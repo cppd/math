@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffers.h"
 
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 
 #include <array>
@@ -26,59 +25,55 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-constexpr VkFormat COLOR_FORMAT_0 = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr VkFormat COLOR_FORMAT_1 = VK_FORMAT_R32G32B32A32_SFLOAT;
-
 vulkan::handle::RenderPass create_render_pass(
         const VkDevice device,
         const VkFormat depth_format,
-        const VkSampleCountFlagBits sample_count)
+        const VkSampleCountFlagBits sample_count,
+        const std::vector<vulkan::ImageWithMemory>& images)
 {
-        std::array<VkAttachmentDescription, 3> attachments = {};
+        std::vector<VkAttachmentDescription> attachments(images.size() + 1);
 
         // Color
 
-        attachments[0].format = COLOR_FORMAT_0;
-        attachments[0].samples = sample_count;
-        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
-
-        attachments[1].format = COLOR_FORMAT_1;
-        attachments[1].samples = sample_count;
-        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[1].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+        for (std::size_t i = 0; i < images.size(); ++i)
+        {
+                ASSERT(images[i].image_view().sample_count() == sample_count);
+                attachments[i] = {};
+                attachments[i].format = images[i].image_view().format();
+                attachments[i].samples = sample_count;
+                attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachments[i].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+        }
 
         // Depth
 
-        attachments[2].format = depth_format;
-        attachments[2].samples = sample_count;
-        attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[2].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        attachments[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments.back() = {};
+        attachments.back().format = depth_format;
+        attachments.back().samples = sample_count;
+        attachments.back().loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachments.back().storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments.back().stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments.back().stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments.back().initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments.back().finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         //
 
-        std::array<VkAttachmentReference, 2> color_references;
-        color_references[0] = {};
-        color_references[0].attachment = 0;
-        color_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        color_references[1] = {};
-        color_references[1].attachment = 1;
-        color_references[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        std::vector<VkAttachmentReference> color_references(images.size());
+
+        for (std::size_t i = 0; i < images.size(); ++i)
+        {
+                color_references[i] = {};
+                color_references[i].attachment = i;
+                color_references[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
 
         VkAttachmentReference depth_reference = {};
-        depth_reference.attachment = 0;
+        depth_reference.attachment = images.size();
         depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass_description = {};
@@ -108,65 +103,21 @@ vulkan::handle::RenderPass create_render_pass(
         return vulkan::handle::RenderPass(device, create_info);
 }
 
-VkClearValue create_color_clear_value()
-{
-        static_assert(COLOR_FORMAT_0 == VK_FORMAT_R32G32B32A32_SFLOAT);
-        static_assert(COLOR_FORMAT_1 == VK_FORMAT_R32G32B32A32_SFLOAT);
-
-        VkClearValue res;
-        res.color.float32[0] = 0;
-        res.color.float32[1] = 0;
-        res.color.float32[2] = 0;
-        res.color.float32[3] = 0;
-        return res;
-}
-
-struct ColorImages final
-{
-        vulkan::ImageWithMemory image_0;
-        vulkan::ImageWithMemory image_1;
-
-        ColorImages(
-                RenderBuffers3D* const render_buffers,
-                const vulkan::Device& device,
-                const std::vector<std::uint32_t>& family_indices)
-                : image_0(
-                        device,
-                        family_indices,
-                        {COLOR_FORMAT_0},
-                        render_buffers->sample_count(),
-                        VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(render_buffers->width(), render_buffers->height()),
-                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
-                  image_1(device,
-                          family_indices,
-                          {COLOR_FORMAT_1},
-                          render_buffers->sample_count(),
-                          VK_IMAGE_TYPE_2D,
-                          vulkan::make_extent(render_buffers->width(), render_buffers->height()),
-                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
-        {
-        }
-};
-
 class Impl final : public RenderBuffers
 {
-        std::vector<ColorImages> color_attachments_;
-        std::vector<ImageViews> image_views_;
-
         vulkan::handle::RenderPass render_pass_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_;
         std::vector<VkFramebuffer> framebuffers_handles_;
+        std::vector<VkClearValue> clear_values_;
 
         VkRenderPass render_pass() const override;
         const std::vector<VkFramebuffer>& framebuffers() const override;
-        std::vector<VkClearValue> clear_values() const override;
-        const std::vector<RenderBuffers::ImageViews>& image_views() const override;
+        const std::vector<VkClearValue>& clear_values() const override;
 
 public:
         Impl(RenderBuffers3D* render_buffers,
-             const vulkan::Device& device,
-             const std::vector<std::uint32_t>& family_indices);
+             const std::vector<vulkan::ImageWithMemory>& images,
+             const vulkan::Device& device);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -175,38 +126,45 @@ public:
 };
 
 Impl::Impl(
-        RenderBuffers3D* const render_buffers,
-        const vulkan::Device& device,
-        const std::vector<std::uint32_t>& family_indices)
+        RenderBuffers3D* render_buffers,
+        const std::vector<vulkan::ImageWithMemory>& images,
+        const vulkan::Device& device)
 {
+        ASSERT(render_buffers->framebuffers().size() == 1);
+
+        ASSERT(!images.empty());
+
+        ASSERT(std::all_of(
+                images.cbegin(), images.cend(),
+                [&](const vulkan::ImageWithMemory& image)
+                {
+                        return render_buffers->sample_count() == image.image_view().sample_count();
+                }));
+
         const std::size_t buffer_count = render_buffers->framebuffers().size();
 
-        color_attachments_.reserve(buffer_count);
+        render_pass_ =
+                create_render_pass(device, render_buffers->depth_format(), render_buffers->sample_count(), images);
+
+        std::vector<VkImageView> attachments(images.size() + 1);
         for (std::size_t i = 0; i < buffer_count; ++i)
         {
-                color_attachments_.emplace_back(render_buffers, device, family_indices);
-        }
-
-        image_views_.reserve(buffer_count);
-        for (std::size_t i = 0; i < buffer_count; ++i)
-        {
-                image_views_.push_back(
-                        {.image_0 = &color_attachments_[i].image_0.image_view(),
-                         .image_1 = &color_attachments_[i].image_1.image_view()});
-        }
-
-        render_pass_ = create_render_pass(device, render_buffers->depth_format(), render_buffers->sample_count());
-
-        std::vector<VkImageView> attachments(3);
-        for (std::size_t i = 0; i < buffer_count; ++i)
-        {
-                attachments[0] = color_attachments_[i].image_0.image_view();
-                attachments[1] = color_attachments_[i].image_1.image_view();
-                attachments[2] = render_buffers->depth_image_view(i);
+                for (std::size_t image_index = 0; image_index < images.size(); ++image_index)
+                {
+                        attachments[image_index] = images[image_index].image_view();
+                }
+                attachments.back() = render_buffers->depth_image_view(i);
 
                 framebuffers_.push_back(create_framebuffer(
                         device, render_pass_, render_buffers->width(), render_buffers->height(), attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
+        }
+
+        constexpr Vector<4, float> CLEAR_VALUE(0, 0, 0, 0);
+        clear_values_.resize(images.size() + 1);
+        for (std::size_t i = 0; i < images.size(); ++i)
+        {
+                clear_values_[i] = vulkan::create_color_clear_value(images[i].image_view().format(), CLEAR_VALUE);
         }
 }
 
@@ -221,26 +179,17 @@ const std::vector<VkFramebuffer>& Impl::framebuffers() const
         return framebuffers_handles_;
 }
 
-std::vector<VkClearValue> Impl::clear_values() const
+const std::vector<VkClearValue>& Impl::clear_values() const
 {
-        ASSERT(color_attachments_.size() == 2);
-        std::vector<VkClearValue> clear_values(3);
-        clear_values[0] = create_color_clear_value();
-        clear_values[1] = create_color_clear_value();
-        return clear_values;
-}
-
-const std::vector<RenderBuffers::ImageViews>& Impl::image_views() const
-{
-        return image_views_;
+        return clear_values_;
 }
 }
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
-        RenderBuffers3D* const render_buffers,
-        const vulkan::Device& device,
-        const std::vector<std::uint32_t>& family_indices)
+        RenderBuffers3D* render_buffers,
+        const std::vector<vulkan::ImageWithMemory>& images,
+        const vulkan::Device& device)
 {
-        return std::make_unique<Impl>(render_buffers, device, family_indices);
+        return std::make_unique<Impl>(render_buffers, images, device);
 }
 }

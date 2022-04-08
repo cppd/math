@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/gpu/render_buffers.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
@@ -28,22 +29,15 @@ namespace ns::gpu::renderer
 {
 struct RenderBuffers
 {
-        struct ImageViews final
-        {
-                const vulkan::ImageView* image_0;
-                const vulkan::ImageView* image_1;
-        };
-
         virtual ~RenderBuffers() = default;
 
         virtual VkRenderPass render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
-        virtual std::vector<VkClearValue> clear_values() const = 0;
-        virtual const std::vector<ImageViews>& image_views() const = 0;
+        virtual const std::vector<VkClearValue>& clear_values() const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
         RenderBuffers3D* render_buffers,
-        const vulkan::Device& device,
-        const std::vector<std::uint32_t>& family_indices);
+        const std::vector<vulkan::ImageWithMemory>& images,
+        const vulkan::Device& device);
 }
