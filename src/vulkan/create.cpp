@@ -170,7 +170,7 @@ handle::Framebuffer create_framebuffer(
         return handle::Framebuffer(device, create_info);
 }
 
-VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, float>& rgb)
+VkClearValue create_color_clear_value(const VkFormat format, const Vector<4, float>& rgba)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -182,10 +182,10 @@ VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, flo
         case VK_FORMAT_R8G8B8A8_UNORM:
         {
                 VkClearValue clear_value;
-                clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgb[0]);
-                clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgb[1]);
-                clear_value.color.float32[2] = color::linear_float_to_srgb_float(rgb[2]);
-                clear_value.color.float32[3] = 1;
+                clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgba[0]);
+                clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgba[1]);
+                clear_value.color.float32[2] = color::linear_float_to_srgb_float(rgba[2]);
+                clear_value.color.float32[3] = rgba[3];
                 return clear_value;
         }
         case VK_FORMAT_B8G8R8_SRGB:
@@ -196,16 +196,21 @@ VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, flo
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
                 VkClearValue clear_value;
-                clear_value.color.float32[0] = rgb[0];
-                clear_value.color.float32[1] = rgb[1];
-                clear_value.color.float32[2] = rgb[2];
-                clear_value.color.float32[3] = 1;
+                clear_value.color.float32[0] = rgba[0];
+                clear_value.color.float32[1] = rgba[1];
+                clear_value.color.float32[2] = rgba[2];
+                clear_value.color.float32[3] = rgba[3];
                 return clear_value;
         }
         default:
                 error("Unsupported format " + format_to_string(format) + " for color clear value");
         }
 #pragma GCC diagnostic pop
+}
+
+VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, float>& rgb)
+{
+        return create_color_clear_value(format, Vector<4, float>(rgb[0], rgb[1], rgb[2], 1));
 }
 
 VkClearValue create_depth_stencil_clear_value()
