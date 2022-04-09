@@ -69,7 +69,7 @@ void VolumeRenderer::create_buffers(
         const VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
         const vulkan::Buffer& transparency_nodes,
-        const std::vector<vulkan::ImageWithMemory>& /*opacity_images*/)
+        const std::vector<vulkan::ImageWithMemory>& opacity_images)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -81,6 +81,10 @@ void VolumeRenderer::create_buffers(
         image_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
 
         fragments_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
+
+        ASSERT(opacity_images.size() == 2);
+        image_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
+        fragments_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
 
         pipeline_image_ = image_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,

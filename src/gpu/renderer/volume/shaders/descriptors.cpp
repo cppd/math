@@ -23,6 +23,28 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = OPACITY_0_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = OPACITY_1_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+
         if (flags.drawing)
         {
                 VkDescriptorSetLayoutBinding b = {};
@@ -197,6 +219,36 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
 
                 infos.emplace_back(image_info);
                 bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
+        }
+
+        descriptors_.update_descriptor_set(0, bindings, infos);
+}
+
+void VolumeSharedMemory::set_opacity(const vulkan::ImageView& opacity_0, const vulkan::ImageView& opacity_1) const
+{
+        ASSERT(opacity_0.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(opacity_1.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(opacity_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(opacity_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+
+        std::vector<vulkan::Descriptors::Info> infos;
+        std::vector<std::uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = opacity_0;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(OPACITY_0_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = opacity_1;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(OPACITY_1_BINDING);
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);

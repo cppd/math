@@ -29,20 +29,23 @@ class VolumeSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int TRANSPARENCY_HEADS_BINDING = 0;
-        static constexpr int TRANSPARENCY_NODES_BINDING = 1;
+        static constexpr int OPACITY_0_BINDING = 0;
+        static constexpr int OPACITY_1_BINDING = 1;
 
-        static constexpr int COORDINATES_BINDING = 2;
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 2;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 3;
 
-        static constexpr int DEPTH_IMAGE_BINDING = 3;
+        static constexpr int COORDINATES_BINDING = 4;
 
-        static constexpr int DRAWING_BINDING = 4;
+        static constexpr int DEPTH_IMAGE_BINDING = 5;
 
-        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 5;
-        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 6;
+        static constexpr int DRAWING_BINDING = 6;
 
-        static constexpr int ACCELERATION_STRUCTURE_BINDING = 7;
-        static constexpr int SHADOW_MAP_BINDING = 7;
+        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 7;
+        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 8;
+
+        static constexpr int ACCELERATION_STRUCTURE_BINDING = 9;
+        static constexpr int SHADOW_MAP_BINDING = 9;
 
         vulkan::Descriptors descriptors_;
 
@@ -83,6 +86,8 @@ public:
                 VkSampler sampler,
                 const vulkan::ImageView& cosine_roughness,
                 const vulkan::ImageView& cosine_weighted_average) const;
+
+        void set_opacity(const vulkan::ImageView& opacity_0, const vulkan::ImageView& opacity_1) const;
 
         void set_depth_image(VkImageView image_view, VkSampler sampler) const;
         void set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const;
