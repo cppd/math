@@ -131,7 +131,10 @@ void MeshRenderer::create_render_buffers(
 
         render_buffers_3d_ = render_buffers;
 
-        render_buffers_ = renderer::create_render_buffers(render_buffers, opacity_images, device_);
+        render_buffers_ = renderer::create_render_buffers(render_buffers_3d_, opacity_images, device_);
+
+        const VkRenderPass render_pass = render_buffers_3d_->render_pass();
+        const VkSampleCountFlagBits sample_count = render_buffers_3d_->sample_count();
 
         triangles_shared_memory_.set_objects_image(objects_image.image_view());
         triangles_shared_memory_.set_transparency(
@@ -158,28 +161,24 @@ void MeshRenderer::create_render_buffers(
                 render_pipelines(transparent).emplace();
 
                 render_pipelines(transparent)->triangles_fragments = triangles_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                        transparent, TrianglesProgramPipelineType::FRAGMENTS);
+                        render_pass, sample_count, sample_shading_, viewport, transparent,
+                        TrianglesProgramPipelineType::FRAGMENTS);
 
                 render_pipelines(transparent)->triangles_image = triangles_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                        transparent, TrianglesProgramPipelineType::IMAGE);
+                        render_pass, sample_count, sample_shading_, viewport, transparent,
+                        TrianglesProgramPipelineType::IMAGE);
 
                 render_pipelines(transparent)->triangle_lines = triangle_lines_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                        transparent);
+                        render_pass, sample_count, sample_shading_, viewport, transparent);
 
                 render_pipelines(transparent)->normals = normals_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                        transparent);
+                        render_pass, sample_count, sample_shading_, viewport, transparent);
 
                 render_pipelines(transparent)->points = points_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-                        viewport, transparent);
+                        render_pass, sample_count, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, viewport, transparent);
 
                 render_pipelines(transparent)->lines = points_program_.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                        viewport, transparent);
+                        render_pass, sample_count, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, viewport, transparent);
         }
 }
 
