@@ -74,6 +74,32 @@ public:
         }
 };
 
+class RenderPass final
+{
+        handle::RenderPass render_pass_;
+        std::uint32_t color_attachment_count_;
+
+public:
+        RenderPass() = default;
+
+        RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info)
+                : render_pass_(device, create_info),
+                  color_attachment_count_(create_info.pSubpasses->colorAttachmentCount)
+        {
+        }
+
+        operator VkRenderPass() const& noexcept
+        {
+                return render_pass_;
+        }
+        operator VkRenderPass() const&& noexcept = delete;
+
+        std::uint32_t color_attachment_count() const noexcept
+        {
+                return color_attachment_count_;
+        }
+};
+
 class Buffer final
 {
         handle::Buffer buffer_;
