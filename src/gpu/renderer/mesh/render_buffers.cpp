@@ -107,6 +107,7 @@ class Impl final : public RenderBuffers
 {
         unsigned width_;
         unsigned height_;
+        VkSampleCountFlagBits sample_count_;
         vulkan::handle::RenderPass render_pass_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_;
         std::vector<VkFramebuffer> framebuffers_handles_;
@@ -114,6 +115,7 @@ class Impl final : public RenderBuffers
 
         unsigned width() const override;
         unsigned height() const override;
+        VkSampleCountFlagBits sample_count() const override;
         VkRenderPass render_pass() const override;
         const std::vector<VkFramebuffer>& framebuffers() const override;
         const std::vector<VkClearValue>& clear_values() const override;
@@ -134,7 +136,8 @@ Impl::Impl(
         const std::vector<vulkan::ImageWithMemory>& images,
         const VkDevice device)
         : width_(render_buffers->width()),
-          height_(render_buffers->height())
+          height_(render_buffers->height()),
+          sample_count_(render_buffers->sample_count())
 {
         ASSERT(render_buffers->framebuffers().size() == 1);
 
@@ -182,6 +185,11 @@ unsigned Impl::width() const
 unsigned Impl::height() const
 {
         return height_;
+}
+
+VkSampleCountFlagBits Impl::sample_count() const
+{
+        return sample_count_;
 }
 
 VkRenderPass Impl::render_pass() const
