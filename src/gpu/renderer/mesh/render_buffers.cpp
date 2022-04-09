@@ -105,19 +105,23 @@ vulkan::handle::RenderPass create_render_pass(
 
 class Impl final : public RenderBuffers
 {
+        unsigned width_;
+        unsigned height_;
         vulkan::handle::RenderPass render_pass_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_;
         std::vector<VkFramebuffer> framebuffers_handles_;
         std::vector<VkClearValue> clear_values_;
 
+        unsigned width() const override;
+        unsigned height() const override;
         VkRenderPass render_pass() const override;
         const std::vector<VkFramebuffer>& framebuffers() const override;
         const std::vector<VkClearValue>& clear_values() const override;
 
 public:
-        Impl(RenderBuffers3D* render_buffers,
+        Impl(const RenderBuffers3D* render_buffers,
              const std::vector<vulkan::ImageWithMemory>& images,
-             const vulkan::Device& device);
+             VkDevice device);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -126,9 +130,11 @@ public:
 };
 
 Impl::Impl(
-        RenderBuffers3D* render_buffers,
+        const RenderBuffers3D* const render_buffers,
         const std::vector<vulkan::ImageWithMemory>& images,
-        const vulkan::Device& device)
+        const VkDevice device)
+        : width_(render_buffers->width()),
+          height_(render_buffers->height())
 {
         ASSERT(render_buffers->framebuffers().size() == 1);
 
@@ -155,7 +161,7 @@ Impl::Impl(
                 }
                 attachments.back() = render_buffers->depth_image_view(i);
 
-                framebuffers_.push_back(create_framebuffer(
+                framebuffers_.push_back(vulkan::create_framebuffer(
                         device, render_pass_, render_buffers->width(), render_buffers->height(), attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
@@ -166,6 +172,16 @@ Impl::Impl(
         {
                 clear_values_[i] = vulkan::create_color_clear_value(images[i].image_view().format(), CLEAR_VALUE);
         }
+}
+
+unsigned Impl::width() const
+{
+        return width_;
+}
+
+unsigned Impl::height() const
+{
+        return height_;
 }
 
 VkRenderPass Impl::render_pass() const
@@ -186,9 +202,9 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 }
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
-        RenderBuffers3D* render_buffers,
+        const RenderBuffers3D* const render_buffers,
         const std::vector<vulkan::ImageWithMemory>& images,
-        const vulkan::Device& device)
+        const VkDevice device)
 {
         return std::make_unique<Impl>(render_buffers, images, device);
 }

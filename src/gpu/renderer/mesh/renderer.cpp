@@ -122,14 +122,16 @@ void MeshRenderer::create_render_buffers(
         const vulkan::ImageWithMemory& transparency_heads_size_image,
         const vulkan::Buffer& transparency_counter,
         const vulkan::Buffer& transparency_nodes,
-        const std::vector<vulkan::ImageWithMemory>& /*opacity_images*/,
+        const std::vector<vulkan::ImageWithMemory>& opacity_images,
         const Region<2, int>& viewport)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_render_buffers();
 
-        render_buffers_ = render_buffers;
+        render_buffers_3d_ = render_buffers;
+
+        render_buffers_ = renderer::create_render_buffers(render_buffers, opacity_images, device_);
 
         triangles_shared_memory_.set_objects_image(objects_image.image_view());
         triangles_shared_memory_.set_transparency(
@@ -191,6 +193,8 @@ void MeshRenderer::delete_render_buffers()
         {
                 render_pipelines(transparent).reset();
         }
+
+        render_buffers_.reset();
 }
 
 void MeshRenderer::create_shadow_mapping_buffers(
@@ -327,7 +331,7 @@ void MeshRenderer::create_render_command_buffers(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        ASSERT(render_buffers_);
+        ASSERT(render_buffers_3d_);
 
         delete_render_command_buffers();
 
@@ -346,10 +350,10 @@ void MeshRenderer::create_render_command_buffers(
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = render_buffers_->width();
-        info.render_area->extent.height = render_buffers_->height();
-        info.render_pass = render_buffers_->render_pass();
-        info.framebuffers = &render_buffers_->framebuffers();
+        info.render_area->extent.width = render_buffers_3d_->width();
+        info.render_area->extent.height = render_buffers_3d_->height();
+        info.render_pass = render_buffers_3d_->render_pass();
+        info.framebuffers = &render_buffers_3d_->framebuffers();
         info.command_pool = graphics_command_pool;
 
         bool image;

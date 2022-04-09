@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "object.h"
+#include "render_buffers.h"
 #include "shadow_mapping.h"
 
 #include "../buffers/ggx_f1_albedo.h"
@@ -43,7 +44,7 @@ class MeshRenderer
         const VkDevice device_;
         const bool sample_shading_;
 
-        const RenderBuffers3D* render_buffers_ = nullptr;
+        const RenderBuffers3D* render_buffers_3d_ = nullptr;
 
         TrianglesProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
@@ -77,6 +78,7 @@ class MeshRenderer
         vulkan::handle::Sampler texture_sampler_;
 
         std::unique_ptr<ShadowMapping> shadow_mapping_;
+        std::unique_ptr<RenderBuffers> render_buffers_;
 
         const std::optional<Pipelines>& render_pipelines(bool transparent) const;
         std::optional<Pipelines>& render_pipelines(bool transparent);

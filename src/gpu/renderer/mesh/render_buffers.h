@@ -31,13 +31,15 @@ struct RenderBuffers
 {
         virtual ~RenderBuffers() = default;
 
+        virtual unsigned width() const = 0;
+        virtual unsigned height() const = 0;
         virtual VkRenderPass render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
         virtual const std::vector<VkClearValue>& clear_values() const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
-        RenderBuffers3D* render_buffers,
+        const RenderBuffers3D* render_buffers,
         const std::vector<vulkan::ImageWithMemory>& images,
-        const vulkan::Device& device);
+        VkDevice device);
 }
