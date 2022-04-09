@@ -251,7 +251,7 @@ vulkan::RenderPass render_pass_swapchain_color_depth(
 }
 #endif
 
-vulkan::handle::RenderPass render_pass_swapchain_color(
+vulkan::RenderPass render_pass_swapchain_color(
         const VkDevice device,
         const VkFormat color_format,
         const VkSampleCountFlagBits sample_count)
@@ -310,10 +310,10 @@ vulkan::handle::RenderPass render_pass_swapchain_color(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::handle::RenderPass(device, create_info);
+        return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::handle::RenderPass render_pass_color_depth(
+vulkan::RenderPass render_pass_color_depth(
         const VkDevice device,
         const VkFormat color_format,
         const VkFormat depth_format,
@@ -397,10 +397,10 @@ vulkan::handle::RenderPass render_pass_color_depth(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::handle::RenderPass(device, create_info);
+        return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::handle::RenderPass render_pass_color(
+vulkan::RenderPass render_pass_color(
         const VkDevice device,
         const VkFormat color_format,
         const VkSampleCountFlagBits sample_count)
@@ -444,6 +444,6 @@ vulkan::handle::RenderPass render_pass_color(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::handle::RenderPass(device, create_info);
+        return vulkan::RenderPass(device, create_info);
 }
 }

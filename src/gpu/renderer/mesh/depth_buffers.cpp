@@ -43,7 +43,7 @@ constexpr std::array DEPTH_IMAGE_FORMATS = std::to_array<VkFormat>
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
 constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-vulkan::handle::RenderPass create_render_pass_depth(const VkDevice device, const VkFormat depth_format)
+vulkan::RenderPass create_render_pass_depth(const VkDevice device, const VkFormat depth_format)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};
 
@@ -95,7 +95,7 @@ vulkan::handle::RenderPass create_render_pass_depth(const VkDevice device, const
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::handle::RenderPass(device, create_info);
+        return vulkan::RenderPass(device, create_info);
 }
 
 void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
@@ -165,7 +165,7 @@ std::string buffer_info(
 class Impl final : public DepthBuffers
 {
         std::vector<vulkan::DepthImageWithMemory> depth_attachments_;
-        vulkan::handle::RenderPass render_pass_;
+        vulkan::RenderPass render_pass_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_;
         std::vector<VkFramebuffer> framebuffers_handles_;
         std::vector<VkClearValue> clear_values_;

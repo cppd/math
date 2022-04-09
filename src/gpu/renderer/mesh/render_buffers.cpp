@@ -25,7 +25,7 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-vulkan::handle::RenderPass create_render_pass(
+vulkan::RenderPass create_render_pass(
         const VkDevice device,
         const VkFormat depth_format,
         const VkSampleCountFlagBits sample_count,
@@ -100,7 +100,7 @@ vulkan::handle::RenderPass create_render_pass(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::handle::RenderPass(device, create_info);
+        return vulkan::RenderPass(device, create_info);
 }
 
 class Impl final : public RenderBuffers
@@ -108,7 +108,7 @@ class Impl final : public RenderBuffers
         unsigned width_;
         unsigned height_;
         VkSampleCountFlagBits sample_count_;
-        vulkan::handle::RenderPass render_pass_;
+        vulkan::RenderPass render_pass_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_;
         std::vector<VkFramebuffer> framebuffers_handles_;
         std::vector<VkClearValue> clear_values_;
