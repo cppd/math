@@ -50,7 +50,7 @@ struct GraphicsPipelineCreateInfo
         const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
         const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
         const std::vector<const SpecializationConstant*>* constants = nullptr;
-        std::optional<VkPipelineColorBlendAttachmentState> color_blend;
+        std::vector<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
 handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);

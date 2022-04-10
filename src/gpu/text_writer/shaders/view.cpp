@@ -207,17 +207,17 @@ vulkan::handle::Pipeline Program::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-        info.color_blend.emplace();
-        info.color_blend->colorWriteMask =
-                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
-                | VK_COLOR_COMPONENT_A_BIT;
-        info.color_blend->blendEnable = VK_TRUE;
-        info.color_blend->srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        info.color_blend->dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        info.color_blend->colorBlendOp = VK_BLEND_OP_ADD;
-        info.color_blend->srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
+        ASSERT(render_pass.color_attachment_count() == 1);
+        VkPipelineColorBlendAttachmentState& state = info.color_blend.emplace_back();
+        state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
+                               | VK_COLOR_COMPONENT_A_BIT;
+        state.blendEnable = VK_TRUE;
+        state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        state.colorBlendOp = VK_BLEND_OP_ADD;
+        state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        state.alphaBlendOp = VK_BLEND_OP_ADD;
 
         const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
         info.shaders = &shaders;

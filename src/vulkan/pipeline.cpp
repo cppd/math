@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 
 #include <memory>
 
@@ -168,25 +169,36 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
 
-        VkPipelineColorBlendAttachmentState color_blend_attachment_state = {};
-        if (!info.color_blend)
+        std::vector<VkPipelineColorBlendAttachmentState> color_blend_attachment_states;
+        if (info.color_blend.empty())
         {
-                color_blend_attachment_state.colorWriteMask =
-                        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
-                        | VK_COLOR_COMPONENT_A_BIT;
-                color_blend_attachment_state.blendEnable = VK_FALSE;
+                if (info.render_pass->color_attachment_count() > 0)
+                {
+                        VkPipelineColorBlendAttachmentState state = {};
+                        state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
+                                               | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+                        state.blendEnable = VK_FALSE;
+
+                        color_blend_attachment_states.resize(info.render_pass->color_attachment_count(), state);
+                }
         }
         else
         {
-                color_blend_attachment_state = *info.color_blend;
+                if (!(info.color_blend.size() == info.render_pass->color_attachment_count()))
+                {
+                        error("color blend count " + to_string(info.color_blend.size())
+                              + " is not equal to color attachment count "
+                              + to_string(info.render_pass->color_attachment_count()));
+                }
+                color_blend_attachment_states = info.color_blend;
         }
 
         VkPipelineColorBlendStateCreateInfo color_blending_state_info = {};
         color_blending_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         color_blending_state_info.logicOpEnable = VK_FALSE;
         // color_blending_state_info.logicOp = VK_LOGIC_OP_COPY;
-        color_blending_state_info.attachmentCount = 1;
-        color_blending_state_info.pAttachments = &color_blend_attachment_state;
+        color_blending_state_info.attachmentCount = color_blend_attachment_states.size();
+        color_blending_state_info.pAttachments = color_blend_attachment_states.data();
         // color_blending_state_info.blendConstants[0] = 0.0f;
         // color_blending_state_info.blendConstants[1] = 0.0f;
         // color_blending_state_info.blendConstants[2] = 0.0f;
