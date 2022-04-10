@@ -33,7 +33,7 @@ struct GraphicsPipelineCreateInfo
 {
         // required, std::optional is used to check that values are set
         const Device* device = nullptr;
-        std::optional<VkRenderPass> render_pass;
+        const RenderPass* render_pass = nullptr;
         std::optional<std::uint32_t> sub_pass;
         std::optional<VkSampleCountFlagBits> sample_count;
         std::optional<bool> sample_shading;

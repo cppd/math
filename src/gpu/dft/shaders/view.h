@@ -102,7 +102,7 @@ public:
         ~ViewProgram() = default;
 
         vulkan::handle::Pipeline create_pipeline(
-                VkRenderPass render_pass,
+                const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 const Region<2, int>& viewport) const;
 

@@ -133,7 +133,7 @@ void MeshRenderer::create_render_buffers(
 
         render_buffers_ = renderer::create_render_buffers(render_buffers_3d_, opacity_images, device_);
 
-        const VkRenderPass render_pass = render_buffers_3d_->render_pass();
+        const vulkan::RenderPass& render_pass = render_buffers_3d_->render_pass();
         const VkSampleCountFlagBits sample_count = render_buffers_3d_->sample_count();
 
         triangles_shared_memory_.set_objects_image(objects_image.image_view());

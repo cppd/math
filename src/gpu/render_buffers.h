@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
+#include <src/vulkan/objects.h>
 
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace ns::gpu
 {
@@ -38,7 +38,7 @@ public:
         virtual VkFormat depth_format() const = 0;
         virtual VkImageView depth_image_view(unsigned index) const = 0;
 
-        virtual VkRenderPass render_pass() const = 0;
+        virtual const vulkan::RenderPass& render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 
         virtual void commands_depth_copy(
@@ -58,7 +58,7 @@ public:
         virtual unsigned width() const = 0;
         virtual unsigned height() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
-        virtual VkRenderPass render_pass() const = 0;
+        virtual const vulkan::RenderPass& render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 };
 }

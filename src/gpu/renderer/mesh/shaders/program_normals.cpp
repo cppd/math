@@ -78,7 +78,7 @@ VkPipelineLayout NormalsProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline NormalsProgram::create_pipeline(
-        const VkRenderPass render_pass,
+        const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
         const bool sample_shading,
         const Region<2, int>& viewport,
@@ -87,7 +87,7 @@ vulkan::handle::Pipeline NormalsProgram::create_pipeline(
         vulkan::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
-        info.render_pass = render_pass;
+        info.render_pass = &render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;

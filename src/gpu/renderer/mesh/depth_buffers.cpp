@@ -175,7 +175,7 @@ class Impl final : public DepthBuffers
         const vulkan::ImageView& image_view(unsigned index) const override;
         unsigned width() const override;
         unsigned height() const override;
-        VkRenderPass render_pass() const override;
+        const vulkan::RenderPass& render_pass() const override;
         VkSampleCountFlagBits sample_count() const override;
         const std::vector<VkFramebuffer>& framebuffers() const override;
         const std::vector<VkClearValue>& clear_values() const override;
@@ -267,7 +267,7 @@ unsigned Impl::height() const
         return depth_attachments_[0].image().extent().height;
 }
 
-VkRenderPass Impl::render_pass() const
+const vulkan::RenderPass& Impl::render_pass() const
 {
         return render_pass_;
 }

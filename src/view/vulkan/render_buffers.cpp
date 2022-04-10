@@ -36,12 +36,12 @@ constexpr VkImageLayout DEPTH_ATTACHMENT_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_ST
 
 class Impl3D : public gpu::RenderBuffers3D
 {
-        virtual VkRenderPass render_pass_3d() const = 0;
+        virtual const vulkan::RenderPass& render_pass_3d() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
 
         //
 
-        VkRenderPass render_pass() const final
+        const vulkan::RenderPass& render_pass() const final
         {
                 return render_pass_3d();
         }
@@ -57,12 +57,12 @@ protected:
 
 class Impl2D : public gpu::RenderBuffers2D
 {
-        virtual VkRenderPass render_pass_2d() const = 0;
+        virtual const vulkan::RenderPass& render_pass_2d() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_2d() const = 0;
 
         //
 
-        VkRenderPass render_pass() const final
+        const vulkan::RenderPass& render_pass() const final
         {
                 return render_pass_2d();
         }
@@ -137,10 +137,10 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         //
 
-        VkRenderPass render_pass_3d() const override;
+        const vulkan::RenderPass& render_pass_3d() const override;
         const std::vector<VkFramebuffer>& framebuffers_3d() const override;
 
-        VkRenderPass render_pass_2d() const override;
+        const vulkan::RenderPass& render_pass_2d() const override;
         const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
@@ -269,7 +269,7 @@ gpu::RenderBuffers2D& Impl::buffers_2d()
         return *this;
 }
 
-VkRenderPass Impl::render_pass_3d() const
+const vulkan::RenderPass& Impl::render_pass_3d() const
 {
         return render_pass_3d_;
 }
@@ -280,7 +280,7 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_3d() const
         return framebuffers_handles_3d_;
 }
 
-VkRenderPass Impl::render_pass_2d() const
+const vulkan::RenderPass& Impl::render_pass_2d() const
 {
         return render_pass_2d_;
 }

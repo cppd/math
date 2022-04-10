@@ -54,7 +54,7 @@ public:
         ~PointsProgram() = default;
 
         vulkan::handle::Pipeline create_pipeline(
-                VkRenderPass render_pass,
+                const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 VkPrimitiveTopology primitive_topology,
                 const Region<2, int>& viewport,
