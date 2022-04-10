@@ -29,12 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-enum class TrianglesProgramPipelineType
-{
-        FRAGMENTS,
-        IMAGE
-};
-
 class TrianglesProgram final
 {
         const vulkan::Device* device_;
@@ -46,10 +40,7 @@ class TrianglesProgram final
         vulkan::handle::PipelineLayout pipeline_layout_;
         vulkan::Shader vertex_shader_;
         vulkan::Shader geometry_shader_;
-        vulkan::Shader fragment_shader_fragments_;
-        vulkan::Shader fragment_shader_image_;
-
-        const vulkan::Shader* fragment_shader(TrianglesProgramPipelineType type) const;
+        vulkan::Shader fragment_shader_;
 
 public:
         explicit TrianglesProgram(const vulkan::Device* device, const Code& code);
@@ -66,8 +57,7 @@ public:
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
                 const Region<2, int>& viewport,
-                bool transparency,
-                TrianglesProgramPipelineType type) const;
+                bool transparency) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;

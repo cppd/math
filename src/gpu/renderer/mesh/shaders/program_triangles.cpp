@@ -69,8 +69,7 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device, const Cod
                   push_constant_ranges())),
           vertex_shader_(*device_, code.mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           geometry_shader_(*device_, code.mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
-          fragment_shader_fragments_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_(*device_, code.mesh_triangles_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -93,25 +92,12 @@ VkPipelineLayout TrianglesProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-const vulkan::Shader* TrianglesProgram::fragment_shader(const TrianglesProgramPipelineType type) const
-{
-        switch (type)
-        {
-        case TrianglesProgramPipelineType::FRAGMENTS:
-                return &fragment_shader_fragments_;
-        case TrianglesProgramPipelineType::IMAGE:
-                return &fragment_shader_image_;
-        }
-        error_fatal("Unknown triangles program pipeline type " + to_string(enum_to_int(type)));
-}
-
 vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
         const bool sample_shading,
         const Region<2, int>& viewport,
-        const bool transparency,
-        const TrianglesProgramPipelineType type) const
+        const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -125,7 +111,7 @@ vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_write = !transparency;
 
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, fragment_shader(type)};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
         info.shaders = &shaders;
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =

@@ -96,25 +96,6 @@ std::optional<MeshRenderer::Pipelines>& MeshRenderer::render_pipelines(const boo
         return pipelines_opaque_;
 }
 
-const std::optional<vulkan::handle::CommandBuffers>& MeshRenderer::command_buffers_all(const bool image) const
-{
-        if (image)
-        {
-                return command_buffers_all_image_;
-        }
-        return command_buffers_all_;
-}
-
-const std::optional<vulkan::handle::CommandBuffers>& MeshRenderer::command_buffers_transparent_as_opaque(
-        const bool image) const
-{
-        if (image)
-        {
-                return command_buffers_transparent_as_opaque_image_;
-        }
-        return command_buffers_transparent_as_opaque_;
-}
-
 void MeshRenderer::create_render_buffers(
         const RenderBuffers3D* const render_buffers,
         const vulkan::ImageWithMemory& objects_image,
@@ -160,13 +141,8 @@ void MeshRenderer::create_render_buffers(
         {
                 render_pipelines(transparent).emplace();
 
-                render_pipelines(transparent)->triangles_fragments = triangles_program_.create_pipeline(
-                        render_pass, sample_count, sample_shading_, viewport, transparent,
-                        TrianglesProgramPipelineType::FRAGMENTS);
-
-                render_pipelines(transparent)->triangles_image = triangles_program_.create_pipeline(
-                        render_pass, sample_count, sample_shading_, viewport, transparent,
-                        TrianglesProgramPipelineType::IMAGE);
+                render_pipelines(transparent)->triangles = triangles_program_.create_pipeline(
+                        render_pass, sample_count, sample_shading_, viewport, transparent);
 
                 render_pipelines(transparent)->triangle_lines = triangle_lines_program_.create_pipeline(
                         render_pass, sample_count, sample_shading_, viewport, transparent);
@@ -272,8 +248,7 @@ void MeshRenderer::draw_commands(
         const VkCommandBuffer command_buffer,
         const bool clip_plane,
         const bool normals,
-        const bool transparent,
-        const bool image) const
+        const bool transparent) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -284,18 +259,9 @@ void MeshRenderer::draw_commands(
 
         ASSERT(render_pipelines(transparent));
 
-        if (!image)
-        {
-                commands_triangles(
-                        meshes, command_buffer, render_pipelines(transparent)->triangles_fragments, transparent,
-                        triangles_program_, triangles_shared_memory_);
-        }
-        else
-        {
-                commands_triangles(
-                        meshes, command_buffer, render_pipelines(transparent)->triangles_image, transparent,
-                        triangles_program_, triangles_shared_memory_);
-        }
+        commands_triangles(
+                meshes, command_buffer, render_pipelines(transparent)->triangles, transparent, triangles_program_,
+                triangles_shared_memory_);
 
         commands_lines(
                 meshes, command_buffer, render_pipelines(transparent)->lines, transparent, points_program_,
@@ -355,8 +321,6 @@ void MeshRenderer::create_render_command_buffers(
         info.framebuffers = &render_buffers_3d_->framebuffers();
         info.command_pool = graphics_command_pool;
 
-        bool image;
-
         info.before_render_pass_commands =
                 !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
         info.after_render_pass_commands =
@@ -365,18 +329,14 @@ void MeshRenderer::create_render_command_buffers(
         {
                 if (!opaque_meshes.empty())
                 {
-                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/, image);
+                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
                 }
                 if (!transparent_meshes.empty())
                 {
-                        draw_commands(
-                                transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/, image);
+                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/);
                 }
         };
-        image = false;
         command_buffers_all_ = vulkan::create_command_buffers(info);
-        image = true;
-        command_buffers_all_image_ = vulkan::create_command_buffers(info);
 
         if (!transparent_meshes.empty())
         {
@@ -384,13 +344,9 @@ void MeshRenderer::create_render_command_buffers(
                 info.after_render_pass_commands = nullptr;
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
-                        draw_commands(
-                                transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/, image);
+                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
                 };
-                image = false;
                 command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
-                image = true;
-                command_buffers_transparent_as_opaque_image_ = vulkan::create_command_buffers(info);
         }
 }
 
@@ -438,9 +394,9 @@ bool MeshRenderer::has_transparent_meshes() const
         return command_buffers_transparent_as_opaque_.has_value();
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const unsigned index, const bool image) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const unsigned index) const
 {
-        const std::optional<vulkan::handle::CommandBuffers>& command_buffers = command_buffers_all(image);
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers = command_buffers_all_;
         if (command_buffers)
         {
                 ASSERT(index < command_buffers->count());
@@ -449,12 +405,9 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const uns
         return std::nullopt;
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(
-        const unsigned index,
-        const bool image) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(const unsigned index) const
 {
-        const std::optional<vulkan::handle::CommandBuffers>& command_buffers =
-                command_buffers_transparent_as_opaque(image);
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers = command_buffers_transparent_as_opaque_;
         if (command_buffers)
         {
                 ASSERT(index < command_buffers->count());

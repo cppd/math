@@ -67,22 +67,6 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangles_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangles_image_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangles_image.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangles_image.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
 std::vector<std::uint32_t> ShaderCode::mesh_shadow_vert() const
 {
         if (ray_tracing_)
