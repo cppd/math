@@ -116,7 +116,7 @@ class Impl final : public RenderBuffers
         unsigned width() const override;
         unsigned height() const override;
         VkSampleCountFlagBits sample_count() const override;
-        VkRenderPass render_pass() const override;
+        const vulkan::RenderPass& render_pass() const override;
         const std::vector<VkFramebuffer>& framebuffers() const override;
         const std::vector<VkClearValue>& clear_values() const override;
 
@@ -192,7 +192,7 @@ VkSampleCountFlagBits Impl::sample_count() const
         return sample_count_;
 }
 
-VkRenderPass Impl::render_pass() const
+const vulkan::RenderPass& Impl::render_pass() const
 {
         return render_pass_;
 }
