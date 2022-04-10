@@ -162,8 +162,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                return !mesh_renderer_.render_command_buffer_all(0, false /*image*/).has_value()
-                       && !volume_renderer_.has_volume();
+                return !mesh_renderer_.has_meshes() && !volume_renderer_.has_volume();
         }
 
         void create_buffers(
