@@ -27,14 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings(
-        const bool fragments_only) const
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings() const
 {
         VolumeSharedMemory::Flags flags{};
 
         flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.coordinates = VK_SHADER_STAGE_FRAGMENT_BIT;
-        flags.depth_image = fragments_only ? 0 : VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.depth_image = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
         flags.acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
@@ -50,20 +49,18 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
 VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           ray_tracing_(code.ray_tracing()),
-          descriptor_set_layout_shared_image_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings(false))),
-          descriptor_set_layout_shared_fragments_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings(true))),
+          descriptor_set_layout_shared_(
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_image_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_image_bindings())),
-          pipeline_layout_image_(vulkan::create_pipeline_layout(
+          pipeline_layout_shared_image_(vulkan::create_pipeline_layout(
                   *device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
-                  {descriptor_set_layout_shared_image_, descriptor_set_layout_image_})),
-          pipeline_layout_fragments_(vulkan::create_pipeline_layout(
+                  {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
+          pipeline_layout_shared_(vulkan::create_pipeline_layout(
                   *device,
                   {VolumeSharedMemory::set_number()},
-                  {descriptor_set_layout_shared_fragments_})),
+                  {descriptor_set_layout_shared_})),
           vertex_shader_(*device_, code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           fragment_shader_image_(*device_, code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_fragments_(*device_, code.volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -71,13 +68,9 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
 {
 }
 
-VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_shared(const bool fragments_only) const
+VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_shared() const
 {
-        if (fragments_only)
-        {
-                return descriptor_set_layout_shared_fragments_;
-        }
-        return descriptor_set_layout_shared_image_;
+        return descriptor_set_layout_shared_;
 }
 
 VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
@@ -85,13 +78,14 @@ VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
         return descriptor_set_layout_image_;
 }
 
-VkPipelineLayout VolumeProgram::pipeline_layout(const bool fragments_only) const
+VkPipelineLayout VolumeProgram::pipeline_layout_shared() const
 {
-        if (fragments_only)
-        {
-                return pipeline_layout_fragments_;
-        }
-        return pipeline_layout_image_;
+        return pipeline_layout_shared_;
+}
+
+VkPipelineLayout VolumeProgram::pipeline_layout_shared_image() const
+{
+        return pipeline_layout_shared_image_;
 }
 
 VkPipelineLayout VolumeProgram::pipeline_layout(const VolumeProgramPipelineType type) const
@@ -100,9 +94,9 @@ VkPipelineLayout VolumeProgram::pipeline_layout(const VolumeProgramPipelineType 
         {
         case VolumeProgramPipelineType::IMAGE:
         case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
-                return pipeline_layout_image_;
+                return pipeline_layout_shared_image_;
         case VolumeProgramPipelineType::FRAGMENTS:
-                return pipeline_layout_fragments_;
+                return pipeline_layout_shared_;
         }
         error_fatal("Unknown volume program pipeline type " + to_string(enum_to_int(type)));
 }

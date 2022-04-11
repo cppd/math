@@ -38,29 +38,19 @@ VolumeRenderer::VolumeRenderer(
           //
           volume_program_(device, code),
           //
-          image_shared_memory_(
+          shared_memory_(
                   *device,
-                  volume_program_.descriptor_set_layout_shared(false),
-                  volume_program_.descriptor_set_layout_shared_bindings(false)),
-          //
-          fragments_shared_memory_(
-                  *device,
-                  volume_program_.descriptor_set_layout_shared(true),
-                  volume_program_.descriptor_set_layout_shared_bindings(true)),
+                  volume_program_.descriptor_set_layout_shared(),
+                  volume_program_.descriptor_set_layout_shared_bindings()),
           //
           image_sampler_(create_volume_image_sampler(*device)),
           depth_sampler_(create_volume_depth_image_sampler(*device)),
           transfer_function_sampler_(create_volume_transfer_function_sampler(*device))
 {
-        image_shared_memory_.set_drawing(drawing_buffer);
-        image_shared_memory_.set_ggx_f1_albedo(
+        shared_memory_.set_drawing(drawing_buffer);
+        shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
-        image_shared_memory_.set_coordinates(coordinates_buffer_.buffer());
-
-        fragments_shared_memory_.set_drawing(drawing_buffer);
-        fragments_shared_memory_.set_ggx_f1_albedo(
-                ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
-        fragments_shared_memory_.set_coordinates(coordinates_buffer_.buffer());
+        shared_memory_.set_coordinates(coordinates_buffer_.buffer());
 }
 
 void VolumeRenderer::create_buffers(
@@ -77,14 +67,11 @@ void VolumeRenderer::create_buffers(
 
         render_buffers_ = render_buffers;
 
-        image_shared_memory_.set_depth_image(depth_image, depth_sampler_);
-        image_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
-
-        fragments_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
+        shared_memory_.set_depth_image(depth_image, depth_sampler_);
+        shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
 
         ASSERT(opacity_images.size() == 2);
-        image_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
-        fragments_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
+        shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
 
         pipeline_image_ = volume_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
@@ -140,9 +127,8 @@ void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffe
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(true),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &fragments_shared_memory_.descriptor_set(), 0,
-                nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -156,11 +142,11 @@ void VolumeRenderer::draw_commands_image(const VolumeObject* const volume, const
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
                 &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
 
@@ -178,11 +164,11 @@ void VolumeRenderer::draw_commands_image_fragments(
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
                 &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
 
@@ -281,15 +267,13 @@ void VolumeRenderer::delete_command_buffers()
 void VolumeRenderer::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image)
 {
         delete_command_buffers();
-        image_shared_memory_.set_shadow_image(sampler, shadow_image);
-        fragments_shared_memory_.set_shadow_image(sampler, shadow_image);
+        shared_memory_.set_shadow_image(sampler, shadow_image);
 }
 
 void VolumeRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
 {
         delete_command_buffers();
-        image_shared_memory_.set_acceleration_structure(acceleration_structure);
-        fragments_shared_memory_.set_acceleration_structure(acceleration_structure);
+        shared_memory_.set_acceleration_structure(acceleration_structure);
 }
 
 bool VolumeRenderer::has_volume() const

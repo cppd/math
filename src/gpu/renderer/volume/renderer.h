@@ -43,8 +43,8 @@ class VolumeRenderer
         VolumeCoordinatesBuffer coordinates_buffer_;
 
         VolumeProgram volume_program_;
-        VolumeSharedMemory image_shared_memory_;
-        VolumeSharedMemory fragments_shared_memory_;
+
+        VolumeSharedMemory shared_memory_;
 
         std::optional<vulkan::handle::Pipeline> pipeline_image_;
         std::optional<vulkan::handle::Pipeline> pipeline_image_fragments_;
