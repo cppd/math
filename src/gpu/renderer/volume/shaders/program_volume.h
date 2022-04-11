@@ -32,6 +32,7 @@ enum class VolumeProgramPipelineType
 {
         IMAGE,
         IMAGE_FRAGMENTS,
+        FRAGMENTS
 };
 
 class VolumeProgram final
@@ -39,13 +40,17 @@ class VolumeProgram final
         const vulkan::Device* device_;
         bool ray_tracing_;
 
-        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_image_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_fragments_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_image_;
-        vulkan::handle::PipelineLayout pipeline_layout_;
+        vulkan::handle::PipelineLayout pipeline_layout_image_;
+        vulkan::handle::PipelineLayout pipeline_layout_fragments_;
         vulkan::Shader vertex_shader_;
         vulkan::Shader fragment_shader_image_;
         vulkan::Shader fragment_shader_image_fragments_;
+        vulkan::Shader fragment_shader_fragments_;
 
+        VkPipelineLayout pipeline_layout(VolumeProgramPipelineType type) const;
         const vulkan::Shader* fragment_shader(VolumeProgramPipelineType type) const;
 
 public:
@@ -65,12 +70,12 @@ public:
                 const Region<2, int>& viewport,
                 VolumeProgramPipelineType type) const;
 
-        VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared(bool fragments_only) const;
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings(bool fragments_only) const;
 
         VkDescriptorSetLayout descriptor_set_layout_image() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
 
-        VkPipelineLayout pipeline_layout() const;
+        VkPipelineLayout pipeline_layout(bool fragments_only) const;
 };
 }

@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../code/code.h"
 #include "buffers/coordinates.h"
 #include "shaders/descriptors.h"
-#include "shaders/program_fragments.h"
 #include "shaders/program_volume.h"
 
 #include <src/gpu/render_buffers.h>
@@ -43,10 +42,8 @@ class VolumeRenderer
 
         VolumeCoordinatesBuffer coordinates_buffer_;
 
-        VolumeProgram image_program_;
+        VolumeProgram volume_program_;
         VolumeSharedMemory image_shared_memory_;
-
-        FragmentsProgram fragments_program_;
         VolumeSharedMemory fragments_shared_memory_;
 
         std::optional<vulkan::handle::Pipeline> pipeline_image_;

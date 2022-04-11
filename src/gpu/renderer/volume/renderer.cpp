@@ -36,17 +36,17 @@ VolumeRenderer::VolumeRenderer(
           //
           coordinates_buffer_(*device, graphics_family_indices),
           //
-          image_program_(device, code),
+          volume_program_(device, code),
+          //
           image_shared_memory_(
                   *device,
-                  image_program_.descriptor_set_layout_shared(),
-                  image_program_.descriptor_set_layout_shared_bindings()),
+                  volume_program_.descriptor_set_layout_shared(false),
+                  volume_program_.descriptor_set_layout_shared_bindings(false)),
           //
-          fragments_program_(device, code),
           fragments_shared_memory_(
                   *device,
-                  fragments_program_.descriptor_set_layout_shared(),
-                  fragments_program_.descriptor_set_layout_shared_bindings()),
+                  volume_program_.descriptor_set_layout_shared(true),
+                  volume_program_.descriptor_set_layout_shared_bindings(true)),
           //
           image_sampler_(create_volume_image_sampler(*device)),
           depth_sampler_(create_volume_depth_image_sampler(*device)),
@@ -86,16 +86,17 @@ void VolumeRenderer::create_buffers(
         image_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
         fragments_shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
 
-        pipeline_image_ = image_program_.create_pipeline(
+        pipeline_image_ = volume_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
                 VolumeProgramPipelineType::IMAGE);
 
-        pipeline_image_fragments_ = image_program_.create_pipeline(
+        pipeline_image_fragments_ = volume_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
                 VolumeProgramPipelineType::IMAGE_FRAGMENTS);
 
-        pipeline_fragments_ = fragments_program_.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport);
+        pipeline_fragments_ = volume_program_.create_pipeline(
+                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
+                VolumeProgramPipelineType::FRAGMENTS);
 }
 
 void VolumeRenderer::delete_buffers()
@@ -115,7 +116,7 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layout
         std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
         layouts.emplace_back(
-                image_program_.descriptor_set_layout_image(), image_program_.descriptor_set_layout_image_bindings());
+                volume_program_.descriptor_set_layout_image(), volume_program_.descriptor_set_layout_image_bindings());
 
         return layouts;
 }
@@ -139,7 +140,7 @@ void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffe
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fragments_program_.pipeline_layout(),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(true),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &fragments_shared_memory_.descriptor_set(), 0,
                 nullptr);
 
@@ -155,13 +156,13 @@ void VolumeRenderer::draw_commands_image(const VolumeObject* const volume, const
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
-                &volume->descriptor_set(image_program_.descriptor_set_layout_image()), 0, nullptr);
+                &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -177,13 +178,13 @@ void VolumeRenderer::draw_commands_image_fragments(
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout(false),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
-                &volume->descriptor_set(image_program_.descriptor_set_layout_image()), 0, nullptr);
+                &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
