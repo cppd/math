@@ -52,10 +52,6 @@ class VolumeSharedMemory final
 public:
         struct Flags final
         {
-                VkShaderStageFlags drawing;
-                VkShaderStageFlags coordinates;
-                VkShaderStageFlags depth_image;
-                VkShaderStageFlags ggx_f1_albedo;
                 VkShaderStageFlags shadow_map;
                 VkShaderStageFlags acceleration_structure;
         };

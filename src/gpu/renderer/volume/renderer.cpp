@@ -196,7 +196,7 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         info.render_pass = render_buffers_->render_pass();
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 draw_commands_fragments(command_buffer);
         };
@@ -244,13 +244,13 @@ void VolumeRenderer::create_command_buffers(
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
 
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 draw_commands_image(volume, command_buffer);
         };
         command_buffers_image_ = vulkan::create_command_buffers(info);
 
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 draw_commands_image_fragments(volume, command_buffer);
         };

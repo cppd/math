@@ -31,10 +31,6 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_s
 {
         VolumeSharedMemory::Flags flags{};
 
-        flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
-        flags.coordinates = VK_SHADER_STAGE_FRAGMENT_BIT;
-        flags.depth_image = VK_SHADER_STAGE_FRAGMENT_BIT;
-        flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
         flags.acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
 
