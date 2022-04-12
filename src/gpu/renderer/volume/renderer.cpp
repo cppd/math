@@ -73,29 +73,26 @@ void VolumeRenderer::create_buffers(
         ASSERT(opacity_images.size() == 2);
         shared_memory_.set_opacity(opacity_images[0].image_view(), opacity_images[1].image_view());
 
-        pipeline_image_ = volume_program_.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgramPipelineType::IMAGE);
+        const auto create_pipeline = [&](const VolumeProgramPipelineType type)
+        {
+                pipelines_[type] = volume_program_.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport, type);
+        };
 
-        pipeline_image_fragments_ = volume_program_.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgramPipelineType::IMAGE_FRAGMENTS);
-
-        pipeline_fragments_ = volume_program_.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgramPipelineType::FRAGMENTS);
+        create_pipeline(VolumeProgramPipelineType::FRAGMENTS);
+        create_pipeline(VolumeProgramPipelineType::FRAGMENTS_OPACITY);
+        create_pipeline(VolumeProgramPipelineType::IMAGE);
+        create_pipeline(VolumeProgramPipelineType::IMAGE_FRAGMENTS);
+        create_pipeline(VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY);
+        create_pipeline(VolumeProgramPipelineType::IMAGE_OPACITY);
 }
 
 void VolumeRenderer::delete_buffers()
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        command_buffers_image_.reset();
-        command_buffers_image_fragments_.reset();
-        command_buffers_fragments_.reset();
-        pipeline_image_.reset();
-        pipeline_image_fragments_.reset();
-        pipeline_fragments_.reset();
+        command_buffers_.clear();
+        pipelines_.clear();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layouts() const
@@ -118,13 +115,17 @@ VkSampler VolumeRenderer::transfer_function_sampler() const
         return transfer_function_sampler_;
 }
 
-void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands_fragments(const VolumeProgramPipelineType type, const VkCommandBuffer command_buffer)
+        const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
+        ASSERT(type == VolumeProgramPipelineType::FRAGMENTS || type == VolumeProgramPipelineType::FRAGMENTS_OPACITY);
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_fragments_);
+        const auto pipeline_iter = pipelines_.find(type);
+        ASSERT(pipeline_iter != pipelines_.cend());
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_iter->second);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared(),
@@ -133,35 +134,21 @@ void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffe
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 
-void VolumeRenderer::draw_commands_image(const VolumeObject* const volume, const VkCommandBuffer command_buffer) const
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        //
-
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_);
-
-        vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
-
-        vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
-                VolumeImageMemory::set_number(), 1 /*set count*/,
-                &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
-
-        vkCmdDraw(command_buffer, 3, 1, 0, 0);
-}
-
-void VolumeRenderer::draw_commands_image_fragments(
+void VolumeRenderer::draw_commands_image(
+        const VolumeProgramPipelineType type,
         const VolumeObject* const volume,
         const VkCommandBuffer command_buffer) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
+        ASSERT(type == VolumeProgramPipelineType::IMAGE || type == VolumeProgramPipelineType::IMAGE_FRAGMENTS
+               || type == VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY
+               || type == VolumeProgramPipelineType::IMAGE_OPACITY);
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_fragments_);
+        const auto pipeline = pipelines_.find(type);
+        ASSERT(pipeline != pipelines_.cend());
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->second);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
@@ -183,7 +170,8 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
 
         ASSERT(render_buffers_);
 
-        command_buffers_fragments_.reset();
+        command_buffers_.erase(VolumeProgramPipelineType::FRAGMENTS);
+        command_buffers_.erase(VolumeProgramPipelineType::FRAGMENTS_OPACITY);
 
         vulkan::CommandBufferCreateInfo info;
 
@@ -196,12 +184,18 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         info.render_pass = render_buffers_->render_pass();
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
-        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
+
+        const auto create_buffers = [&](const VolumeProgramPipelineType type)
         {
-                draw_commands_fragments(command_buffer);
+                info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
+                {
+                        draw_commands_fragments(type, command_buffer);
+                };
+                command_buffers_[type] = vulkan::create_command_buffers(info);
         };
 
-        command_buffers_fragments_ = vulkan::create_command_buffers(info);
+        create_buffers(VolumeProgramPipelineType::FRAGMENTS);
+        create_buffers(VolumeProgramPipelineType::FRAGMENTS_OPACITY);
 }
 
 void VolumeRenderer::create_command_buffers(const VkCommandPool graphics_command_pool)
@@ -244,24 +238,24 @@ void VolumeRenderer::create_command_buffers(
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
 
-        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
+        const auto create_buffers = [&](const VolumeProgramPipelineType type)
         {
-                draw_commands_image(volume, command_buffer);
+                info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
+                {
+                        draw_commands_image(type, volume, command_buffer);
+                };
+                command_buffers_[type] = vulkan::create_command_buffers(info);
         };
-        command_buffers_image_ = vulkan::create_command_buffers(info);
 
-        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
-        {
-                draw_commands_image_fragments(volume, command_buffer);
-        };
-        command_buffers_image_fragments_ = vulkan::create_command_buffers(info);
+        create_buffers(VolumeProgramPipelineType::IMAGE);
+        create_buffers(VolumeProgramPipelineType::IMAGE_FRAGMENTS);
+        create_buffers(VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY);
+        create_buffers(VolumeProgramPipelineType::IMAGE_OPACITY);
 }
 
 void VolumeRenderer::delete_command_buffers()
 {
-        command_buffers_fragments_.reset();
-        command_buffers_image_.reset();
-        command_buffers_image_fragments_.reset();
+        command_buffers_.clear();
 }
 
 void VolumeRenderer::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image)
@@ -278,9 +272,7 @@ void VolumeRenderer::set_acceleration_structure(const VkAccelerationStructureKHR
 
 bool VolumeRenderer::has_volume() const
 {
-        ASSERT(command_buffers_image_.has_value() == command_buffers_image_fragments_.has_value());
-
-        return command_buffers_image_.has_value();
+        return command_buffers_.contains(VolumeProgramPipelineType::IMAGE);
 }
 
 std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned index, const bool with_fragments) const
@@ -289,18 +281,22 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned ind
         {
                 if (with_fragments)
                 {
-                        ASSERT(index < command_buffers_image_fragments_->count());
-                        return (*command_buffers_image_fragments_)[index];
+                        const auto iter = command_buffers_.find(VolumeProgramPipelineType::IMAGE_FRAGMENTS);
+                        ASSERT(iter != command_buffers_.cend());
+                        ASSERT(index < iter->second.count());
+                        return iter->second[index];
                 }
-                ASSERT(index < command_buffers_image_->count());
-                return (*command_buffers_image_)[index];
+                const auto iter = command_buffers_.find(VolumeProgramPipelineType::IMAGE);
+                ASSERT(iter != command_buffers_.cend());
+                ASSERT(index < iter->second.count());
+                return iter->second[index];
         }
         if (with_fragments)
         {
-                ASSERT(command_buffers_fragments_);
-
-                ASSERT(index < command_buffers_fragments_->count());
-                return (*command_buffers_fragments_)[index];
+                const auto iter = command_buffers_.find(VolumeProgramPipelineType::FRAGMENTS);
+                ASSERT(iter != command_buffers_.cend());
+                ASSERT(index < iter->second.count());
+                return iter->second[index];
         }
         return std::nullopt;
 }

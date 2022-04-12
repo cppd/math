@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 #include <thread>
+#include <unordered_map>
 
 namespace ns::gpu::renderer
 {
@@ -46,20 +47,19 @@ class VolumeRenderer
 
         VolumeSharedMemory shared_memory_;
 
-        std::optional<vulkan::handle::Pipeline> pipeline_image_;
-        std::optional<vulkan::handle::Pipeline> pipeline_image_fragments_;
-        std::optional<vulkan::handle::Pipeline> pipeline_fragments_;
-        std::optional<vulkan::handle::CommandBuffers> command_buffers_image_;
-        std::optional<vulkan::handle::CommandBuffers> command_buffers_image_fragments_;
-        std::optional<vulkan::handle::CommandBuffers> command_buffers_fragments_;
+        std::unordered_map<VolumeProgramPipelineType, vulkan::handle::Pipeline> pipelines_;
+        std::unordered_map<VolumeProgramPipelineType, vulkan::handle::CommandBuffers> command_buffers_;
 
         vulkan::handle::Sampler image_sampler_;
         vulkan::handle::Sampler depth_sampler_;
         vulkan::handle::Sampler transfer_function_sampler_;
 
-        void draw_commands_fragments(VkCommandBuffer command_buffer) const;
-        void draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
-        void draw_commands_image_fragments(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
+        void draw_commands_fragments(VolumeProgramPipelineType type, VkCommandBuffer command_buffer) const;
+
+        void draw_commands_image(
+                VolumeProgramPipelineType type,
+                const VolumeObject* volume,
+                VkCommandBuffer command_buffer) const;
 
         void create_command_buffers_fragments(VkCommandPool graphics_command_pool);
 
