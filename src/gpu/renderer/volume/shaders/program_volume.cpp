@@ -58,9 +58,18 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
           vertex_shader_(*device_, code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_fragments_(*device_, code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_fragments_opacity_(
+                  *device_,
+                  code.volume_fragments_opacity_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_(*device_, code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_fragments_(*device_, code.volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_fragments_(*device_, code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_image_fragments_opacity_(
+                  *device_,
+                  code.volume_image_fragments_opacity_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_opacity_(*device_, code.volume_image_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -88,11 +97,14 @@ VkPipelineLayout VolumeProgram::pipeline_layout(const VolumeProgramPipelineType 
 {
         switch (type)
         {
+        case VolumeProgramPipelineType::FRAGMENTS:
+        case VolumeProgramPipelineType::FRAGMENTS_OPACITY:
+                return pipeline_layout_shared_;
         case VolumeProgramPipelineType::IMAGE:
         case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
+        case VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY:
+        case VolumeProgramPipelineType::IMAGE_OPACITY:
                 return pipeline_layout_shared_image_;
-        case VolumeProgramPipelineType::FRAGMENTS:
-                return pipeline_layout_shared_;
         }
         error_fatal("Unknown volume program pipeline type " + to_string(enum_to_int(type)));
 }
@@ -101,12 +113,18 @@ const vulkan::Shader* VolumeProgram::fragment_shader(const VolumeProgramPipeline
 {
         switch (type)
         {
+        case VolumeProgramPipelineType::FRAGMENTS:
+                return &fragment_shader_fragments_;
+        case VolumeProgramPipelineType::FRAGMENTS_OPACITY:
+                return &fragment_shader_fragments_opacity_;
         case VolumeProgramPipelineType::IMAGE:
                 return &fragment_shader_image_;
         case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
                 return &fragment_shader_image_fragments_;
-        case VolumeProgramPipelineType::FRAGMENTS:
-                return &fragment_shader_fragments_;
+        case VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY:
+                return &fragment_shader_image_fragments_opacity_;
+        case VolumeProgramPipelineType::IMAGE_OPACITY:
+                return &fragment_shader_image_opacity_;
         }
         error_fatal("Unknown volume program pipeline type " + to_string(enum_to_int(type)));
 }
