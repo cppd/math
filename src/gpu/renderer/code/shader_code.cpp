@@ -291,6 +291,54 @@ std::vector<std::uint32_t> ShaderCode::volume_fragments_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
+std::vector<std::uint32_t> ShaderCode::volume_image_opacity_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume_image_opacity.frag.spr"
+                };
+                return {std::cbegin(CODE), std::cend(CODE)};
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume_image_opacity.frag.spr"
+        };
+        return {std::cbegin(CODE), std::cend(CODE)};
+}
+
+std::vector<std::uint32_t> ShaderCode::volume_image_fragments_opacity_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume_image_fragments_opacity.frag.spr"
+                };
+                return {std::cbegin(CODE), std::cend(CODE)};
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume_image_fragments_opacity.frag.spr"
+        };
+        return {std::cbegin(CODE), std::cend(CODE)};
+}
+
+std::vector<std::uint32_t> ShaderCode::volume_fragments_opacity_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume_fragments_opacity.frag.spr"
+                };
+                return {std::cbegin(CODE), std::cend(CODE)};
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume_fragments_opacity.frag.spr"
+        };
+        return {std::cbegin(CODE), std::cend(CODE)};
+}
+
 ShaderCode::ShaderCode(const bool ray_tracing) : ray_tracing_(ray_tracing)
 {
 }

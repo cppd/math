@@ -47,5 +47,8 @@ public:
         virtual std::vector<std::uint32_t> volume_image_frag() const = 0;
         virtual std::vector<std::uint32_t> volume_image_fragments_frag() const = 0;
         virtual std::vector<std::uint32_t> volume_fragments_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_image_opacity_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_fragments_opacity_frag() const = 0;
 };
 }

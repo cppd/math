@@ -47,6 +47,9 @@ class ShaderCode final : public Code
         std::vector<std::uint32_t> volume_image_frag() const override;
         std::vector<std::uint32_t> volume_image_fragments_frag() const override;
         std::vector<std::uint32_t> volume_fragments_frag() const override;
+        std::vector<std::uint32_t> volume_image_opacity_frag() const override;
+        std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const override;
+        std::vector<std::uint32_t> volume_fragments_opacity_frag() const override;
 
 public:
         explicit ShaderCode(bool ray_tracing);
