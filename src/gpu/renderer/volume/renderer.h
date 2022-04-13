@@ -111,7 +111,7 @@ public:
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_volume() const;
-        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool with_fragments) const;
+        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool fragments, bool opacity) const;
 
         void set_matrix(const Matrix4d& vp_matrix);
         void set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix);

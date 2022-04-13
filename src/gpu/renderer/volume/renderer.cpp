@@ -281,21 +281,41 @@ bool VolumeRenderer::has_volume() const
         return commands_image_.has_value();
 }
 
-std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned index, const bool with_fragments) const
+std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(
+        const unsigned index,
+        const bool fragments,
+        const bool opacity) const
 {
         if (has_volume())
         {
                 ASSERT(commands_image_);
-                if (with_fragments)
+                if (fragments)
                 {
+                        if (opacity)
+                        {
+                                return commands_image_->image_fragments_opacity[index];
+                        }
                         return commands_image_->image_fragments[index];
+                }
+                if (opacity)
+                {
+                        return commands_image_->image_opacity[index];
                 }
                 return commands_image_->image[index];
         }
-        if (with_fragments)
+        if (fragments)
         {
                 ASSERT(commands_fragments_);
+                if (opacity)
+                {
+                        return commands_fragments_->fragments_opacity[index];
+                }
                 return commands_fragments_->fragments[index];
+        }
+        if (opacity)
+        {
+                ASSERT(commands_fragments_);
+                return commands_fragments_->opacity[index];
         }
         return std::nullopt;
 }

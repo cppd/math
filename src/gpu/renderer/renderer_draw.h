@@ -41,7 +41,14 @@ class RendererDraw
         const MeshRenderer* mesh_renderer_;
         const VolumeRenderer* volume_renderer_;
 
-        std::tuple<VkSemaphore, bool> draw_meshes(
+        struct DrawInfo final
+        {
+                VkSemaphore semaphore;
+                bool transparency;
+                bool opacity;
+        };
+
+        DrawInfo draw_meshes(
                 VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue,
                 unsigned index,
