@@ -69,7 +69,8 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
                   *device_,
                   code.volume_image_fragments_opacity_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_opacity_(*device_, code.volume_image_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_image_opacity_(*device_, code.volume_image_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_opacity_(*device_, code.volume_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -99,6 +100,7 @@ VkPipelineLayout VolumeProgram::pipeline_layout(const VolumeProgramPipelineType 
         {
         case VolumeProgramPipelineType::FRAGMENTS:
         case VolumeProgramPipelineType::FRAGMENTS_OPACITY:
+        case VolumeProgramPipelineType::OPACITY:
                 return pipeline_layout_shared_;
         case VolumeProgramPipelineType::IMAGE:
         case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
@@ -125,6 +127,8 @@ const vulkan::Shader* VolumeProgram::fragment_shader(const VolumeProgramPipeline
                 return &fragment_shader_image_fragments_opacity_;
         case VolumeProgramPipelineType::IMAGE_OPACITY:
                 return &fragment_shader_image_opacity_;
+        case VolumeProgramPipelineType::OPACITY:
+                return &fragment_shader_opacity_;
         }
         error_fatal("Unknown volume program pipeline type " + to_string(enum_to_int(type)));
 }

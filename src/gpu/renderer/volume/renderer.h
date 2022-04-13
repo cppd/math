@@ -48,7 +48,22 @@ class VolumeRenderer
         VolumeSharedMemory shared_memory_;
 
         std::unordered_map<VolumeProgramPipelineType, vulkan::handle::Pipeline> pipelines_;
-        std::unordered_map<VolumeProgramPipelineType, vulkan::handle::CommandBuffers> command_buffers_;
+
+        struct CommandsFragments final
+        {
+                vulkan::handle::CommandBuffers fragments;
+                vulkan::handle::CommandBuffers fragments_opacity;
+                vulkan::handle::CommandBuffers opacity;
+        };
+        struct CommandsImage final
+        {
+                vulkan::handle::CommandBuffers image;
+                vulkan::handle::CommandBuffers image_fragments;
+                vulkan::handle::CommandBuffers image_fragments_opacity;
+                vulkan::handle::CommandBuffers image_opacity;
+        };
+        std::optional<CommandsFragments> commands_fragments_;
+        std::optional<CommandsImage> commands_image_;
 
         vulkan::handle::Sampler image_sampler_;
         vulkan::handle::Sampler depth_sampler_;

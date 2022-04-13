@@ -35,7 +35,8 @@ enum class VolumeProgramPipelineType
         IMAGE,
         IMAGE_FRAGMENTS,
         IMAGE_FRAGMENTS_OPACITY,
-        IMAGE_OPACITY
+        IMAGE_OPACITY,
+        OPACITY
 };
 
 class VolumeProgram final
@@ -54,6 +55,7 @@ class VolumeProgram final
         vulkan::Shader fragment_shader_image_fragments_;
         vulkan::Shader fragment_shader_image_fragments_opacity_;
         vulkan::Shader fragment_shader_image_opacity_;
+        vulkan::Shader fragment_shader_opacity_;
 
         VkPipelineLayout pipeline_layout(VolumeProgramPipelineType type) const;
         const vulkan::Shader* fragment_shader(VolumeProgramPipelineType type) const;
