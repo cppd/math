@@ -330,8 +330,14 @@ void main()
         color_set();
 }
 
+#elif defined(OPACITY)
+
+void main()
+{
+}
+
 #else
-#error IMAGE or FRAGMENTS not defined
+#error IMAGE or FRAGMENTS or OPACITY not defined
 #endif
 
 #endif
