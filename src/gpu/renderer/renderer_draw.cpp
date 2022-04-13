@@ -73,7 +73,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
 
         if (!mesh_renderer_->has_transparent_meshes())
         {
-                transparency_message_.process(-1, -1);
+                transparency_message_.process({});
                 return {.semaphore = semaphore, .transparency = false, .opacity = false};
         }
 
@@ -96,15 +96,27 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
 
                 semaphore = transparent_as_opaque_semaphore_;
                 transparency = false;
+
+                transparency_message_.process(
+                        [&]()
+                        {
+                                TransparencyMessage::Data data;
+                                if (nodes)
+                                {
+                                        data.required_node_memory = required_node_memory;
+                                }
+                                if (overload)
+                                {
+                                        data.overload_count = overload_counter;
+                                }
+                                return data;
+                        }());
         }
         else
         {
                 transparency = true;
+                transparency_message_.process({});
         }
-
-        transparency_message_.process(
-                nodes ? static_cast<long long>(required_node_memory) : -1,
-                overload ? static_cast<long long>(overload_counter) : -1);
 
         return {.semaphore = semaphore, .transparency = transparency, .opacity = false};
 }

@@ -19,38 +19,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 
+#include <optional>
 #include <string>
 
 namespace ns::gpu::renderer
 {
 class TransparencyMessage final
 {
-        static long long to_mb(const long long value)
+        static unsigned long long to_mb(const unsigned long long value)
         {
                 return value >> 20;
         }
 
         const std::string node_buffer_max_size_mb_;
 
-        long long previous_required_node_memory_ = -1;
-        long long previous_overload_count_ = -1;
+        std::optional<unsigned long long> previous_required_node_memory_;
+        std::optional<unsigned long long> previous_overload_count_;
 
-        void process_required_node_memory(const long long required_node_memory)
+        void process_required_node_memory(const std::optional<unsigned long long> required_node_memory)
         {
-                if (required_node_memory < 0)
+                if (!required_node_memory)
                 {
-                        if (previous_required_node_memory_ >= 0)
+                        if (previous_required_node_memory_)
                         {
                                 LOG("Transparency memory: OK");
                         }
                 }
                 else
                 {
-                        if (previous_required_node_memory_ != required_node_memory)
+                        if (previous_required_node_memory_ != *required_node_memory)
                         {
                                 std::string s;
                                 s += "Transparency memory: required ";
-                                s += std::to_string(to_mb(required_node_memory));
+                                s += std::to_string(to_mb(*required_node_memory));
                                 s += " MiB, limit ";
                                 s += node_buffer_max_size_mb_;
                                 s += " MiB.";
@@ -60,22 +61,22 @@ class TransparencyMessage final
                 previous_required_node_memory_ = required_node_memory;
         }
 
-        void process_overload_count(const long long overload_count)
+        void process_overload_count(const std::optional<unsigned long long> overload_count)
         {
-                if (overload_count < 0)
+                if (!overload_count)
                 {
-                        if (previous_overload_count_ >= 0)
+                        if (previous_overload_count_)
                         {
                                 LOG("Transparency overload: OK");
                         }
                 }
                 else
                 {
-                        if (previous_overload_count_ != overload_count)
+                        if (previous_overload_count_ != *overload_count)
                         {
                                 std::string s;
                                 s += "Transparency overload: ";
-                                s += std::to_string(overload_count);
+                                s += std::to_string(*overload_count);
                                 s += " samples.";
                                 LOG(s);
                         }
@@ -84,15 +85,21 @@ class TransparencyMessage final
         }
 
 public:
-        explicit TransparencyMessage(const long long node_buffer_max_size)
+        explicit TransparencyMessage(const unsigned long long node_buffer_max_size)
                 : node_buffer_max_size_mb_(std::to_string(to_mb(node_buffer_max_size)))
         {
         }
 
-        void process(const long long required_node_memory, const long long overload_count)
+        struct Data final
         {
-                process_required_node_memory(required_node_memory);
-                process_overload_count(overload_count);
+                std::optional<unsigned long long> required_node_memory;
+                std::optional<unsigned long long> overload_count;
+        };
+
+        void process(const Data& data)
+        {
+                process_required_node_memory(data.required_node_memory);
+                process_overload_count(data.overload_count);
         }
 };
 }
