@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VOLUME_SHADE_GLSL
 #define VOLUME_SHADE_GLSL
 
+#include "mesh_fragment.glsl"
 #include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
-#include "transparency.glsl"
 #include "volume_in.glsl"
 
 #if defined(IMAGE)

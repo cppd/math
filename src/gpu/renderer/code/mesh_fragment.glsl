@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TRANSPARENCY_GLSL
-#define TRANSPARENCY_GLSL
+#ifndef MESH_FRAGMENT_GLSL
+#define MESH_FRAGMENT_GLSL
 
 const uint TRANSPARENCY_MAX_NODES = 32;
 const uint TRANSPARENCY_NULL_INDEX = 0xffffffff;

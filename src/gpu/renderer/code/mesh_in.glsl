@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MESH_IN_GLSL
 
 #include "drawing_buffer.glsl"
-#include "transparency.glsl"
+#include "mesh_fragment.glsl"
 
 #ifdef RAY_TRACING
 #extension GL_EXT_ray_query : require

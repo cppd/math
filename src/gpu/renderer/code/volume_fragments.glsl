@@ -25,7 +25,7 @@ The MIT Press, 2009.
 #ifndef VOLUME_FRAGMENTS_GLSL
 #define VOLUME_FRAGMENTS_GLSL
 
-#include "transparency.glsl"
+#include "mesh_fragment.glsl"
 #include "volume_in.glsl"
 
 #if !defined(FRAGMENTS)

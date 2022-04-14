@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef MESH_OUT_GLSL
 #define MESH_OUT_GLSL
 
+#include "mesh_fragment.glsl"
 #include "mesh_in.glsl"
 #include "mesh_shade.glsl"
-#include "transparency.glsl"
 
 layout(early_fragment_tests) in;
 
