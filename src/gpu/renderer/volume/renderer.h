@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "../buffers/ggx_f1_albedo.h"
+#include "../buffers/opacity.h"
 #include "../code/code.h"
 #include "buffers/coordinates.h"
 #include "shaders/descriptors.h"
@@ -97,7 +98,7 @@ public:
                 VkImageView depth_image,
                 const vulkan::ImageWithMemory& transparency_heads_image,
                 const vulkan::Buffer& transparency_nodes,
-                const std::vector<vulkan::ImageWithMemory>& opacity_images);
+                const Opacity& opacity);
         void delete_buffers();
 
         void create_command_buffers(VkCommandPool graphics_command_pool);

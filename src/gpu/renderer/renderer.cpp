@@ -192,12 +192,12 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 mesh_renderer_.create_render_buffers(
                         render_buffers_, *object_image_, transparency_buffers_.heads(),
                         transparency_buffers_.heads_size(), transparency_buffers_.counters(),
-                        transparency_buffers_.nodes(), opacity_buffers_.images(), viewport_);
+                        transparency_buffers_.nodes(), opacity_buffers_, viewport_);
                 create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
                         render_buffers_, viewport_, depth_copy_image_->image_view(), transparency_buffers_.heads(),
-                        transparency_buffers_.nodes(), opacity_buffers_.images());
+                        transparency_buffers_.nodes(), opacity_buffers_);
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();

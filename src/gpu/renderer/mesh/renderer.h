@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shadow_mapping.h"
 
 #include "../buffers/ggx_f1_albedo.h"
+#include "../buffers/opacity.h"
 #include "../code/code.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_normals.h"
@@ -108,7 +109,7 @@ public:
                 const vulkan::ImageWithMemory& transparency_heads_size_image,
                 const vulkan::Buffer& transparency_counter,
                 const vulkan::Buffer& transparency_nodes,
-                const std::vector<vulkan::ImageWithMemory>& opacity_images,
+                const Opacity& opacity,
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 

@@ -24,9 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class OpacityBuffers final
+class Opacity
+{
+public:
+        virtual ~Opacity() = default;
+
+        virtual const std::vector<vulkan::ImageWithMemory>& images() const = 0;
+
+        virtual std::vector<VkClearValue> clear_values() const = 0;
+};
+
+class OpacityBuffers final : public Opacity
 {
         std::vector<vulkan::ImageWithMemory> images_;
+
+        const std::vector<vulkan::ImageWithMemory>& images() const override;
+        std::vector<VkClearValue> clear_values() const override;
 
 public:
         void create_buffers(
@@ -37,7 +50,5 @@ public:
                 unsigned height);
 
         void delete_buffers();
-
-        const std::vector<vulkan::ImageWithMemory>& images() const;
 };
 }

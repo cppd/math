@@ -121,9 +121,7 @@ class Impl final : public RenderBuffers
         const std::vector<VkClearValue>& clear_values() const override;
 
 public:
-        Impl(const RenderBuffers3D* render_buffers,
-             const std::vector<vulkan::ImageWithMemory>& images,
-             VkDevice device);
+        Impl(const RenderBuffers3D* render_buffers, const Opacity& opacity, VkDevice device);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -131,17 +129,18 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(
-        const RenderBuffers3D* const render_buffers,
-        const std::vector<vulkan::ImageWithMemory>& images,
-        const VkDevice device)
+Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, const VkDevice device)
         : width_(render_buffers->width()),
           height_(render_buffers->height()),
           sample_count_(render_buffers->sample_count())
 {
         ASSERT(render_buffers->framebuffers().size() == 1);
 
-        ASSERT(!images.empty());
+        const std::vector<vulkan::ImageWithMemory>& images = opacity.images();
+
+        ASSERT(images.size() == 2);
+        ASSERT(images[0].image_view().format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(images[1].image_view().format() == VK_FORMAT_R32G32B32A32_SFLOAT);
 
         ASSERT(std::all_of(
                 images.cbegin(), images.cend(),
@@ -169,12 +168,8 @@ Impl::Impl(
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 
-        constexpr Vector<4, float> CLEAR_VALUE(0, 0, 0, 0);
-        clear_values_.resize(images.size() + 1);
-        for (std::size_t i = 0; i < images.size(); ++i)
-        {
-                clear_values_[i] = vulkan::create_color_clear_value(images[i].image_view().format(), CLEAR_VALUE);
-        }
+        clear_values_ = opacity.clear_values();
+        clear_values_.emplace_back(); // depth
 }
 
 unsigned Impl::width() const
@@ -211,9 +206,9 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
         const RenderBuffers3D* const render_buffers,
-        const std::vector<vulkan::ImageWithMemory>& images,
+        const Opacity& opacity,
         const VkDevice device)
 {
-        return std::make_unique<Impl>(render_buffers, images, device);
+        return std::make_unique<Impl>(render_buffers, opacity, device);
 }
 }

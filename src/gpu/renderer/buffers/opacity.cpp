@@ -51,4 +51,23 @@ const std::vector<vulkan::ImageWithMemory>& OpacityBuffers::images() const
         ASSERT(images_.size() == 2);
         return images_;
 }
+
+std::vector<VkClearValue> OpacityBuffers::clear_values() const
+{
+        ASSERT(images_.size() == 2);
+
+        std::vector<VkClearValue> clear_values(images_.size());
+
+        clear_values[0].color.float32[0] = 0;
+        clear_values[0].color.float32[1] = 0;
+        clear_values[0].color.float32[2] = 0;
+        clear_values[0].color.float32[3] = 0;
+
+        clear_values[1].color.float32[0] = 0;
+        clear_values[1].color.float32[1] = 0;
+        clear_values[1].color.float32[2] = 0;
+        clear_values[1].color.float32[3] = 0;
+
+        return clear_values;
+}
 }

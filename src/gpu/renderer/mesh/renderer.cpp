@@ -103,7 +103,7 @@ void MeshRenderer::create_render_buffers(
         const vulkan::ImageWithMemory& transparency_heads_size_image,
         const vulkan::Buffer& transparency_counter,
         const vulkan::Buffer& transparency_nodes,
-        const std::vector<vulkan::ImageWithMemory>& opacity_images,
+        const Opacity& opacity,
         const Region<2, int>& viewport)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
@@ -112,7 +112,7 @@ void MeshRenderer::create_render_buffers(
 
         render_buffers_3d_ = render_buffers;
 
-        render_buffers_ = renderer::create_render_buffers(render_buffers_3d_, opacity_images, device_);
+        render_buffers_ = renderer::create_render_buffers(render_buffers_3d_, opacity, device_);
 
         const vulkan::RenderPass& render_pass = render_buffers_3d_->render_pass();
         const VkSampleCountFlagBits sample_count = render_buffers_3d_->sample_count();
