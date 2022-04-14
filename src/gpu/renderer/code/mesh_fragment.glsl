@@ -68,6 +68,39 @@ TransparencyNode create_transparency_node(
 
 //
 
+struct OpacityFragment
+{
+        uvec4 v_0;
+        vec4 v_1;
+};
+
+OpacityFragment create_opacity_fragment(
+        const vec3 color,
+        const float alpha,
+        const vec3 n,
+        const float metalness,
+        const float roughness,
+        const float ambient,
+        const float edge_factor,
+        const float depth)
+{
+        OpacityFragment fragment;
+
+        fragment.v_0[0] = packUnorm2x16(color.rg);
+        fragment.v_0[1] = packUnorm2x16(vec2(color.b, alpha));
+        fragment.v_0[2] = packUnorm2x16(vec2(metalness, roughness));
+        fragment.v_0[3] = packUnorm2x16(vec2(ambient, edge_factor));
+
+        fragment.v_1[0] = n.x;
+        fragment.v_1[1] = n.y;
+        fragment.v_1[2] = n.z;
+        fragment.v_1[3] = depth;
+
+        return fragment;
+}
+
+//
+
 struct FragmentData
 {
         vec4 color;
@@ -94,6 +127,28 @@ FragmentData fragment_data(const Fragment fragment)
         }
         data.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
         data.depth = fragment.depth;
+
+        return data;
+}
+
+FragmentData fragment_data(const OpacityFragment fragment)
+{
+        FragmentData data;
+
+        data.color.rg = unpackUnorm2x16(fragment.v_0[0]);
+        data.color.ba = unpackUnorm2x16(fragment.v_0[1]);
+        {
+                const vec2 v = unpackUnorm2x16(fragment.v_0[2]);
+                data.metalness = v[0];
+                data.roughness = v[1];
+        }
+        {
+                const vec2 v = unpackUnorm2x16(fragment.v_0[3]);
+                data.ambient = v[0];
+                data.edge_factor = v[1];
+        }
+        data.n = fragment.v_1.xyz;
+        data.depth = fragment.v_1.w;
 
         return data;
 }
