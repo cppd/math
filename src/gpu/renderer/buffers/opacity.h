@@ -26,9 +26,10 @@ namespace ns::gpu::renderer
 {
 class Opacity
 {
-public:
-        virtual ~Opacity() = default;
+protected:
+        ~Opacity() = default;
 
+public:
         virtual const std::vector<vulkan::ImageWithMemory>& images() const = 0;
 
         virtual std::vector<VkClearValue> clear_values() const = 0;
