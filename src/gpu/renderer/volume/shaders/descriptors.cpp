@@ -214,7 +214,7 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
 
 void VolumeSharedMemory::set_opacity(const vulkan::ImageView& opacity_0, const vulkan::ImageView& opacity_1) const
 {
-        ASSERT(opacity_0.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(opacity_0.format() == VK_FORMAT_R32G32B32A32_UINT);
         ASSERT(opacity_1.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
         ASSERT(opacity_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(opacity_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));

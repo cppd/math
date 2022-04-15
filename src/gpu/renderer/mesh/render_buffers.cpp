@@ -139,7 +139,7 @@ Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, 
         const std::vector<vulkan::ImageWithMemory>& images = opacity.images();
 
         ASSERT(images.size() == 2);
-        ASSERT(images[0].image_view().format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(images[0].image_view().format() == VK_FORMAT_R32G32B32A32_UINT);
         ASSERT(images[1].image_view().format() == VK_FORMAT_R32G32B32A32_SFLOAT);
 
         ASSERT(std::all_of(

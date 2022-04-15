@@ -26,8 +26,8 @@ namespace
 constexpr VkImageUsageFlags USAGE_FLAGS = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 constexpr VkImageType IMAGE_TYPE = VK_IMAGE_TYPE_2D;
 
-constexpr VkFormat FORMAT_0 = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr VkClearValue CLEAR_VALUE_0 = {.color{.float32{0, 0, 0, 0}}};
+constexpr VkFormat FORMAT_0 = VK_FORMAT_R32G32B32A32_UINT;
+constexpr VkClearValue CLEAR_VALUE_0 = {.color{.uint32{0, 0, 0, 0}}};
 
 constexpr VkFormat FORMAT_1 = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr VkClearValue CLEAR_VALUE_1 = {.color{.float32{0, 0, 0, 0}}};

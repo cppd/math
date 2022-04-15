@@ -25,8 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_EXT_ray_query : require
 #endif
 
-layout(set = 0, binding = 0, rgba32f) uniform restrict readonly image2DMS opacity_0;
+#if defined(OPACITY)
+
+layout(set = 0, binding = 0, rgba32ui) uniform restrict readonly uimage2DMS opacity_0;
 layout(set = 0, binding = 1, rgba32f) uniform restrict readonly image2DMS opacity_1;
+
+#endif
 
 #if defined(FRAGMENTS)
 
