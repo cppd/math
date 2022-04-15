@@ -23,14 +23,19 @@ namespace ns::gpu::renderer
 {
 namespace
 {
+constexpr std::array<std::uint32_t, 4> V_0_NULL_VALUE{0, 0, 0, 0};
+constexpr std::array<float, 4> V_1_NULL_VALUE{-1, -1, -1, -1};
+
+constexpr VkFormat FORMAT_0 = VK_FORMAT_R32G32B32A32_UINT;
+constexpr VkFormat FORMAT_1 = VK_FORMAT_R32G32B32A32_SFLOAT;
+
 constexpr VkImageUsageFlags USAGE_FLAGS = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 constexpr VkImageType IMAGE_TYPE = VK_IMAGE_TYPE_2D;
 
-constexpr VkFormat FORMAT_0 = VK_FORMAT_R32G32B32A32_UINT;
-constexpr VkClearValue CLEAR_VALUE_0 = {.color{.uint32{0, 0, 0, 0}}};
-
-constexpr VkFormat FORMAT_1 = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr VkClearValue CLEAR_VALUE_1 = {.color{.float32{0, 0, 0, 0}}};
+constexpr VkClearValue CLEAR_VALUE_0 = {
+        .color{.uint32{V_0_NULL_VALUE[0], V_0_NULL_VALUE[1], V_0_NULL_VALUE[2], V_0_NULL_VALUE[3]}}};
+constexpr VkClearValue CLEAR_VALUE_1 = {
+        .color{.float32{V_1_NULL_VALUE[0], V_1_NULL_VALUE[1], V_1_NULL_VALUE[2], V_1_NULL_VALUE[3]}}};
 }
 
 void OpacityBuffers::create_buffers(
