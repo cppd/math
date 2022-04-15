@@ -40,6 +40,10 @@ layout(set = 0, binding = 3, std430) buffer restrict readonly TransparencyNodes
         TransparencyNode transparency_nodes[];
 };
 
+#endif
+
+#if defined(FRAGMENTS) || defined(OPACITY)
+
 layout(set = 0, binding = 4, std140) uniform restrict Coordinates
 {
         mat4 device_to_world;

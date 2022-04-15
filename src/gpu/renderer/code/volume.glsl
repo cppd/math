@@ -41,6 +41,7 @@ A K Peters, Ltd, 2006.
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
+#include "volume_opacity.glsl"
 #include "volume_out.glsl"
 #include "volume_shade.glsl"
 
@@ -59,7 +60,7 @@ void draw_fragments()
 {
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(fragment_data(fragments_top())));
         }
 }
 
@@ -102,7 +103,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
                         while (fragment.depth <= volume_depth)
                         {
-                                COLOR_ADD(fragment_color(fragment));
+                                COLOR_ADD(fragment_color(fragment_data(fragment)));
                                 if (fragments_pop(), fragments_empty())
                                 {
                                         break;
@@ -125,7 +126,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(fragment_data(fragments_top())));
         }
 }
 
@@ -145,7 +146,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
                 while (fragment.depth <= depth_org)
                 {
-                        COLOR_ADD(fragment_color(fragment));
+                        COLOR_ADD(fragment_color(fragment_data(fragment)));
                         if (fragments_pop(), fragments_empty())
                         {
                                 break;
@@ -200,7 +201,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
                                 while (fragment.depth <= v.w)
                                 {
-                                        COLOR_ADD(fragment_color(fragment));
+                                        COLOR_ADD(fragment_color(fragment_data(fragment)));
                                         if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
@@ -215,7 +216,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                         {
                                 while (fragment.depth <= volume_depth)
                                 {
-                                        COLOR_ADD(fragment_color(fragment));
+                                        COLOR_ADD(fragment_color(fragment_data(fragment)));
                                         if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
@@ -240,7 +241,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(fragment_data(fragments_top())));
         }
 
         for (; s < sample_end; ++s)
@@ -286,6 +287,7 @@ void draw_without_volume()
 void main()
 {
         fragments_build();
+        opacity_build();
 
         const vec3 ray_org = (volume_coordinates.device_to_texture_matrix * vec4(device_coordinates, 0, 1)).xyz;
         const vec3 ray_dir = normalize(mat3(volume_coordinates.device_to_texture_matrix) * vec3(0, 0, 1));
@@ -324,6 +326,7 @@ void main()
 void main()
 {
         fragments_build();
+        opacity_build();
 
         color_init();
         draw_fragments();
@@ -334,6 +337,7 @@ void main()
 
 void main()
 {
+        opacity_build();
 }
 
 #else

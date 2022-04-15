@@ -51,7 +51,7 @@ float mesh_shadow_transparency_texture(const vec3 texture_position)
 }
 #endif
 
-#if defined(FRAGMENTS)
+#if defined(FRAGMENTS) || defined(OPACITY)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 world_position = coordinates.device_to_world * vec4(device_position, 1);
@@ -75,7 +75,7 @@ float mesh_shadow_transparency_texture(const vec3 texture_position)
 }
 #endif
 
-#if defined(FRAGMENTS)
+#if defined(FRAGMENTS) || defined(OPACITY)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 shadow_position = coordinates.device_to_shadow * vec4(device_position, 1);
@@ -96,7 +96,7 @@ float isosurface_shadow_transparency_texture(const vec3 texture_position)
         return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
 }
 
-#if defined(FRAGMENTS)
+#if defined(FRAGMENTS) || defined(OPACITY)
 float isosurface_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 texture_position = volume_coordinates.device_to_texture_matrix * vec4(device_position, 1);
@@ -116,7 +116,7 @@ float shadow_transparency_texture(const vec3 texture_position)
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
-#if defined(FRAGMENTS)
+#if defined(FRAGMENTS) || defined(OPACITY)
 float shadow_transparency_device(const vec3 device_position)
 {
         const float mesh_shadow = mesh_shadow_transparency_device(device_position);
@@ -129,7 +129,7 @@ float shadow_transparency_device(const vec3 device_position)
 }
 #endif
 
-#elif defined(FRAGMENTS)
+#elif defined(FRAGMENTS) || defined(OPACITY)
 
 float shadow_transparency_device(const vec3 device_position)
 {
@@ -177,24 +177,23 @@ vec4 isosurface_color(const vec3 texture_position)
 
 //
 
-#if !defined(FRAGMENTS)
+#if !(defined(FRAGMENTS) || defined(OPACITY))
 
-vec4 fragment_color(const Fragment)
+vec4 fragment_color(const FragmentData)
 {
         return vec4(0);
 }
 
 #else
 
-vec4 fragment_color(const Fragment fragment)
+vec4 fragment_color(const FragmentData fragment)
 {
-        const FragmentData d = fragment_data(fragment);
-
-        if (d.n == vec3(0))
+        if (fragment.n == vec3(0))
         {
-                return d.color;
+                return fragment.color;
         }
 
+        const vec3 n = fragment.n;
         const vec3 v = drawing.direction_to_camera;
         const vec3 l = drawing.direction_to_light;
 
@@ -202,28 +201,30 @@ vec4 fragment_color(const Fragment fragment)
 
         if (drawing.show_shadow)
         {
-                const vec3 device_position = vec3(device_coordinates, d.depth);
+                const vec3 device_position = vec3(device_coordinates, fragment.depth);
                 const float transparency = shadow_transparency_device(device_position);
 
                 const Lighting lighting =
-                        shade(d.color.rgb, d.metalness, d.roughness, d.n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, d.ambient, transparency);
+                        shade(fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,
+                              ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
+                              drawing.lighting_color, fragment.ambient, transparency);
 
                 color = lighting.front + lighting.side;
         }
         else
         {
                 color =
-                        shade(d.color.rgb, d.metalness, d.roughness, d.n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, d.ambient);
+                        shade(fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,
+                              ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
+                              drawing.lighting_color, fragment.ambient);
         }
 
-        if (d.edge_factor > 0)
+        if (fragment.edge_factor > 0)
         {
-                color = mix(color, drawing.wireframe_color, d.edge_factor);
+                color = mix(color, drawing.wireframe_color, fragment.edge_factor);
         }
 
-        return vec4(color, d.color.a);
+        return vec4(color, fragment.color.a);
 }
 
 #endif
