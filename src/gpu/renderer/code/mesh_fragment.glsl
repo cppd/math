@@ -133,6 +133,11 @@ FragmentData fragment_data(const Fragment fragment)
         return data;
 }
 
+float fragment_opacity_depth(const vec4 v_1)
+{
+        return v_1.w;
+}
+
 FragmentData fragment_data(const OpacityFragment fragment)
 {
         FragmentData data;

@@ -39,6 +39,11 @@ bool opacity_empty()
         return true;
 }
 
+float opacity_depth()
+{
+        return 0;
+}
+
 OpacityFragment opacity_fragment()
 {
         OpacityFragment f;
@@ -59,6 +64,11 @@ void opacity_build()
 bool opacity_empty()
 {
         return g_opacity_empty;
+}
+
+float opacity_depth()
+{
+        return fragment_opacity_depth(g_opacity_fragment_v_1);
 }
 
 OpacityFragment opacity_fragment()

@@ -302,7 +302,8 @@ void main()
 
         const vec3 image_org = ray_org + ray_dir * first;
         const float depth_org = dot(volume_coordinates.third_row_of_texture_to_device, vec4(image_org, 1));
-        const float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
+        const float depth_image_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
+        const float depth_limit = !opacity_empty() ? min(opacity_depth(), depth_image_limit) : depth_image_limit;
         const float depth_dir_limit = depth_limit - depth_org;
         if (depth_dir_limit <= 0)
         {
