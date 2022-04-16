@@ -45,8 +45,6 @@ class MeshRenderer
         const VkDevice device_;
         const bool sample_shading_;
 
-        const RenderBuffers3D* render_buffers_3d_ = nullptr;
-
         TrianglesProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
 

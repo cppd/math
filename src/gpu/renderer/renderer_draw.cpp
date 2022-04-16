@@ -74,7 +74,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         if (!mesh_renderer_->has_transparent_meshes())
         {
                 transparency_message_.process({});
-                return {.semaphore = semaphore, .transparency = false, .opacity = false};
+                return {.semaphore = semaphore, .transparency = false, .opacity = true};
         }
 
         VULKAN_CHECK(vkQueueWaitIdle(graphics_queue));
@@ -118,7 +118,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
                 transparency_message_.process({});
         }
 
-        return {.semaphore = semaphore, .transparency = transparency, .opacity = false};
+        return {.semaphore = semaphore, .transparency = transparency, .opacity = true};
 }
 
 VkSemaphore RendererDraw::draw(

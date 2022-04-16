@@ -20,11 +20,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_fragment.glsl"
 #include "mesh_in.glsl"
-#include "mesh_shade.glsl"
 
 layout(early_fragment_tests) in;
 
-layout(location = 0) out vec4 out_color;
+layout(location = 0) out uvec4 out_color_0;
+layout(location = 1) out vec4 out_color_1;
+
+void write_opacity(
+        const vec3 color,
+        const vec3 n,
+        const float metalness,
+        const float roughness,
+        const float ambient,
+        const float edge_factor)
+{
+        const float ALPHA = 1;
+
+        const OpacityFragment fragment =
+                create_opacity_fragment(color, ALPHA, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z);
+
+        out_color_0 = fragment.v_0;
+        out_color_1 = fragment.v_1;
+}
 
 void write_transparency(
         const vec3 color,
@@ -53,6 +70,7 @@ void write_transparency(
         {
                 atomicAdd(transparency_overload_counter, 1);
         }
+
         discard;
 }
 
@@ -60,13 +78,19 @@ void set_fragment_color(const vec3 color)
 {
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
+        const vec3 N = vec3(0);
+        const float METALNESS = 0;
+        const float ROUGHNESS = 0;
+        const float AMBIENT = 0;
+        const float EDGE_FACTOR = 0;
+
         if (!transparency_drawing)
         {
-                out_color = vec4(color, 1);
+                write_opacity(color, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR);
         }
         else
         {
-                write_transparency(color, mesh.alpha, vec3(0), 0, 0, 0, 0);
+                write_transparency(color, mesh.alpha, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR);
         }
 }
 
@@ -76,9 +100,7 @@ void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 world
 
         if (!transparency_drawing)
         {
-                const vec3 color = mesh_shade(
-                        surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);
-                out_color = vec4(color, 1);
+                write_opacity(surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor);
         }
         else
         {

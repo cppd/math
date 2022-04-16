@@ -110,12 +110,10 @@ void MeshRenderer::create_render_buffers(
 
         delete_render_buffers();
 
-        render_buffers_3d_ = render_buffers;
+        render_buffers_ = renderer::create_render_buffers(render_buffers, opacity, device_);
 
-        render_buffers_ = renderer::create_render_buffers(render_buffers_3d_, opacity, device_);
-
-        const vulkan::RenderPass& render_pass = render_buffers_3d_->render_pass();
-        const VkSampleCountFlagBits sample_count = render_buffers_3d_->sample_count();
+        const vulkan::RenderPass& render_pass = render_buffers_->render_pass();
+        const VkSampleCountFlagBits sample_count = render_buffers_->sample_count();
 
         triangles_shared_memory_.set_objects_image(objects_image.image_view());
         triangles_shared_memory_.set_transparency(
@@ -296,7 +294,7 @@ void MeshRenderer::create_render_command_buffers(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        ASSERT(render_buffers_3d_);
+        ASSERT(render_buffers_);
 
         delete_render_command_buffers();
 
@@ -315,11 +313,12 @@ void MeshRenderer::create_render_command_buffers(
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = render_buffers_3d_->width();
-        info.render_area->extent.height = render_buffers_3d_->height();
-        info.render_pass = render_buffers_3d_->render_pass();
-        info.framebuffers = &render_buffers_3d_->framebuffers();
+        info.render_area->extent.width = render_buffers_->width();
+        info.render_area->extent.height = render_buffers_->height();
+        info.render_pass = render_buffers_->render_pass();
+        info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
+        info.clear_values = &render_buffers_->clear_values();
 
         info.before_render_pass_commands =
                 !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
