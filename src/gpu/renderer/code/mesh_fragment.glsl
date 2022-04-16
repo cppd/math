@@ -25,7 +25,7 @@ const vec4 OPACITY_V_1_NULL_VALUE = vec4(-1);
 
 //
 
-struct Fragment
+struct TransparencyFragment
 {
         uint color_rg;
         uint color_ba;
@@ -38,7 +38,7 @@ struct Fragment
 
 struct TransparencyNode
 {
-        Fragment fragment;
+        TransparencyFragment fragment;
         uint next;
 };
 
@@ -114,7 +114,7 @@ struct FragmentData
         float depth;
 };
 
-FragmentData fragment_data(const Fragment fragment)
+FragmentData fragment_data(const TransparencyFragment fragment)
 {
         FragmentData data;
 

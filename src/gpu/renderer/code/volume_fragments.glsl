@@ -43,15 +43,15 @@ void fragments_pop()
 {
 }
 
-Fragment fragments_top()
+TransparencyFragment fragments_top()
 {
-        Fragment f;
+        TransparencyFragment f;
         return f;
 }
 
 #else
 
-Fragment g_fragments[TRANSPARENCY_MAX_NODES];
+TransparencyFragment g_fragments[TRANSPARENCY_MAX_NODES];
 int g_fragments_count;
 
 int fragments_min_heapify_impl(const int i)
@@ -63,7 +63,7 @@ int fragments_min_heapify_impl(const int i)
         m = (right < g_fragments_count && g_fragments[right].depth < g_fragments[m].depth) ? right : m;
         if (m != i)
         {
-                const Fragment t = g_fragments[i];
+                const TransparencyFragment t = g_fragments[i];
                 g_fragments[i] = g_fragments[m];
                 g_fragments[m] = t;
                 return m;
@@ -104,7 +104,7 @@ bool fragments_empty()
         return g_fragments_count <= 0;
 }
 
-Fragment fragments_top()
+TransparencyFragment fragments_top()
 {
         return g_fragments[0];
 }

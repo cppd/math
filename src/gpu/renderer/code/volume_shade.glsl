@@ -179,7 +179,12 @@ vec4 isosurface_color(const vec3 texture_position)
 
 #if !(defined(FRAGMENTS) || defined(OPACITY))
 
-vec4 fragment_color(const FragmentData)
+vec4 fragment_color(const TransparencyFragment fragment)
+{
+        return vec4(0);
+}
+
+vec4 fragment_color(const OpacityFragment fragment)
 {
         return vec4(0);
 }
@@ -225,6 +230,16 @@ vec4 fragment_color(const FragmentData fragment)
         }
 
         return vec4(color, fragment.color.a);
+}
+
+vec4 fragment_color(const TransparencyFragment fragment)
+{
+        return fragment_color(fragment_data(fragment));
+}
+
+vec4 fragment_color(const OpacityFragment fragment)
+{
+        return fragment_color(fragment_data(fragment));
 }
 
 #endif
