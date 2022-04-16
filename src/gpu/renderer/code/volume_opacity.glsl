@@ -44,12 +44,6 @@ float opacity_depth()
         return 0;
 }
 
-OpacityFragment opacity_fragment()
-{
-        OpacityFragment f;
-        return f;
-}
-
 #else
 
 vec4 g_opacity_fragment_v_1;

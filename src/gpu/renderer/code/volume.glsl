@@ -54,8 +54,11 @@ A K Peters, Ltd, 2006.
                 }                   \
         } while (false)
 
-#if defined(FRAGMENTS)
-
+#if !defined(FRAGMENTS)
+void draw_fragments()
+{
+}
+#else
 void draw_fragments()
 {
         for (; !fragments_empty(); fragments_pop())
@@ -63,7 +66,20 @@ void draw_fragments()
                 COLOR_ADD(fragment_color(fragments_top()));
         }
 }
+#endif
 
+#if !defined(OPACITY)
+void draw_opacity()
+{
+}
+#else
+void draw_opacity()
+{
+        if (!opacity_empty())
+        {
+                color_add(fragment_color(opacity_fragment()));
+        }
+}
 #endif
 
 #if defined(IMAGE)
@@ -272,15 +288,15 @@ void draw_volume(const vec3 image_dir, const vec3 image_org, const float depth_d
         {
                 draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
         }
+        draw_opacity();
         color_set();
 }
 
 void draw_without_volume()
 {
         color_init();
-#if defined(FRAGMENTS)
         draw_fragments();
-#endif
+        draw_opacity();
         color_set();
 }
 
@@ -322,7 +338,7 @@ void main()
         draw_volume(image_dir, image_org, depth_dir, depth_org);
 }
 
-#elif defined(FRAGMENTS)
+#elif defined(FRAGMENTS) || defined(OPACITY)
 
 void main()
 {
@@ -331,14 +347,8 @@ void main()
 
         color_init();
         draw_fragments();
+        draw_opacity();
         color_set();
-}
-
-#elif defined(OPACITY)
-
-void main()
-{
-        opacity_build();
 }
 
 #else
