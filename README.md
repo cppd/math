@@ -16,6 +16,7 @@ Just for fun with mathematics and stuff
 * [Technical details](#technical-details)
 * [Images](#images)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
+  * [Real-time rendering](#real-time-rendering)
   * [3D model](#3d-model)
 
 
@@ -32,7 +33,7 @@ Just for fun with mathematics and stuff
 * Triangle meshes (rasterization).
 * Volumes (ray marching).
 * Isosurfaces (ray marching).
-* Shadows (ray tracing, shadow mapping).
+* Shadows (ray tracing, ray marching, shadow mapping).
 * Order-independent transparency (lists of fragments).
 
 ### CPU
@@ -122,6 +123,18 @@ Volumetric rendering
 <img src="https://i.imgur.com/XL8NzRJ.png" alt="image" width="19%"></img>
 <img src="https://i.imgur.com/7rgjaqb.png" alt="image" width="19%"></img>
 <img src="https://i.imgur.com/FQH6ULO.png" alt="image" width="19%"></img>
+
+### Real-time rendering
+
+Semitransparent objects
+
+* Triangle mesh (green) and its ray tracing shadows.
+* Isosurface (blue) and its ray marching shadows.
+
+<img src="https://i.imgur.com/82dhRk9.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/gvchVTs.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/UC7VQjT.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/ifhRGra.png" alt="image" width="23%"></img>
 
 ### 3D model
 
