@@ -57,6 +57,8 @@ class MeshRenderer
         PointsProgram points_program_;
         SharedMemory points_shared_memory_;
 
+        vulkan::handle::Sampler texture_sampler_;
+
         struct Pipelines final
         {
                 vulkan::handle::Pipeline triangles;
@@ -68,10 +70,9 @@ class MeshRenderer
         std::optional<Pipelines> pipelines_opaque_;
         std::optional<Pipelines> pipelines_transparent_;
 
+        bool has_opaque_meshes_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_all_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_transparent_as_opaque_;
-
-        vulkan::handle::Sampler texture_sampler_;
 
         std::unique_ptr<ShadowMapping> shadow_mapping_;
         std::unique_ptr<RenderBuffers> render_buffers_;
@@ -140,7 +141,9 @@ public:
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_meshes() const;
+        bool has_opaque_meshes() const;
         bool has_transparent_meshes() const;
+
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
 

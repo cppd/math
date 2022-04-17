@@ -86,6 +86,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         const bool nodes = required_node_memory > transparency_node_buffer_max_size_;
         const bool overload = overload_counter > 0;
         bool transparency;
+        bool opacity;
         if (nodes || overload)
         {
                 ASSERT(mesh_renderer_->render_command_buffer_transparent_as_opaque(index));
@@ -95,7 +96,9 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
                         transparent_as_opaque_semaphore_, graphics_queue);
 
                 semaphore = transparent_as_opaque_semaphore_;
+
                 transparency = false;
+                opacity = true;
 
                 transparency_message_.process(
                         [&]()
@@ -115,10 +118,12 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         else
         {
                 transparency = true;
+                opacity = mesh_renderer_->has_opaque_meshes();
+
                 transparency_message_.process({});
         }
 
-        return {.semaphore = semaphore, .transparency = transparency, .opacity = true};
+        return {.semaphore = semaphore, .transparency = transparency, .opacity = opacity};
 }
 
 VkSemaphore RendererDraw::draw(

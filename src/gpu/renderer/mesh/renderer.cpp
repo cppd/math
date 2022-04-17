@@ -66,7 +66,8 @@ MeshRenderer::MeshRenderer(
                   points_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
-          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy))
+          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
+          has_opaque_meshes_(false)
 {
         triangles_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
@@ -307,6 +308,8 @@ void MeshRenderer::create_render_command_buffers(
         std::vector<const MeshObject*> transparent_meshes;
         find_opaque_and_transparent_meshes(meshes, &opaque_meshes, &transparent_meshes);
 
+        has_opaque_meshes_ = !opaque_meshes.empty();
+
         vulkan::CommandBufferCreateInfo info;
 
         info.device = device_;
@@ -353,6 +356,7 @@ void MeshRenderer::delete_render_command_buffers()
 {
         command_buffers_all_.reset();
         command_buffers_transparent_as_opaque_.reset();
+        has_opaque_meshes_ = false;
 }
 
 void MeshRenderer::create_shadow_mapping_command_buffers(
@@ -386,6 +390,11 @@ void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR a
 bool MeshRenderer::has_meshes() const
 {
         return command_buffers_all_.has_value();
+}
+
+bool MeshRenderer::has_opaque_meshes() const
+{
+        return has_opaque_meshes_;
 }
 
 bool MeshRenderer::has_transparent_meshes() const
