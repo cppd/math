@@ -26,7 +26,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/add_include_files.cmake")
 
 set(compilers "GNU;Clang")
 set(gcc_minimal_version "11")
-set(clang_minimal_version "13")
+set(clang_minimal_version "14")
 
 set(shader_environment "vulkan1.2")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
