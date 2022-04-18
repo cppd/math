@@ -72,7 +72,7 @@ WindowInit::WindowInit()
         XSetErrorHandler(error_handler);
 
         g_display = XOpenDisplay(nullptr); // getenv("DISPLAY")
-        if (g_display == nullptr)
+        if (!g_display)
         {
                 error("Error XOpenDiplay");
         }

@@ -131,7 +131,7 @@ protected:
 
                 // A convex hull point is on the facet plane.
                 // convex_hull_facet == nullptr when creating initial convex hull.
-                ASSERT(convex_hull_facet != nullptr);
+                ASSERT(convex_hull_facet);
                 if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
                 {
                         negate(&ortho_);
@@ -324,7 +324,7 @@ protected:
 
                 // A convex hull point is on the facet plane.
                 // convex_hull_facet == nullptr when creating initial convex hull.
-                ASSERT(convex_hull_facet != nullptr);
+                ASSERT(convex_hull_facet);
                 if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
                 {
                         negate(&ortho_);

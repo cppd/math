@@ -214,7 +214,7 @@ public:
                   sample_count_(image.sample_count()),
                   usage_(image.usage())
         {
-                ASSERT(create_info.pNext == nullptr);
+                ASSERT(!create_info.pNext);
                 ASSERT(image == create_info.image);
                 ASSERT(image.format() == create_info.format);
         }

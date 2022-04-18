@@ -36,7 +36,7 @@ namespace
 {
 // bool is_child_widget_of_any_layout(QLayout* const layout, QWidget* const widget)
 // {
-//         if (layout == nullptr || widget == nullptr)
+//         if (!layout || !widget)
 //         {
 //                 return false;
 //         }
@@ -131,7 +131,7 @@ QSplitter* find_widget_splitter(QObject* const object, QWidget* const widget)
         }
         for (QObject* const child : object->children())
         {
-                if (QSplitter* const s = find_widget_splitter(child, widget); s != nullptr)
+                if (QSplitter* const s = find_widget_splitter(child, widget))
                 {
                         return s;
                 }

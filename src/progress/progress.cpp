@@ -123,7 +123,7 @@ public:
                 }
         }
 
-        ~Impl() override
+        ~Impl()
         {
                 if (ratios_)
                 {

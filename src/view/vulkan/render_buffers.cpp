@@ -52,7 +52,9 @@ class Impl3D : public gpu::RenderBuffers3D
         }
 
 protected:
-        ~Impl3D() override = default;
+        ~Impl3D()
+        {
+        }
 };
 
 class Impl2D : public gpu::RenderBuffers2D
@@ -73,7 +75,9 @@ class Impl2D : public gpu::RenderBuffers2D
         }
 
 protected:
-        ~Impl2D() override = default;
+        ~Impl2D()
+        {
+        }
 };
 
 class Impl final : public RenderBuffers, public Impl3D, public Impl2D

@@ -66,8 +66,7 @@ MeshRenderer::MeshRenderer(
                   points_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
-          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
-          has_opaque_meshes_(false)
+          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy))
 {
         triangles_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());

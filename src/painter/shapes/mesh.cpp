@@ -193,7 +193,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                         {
                                 const std::tuple<T, const MeshFacet<N, T>*> info =
                                         geometry::ray_intersection(*facets, indices, ray, local_max_distance);
-                                if (std::get<1>(info) != nullptr)
+                                if (std::get<1>(info))
                                 {
                                         return info;
                                 }

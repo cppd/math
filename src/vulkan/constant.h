@@ -25,7 +25,7 @@ namespace ns::vulkan
 class SpecializationConstant
 {
 protected:
-        virtual ~SpecializationConstant() = default;
+        ~SpecializationConstant() = default;
 
 public:
         virtual const std::vector<VkSpecializationMapEntry>& entries() const = 0;

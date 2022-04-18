@@ -28,7 +28,7 @@ namespace ns::gpu
 class RenderBuffers3D
 {
 protected:
-        virtual ~RenderBuffers3D() = default;
+        ~RenderBuffers3D() = default;
 
 public:
         virtual unsigned width() const = 0;
@@ -52,7 +52,7 @@ public:
 class RenderBuffers2D
 {
 protected:
-        virtual ~RenderBuffers2D() = default;
+        ~RenderBuffers2D() = default;
 
 public:
         virtual unsigned width() const = 0;

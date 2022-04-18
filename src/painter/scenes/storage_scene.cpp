@@ -89,7 +89,7 @@ class Impl final : public Scene<N, T, Color>
                         {
                                 const std::tuple<T, const Surface<N, T, Color>*> info =
                                         ray_intersection(*shapes, indices, ray_moved, max_distance);
-                                if (std::get<1>(info) != nullptr)
+                                if (std::get<1>(info))
                                 {
                                         return info;
                                 }

@@ -54,7 +54,7 @@ PainterParametersWidget::PainterParametersWidget(
 
         if (std::any_of(
                     precisions.cbegin(), precisions.cend(),
-                    [](const char* s)
+                    [](const char* const s)
                     {
                             return s == nullptr || std::string_view(s).empty();
                     }))
@@ -69,7 +69,7 @@ PainterParametersWidget::PainterParametersWidget(
 
         if (std::any_of(
                     colors.cbegin(), colors.cend(),
-                    [](const char* s)
+                    [](const char* const s)
                     {
                             return s == nullptr || std::string_view(s).empty();
                     }))

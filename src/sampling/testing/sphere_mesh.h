@@ -118,7 +118,7 @@ public:
                         {
                                 const std::tuple<T, const geometry::HyperplaneSimplex<N, T>*> info =
                                         geometry::ray_intersection(*facets, indices, ray, max_distance);
-                                if (std::get<1>(info) != nullptr)
+                                if (std::get<1>(info))
                                 {
                                         return info;
                                 }

@@ -138,7 +138,7 @@ public:
         {
                 for (int i = 0; i < MAX_SIZE; ++i)
                 {
-                        if (data_[i].facet() == nullptr)
+                        if (!data_[i].facet())
                         {
                                 data_[i] = {facet, external_point_index};
                                 ++size_;

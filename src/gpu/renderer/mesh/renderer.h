@@ -70,7 +70,7 @@ class MeshRenderer
         std::optional<Pipelines> pipelines_opaque_;
         std::optional<Pipelines> pipelines_transparent_;
 
-        bool has_opaque_meshes_;
+        bool has_opaque_meshes_ = false;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_all_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_transparent_as_opaque_;
 

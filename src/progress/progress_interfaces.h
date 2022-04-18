@@ -24,7 +24,7 @@ namespace ns
 class ProgressRatioControl
 {
 protected:
-        virtual ~ProgressRatioControl() = default;
+        ~ProgressRatioControl() = default;
 
 public:
         virtual void terminate_quietly() = 0;
@@ -36,7 +36,7 @@ public:
 class ProgressRatios
 {
 protected:
-        virtual ~ProgressRatios() = default;
+        ~ProgressRatios() = default;
 
 public:
         virtual void add_progress_ratio(ProgressRatioControl* ratio) = 0;
