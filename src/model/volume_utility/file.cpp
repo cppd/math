@@ -145,7 +145,7 @@ void save_to_images(
         const image::ImageView<N>& image_view,
         ProgressRatio* const progress,
         unsigned* const current,
-        unsigned const count)
+        const unsigned count)
 {
         static_assert(N >= 3);
 
