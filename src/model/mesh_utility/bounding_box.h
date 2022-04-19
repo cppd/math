@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::mesh
 {
 template <std::size_t N>
-struct BoundingBox
+struct BoundingBox final
 {
         Vector<N, float> min;
         Vector<N, float> max;

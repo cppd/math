@@ -50,7 +50,7 @@ bool equal(const Vector<3, double>& a, const Vector<3, double>& b)
 }
 
 template <std::size_t N, typename T>
-struct MatrixWithDeterminant
+struct MatrixWithDeterminant final
 {
         Matrix<N, N, T> matrix;
         T determinant;

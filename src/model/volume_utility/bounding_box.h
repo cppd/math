@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::volume
 {
 template <std::size_t N>
-struct BoundingBox
+struct BoundingBox final
 {
         Vector<N, double> min;
         Vector<N, double> max;

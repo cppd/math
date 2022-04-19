@@ -32,10 +32,13 @@ struct Volume final
         Matrix<N + 1, N + 1, double> matrix;
 
         Volume() = default;
+
         Volume(const Volume&) = delete;
         Volume& operator=(const Volume&) = delete;
+
         Volume(Volume&&) = default;
         Volume& operator=(Volume&&) = default;
+
         ~Volume() = default;
 };
 }

@@ -52,7 +52,7 @@ public:
 namespace std
 {
 template <>
-struct hash<::ns::ObjectId>
+struct hash<::ns::ObjectId> final
 {
         std::size_t operator()(const ::ns::ObjectId id) const noexcept
         {

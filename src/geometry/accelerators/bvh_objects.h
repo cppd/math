@@ -29,8 +29,9 @@ namespace bvh_objects_implementation
 {
 template <typename T>
 struct Type;
+
 template <std::size_t N, typename T>
-struct Type<BoundingBox<N, T>>
+struct Type<BoundingBox<N, T>> final
 {
         using Value = BvhObject<N, T>;
 };

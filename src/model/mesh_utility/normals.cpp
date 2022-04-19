@@ -80,7 +80,7 @@ Vector<N, T> average_of_normals(const Vector<N, T>& normal, const std::vector<Ve
         return sum.normalized();
 }
 
-struct VertexFacet
+struct VertexFacet final
 {
         int facet_index;
         unsigned facet_vertex; // [0, N)

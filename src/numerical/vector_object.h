@@ -298,7 +298,7 @@ using Vector4i = Vector<4, int>;
 namespace std
 {
 template <size_t N, typename T>
-struct hash<::ns::Vector<N, T>>
+struct hash<::ns::Vector<N, T>> final
 {
         size_t operator()(const ::ns::Vector<N, T>& v) const
         {
@@ -307,7 +307,7 @@ struct hash<::ns::Vector<N, T>>
 };
 
 template <size_t N, typename T>
-struct tuple_size<::ns::Vector<N, T>> : integral_constant<size_t, N>
+struct tuple_size<::ns::Vector<N, T>> final : integral_constant<size_t, N>
 {
 };
 }

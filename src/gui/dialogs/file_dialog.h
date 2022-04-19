@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-struct FileFilter
+struct FileFilter final
 {
         std::string name;
         std::vector<std::string> file_extensions;

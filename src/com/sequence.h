@@ -30,7 +30,7 @@ template <
         template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
-struct Sequence
+struct Sequence final
 {
         template <int FIRST, int N, std::size_t... I>
         struct S

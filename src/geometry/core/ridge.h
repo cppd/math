@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-class Ridge
+class Ridge final
 {
         static_assert(N > 1);
         std::array<int, N - 1> vertices_;
@@ -81,7 +81,7 @@ public:
 };
 
 template <typename Facet>
-class RidgeDataElement
+class RidgeDataElement final
 {
         const Facet* facet_;
         int external_vertex_index_;
@@ -120,7 +120,7 @@ public:
 };
 
 template <int MAX_SIZE, typename Facet>
-class RidgeDataC
+class RidgeDataC final
 {
         static_assert(MAX_SIZE > 1);
 
@@ -187,7 +187,7 @@ template <typename Facet>
 using RidgeData2 = RidgeDataC<2, Facet>;
 
 template <typename Facet>
-class RidgeDataN
+class RidgeDataN final
 {
         std::list<RidgeDataElement<Facet>> data_;
 
@@ -289,7 +289,7 @@ void add_to_ridges(const Facet& facet, const int exclude_point, Set<Ridge<N>>* c
 namespace std
 {
 template <std::size_t N>
-struct hash<::ns::geometry::Ridge<N>>
+struct hash<::ns::geometry::Ridge<N>> final
 {
         std::size_t operator()(const ::ns::geometry::Ridge<N>& v) const
         {

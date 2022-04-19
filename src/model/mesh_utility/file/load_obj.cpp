@@ -80,7 +80,7 @@ enum class ObjLineType
 };
 
 template <std::size_t N>
-struct ObjLine
+struct ObjLine final
 {
         ObjLineType type;
         long long second_b;
@@ -90,7 +90,7 @@ struct ObjLine
         Vector<N, float> v;
 };
 
-struct Counters
+struct Counters final
 {
         int vertex = 0;
         int texcoord = 0;

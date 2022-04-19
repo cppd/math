@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::text
 {
-struct TextData
+struct TextData final
 {
         int step_y;
         int start_x;

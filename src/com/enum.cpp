@@ -22,7 +22,7 @@ namespace ns
 namespace
 {
 template <typename Underlying, Underlying VALUE, typename Result>
-struct Test
+struct Test final
 {
         enum class Enum : Underlying
         {

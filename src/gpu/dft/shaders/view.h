@@ -73,7 +73,7 @@ public:
         void set_image(VkSampler sampler, const vulkan::ImageView& image) const;
 };
 
-struct ViewVertex
+struct ViewVertex final
 {
         Vector4f position;
         Vector2f texture_coordinates;

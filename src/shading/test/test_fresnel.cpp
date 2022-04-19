@@ -27,7 +27,7 @@ namespace
 // n=3;
 // N[(n-1)*Integrate[Power[Sin[x],n-2]*Cos[x]*(f0+(1-f0)*Power[1-Cos[x],5]),{x,0,Pi/2}],50]
 template <typename Color>
-struct Test
+struct Test final
 {
         template <std::size_t N>
         static constexpr bool equal(const Color& a, const Color& b)

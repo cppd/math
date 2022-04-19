@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename... T>
-struct Visitors : T...
+struct Visitors final : T...
 {
         using T::operator()...;
 };
+
 template <typename... T>
 Visitors(T...) -> Visitors<T...>;
 }

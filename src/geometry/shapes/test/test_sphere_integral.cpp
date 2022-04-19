@@ -37,7 +37,7 @@ namespace ns::geometry::shapes::test
 namespace
 {
 template <typename T>
-struct Test
+struct Test final
 {
         template <unsigned N>
         static constexpr long double PI_POW = power<N>(PI<long double>);

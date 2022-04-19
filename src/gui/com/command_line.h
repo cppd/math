@@ -25,7 +25,7 @@ namespace ns::gui
 {
 std::string command_line_description();
 
-struct CommandLineOptions
+struct CommandLineOptions final
 {
         std::filesystem::path file_name;
         bool no_object_selection_dialog;

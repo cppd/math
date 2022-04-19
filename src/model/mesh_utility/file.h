@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-struct FileFormat
+struct FileFormat final
 {
         std::string format_name;
         std::vector<std::string> file_name_extensions;

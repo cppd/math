@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct ViewportTransform
+struct ViewportTransform final
 {
         // device_coordinates = (framebuffer_coordinates - center) * factor
         Vector2d center;

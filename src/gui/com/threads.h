@@ -32,7 +32,7 @@ namespace ns::gui
 {
 struct WorkerThreads
 {
-        struct Progress
+        struct Progress final
         {
                 unsigned id;
                 const ProgressRatioList* progress_list;

@@ -33,7 +33,7 @@ template <unsigned N>
 constexpr long double PI_POW = power<N>(PI<long double>);
 
 template <typename T>
-struct Test
+struct Test final
 {
         static_assert(compare<T>(1, SPHERE_AREA<2, T>, 2 * PI_POW<1>));
         static_assert(compare<T>(1, SPHERE_AREA<3, T>, 4 * PI_POW<1>));

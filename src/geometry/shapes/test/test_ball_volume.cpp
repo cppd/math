@@ -30,7 +30,7 @@ template <unsigned N>
 constexpr long double PI_POW = power<N>(PI<long double>);
 
 template <typename T>
-struct Test
+struct Test final
 {
         template <unsigned N>
         static constexpr bool cmp(const int epsilon_count, const T v)

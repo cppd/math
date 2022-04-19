@@ -29,7 +29,7 @@ namespace ns::color
 {
 namespace
 {
-struct Component
+struct Component final
 {
         double s0;
         double s1;

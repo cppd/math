@@ -33,7 +33,7 @@ namespace ns::geometry::spatial
 namespace
 {
 template <typename T>
-struct Test
+struct Test final
 {
         static constexpr BoundingBox<4, T> BOX{Vector<4, T>(1, -2, 3, -4), Vector<4, T>(-5, 6, -7, 8)};
         static_assert(BOX.min() == Vector<4, T>(-5, -2, -7, -4));

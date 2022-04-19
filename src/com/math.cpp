@@ -22,7 +22,7 @@ namespace ns
 namespace
 {
 template <typename I, typename T>
-struct Test
+struct Test final
 {
         static_assert(integral_floor<I, T>(-2) == -2);
         static_assert(integral_floor<I, T>(-1.5) == -2);

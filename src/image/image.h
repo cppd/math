@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::image
 {
 template <std::size_t N>
-struct Image
+struct Image final
 {
         std::array<int, N> size;
         ColorFormat color_format;
@@ -35,7 +35,7 @@ struct Image
 };
 
 template <std::size_t N>
-struct ImageView
+struct ImageView final
 {
         std::array<int, N> size;
         ColorFormat color_format;
