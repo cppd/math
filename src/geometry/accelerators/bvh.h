@@ -54,10 +54,12 @@ class Bvh final
                 {
                         stack_[next_++] = v;
                 }
+
                 unsigned pop()
                 {
                         return stack_[--next_];
                 }
+
                 bool empty() const
                 {
                         return next_ == 0;

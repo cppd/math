@@ -215,6 +215,7 @@ handle::ImageView create_image_view(
 
         return handle::ImageView(device, create_info);
 }
+
 std::string swapchain_info_string(
         const VkSurfaceFormatKHR surface_format,
         const VkPresentModeKHR present_mode,

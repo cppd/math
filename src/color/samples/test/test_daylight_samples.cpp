@@ -34,6 +34,7 @@ public:
         explicit Exception(std::string&& text) : text_(std::move(text))
         {
         }
+
         const char* what() const noexcept override
         {
                 return text_.c_str();
@@ -46,14 +47,17 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
         {
                 error("Error min " + to_string(min));
         }
+
         if (!(max <= DAYLIGHT_SAMPLES_MAX_WAVELENGTH))
         {
                 error("Error max " + to_string(max));
         }
+
         if (!(max > min))
         {
                 error("Error min " + to_string(min) + " and max " + to_string(max));
         }
+
         if (!(count > 0))
         {
                 error("Error count " + to_string(count));
@@ -75,6 +79,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 {
                         error("D65 " + to_string(d65[i]) + " is not positive and not zero");
                 }
+
                 if (!(daylight[i] >= 0))
                 {
                         error("Daylight " + to_string(daylight[i]) + " is not positive and not zero");

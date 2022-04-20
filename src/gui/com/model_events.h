@@ -32,8 +32,6 @@ namespace ns::gui
 {
 class ModelEvents final
 {
-        const std::thread::id thread_id_ = std::this_thread::get_id();
-
         template <std::size_t N>
         struct Events final : public mesh::MeshEvents<N>, public volume::VolumeEvents<N>
         {
@@ -43,6 +41,8 @@ class ModelEvents final
                 void send(mesh::MeshEvent<N>&& event) const override;
                 void send(volume::VolumeEvent<N>&& event) const override;
         };
+
+        const std::thread::id thread_id_ = std::this_thread::get_id();
         Sequence<settings::Dimensions, std::tuple, Events> events_;
 
 public:

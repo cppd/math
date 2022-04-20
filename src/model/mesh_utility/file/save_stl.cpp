@@ -73,7 +73,9 @@ void write_begin_binary(std::ostream& file, unsigned facet_count)
                 std::array<std::uint8_t, 80> header;
                 std::uint32_t number_of_triangles;
         };
+
         static_assert(sizeof(Begin) == 84 * sizeof(std::uint8_t));
+
         Begin begin;
         std::memset(begin.header.data(), 0, begin.header.size());
         begin.number_of_triangles = facet_count;
@@ -86,7 +88,9 @@ void write_end_binary(std::ostream& file)
         {
                 std::uint16_t attribute_byte_count;
         };
+
         static_assert(sizeof(End) == 2 * sizeof(std::uint8_t));
+
         End end;
         end.attribute_byte_count = 0;
         file.write(reinterpret_cast<const char*>(&end), sizeof(end));

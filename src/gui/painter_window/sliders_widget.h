@@ -35,6 +35,7 @@ private:
                 QLabel* label;
                 unsigned number;
         };
+
         std::unordered_map<QSlider*, Slider> sliders_;
         std::vector<int> slider_positions_;
 

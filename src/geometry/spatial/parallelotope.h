@@ -56,8 +56,8 @@ class Parallelotope final
                 T d1;
                 T d2;
         };
-        std::array<Planes, N> planes_;
 
+        std::array<Planes, N> planes_;
         Vector<N, T> org_;
         std::array<Vector<N, T>, N> vectors_;
 

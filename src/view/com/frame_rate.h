@@ -37,6 +37,7 @@ public:
         {
                 return text_size_;
         }
+
         const text::TextData& text_data() const
         {
                 return text_data_;

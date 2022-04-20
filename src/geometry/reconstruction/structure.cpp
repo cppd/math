@@ -42,12 +42,14 @@ struct VertexConnections final
         {
                 int facet_index;
                 int facet_vertex_index;
-                Facet(int facet_index, int facet_vertex_index)
+
+                Facet(const int facet_index, const int facet_vertex_index)
                         : facet_index(facet_index),
                           facet_vertex_index(facet_vertex_index)
                 {
                 }
         };
+
         std::vector<int> objects;
         std::vector<Facet> facets;
 };

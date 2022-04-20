@@ -41,6 +41,15 @@ namespace ns::gpu::renderer
 {
 class MeshRenderer
 {
+        struct Pipelines final
+        {
+                vulkan::handle::Pipeline triangles;
+                vulkan::handle::Pipeline triangle_lines;
+                vulkan::handle::Pipeline normals;
+                vulkan::handle::Pipeline points;
+                vulkan::handle::Pipeline lines;
+        };
+
         const std::thread::id thread_id_ = std::this_thread::get_id();
         const VkDevice device_;
         const bool sample_shading_;
@@ -59,14 +68,6 @@ class MeshRenderer
 
         vulkan::handle::Sampler texture_sampler_;
 
-        struct Pipelines final
-        {
-                vulkan::handle::Pipeline triangles;
-                vulkan::handle::Pipeline triangle_lines;
-                vulkan::handle::Pipeline normals;
-                vulkan::handle::Pipeline points;
-                vulkan::handle::Pipeline lines;
-        };
         std::optional<Pipelines> pipelines_opaque_;
         std::optional<Pipelines> pipelines_transparent_;
 

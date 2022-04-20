@@ -38,6 +38,7 @@ struct Sequence final
                 static_assert(N > 0);
                 using T = typename S<FIRST, N - 1, N - 1, I...>::T;
         };
+
         template <int FIRST, std::size_t... I>
         struct S<FIRST, 0, I...> final
         {

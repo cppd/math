@@ -61,11 +61,13 @@ public:
         Switcher(std::atomic<D*>* const dst, S* const src) : dst_(dst), src_(src)
         {
         }
+
         ~Switcher()
         {
                 src_->clear();
                 *dst_ = src_;
         }
+
         Switcher(const Switcher&) = delete;
         Switcher(Switcher&&) = delete;
         Switcher& operator=(const Switcher&) = delete;

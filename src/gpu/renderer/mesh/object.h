@@ -66,6 +66,7 @@ struct MeshObject
                 bool mesh = false;
                 bool transparency = false;
         };
+
         virtual UpdateChanges update(const mesh::Reading<3>& mesh_object) = 0;
 
         virtual std::optional<VkDeviceAddress> acceleration_structure_device_address() const = 0;

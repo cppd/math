@@ -38,10 +38,12 @@ public:
                   ortho_(ortho)
         {
         }
+
         const std::array<int, N>& vertices() const
         {
                 return indices_;
         }
+
         const Vector<N, double>& ortho() const
         {
                 return ortho_;
@@ -60,10 +62,12 @@ public:
                   orthos_(orthos)
         {
         }
+
         const std::array<int, N + 1>& vertices() const
         {
                 return indices_;
         }
+
         const Vector<N, double>& ortho(unsigned i) const
         {
                 ASSERT(i < orthos_.size());

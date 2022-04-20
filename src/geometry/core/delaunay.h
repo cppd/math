@@ -50,18 +50,22 @@ public:
                   delaunay_{delaunay_0, delaunay_1}
         {
         }
+
         bool one_sided() const
         {
                 return delaunay_[1] < 0;
         }
+
         const std::array<int, N>& vertices() const
         {
                 return vertices_;
         }
+
         const Vector<N, double>& ortho() const
         {
                 return ortho_;
         }
+
         int delaunay(const unsigned i) const
         {
                 ASSERT(i == 0 || (i == 1 && delaunay_[1] >= 0));
@@ -81,10 +85,12 @@ public:
                   voronoi_vertex_(voronoi_vertex)
         {
         }
+
         const std::array<int, N + 1>& vertices() const
         {
                 return vertices_;
         }
+
         const Vector<N, double>& voronoi_vertex() const
         {
                 return voronoi_vertex_;

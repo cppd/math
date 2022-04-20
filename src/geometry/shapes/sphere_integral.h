@@ -162,6 +162,7 @@ T sphere_cosine_weighted_average_by_angle(const F& f, const int count)
 
         return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
 }
+
 template <unsigned N, typename T, typename F>
 T sphere_cosine_weighted_average_by_cosine(const F& f, const int count)
 {

@@ -44,6 +44,7 @@ struct Insert final
 {
         std::shared_ptr<MeshObject<N>> object;
         std::optional<ObjectId> parent_object_id;
+
         Insert(std::shared_ptr<MeshObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
                 : object(std::move(object)),
                   parent_object_id(parent_object_id)
@@ -55,6 +56,7 @@ template <std::size_t N>
 struct Erase final
 {
         ObjectId id;
+
         explicit Erase(const ObjectId id) : id(id)
         {
         }
@@ -64,6 +66,7 @@ template <std::size_t N>
 struct Update final
 {
         std::weak_ptr<MeshObject<N>> object;
+
         explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
         {
         }
@@ -94,6 +97,7 @@ enum Update
         UPDATE_ROUGHNESS,
         UPDATE_VISIBILITY
 };
+
 using Updates = std::bitset<UPDATE_VISIBILITY + 1>;
 
 template <std::size_t N>
@@ -113,6 +117,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 {
                 }
         };
+
         static constexpr DefaultEvents DEFAULT_EVENTS{};
 
         inline static const MeshEvents<N>* events_ = &DEFAULT_EVENTS;

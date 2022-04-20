@@ -66,6 +66,7 @@ public:
         {
                 return images_->image_with_background_;
         }
+
         image::Image<N>& image_without_background() const
         {
                 return images_->image_without_background_;
@@ -87,6 +88,7 @@ public:
         {
                 return images_->image_with_background_;
         }
+
         const image::Image<N>& image_without_background() const
         {
                 return images_->image_without_background_;

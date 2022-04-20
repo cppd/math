@@ -39,6 +39,7 @@ constexpr int SHADOW_ZOOM = 2;
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
 constexpr double DFT_GAMMA = 0.5;
 }
+
 ViewWidget::ViewWidget() : QWidget(nullptr)
 {
         ui_.setupUi(this);

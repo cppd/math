@@ -84,6 +84,7 @@ constexpr bool test_cofactor_expansion()
                        -2555210922012, 336840375312, -206347990212, 159370731576, -135170325612, 120413980512,
                        4125807482688);
 }
+
 static_assert(test_cofactor_expansion<long long>());
 static_assert(test_cofactor_expansion<__int128>());
 static_assert(test_cofactor_expansion<double>());
@@ -108,6 +109,7 @@ constexpr bool test_row_reduction()
         }
         return true;
 }
+
 static_assert(test_row_reduction<double>());
 static_assert(test_row_reduction<long double>());
 static_assert(test_row_reduction<__float128>());

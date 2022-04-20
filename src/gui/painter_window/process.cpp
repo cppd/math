@@ -48,6 +48,7 @@ std::array<T, N> to_array(const std::vector<T>& vector)
         }
         return array;
 }
+
 struct Parameters final
 {
         bool background;

@@ -162,7 +162,7 @@ void add(Dst* const dst, Src&& src) requires requires
         {
                 *dst = std::forward<Src>(src);
         }
-};
+}
 
 template <typename Dst, typename Src>
 void add(Dst* const dst, Src&& src) requires requires

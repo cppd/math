@@ -34,6 +34,7 @@ public:
         explicit Exception(std::string&& text) : text_(std::move(text))
         {
         }
+
         const char* what() const noexcept override
         {
                 return text_.c_str();
@@ -46,6 +47,7 @@ void compare_a(const double t, const int min, const int max, const unsigned coun
         {
                 error("Error min " + to_string(min) + " and max " + to_string(max));
         }
+
         if (!(count > 0))
         {
                 error("Error count " + to_string(count));
@@ -65,6 +67,7 @@ void compare_a(const double t, const int min, const int max, const unsigned coun
                 {
                         error("A " + to_string(a[i]) + " is not positive and not zero");
                 }
+
                 if (!(blackbody[i] >= 0))
                 {
                         error("Blackbody " + to_string(blackbody[i]) + " is not positive and not zero");

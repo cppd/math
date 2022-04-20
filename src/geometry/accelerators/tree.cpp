@@ -118,6 +118,7 @@ struct Task final
 {
         Box* box;
         unsigned depth;
+
         Task(Box* const box, const unsigned depth) : box(box), depth(depth)
         {
         }

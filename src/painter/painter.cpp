@@ -110,6 +110,7 @@ public:
         {
                 ASSERT(!max_number || *max_number > 0);
         }
+
         bool continue_painting()
         {
                 return !(max_number_ && ++number_ == *max_number_);
@@ -129,10 +130,12 @@ public:
         {
                 notifier_->thread_busy(thread_, pixel);
         }
+
         ~ThreadBusy()
         {
                 notifier_->thread_free(thread_);
         }
+
         ThreadBusy(const ThreadBusy&) = delete;
         ThreadBusy& operator=(const ThreadBusy&) = delete;
 };

@@ -42,15 +42,18 @@ class ThreadPool final
                         has_error_ = true;
                         error_message_ = s;
                 }
+
                 void clear()
                 {
                         has_error_ = false;
                         error_message_.clear();
                 }
+
                 bool has_error() const
                 {
                         return has_error_;
                 }
+
                 const std::string& error_message() const
                 {
                         return error_message_;

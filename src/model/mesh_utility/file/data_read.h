@@ -60,11 +60,13 @@ T str_to_floating_point(const char* const str, char** const end) requires(std::i
 {
         return std::strtof(str, end);
 }
+
 template <typename T>
 T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, double>)
 {
         return std::strtod(str, end);
 }
+
 template <typename T>
 T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, long double>)
 {

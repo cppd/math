@@ -48,6 +48,7 @@ public:
         {
                 return device_;
         }
+
         operator VkDevice() const&& = delete;
 
         VkPhysicalDevice physical_device() const;

@@ -40,6 +40,7 @@ namespace command
 struct UpdateMeshObject final
 {
         std::weak_ptr<const mesh::MeshObject<3>> object;
+
         explicit UpdateMeshObject(std::weak_ptr<const mesh::MeshObject<3>> object) : object(std::move(object))
         {
         }
@@ -48,6 +49,7 @@ struct UpdateMeshObject final
 struct UpdateVolumeObject final
 {
         std::weak_ptr<const volume::VolumeObject<3>> object;
+
         explicit UpdateVolumeObject(std::weak_ptr<const volume::VolumeObject<3>> object) : object(std::move(object))
         {
         }
@@ -56,6 +58,7 @@ struct UpdateVolumeObject final
 struct DeleteObject final
 {
         ObjectId id;
+
         explicit DeleteObject(const ObjectId id) : id(id)
         {
         }
@@ -72,6 +75,7 @@ struct ResetView final
 struct SetLightingColor final
 {
         color::Color value;
+
         explicit SetLightingColor(const color::Color& value) : value(value)
         {
         }
@@ -80,6 +84,7 @@ struct SetLightingColor final
 struct SetBackgroundColor final
 {
         color::Color value;
+
         explicit SetBackgroundColor(const color::Color& value) : value(value)
         {
         }
@@ -88,6 +93,7 @@ struct SetBackgroundColor final
 struct SetWireframeColor final
 {
         color::Color value;
+
         explicit SetWireframeColor(const color::Color& value) : value(value)
         {
         }
@@ -96,6 +102,7 @@ struct SetWireframeColor final
 struct SetNormalLength final
 {
         float value;
+
         explicit SetNormalLength(const float value) : value(value)
         {
         }
@@ -104,6 +111,7 @@ struct SetNormalLength final
 struct SetNormalColorPositive final
 {
         color::Color value;
+
         explicit SetNormalColorPositive(const color::Color& value) : value(value)
         {
         }
@@ -112,6 +120,7 @@ struct SetNormalColorPositive final
 struct SetNormalColorNegative final
 {
         color::Color value;
+
         explicit SetNormalColorNegative(const color::Color& value) : value(value)
         {
         }
@@ -120,6 +129,7 @@ struct SetNormalColorNegative final
 struct ShowSmooth final
 {
         bool show;
+
         explicit ShowSmooth(const bool show) : show(show)
         {
         }
@@ -128,6 +138,7 @@ struct ShowSmooth final
 struct ShowWireframe final
 {
         bool show;
+
         explicit ShowWireframe(const bool show) : show(show)
         {
         }
@@ -136,6 +147,7 @@ struct ShowWireframe final
 struct ShowShadow final
 {
         bool show;
+
         explicit ShowShadow(const bool show) : show(show)
         {
         }
@@ -144,6 +156,7 @@ struct ShowShadow final
 struct ShowFog final
 {
         bool show;
+
         explicit ShowFog(const bool show) : show(show)
         {
         }
@@ -152,6 +165,7 @@ struct ShowFog final
 struct ShowMaterials final
 {
         bool show;
+
         explicit ShowMaterials(const bool show) : show(show)
         {
         }
@@ -160,6 +174,7 @@ struct ShowMaterials final
 struct ShowFps final
 {
         bool show;
+
         explicit ShowFps(const bool show) : show(show)
         {
         }
@@ -168,6 +183,7 @@ struct ShowFps final
 struct SetVerticalSync final
 {
         bool enabled;
+
         explicit SetVerticalSync(const bool enabled) : enabled(enabled)
         {
         }
@@ -176,6 +192,7 @@ struct SetVerticalSync final
 struct SetShadowZoom final
 {
         double value;
+
         explicit SetShadowZoom(const double value) : value(value)
         {
         }
@@ -184,6 +201,7 @@ struct SetShadowZoom final
 struct ShowNormals final
 {
         bool show;
+
         explicit ShowNormals(const bool show) : show(show)
         {
         }
@@ -193,6 +211,7 @@ struct WindowResize final
 {
         int x;
         int y;
+
         WindowResize(const int x, const int y) : x(x), y(y)
         {
         }
@@ -201,6 +220,7 @@ struct WindowResize final
 struct ClipPlaneSetColor final
 {
         color::Color value;
+
         explicit ClipPlaneSetColor(const color::Color& value) : value(value)
         {
         }
@@ -209,6 +229,7 @@ struct ClipPlaneSetColor final
 struct ClipPlaneShow final
 {
         double position;
+
         explicit ClipPlaneShow(const double position) : position(position)
         {
         }
@@ -217,6 +238,7 @@ struct ClipPlaneShow final
 struct ClipPlaneSetPosition final
 {
         double position;
+
         explicit ClipPlaneSetPosition(const double position) : position(position)
         {
         }
@@ -231,6 +253,7 @@ struct MousePress final
         int x;
         int y;
         MouseButton button;
+
         MousePress(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
         {
         }
@@ -241,6 +264,7 @@ struct MouseRelease final
         int x;
         int y;
         MouseButton button;
+
         MouseRelease(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
         {
         }
@@ -250,6 +274,7 @@ struct MouseMove final
 {
         int x;
         int y;
+
         MouseMove(const int x, const int y) : x(x), y(y)
         {
         }
@@ -260,6 +285,7 @@ struct MouseWheel final
         int x;
         int y;
         double delta;
+
         MouseWheel(const int x, const int y, const double delta) : x(x), y(y), delta(delta)
         {
         }
@@ -268,6 +294,7 @@ struct MouseWheel final
 struct DftShow final
 {
         bool show;
+
         explicit DftShow(const bool show) : show(show)
         {
         }
@@ -276,6 +303,7 @@ struct DftShow final
 struct DftSetBrightness final
 {
         double value;
+
         explicit DftSetBrightness(const double value) : value(value)
         {
         }
@@ -284,6 +312,7 @@ struct DftSetBrightness final
 struct DftSetBackgroundColor final
 {
         color::Color value;
+
         explicit DftSetBackgroundColor(const color::Color& value) : value(value)
         {
         }
@@ -292,6 +321,7 @@ struct DftSetBackgroundColor final
 struct DftSetColor final
 {
         color::Color value;
+
         explicit DftSetColor(const color::Color& value) : value(value)
         {
         }
@@ -300,6 +330,7 @@ struct DftSetColor final
 struct ConvexHullShow final
 {
         bool show;
+
         explicit ConvexHullShow(const bool show) : show(show)
         {
         }
@@ -308,6 +339,7 @@ struct ConvexHullShow final
 struct OpticalFlowShow final
 {
         bool show;
+
         explicit OpticalFlowShow(const bool show) : show(show)
         {
         }
@@ -316,6 +348,7 @@ struct OpticalFlowShow final
 struct PencilSketchShow final
 {
         bool show;
+
         explicit PencilSketchShow(const bool show) : show(show)
         {
         }

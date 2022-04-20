@@ -41,6 +41,12 @@ namespace ns::gpu::renderer
 {
 namespace
 {
+struct MaterialVertices final
+{
+        int offset;
+        int count;
+};
+
 class Impl final : public MeshObject
 {
         const vulkan::Device* const device_;
@@ -58,11 +64,6 @@ class Impl final : public MeshObject
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_;
         const std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory_;
 
-        struct MaterialVertices final
-        {
-                int offset;
-                int count;
-        };
         std::vector<MaterialVertices> material_vertices_;
 
         std::unique_ptr<vulkan::BufferWithMemory> faces_vertex_buffer_;

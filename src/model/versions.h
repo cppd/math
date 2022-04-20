@@ -34,10 +34,12 @@ class Versions
         {
                 int version;
                 std::bitset<N> updates;
+
                 Version(int version, const std::bitset<N>& updates) : version(version), updates(updates)
                 {
                 }
         };
+
         std::deque<Version> versions_{{Version(0, std::bitset<N>().set())}};
 
 public:

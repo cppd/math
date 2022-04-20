@@ -29,7 +29,8 @@ template <std::size_t N, typename T>
 const BvhObject<N, T>& bvh_object(const BvhObject<N, T>& v)
 {
         return v;
-};
+}
+
 template <std::size_t N, typename T>
 BvhObject<N, T>&& bvh_object(BvhObject<N, T>&& v)
 {

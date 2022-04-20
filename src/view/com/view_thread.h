@@ -67,8 +67,6 @@ public:
 template <typename T>
 class EventQueues final
 {
-        ThreadQueue<Command> send_queue_;
-
         struct ViewInfoExt final
         {
                 const std::vector<Info>* info;
@@ -77,6 +75,8 @@ class EventQueues final
                 std::condition_variable cv;
                 bool received;
         };
+
+        ThreadQueue<Command> send_queue_;
         ThreadQueue<ViewInfoExt*> receive_queue_;
 
 public:

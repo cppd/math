@@ -66,18 +66,22 @@ public:
                         rows_[i] = rows->data() + i;
                 }
         }
+
         [[nodiscard]] constexpr const T& operator()(const int r, const int c) const&
         {
                 return (*rows_[r])[c];
         }
+
         [[nodiscard]] constexpr T& operator()(const int r, const int c) &
         {
                 return (*rows_[r])[c];
         }
+
         [[nodiscard]] constexpr Vector<C, T>& row(const int r) &
         {
                 return *rows_[r];
         }
+
         constexpr void swap(const int row_1, const int row_2) &
         {
                 std::swap(rows_[row_1], rows_[row_2]);

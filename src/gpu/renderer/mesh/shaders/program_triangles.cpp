@@ -77,6 +77,7 @@ VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_shared() const
 {
         return descriptor_set_layout_shared_;
 }
+
 VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_mesh() const
 {
         return descriptor_set_layout_mesh_;

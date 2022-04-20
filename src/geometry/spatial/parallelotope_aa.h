@@ -65,6 +65,7 @@ class ParallelotopeAA final
                 T d1;
                 T d2;
         };
+
         std::array<Planes, N> planes_;
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);

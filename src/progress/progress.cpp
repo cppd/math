@@ -48,6 +48,7 @@ public:
         {
                 return counter_.load(std::memory_order_relaxed);
         }
+
         operator T() const&& = delete;
 
         void operator|=(const T& v)
@@ -198,23 +199,29 @@ ProgressRatio::ProgressRatio(ProgressRatios* const ratios, const std::string& pe
         : progress_(std::make_unique<Impl>(ratios, permanent_text))
 {
 }
+
 ProgressRatio::~ProgressRatio() = default;
+
 void ProgressRatio::set(const unsigned value, const unsigned maximum)
 {
         progress_->set(value, maximum);
 }
+
 void ProgressRatio::set(const double v)
 {
         progress_->set(v);
 }
+
 void ProgressRatio::set_undefined()
 {
         progress_->set_undefined();
 }
+
 void ProgressRatio::set_text(const std::string& text)
 {
         progress_->set_text(text);
 }
+
 bool ProgressRatio::lock_free()
 {
         return LOCK_FREE;

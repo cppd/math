@@ -36,6 +36,21 @@ namespace ns::gpu::renderer
 {
 class VolumeRenderer
 {
+        struct CommandsFragments final
+        {
+                vulkan::handle::CommandBuffers fragments;
+                vulkan::handle::CommandBuffers fragments_opacity;
+                vulkan::handle::CommandBuffers opacity;
+        };
+
+        struct CommandsImage final
+        {
+                vulkan::handle::CommandBuffers image;
+                vulkan::handle::CommandBuffers image_fragments;
+                vulkan::handle::CommandBuffers image_fragments_opacity;
+                vulkan::handle::CommandBuffers image_opacity;
+        };
+
         const std::thread::id thread_id_ = std::this_thread::get_id();
         const VkDevice device_;
         const bool sample_shading_;
@@ -50,19 +65,6 @@ class VolumeRenderer
 
         std::unordered_map<VolumeProgramPipelineType, vulkan::handle::Pipeline> pipelines_;
 
-        struct CommandsFragments final
-        {
-                vulkan::handle::CommandBuffers fragments;
-                vulkan::handle::CommandBuffers fragments_opacity;
-                vulkan::handle::CommandBuffers opacity;
-        };
-        struct CommandsImage final
-        {
-                vulkan::handle::CommandBuffers image;
-                vulkan::handle::CommandBuffers image_fragments;
-                vulkan::handle::CommandBuffers image_fragments_opacity;
-                vulkan::handle::CommandBuffers image_opacity;
-        };
         std::optional<CommandsFragments> commands_fragments_;
         std::optional<CommandsImage> commands_image_;
 

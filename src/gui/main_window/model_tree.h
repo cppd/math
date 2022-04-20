@@ -41,17 +41,18 @@ class ModelTree final : public QWidget, private ModelTreeEvents, private ModelTr
         Q_OBJECT
 
 private:
+        struct Item final
+        {
+                QTreeWidgetItem* item;
+                bool visible;
+        };
+
         const std::thread::id thread_id_;
 
         Ui::ModelTree ui_;
 
         storage::Storage storage_;
 
-        struct Item final
-        {
-                QTreeWidgetItem* item;
-                bool visible;
-        };
         std::unordered_map<QTreeWidgetItem*, ObjectId> map_item_id_;
         std::unordered_map<ObjectId, Item> map_id_item_;
 

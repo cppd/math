@@ -82,6 +82,7 @@ public:
         {
                 return hProvider_;
         }
+
         operator HCRYPTPROV() const&& = delete;
 
         Provider(const Provider&) = delete;

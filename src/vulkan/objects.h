@@ -42,6 +42,7 @@ public:
         {
                 return queue_;
         }
+
         operator VkQueue() const&& noexcept = delete;
 
         std::uint32_t family_index() const noexcept
@@ -66,6 +67,7 @@ public:
         {
                 return command_pool_;
         }
+
         operator VkCommandPool() const&& noexcept = delete;
 
         std::uint32_t family_index() const noexcept
@@ -92,6 +94,7 @@ public:
         {
                 return render_pass_;
         }
+
         operator VkRenderPass() const&& noexcept = delete;
 
         std::uint32_t color_attachment_count() const noexcept
@@ -118,6 +121,7 @@ public:
         {
                 return buffer_;
         }
+
         operator VkBuffer() const&& noexcept = delete;
 
         VkDevice device() const noexcept
@@ -160,6 +164,7 @@ public:
         {
                 return image_;
         }
+
         operator VkImage() const&& noexcept = delete;
 
         VkDevice device() const noexcept
@@ -223,6 +228,7 @@ public:
         {
                 return image_view_;
         }
+
         operator VkImageView() const&& noexcept = delete;
 
         VkFormat format() const noexcept

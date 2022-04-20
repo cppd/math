@@ -70,6 +70,7 @@ float get_i(ivec2 p)
         p = clamp(p, ivec2(0), imageSize(image_dx) - 1);
         return imageLoad(image_i, p).r;
 }
+
 float get_j(vec2 p)
 {
         p = clamp(p, vec2(0), imageSize(image_dx) - 1);

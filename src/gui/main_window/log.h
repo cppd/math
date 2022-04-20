@@ -34,6 +34,7 @@ class Log final
         {
                 std::string text;
                 RGB8 color;
+
                 template <typename T, typename C>
                 Message(T&& text, C&& color)
                         : text(std::forward<T>(text)),

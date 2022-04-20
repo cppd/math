@@ -44,6 +44,7 @@ struct Insert final
 {
         std::shared_ptr<VolumeObject<N>> object;
         std::optional<ObjectId> parent_object_id;
+
         Insert(std::shared_ptr<VolumeObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
                 : object(std::move(object)),
                   parent_object_id(parent_object_id)
@@ -55,6 +56,7 @@ template <std::size_t N>
 struct Erase final
 {
         ObjectId id;
+
         explicit Erase(const ObjectId id) : id(id)
         {
         }
@@ -64,6 +66,7 @@ template <std::size_t N>
 struct Update final
 {
         std::weak_ptr<VolumeObject<N>> object;
+
         explicit Update(std::weak_ptr<VolumeObject<N>>&& object) : object(std::move(object))
         {
         }
@@ -98,6 +101,7 @@ enum Update
         UPDATE_VISIBILITY,
         UPDATE_VOLUME_ALPHA_COEFFICIENT
 };
+
 using Updates = std::bitset<UPDATE_VOLUME_ALPHA_COEFFICIENT + 1>;
 
 template <std::size_t N>
@@ -117,6 +121,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 {
                 }
         };
+
         static constexpr DefaultEvents DEFAULT_EVENTS{};
 
         inline static const VolumeEvents<N>* events_ = &DEFAULT_EVENTS;

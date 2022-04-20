@@ -30,6 +30,7 @@ class Frequency
         {
                 int sample_number;
                 double event_count = 0;
+
                 explicit Events(const int sample_number) : sample_number(sample_number)
                 {
                 }
