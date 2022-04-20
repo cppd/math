@@ -41,10 +41,10 @@ constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 // clang-format off
 constexpr std::array VERTICES = std::to_array<ViewVertex>
 ({
-        {{-1, +1, 0, 1}, {0, 1}},
-        {{+1, +1, 0, 1}, {1, 1}},
+        {{-1,  1, 0, 1}, {0, 1}},
+        {{ 1,  1, 0, 1}, {1, 1}},
         {{-1, -1, 0, 1}, {0, 0}},
-        {{+1, -1, 0, 1}, {1, 0}}
+        {{ 1, -1, 0, 1}, {1, 0}}
 });
 // clang-format on
 
