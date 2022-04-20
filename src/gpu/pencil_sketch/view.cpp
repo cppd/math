@@ -35,8 +35,20 @@ namespace ns::gpu::pencil_sketch
 {
 namespace
 {
-constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
+
+// texture (0, 0) is top left
+// clang-format off
+constexpr std::array VERTICES = std::to_array<ViewVertex>
+({
+        {{-1, +1, 0, 1}, {0, 1}},
+        {{+1, +1, 0, 1}, {1, 1}},
+        {{-1, -1, 0, 1}, {0, 0}},
+        {{+1, -1, 0, 1}, {1, 0}}
+});
+// clang-format on
+
+static_assert(VERTICES.size() == 4);
 
 class Impl final : public View
 {
@@ -78,7 +90,7 @@ class Impl final : public View
                 const std::array<VkDeviceSize, 1> offsets{0};
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                vkCmdDraw(command_buffer, VERTEX_COUNT, 1, 0, 0);
+                vkCmdDraw(command_buffer, VERTICES.size(), 1, 0, 0);
         }
 
         void create_buffers(
@@ -157,22 +169,14 @@ class Impl final : public View
 
         void create_vertices()
         {
-                std::array<ViewVertex, VERTEX_COUNT> vertices;
-
-                // texture (0, 0) is top left
-                vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
-                vertices[1] = {{+1, +1, 0, 1}, {1, 1}};
-                vertices[2] = {{-1, -1, 0, 1}, {0, 0}};
-                vertices[3] = {{+1, -1, 0, 1}, {1, 0}};
-
                 vertices_.reset();
                 vertices_ = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
                         std::vector<std::uint32_t>(
                                 {graphics_queue_->family_index() /*, transfer_queue_.family_index()*/}),
-                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
+                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(VERTICES));
                 vertices_->write(
-                        *graphics_command_pool_, *graphics_queue_, data_size(vertices), data_pointer(vertices));
+                        *graphics_command_pool_, *graphics_queue_, data_size(VERTICES), data_pointer(VERTICES));
         }
 
 public:
