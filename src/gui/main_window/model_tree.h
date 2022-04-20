@@ -47,7 +47,7 @@ private:
 
         storage::Storage storage_;
 
-        struct Item
+        struct Item final
         {
                 QTreeWidgetItem* item;
                 bool visible;

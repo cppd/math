@@ -69,7 +69,7 @@ void check_facet_dimension(
 template <std::size_t N>
 void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets, const bool has_boundary)
 {
-        struct Hash
+        struct Hash final
         {
                 std::size_t operator()(const std::array<int, N - 1>& v) const
                 {

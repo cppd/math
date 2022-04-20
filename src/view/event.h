@@ -191,7 +191,8 @@ struct ShowNormals final
 
 struct WindowResize final
 {
-        int x, y;
+        int x;
+        int y;
         WindowResize(const int x, const int y) : x(x), y(y)
         {
         }
@@ -227,7 +228,8 @@ struct ClipPlaneHide final
 
 struct MousePress final
 {
-        int x, y;
+        int x;
+        int y;
         MouseButton button;
         MousePress(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
         {
@@ -236,7 +238,8 @@ struct MousePress final
 
 struct MouseRelease final
 {
-        int x, y;
+        int x;
+        int y;
         MouseButton button;
         MouseRelease(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
         {
@@ -245,7 +248,8 @@ struct MouseRelease final
 
 struct MouseMove final
 {
-        int x, y;
+        int x;
+        int y;
         MouseMove(const int x, const int y) : x(x), y(y)
         {
         }
@@ -253,7 +257,8 @@ struct MouseMove final
 
 struct MouseWheel final
 {
-        int x, y;
+        int x;
+        int y;
         double delta;
         MouseWheel(const int x, const int y, const double delta) : x(x), y(y), delta(delta)
         {

@@ -110,7 +110,7 @@ public:
                 return data_->p() == v.data_->p() && data_->n() == v.data_->n() && data_->t() == v.data_->t();
         }
 
-        struct Hash
+        struct Hash final
         {
                 std::size_t operator()(const MapVertex& v) const
                 {

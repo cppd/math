@@ -30,7 +30,7 @@ namespace ns::gui::main_window
 {
 class Log final
 {
-        struct Message
+        struct Message final
         {
                 std::string text;
                 RGB8 color;

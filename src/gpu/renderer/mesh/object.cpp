@@ -58,7 +58,7 @@ class Impl final : public MeshObject
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_;
         const std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory_;
 
-        struct MaterialVertices
+        struct MaterialVertices final
         {
                 int offset;
                 int count;

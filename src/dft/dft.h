@@ -25,6 +25,7 @@ namespace ns::dft
 struct DFT
 {
         virtual ~DFT() = default;
+
         virtual void exec(bool inverse, std::vector<std::complex<float>>* data) = 0;
 };
 }

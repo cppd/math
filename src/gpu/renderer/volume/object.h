@@ -43,7 +43,7 @@ struct VolumeObject
 
         virtual void set_clip_plane(const Vector4d& world_clip_plane_equation) = 0;
 
-        struct UpdateChanges
+        struct UpdateChanges final
         {
                 bool image = false;
         };

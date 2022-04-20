@@ -31,7 +31,7 @@ class FftGlobalBuffer final
 {
         vulkan::BufferWithMemory buffer_;
 
-        struct Data
+        struct Data final
         {
                 std::uint32_t m_div_2;
                 float two_pi_div_m;

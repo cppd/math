@@ -54,7 +54,7 @@ std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N,
 }
 
 template <typename T>
-struct FresnelDielectric
+struct FresnelDielectric final
 {
         T reflected;
         T transmitted;

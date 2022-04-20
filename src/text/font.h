@@ -34,10 +34,15 @@ public:
 
         void set_size(int size_in_pixels);
 
-        struct Char
+        struct Char final
         {
                 const unsigned char* image;
-                int size, width, height, left, top, advance_x;
+                int size;
+                int width;
+                int height;
+                int left;
+                int top;
+                int advance_x;
                 char32_t code_point;
         };
 

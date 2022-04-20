@@ -30,7 +30,7 @@ class SlidersWidget final : public QWidget
         Q_OBJECT
 
 private:
-        struct Slider
+        struct Slider final
         {
                 QLabel* label;
                 unsigned number;

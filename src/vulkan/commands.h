@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct CommandBufferCreateInfo
+struct CommandBufferCreateInfo final
 {
         // required, std::optional is used to check that values are set
         std::optional<VkDevice> device;

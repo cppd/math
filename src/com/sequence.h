@@ -33,13 +33,13 @@ template <
 struct Sequence final
 {
         template <int FIRST, int N, std::size_t... I>
-        struct S
+        struct S final
         {
                 static_assert(N > 0);
                 using T = typename S<FIRST, N - 1, N - 1, I...>::T;
         };
         template <int FIRST, std::size_t... I>
-        struct S<FIRST, 0, I...>
+        struct S<FIRST, 0, I...> final
         {
                 static_assert(sizeof...(I) > 0);
                 using T = Type<SequenceType<FIRST + I, SequenceTypeParameters...>...>;

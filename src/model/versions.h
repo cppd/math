@@ -30,7 +30,7 @@ class Versions
 {
         static constexpr std::size_t MAX_VERSION_COUNT = 10;
 
-        struct Version
+        struct Version final
         {
                 int version;
                 std::bitset<N> updates;

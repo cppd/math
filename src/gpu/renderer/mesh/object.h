@@ -60,7 +60,7 @@ struct MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 
-        struct UpdateChanges
+        struct UpdateChanges final
         {
                 bool matrix = false;
                 bool mesh = false;

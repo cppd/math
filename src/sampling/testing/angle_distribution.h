@@ -49,7 +49,7 @@ class AngleDistribution
                 return angle * (180 / PI<T>);
         }
 
-        struct Distribution
+        struct Distribution final
         {
                 T angle_from;
                 T angle_to;

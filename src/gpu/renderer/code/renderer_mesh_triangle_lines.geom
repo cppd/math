@@ -68,7 +68,9 @@ void main()
                 return;
         }
 
-        int i0, i1, i2;
+        int i0;
+        int i1;
+        int i2;
 
         if (s[0] != 0 && s[0] != s[1] && s[0] != s[2])
         {

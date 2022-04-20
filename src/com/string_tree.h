@@ -24,7 +24,7 @@ namespace ns
 {
 class StringTree
 {
-        struct Node
+        struct Node final
         {
                 std::string name;
                 std::vector<std::size_t> children;

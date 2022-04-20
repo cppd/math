@@ -147,14 +147,16 @@ class Impl final : public Window
 
         int width() const override
         {
-                int width, height;
+                int width;
+                int height;
                 glfwGetFramebufferSize(window_, &width, &height);
                 return width;
         }
 
         int height() const override
         {
-                int width, height;
+                int width;
+                int height;
                 glfwGetFramebufferSize(window_, &width, &height);
                 return height;
         }

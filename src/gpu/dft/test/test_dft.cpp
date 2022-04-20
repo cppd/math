@@ -196,7 +196,7 @@ std::filesystem::path make_path(const std::string_view& name)
         return std::filesystem::temp_directory_path() / path_from_utf8(name);
 }
 
-struct DftData
+struct DftData final
 {
         std::vector<Complex> forward;
         std::vector<Complex> inverse;

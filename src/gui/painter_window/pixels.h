@@ -50,6 +50,7 @@ struct Pixels
                 image::ColorFormat color_format;
                 std::vector<std::byte> pixels;
         };
+
         struct Images final
         {
                 std::vector<int> size;

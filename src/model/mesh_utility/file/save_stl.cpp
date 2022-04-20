@@ -68,7 +68,7 @@ void write_end_ascii(std::ostream& file, const std::string& solid_name)
 
 void write_begin_binary(std::ostream& file, unsigned facet_count)
 {
-        struct Begin
+        struct Begin final
         {
                 std::array<std::uint8_t, 80> header;
                 std::uint32_t number_of_triangles;
@@ -82,7 +82,7 @@ void write_begin_binary(std::ostream& file, unsigned facet_count)
 
 void write_end_binary(std::ostream& file)
 {
-        struct End
+        struct End final
         {
                 std::uint16_t attribute_byte_count;
         };

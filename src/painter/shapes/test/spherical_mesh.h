@@ -102,7 +102,7 @@ float random_radius(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename Color>
-struct SphericalMesh
+struct SphericalMesh final
 {
         std::size_t facet_count;
         geometry::BoundingBox<N, T> bounding_box;

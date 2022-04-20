@@ -32,7 +32,7 @@ long long simplex_count(const std::vector<std::array<int, N>>& facets)
 {
         static_assert(D < N);
 
-        struct Hash
+        struct Hash final
         {
                 std::size_t operator()(const std::array<int, D + 1>& v) const
                 {

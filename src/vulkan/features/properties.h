@@ -26,7 +26,7 @@ template <typename T>
 struct FeatureProperties;
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceFeatures>
+struct FeatureProperties<VkPhysicalDeviceFeatures> final
 {
         static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceFeatures, robustBufferAccess);
         static constexpr std::size_t COUNT = 55;
@@ -34,7 +34,7 @@ struct FeatureProperties<VkPhysicalDeviceFeatures>
 };
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceVulkan11Features>
+struct FeatureProperties<VkPhysicalDeviceVulkan11Features> final
 {
         static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceVulkan11Features, storageBuffer16BitAccess);
         static constexpr std::size_t COUNT = 12;
@@ -42,7 +42,7 @@ struct FeatureProperties<VkPhysicalDeviceVulkan11Features>
 };
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceVulkan12Features>
+struct FeatureProperties<VkPhysicalDeviceVulkan12Features> final
 {
         static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceVulkan12Features, samplerMirrorClampToEdge);
         static constexpr std::size_t COUNT = 47;
@@ -50,7 +50,7 @@ struct FeatureProperties<VkPhysicalDeviceVulkan12Features>
 };
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR>
+struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR> final
 {
         static constexpr std::size_t OFFSET =
                 offsetof(VkPhysicalDeviceAccelerationStructureFeaturesKHR, accelerationStructure);
@@ -59,7 +59,7 @@ struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR>
 };
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceRayQueryFeaturesKHR>
+struct FeatureProperties<VkPhysicalDeviceRayQueryFeaturesKHR> final
 {
         static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceRayQueryFeaturesKHR, rayQuery);
         static constexpr std::size_t COUNT = 1;
@@ -67,7 +67,7 @@ struct FeatureProperties<VkPhysicalDeviceRayQueryFeaturesKHR>
 };
 
 template <>
-struct FeatureProperties<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>
+struct FeatureProperties<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> final
 {
         static constexpr std::size_t OFFSET =
                 offsetof(VkPhysicalDeviceRayTracingPipelineFeaturesKHR, rayTracingPipeline);

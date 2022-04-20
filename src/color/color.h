@@ -138,7 +138,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
         using Base = Samples<SpectrumSamples<T, N>, N, T>;
 
-        struct Colors
+        struct Colors final
         {
                 Vector<N, T> white;
                 Vector<N, T> cyan;
@@ -149,7 +149,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 Vector<N, T> blue;
         };
 
-        struct Functions
+        struct Functions final
         {
                 Vector<N, T> x;
                 Vector<N, T> y;

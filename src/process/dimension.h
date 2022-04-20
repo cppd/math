@@ -29,7 +29,7 @@ namespace implementation
 }
 
 template <std::size_t N>
-struct Dimension
+struct Dimension final
 {
 };
 

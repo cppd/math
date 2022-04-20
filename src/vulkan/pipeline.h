@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct GraphicsPipelineCreateInfo
+struct GraphicsPipelineCreateInfo final
 {
         // required, std::optional is used to check that values are set
         const Device* device = nullptr;
@@ -57,7 +57,7 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
 //
 
-struct ComputePipelineCreateInfo
+struct ComputePipelineCreateInfo final
 {
         // required
         VkDevice device = VK_NULL_HANDLE;
@@ -72,7 +72,7 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
 
 //
 
-struct RayTracingPipelineCreateInfo
+struct RayTracingPipelineCreateInfo final
 {
         // required
         VkDevice device = VK_NULL_HANDLE;

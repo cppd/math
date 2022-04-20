@@ -26,7 +26,7 @@ namespace ns
 {
 class Frequency
 {
-        struct Events
+        struct Events final
         {
                 int sample_number;
                 double event_count = 0;

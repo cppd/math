@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct TrianglesVertex
+struct TrianglesVertex final
 {
         Vector3f position;
         Vector3f normal;

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct PointsVertex
+struct PointsVertex final
 {
         Vector3f position;
 

@@ -97,7 +97,7 @@ template <std::size_t N>
 struct Notifier
 {
 protected:
-        virtual ~Notifier() = default;
+        ~Notifier() = default;
 
 public:
         virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;

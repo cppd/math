@@ -69,7 +69,7 @@ class EventQueues final
 {
         ThreadQueue<Command> send_queue_;
 
-        struct ViewInfoExt
+        struct ViewInfoExt final
         {
                 const std::vector<Info>* info;
 

@@ -29,6 +29,7 @@ namespace ns::gpu::dft
 struct Dft
 {
         virtual ~Dft() = default;
+
         virtual void create_buffers(unsigned width, unsigned height, std::uint32_t family_index) = 0;
         virtual void delete_buffers() = 0;
 

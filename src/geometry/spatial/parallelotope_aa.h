@@ -60,9 +60,10 @@ class ParallelotopeAA final
         // Object count after binary division
         static constexpr int DIVISIONS = 1 << N;
 
-        struct Planes
+        struct Planes final
         {
-                T d1, d2;
+                T d1;
+                T d2;
         };
         std::array<Planes, N> planes_;
 
