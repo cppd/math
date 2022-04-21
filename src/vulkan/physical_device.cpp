@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 
 #include <algorithm>
+#include <optional>
 #include <random>
 #include <sstream>
 
@@ -41,14 +42,17 @@ namespace
 {
 constexpr std::uint32_t MIN_STORAGE_BUFFER_RANGE = 1'000'000'000;
 
-bool find_family(
+std::optional<std::uint32_t> find_family(
         const std::vector<VkQueueFamilyProperties>& families,
         const VkQueueFlags flags,
-        const VkQueueFlags no_flags,
-        std::uint32_t* const index)
+        const VkQueueFlags no_flags)
 {
-        ASSERT(flags != 0);
-        ASSERT((flags & no_flags) == 0);
+        if (!flags)
+        {
+                return std::nullopt;
+        }
+
+        ASSERT(!(flags & no_flags));
 
         for (std::size_t i = 0; i < families.size(); ++i)
         {
@@ -61,12 +65,11 @@ bool find_family(
 
                 if (((p.queueFlags & flags) == flags) && !(p.queueFlags & no_flags))
                 {
-                        *index = i;
-                        return true;
+                        return i;
                 }
         }
 
-        return false;
+        return std::nullopt;
 }
 
 std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surface, const VkPhysicalDevice device)
@@ -226,7 +229,7 @@ std::vector<std::size_t> suitable_physical_devices(
 
                 try
                 {
-                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
+                        physical_device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
                 }
                 catch (...)
                 {
@@ -296,28 +299,31 @@ const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() con
         return info_.queue_families;
 }
 
-std::uint32_t PhysicalDevice::family_index(
+std::uint32_t PhysicalDevice::find_family_index(
         const VkQueueFlags set_flags,
         const VkQueueFlags not_set_flags,
         const std::vector<VkQueueFlags>& default_flags) const
 {
-        std::uint32_t index;
-
-        if (set_flags && find_family(info_.queue_families, set_flags, not_set_flags, &index))
+        if (!set_flags)
         {
-                return index;
+                error("No flags for finding queue family index");
+        }
+
+        if (const auto index = find_family(info_.queue_families, set_flags, not_set_flags))
+        {
+                return *index;
         }
 
         for (const VkQueueFlags flags : default_flags)
         {
-                if (flags && find_family(info_.queue_families, flags, 0, &index))
+                if (const auto index = find_family(info_.queue_families, flags, 0))
                 {
-                        return index;
+                        return *index;
                 }
         }
 
-        error("Queue family not found, flags set " + to_string(set_flags) + "; not set " + to_string(not_set_flags)
-              + "; default " + to_string(default_flags));
+        error("Queue family not found, set flags " + to_string(set_flags) + ", not set flags "
+              + to_string(not_set_flags) + ", default flags " + to_string(default_flags));
 }
 
 std::uint32_t PhysicalDevice::presentation_family_index() const

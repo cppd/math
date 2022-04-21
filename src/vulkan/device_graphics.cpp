@@ -33,10 +33,12 @@ DeviceGraphics::DeviceGraphics(
         : physical_device_(
                 find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
           graphics_compute_family_index_(
-                  physical_device_.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0})),
-          compute_family_index_(
-                  physical_device_.family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT, {VK_QUEUE_COMPUTE_BIT})),
-          transfer_family_index_(physical_device_.family_index(
+                  physical_device_.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0})),
+          compute_family_index_(physical_device_.find_family_index(
+                  VK_QUEUE_COMPUTE_BIT,
+                  VK_QUEUE_GRAPHICS_BIT,
+                  {VK_QUEUE_COMPUTE_BIT})),
+          transfer_family_index_(physical_device_.find_family_index(
                   VK_QUEUE_TRANSFER_BIT,
                   VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
                   // All commands that are allowed on a queue that supports

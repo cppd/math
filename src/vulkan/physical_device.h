@@ -44,7 +44,7 @@ public:
         const PhysicalDeviceFeatures& features() const;
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
-        std::uint32_t family_index(
+        std::uint32_t find_family_index(
                 VkQueueFlags set_flags,
                 VkQueueFlags not_set_flags,
                 const std::vector<VkQueueFlags>& default_flags) const;
