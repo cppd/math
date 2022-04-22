@@ -22,9 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string samples_to_string(VkSampleCountFlags flags);
-std::string resolve_modes_to_string(VkResolveModeFlags flags);
-std::string shader_stages_to_string(VkShaderStageFlags flags);
-std::string subgroup_features_to_string(VkSubgroupFeatureFlags flags);
-std::string queues_to_string(VkQueueFlags flags);
+std::string point_clipping_behavior_to_string(VkPointClippingBehavior point_clipping_behavior);
 }

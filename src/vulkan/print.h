@@ -23,8 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print/image_layout.h"
 #include "print/image_type.h"
 #include "print/physical_device_type.h"
+#include "print/point_clipping_behavior.h"
 #include "print/present_mode.h"
 #include "print/result.h"
+#include "print/shader_float_controls_independence.h"
 
 #include <algorithm>
 #include <string>

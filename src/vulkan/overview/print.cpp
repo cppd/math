@@ -173,38 +173,4 @@ std::string queues_to_string(const VkQueueFlags flags)
 
         return s;
 }
-
-std::string shader_float_controls_independence_to_string(const VkShaderFloatControlsIndependence v)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch"
-        switch (v)
-        {
-        case VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY:
-                return "32_BIT_ONLY";
-        case VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL:
-                return "ALL";
-        case VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE:
-                return "NONE";
-        }
-#pragma GCC diagnostic pop
-
-        return "UNKNOWN";
-}
-
-std::string point_clipping_behavior_to_string(const VkPointClippingBehavior v)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch"
-        switch (v)
-        {
-        case VK_POINT_CLIPPING_BEHAVIOR_ALL_CLIP_PLANES:
-                return "ALL_CLIP_PLANES";
-        case VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY:
-                return "USER_CLIP_PLANES_ONLY";
-        }
-#pragma GCC diagnostic pop
-
-        return "UNKNOWN";
-}
 }

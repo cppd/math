@@ -15,16 +15,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "point_clipping_behavior.h"
 
-#include <string>
-#include <vulkan/vulkan.h>
+#include <src/com/enum.h>
+#include <src/com/print.h>
+
+#define CASE(parameter) \
+        case parameter: \
+                return #parameter;
 
 namespace ns::vulkan
 {
-std::string samples_to_string(VkSampleCountFlags flags);
-std::string resolve_modes_to_string(VkResolveModeFlags flags);
-std::string shader_stages_to_string(VkShaderStageFlags flags);
-std::string subgroup_features_to_string(VkSubgroupFeatureFlags flags);
-std::string queues_to_string(VkQueueFlags flags);
+std::string point_clipping_behavior_to_string(const VkPointClippingBehavior point_clipping_behavior)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        switch (point_clipping_behavior)
+        {
+                CASE(VK_POINT_CLIPPING_BEHAVIOR_ALL_CLIP_PLANES)
+                CASE(VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY)
+        }
+#pragma GCC diagnostic pop
+
+        return "Unknown VkPointClippingBehavior " + to_string(enum_to_int(point_clipping_behavior));
+}
 }
