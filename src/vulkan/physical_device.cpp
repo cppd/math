@@ -227,11 +227,7 @@ std::vector<std::size_t> suitable_physical_devices(
                         continue;
                 }
 
-                try
-                {
-                        physical_device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
-                }
-                catch (...)
+                if (!physical_device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
                 {
                         continue;
                 }
@@ -299,31 +295,16 @@ const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() con
         return info_.queue_families;
 }
 
-std::uint32_t PhysicalDevice::find_family_index(
+std::optional<std::uint32_t> PhysicalDevice::find_family_index(
         const VkQueueFlags set_flags,
-        const VkQueueFlags not_set_flags,
-        const std::vector<VkQueueFlags>& default_flags) const
+        const VkQueueFlags not_set_flags) const
 {
         if (!set_flags)
         {
                 error("No flags for finding queue family index");
         }
 
-        if (const auto index = find_family(info_.queue_families, set_flags, not_set_flags))
-        {
-                return *index;
-        }
-
-        for (const VkQueueFlags flags : default_flags)
-        {
-                if (const auto index = find_family(info_.queue_families, flags, 0))
-                {
-                        return *index;
-                }
-        }
-
-        error("Queue family not found, set flags " + to_string(set_flags) + ", not set flags "
-              + to_string(not_set_flags) + ", default flags " + to_string(default_flags));
+        return find_family(info_.queue_families, set_flags, not_set_flags);
 }
 
 std::uint32_t PhysicalDevice::presentation_family_index() const

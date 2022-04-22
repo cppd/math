@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device_info.h"
 
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -44,10 +45,9 @@ public:
         const PhysicalDeviceFeatures& features() const;
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
-        std::uint32_t find_family_index(
+        [[nodiscard]] std::optional<std::uint32_t> find_family_index(
                 VkQueueFlags set_flags,
-                VkQueueFlags not_set_flags,
-                const std::vector<VkQueueFlags>& default_flags) const;
+                VkQueueFlags not_set_flags = 0) const;
 
         std::uint32_t presentation_family_index() const;
 
