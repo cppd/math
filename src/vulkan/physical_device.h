@@ -46,8 +46,8 @@ public:
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
         [[nodiscard]] std::optional<std::uint32_t> find_family_index(
-                VkQueueFlags set_flags,
-                VkQueueFlags not_set_flags = 0) const;
+                VkQueueFlags present_flags,
+                VkQueueFlags absent_flags = 0) const;
 
         std::uint32_t presentation_family_index() const;
 

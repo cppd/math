@@ -44,15 +44,18 @@ constexpr std::uint32_t MIN_STORAGE_BUFFER_RANGE = 1'000'000'000;
 
 std::optional<std::uint32_t> find_family(
         const std::vector<VkQueueFamilyProperties>& families,
-        const VkQueueFlags flags,
-        const VkQueueFlags no_flags)
+        const VkQueueFlags present_flags,
+        const VkQueueFlags absent_flags)
 {
-        if (!flags)
+        if (!present_flags)
         {
-                return std::nullopt;
+                error("No present flags specified for finding queue family index");
         }
 
-        ASSERT(!(flags & no_flags));
+        if (present_flags & absent_flags)
+        {
+                error("Flag intersection for finding queue family index");
+        }
 
         for (std::size_t i = 0; i < families.size(); ++i)
         {
@@ -63,7 +66,7 @@ std::optional<std::uint32_t> find_family(
                         continue;
                 }
 
-                if (((p.queueFlags & flags) == flags) && !(p.queueFlags & no_flags))
+                if (((p.queueFlags & present_flags) == present_flags) && !(p.queueFlags & absent_flags))
                 {
                         return i;
                 }
@@ -296,15 +299,10 @@ const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() con
 }
 
 std::optional<std::uint32_t> PhysicalDevice::find_family_index(
-        const VkQueueFlags set_flags,
-        const VkQueueFlags not_set_flags) const
+        const VkQueueFlags present_flags,
+        const VkQueueFlags absent_flags) const
 {
-        if (!set_flags)
-        {
-                error("No flags for finding queue family index");
-        }
-
-        return find_family(info_.queue_families, set_flags, not_set_flags);
+        return find_family(info_.queue_families, present_flags, absent_flags);
 }
 
 std::uint32_t PhysicalDevice::presentation_family_index() const
