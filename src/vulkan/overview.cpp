@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "overview/device.h"
 #include "overview/device_properties.h"
-#include "overview/print.h"
 
 #include <src/com/print.h>
 #include <src/com/string_tree.h>

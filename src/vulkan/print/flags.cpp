@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "print.h"
+#include "flags.h"
 
 #include <src/com/print.h>
 
@@ -37,6 +37,7 @@ void add_flags(
                 {
                         *s += ", ";
                 }
+
                 *s += name;
                 *flags_clear &= ~test_flags;
         }
@@ -51,6 +52,7 @@ void add_flags_unknown(std::string* const s, const Flags flags)
                 {
                         *s += ", ";
                 }
+
                 *s += "UNKNOWN (";
                 *s += to_string_binary(flags, "0b");
                 *s += ")";
@@ -58,7 +60,7 @@ void add_flags_unknown(std::string* const s, const Flags flags)
 }
 }
 
-std::string samples_to_string(const VkSampleCountFlags flags)
+std::string sample_counts_to_string(const VkSampleCountFlags flags)
 {
         if (!flags)
         {
@@ -66,7 +68,7 @@ std::string samples_to_string(const VkSampleCountFlags flags)
         }
 
         std::string s;
-        VkSampleCountFlags flags_clear = flags;
+        auto flags_clear = flags;
 
         add_flags(&s, flags, &flags_clear, VK_SAMPLE_COUNT_1_BIT, "1");
         add_flags(&s, flags, &flags_clear, VK_SAMPLE_COUNT_2_BIT, "2");
@@ -89,7 +91,7 @@ std::string resolve_modes_to_string(const VkResolveModeFlags flags)
         }
 
         std::string s;
-        VkSampleCountFlags flags_clear = flags;
+        auto flags_clear = flags;
 
         add_flags(&s, flags, &flags_clear, VK_RESOLVE_MODE_SAMPLE_ZERO_BIT, "SAMPLE_ZERO");
         add_flags(&s, flags, &flags_clear, VK_RESOLVE_MODE_AVERAGE_BIT, "AVERAGE");
@@ -109,7 +111,7 @@ std::string shader_stages_to_string(const VkShaderStageFlags flags)
         }
 
         std::string s;
-        VkSampleCountFlags flags_clear = flags;
+        auto flags_clear = flags;
 
         add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_VERTEX_BIT, "VERTEX");
         add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, "TESSELLATION_CONTROL");
@@ -137,7 +139,7 @@ std::string subgroup_features_to_string(const VkSubgroupFeatureFlags flags)
         }
 
         std::string s;
-        VkSampleCountFlags flags_clear = flags;
+        auto flags_clear = flags;
 
         add_flags(&s, flags, &flags_clear, VK_SUBGROUP_FEATURE_BASIC_BIT, "BASIC");
         add_flags(&s, flags, &flags_clear, VK_SUBGROUP_FEATURE_VOTE_BIT, "VOTE");
@@ -161,7 +163,7 @@ std::string queues_to_string(const VkQueueFlags flags)
         }
 
         std::string s;
-        VkSampleCountFlags flags_clear = flags;
+        auto flags_clear = flags;
 
         add_flags(&s, flags, &flags_clear, VK_QUEUE_GRAPHICS_BIT, "GRAPHICS");
         add_flags(&s, flags, &flags_clear, VK_QUEUE_COMPUTE_BIT, "COMPUTE");

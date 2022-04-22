@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device_properties.h"
 
-#include "print.h"
-
 #include "../print.h"
 
 #include <src/com/print.h>
@@ -59,7 +57,7 @@ void add_sample(
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, samples_to_string(flags));
+        strings->emplace_back(name, sample_counts_to_string(flags));
 }
 
 void add_shader_stage(

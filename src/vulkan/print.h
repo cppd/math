@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "print/color_space.h"
+#include "print/flags.h"
 #include "print/format.h"
 #include "print/formats.h"
 #include "print/image_layout.h"
