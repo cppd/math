@@ -17,21 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../device.h"
-#include "../physical_device.h"
-
-#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-void distribute_device_queues(
-        const Device& device,
+std::vector<std::uint32_t> distribute_device_queues(
+        std::uint32_t count,
         const std::string_view& queue_name,
         std::uint32_t family_index,
-        const std::span<Queue>& queues,
+        std::uint32_t device_queue_count,
         std::unordered_map<std::uint32_t, std::uint32_t>* queue_count,
         std::string* description);
 

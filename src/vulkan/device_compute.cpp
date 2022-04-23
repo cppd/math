@@ -105,11 +105,21 @@ DeviceCompute::DeviceCompute(
         std::string description;
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
 
-        distribute_device_queues(
-                device_, "compute", compute_family_index_, compute_queues_, &queue_count, &description);
+        for (std::size_t i = 0;
+             const auto queue_index : distribute_device_queues(
+                     COMPUTE_QUEUE_COUNT, "compute", compute_family_index_, device_.queue_count(compute_family_index_),
+                     &queue_count, &description))
+        {
+                compute_queues_[i++] = device_.queue(compute_family_index_, queue_index);
+        }
 
-        distribute_device_queues(
-                device_, "transfer", transfer_family_index_, transfer_queues_, &queue_count, &description);
+        for (std::size_t i = 0;
+             const auto queue_index : distribute_device_queues(
+                     TRANSFER_QUEUE_COUNT, "transfer", transfer_family_index_,
+                     device_.queue_count(transfer_family_index_), &queue_count, &description))
+        {
+                transfer_queues_[i++] = device_.queue(transfer_family_index_, queue_index);
+        }
 
         LOG(description);
 }

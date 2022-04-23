@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-void distribute_device_queues(
-        const Device& device,
+std::vector<std::uint32_t> distribute_device_queues(
+        const std::uint32_t count,
         const std::string_view& queue_name,
         const std::uint32_t family_index,
-        const std::span<Queue>& queues,
+        const std::uint32_t device_queue_count,
         std::unordered_map<std::uint32_t, std::uint32_t>* const queue_count,
         std::string* const description)
 {
@@ -38,17 +38,21 @@ void distribute_device_queues(
         *description += queue_name;
         *description += " queues, family index = " + to_string(family_index);
 
-        for (std::size_t i = 0; i < queues.size(); ++i)
+        std::vector<std::uint32_t> queues;
+
+        for (std::size_t i = 0; i < count; ++i)
         {
                 std::uint32_t& device_queue = (*queue_count)[family_index];
-                if (device_queue >= device.queue_count(family_index))
+                if (device_queue >= device_queue_count)
                 {
                         device_queue = 0;
                 }
-                queues[i] = device.queue(family_index, device_queue);
+                queues.push_back(device_queue);
                 *description += "\n  queue = " + to_string(i) + ", device queue = " + to_string(device_queue);
                 ++device_queue;
         }
+
+        return queues;
 }
 
 std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
