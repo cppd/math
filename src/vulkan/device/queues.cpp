@@ -20,22 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
-#include <algorithm>
-
 namespace ns::vulkan
 {
-std::unordered_map<std::uint32_t, std::uint32_t> compute_device_queue_count(
-        const PhysicalDevice& physical_device,
-        const std::vector<std::tuple<std::uint32_t, std::uint32_t>>& family_index_and_count)
-{
-        std::unordered_map<std::uint32_t, std::uint32_t> queues;
-        for (const auto& [index, count] : family_index_and_count)
-        {
-                queues[index] = std::min(queues[index] + count, physical_device.queue_families()[index].queueCount);
-        }
-        return queues;
-}
-
 void distribute_device_queues(
         const Device& device,
         const std::string_view& queue_name,

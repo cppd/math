@@ -22,16 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <span>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 namespace ns::vulkan
 {
-std::unordered_map<std::uint32_t, std::uint32_t> compute_device_queue_count(
-        const PhysicalDevice& physical_device,
-        const std::vector<std::tuple<std::uint32_t, std::uint32_t>>& family_index_and_count);
-
 void distribute_device_queues(
         const Device& device,
         const std::string_view& queue_name,

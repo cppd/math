@@ -74,6 +74,32 @@ std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
 
         error("Transfer queue family not found");
 }
+
+std::unordered_map<std::uint32_t, std::uint32_t> compute_device_queue_count(
+        const PhysicalDevice& physical_device,
+        const std::uint32_t graphics_compute_index,
+        const std::uint32_t graphics_compute_count,
+        const std::uint32_t compute_index,
+        const std::uint32_t compute_count,
+        const std::uint32_t transfer_index,
+        const std::uint32_t transfer_count,
+        const std::uint32_t presentation_index,
+        const std::uint32_t presentation_count)
+{
+        std::unordered_map<std::uint32_t, std::uint32_t> queues;
+
+        const auto compute = [&](const auto index, const auto count)
+        {
+                queues[index] = std::min(queues[index] + count, physical_device.queue_families()[index].queueCount);
+        };
+
+        compute(graphics_compute_index, graphics_compute_count);
+        compute(compute_index, compute_count);
+        compute(transfer_index, transfer_count);
+        compute(presentation_index, presentation_count);
+
+        return queues;
+}
 }
 
 DeviceGraphics::DeviceGraphics(
@@ -89,10 +115,14 @@ DeviceGraphics::DeviceGraphics(
           device_(&physical_device_,
                   compute_device_queue_count(
                           physical_device_,
-                          {{graphics_compute_family_index_, GRAPHICS_COMPUTE_QUEUE_COUNT},
-                           {compute_family_index_, COMPUTE_QUEUE_COUNT},
-                           {transfer_family_index_, TRANSFER_QUEUE_COUNT},
-                           {presentation_family_index_, PRESENTATION_QUEUE_COUNT}}),
+                          graphics_compute_family_index_,
+                          GRAPHICS_COMPUTE_QUEUE_COUNT,
+                          compute_family_index_,
+                          COMPUTE_QUEUE_COUNT,
+                          transfer_family_index_,
+                          TRANSFER_QUEUE_COUNT,
+                          presentation_family_index_,
+                          PRESENTATION_QUEUE_COUNT),
                   device_functionality),
           device_extension_functions_(device_)
 {
