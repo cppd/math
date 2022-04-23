@@ -89,11 +89,8 @@ concept FloatingPointType = std::is_floating_point_v<T> || std::is_same_v<T, __f
 template <typename T>
 struct Limits;
 
-// clang-format off
-
 template <typename T>
-requires IntegralType<T> && std::numeric_limits<T>::is_specialized
-struct Limits<T>
+requires IntegralType<T> && std::numeric_limits<T>::is_specialized struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -118,8 +115,7 @@ struct Limits<T>
 };
 
 template <typename T>
-requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized
-struct Limits<T>
+requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized struct Limits<T>
 {
         static constexpr T epsilon() noexcept
         {
@@ -165,8 +161,7 @@ struct Limits<T>
 };
 
 template <typename T>
-requires std::is_same_v<T, unsigned __int128> && (!std::numeric_limits<T>::is_specialized)
-struct Limits<T>
+requires std::is_same_v<T, unsigned __int128> &&(!std::numeric_limits<T>::is_specialized) struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -191,8 +186,7 @@ struct Limits<T>
 };
 
 template <typename T>
-requires std::is_same_v<T, signed __int128> && (!std::numeric_limits<T>::is_specialized)
-struct Limits<T>
+requires std::is_same_v<T, signed __int128> &&(!std::numeric_limits<T>::is_specialized) struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -217,8 +211,7 @@ struct Limits<T>
 };
 
 template <typename T>
-requires std::is_same_v<T, __float128> && (!std::numeric_limits<T>::is_specialized)
-struct Limits<T>
+requires std::is_same_v<T, __float128> &&(!std::numeric_limits<T>::is_specialized) struct Limits<T>
 {
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
@@ -260,8 +253,6 @@ struct Limits<T>
                 return true;
         }
 };
-
-// clang-format on
 }
 
 template <typename T>

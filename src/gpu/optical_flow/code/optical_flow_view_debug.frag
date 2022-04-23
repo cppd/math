@@ -19,13 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(binding = 0) uniform sampler2D tex;
 
-// in vec2 vs_texture_coordinates;
+// layout(location = 0) in VS
+// {
+//         vec2 texture_coordinates;
+// }
+// vs;
 
 layout(location = 0) out vec4 color;
 
 void main()
 {
-        // float c = texture(tex, vs_texture_coordinates).x;
+        // const float c = texture(tex, vs.texture_coordinates).x;
         const float c = texelFetch(tex, ivec2(gl_FragCoord.xy), 0).x;
 
         // c += 0.5;

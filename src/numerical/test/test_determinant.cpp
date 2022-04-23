@@ -33,10 +33,8 @@ namespace ns::numerical::determinant_implementation
 {
 namespace
 {
-// clang-format off
-template<typename T>
-constexpr std::array VECTORS = std::to_array<Vector<7, T>>
-({
+template <typename T>
+constexpr std::array VECTORS = std::to_array<Vector<7, T>>({
         {10,  2,   3,   4,   5,   6,   7},
         { 8, 90,  10,  11,  12,  13,  14},
         {15, 16, 170,  18,  19,  20,  21},
@@ -45,7 +43,6 @@ constexpr std::array VECTORS = std::to_array<Vector<7, T>>
         {36, 37,  38,  39,  40, 410,  42},
         {43, 44,  45,  46,  47,  48, 490}
 });
-// clang-format on
 
 template <typename T>
 constexpr bool TEST_COFACTOR_EXPANSION =

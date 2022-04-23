@@ -17,20 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
-// out vec2 vs_texture_coordinates;
+const vec4 VERTICES[4] = {vec4(-1, 1, 0, 1), vec4(1, 1, 0, 1), vec4(-1, -1, 0, 1), vec4(1, -1, 0, 1)};
 
-// clang-format off
-const vec4 VERTICES[4] = vec4[4]
-(
-        vec4(-1,  1, 0, 1),
-        vec4( 1,  1, 0, 1),
-        vec4(-1, -1, 0, 1),
-        vec4( 1, -1, 0, 1)
-);
-// clang-format on
+// texture (0, 0) is top left
+// const vec2 TEXTURE_COORDINATES[4] = {vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0)};
 
-// Texture (0, 0) is bottom left
-// const vec2 texture_coordinates[4] = vec2[4](vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0));
+// layout(location = 0) out VS
+// {
+//         vec2 texture_coordinates;
+// }
+// vs;
 
 void main()
 {
@@ -39,6 +35,6 @@ void main()
         if (vertex_index < 4)
         {
                 gl_Position = VERTICES[vertex_index];
-                // vs_texture_coordinates = texture_coordinates[vertex_index];
+                // vs.texture_coordinates = TEXTURE_COORDINATES[vertex_index];
         }
 }
