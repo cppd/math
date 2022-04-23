@@ -92,9 +92,19 @@ float random_radius(RandomEngine& engine)
         {
                 if (std::is_same_v<T, float>)
                 {
-                        return std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}});
+                        return std::to_array<std::array<int, 2>>({
+                                {-7, 10},
+                                {-4,  6},
+                                {-3,  5},
+                                {-2,  3}
+                        });
                 }
-                return std::to_array<std::array<int, 2>>({{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}});
+                return std::to_array<std::array<int, 2>>({
+                        {-22, 37},
+                        {-22, 37},
+                        {-22, 37},
+                        {-22, 30}
+                });
         }();
 
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());

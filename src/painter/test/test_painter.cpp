@@ -141,8 +141,12 @@ void check_application_instance()
 template <std::size_t N>
 float random_radius()
 {
-        static constexpr std::array EXPONENTS =
-                std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}});
+        static constexpr std::array EXPONENTS = std::to_array<std::array<int, 2>>({
+                {-7, 10},
+                {-4,  6},
+                {-3,  5},
+                {-2,  3}
+        });
 
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());
         static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];

@@ -186,7 +186,9 @@ std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& 
                 return parameters;
         }
 
-        return {{.background = dialog_parameters.with_background, .to_8_bit = dialog_parameters.convert_to_8_bit}};
+        return {
+                {.background = dialog_parameters.with_background, .to_8_bit = dialog_parameters.convert_to_8_bit}
+        };
 }
 
 template <std::size_t N_IMAGE>

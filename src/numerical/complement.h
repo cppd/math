@@ -196,7 +196,9 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
 
         if constexpr (N == 2)
         {
-                return {Vector<2, T>{unit_vector[1], -unit_vector[0]}};
+                return {
+                        Vector<2, T>{unit_vector[1], -unit_vector[0]}
+                };
         }
 
         if constexpr (N == 3)

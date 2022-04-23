@@ -85,10 +85,20 @@ std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices)
 {
-        constexpr std::array VERTICES_0 = std::to_array<Vector3f>({{-0.5, 1, 0}, {-1, 0, 0}, {0, 0, 0}, {-0.5, -1, 0}});
+        constexpr std::array VERTICES_0 = std::to_array<Vector3f>({
+                {-0.5,  1, 0},
+                {  -1,  0, 0},
+                {   0,  0, 0},
+                {-0.5, -1, 0}
+        });
         constexpr std::array INDICES_0 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
 
-        constexpr std::array VERTICES_1 = std::to_array<Vector3f>({{0.5, 1, 0}, {1, 0, 0}, {0, 0, 0}, {0.5, -1, 0}});
+        constexpr std::array VERTICES_1 = std::to_array<Vector3f>({
+                {0.5,  1, 0},
+                {  1,  0, 0},
+                {  0,  0, 0},
+                {0.5, -1, 0}
+        });
         constexpr std::array INDICES_1 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
 
         std::vector<vulkan::BottomLevelAccelerationStructure> bottom_level;
@@ -104,8 +114,12 @@ std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
 
 std::vector<VkTransformMatrixKHR> create_matrices()
 {
-        constexpr VkTransformMatrixKHR MATRIX_0{{{1, 0, 0, 0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
-        constexpr VkTransformMatrixKHR MATRIX_1{{{1, 0, 0, -0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+        constexpr VkTransformMatrixKHR MATRIX_0{
+                {{1, 0, 0, 0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}
+        };
+        constexpr VkTransformMatrixKHR MATRIX_1{
+                {{1, 0, 0, -0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}
+        };
 
         std::vector<VkTransformMatrixKHR> matrices;
         matrices.push_back(MATRIX_0);

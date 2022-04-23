@@ -45,7 +45,9 @@ std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N,
 
         if (cos2_square > 0)
         {
-                return {{std::abs(dot1), std::sqrt(cos2_square)}};
+                return {
+                        {std::abs(dot1), std::sqrt(cos2_square)}
+                };
         }
 
         // total internal reflection

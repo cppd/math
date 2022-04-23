@@ -33,7 +33,9 @@ struct PushConstants final
 
 std::vector<VkPushConstantRange> push_constant_ranges()
 {
-        return {{.stageFlags = PUSH_CONSTANT_STAGE, .offset = 0, .size = sizeof(PushConstants)}};
+        return {
+                {.stageFlags = PUSH_CONSTANT_STAGE, .offset = 0, .size = sizeof(PushConstants)}
+        };
 }
 
 void push_constant_command(

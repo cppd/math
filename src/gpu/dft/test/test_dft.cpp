@@ -387,7 +387,14 @@ void constant_data_test(ComputeVector* const dft, ProgressRatio* const progress)
 
         LOG("\n----- Constant Data DFT Tests -----");
 
-        const std::vector<Complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
+        const std::vector<Complex> source_data({
+                {1, 0},
+                {2, 0},
+                {3, 0},
+                {4, 0},
+                {5, 0},
+                {6, 0}
+        });
         const int n = source_data.size() / 3;
         const int k = source_data.size() / n;
 

@@ -45,7 +45,10 @@ class Mouse final
         int y_ = Limits<int>::lowest();
 
         Camera* camera_;
-        Region<2, int> rectangle_{{Limits<int>::lowest(), Limits<int>::lowest()}, {0, 0}};
+        Region<2, int> rectangle_{
+                {Limits<int>::lowest(), Limits<int>::lowest()},
+                {                    0,                     0}
+        };
 
         const MouseButtonInfo& info(MouseButton button) const;
 

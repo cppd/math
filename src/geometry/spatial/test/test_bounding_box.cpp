@@ -74,7 +74,8 @@ struct Test final
         static_assert(BOX_POINT.max() == Vector<4, T>(1, -2, 3, -4));
 
         static constexpr BoundingBox<4, T> BOX_ARRAY{
-                std::array{Vector<4, T>(1, -2, 3, -4), Vector<4, T>(-5, 6, -7, 8)}};
+                std::array{Vector<4, T>(1, -2, 3, -4), Vector<4, T>(-5, 6, -7, 8)}
+        };
         static_assert(BOX_ARRAY.min() == Vector<4, T>(-5, -2, -7, -4));
         static_assert(BOX_ARRAY.max() == Vector<4, T>(1, 6, 3, 8));
 };

@@ -53,7 +53,9 @@ std::string StringTree::text(const unsigned indent) const
 {
         std::string s;
 
-        std::stack<std::tuple<std::size_t, unsigned>> stack({{ROOT_NODE, 0}});
+        std::stack<std::tuple<std::size_t, unsigned>> stack({
+                {ROOT_NODE, 0}
+        });
 
         while (!stack.empty())
         {
