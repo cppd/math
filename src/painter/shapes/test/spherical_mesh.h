@@ -88,10 +88,14 @@ float random_radius(RandomEngine& engine)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
-        static constexpr std::array EXPONENTS =
-                std::is_same_v<T, float>
-                        ? std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}})
-                        : std::to_array<std::array<int, 2>>({{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}});
+        static constexpr std::array EXPONENTS = []
+        {
+                if (std::is_same_v<T, float>)
+                {
+                        return std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}});
+                }
+                return std::to_array<std::array<int, 2>>({{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}});
+        }();
 
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());
         static constexpr std::array<int, 2> EXPONENT = EXPONENTS[N - 3];
