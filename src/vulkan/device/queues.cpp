@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <map>
+
 namespace ns::vulkan
 {
 namespace
@@ -44,6 +46,62 @@ std::vector<std::uint32_t> distribute_device_queues(
         }
 
         return queues;
+}
+
+std::map<std::uint32_t, std::map<std::uint32_t, std::string>> create_queue_description_map(
+        const std::vector<std::string_view>& names,
+        const std::vector<QueueFamilyDevice>& device_queues)
+{
+        if (names.size() != device_queues.size())
+        {
+                error("Names size " + to_string(names.size()) + " is not equal to device queues size "
+                      + to_string(device_queues.size()));
+        }
+
+        std::map<std::uint32_t, std::map<std::uint32_t, std::string>> res;
+
+        for (std::size_t i = 0; i < names.size(); ++i)
+        {
+                const auto family_index = device_queues[i].family_index;
+                for (const auto queue : device_queues[i].device_queues)
+                {
+                        std::string& s = res[family_index][queue];
+                        if (!s.empty())
+                        {
+                                s += ", ";
+                        }
+                        s += names[i];
+                }
+        }
+
+        return res;
+}
+
+std::string create_queue_description_string(
+        const std::string_view line_start,
+        const std::map<std::uint32_t, std::map<std::uint32_t, std::string>>& queue_info)
+{
+        std::string res;
+
+        for (const auto& [family_index, queues] : queue_info)
+        {
+                for (const auto& [queue, s] : queues)
+                {
+                        if (!res.empty())
+                        {
+                                res += '\n';
+                        }
+                        res += line_start;
+                        res += "family index = ";
+                        res += to_string(family_index);
+                        res += ", queue = ";
+                        res += to_string(queue);
+                        res += ": ";
+                        res += s;
+                }
+        }
+
+        return res;
 }
 }
 
@@ -78,36 +136,8 @@ std::string device_queues_description(
         const std::vector<std::string_view>& names,
         const std::vector<QueueFamilyDevice>& device_queues)
 {
-        ASSERT(names.size() == device_queues.size());
-
-        constexpr std::string_view LINE_START = "queue distribution: ";
-
-        std::string res;
-        for (std::size_t i = 0; i < names.size(); ++i)
-        {
-                if (!res.empty())
-                {
-                        res += '\n';
-                }
-                res += LINE_START;
-                res += names[i];
-                res += '\n';
-                res += LINE_START;
-                res += "  family = ";
-                res += to_string(device_queues[i].family_index);
-                res += ", queues = {";
-                const std::vector<std::uint32_t>& queues = device_queues[i].device_queues;
-                for (std::size_t j = 0; j < queues.size(); ++j)
-                {
-                        if (j != 0)
-                        {
-                                res += ", ";
-                        }
-                        res += to_string(queues[j]);
-                }
-                res += '}';
-        }
-        return res;
+        return create_queue_description_string(
+                "queue distribution: ", create_queue_description_map(names, device_queues));
 }
 
 std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues)
