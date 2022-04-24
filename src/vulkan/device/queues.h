@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../device.h"
 #include "../physical_device.h"
 
-#include <string_view>
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -29,7 +29,6 @@ namespace ns::vulkan
 {
 struct QueueFamilyInfo final
 {
-        std::string_view name;
         std::uint32_t index;
         std::uint32_t count;
 };
@@ -47,6 +46,10 @@ struct QueueDistribution final
 };
 
 QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& data);
+
+std::string device_queues_description(
+        const std::vector<std::string_view>& names,
+        const std::vector<QueueFamilyDevice>& device_queues);
 
 std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues);
 

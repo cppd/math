@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "queues.h"
 
 #include <src/com/error.h>
-#include <src/com/log.h>
 #include <src/com/print.h>
 
 namespace ns::vulkan
@@ -27,20 +26,10 @@ namespace
 {
 std::vector<std::uint32_t> distribute_device_queues(
         const std::uint32_t count,
-        const std::string_view& queue_name,
         const std::uint32_t family_index,
         const std::uint32_t device_queue_count,
-        std::unordered_map<std::uint32_t, std::uint32_t>* const queue_count,
-        std::string* const description)
+        std::unordered_map<std::uint32_t, std::uint32_t>* const queue_count)
 {
-        if (!description->empty())
-        {
-                *description += '\n';
-        }
-
-        *description += queue_name;
-        *description += " queues, family index = " + to_string(family_index);
-
         std::vector<std::uint32_t> queues;
 
         for (std::size_t i = 0; i < count; ++i)
@@ -51,7 +40,6 @@ std::vector<std::uint32_t> distribute_device_queues(
                         device_queue = 0;
                 }
                 queues.push_back(device_queue);
-                *description += "\n  queue = " + to_string(i) + ", device queue = " + to_string(device_queue);
                 ++device_queue;
         }
 
@@ -72,21 +60,54 @@ QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const
 
         distribution.device_queues.reserve(data.size());
 
-        std::string description;
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
 
         for (const QueueFamilyInfo& entry : data)
         {
+                std::vector<std::uint32_t> device_queues = distribute_device_queues(
+                        entry.count, entry.index, distribution.index_to_count[entry.index], &queue_count);
+
                 distribution.device_queues.push_back(
-                        {.family_index = entry.index,
-                         .device_queues = distribute_device_queues(
-                                 entry.count, entry.name, entry.index, distribution.index_to_count[entry.index],
-                                 &queue_count, &description)});
+                        {.family_index = entry.index, .device_queues = std::move(device_queues)});
         }
 
-        LOG(description);
-
         return distribution;
+}
+
+std::string device_queues_description(
+        const std::vector<std::string_view>& names,
+        const std::vector<QueueFamilyDevice>& device_queues)
+{
+        ASSERT(names.size() == device_queues.size());
+
+        constexpr std::string_view LINE_START = "queue distribution: ";
+
+        std::string res;
+        for (std::size_t i = 0; i < names.size(); ++i)
+        {
+                if (!res.empty())
+                {
+                        res += '\n';
+                }
+                res += LINE_START;
+                res += names[i];
+                res += '\n';
+                res += LINE_START;
+                res += "  family = ";
+                res += to_string(device_queues[i].family_index);
+                res += ", queues = {";
+                const std::vector<std::uint32_t>& queues = device_queues[i].device_queues;
+                for (std::size_t j = 0; j < queues.size(); ++j)
+                {
+                        if (j != 0)
+                        {
+                                res += ", ";
+                        }
+                        res += to_string(queues[j]);
+                }
+                res += '}';
+        }
+        return res;
 }
 
 std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues)

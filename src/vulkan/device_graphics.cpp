@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device/queues.h"
 
+#include <src/com/log.h>
+
 namespace ns::vulkan
 {
 namespace
@@ -95,25 +97,19 @@ DeviceGraphics::DeviceGraphics(
         const std::vector<QueueFamilyInfo> family_info = [&]
         {
                 std::vector<QueueFamilyInfo> res(4);
-
                 res[GRAPHICS_COMPUTE] = {
-                        .name = "graphics compute",
                         .index = graphics_compute_family_index_,
                         .count = GRAPHICS_COMPUTE_QUEUE_COUNT};
-
-                res[COMPUTE] = {.name = "compute", .index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
-
-                res[TRANSFER] = {.name = "transfer", .index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
-
-                res[PRESENTATION] = {
-                        .name = "presentation",
-                        .index = presentation_family_index_,
-                        .count = PRESENTATION_QUEUE_COUNT};
-
+                res[COMPUTE] = {.index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
+                res[TRANSFER] = {.index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
+                res[PRESENTATION] = {.index = presentation_family_index_, .count = PRESENTATION_QUEUE_COUNT};
                 return res;
         }();
 
         const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
+
+        LOG(device_queues_description(
+                {"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
 
         device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
 
