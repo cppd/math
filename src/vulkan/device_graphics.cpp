@@ -19,15 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device/queues.h"
 
-#include <src/com/log.h>
-
-#include <string>
-#include <unordered_map>
-
 namespace ns::vulkan
 {
 namespace
 {
+constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
+constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
+constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
+constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
+
 std::uint32_t find_graphics_compute_family_index(const PhysicalDevice& device)
 {
         if (const auto index = device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
@@ -74,32 +74,6 @@ std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
 
         error("Transfer queue family not found");
 }
-
-std::unordered_map<std::uint32_t, std::uint32_t> compute_device_queue_count(
-        const PhysicalDevice& physical_device,
-        const std::uint32_t graphics_compute_index,
-        const std::uint32_t graphics_compute_count,
-        const std::uint32_t compute_index,
-        const std::uint32_t compute_count,
-        const std::uint32_t transfer_index,
-        const std::uint32_t transfer_count,
-        const std::uint32_t presentation_index,
-        const std::uint32_t presentation_count)
-{
-        std::unordered_map<std::uint32_t, std::uint32_t> queues;
-
-        const auto compute = [&](const auto index, const auto count)
-        {
-                queues[index] = std::min(queues[index] + count, physical_device.queue_families()[index].queueCount);
-        };
-
-        compute(graphics_compute_index, graphics_compute_count);
-        compute(compute_index, compute_count);
-        compute(transfer_index, transfer_count);
-        compute(presentation_index, presentation_count);
-
-        return queues;
-}
 }
 
 DeviceGraphics::DeviceGraphics(
@@ -111,56 +85,43 @@ DeviceGraphics::DeviceGraphics(
           graphics_compute_family_index_(find_graphics_compute_family_index(physical_device_)),
           compute_family_index_(find_compute_family_index(physical_device_)),
           transfer_family_index_(find_transfer_family_index(physical_device_)),
-          presentation_family_index_(physical_device_.presentation_family_index()),
-          device_(&physical_device_,
-                  compute_device_queue_count(
-                          physical_device_,
-                          graphics_compute_family_index_,
-                          GRAPHICS_COMPUTE_QUEUE_COUNT,
-                          compute_family_index_,
-                          COMPUTE_QUEUE_COUNT,
-                          transfer_family_index_,
-                          TRANSFER_QUEUE_COUNT,
-                          presentation_family_index_,
-                          PRESENTATION_QUEUE_COUNT),
-                  device_functionality),
-          device_extension_functions_(device_)
+          presentation_family_index_(physical_device_.presentation_family_index())
 {
-        std::string description;
-        std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
+        constexpr int GRAPHICS_COMPUTE = 0;
+        constexpr int COMPUTE = 1;
+        constexpr int TRANSFER = 2;
+        constexpr int PRESENTATION = 3;
 
-        for (std::size_t i = 0;
-             const auto queue_index : distribute_device_queues(
-                     GRAPHICS_COMPUTE_QUEUE_COUNT, "graphics_compute", graphics_compute_family_index_,
-                     device_.queue_count(graphics_compute_family_index_), &queue_count, &description))
+        const std::vector<QueueFamilyInfo> family_info = [&]
         {
-                graphics_compute_queues_[i++] = device_.queue(graphics_compute_family_index_, queue_index);
-        }
+                std::vector<QueueFamilyInfo> res(4);
 
-        for (std::size_t i = 0;
-             const auto queue_index : distribute_device_queues(
-                     COMPUTE_QUEUE_COUNT, "compute", compute_family_index_, device_.queue_count(compute_family_index_),
-                     &queue_count, &description))
-        {
-                compute_queues_[i++] = device_.queue(compute_family_index_, queue_index);
-        }
+                res[GRAPHICS_COMPUTE] = {
+                        .name = "graphics compute",
+                        .index = graphics_compute_family_index_,
+                        .count = GRAPHICS_COMPUTE_QUEUE_COUNT};
 
-        for (std::size_t i = 0;
-             const auto queue_index : distribute_device_queues(
-                     TRANSFER_QUEUE_COUNT, "transfer", transfer_family_index_,
-                     device_.queue_count(transfer_family_index_), &queue_count, &description))
-        {
-                transfer_queues_[i++] = device_.queue(transfer_family_index_, queue_index);
-        }
+                res[COMPUTE] = {.name = "compute", .index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
 
-        for (std::size_t i = 0;
-             const auto queue_index : distribute_device_queues(
-                     PRESENTATION_QUEUE_COUNT, "presentation", presentation_family_index_,
-                     device_.queue_count(presentation_family_index_), &queue_count, &description))
-        {
-                presentation_queues_[i++] = device_.queue(presentation_family_index_, queue_index);
-        }
+                res[TRANSFER] = {.name = "transfer", .index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
 
-        LOG(description);
+                res[PRESENTATION] = {
+                        .name = "presentation",
+                        .index = presentation_family_index_,
+                        .count = PRESENTATION_QUEUE_COUNT};
+
+                return res;
+        }();
+
+        const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
+
+        device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
+
+        device_extension_functions_.emplace(*device_);
+
+        graphics_compute_queues_ = create_device_queues(*device_, distribution.device_queues[GRAPHICS_COMPUTE]);
+        compute_queues_ = create_device_queues(*device_, distribution.device_queues[COMPUTE]);
+        transfer_queues_ = create_device_queues(*device_, distribution.device_queues[TRANSFER]);
+        presentation_queues_ = create_device_queues(*device_, distribution.device_queues[PRESENTATION]);
 }
 }

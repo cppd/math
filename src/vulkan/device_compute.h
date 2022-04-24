@@ -22,32 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 
-#include <array>
-
 namespace ns::vulkan
 {
 class DeviceCompute final
 {
-        static constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
-        static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
-
         const PhysicalDevice physical_device_;
 
         const std::uint32_t compute_family_index_;
         const std::uint32_t transfer_family_index_;
 
-        const Device device_;
+        std::optional<Device> device_;
 
-        std::array<Queue, COMPUTE_QUEUE_COUNT> compute_queues_;
-        std::array<Queue, TRANSFER_QUEUE_COUNT> transfer_queues_;
+        std::vector<Queue> compute_queues_;
+        std::vector<Queue> transfer_queues_;
 
 public:
         DeviceCompute(
                 PhysicalDeviceSearchType search_type,
                 VkInstance instance,
                 const DeviceFunctionality& device_functionality);
-
-        ~DeviceCompute() = default;
 
         DeviceCompute(const DeviceCompute&) = delete;
         DeviceCompute(DeviceCompute&&) = delete;
@@ -56,7 +49,7 @@ public:
 
         const Device& device() const
         {
-                return device_;
+                return *device_;
         }
 
         std::uint32_t compute_family_index() const

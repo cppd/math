@@ -17,20 +17,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include "../device.h"
+#include "../physical_device.h"
+
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-std::vector<std::uint32_t> distribute_device_queues(
-        std::uint32_t count,
-        const std::string_view& queue_name,
-        std::uint32_t family_index,
-        std::uint32_t device_queue_count,
-        std::unordered_map<std::uint32_t, std::uint32_t>* queue_count,
-        std::string* description);
+struct QueueFamilyInfo final
+{
+        std::string_view name;
+        std::uint32_t index;
+        std::uint32_t count;
+};
+
+struct QueueFamilyDevice final
+{
+        std::uint32_t family_index;
+        std::vector<std::uint32_t> device_queues;
+};
+
+struct QueueDistribution final
+{
+        std::unordered_map<std::uint32_t, std::uint32_t> index_to_count;
+        std::vector<QueueFamilyDevice> device_queues;
+};
+
+QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& data);
+
+std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues);
 
 std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
         VkDevice device,

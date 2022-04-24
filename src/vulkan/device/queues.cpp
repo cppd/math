@@ -18,9 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "queues.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/print.h>
 
 namespace ns::vulkan
+{
+namespace
 {
 std::vector<std::uint32_t> distribute_device_queues(
         const std::uint32_t count,
@@ -53,6 +56,48 @@ std::vector<std::uint32_t> distribute_device_queues(
         }
 
         return queues;
+}
+}
+
+QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& data)
+{
+        QueueDistribution distribution;
+
+        for (const QueueFamilyInfo& entry : data)
+        {
+                distribution.index_to_count[entry.index] = std::min(
+                        distribution.index_to_count[entry.index] + entry.count,
+                        physical_device.queue_families()[entry.index].queueCount);
+        }
+
+        distribution.device_queues.reserve(data.size());
+
+        std::string description;
+        std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
+
+        for (const QueueFamilyInfo& entry : data)
+        {
+                distribution.device_queues.push_back(
+                        {.family_index = entry.index,
+                         .device_queues = distribute_device_queues(
+                                 entry.count, entry.name, entry.index, distribution.index_to_count[entry.index],
+                                 &queue_count, &description)});
+        }
+
+        LOG(description);
+
+        return distribution;
+}
+
+std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues)
+{
+        std::vector<Queue> res;
+        res.reserve(device_queues.device_queues.size());
+        for (const auto queue : device_queues.device_queues)
+        {
+                res.push_back(device.queue(device_queues.family_index, queue));
+        }
+        return res;
 }
 
 std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(

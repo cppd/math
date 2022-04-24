@@ -23,17 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 
-#include <array>
-
 namespace ns::vulkan
 {
 class DeviceGraphics final
 {
-        static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
-        static constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
-        static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
-        static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
-
         const PhysicalDevice physical_device_;
 
         const std::uint32_t graphics_compute_family_index_;
@@ -41,18 +34,16 @@ class DeviceGraphics final
         const std::uint32_t transfer_family_index_;
         const std::uint32_t presentation_family_index_;
 
-        const Device device_;
-        const DeviceExtensionFunctions device_extension_functions_;
+        std::optional<Device> device_;
+        std::optional<DeviceExtensionFunctions> device_extension_functions_;
 
-        std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> graphics_compute_queues_;
-        std::array<Queue, COMPUTE_QUEUE_COUNT> compute_queues_;
-        std::array<Queue, TRANSFER_QUEUE_COUNT> transfer_queues_;
-        std::array<Queue, PRESENTATION_QUEUE_COUNT> presentation_queues_;
+        std::vector<Queue> graphics_compute_queues_;
+        std::vector<Queue> compute_queues_;
+        std::vector<Queue> transfer_queues_;
+        std::vector<Queue> presentation_queues_;
 
 public:
         DeviceGraphics(VkInstance instance, const DeviceFunctionality& device_functionality, VkSurfaceKHR surface);
-
-        ~DeviceGraphics() = default;
 
         DeviceGraphics(const DeviceGraphics&) = delete;
         DeviceGraphics(DeviceGraphics&&) = delete;
@@ -61,7 +52,7 @@ public:
 
         const Device& device() const
         {
-                return device_;
+                return *device_;
         }
 
         std::uint32_t graphics_compute_family_index() const
@@ -79,7 +70,7 @@ public:
                 return transfer_family_index_;
         }
 
-        const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_compute_queues() const
+        const std::vector<Queue>& graphics_compute_queues() const
         {
                 return graphics_compute_queues_;
         }
