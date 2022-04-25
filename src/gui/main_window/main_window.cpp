@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "../com/application.h"
 #include "../com/command_line.h"
 #include "../com/support.h"
 #include "../dialogs/application_about.h"
@@ -31,8 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/create.h>
 
 #include <QCloseEvent>
-#include <QDesktopWidget>
 #include <QPointer>
+#include <QScreen>
 
 namespace ns::gui::main_window
 {
@@ -263,12 +264,14 @@ void MainWindow::first_shown()
 {
         if (WINDOW_SIZE_GRAPHICS)
         {
-                QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
+                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QSize size = screen.geometry().size() * WINDOW_SIZE_COEF;
                 resize_window_widget(this, graphics_widget_, size);
         }
         else
         {
-                QSize size = QDesktopWidget().availableGeometry(this).size() * WINDOW_SIZE_COEF;
+                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QSize size = screen.availableGeometry().size() * WINDOW_SIZE_COEF;
                 resize_window_frame(this, size);
         }
 

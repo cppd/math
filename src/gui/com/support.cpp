@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QScrollBar>
 #include <algorithm>
 #include <cmath>
@@ -277,10 +277,12 @@ void move_window_to_desktop_center(QMainWindow* const window)
 {
         ASSERT(window);
 
+        const QScreen& screen = *Application::instance()->primaryScreen();
+
         // move function includes frame
         window->move(
-                (QDesktopWidget().availableGeometry(window).width() - window->frameGeometry().width()) / 2,
-                (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
+                (screen.availableGeometry().width() - window->frameGeometry().width()) / 2,
+                (screen.availableGeometry().height() - window->frameGeometry().height()) / 2);
 }
 
 void resize_window_frame(QMainWindow* const window, const QSize& frame_size)
