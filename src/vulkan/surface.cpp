@@ -78,7 +78,7 @@ bool surface_suitable(const VkPhysicalDevice device, const VkSurfaceKHR surface)
         return !find_surface_formats(device, surface).empty() && !find_present_modes(device, surface).empty();
 }
 
-VkExtent2D surface_extent(const VkSurfaceCapabilitiesKHR& capabilities)
+VkExtent2D choose_surface_extent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
         constexpr std::uint32_t SPECIAL_VALUE = 0xffff'ffff;
 

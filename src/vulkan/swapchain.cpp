@@ -376,7 +376,7 @@ Swapchain::Swapchain(
         const VkSurfaceCapabilitiesKHR surface_capabilities =
                 find_surface_capabilities(device.physical_device(), surface);
 
-        extent_ = surface_extent(surface_capabilities);
+        extent_ = choose_surface_extent(surface_capabilities);
 
         const std::vector<VkSurfaceFormatKHR> surface_formats = find_surface_formats(device.physical_device(), surface);
         surface_format_ = choose_surface_format(required_surface_format, surface_formats);

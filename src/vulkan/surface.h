@@ -30,5 +30,5 @@ std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice device, VkSurf
 
 bool surface_suitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-VkExtent2D surface_extent(const VkSurfaceCapabilitiesKHR& capabilities);
+VkExtent2D choose_surface_extent(const VkSurfaceCapabilitiesKHR& capabilities);
 }
