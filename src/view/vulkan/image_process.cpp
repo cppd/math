@@ -33,7 +33,6 @@ vulkan::DeviceFunctionality ImageProcess::device_functionality()
 }
 
 ImageProcess::ImageProcess(
-        const double window_ppi,
         const bool sample_shading,
         const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
@@ -43,7 +42,6 @@ ImageProcess::ImageProcess(
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue,
         const unsigned image_count)
-        : window_ppi_(window_ppi)
 {
         convex_hull_ = gpu::convex_hull::create_view(device, graphics_command_pool, graphics_queue, sample_shading);
 
@@ -139,6 +137,7 @@ void ImageProcess::delete_buffers()
 }
 
 void ImageProcess::create_buffers(
+        const double window_ppi,
         gpu::RenderBuffers2D* const render_buffers,
         const vulkan::ImageWithMemory& input,
         const vulkan::ImageWithMemory& objects,
@@ -149,7 +148,7 @@ void ImageProcess::create_buffers(
 
         pencil_sketch_->create_buffers(render_buffers, input, objects, window_1);
 
-        optical_flow_->create_buffers(render_buffers, input, window_ppi_, window_1);
+        optical_flow_->create_buffers(render_buffers, input, window_ppi, window_1);
 
         if (window_2)
         {

@@ -77,6 +77,8 @@ constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
 
+constexpr double TEXT_SIZE_IN_POINTS = 9;
+
 vulkan::DeviceFunctionality device_functionality()
 {
         vulkan::DeviceFunctionality res;
@@ -113,7 +115,9 @@ class Impl final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
+        const double window_ppi_;
         const int frame_size_in_pixels_;
+        const int text_size_in_pixels_;
 
         FrameRate frame_rate_;
 
@@ -260,7 +264,8 @@ class Impl final
                         Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
                 image_process_.create_buffers(
-                        &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1, window_2);
+                        window_ppi_, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1,
+                        window_2);
 
                 mouse_.set_rectangle(window_1);
                 camera_.resize(window_1.width(), window_1.height());
@@ -361,8 +366,10 @@ class Impl final
 
 public:
         Impl(const window::WindowID window, const double window_ppi)
-                : frame_size_in_pixels_(frame_size_in_pixels(window_ppi)),
-                  frame_rate_(window_ppi),
+                : window_ppi_(window_ppi),
+                  frame_size_in_pixels_(frame_size_in_pixels(window_ppi_)),
+                  text_size_in_pixels_(points_to_pixels(TEXT_SIZE_IN_POINTS, window_ppi)),
+                  frame_rate_(text_size_in_pixels_),
                   surface_(
                           vulkan::Instance::handle(),
                           [&](const VkInstance instance)
@@ -397,10 +404,9 @@ public:
                           &transfer_command_pool_,
                           &device_graphics_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
-                          frame_rate_.text_size(),
+                          text_size_in_pixels_,
                           DEFAULT_TEXT_COLOR)),
                   image_process_(
-                          window_ppi,
                           SAMPLE_RATE_SHADING,
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,

@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "frame_rate.h"
 
-#include <src/com/conversion.h>
 #include <src/com/print.h>
 
 #include <cmath>
@@ -28,21 +27,15 @@ namespace
 {
 constexpr double INTERVAL_LENGTH = 1;
 constexpr int SAMPLE_COUNT = 10;
-
-constexpr double TEXT_SIZE_IN_POINTS = 9.0;
-constexpr double TEXT_STEP_Y_IN_POINTS = 1.3 * TEXT_SIZE_IN_POINTS;
-constexpr double TEXT_X_IN_POINTS = 5;
-constexpr double TEXT_Y_IN_POINTS = TEXT_STEP_Y_IN_POINTS;
 constexpr const char* TEXT = "FPS: ";
 }
 
-FrameRate::FrameRate(const double ppi)
-        : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT),
-          text_size_(points_to_pixels(TEXT_SIZE_IN_POINTS, ppi))
+FrameRate::FrameRate(const int text_size_in_pixels) : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
 {
-        text_data_.step_y = points_to_pixels(TEXT_STEP_Y_IN_POINTS, ppi);
-        text_data_.start_x = points_to_pixels(TEXT_X_IN_POINTS, ppi);
-        text_data_.start_y = points_to_pixels(TEXT_Y_IN_POINTS, ppi);
+        text_data_.step_y = std::lround(1.3 * text_size_in_pixels);
+        text_data_.start_x = std::lround(0.5 * text_size_in_pixels);
+        text_data_.start_y = text_data_.step_y;
+
         text_data_.text.resize(2);
         text_data_.text[0] = TEXT;
         text_data_.text[1] = "";

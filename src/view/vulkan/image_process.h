@@ -38,8 +38,6 @@ namespace ns::view
 {
 class ImageProcess
 {
-        const double window_ppi_;
-
         bool convex_hull_active_ = false;
         bool pencil_sketch_active_ = false;
         bool dft_active_ = false;
@@ -64,7 +62,6 @@ public:
         static vulkan::DeviceFunctionality device_functionality();
 
         ImageProcess(
-                double window_ppi,
                 bool sample_shading,
                 const vulkan::Device* device,
                 const vulkan::CommandPool* graphics_command_pool,
@@ -82,6 +79,7 @@ public:
         void delete_buffers();
 
         void create_buffers(
+                double window_ppi,
                 gpu::RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
