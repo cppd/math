@@ -22,12 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-bool find_surface_details(
-        VkSurfaceKHR surface,
-        VkPhysicalDevice device,
-        VkSurfaceCapabilitiesKHR* surface_capabilities,
-        std::vector<VkSurfaceFormatKHR>* surface_formats,
-        std::vector<VkPresentModeKHR>* present_modes);
+VkSurfaceCapabilitiesKHR find_surface_capabilities(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice device);
+std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+bool surface_suitable(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+VkExtent2D surface_extent(const VkSurfaceCapabilitiesKHR& capabilities);
 }

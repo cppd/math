@@ -246,7 +246,7 @@ std::vector<std::size_t> suitable_physical_devices(
                                 continue;
                         }
 
-                        if (!surface_suitable(surface, physical_device.device()))
+                        if (!surface_suitable(physical_device.device(), surface))
                         {
                                 continue;
                         }

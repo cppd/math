@@ -35,7 +35,10 @@ VkSurfaceFormatKHR choose_surface_format(
         const VkSurfaceFormatKHR required_surface_format,
         const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
-        ASSERT(!surface_formats.empty());
+        if (surface_formats.empty())
+        {
+                error("Surface formats not found");
+        }
 
         if (surface_formats.size() == 1 && surface_formats[0].format == VK_FORMAT_UNDEFINED)
         {
@@ -65,9 +68,14 @@ VkSurfaceFormatKHR choose_surface_format(
 }
 
 VkPresentModeKHR choose_present_mode(
-        const std::vector<VkPresentModeKHR>& present_modes,
-        const PresentMode preferred_present_mode)
+        const PresentMode preferred_present_mode,
+        const std::vector<VkPresentModeKHR>& present_modes)
 {
+        if (present_modes.empty())
+        {
+                error("Present modes not found");
+        }
+
         // VK_PRESENT_MODE_FIFO_KHR is required to be supported
 
         switch (preferred_present_mode)
@@ -95,21 +103,11 @@ VkPresentModeKHR choose_present_mode(
         error_fatal("Unknown preferred present mode");
 }
 
-VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
-{
-        if (!(capabilities.currentExtent.width == 0xffff'ffff && capabilities.currentExtent.height == 0xffff'ffff))
-        {
-                return capabilities.currentExtent;
-        }
-
-        error("Current width and height of the surface are not defined");
-}
-
 std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, const int image_count)
 {
         if (image_count <= 0)
         {
-                error("Requested image count <= 0");
+                error("Requested image count " + to_string(image_count) + " must be positive");
         }
 
         if (static_cast<std::uint32_t>(image_count) <= capabilities.minImageCount)
@@ -137,7 +135,7 @@ std::vector<VkImage> swapchain_images(const VkDevice device, const VkSwapchainKH
         std::uint32_t image_count = find_image_count(device, swapchain);
         if (image_count < 1)
         {
-                return {};
+                error("Failed to find swapchain images");
         }
 
         std::vector<VkImage> images(image_count);
@@ -216,23 +214,87 @@ handle::ImageView create_image_view(
         return handle::ImageView(device, create_info);
 }
 
+std::string extent_to_string(const VkExtent2D extent)
+{
+        const char* const multiplication_sign = reinterpret_cast<const char*>(u8"\U000000D7");
+        return to_string(extent.width) + multiplication_sign + to_string(extent.height);
+}
+
+std::string surface_formats_to_string(const std::vector<VkSurfaceFormatKHR>& surface_formats)
+{
+        std::string s;
+        for (const VkSurfaceFormatKHR format : surface_formats)
+        {
+                if (!s.empty())
+                {
+                        s += ", ";
+                }
+                s += format_to_string(format.format);
+        }
+        return s;
+}
+
+std::string color_spaces_to_string(const std::vector<VkSurfaceFormatKHR>& surface_formats)
+{
+        std::string s;
+        for (const VkSurfaceFormatKHR format : surface_formats)
+        {
+                if (!s.empty())
+                {
+                        s += ", ";
+                }
+                s += color_space_to_string(format.colorSpace);
+        }
+        return s;
+}
+
+std::string present_modes_to_string(const std::vector<VkPresentModeKHR>& present_modes)
+{
+        std::string s;
+        for (const VkPresentModeKHR mode : present_modes)
+        {
+                if (!s.empty())
+                {
+                        s += ", ";
+                }
+                s += present_mode_to_string(mode);
+        }
+        return s;
+}
+
 std::string swapchain_info_string(
+        const VkSurfaceCapabilitiesKHR& surface_capabilities,
+        const VkExtent2D extent,
         const VkSurfaceFormatKHR surface_format,
+        const std::vector<VkSurfaceFormatKHR>& surface_formats,
         const VkPresentModeKHR present_mode,
+        const std::vector<VkPresentModeKHR>& present_modes,
         const int preferred_image_count,
         const int image_count)
 {
         std::string s;
 
-        s += "Swapchain surface format " + format_to_string(surface_format.format);
+        s += "Swapchain extent: " + extent_to_string(extent) + " ("
+             + extent_to_string(surface_capabilities.minImageExtent) + ", "
+             + extent_to_string(surface_capabilities.maxImageExtent) + ")";
         s += '\n';
-        s += "Swapchain color space " + color_space_to_string(surface_format.colorSpace);
+
+        s += "Swapchain surface format: " + format_to_string(surface_format.format) + " ("
+             + surface_formats_to_string(surface_formats) + ")";
         s += '\n';
-        s += "Swapchain present mode " + present_mode_to_string(present_mode);
+
+        s += "Swapchain color space: " + color_space_to_string(surface_format.colorSpace) + " ("
+             + color_spaces_to_string(surface_formats) + ")";
         s += '\n';
-        s += "Swapchain preferred image count = " + to_string(preferred_image_count);
+
+        s += "Swapchain present mode: " + present_mode_to_string(present_mode) + " ("
+             + present_modes_to_string(present_modes) + ")";
         s += '\n';
-        s += "Swapchain chosen image count = " + to_string(image_count);
+
+        s += "Swapchain preferred image count: " + to_string(preferred_image_count);
+        s += '\n';
+
+        s += "Swapchain chosen image count: " + to_string(image_count);
 
         return s;
 }
@@ -311,33 +373,28 @@ Swapchain::Swapchain(
         const int preferred_image_count,
         const PresentMode preferred_present_mode)
 {
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-        std::vector<VkSurfaceFormatKHR> surface_formats;
-        std::vector<VkPresentModeKHR> present_modes;
+        const VkSurfaceCapabilitiesKHR surface_capabilities =
+                find_surface_capabilities(device.physical_device(), surface);
 
-        if (!find_surface_details(
-                    surface, device.physical_device(), &surface_capabilities, &surface_formats, &present_modes))
-        {
-                error("Failed to find surface details");
-        }
+        extent_ = surface_extent(surface_capabilities);
 
+        const std::vector<VkSurfaceFormatKHR> surface_formats = find_surface_formats(device.physical_device(), surface);
         surface_format_ = choose_surface_format(required_surface_format, surface_formats);
-        extent_ = choose_extent(surface_capabilities);
 
-        const VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
+        const std::vector<VkPresentModeKHR> present_modes = find_present_modes(device.physical_device(), surface);
+        const VkPresentModeKHR present_mode = choose_present_mode(preferred_present_mode, present_modes);
+
         const std::uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
-        LOG(swapchain_info_string(surface_format_, present_mode, preferred_image_count, image_count));
+        LOG(swapchain_info_string(
+                surface_capabilities, extent_, surface_format_, surface_formats, present_mode, present_modes,
+                preferred_image_count, image_count));
 
         swapchain_ = create_swapchain_khr(
                 device, surface, surface_format_, present_mode, extent_, image_count,
                 surface_capabilities.currentTransform, family_indices);
 
         images_ = swapchain_images(device, swapchain_);
-        if (images_.empty())
-        {
-                error("Failed to find swapchain images");
-        }
 
         image_view_handles_.reserve(images_.size());
         image_views_.reserve(images_.size());
