@@ -17,15 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
+#include "glyphs.h"
 #include "sampler.h"
 
 #include "shaders/view.h"
 
 #include <src/com/container.h>
 #include <src/numerical/transform.h>
-#include <src/text/font.h>
-#include <src/text/fonts.h>
-#include <src/text/glyphs.h>
 #include <src/text/vertices.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
@@ -35,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <optional>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 namespace ns::gpu::text_writer
@@ -44,52 +41,6 @@ namespace
 {
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
-// clang-format off
-constexpr std::array GRAYSCALE_IMAGE_FORMATS = std::to_array<VkFormat>
-({
-        VK_FORMAT_R8_SRGB,
-        VK_FORMAT_R16_UNORM,
-        VK_FORMAT_R32_SFLOAT
-});
-// clang-format on
-
-std::vector<unsigned char> font_data()
-{
-        const text::Fonts& fonts = text::Fonts::instance();
-
-        std::vector<std::string> font_names = fonts.names();
-        if (font_names.empty())
-        {
-                error("Fonts not found");
-        }
-
-        return fonts.data(font_names.front());
-}
-
-class Glyphs
-{
-        image::Image<2> image_;
-        std::unordered_map<char32_t, text::FontGlyph> glyphs_;
-
-public:
-        Glyphs(const int size, const unsigned max_image_dimension)
-        {
-                text::Font font(size, font_data());
-
-                create_font_glyphs(font, max_image_dimension, max_image_dimension, &glyphs_, &image_);
-        }
-
-        std::unordered_map<char32_t, text::FontGlyph>& glyphs()
-        {
-                return glyphs_;
-        }
-
-        const image::Image<2>& image() const
-        {
-                return image_;
-        }
-};
-
 class Impl final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -97,23 +48,22 @@ class Impl final : public View
         const bool sample_shading_;
 
         const vulkan::Device* const device_;
-        VkCommandPool graphics_command_pool_;
-
-        vulkan::ImageWithMemory glyph_texture_;
-        std::unordered_map<char32_t, text::FontGlyph> glyphs_;
+        const vulkan::CommandPool* const graphics_command_pool_;
+        const vulkan::Queue* const graphics_queue_;
 
         vulkan::handle::Semaphore semaphore_;
         vulkan::handle::Sampler sampler_;
         Program program_;
         Buffer buffer_;
         Memory memory_;
+
         std::optional<vulkan::BufferWithMemory> vertex_buffer_;
         vulkan::BufferWithMemory indirect_buffer_;
         RenderBuffers2D* render_buffers_ = nullptr;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
-        std::uint32_t graphics_family_index_;
+        std::optional<Glyphs> glyphs_;
 
         void set_color(const color::Color& color) const override
         {
@@ -152,7 +102,7 @@ class Impl final : public View
                 info.render_area->extent.height = render_buffers_->height();
                 info.render_pass = render_buffers_->render_pass();
                 info.framebuffers = &render_buffers_->framebuffers();
-                info.command_pool = graphics_command_pool_;
+                info.command_pool = *graphics_command_pool_;
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
@@ -204,11 +154,11 @@ class Impl final : public View
                 //
 
                 ASSERT(render_buffers_);
-                ASSERT(queue.family_index() == graphics_family_index_);
+                ASSERT(queue.family_index() == graphics_queue_->family_index());
 
                 thread_local std::vector<text::TextVertex> vertices;
 
-                text_vertices(glyphs_, text_data, &vertices);
+                text::text_vertices(glyphs_->glyphs(), text_data, &vertices);
 
                 static_assert(sizeof(text::TextVertex) == sizeof(Vertex));
                 static_assert(offsetof(text::TextVertex, window) == offsetof(Vertex, window_coordinates));
@@ -227,8 +177,8 @@ class Impl final : public View
 
                         vertex_buffer_.emplace(
                                 vulkan::BufferMemoryType::HOST_VISIBLE, *device_,
-                                std::vector<std::uint32_t>({graphics_family_index_}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                std::max(vertex_buffer_->buffer().size() * 2, size));
+                                std::vector<std::uint32_t>({graphics_queue_->family_index()}),
+                                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, std::max(vertex_buffer_->buffer().size() * 2, size));
 
                         command_buffers_ = create_commands();
                 }
@@ -253,40 +203,33 @@ class Impl final : public View
                 return semaphore_;
         }
 
+        void create_glyphs(const int size)
+        {
+                glyphs_.emplace(
+                        size, *device_, *graphics_command_pool_, *graphics_queue_,
+                        std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+
+                memory_.set_image(sampler_, glyphs_->image_view());
+        }
+
+public:
         Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const /*transfer_command_pool*/,
              const vulkan::Queue* const /*transfer_queue*/,
              const bool sample_shading,
-             const color::Color& color,
-             Glyphs&& glyphs)
+             const int size,
+             const color::Color& color)
                 : sample_shading_(sample_shading),
                   device_(device),
-                  graphics_command_pool_(*graphics_command_pool),
-                  glyph_texture_(
-                          *device_,
-                          std::vector<std::uint32_t>({graphics_queue->family_index()}),
-                          std::vector<VkFormat>(
-                                  std::cbegin(GRAYSCALE_IMAGE_FORMATS),
-                                  std::cend(GRAYSCALE_IMAGE_FORMATS)),
-                          VK_SAMPLE_COUNT_1_BIT,
-                          VK_IMAGE_TYPE_2D,
-                          vulkan::make_extent(glyphs.image().size[0], glyphs.image().size[1]),
-                          VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-                          VK_IMAGE_LAYOUT_UNDEFINED,
-                          *graphics_command_pool,
-                          *graphics_queue),
-                  glyphs_(std::move(glyphs.glyphs())),
+                  graphics_command_pool_(graphics_command_pool),
+                  graphics_queue_(graphics_queue),
                   semaphore_(*device_),
                   sampler_(create_sampler(*device_)),
                   program_(device_),
                   buffer_(*device_, std::vector<std::uint32_t>({graphics_queue->family_index()})),
-                  memory_(*device_,
-                          program_.descriptor_set_layout(),
-                          buffer_.buffer(),
-                          sampler_,
-                          glyph_texture_.image_view()),
+                  memory_(*device_, program_.descriptor_set_layout(), buffer_.buffer()),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,
@@ -299,34 +242,10 @@ class Impl final : public View
                           *device_,
                           std::vector<std::uint32_t>({graphics_queue->family_index()}),
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                          sizeof(VkDrawIndirectCommand)),
-                  graphics_family_index_(graphics_queue->family_index())
+                          sizeof(VkDrawIndirectCommand))
         {
-                glyph_texture_.write(
-                        *graphics_command_pool, *graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.image().color_format, glyphs.image().pixels);
-
+                create_glyphs(size);
                 set_color(color);
-        }
-
-public:
-        Impl(const vulkan::Device* const device,
-             const vulkan::CommandPool* const graphics_command_pool,
-             const vulkan::Queue* const graphics_queue,
-             const vulkan::CommandPool* const transfer_command_pool,
-             const vulkan::Queue* const transfer_queue,
-             const bool sample_shading,
-             const int size,
-             const color::Color& color)
-                : Impl(device,
-                       graphics_command_pool,
-                       graphics_queue,
-                       transfer_command_pool,
-                       transfer_queue,
-                       sample_shading,
-                       color,
-                       Glyphs(size, device->properties().properties_10.limits.maxImageDimension2D))
-        {
         }
 
         ~Impl() override

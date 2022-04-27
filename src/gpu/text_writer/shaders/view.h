@@ -63,9 +63,9 @@ public:
 
         Memory(const vulkan::Device& device,
                VkDescriptorSetLayout descriptor_set_layout,
-               const vulkan::Buffer& data_buffer,
-               VkSampler sampler,
-               VkImageView texture);
+               const vulkan::Buffer& data_buffer);
+
+        void set_image(VkSampler sampler, VkImageView image) const;
 
         const VkDescriptorSet& descriptor_set() const;
 };

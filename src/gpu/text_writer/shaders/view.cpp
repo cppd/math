@@ -82,41 +82,30 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 Memory::Memory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& data_buffer,
-        const VkSampler sampler,
-        const VkImageView texture)
+        const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = data_buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = data_buffer.size();
 
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = data_buffer;
-                buffer_info.offset = 0;
-                buffer_info.range = data_buffer.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DATA_BINDING);
-        }
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = texture;
-                image_info.sampler = sampler;
-
-                infos.emplace_back(image_info);
-
-                bindings.push_back(TEXTURE_BINDING);
-        }
-
-        descriptors_.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
 }
 
 unsigned Memory::set_number()
 {
         return SET_NUMBER;
+}
+
+void Memory::set_image(const VkSampler sampler, const VkImageView image) const
+{
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = image;
+        image_info.sampler = sampler;
+
+        descriptors_.update_descriptor_set(0, TEXTURE_BINDING, image_info);
 }
 
 const VkDescriptorSet& Memory::descriptor_set() const
