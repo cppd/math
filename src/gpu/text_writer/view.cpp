@@ -70,6 +70,20 @@ class Impl final : public View
                 buffer_.set_color(color.rgb32().clamp(0, 1));
         }
 
+        void set_text_size(const unsigned size) override
+        {
+                if (glyphs_ && glyphs_->size() == size)
+                {
+                        return;
+                }
+
+                glyphs_.emplace(
+                        size, *device_, *graphics_command_pool_, *graphics_queue_,
+                        std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+
+                memory_.set_image(sampler_, glyphs_->image_view());
+        }
+
         void draw_commands(const VkCommandBuffer command_buffer) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
@@ -155,6 +169,7 @@ class Impl final : public View
 
                 ASSERT(render_buffers_);
                 ASSERT(queue.family_index() == graphics_queue_->family_index());
+                ASSERT(glyphs_);
 
                 thread_local std::vector<text::TextVertex> vertices;
 
@@ -203,15 +218,6 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        void create_glyphs(const int size)
-        {
-                glyphs_.emplace(
-                        size, *device_, *graphics_command_pool_, *graphics_queue_,
-                        std::vector<std::uint32_t>({graphics_queue_->family_index()}));
-
-                memory_.set_image(sampler_, glyphs_->image_view());
-        }
-
 public:
         Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
@@ -219,7 +225,6 @@ public:
              const vulkan::CommandPool* const /*transfer_command_pool*/,
              const vulkan::Queue* const /*transfer_queue*/,
              const bool sample_shading,
-             const int size,
              const color::Color& color)
                 : sample_shading_(sample_shading),
                   device_(device),
@@ -244,7 +249,6 @@ public:
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                           sizeof(VkDrawIndirectCommand))
         {
-                create_glyphs(size);
                 set_color(color);
         }
 
@@ -269,11 +273,10 @@ std::unique_ptr<View> create_view(
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         const bool sample_shading,
-        const int size,
         const color::Color& color)
 {
         return std::make_unique<Impl>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
-                size, color);
+                color);
 }
 }

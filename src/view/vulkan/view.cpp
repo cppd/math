@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/queue.h>
 #include <src/window/surface.h>
 
+#include <algorithm>
 #include <chrono>
 
 namespace ns::view
@@ -102,13 +103,22 @@ vulkan::DeviceFunctionality device_functionality()
         return res;
 }
 
-int frame_size_in_pixels(const double window_ppi)
+struct PixelSizes final
+{
+        unsigned frame;
+        unsigned text;
+};
+
+PixelSizes calculate_pixel_sizes(const double window_ppi)
 {
         if (!(window_ppi > 0))
         {
                 error("Window PPI " + to_string(window_ppi) + "is not positive");
         }
-        return std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi));
+        PixelSizes res;
+        res.frame = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi));
+        res.text = std::max(1, points_to_pixels(TEXT_SIZE_IN_POINTS, window_ppi));
+        return res;
 }
 
 class Impl final
@@ -116,8 +126,6 @@ class Impl final
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const double window_ppi_;
-        const int frame_size_in_pixels_;
-        const int text_size_in_pixels_;
 
         FrameRate frame_rate_;
 
@@ -232,6 +240,11 @@ class Impl final
 
         void create_buffers(const VkFormat format, const unsigned width, const unsigned height)
         {
+                const PixelSizes pixel_sizes = calculate_pixel_sizes(window_ppi_);
+
+                frame_rate_.set_text_size(pixel_sizes.text);
+                text_->set_text_size(pixel_sizes.text);
+
                 render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
                         {device_graphics_.graphics_compute_queues()[0].family_index()}, device_graphics_.device(),
@@ -247,7 +260,7 @@ class Impl final
 
                 const auto [window_1, window_2] = window_position_and_size(
                         image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
-                        frame_size_in_pixels_);
+                        pixel_sizes.frame);
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_.emplace(
@@ -367,9 +380,6 @@ class Impl final
 public:
         Impl(const window::WindowID window, const double window_ppi)
                 : window_ppi_(window_ppi),
-                  frame_size_in_pixels_(frame_size_in_pixels(window_ppi_)),
-                  text_size_in_pixels_(points_to_pixels(TEXT_SIZE_IN_POINTS, window_ppi)),
-                  frame_rate_(text_size_in_pixels_),
                   surface_(
                           vulkan::Instance::handle(),
                           [&](const VkInstance instance)
@@ -404,7 +414,6 @@ public:
                           &transfer_command_pool_,
                           &device_graphics_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
-                          text_size_in_pixels_,
                           DEFAULT_TEXT_COLOR)),
                   image_process_(
                           SAMPLE_RATE_SHADING,

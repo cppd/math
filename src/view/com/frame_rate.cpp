@@ -30,15 +30,18 @@ constexpr int SAMPLE_COUNT = 10;
 constexpr const char* TEXT = "FPS: ";
 }
 
-FrameRate::FrameRate(const int text_size_in_pixels) : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
+FrameRate::FrameRate() : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
+{
+        text_data_.text.resize(2);
+        text_data_.text[0] = TEXT;
+        text_data_.text[1] = "";
+}
+
+void FrameRate::set_text_size(const unsigned text_size_in_pixels)
 {
         text_data_.step_y = std::lround(1.3 * text_size_in_pixels);
         text_data_.start_x = std::lround(0.5 * text_size_in_pixels);
         text_data_.start_y = text_data_.step_y;
-
-        text_data_.text.resize(2);
-        text_data_.text[0] = TEXT;
-        text_data_.text[1] = "";
 }
 
 void FrameRate::calculate()

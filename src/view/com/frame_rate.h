@@ -28,7 +28,9 @@ class FrameRate
         text::TextData text_data_;
 
 public:
-        explicit FrameRate(int text_size_in_pixels);
+        FrameRate();
+
+        void set_text_size(unsigned text_size_in_pixels);
 
         void calculate();
 
