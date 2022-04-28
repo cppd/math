@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(__linux__)
 
-#include <QX11Info>
+#include <QGuiApplication>
+#include <xcb/xcb.h>
 //
 #include <vulkan/vulkan_xcb.h>
 
@@ -39,7 +40,7 @@ VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance insta
 
         VkXcbSurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        info.connection = QX11Info::connection();
+        info.connection = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->connection();
         info.window = window;
 
         VkSurfaceKHR surface;

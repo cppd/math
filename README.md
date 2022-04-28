@@ -83,7 +83,7 @@ Programming languages     | C++20, GLSL 4.60
 C++ compilers             | GCC 11, Clang 14
 Platforms                 | Linux
 Graphics and compute APIs | Vulkan 1.2 with ray tracing extensions
-Frameworks                | Qt 5
+Frameworks                | Qt 6
 Libraries                 | FreeType, GMP
 Optional libraries        | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build systems             | CMake
