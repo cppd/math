@@ -19,13 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../view.h"
 
+#include <array>
 #include <memory>
 #include <vector>
 
 namespace ns::view
 {
 std::unique_ptr<View> create_view_impl(
-        window::WindowID parent_window,
-        double parent_window_ppi,
+        window::WindowID window,
+        const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands);
 }

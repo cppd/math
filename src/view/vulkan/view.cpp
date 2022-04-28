@@ -49,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <chrono>
+#include <optional>
 
 namespace ns::view
 {
@@ -110,8 +111,12 @@ struct PixelSizes final
         unsigned text;
 };
 
-PixelSizes calculate_pixel_sizes(const double ppi)
+PixelSizes calculate_pixel_sizes(const std::array<double, 2>& window_size_in_mm, const vulkan::Swapchain& swapchain)
 {
+        const double ppi_x = size_to_ppi(window_size_in_mm[0], swapchain.width());
+        const double ppi_y = size_to_ppi(window_size_in_mm[1], swapchain.height());
+        const double ppi = 0.5 * (ppi_x + ppi_y);
+
         if (!(ppi > 0))
         {
                 error("PPI " + to_string(ppi) + "is not positive");
@@ -136,16 +141,13 @@ class Impl final
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device()};
 
         std::optional<PixelSizes> pixel_sizes_;
-
         FrameRate frame_rate_;
 
         ClearBuffer clear_buffer_;
-
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
 
         ImageProcess image_process_;
-
         Camera camera_;
         Mouse mouse_;
         ClipPlane clip_plane_;
@@ -337,7 +339,7 @@ class Impl final
                 swapchain_.reset();
         }
 
-        void create_swapchain(const double window_ppi = -1)
+        void create_swapchain(const std::optional<std::array<double, 2>>& window_size_in_mm = std::nullopt)
         {
                 delete_swapchain();
 
@@ -350,9 +352,9 @@ class Impl final
                         view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
                                                       : vulkan::PresentMode::PREFER_FAST);
 
-                if (window_ppi > 0)
+                if (window_size_in_mm)
                 {
-                        pixel_sizes_ = calculate_pixel_sizes(window_ppi);
+                        pixel_sizes_ = calculate_pixel_sizes(*window_size_in_mm, *swapchain_);
                 }
 
                 create_swapchain_buffers();
@@ -386,7 +388,7 @@ class Impl final
         }
 
 public:
-        Impl(const window::WindowID window, const double window_ppi)
+        Impl(const window::WindowID window, const std::array<double, 2>& window_size_in_mm)
                 : surface_(
                         vulkan::Instance::handle(),
                         [&](const VkInstance instance)
@@ -461,7 +463,7 @@ public:
         {
                 ASSERT(device_graphics_.graphics_compute_queues().size() >= 2);
 
-                create_swapchain(window_ppi);
+                create_swapchain(window_size_in_mm);
 
                 command(command::ResetView());
         }
@@ -537,10 +539,10 @@ public:
 }
 
 std::unique_ptr<View> create_view_impl(
-        const window::WindowID parent_window,
-        const double parent_window_ppi,
+        const window::WindowID window,
+        const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)
 {
-        return std::make_unique<ViewThread<Impl>>(parent_window, parent_window_ppi, std::move(initial_commands));
+        return std::make_unique<ViewThread<Impl>>(std::move(initial_commands), window, window_size_in_mm);
 }
 }

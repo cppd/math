@@ -145,13 +145,14 @@ class ViewThread final : public View
                 event_queues_.receive(info);
         }
 
-        void thread_function(const window::WindowID parent_window, const double parent_window_ppi)
+        template <typename... Args>
+        void thread_function(Args&&... args)
         {
                 try
                 {
                         [[maybe_unused]] const std::thread::id thread_id = std::this_thread::get_id();
 
-                        T view(parent_window, parent_window_ppi);
+                        T view(std::forward<Args>(args)...);
 
                         started_ = true;
 
@@ -203,10 +204,8 @@ class ViewThread final : public View
         }
 
 public:
-        ViewThread(
-                const window::WindowID parent_window,
-                const double parent_window_ppi,
-                std::vector<Command>&& initial_commands)
+        template <typename... Args>
+        explicit ViewThread(std::vector<Command>&& initial_commands, Args&&... args)
                 : event_queues_(std::move(initial_commands))
         {
                 try
@@ -216,7 +215,7 @@ public:
                                 {
                                         try
                                         {
-                                                thread_function(parent_window, parent_window_ppi);
+                                                thread_function(std::forward<Args>(args)...);
                                         }
                                         catch (...)
                                         {

@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::view
 {
 std::unique_ptr<View> create_view(
-        const window::WindowID parent_window,
-        const double parent_window_ppi,
+        const window::WindowID window,
+        const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)
 {
-        return create_view_impl(parent_window, parent_window_ppi, std::move(initial_commands));
+        return create_view_impl(window, window_size_in_mm, std::move(initial_commands));
 }
 }
