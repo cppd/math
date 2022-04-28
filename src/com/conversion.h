@@ -30,4 +30,9 @@ inline int millimeters_to_pixels(const double millimeters, const double pixels_p
 {
         return std::lround(millimeters / 25.4 * pixels_per_inch);
 }
+
+constexpr double size_to_ppi(const double size_in_mm, const unsigned size_in_pixels)
+{
+        return size_in_pixels / size_in_mm * 25.4;
+}
 }
