@@ -105,19 +105,22 @@ vulkan::DeviceFunctionality device_functionality()
 
 struct PixelSizes final
 {
+        double ppi;
         unsigned frame;
         unsigned text;
 };
 
-PixelSizes calculate_pixel_sizes(const double window_ppi)
+PixelSizes calculate_pixel_sizes(const double ppi)
 {
-        if (!(window_ppi > 0))
+        if (!(ppi > 0))
         {
-                error("Window PPI " + to_string(window_ppi) + "is not positive");
+                error("PPI " + to_string(ppi) + "is not positive");
         }
+
         PixelSizes res;
-        res.frame = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi));
-        res.text = std::max(1, points_to_pixels(TEXT_SIZE_IN_POINTS, window_ppi));
+        res.ppi = ppi;
+        res.frame = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, ppi));
+        res.text = std::max(1, points_to_pixels(TEXT_SIZE_IN_POINTS, ppi));
         return res;
 }
 
@@ -125,16 +128,16 @@ class Impl final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const double window_ppi_;
-
-        FrameRate frame_rate_;
-
         const vulkan::handle::SurfaceKHR surface_;
         const vulkan::DeviceGraphics device_graphics_;
         const vulkan::CommandPool graphics_compute_command_pool_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device()};
+
+        std::optional<PixelSizes> pixel_sizes_;
+
+        FrameRate frame_rate_;
 
         ClearBuffer clear_buffer_;
 
@@ -240,10 +243,10 @@ class Impl final
 
         void create_buffers(const VkFormat format, const unsigned width, const unsigned height)
         {
-                const PixelSizes pixel_sizes = calculate_pixel_sizes(window_ppi_);
+                ASSERT(pixel_sizes_);
 
-                frame_rate_.set_text_size(pixel_sizes.text);
-                text_->set_text_size(pixel_sizes.text);
+                frame_rate_.set_text_size(pixel_sizes_->text);
+                text_->set_text_size(pixel_sizes_->text);
 
                 render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
@@ -260,7 +263,7 @@ class Impl final
 
                 const auto [window_1, window_2] = window_position_and_size(
                         image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
-                        pixel_sizes.frame);
+                        pixel_sizes_->frame);
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_.emplace(
@@ -277,8 +280,8 @@ class Impl final
                         Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
                 image_process_.create_buffers(
-                        window_ppi_, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1,
-                        window_2);
+                        pixel_sizes_->ppi, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_,
+                        window_1, window_2);
 
                 mouse_.set_rectangle(window_1);
                 camera_.resize(window_1.width(), window_1.height());
@@ -334,7 +337,7 @@ class Impl final
                 swapchain_.reset();
         }
 
-        void create_swapchain()
+        void create_swapchain(const double window_ppi = -1)
         {
                 delete_swapchain();
 
@@ -346,6 +349,11 @@ class Impl final
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
                         view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
                                                       : vulkan::PresentMode::PREFER_FAST);
+
+                if (window_ppi > 0)
+                {
+                        pixel_sizes_ = calculate_pixel_sizes(window_ppi);
+                }
 
                 create_swapchain_buffers();
         }
@@ -379,13 +387,12 @@ class Impl final
 
 public:
         Impl(const window::WindowID window, const double window_ppi)
-                : window_ppi_(window_ppi),
-                  surface_(
-                          vulkan::Instance::handle(),
-                          [&](const VkInstance instance)
-                          {
-                                  return window::vulkan_create_surface(window, instance);
-                          }),
+                : surface_(
+                        vulkan::Instance::handle(),
+                        [&](const VkInstance instance)
+                        {
+                                return window::vulkan_create_surface(window, instance);
+                        }),
                   device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
                   graphics_compute_command_pool_(vulkan::create_command_pool(
                           device_graphics_.device(),
@@ -454,7 +461,8 @@ public:
         {
                 ASSERT(device_graphics_.graphics_compute_queues().size() >= 2);
 
-                create_swapchain();
+                create_swapchain(window_ppi);
+
                 command(command::ResetView());
         }
 
