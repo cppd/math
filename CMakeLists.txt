@@ -115,10 +115,9 @@ project(math C CXX)
 set(output_headers_directory "${PROJECT_BINARY_DIR}/output_headers")
 file(REMOVE_RECURSE "${output_headers_directory}")
 
-# Qt
 set(CMAKE_AUTOMOC ON)
-#set(CMAKE_AUTOMOC_MOC_OPTIONS some_options)
 set(CMAKE_AUTOUIC ON)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 check_int128()
@@ -155,9 +154,6 @@ endfunction()
 add_shaders(SOURCE "src/gpu")
 add_shaders(SOURCE "src/gpu/renderer" MACROS RAY_TRACING)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
-target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
-
 # CMake uses -I
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
 
@@ -167,39 +163,41 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
 
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 find_package(Vulkan REQUIRED)
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 if(NOT TARGET Vulkan::glslangValidator)
         message(FATAL_ERROR "glslangValidator not found")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GMP")
 find_package(GMP REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${GMP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         find_package(X11 REQUIRED COMPONENTS xcb)
-        target_link_libraries(${PROJECT_NAME} X11::xcb)
+        target_link_libraries(${PROJECT_NAME} PRIVATE X11::xcb)
 endif()
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x060200)
 find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets)
-target_link_libraries(${PROJECT_NAME} Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 
 find_package(Freetype REQUIRED)
-target_link_libraries(${PROJECT_NAME} Freetype::Freetype)
+target_link_libraries(${PROJECT_NAME} PRIVATE Freetype::Freetype)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/FFTW")
 find_package(FFTW)
 if(FFTW_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE FFTW_FOUND)
-        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${FFTW_LIBRARIES} ${FFTW_THREAD_LIBRARIES})
+        target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${FFTW_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${FFTW_LIBRARIES} ${FFTW_THREAD_LIBRARIES})
 endif()
 
 find_package(CUDAToolkit)
 if(CUDAToolkit_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE CUDA_FOUND)
-        target_link_libraries(${PROJECT_NAME} CUDA::cudart CUDA::cufft)
+        target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cudart CUDA::cufft)
 endif()
