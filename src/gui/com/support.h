@@ -97,7 +97,6 @@ void set_slider_to_middle(QSlider* slider);
 void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, RGB8 color) noexcept;
 
 window::WindowID widget_window_id(const QWidget* widget);
-double widget_pixels_per_inch(const QWidget* widget);
 
 void move_window_to_desktop_center(QMainWindow* window);
 

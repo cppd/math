@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QScreen>
 #include <QScrollBar>
 #include <algorithm>
+#include <bit>
 #include <cmath>
-#include <cstring>
 #include <type_traits>
 
 namespace ns::gui
@@ -230,47 +230,26 @@ void append_to_text_edit(QPlainTextEdit* const text_edit, const std::string_view
         }
 }
 
-#if 0
-void disable_radio_button(QRadioButton* const button)
-{
-        ASSERT(button && button->group());
-
-        button->group()->setExclusive(false);
-        // button->setAutoExclusive(false);
-        button->setChecked(false);
-        // button->setAutoExclusive(true);
-        button->setEnabled(false);
-        button->group()->setExclusive(true);
-}
-#endif
+// void disable_radio_button(QRadioButton* const button)
+// {
+//         ASSERT(button && button->group());
+//         button->group()->setExclusive(false);
+//         // button->setAutoExclusive(false);
+//         button->setChecked(false);
+//         // button->setAutoExclusive(true);
+//         button->setEnabled(false);
+//         button->group()->setExclusive(true);
+// }
 
 window::WindowID widget_window_id(const QWidget* const widget)
 {
         ASSERT(widget);
 
-        static_assert(sizeof(window::WindowID) == sizeof(WId));
+        static_assert(sizeof(window::WindowID) == sizeof(decltype(widget->winId())));
         static_assert(std::is_integral_v<window::WindowID> || std::is_pointer_v<window::WindowID>);
-        static_assert(std::is_integral_v<WId> || std::is_pointer_v<WId>);
+        static_assert(std::is_integral_v<decltype(widget->winId())> || std::is_pointer_v<decltype(widget->winId())>);
 
-        const WId w_id = widget->winId();
-        window::WindowID window_id;
-        std::memcpy(&window_id, &w_id, sizeof(window_id));
-        return window_id;
-}
-
-double widget_pixels_per_inch(const QWidget* const widget)
-{
-#if 0
-        const int n = QApplication::desktop()->screenNumber(widget);
-        QScreen* const s = QApplication::screens().at(n);
-        return s->logicalDotsPerInch();
-#else
-        const double ppi_x = widget->logicalDpiX();
-        const double ppi_y = widget->logicalDpiY();
-        const double ppi = 0.5 * (ppi_x + ppi_y);
-        ASSERT(ppi > 0);
-        return ppi;
-#endif
+        return std::bit_cast<window::WindowID>(widget->winId());
 }
 
 void move_window_to_desktop_center(QMainWindow* const window)
