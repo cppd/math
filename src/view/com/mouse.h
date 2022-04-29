@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/numerical/region.h>
 
+#include <tuple>
 #include <unordered_map>
 
 namespace ns::view
@@ -50,6 +51,11 @@ class Mouse final
                 {                    0,                     0}
         };
 
+        double width_ = -1;
+        double height_ = -1;
+
+        std::tuple<int, int> position(double x, double y) const;
+
         const MouseButtonInfo& info(MouseButton button) const;
 
         void command(const command::MousePress& v);
@@ -60,7 +66,7 @@ class Mouse final
 public:
         explicit Mouse(Camera* camera);
 
-        void set_rectangle(const Region<2, int>& rectangle);
+        void set_rectangle(const Region<2, int>& rectangle, int width, int height);
         void command(const MouseCommand& mouse_command);
 };
 }

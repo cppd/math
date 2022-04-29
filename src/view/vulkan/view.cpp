@@ -285,7 +285,7 @@ class Impl final
                         pixel_sizes_->ppi, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_,
                         window_1, window_2);
 
-                mouse_.set_rectangle(window_1);
+                mouse_.set_rectangle(window_1, width, height);
                 camera_.resize(window_1.width(), window_1.height());
         }
 

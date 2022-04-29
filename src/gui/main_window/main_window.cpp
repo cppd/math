@@ -314,62 +314,77 @@ void MainWindow::on_timer()
         actions_->set_progresses();
 }
 
-void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* const e)
+std::tuple<double, double> MainWindow::graphics_widget_position(const QSinglePointEvent* event) const
+{
+        static_assert(std::is_floating_point_v<decltype(event->position().x())>);
+        static_assert(std::is_floating_point_v<decltype(event->position().y())>);
+
+        const double x = event->position().x() / graphics_widget_->width();
+        const double y = event->position().y() / graphics_widget_->height();
+        return {x, y};
+}
+
+void MainWindow::on_graphics_widget_mouse_wheel(const QWheelEvent* const event)
 {
         if (view_)
         {
-                view_->send(
-                        view::command::MouseWheel(e->position().x(), e->position().y(), e->angleDelta().y() / 120.0));
+                const auto [x, y] = graphics_widget_position(event);
+                view_->send(view::command::MouseWheel(x, y, event->angleDelta().y() / 120.0));
         }
 }
 
-void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* const e)
+void MainWindow::on_graphics_widget_mouse_move(const QMouseEvent* const event)
 {
         if (view_)
         {
-                view_->send(view::command::MouseMove(e->x(), e->y()));
+                const auto [x, y] = graphics_widget_position(event);
+                view_->send(view::command::MouseMove(x, y));
         }
 }
 
-void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* const e)
+void MainWindow::on_graphics_widget_mouse_press(const QMouseEvent* const event)
 {
         if (view_)
         {
-                if (e->button() == Qt::MouseButton::LeftButton)
+                if (event->button() == Qt::MouseButton::LeftButton)
                 {
-                        view_->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::LEFT));
+                        const auto [x, y] = graphics_widget_position(event);
+                        view_->send(view::command::MousePress(x, y, view::MouseButton::LEFT));
                         return;
                 }
-                if (e->button() == Qt::MouseButton::RightButton)
+                if (event->button() == Qt::MouseButton::RightButton)
                 {
-                        view_->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::RIGHT));
-                        return;
-                }
-        }
-}
-
-void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* const e)
-{
-        if (view_)
-        {
-                if (e->button() == Qt::MouseButton::LeftButton)
-                {
-                        view_->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::LEFT));
-                        return;
-                }
-                if (e->button() == Qt::MouseButton::RightButton)
-                {
-                        view_->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::RIGHT));
+                        const auto [x, y] = graphics_widget_position(event);
+                        view_->send(view::command::MousePress(x, y, view::MouseButton::RIGHT));
                         return;
                 }
         }
 }
 
-void MainWindow::on_graphics_widget_resize(QResizeEvent* const e)
+void MainWindow::on_graphics_widget_mouse_release(const QMouseEvent* const event)
 {
         if (view_)
         {
-                view_->send(view::command::WindowResize(e->size().width(), e->size().height()));
+                if (event->button() == Qt::MouseButton::LeftButton)
+                {
+                        const auto [x, y] = graphics_widget_position(event);
+                        view_->send(view::command::MouseRelease(x, y, view::MouseButton::LEFT));
+                        return;
+                }
+                if (event->button() == Qt::MouseButton::RightButton)
+                {
+                        const auto [x, y] = graphics_widget_position(event);
+                        view_->send(view::command::MouseRelease(x, y, view::MouseButton::RIGHT));
+                        return;
+                }
+        }
+}
+
+void MainWindow::on_graphics_widget_resize(const QResizeEvent* const event)
+{
+        if (view_)
+        {
+                view_->send(view::command::WindowResize(event->size().width(), event->size().height()));
         }
 }
 }

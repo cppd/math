@@ -23,9 +23,16 @@ Mouse::Mouse(Camera* const camera) : camera_(camera)
 {
 }
 
-void Mouse::set_rectangle(const Region<2, int>& rectangle)
+void Mouse::set_rectangle(const Region<2, int>& rectangle, const int width, const int height)
 {
         rectangle_ = rectangle;
+        width_ = width;
+        height_ = height;
+}
+
+std::tuple<int, int> Mouse::position(const double x, const double y) const
+{
+        return {std::lround(x * width_), std::lround(y * height_)};
 }
 
 void Mouse::command(const MouseCommand& mouse_command)
@@ -50,37 +57,43 @@ const Mouse::MouseButtonInfo& Mouse::info(const MouseButton button) const
 
 void Mouse::command(const command::MousePress& v)
 {
-        x_ = v.x;
-        y_ = v.y;
+        const auto [x, y] = position(v.x, v.y);
+
+        x_ = x;
+        y_ = y;
 
         MouseButtonInfo& m = buttons_[v.button];
         m.pressed = true;
-        m.pressed_x = v.x;
-        m.pressed_y = v.y;
+        m.pressed_x = x;
+        m.pressed_y = y;
         m.delta_x = 0;
         m.delta_y = 0;
 }
 
 void Mouse::command(const command::MouseRelease& v)
 {
+        const auto [x, y] = position(v.x, v.y);
+
         buttons_[v.button].pressed = false;
-        x_ = v.x;
-        y_ = v.y;
+        x_ = x;
+        y_ = y;
 }
 
 void Mouse::command(const command::MouseMove& v)
 {
+        const auto [x, y] = position(v.x, v.y);
+
         for (auto& [button, info] : buttons_)
         {
                 if (info.pressed)
                 {
-                        info.delta_x = v.x - x_;
-                        info.delta_y = v.y - y_;
+                        info.delta_x = x - x_;
+                        info.delta_y = y - y_;
                 }
         }
 
-        x_ = v.x;
-        y_ = v.y;
+        x_ = x;
+        y_ = y;
 
         const MouseButtonInfo& right = info(MouseButton::RIGHT);
         if (right.pressed && rectangle_.is_inside(right.pressed_x, right.pressed_y)
@@ -99,6 +112,8 @@ void Mouse::command(const command::MouseMove& v)
 
 void Mouse::command(const command::MouseWheel& v)
 {
-        camera_->scale(v.x - rectangle_.x0(), v.y - rectangle_.y0(), v.delta);
+        const auto [x, y] = position(v.x, v.y);
+
+        camera_->scale(x - rectangle_.x0(), y - rectangle_.y0(), v.delta);
 }
 }

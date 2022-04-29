@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
+#include <tuple>
 
 namespace ns::gui::main_window
 {
@@ -75,11 +76,13 @@ private:
 
         QTimer timer_;
 
-        void on_graphics_widget_mouse_move(QMouseEvent*);
-        void on_graphics_widget_mouse_press(QMouseEvent*);
-        void on_graphics_widget_mouse_release(QMouseEvent*);
-        void on_graphics_widget_mouse_wheel(QWheelEvent*);
-        void on_graphics_widget_resize(QResizeEvent*);
+        std::tuple<double, double> graphics_widget_position(const QSinglePointEvent* event) const;
+
+        void on_graphics_widget_mouse_move(const QMouseEvent* event);
+        void on_graphics_widget_mouse_press(const QMouseEvent* event);
+        void on_graphics_widget_mouse_release(const QMouseEvent* event);
+        void on_graphics_widget_mouse_wheel(const QWheelEvent* event);
+        void on_graphics_widget_resize(const QResizeEvent* event);
         void on_timer();
 
         void constructor_graphics_widget();

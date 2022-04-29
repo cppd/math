@@ -250,43 +250,43 @@ struct ClipPlaneHide final
 
 struct MousePress final
 {
-        int x;
-        int y;
+        double x;
+        double y;
         MouseButton button;
 
-        MousePress(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
+        MousePress(const double x, const double y, const MouseButton button) : x(x), y(y), button(button)
         {
         }
 };
 
 struct MouseRelease final
 {
-        int x;
-        int y;
+        double x;
+        double y;
         MouseButton button;
 
-        MouseRelease(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
+        MouseRelease(const double x, const double y, const MouseButton button) : x(x), y(y), button(button)
         {
         }
 };
 
 struct MouseMove final
 {
-        int x;
-        int y;
+        double x;
+        double y;
 
-        MouseMove(const int x, const int y) : x(x), y(y)
+        MouseMove(const double x, const double y) : x(x), y(y)
         {
         }
 };
 
 struct MouseWheel final
 {
-        int x;
-        int y;
+        double x;
+        double y;
         double delta;
 
-        MouseWheel(const int x, const int y, const double delta) : x(x), y(y), delta(delta)
+        MouseWheel(const double x, const double y, const double delta) : x(x), y(y), delta(delta)
         {
         }
 };
