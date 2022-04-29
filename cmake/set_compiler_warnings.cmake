@@ -101,27 +101,18 @@ function(set_compiler_warnings source_files)
                         -Wno-undefined-func-template
 
                         # Qt
-                        -Wno-extra-semi-stmt
-                        -Wno-redundant-parens
                         -Wno-reserved-identifier
                         >
                 >
         )
 
-        foreach(f ${source_files})
-
-                if (${f} MATCHES "^.+\.cpp$")
-
-                        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-                                string(CONCAT flags
-                                        " -Wextra-semi-stmt"
-                                        " -Wredundant-parens"
-                                )
-                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
-                        endif()
-
-                endif()
-
-        endforeach()
+        # foreach(f ${source_files})
+        #         if (${f} MATCHES "^.+\.cpp$")
+        #                 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        #                         string(CONCAT flags)
+        #                         set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
+        #                 endif()
+        #         endif()
+        # endforeach()
 
 endfunction()
