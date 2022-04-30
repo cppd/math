@@ -108,6 +108,11 @@ void check_print_characters(const std::string& s)
                 error("Information string has unsupported characters " + s);
         }
 }
+
+void set_line_edit_width(QLineEdit* line_edit)
+{
+        line_edit->setMinimumWidth(line_edit->fontMetrics().boundingRect(QString(75, 'a')).width());
+}
 }
 
 ViewImageDialog::ViewImageDialog(
@@ -142,7 +147,9 @@ ViewImageDialog::ViewImageDialog(
 
         connect(ui_.toolButton_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
 
-        this->adjustSize();
+        set_line_edit_width(ui_.lineEdit_path);
+
+        set_dialog_height(this);
 }
 
 void ViewImageDialog::done(const int r)
