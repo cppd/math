@@ -327,4 +327,12 @@ void set_dialog_size(QDialog* const dialog)
         dialog->setMinimumSize(size);
         dialog->setMaximumSize(size);
 }
+
+void set_dialog_height(QDialog* const dialog)
+{
+        dialog->adjustSize();
+        const auto height = dialog->height();
+        dialog->setMinimumHeight(height);
+        dialog->setMaximumHeight(height);
+}
 }

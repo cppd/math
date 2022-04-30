@@ -113,4 +113,5 @@ void set_label_minimum_width_for_text(QLabel* label, const std::string_view& tex
 void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text);
 
 void set_dialog_size(QDialog* dialog);
+void set_dialog_height(QDialog* dialog);
 }
