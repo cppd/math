@@ -30,6 +30,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
+namespace
+{
+void set_line_edit_width(QLineEdit* line_edit)
+{
+        line_edit->setMinimumWidth(line_edit->fontMetrics().boundingRect(QString(75, 'a')).width());
+}
+}
+
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
         const PainterImagePathType path_type,
@@ -45,7 +53,7 @@ PainterImageDialog::PainterImageDialog(
         set_path();
         set_checkboxes(use_all);
 
-        this->adjustSize();
+        set_dialog_height(this);
 }
 
 void PainterImageDialog::set_path()
@@ -59,12 +67,14 @@ void PainterImageDialog::set_path()
                 return;
         case PainterImagePathType::DIRECTORY:
                 ui_.label_path_name->setText("Directory:");
+                set_line_edit_width(ui_.lineEdit_path);
                 ui_.lineEdit_path->setReadOnly(true);
                 connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         case PainterImagePathType::FILE:
                 ui_.label_path_name->setText("File:");
+                set_line_edit_width(ui_.lineEdit_path);
                 ui_.lineEdit_path->setReadOnly(true);
                 connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
