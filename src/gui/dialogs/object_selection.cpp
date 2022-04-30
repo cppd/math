@@ -75,6 +75,8 @@ ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         ui_.checkBox_cocone->setChecked(input.cocone);
         ui_.checkBox_convex_hull->setChecked(input.convex_hull);
         ui_.checkBox_minumum_spanning_tree->setChecked(input.mst);
+
+        set_dialog_size(this);
 }
 
 void ObjectSelectionParametersDialog::set_all(const bool checked)
