@@ -27,21 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-VolumeObjectParametersDialog::VolumeObjectParametersDialog(
+namespace
+{
+void check_parameters(
         const int dimension,
         const std::string& object_name,
         const int default_image_size,
         const int min_image_size,
-        const int max_image_size,
-        std::optional<VolumeObjectParameters>& parameters)
-        : QDialog(parent_for_dialog()),
-          min_image_size_(min_image_size),
-          max_image_size_(max_image_size),
-          parameters_(parameters)
+        const int max_image_size)
 {
-        ui_.setupUi(this);
-        setWindowTitle("Create Object");
-
         if (!(dimension >= 2))
         {
                 error("Error dimension parameter: " + to_string(dimension));
@@ -68,14 +62,36 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
                 error("Initial image size must be in the range [" + to_string(min_image_size) + ", "
                       + to_string(max_image_size) + "]");
         }
+}
+}
+
+VolumeObjectParametersDialog::VolumeObjectParametersDialog(
+        const int dimension,
+        const std::string& object_name,
+        const int default_image_size,
+        const int min_image_size,
+        const int max_image_size,
+        std::optional<VolumeObjectParameters>& parameters)
+        : QDialog(parent_for_dialog()),
+          min_image_size_(min_image_size),
+          max_image_size_(max_image_size),
+          parameters_(parameters)
+{
+        check_parameters(dimension, object_name, default_image_size, min_image_size, max_image_size);
+
+        ui_.setupUi(this);
+        setWindowTitle("Create Object");
 
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
         ui_.spinBox_image_size->setMinimum(min_image_size);
         ui_.spinBox_image_size->setMaximum(max_image_size);
-        ui_.spinBox_image_size->setValue(default_image_size);
         ui_.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
+
+        ui_.spinBox_image_size->setValue(max_image_size);
+        set_dialog_size(this);
+        ui_.spinBox_image_size->setValue(default_image_size);
 }
 
 void VolumeObjectParametersDialog::done(const int r)

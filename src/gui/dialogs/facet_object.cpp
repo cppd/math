@@ -27,21 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-FacetObjectParametersDialog::FacetObjectParametersDialog(
+namespace
+{
+void check_parameters(
         const int dimension,
         const std::string& object_name,
         const int default_facet_count,
         const int min_facet_count,
-        const int max_facet_count,
-        std::optional<FacetObjectParameters>& parameters)
-        : QDialog(parent_for_dialog()),
-          min_facet_count_(min_facet_count),
-          max_facet_count_(max_facet_count),
-          parameters_(parameters)
+        const int max_facet_count)
 {
-        ui_.setupUi(this);
-        setWindowTitle("Create Object");
-
         if (!(dimension >= 2))
         {
                 error("Dimension " + to_string(dimension) + " must be greater than or equal to 2");
@@ -68,14 +62,36 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
                 error("Initial facet count must be in the range [" + to_string(min_facet_count) + ", "
                       + to_string(max_facet_count) + "]");
         }
+}
+}
+
+FacetObjectParametersDialog::FacetObjectParametersDialog(
+        const int dimension,
+        const std::string& object_name,
+        const int default_facet_count,
+        const int min_facet_count,
+        const int max_facet_count,
+        std::optional<FacetObjectParameters>& parameters)
+        : QDialog(parent_for_dialog()),
+          min_facet_count_(min_facet_count),
+          max_facet_count_(max_facet_count),
+          parameters_(parameters)
+{
+        check_parameters(dimension, object_name, default_facet_count, min_facet_count, max_facet_count);
+
+        ui_.setupUi(this);
+        setWindowTitle("Create Object");
 
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
         ui_.spinBox_facet_count->setMinimum(min_facet_count);
         ui_.spinBox_facet_count->setMaximum(max_facet_count);
-        ui_.spinBox_facet_count->setValue(default_facet_count);
         ui_.spinBox_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
+
+        ui_.spinBox_facet_count->setValue(max_facet_count);
+        set_dialog_size(this);
+        ui_.spinBox_facet_count->setValue(default_facet_count);
 }
 
 void FacetObjectParametersDialog::done(const int r)

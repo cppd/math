@@ -27,21 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-PointObjectParametersDialog::PointObjectParametersDialog(
+namespace
+{
+void check_parameters(
         const int dimension,
         const std::string& object_name,
         const int default_point_count,
         const int min_point_count,
-        const int max_point_count,
-        std::optional<PointObjectParameters>& parameters)
-        : QDialog(parent_for_dialog()),
-          min_point_count_(min_point_count),
-          max_point_count_(max_point_count),
-          parameters_(parameters)
+        const int max_point_count)
 {
-        ui_.setupUi(this);
-        setWindowTitle("Create Object");
-
         if (!(dimension >= 2))
         {
                 error("Dimension " + to_string(dimension) + " must be greater than or equal to 2");
@@ -68,14 +62,36 @@ PointObjectParametersDialog::PointObjectParametersDialog(
                 error("Initial point count must be in the range [" + to_string(min_point_count) + ", "
                       + to_string(max_point_count) + "]");
         }
+}
+}
+
+PointObjectParametersDialog::PointObjectParametersDialog(
+        const int dimension,
+        const std::string& object_name,
+        const int default_point_count,
+        const int min_point_count,
+        const int max_point_count,
+        std::optional<PointObjectParameters>& parameters)
+        : QDialog(parent_for_dialog()),
+          min_point_count_(min_point_count),
+          max_point_count_(max_point_count),
+          parameters_(parameters)
+{
+        check_parameters(dimension, object_name, default_point_count, min_point_count, max_point_count);
+
+        ui_.setupUi(this);
+        setWindowTitle("Create Object");
 
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
         ui_.spinBox_point_count->setMinimum(min_point_count);
         ui_.spinBox_point_count->setMaximum(max_point_count);
-        ui_.spinBox_point_count->setValue(default_point_count);
         ui_.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
+
+        ui_.spinBox_point_count->setValue(max_point_count);
+        set_dialog_size(this);
+        ui_.spinBox_point_count->setValue(default_point_count);
 }
 
 void PointObjectParametersDialog::done(const int r)
