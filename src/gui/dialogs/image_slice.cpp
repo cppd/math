@@ -32,17 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-ImageSliceDialog::ImageSliceDialog(
-        const std::vector<int>& size,
-        const int slice_dimension,
-        std::optional<ImageSliceParameters>& parameters)
-        : QDialog(parent_for_dialog()),
-          slice_dimension_(slice_dimension),
-          parameters_(parameters)
+namespace
 {
-        ui_.setupUi(this);
-        setWindowTitle("Image Slice");
-
+void check_parameters(const std::vector<int>& size, const int slice_dimension)
+{
         if (!(size.size() >= 2))
         {
                 error("Image dimension " + to_string(size.size()) + " must be greater than or equal to 2");
@@ -58,6 +51,86 @@ ImageSliceDialog::ImageSliceDialog(
                 error("Slice dimension " + to_string(slice_dimension) + " must be in the range [1, "
                       + to_string(size.size()) + ")");
         }
+}
+
+void create_slider(
+        QDialog* const dialog,
+        QGridLayout* const layout,
+        const int i,
+        const int size,
+        const int max_size,
+        std::optional<int>* const slice)
+{
+        constexpr bool CHECKED = false;
+
+        QLabel* const label_d = new QLabel(QString::fromStdString("d[" + to_string(i) + "]"), dialog);
+        QLabel* const label_e = new QLabel("=", dialog);
+
+        QCheckBox* const check_box = new QCheckBox(dialog);
+        check_box->setChecked(CHECKED);
+
+        QLabel* const label = new QLabel(dialog);
+        set_label_minimum_width_for_text(label, to_string_digit_groups(max_size - 1));
+        label->setEnabled(CHECKED);
+
+        QSlider* const slider = new QSlider(dialog);
+        slider->setOrientation(Qt::Horizontal);
+        slider->setMinimum(0);
+        slider->setMaximum(size - 1);
+        slider->setEnabled(CHECKED);
+        set_slider_to_middle(slider);
+        label->setText(QString::fromStdString(to_string_digit_groups(slider->value())));
+
+        static_assert(!CHECKED);
+        slice->reset();
+
+        layout->addWidget(label_d, i, 0);
+        layout->addWidget(label_e, i, 1);
+        layout->addWidget(check_box, i, 2);
+        layout->addWidget(label, i, 3);
+        layout->addWidget(slider, i, 4);
+
+        dialog->connect(
+                slider, &QSlider::valueChanged, dialog,
+                [=]()
+                {
+                        set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
+
+                        ASSERT(check_box->isChecked());
+                        *slice = slider->value();
+                });
+
+        dialog->connect(
+                check_box, &QCheckBox::stateChanged, dialog,
+                [=]()
+                {
+                        label->setEnabled(check_box->isChecked());
+                        slider->setEnabled(check_box->isChecked());
+
+                        if (check_box->isChecked())
+                        {
+                                *slice = slider->value();
+                        }
+                        else
+                        {
+                                slice->reset();
+                        }
+                });
+}
+}
+
+ImageSliceDialog::ImageSliceDialog(
+        const std::vector<int>& size,
+        const int slice_dimension,
+        std::optional<ImageSliceParameters>& parameters)
+        : QDialog(parent_for_dialog()),
+          slice_dimension_(slice_dimension),
+          parameters_(parameters)
+{
+        check_parameters(size, slice_dimension);
+
+        ui_.setupUi(this);
+        setWindowTitle("Image Slice");
 
         const int max_size = *std::max_element(size.cbegin(), size.cend());
 
@@ -69,66 +142,15 @@ ImageSliceDialog::ImageSliceDialog(
 
         for (std::size_t i = 0; i < size.size(); ++i)
         {
-                constexpr bool CHECKED = false;
-
-                QLabel* const label_d = new QLabel(QString::fromStdString("d[" + to_string(i) + "]"), this);
-                QLabel* const label_e = new QLabel("=", this);
-
-                QCheckBox* const check_box = new QCheckBox(this);
-                check_box->setChecked(CHECKED);
-
-                QLabel* const label = new QLabel(this);
-                set_label_minimum_width_for_text(label, to_string_digit_groups(max_size - 1));
-                label->setEnabled(CHECKED);
-
-                QSlider* const slider = new QSlider(this);
-                slider->setOrientation(Qt::Horizontal);
-                slider->setMinimum(0);
-                slider->setMaximum(size[i] - 1);
-                slider->setEnabled(CHECKED);
-                set_slider_to_middle(slider);
-                label->setText(QString::fromStdString(to_string_digit_groups(slider->value())));
-
-                static_assert(!CHECKED);
-                slices_[i].reset();
-
-                layout->addWidget(label_d, i, 0);
-                layout->addWidget(label_e, i, 1);
-                layout->addWidget(check_box, i, 2);
-                layout->addWidget(label, i, 3);
-                layout->addWidget(slider, i, 4);
-
-                connect(slider, &QSlider::valueChanged, this,
-                        [=, this]()
-                        {
-                                set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
-
-                                ASSERT(check_box->isChecked());
-                                slices_[i] = slider->value();
-                        });
-
-                connect(check_box, &QCheckBox::stateChanged, this,
-                        [=, this]()
-                        {
-                                label->setEnabled(check_box->isChecked());
-                                slider->setEnabled(check_box->isChecked());
-
-                                if (check_box->isChecked())
-                                {
-                                        slices_[i] = slider->value();
-                                }
-                                else
-                                {
-                                        slices_[i].reset();
-                                }
-                        });
+                create_slider(this, layout, i, size[i], max_size, &slices_[i]);
         }
 
         ASSERT(qobject_cast<QVBoxLayout*>(this->layout()));
         qobject_cast<QVBoxLayout*>(this->layout())->insertWidget(0, widget);
 
-        this->setMinimumWidth(500);
-        this->adjustSize();
+        this->setMinimumWidth(this->fontMetrics().boundingRect(QString(75, 'a')).width());
+
+        set_dialog_height(this);
 }
 
 void ImageSliceDialog::done(const int r)
