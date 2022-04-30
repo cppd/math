@@ -319,4 +319,12 @@ void set_label_text_and_minimum_width(QLabel* const label, const std::string_vie
         label->setText(s);
         label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(s).width()));
 }
+
+void set_dialog_size(QDialog* const dialog)
+{
+        dialog->adjustSize();
+        const auto size = dialog->size();
+        dialog->setMinimumSize(size);
+        dialog->setMaximumSize(size);
+}
 }

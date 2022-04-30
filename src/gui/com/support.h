@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/window/handle.h>
 
+#include <QDialog>
 #include <QLabel>
 #include <QLayout>
 #include <QMainWindow>
@@ -110,4 +111,6 @@ void add_widget(QWidget* dst, QWidget* src);
 
 void set_label_minimum_width_for_text(QLabel* label, const std::string_view& text);
 void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text);
+
+void set_dialog_size(QDialog* dialog);
 }
