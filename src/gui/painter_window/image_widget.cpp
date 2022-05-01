@@ -42,7 +42,6 @@ ImageWidget::ImageWidget(const int width, const int height, QMenu* const menu)
         layout()->setContentsMargins(0, 0, 0, 0);
 
         ui_.label_image->setText("");
-        ui_.label_image->resize(image_2d_.width(), image_2d_.height());
 
         ui_.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui_.scrollAreaWidgetContents->layout()->setSpacing(0);
@@ -59,10 +58,10 @@ QSize ImageWidget::size_difference() const
 {
         ui_.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui_.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        QSize size = image_2d_.size() - ui_.scroll_area->size();
+        const QSize difference = image_2d_.size() / ui_.label_image->devicePixelRatioF() - ui_.scroll_area->size();
         ui_.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui_.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        return size;
+        return difference;
 }
 
 void ImageWidget::update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices)
@@ -88,6 +87,10 @@ void ImageWidget::update(const std::span<const std::byte>& pixels_r8g8b8a8, cons
                 }
         }
 
+        if (!(image_2d_.devicePixelRatioF() == ui_.label_image->devicePixelRatioF()))
+        {
+                image_2d_.setDevicePixelRatio(ui_.label_image->devicePixelRatioF());
+        }
         ui_.label_image->setPixmap(QPixmap::fromImage(image_2d_));
         ui_.label_image->update();
 }
