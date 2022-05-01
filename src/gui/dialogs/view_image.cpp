@@ -109,7 +109,7 @@ void check_print_characters(const std::string& s)
         }
 }
 
-void set_line_edit_width(QLineEdit* line_edit)
+void set_line_edit_width(QLineEdit* const line_edit)
 {
         line_edit->setMinimumWidth(line_edit->fontMetrics().boundingRect(QString(75, 'a')).width());
 }

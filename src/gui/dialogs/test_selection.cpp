@@ -26,6 +26,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
+namespace
+{
+void set_window_size(QDialog* const dialog)
+{
+        const QSize size = dialog->screen()->geometry().size();
+        if (size.width() > size.height())
+        {
+                const auto v = size.height() / 2;
+                dialog->resize(v, v);
+        }
+        else
+        {
+                const auto v = size.width() / 2;
+                dialog->resize(v, v);
+        }
+}
+}
+
 class TestSelectionParametersDialog::Items final
 {
         struct Item final
@@ -155,7 +173,6 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
           parameters_(parameters)
 {
         ui_.setupUi(this);
-
         setWindowTitle(QString::fromUtf8(title.data(), title.size()));
 
         std::sort(test_names.begin(), test_names.end());
@@ -191,6 +208,8 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
                 {
                         filter(ui_.lineEdit_filter->text());
                 });
+
+        set_window_size(this);
 }
 
 TestSelectionParametersDialog::~TestSelectionParametersDialog() = default;

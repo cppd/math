@@ -32,7 +32,7 @@ namespace ns::gui::dialog
 {
 namespace
 {
-void set_line_edit_width(QLineEdit* line_edit)
+void set_line_edit_width(QLineEdit* const line_edit)
 {
         line_edit->setMinimumWidth(line_edit->fontMetrics().boundingRect(QString(75, 'a')).width());
 }
