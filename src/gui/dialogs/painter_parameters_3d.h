@@ -42,11 +42,11 @@ private:
 
         PainterParametersWidget* parameters_widget_;
 
-        int min_width_;
-        int max_width_;
-        int min_height_;
-        int max_height_;
         double aspect_ratio_;
+        int max_width_;
+        int min_width_;
+        int max_height_;
+        int min_height_;
 
         std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters_;
 

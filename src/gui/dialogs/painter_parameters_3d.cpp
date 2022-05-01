@@ -30,6 +30,23 @@ namespace ns::gui::dialog
 namespace
 {
 constexpr int DIMENSION = 3;
+
+namespace
+{
+void check_parameters(const int width, const int height, const int max_screen_size)
+{
+        if (!(width >= 1 && height >= 1))
+        {
+                error("Width " + to_string(width) + " and height " + to_string(height)
+                      + " must be greater than or equal to 1");
+        }
+
+        if (!(max_screen_size >= 1))
+        {
+                error("Maximum screen size " + to_string(max_screen_size) + " must be greater than or equal to 1");
+        }
+}
+}
 }
 
 PainterParameters3dDialog::PainterParameters3dDialog(
@@ -54,19 +71,13 @@ PainterParameters3dDialog::PainterParameters3dDialog(
                   default_precision_index,
                   colors,
                   default_color_index)),
+          aspect_ratio_(static_cast<double>(width) / height),
+          max_width_(aspect_ratio_ >= 1 ? max_screen_size : std::lround(max_screen_size * aspect_ratio_)),
+          min_width_(std::min(max_width_, width)),
+          max_height_(aspect_ratio_ >= 1 ? std::lround(max_screen_size / aspect_ratio_) : max_screen_size),
+          min_height_(std::min(max_height_, height)),
           parameters_(parameters)
 {
-        if (!(width >= 1 && height >= 1))
-        {
-                error("Width " + to_string(width) + " and height " + to_string(height)
-                      + " must be greater than or equal to 1");
-        }
-
-        if (!(max_screen_size >= 1))
-        {
-                error("Maximum screen size " + to_string(max_screen_size) + " must be greater than or equal to 1");
-        }
-
         ui_.setupUi(this);
         setWindowTitle("Painter");
 
@@ -74,12 +85,6 @@ PainterParameters3dDialog::PainterParameters3dDialog(
                 &PainterParameters3dDialog::on_width_value_changed);
         connect(ui_.spinBox_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParameters3dDialog::on_height_value_changed);
-
-        aspect_ratio_ = static_cast<double>(width) / height;
-        max_width_ = aspect_ratio_ >= 1 ? max_screen_size : std::lround(max_screen_size * aspect_ratio_);
-        max_height_ = aspect_ratio_ >= 1 ? std::lround(max_screen_size / aspect_ratio_) : max_screen_size;
-        min_width_ = std::min(max_width_, width);
-        min_height_ = std::min(max_height_, height);
 
         ui_.label_space->setText(QString::fromStdString(space_name(DIMENSION)));
 
@@ -94,6 +99,8 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         ui_.spinBox_height->setSingleStep(std::max(1, min_height_ / 10));
 
         ui_.verticalLayout_parameters->addWidget(parameters_widget_);
+
+        set_dialog_size(this);
 }
 
 void PainterParameters3dDialog::on_width_value_changed(int)
@@ -164,6 +171,8 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
         const std::array<const char*, 2>& colors,
         const int default_color_index)
 {
+        check_parameters(width, height, max_screen_size);
+
         std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 
         QtObjectInDynamicMemory w(new PainterParameters3dDialog(

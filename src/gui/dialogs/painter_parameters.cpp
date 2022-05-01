@@ -24,8 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-PainterParametersWidget::PainterParametersWidget(
-        QWidget* const parent,
+namespace
+{
+void check_parameters(
         const int max_thread_count,
         const int default_samples_per_pixel,
         const int max_samples_per_pixel,
@@ -33,7 +34,6 @@ PainterParametersWidget::PainterParametersWidget(
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
         const int default_color_index)
-        : QWidget(parent)
 {
         if (!(max_thread_count >= 1))
         {
@@ -81,13 +81,29 @@ PainterParametersWidget::PainterParametersWidget(
         {
                 error("Default color index error " + to_string(default_color_index));
         }
+}
+}
+
+PainterParametersWidget::PainterParametersWidget(
+        QWidget* const parent,
+        const int max_thread_count,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
+        const std::array<const char*, 2>& precisions,
+        const int default_precision_index,
+        const std::array<const char*, 2>& colors,
+        const int default_color_index)
+        : QWidget(parent),
+          max_thread_count_(max_thread_count),
+          max_samples_per_pixel_(max_samples_per_pixel)
+{
+        check_parameters(
+                max_thread_count, default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index,
+                colors, default_color_index);
 
         ui_.setupUi(this);
 
         this->layout()->setContentsMargins(0, 0, 0, 0);
-
-        max_thread_count_ = max_thread_count;
-        max_samples_per_pixel_ = max_samples_per_pixel;
 
         ui_.spinBox_threads->setMinimum(1);
         ui_.spinBox_threads->setMaximum(max_thread_count);
