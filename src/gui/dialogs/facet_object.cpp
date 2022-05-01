@@ -88,10 +88,9 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         ui_.spinBox_facet_count->setMinimum(min_facet_count);
         ui_.spinBox_facet_count->setMaximum(max_facet_count);
         ui_.spinBox_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
-
-        ui_.spinBox_facet_count->setValue(max_facet_count);
-        set_dialog_size(this);
         ui_.spinBox_facet_count->setValue(default_facet_count);
+
+        set_dialog_size(this);
 }
 
 void FacetObjectParametersDialog::done(const int r)

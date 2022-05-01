@@ -88,10 +88,9 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         ui_.spinBox_point_count->setMinimum(min_point_count);
         ui_.spinBox_point_count->setMaximum(max_point_count);
         ui_.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
-
-        ui_.spinBox_point_count->setValue(max_point_count);
-        set_dialog_size(this);
         ui_.spinBox_point_count->setValue(default_point_count);
+
+        set_dialog_size(this);
 }
 
 void PointObjectParametersDialog::done(const int r)

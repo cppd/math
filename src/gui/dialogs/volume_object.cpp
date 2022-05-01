@@ -88,10 +88,9 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         ui_.spinBox_image_size->setMinimum(min_image_size);
         ui_.spinBox_image_size->setMaximum(max_image_size);
         ui_.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
-
-        ui_.spinBox_image_size->setValue(max_image_size);
-        set_dialog_size(this);
         ui_.spinBox_image_size->setValue(default_image_size);
+
+        set_dialog_size(this);
 }
 
 void VolumeObjectParametersDialog::done(const int r)
