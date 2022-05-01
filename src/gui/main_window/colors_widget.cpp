@@ -57,6 +57,17 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         connect(ui_.toolButton_normal_color_positive, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_positive_clicked);
         connect(ui_.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
+
+        this->adjustSize();
+
+        const auto h = ui_.toolButton_background_color->size().height();
+        ui_.widget_background_color->setMinimumSize(h, h);
+        ui_.widget_clip_plane_color->setMinimumSize(h, h);
+        ui_.widget_dft_background_color->setMinimumSize(h, h);
+        ui_.widget_dft_color->setMinimumSize(h, h);
+        ui_.widget_normal_color_negative->setMinimumSize(h, h);
+        ui_.widget_normal_color_positive->setMinimumSize(h, h);
+        ui_.widget_wireframe_color->setMinimumSize(h, h);
 }
 
 void ColorsWidget::set_view(view::View* const view)

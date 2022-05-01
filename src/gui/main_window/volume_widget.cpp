@@ -67,6 +67,11 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
         connect(ui_.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
         connect(ui_.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
         connect(slider_levels_.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
+
+        this->adjustSize();
+
+        const auto h = ui_.toolButton_color->size().height();
+        ui_.widget_color->setMinimumSize(h, h);
 }
 
 void VolumeWidget::set_model_tree(ModelTree* const model_tree)

@@ -59,6 +59,11 @@ MeshWidget::MeshWidget() : QWidget(nullptr)
         connect(ui_.slider_roughness, &QSlider::valueChanged, this, &MeshWidget::on_roughness_changed);
         connect(ui_.slider_transparency, &QSlider::valueChanged, this, &MeshWidget::on_transparency_changed);
         connect(ui_.toolButton_color, &QToolButton::clicked, this, &MeshWidget::on_color_clicked);
+
+        this->adjustSize();
+
+        const auto h = ui_.toolButton_color->size().height();
+        ui_.widget_color->setMinimumSize(h, h);
 }
 
 void MeshWidget::set_model_tree(ModelTree* const model_tree)
