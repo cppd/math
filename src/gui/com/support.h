@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRadioButton>
 #include <QSlider>
 #include <QSplitter>
+#include <array>
 #include <string_view>
 
 namespace ns::gui
@@ -98,6 +99,7 @@ void set_slider_to_middle(QSlider* slider);
 void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, RGB8 color) noexcept;
 
 window::WindowID widget_window_id(const QWidget* widget);
+std::array<double, 2> widget_size(const QWidget* widget);
 
 void move_window_to_desktop_center(QMainWindow* window);
 

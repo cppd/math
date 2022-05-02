@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application.h"
 
 #include <src/color/rgb8.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/com/log.h>
 
 #include <QApplication>
 #include <QScreen>
@@ -28,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <sstream>
 #include <type_traits>
 
 namespace ns::gui
@@ -250,6 +253,34 @@ window::WindowID widget_window_id(const QWidget* const widget)
         static_assert(std::is_integral_v<decltype(widget->winId())> || std::is_pointer_v<decltype(widget->winId())>);
 
         return std::bit_cast<window::WindowID>(widget->winId());
+}
+
+std::array<double, 2> widget_size(const QWidget* const widget)
+{
+        ASSERT(widget);
+
+        const double width_mm = widget->widthMM();
+        const double height_mm = widget->heightMM();
+
+        const double logical_ppi = widget->logicalDpiX();
+        const double width = pixels_to_millimeters(widget->width(), logical_ppi);
+        const double height = pixels_to_millimeters(widget->height(), logical_ppi);
+        const double rel_w = std::abs(width_mm - width) / std::max(std::abs(width_mm), std::abs(width));
+        const double rel_h = std::abs(height_mm - height) / std::max(std::abs(height_mm), std::abs(height));
+        if (!(rel_w < 0.01 && rel_h < 0.01))
+        {
+                std::ostringstream oss;
+                oss << "Error finding widget size:";
+                oss << " size mm = (" << width_mm << ", " << height_mm << ");";
+                oss << " size = (" << width << ", " << height << ");";
+                oss << " size pixels = (" << widget->width() << ", " << widget->height() << ");";
+                oss << " logical ppi = " << logical_ppi << ";";
+                oss << " device pixel ratio = " << widget->devicePixelRatioF() << ";";
+                oss << " ppi = " << logical_ppi * widget->devicePixelRatioF();
+                LOG(oss.str());
+        }
+
+        return {width_mm, height_mm};
 }
 
 void move_window_to_desktop_center(QMainWindow* const window)

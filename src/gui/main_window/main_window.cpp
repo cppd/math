@@ -282,11 +282,7 @@ void MainWindow::first_shown()
         vulkan_instance_ = std::make_unique<vulkan::Instance>();
 
         view_ = view::create_view(
-                widget_window_id(graphics_widget_),
-                std::array{
-                        static_cast<double>(graphics_widget_->widthMM()),
-                        static_cast<double>(graphics_widget_->heightMM())},
-                view_initial_commands());
+                widget_window_id(graphics_widget_), widget_size(graphics_widget_), view_initial_commands());
 
         lighting_widget_->set_view(view_.get());
         colors_widget_->set_view(view_.get());
