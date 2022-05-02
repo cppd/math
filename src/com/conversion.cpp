@@ -31,6 +31,8 @@ namespace
 {
 static_assert(381 == size_to_ppi(10, 150));
 static_assert(25.4 / 15 == size_to_ppi(150, 10));
+static_assert(25.4 / 15 == pixels_to_millimeters(10, 150));
+static_assert(381 == pixels_to_millimeters(150, 10));
 
 void compare(const double a, const double b)
 {
@@ -55,6 +57,8 @@ void test()
         compare(59, millimeters_to_pixels(150, 10));
         compare(381, size_to_ppi(10, 150));
         compare(25.4 / 15, size_to_ppi(150, 10));
+        compare(25.4 / 15, pixels_to_millimeters(10, 150));
+        compare(381, pixels_to_millimeters(150, 10));
 }
 
 TEST_SMALL("Conversion", test)
