@@ -58,41 +58,37 @@ MainWindow::MainWindow()
 
 void MainWindow::constructor_graphics_widget()
 {
-        QSplitter* const splitter = find_widget_splitter(this, ui_.graphics_widget);
-        ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
+        QSplitter* const horizontal_splitter = find_widget_splitter(this, ui_.graphics_widget);
+        ASSERT(horizontal_splitter && horizontal_splitter->orientation() == Qt::Horizontal);
 
         graphics_widget_ = new GraphicsWidget(this);
-
-        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui_.graphics_widget), graphics_widget_);
-        if (w != ui_.graphics_widget)
+        if (horizontal_splitter->replaceWidget(horizontal_splitter->indexOf(ui_.graphics_widget), graphics_widget_)
+            != ui_.graphics_widget)
         {
                 error_fatal("Failed to replace graphics widget");
         }
         delete ui_.graphics_widget;
         ui_.graphics_widget = nullptr;
 
-        graphics_widget_->setMinimumSize(400, 400);
+        graphics_widget_->setMinimumSize(100, 100);
         graphics_widget_->setVisible(true);
 
-        set_horizontal_stretch(graphics_widget_, 1);
-        for (QObject* object : splitter->children())
-        {
-                if (object != graphics_widget_ && qobject_cast<QWidget*>(object))
-                {
-                        set_horizontal_stretch(qobject_cast<QWidget*>(object), 0);
-                }
-        }
+        ASSERT(horizontal_splitter->children().size() >= 2);
+        ASSERT(horizontal_splitter->children()[0] == graphics_widget_
+               || horizontal_splitter->children()[0] == ui_.tab_widget);
+        ASSERT(horizontal_splitter->children()[1] == graphics_widget_
+               || horizontal_splitter->children()[1] == ui_.tab_widget);
+        horizontal_splitter->setSizes(QList<int>() << 1 << 1'000'000);
 
-        set_vertical_stretch(splitter, 1);
-        QSplitter* const vertical_splitter = find_widget_splitter(this, splitter);
+        QSplitter* const vertical_splitter = find_widget_splitter(this, horizontal_splitter);
         ASSERT(vertical_splitter && vertical_splitter->orientation() == Qt::Vertical);
-        for (QObject* object : vertical_splitter->children())
-        {
-                if (object != splitter && qobject_cast<QWidget*>(object))
-                {
-                        set_vertical_stretch(qobject_cast<QWidget*>(object), 0);
-                }
-        }
+
+        ASSERT(vertical_splitter->children().size() >= 2);
+        ASSERT(vertical_splitter->children()[0] == ui_.text_log
+               || vertical_splitter->children()[0] == horizontal_splitter);
+        ASSERT(vertical_splitter->children()[1] == ui_.text_log
+               || vertical_splitter->children()[1] == horizontal_splitter);
+        vertical_splitter->setSizes(QList<int>() << 1'000'000 << 1);
 
         connect(graphics_widget_, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
         connect(graphics_widget_, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
@@ -127,8 +123,6 @@ void MainWindow::constructor_objects()
 
         ui_.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
         ui_.main_widget->layout()->setSpacing(0);
-
-        ui_.tab_widget->setCurrentWidget(ui_.tab_models);
 
         // disable height changing when a widget is added or removed
         ui_.status_bar->setFixedHeight(ui_.status_bar->height());
@@ -240,6 +234,28 @@ void MainWindow::showEvent(QShowEvent* const /*event*/)
         }
         first_show_ = false;
 
+        ui_.tab_widget->setCurrentWidget(ui_.tab_color);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_lighting);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_mesh);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_view);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_volume);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_models);
+
+        if (WINDOW_SIZE_GRAPHICS)
+        {
+                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QSize size = screen.geometry().size() * WINDOW_SIZE_COEF;
+                resize_window_widget(this, graphics_widget_, size);
+        }
+        else
+        {
+                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QSize size = screen.availableGeometry().size() * WINDOW_SIZE_COEF;
+                resize_window_frame(this, size);
+        }
+
+        move_window_to_desktop_center(this);
+
         // window is not yet visible on showEvent
         QTimer::singleShot(
                 WINDOW_SHOW_DELAY, this,
@@ -262,21 +278,6 @@ void MainWindow::showEvent(QShowEvent* const /*event*/)
 
 void MainWindow::first_shown()
 {
-        if (WINDOW_SIZE_GRAPHICS)
-        {
-                const QScreen& screen = *Application::instance()->primaryScreen();
-                const QSize size = screen.geometry().size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, graphics_widget_, size);
-        }
-        else
-        {
-                const QScreen& screen = *Application::instance()->primaryScreen();
-                const QSize size = screen.availableGeometry().size() * WINDOW_SIZE_COEF;
-                resize_window_frame(this, size);
-        }
-
-        move_window_to_desktop_center(this);
-
         const CommandLineOptions options = command_line_options();
 
         vulkan_instance_ = std::make_unique<vulkan::Instance>();
