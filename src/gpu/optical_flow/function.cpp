@@ -121,26 +121,19 @@ std::vector<Vector2i> flow_groups(
         return groups;
 }
 
-void create_top_level_points(
+TopLevelPoints create_top_level_points(
         const int width,
         const int height,
         const double distance_between_points_in_mm,
-        const int ppi,
-        int* const point_count_x,
-        int* const point_count_y,
-        std::vector<Vector2i>* const points)
+        const int ppi)
 {
         ASSERT(width >= 0 && height >= 0 && ppi >= 0);
-
-        points->clear();
 
         const int distance = millimeters_to_pixels(distance_between_points_in_mm, ppi);
 
         if (width <= 0 || height <= 0 || distance < 0)
         {
-                *point_count_x = 0;
-                *point_count_y = 0;
-                return;
+                return {.count_x = 0, .count_y = 0, .points = {}};
         }
 
         const int lw = width - 2 * distance;
@@ -148,30 +141,27 @@ void create_top_level_points(
 
         if (lw <= 0 || lh <= 0)
         {
-                *point_count_x = 0;
-                *point_count_y = 0;
-                return;
+                return {.count_x = 0, .count_y = 0, .points = {}};
         }
 
         const int size = distance + 1;
-        *point_count_x = (lw + size - 1) / size;
-        *point_count_y = (lh + size - 1) / size;
+        const int count_x = (lw + size - 1) / size;
+        const int count_y = (lh + size - 1) / size;
+        const long long point_count = static_cast<long long>(count_x) * count_y;
 
-        const int point_count = *point_count_x * *point_count_y;
-
-        points->clear();
-        points->resize(point_count);
-
-        int index = 0;
+        std::vector<Vector2i> points(point_count);
+        long long index = 0;
         for (int y = distance; y < height - distance; y += size)
         {
                 for (int x = distance; x < width - distance; x += size)
                 {
-                        (*points)[index++] = Vector2i(x, y);
+                        points[index++] = Vector2i(x, y);
                 }
         }
 
         ASSERT(index == point_count);
-        ASSERT(static_cast<std::size_t>(*point_count_x) * *point_count_y == points->size());
+        ASSERT(static_cast<std::size_t>(count_x) * count_y == points.size());
+
+        return {.count_x = count_x, .count_y = count_y, .points = std::move(points)};
 }
 }

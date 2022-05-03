@@ -37,12 +37,12 @@ std::vector<Vector2i> flow_groups(
         int top_point_count_x,
         int top_point_count_y);
 
-void create_top_level_points(
-        int width,
-        int height,
-        double distance_between_points_in_mm,
-        int ppi,
-        int* point_count_x,
-        int* point_count_y,
-        std::vector<Vector2i>* points);
+struct TopLevelPoints final
+{
+        int count_x;
+        int count_y;
+        std::vector<Vector2i> points;
+};
+
+TopLevelPoints create_top_level_points(int width, int height, double distance_between_points_in_mm, int ppi);
 }

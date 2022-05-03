@@ -112,6 +112,53 @@ int count_numbers_in_file(const std::filesystem::path& file_name)
 
         return count_numbers(line);
 }
+
+template <typename Path>
+std::tuple<int, MeshFileType> dimension_and_file_type(const Path& file_name)
+{
+        static constexpr std::string_view OBJ = ".obj";
+        static constexpr std::string_view STL = ".stl";
+        static constexpr std::string_view TXT = ".txt";
+
+        const std::string extension = generic_utf8_filename(file_name.extension());
+
+        if (extension.empty() || extension[0] != '.')
+        {
+                error("No file extension found");
+        }
+
+        if (extension.find(OBJ) == 0)
+        {
+                return {(extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size())),
+                        MeshFileType::OBJ};
+        }
+
+        if (extension.find(STL) == 0)
+        {
+                return {(extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size())),
+                        MeshFileType::STL};
+        }
+
+        if (extension.find(TXT) == 0)
+        {
+                if (extension == TXT)
+                {
+                        return {count_numbers_in_file(file_name), MeshFileType::TXT};
+                }
+
+                const int dimension = read_dimension_number(extension.substr(TXT.size()));
+                const int dimension_numbers = count_numbers_in_file(file_name);
+                if (dimension != dimension_numbers)
+                {
+                        error("Conflicting dimensions in file extension " + to_string(dimension) + " and in file data "
+                              + to_string(dimension_numbers));
+                }
+
+                return {dimension, MeshFileType::TXT};
+        }
+
+        error("Unsupported file format " + extension);
+}
 }
 
 int read_dimension_number(const std::string& s)
@@ -148,52 +195,7 @@ int read_dimension_number(const std::string& s)
 template <typename Path>
 std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
 {
-        static constexpr std::string_view OBJ = ".obj";
-        static constexpr std::string_view STL = ".stl";
-        static constexpr std::string_view TXT = ".txt";
-
-        const std::string extension = generic_utf8_filename(file_name.extension());
-
-        if (extension.empty() || extension[0] != '.')
-        {
-                error("No file extension found");
-        }
-
-        int dimension;
-        MeshFileType file_type;
-
-        if (extension.find(OBJ) == 0)
-        {
-                dimension = (extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size()));
-                file_type = MeshFileType::OBJ;
-        }
-        else if (extension.find(STL) == 0)
-        {
-                dimension = (extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size()));
-                file_type = MeshFileType::STL;
-        }
-        else if (extension.find(TXT) == 0)
-        {
-                if (extension == TXT)
-                {
-                        dimension = count_numbers_in_file(file_name);
-                }
-                else
-                {
-                        dimension = read_dimension_number(extension.substr(TXT.size()));
-                        int dimension_numbers = count_numbers_in_file(file_name);
-                        if (dimension != dimension_numbers)
-                        {
-                                error("Conflicting dimensions in file extension " + to_string(dimension)
-                                      + " and in file data " + to_string(dimension_numbers));
-                        }
-                }
-                file_type = MeshFileType::TXT;
-        }
-        else
-        {
-                error("Unsupported file format " + extension);
-        }
+        const auto [dimension, file_type] = dimension_and_file_type(file_name);
 
         if (dimension < 3)
         {

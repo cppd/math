@@ -99,14 +99,10 @@ class Impl final : public View
 
                 //
 
-                std::vector<Vector2i> points;
-                int point_count_x;
-                int point_count_y;
-                create_top_level_points(
-                        rectangle.width(), rectangle.height(), DISTANCE_BETWEEN_POINTS_IN_MM, window_ppi,
-                        &point_count_x, &point_count_y, &points);
+                const TopLevelPoints top_level = create_top_level_points(
+                        rectangle.width(), rectangle.height(), DISTANCE_BETWEEN_POINTS_IN_MM, window_ppi);
 
-                top_point_count_ = points.size();
+                top_point_count_ = top_level.points.size();
 
                 if (top_point_count_ == 0)
                 {
@@ -117,14 +113,17 @@ class Impl final : public View
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
                         std::vector<std::uint32_t>(
                                 {graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(points));
-                top_points_->write(*graphics_command_pool_, *graphics_queue_, data_size(points), data_pointer(points));
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                        data_size(top_level.points));
+                top_points_->write(
+                        *graphics_command_pool_, *graphics_queue_, data_size(top_level.points),
+                        data_pointer(top_level.points));
 
                 top_flow_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
                         std::vector<std::uint32_t>(
                                 {graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(Vector2f));
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, top_level.points.size() * sizeof(Vector2f));
 
                 pipeline_points_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
@@ -136,7 +135,7 @@ class Impl final : public View
                 memory_.set_flow(top_flow_->buffer());
 
                 compute_->create_buffers(
-                        sampler_, input, rectangle, point_count_x, point_count_y, top_points_->buffer(),
+                        sampler_, input, rectangle, top_level.count_x, top_level.count_y, top_points_->buffer(),
                         top_flow_->buffer());
 
                 // (0, 0) is top left

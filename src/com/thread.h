@@ -74,42 +74,6 @@ class ThreadsWithCatch
 
         std::vector<ThreadData> threads_;
 
-        void join(bool* const there_is_error, std::string* const error_message) noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                *there_is_error = false;
-
-                                for (ThreadData& thread_data : threads_)
-                                {
-                                        thread_data.join();
-
-                                        if (thread_data.has_error())
-                                        {
-                                                *there_is_error = true;
-                                                if (!error_message->empty())
-                                                {
-                                                        *error_message += '\n';
-                                                }
-                                                *error_message += thread_data.error_message();
-                                        }
-                                }
-
-                                threads_.clear();
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Unknown error while joining threads-with-catch");
-                }
-        }
-
 public:
         explicit ThreadsWithCatch(const unsigned thread_count)
         {
@@ -178,10 +142,39 @@ public:
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                bool there_is_error;
+                bool there_is_error = false;
                 std::string error_message;
 
-                join(&there_is_error, &error_message);
+                try
+                {
+                        try
+                        {
+                                for (ThreadData& thread_data : threads_)
+                                {
+                                        thread_data.join();
+
+                                        if (thread_data.has_error())
+                                        {
+                                                there_is_error = true;
+                                                if (!error_message.empty())
+                                                {
+                                                        error_message += '\n';
+                                                }
+                                                error_message += thread_data.error_message();
+                                        }
+                                }
+
+                                threads_.clear();
+                        }
+                        catch (const std::exception& e)
+                        {
+                                error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
+                        }
+                }
+                catch (...)
+                {
+                        error_fatal("Unknown error while joining threads-with-catch");
+                }
 
                 if (there_is_error)
                 {

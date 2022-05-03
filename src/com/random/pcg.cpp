@@ -23,35 +23,62 @@ namespace ns
 {
 namespace
 {
-void init(const std::array<std::uint32_t, 4>& data, std::uint64_t* const state, std::uint64_t* const increment)
-{
-        *state = data[0];
-        *state |= static_cast<std::uint64_t>(data[1]) << 32;
-        *increment = data[2];
-        *increment |= static_cast<std::uint64_t>(data[3]) << 32;
-        *increment |= 1;
-}
-}
-
-PCG::PCG()
+std::array<std::uint32_t, 4> random_data()
 {
         std::array<std::uint32_t, 4> data;
         read_system_random(std::as_writable_bytes(std::span(data)));
-        init(data, &state_, &increment_);
+        return data;
 }
 
-PCG::PCG(std::seed_seq& seed_seq)
+std::array<std::uint32_t, 4> random_data(std::seed_seq& seed_seq)
 {
         std::array<std::uint32_t, 4> data;
         seed_seq.generate(data.begin(), data.end());
-        init(data, &state_, &increment_);
+        return data;
 }
 
-PCG::PCG(const result_type value)
+template <typename T>
+std::array<std::uint32_t, 4> random_data(const T value) requires(std::is_integral_v<T>)
 {
         std::seed_seq seed_seq({value});
         std::array<std::uint32_t, 4> data;
         seed_seq.generate(data.begin(), data.end());
-        init(data, &state_, &increment_);
+        return data;
+}
+
+//
+
+std::uint64_t state(const std::uint32_t v1, const std::uint32_t v2)
+{
+        std::uint64_t state = v1;
+        state |= static_cast<std::uint64_t>(v2) << 32;
+        return state;
+}
+
+std::uint64_t increment(const std::uint32_t v1, const std::uint32_t v2)
+{
+        std::uint64_t increment = v1;
+        increment |= static_cast<std::uint64_t>(v2) << 32;
+        increment |= 1;
+        return increment;
+}
+}
+
+PCG::PCG(const std::array<std::uint32_t, 4>& data)
+        : state_(state(data[0], data[1])),
+          increment_(increment(data[2], data[3]))
+{
+}
+
+PCG::PCG() : PCG(random_data())
+{
+}
+
+PCG::PCG(std::seed_seq& seed_seq) : PCG(random_data(seed_seq))
+{
+}
+
+PCG::PCG(const result_type value) : PCG(random_data(value))
+{
 }
 }

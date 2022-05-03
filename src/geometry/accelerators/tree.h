@@ -123,13 +123,11 @@ public:
                 const T& root_t,
                 const ObjectIntersect& object_intersect) const
         {
-                const Box* box;
-                Vector<N, T> point;
-
                 Ray<N, T> local_ray = ray;
-                point = local_ray.point(root_t);
+                Vector<N, T> point = local_ray.point(root_t);
                 local_ray.set_org(point);
-                box = find_box_for_point(point);
+
+                const Box* box = find_box_for_point(point);
                 if (!box)
                 {
                         box = find_box_for_point(local_ray.point(ray_offset_));

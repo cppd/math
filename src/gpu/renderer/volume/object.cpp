@@ -185,8 +185,9 @@ class Impl final : public VolumeObject
                 }
         }
 
-        void set_image(const image::Image<3>& image, bool* const size_changed)
+        bool set_image(const image::Image<3>& image)
         {
+                bool size_changed;
                 VkImageLayout image_layout;
 
                 if (!image_ || image_formats_ != volume_image_formats(image.color_format)
@@ -194,8 +195,7 @@ class Impl final : public VolumeObject
                     || image_->image().extent().height != static_cast<unsigned>(image.size[1])
                     || image_->image().extent().depth != static_cast<unsigned>(image.size[2]))
                 {
-                        *size_changed = true;
-
+                        size_changed = true;
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
                         image_scalar_ = is_scalar_volume(image.color_format);
@@ -215,8 +215,7 @@ class Impl final : public VolumeObject
                 }
                 else
                 {
-                        *size_changed = false;
-
+                        size_changed = false;
                         image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 }
 
@@ -228,6 +227,8 @@ class Impl final : public VolumeObject
                                         *transfer_command_pool_, *transfer_queue_, image_layout,
                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, format, pixels);
                         });
+
+                return size_changed;
         }
 
         void set_texture_to_world_matrix(const Matrix4d& texture_to_world_matrix)
@@ -303,7 +304,7 @@ class Impl final : public VolumeObject
 
                 if (updates[volume::UPDATE_IMAGE])
                 {
-                        set_image(volume_object.volume().image, &size_changed);
+                        size_changed = set_image(volume_object.volume().image);
                         update_changes.image = true;
                 }
 

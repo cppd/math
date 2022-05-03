@@ -64,29 +64,39 @@ std::stack<int> find_external_facets(const std::vector<DelaunayFacet<N>>& delaun
 }
 
 template <std::size_t N>
-std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* const visited_delaunay_objects)
+std::optional<int> find_index(const DelaunayFacet<N>& facet, const std::vector<bool>& visited_delaunay_objects)
 {
-        int index;
         if (facet.one_sided())
         {
-                if ((*visited_delaunay_objects)[facet.delaunay(0)])
+                if (visited_delaunay_objects[facet.delaunay(0)])
                 {
                         return std::nullopt;
                 }
-                index = facet.delaunay(0);
+                return facet.delaunay(0);
         }
-        else
+
+        if (visited_delaunay_objects[facet.delaunay(0)] && visited_delaunay_objects[facet.delaunay(1)])
         {
-                if ((*visited_delaunay_objects)[facet.delaunay(0)] && (*visited_delaunay_objects)[facet.delaunay(1)])
-                {
-                        return std::nullopt;
-                }
-                ASSERT((*visited_delaunay_objects)[facet.delaunay(0)]
-                       || (*visited_delaunay_objects)[facet.delaunay(1)]);
-                index = (*visited_delaunay_objects)[facet.delaunay(0)] ? facet.delaunay(1) : facet.delaunay(0);
+                return std::nullopt;
         }
-        (*visited_delaunay_objects)[index] = true;
-        return index;
+
+        ASSERT(visited_delaunay_objects[facet.delaunay(0)] || visited_delaunay_objects[facet.delaunay(1)]);
+        if (visited_delaunay_objects[facet.delaunay(0)])
+        {
+                return facet.delaunay(1);
+        }
+        return facet.delaunay(0);
+}
+
+template <std::size_t N>
+std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* const visited_delaunay_objects)
+{
+        if (const auto index = find_index(facet, *visited_delaunay_objects))
+        {
+                (*visited_delaunay_objects)[*index] = true;
+                return index;
+        }
+        return std::nullopt;
 }
 
 template <std::size_t N>

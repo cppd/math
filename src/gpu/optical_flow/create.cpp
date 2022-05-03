@@ -155,15 +155,12 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
 
         for (std::size_t i = 0; i < size; ++i)
         {
-                const vulkan::Buffer* top_points_ptr;
-                const vulkan::Buffer* flow_ptr;
-                const vulkan::Buffer* flow_guess_ptr;
-
-                FlowDataBuffer::Data data;
-
                 const bool top = (i == 0);
                 const bool bottom = (i + 1 == size);
 
+                const vulkan::Buffer* top_points_ptr;
+                const vulkan::Buffer* flow_ptr;
+                FlowDataBuffer::Data data;
                 if (!top)
                 {
                         top_points_ptr = &top_points; // not used
@@ -181,6 +178,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
                         data.point_count_y = top_point_count_y;
                 }
 
+                const vulkan::Buffer* flow_guess_ptr;
                 if (!bottom)
                 {
                         int i_prev = i + 1;

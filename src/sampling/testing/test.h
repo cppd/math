@@ -49,7 +49,9 @@ inline void add_description(
         {
                 return;
         }
+
         (*message) += separator;
+
         for (char c : description)
         {
                 (*message) += ascii::is_print(c) ? c : ' ';
@@ -61,6 +63,7 @@ inline void log(const std::string& message, const bool add_indent = false)
         constexpr unsigned INDENT_SIZE = 2;
         const unsigned indent_size = (add_indent ? 2 : 1) * INDENT_SIZE;
         const std::string indent(indent_size, ' ');
+
         std::string s;
         s.reserve(indent_size + message.size());
         s += indent;
@@ -153,6 +156,7 @@ void test_distribution_angle(
                 const double c = buckets.distribution_count(count_per_bucket);
                 return (c <= 1e9) ? c : 0;
         }();
+
         if (count <= 0)
         {
                 return;

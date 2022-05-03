@@ -84,11 +84,15 @@ public:
 
                 n_ = normal_indices;
 
-                std::array<T, N> dots;
-                for (unsigned i = 0; i < N; ++i)
+                const std::array<T, N> dots = [&]
                 {
-                        dots[i] = dot(normals[n_[i]], simplex_.normal());
-                }
+                        std::array<T, N> res;
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                res[i] = dot(normals[n_[i]], simplex_.normal());
+                        }
+                        return res;
+                }();
 
                 if (!std::all_of(
                             dots.cbegin(), dots.cend(),

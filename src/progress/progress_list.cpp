@@ -121,10 +121,8 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
 
         for (const ProgressRatioControl* const ratio : ratios_)
         {
-                unsigned value;
-                unsigned maximum;
-                ratio->get(&value, &maximum);
-                result.emplace_back(value, maximum, ratio->text());
+                const ProgressRatioControl::Info info = ratio->info();
+                result.emplace_back(info.value, info.maximum, ratio->text());
         }
         return result;
 }

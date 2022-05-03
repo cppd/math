@@ -209,16 +209,16 @@ void ModelTree::insert_into_tree(
                 }
         }
 
-        QTreeWidgetItem* item;
-        if (parent_item)
+        QTreeWidgetItem* const item = [&]
         {
-                item = new QTreeWidgetItem(parent_item);
+                if (!parent_item)
+                {
+                        return new QTreeWidgetItem(ui_.model_tree);
+                }
+                QTreeWidgetItem* const new_item = new QTreeWidgetItem(parent_item);
                 parent_item->setExpanded(true);
-        }
-        else
-        {
-                item = new QTreeWidgetItem(ui_.model_tree);
-        }
+                return new_item;
+        }();
 
         const QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);

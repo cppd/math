@@ -69,16 +69,14 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 {
         const double scale = default_scale_ / std::pow(SCALE_BASE, scale_exponent_);
 
-        gpu::renderer::CameraInfo::Volume volume;
+        const double left = scale * (window_center_[0] - 0.5 * width_);
+        const double right = scale * (window_center_[0] + 0.5 * width_);
+        const double bottom = scale * (window_center_[1] - 0.5 * height_);
+        const double top = scale * (window_center_[1] + 0.5 * height_);
+        const double near = 1;
+        const double far = -1;
 
-        volume.left = scale * (window_center_[0] - 0.5 * width_);
-        volume.right = scale * (window_center_[0] + 0.5 * width_);
-        volume.bottom = scale * (window_center_[1] - 0.5 * height_);
-        volume.top = scale * (window_center_[1] + 0.5 * height_);
-        volume.near = 1;
-        volume.far = -1;
-
-        return volume;
+        return {.left = left, .right = right, .bottom = bottom, .top = top, .near = near, .far = far};
 }
 
 Matrix4d Camera::main_view_matrix() const

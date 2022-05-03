@@ -57,42 +57,44 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
         {
                 ASSERT(use_object_selection_dialog);
 
-                std::string caption = "Open";
-                bool read_only = true;
-
-                std::vector<gui::dialog::FileFilter> filters;
-                for (const mesh::FileFormat& v : mesh::load_formats(settings::supported_dimensions()))
+                const std::vector<gui::dialog::FileFilter> filters = []
                 {
-                        gui::dialog::FileFilter& f = filters.emplace_back();
-                        f.name = v.format_name;
-                        f.file_extensions = v.file_name_extensions;
-                }
+                        std::vector<gui::dialog::FileFilter> res;
+                        for (const mesh::FileFormat& v : mesh::load_formats(settings::supported_dimensions()))
+                        {
+                                gui::dialog::FileFilter& f = res.emplace_back();
+                                f.name = v.format_name;
+                                f.file_extensions = v.file_name_extensions;
+                        }
+                        return res;
+                }();
 
-                std::optional<std::string> file_name_string = gui::dialog::open_file(caption, filters, read_only);
+                const std::string caption = "Open";
+                const bool read_only = true;
+                const std::optional<std::string> file_name_string = gui::dialog::open_file(caption, filters, read_only);
                 if (!file_name_string)
                 {
                         return nullptr;
                 }
+
                 path = path_from_utf8(*file_name_string);
         }
 
-        gui::dialog::ObjectSelectionParameters selection_parameters;
-        if (use_object_selection_dialog)
+        const auto selection_parameters = [&]() -> std::optional<gui::dialog::ObjectSelectionParameters>
         {
-                std::optional<gui::dialog::ObjectSelectionParameters> selection =
-                        gui::dialog::ObjectSelectionParametersDialog::show();
-                if (!selection)
+                if (use_object_selection_dialog)
                 {
-                        return nullptr;
+                        return gui::dialog::ObjectSelectionParametersDialog::show();
                 }
-                selection_parameters = *selection;
-        }
-        else
+                return gui::dialog::ObjectSelectionParametersDialog::current();
+        }();
+
+        if (!selection_parameters)
         {
-                selection_parameters = gui::dialog::ObjectSelectionParametersDialog::current();
+                return nullptr;
         }
 
-        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+        const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
         return [=](ProgressRatioList* const progress_list)
@@ -107,8 +109,8 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
                                         load_mesh<N>(generic_utf8_filename(path.filename()), progress_list, path);
 
                                 compute_meshes<N>(
-                                        progress_list, selection_parameters.convex_hull, selection_parameters.cocone,
-                                        selection_parameters.bound_cocone, selection_parameters.mst, *mesh,
+                                        progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
+                                        selection_parameters->bound_cocone, selection_parameters->mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
                         });
         };
@@ -125,7 +127,7 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::PointObjectParameters> point_object_parameters =
+        const std::optional<gui::dialog::PointObjectParameters> point_object_parameters =
                 gui::dialog::PointObjectParametersDialog::show(
                         dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM);
         if (!point_object_parameters)
@@ -133,14 +135,14 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
+        const std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
                 gui::dialog::ObjectSelectionParametersDialog::show();
         if (!selection_parameters)
         {
                 return nullptr;
         }
 
-        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+        const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
         return [=](ProgressRatioList* const progress_list)
@@ -171,7 +173,7 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::FacetObjectParameters> facet_object_parameters =
+        const std::optional<gui::dialog::FacetObjectParameters> facet_object_parameters =
                 gui::dialog::FacetObjectParametersDialog::show(
                         dimension, object_name, FACET_COUNT_DEFAULT, FACET_COUNT_MINIMUM, FACET_COUNT_MAXIMUM);
         if (!facet_object_parameters)
@@ -179,14 +181,14 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
+        const std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
                 gui::dialog::ObjectSelectionParametersDialog::show();
         if (!selection_parameters)
         {
                 return nullptr;
         }
 
-        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+        const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
         return [=](ProgressRatioList* const progress_list)
@@ -210,20 +212,20 @@ std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path
 {
         if (path.empty())
         {
-                std::string caption = "Open";
-                bool read_only = true;
-
-                std::optional<std::string> directory_string = gui::dialog::select_directory(caption, read_only);
+                const std::string caption = "Open";
+                const bool read_only = true;
+                const std::optional<std::string> directory_string = gui::dialog::select_directory(caption, read_only);
                 if (!directory_string)
                 {
                         return nullptr;
                 }
+
                 path = path_from_utf8(*directory_string);
         }
 
         return [=](ProgressRatioList* const progress_list)
         {
-                unsigned dimension = volume::volume_info(path).size.size();
+                const unsigned dimension = volume::volume_info(path).size.size();
 
                 apply_for_dimension(
                         dimension,
@@ -245,9 +247,10 @@ std::function<void(ProgressRatioList*)> action_load_volume(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::VolumeObjectParameters> parameters = gui::dialog::VolumeObjectParametersDialog::show(
-                dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
-                VOLUME_IMAGE_SIZE_MAXIMUM);
+        const std::optional<gui::dialog::VolumeObjectParameters> parameters =
+                gui::dialog::VolumeObjectParametersDialog::show(
+                        dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
+                        VOLUME_IMAGE_SIZE_MAXIMUM);
         if (!parameters)
         {
                 return nullptr;

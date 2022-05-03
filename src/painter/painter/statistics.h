@@ -43,16 +43,8 @@ class PaintingStatistics
 
         mutable std::mutex lock_;
 
-public:
-        explicit PaintingStatistics(const long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
+        void init_impl()
         {
-                init();
-        }
-
-        void init()
-        {
-                std::lock_guard lg(lock_);
-
                 pixel_counter_ = 0;
                 ray_counter_ = 0;
                 sample_counter_ = 0;
@@ -61,6 +53,18 @@ public:
                 pass_start_time_ = Clock::now();
                 pass_start_pixel_count_ = 0;
                 previous_pass_duration_ = 0;
+        }
+
+public:
+        explicit PaintingStatistics(const long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
+        {
+                init_impl();
+        }
+
+        void init()
+        {
+                std::lock_guard lg(lock_);
+                init_impl();
         }
 
         void pixel_done(const int ray_count, const int sample_count)

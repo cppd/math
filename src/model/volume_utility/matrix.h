@@ -30,9 +30,9 @@ namespace ns::volume
 template <std::size_t N>
 Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& size)
 {
+        const double max_size = *std::max_element(size.cbegin(), size.cend());
         Matrix<N + 1, N + 1, double> matrix(1);
-        double max_size = *std::max_element(size.cbegin(), size.cend());
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 matrix(i, i) = size[i] / max_size;
         }
@@ -45,12 +45,10 @@ Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const double size,
         const Vector<N, double>& position)
 {
-        Vector<N, double> center;
-        double length;
-        std::tie(center, length) = center_and_length(volume);
-        Matrix<N + 1, N + 1, double> t1 = matrix::translate(-center);
-        Matrix<N + 1, N + 1, double> t2 = matrix::scale(Vector<N, double>(size / length));
-        Matrix<N + 1, N + 1, double> t3 = matrix::translate(position);
+        const auto [center, length] = center_and_length(volume);
+        const Matrix<N + 1, N + 1, double> t1 = matrix::translate(-center);
+        const Matrix<N + 1, N + 1, double> t2 = matrix::scale(Vector<N, double>(size / length));
+        const Matrix<N + 1, N + 1, double> t3 = matrix::translate(position);
         return t3 * t2 * t1;
 }
 }

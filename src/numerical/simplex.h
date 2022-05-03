@@ -270,25 +270,29 @@ bool variable_x0_is_zero(
 }
 
 template <std::size_t N, typename T>
-bool find_positive_index(const Vector<N, T>& c, unsigned* const e)
+std::optional<unsigned> find_positive_index(const Vector<N, T>& c)
 {
-        T max_abs_c = std::abs(c[0]);
-        for (unsigned i = 1; i < N; ++i)
+        const T max_abs_c = [&]
         {
-                max_abs_c = std::max(max_abs_c, std::abs(c[i]));
-        }
-        T eps_c = max_abs_c * (2 * Limits<T>::epsilon());
+                T res = std::abs(c[0]);
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        res = std::max(res, std::abs(c[i]));
+                }
+                return res;
+        }();
+
+        const T eps_c = max_abs_c * (2 * Limits<T>::epsilon());
 
         for (unsigned i = 0; i < N; ++i)
         {
                 if (c[i] > eps_c)
                 {
-                        *e = i;
-                        return true;
+                        return i;
                 }
         }
 
-        return false;
+        return std::nullopt;
 }
 
 template <std::size_t M, typename T>
@@ -336,9 +340,8 @@ std::optional<ConstraintSolution> simplex_iterations(
 
         for (int iteration = 2;; ++iteration)
         {
-                unsigned e;
-
-                if (!find_positive_index(c, &e))
+                const auto e = find_positive_index(c);
+                if (!e)
                 {
                         return std::nullopt;
                 }
@@ -355,9 +358,9 @@ std::optional<ConstraintSolution> simplex_iterations(
                 {
                         b[i] = std::max(static_cast<T>(0), b[i]);
 
-                        if (a[i][e] < 0)
+                        if (a[i][*e] < 0)
                         {
-                                T delta = b[i] / a[i][e];
+                                T delta = b[i] / a[i][*e];
 
                                 if (delta > max_delta || l == Limits<unsigned>::max())
                                 {
@@ -372,8 +375,8 @@ std::optional<ConstraintSolution> simplex_iterations(
                         return ConstraintSolution::UNBOUND;
                 }
 
-                pivot(b, a, v, c, l, e);
-                std::swap(map_m[l], map_n[e]);
+                pivot(b, a, v, c, l, *e);
+                std::swap(map_m[l], map_n[*e]);
 
                 if constexpr (WITH_PRINT)
                 {

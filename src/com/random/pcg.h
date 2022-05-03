@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <array>
 #include <bit>
 #include <random>
 
@@ -26,6 +27,8 @@ class PCG final
 {
         std::uint64_t state_;
         std::uint64_t increment_;
+
+        PCG(const std::array<std::uint32_t, 4>& data);
 
 public:
         using result_type = std::uint32_t;

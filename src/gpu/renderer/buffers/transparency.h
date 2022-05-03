@@ -71,6 +71,12 @@ public:
         void commands_init(VkCommandBuffer command_buffer) const;
         void commands_read(VkCommandBuffer command_buffer) const;
 
-        void read(unsigned long long* required_node_memory, unsigned* overload_counter) const;
+        struct Info final
+        {
+                unsigned long long required_node_memory;
+                unsigned overload_counter;
+        };
+
+        Info read() const;
 };
 }

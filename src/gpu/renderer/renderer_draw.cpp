@@ -79,12 +79,9 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
 
         VULKAN_CHECK(vkQueueWaitIdle(graphics_queue));
 
-        unsigned long long required_node_memory;
-        unsigned overload_counter;
-        transparency_buffers.read(&required_node_memory, &overload_counter);
-
-        const bool nodes = required_node_memory > transparency_node_buffer_max_size_;
-        const bool overload = overload_counter > 0;
+        const TransparencyBuffers::Info info = transparency_buffers.read();
+        const bool nodes = info.required_node_memory > transparency_node_buffer_max_size_;
+        const bool overload = info.overload_counter > 0;
         bool transparency;
         bool opacity;
         if (nodes || overload)
@@ -106,11 +103,11 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
                                 TransparencyMessage::Data data;
                                 if (nodes)
                                 {
-                                        data.required_node_memory = required_node_memory;
+                                        data.required_node_memory = info.required_node_memory;
                                 }
                                 if (overload)
                                 {
-                                        data.overload_count = overload_counter;
+                                        data.overload_count = info.overload_counter;
                                 }
                                 return data;
                         }());

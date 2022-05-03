@@ -166,11 +166,12 @@ public:
                 terminate_.set_terminate_with_message();
         }
 
-        void get(unsigned* const value, unsigned* const maximum) const override
+        Info info() const override
         {
-                CounterType c = counter_;
-                *value = c & MAX;
-                *maximum = c >> SHIFT;
+                const CounterType c = counter_;
+                const unsigned value = c & MAX;
+                const unsigned maximum = c >> SHIFT;
+                return {.value = value, .maximum = maximum};
         }
 
         std::string text() const override

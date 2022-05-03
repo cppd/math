@@ -42,12 +42,9 @@ void normalize(std::vector<std::byte>* const bytes)
                       + "-component pixels");
         }
 
-        std::byte* ptr;
-        const std::byte* const end = bytes->data() + bytes->size();
-
         float max = Limits<float>::lowest();
-
-        ptr = bytes->data();
+        std::byte* ptr = bytes->data();
+        const std::byte* const end = bytes->data() + bytes->size();
         while (ptr != end)
         {
                 std::array<float, N> pixel;

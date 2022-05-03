@@ -40,6 +40,27 @@ void set_label(QLabel* const label, QSlider* const slider)
 {
         set_label(label, slider_position(slider));
 }
+
+struct MeshInfo final
+{
+        double alpha;
+        color::Color color;
+        double ambient;
+        double metalness;
+        double roughness;
+};
+
+template <std::size_t N>
+MeshInfo read_mesh(const mesh::MeshObject<N>& mesh_object)
+{
+        const mesh::Reading reading(mesh_object);
+
+        return {.alpha = reading.alpha(),
+                .color = reading.color(),
+                .ambient = reading.ambient(),
+                .metalness = reading.metalness(),
+                .roughness = reading.roughness()};
+}
 }
 
 MeshWidget::MeshWidget() : QWidget(nullptr)
@@ -282,42 +303,31 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
-                        double alpha;
-                        color::Color color;
-                        double ambient;
-                        double metalness;
-                        double roughness;
+                        const MeshInfo info = read_mesh(*mesh_object);
+
                         {
-                                const mesh::Reading reading(*mesh_object);
-                                alpha = reading.alpha();
-                                color = reading.color();
-                                ambient = reading.ambient();
-                                metalness = reading.metalness();
-                                roughness = reading.roughness();
-                        }
-                        {
-                                const double position = 1.0 - alpha;
+                                const double position = 1.0 - info.alpha;
                                 QSignalBlocker blocker(ui_.slider_transparency);
                                 set_slider_position(ui_.slider_transparency, position);
                         }
                         {
                                 QSignalBlocker blocker(ui_.widget_color);
-                                set_widget_color(ui_.widget_color, color_to_qcolor(color));
+                                set_widget_color(ui_.widget_color, color_to_qcolor(info.color));
                         }
                         {
-                                const double position = ambient;
+                                const double position = info.ambient;
                                 QSignalBlocker blocker(ui_.slider_ambient);
                                 set_slider_position(ui_.slider_ambient, position);
                                 set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
-                                const double position = metalness;
+                                const double position = info.metalness;
                                 QSignalBlocker blocker(ui_.slider_metalness);
                                 set_slider_position(ui_.slider_metalness, position);
                                 set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
-                                const double position = roughness;
+                                const double position = info.roughness;
                                 QSignalBlocker blocker(ui_.slider_roughness);
                                 set_slider_position(ui_.slider_roughness, position);
                                 set_label(ui_.label_roughness, ui_.slider_roughness);

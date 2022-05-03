@@ -186,7 +186,7 @@ void create_menu(
         const LightingWidget* const lighting,
         const ColorsWidget* const colors)
 {
-        QAction* action;
+        QAction* action = nullptr;
 
         action = menu_file->addAction("Load Mesh...");
         connections->emplace_back(QObject::connect(

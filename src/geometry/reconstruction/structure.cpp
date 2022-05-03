@@ -259,7 +259,7 @@ void cocone_facets_and_voronoi_radius(
                 }
                 else
                 {
-                        Vector<N, double> pb = delaunay_objects[facet.delaunay(1)].voronoi_vertex() - vertex;
+                        const Vector<N, double> pb = delaunay_objects[facet.delaunay(1)].voronoi_vertex() - vertex;
                         pb_length = pb.norm();
                         cos_n_b = dot(positive_pole, pb) / pb_length;
                 }
