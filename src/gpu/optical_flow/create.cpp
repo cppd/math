@@ -21,6 +21,72 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
+namespace
+{
+struct FlowInfo final
+{
+        const vulkan::Buffer* top_points_ptr;
+        const vulkan::Buffer* flow_ptr;
+        const vulkan::Buffer* flow_guess_ptr;
+        FlowDataBuffer::Data data;
+};
+
+FlowInfo flow_info(
+        const std::size_t i,
+        const vulkan::Buffer& top_points,
+        const vulkan::Buffer& top_flow,
+        const std::vector<const vulkan::Buffer*>& flow_buffers,
+        const std::vector<Vector2i>& sizes,
+        const int top_point_count_x,
+        const int top_point_count_y)
+{
+        const auto flow_index = [&](const std::size_t index)
+        {
+                ASSERT(index > 0 && index < sizes.size());
+                return index - 1; // buffers start at level 1
+        };
+
+        const bool top = (i == 0);
+        const bool bottom = (i + 1 == sizes.size());
+
+        FlowInfo res;
+
+        if (!top)
+        {
+                res.top_points_ptr = &top_points; // not used
+                res.flow_ptr = flow_buffers[flow_index(i)];
+                res.data.use_all_points = true;
+                res.data.point_count_x = sizes[i][0];
+                res.data.point_count_y = sizes[i][1];
+        }
+        else
+        {
+                res.top_points_ptr = &top_points;
+                res.flow_ptr = &top_flow;
+                res.data.use_all_points = false;
+                res.data.point_count_x = top_point_count_x;
+                res.data.point_count_y = top_point_count_y;
+        }
+
+        if (!bottom)
+        {
+                const int i_prev = i + 1;
+                res.data.use_guess = true;
+                res.data.guess_kx = (sizes[i_prev][0] != sizes[i][0]) ? 2 : 1;
+                res.data.guess_ky = (sizes[i_prev][1] != sizes[i][1]) ? 2 : 1;
+                res.data.guess_width = sizes[i_prev][0];
+                res.flow_guess_ptr = flow_buffers[flow_index(i_prev)];
+        }
+        else
+        {
+                res.flow_guess_ptr = flow_buffers[0]; // not used
+                res.data.use_guess = false;
+        }
+
+        return res;
+}
+}
+
 std::vector<vulkan::ImageWithMemory> create_images(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
@@ -139,13 +205,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
         ASSERT(images[1].size() == size);
         ASSERT(dx.size() == size);
         ASSERT(dy.size() == size);
-
         ASSERT(flow_buffers.size() + 1 == size);
-        const auto flow_index = [&](std::size_t i)
-        {
-                ASSERT(i > 0 && i < size);
-                return i - 1; // buffers start at level 1
-        };
 
         const std::vector<std::uint32_t> family_indices{family_index};
 
@@ -155,53 +215,17 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
 
         for (std::size_t i = 0; i < size; ++i)
         {
-                const bool top = (i == 0);
-                const bool bottom = (i + 1 == size);
-
-                const vulkan::Buffer* top_points_ptr;
-                const vulkan::Buffer* flow_ptr;
-                FlowDataBuffer::Data data;
-                if (!top)
-                {
-                        top_points_ptr = &top_points; // not used
-                        flow_ptr = flow_buffers[flow_index(i)];
-                        data.use_all_points = true;
-                        data.point_count_x = sizes[i][0];
-                        data.point_count_y = sizes[i][1];
-                }
-                else
-                {
-                        top_points_ptr = &top_points;
-                        flow_ptr = &top_flow;
-                        data.use_all_points = false;
-                        data.point_count_x = top_point_count_x;
-                        data.point_count_y = top_point_count_y;
-                }
-
-                const vulkan::Buffer* flow_guess_ptr;
-                if (!bottom)
-                {
-                        int i_prev = i + 1;
-                        data.use_guess = true;
-                        data.guess_kx = (sizes[i_prev][0] != sizes[i][0]) ? 2 : 1;
-                        data.guess_ky = (sizes[i_prev][1] != sizes[i][1]) ? 2 : 1;
-                        data.guess_width = sizes[i_prev][0];
-                        flow_guess_ptr = flow_buffers[flow_index(i_prev)];
-                }
-                else
-                {
-                        flow_guess_ptr = flow_buffers[0]; // not used
-                        data.use_guess = false;
-                }
+                const FlowInfo info =
+                        flow_info(i, top_points, top_flow, flow_buffers, sizes, top_point_count_x, top_point_count_y);
 
                 flow_buffer.emplace_back(device, family_indices);
                 flow_memory.emplace_back(device, descriptor_set_layout, flow_buffer[i].buffer());
 
-                flow_buffer[i].set(data);
+                flow_buffer[i].set(info.data);
 
-                flow_memory[i].set_top_points(*top_points_ptr);
-                flow_memory[i].set_flow(*flow_ptr);
-                flow_memory[i].set_flow_guess(*flow_guess_ptr);
+                flow_memory[i].set_top_points(*info.top_points_ptr);
+                flow_memory[i].set_flow(*info.flow_ptr);
+                flow_memory[i].set_flow_guess(*info.flow_guess_ptr);
 
                 flow_memory[i].set_dx(dx[i].image_view());
                 flow_memory[i].set_dy(dy[i].image_view());
