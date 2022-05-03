@@ -67,6 +67,70 @@ void copy_device_to_host(
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
+VkAccessFlags src_access(const VkImageLayout old_layout)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (old_layout)
+        {
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                return VK_ACCESS_TRANSFER_WRITE_BIT;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                return VK_ACCESS_TRANSFER_READ_BIT;
+        default:
+                return 0;
+        }
+#pragma GCC diagnostic pop
+}
+
+VkPipelineStageFlags src_stage(const VkImageLayout old_layout)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (old_layout)
+        {
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                return VK_PIPELINE_STAGE_TRANSFER_BIT;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                return VK_PIPELINE_STAGE_TRANSFER_BIT;
+        default:
+                return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        }
+#pragma GCC diagnostic pop
+}
+
+VkAccessFlags dst_access(const VkImageLayout new_layout)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (new_layout)
+        {
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                return VK_ACCESS_TRANSFER_WRITE_BIT;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                return VK_ACCESS_TRANSFER_READ_BIT;
+        default:
+                return 0;
+        }
+#pragma GCC diagnostic pop
+}
+
+VkPipelineStageFlags dst_stage(const VkImageLayout new_layout)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (new_layout)
+        {
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                return VK_PIPELINE_STAGE_TRANSFER_BIT;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                return VK_PIPELINE_STAGE_TRANSFER_BIT;
+        default:
+                return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        }
+#pragma GCC diagnostic pop
+}
+
 void cmd_transition_image_layout(
         const VkImageAspectFlags aspect_flags,
         const VkCommandBuffer command_buffer,
@@ -97,46 +161,11 @@ void cmd_transition_image_layout(
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
 
-        VkPipelineStageFlags src_stage;
-        VkPipelineStageFlags dst_stage;
+        barrier.srcAccessMask = src_access(old_layout);
+        barrier.dstAccessMask = dst_access(new_layout);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (old_layout)
-        {
-        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                break;
-        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-                src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                break;
-        default:
-                barrier.srcAccessMask = 0;
-                src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        }
-#pragma GCC diagnostic pop
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (new_layout)
-        {
-        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                break;
-        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-                dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                break;
-        default:
-                barrier.dstAccessMask = 0;
-                dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        }
-#pragma GCC diagnostic pop
-
-        vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(
+                command_buffer, src_stage(old_layout), dst_stage(new_layout), 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void cmd_copy_buffer_to_image(
