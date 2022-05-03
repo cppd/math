@@ -21,10 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <vector>
 
-namespace ns::gpu::dft
+namespace ns::gpu::dft::test
 {
 template <typename T>
-void load_data(const std::filesystem::path& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data);
+struct LoadData final
+{
+        int n1;
+        int n2;
+        std::vector<std::complex<T>> data;
+};
+
+template <typename T>
+LoadData<T> load_data(const std::filesystem::path& file_name);
 
 template <typename T>
 void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<T>>& x);

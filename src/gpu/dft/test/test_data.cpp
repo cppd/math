@@ -25,43 +25,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <random>
 
-namespace ns::gpu::dft
+namespace ns::gpu::dft::test
 {
 template <typename T>
-void load_data(
-        const std::filesystem::path& file_name,
-        int* const n1,
-        int* const n2,
-        std::vector<std::complex<T>>* const data)
+LoadData<T> load_data(const std::filesystem::path& file_name)
 {
-        constexpr int MAX_DIMENSION_SIZE = 1e9;
+        constexpr int MAX_DIMENSION_SIZE{1'000'000'000};
 
         std::fstream file(file_name);
 
-        long long v1;
-        long long v2;
+        int n1;
+        int n2;
 
-        file >> v1 >> v2;
+        file >> n1 >> n2;
+
         if (!file)
         {
                 error("Data dimensions read error");
         }
 
-        if (v1 < 1 || v2 < 1)
+        if (n1 < 1 || n2 < 1)
         {
                 error("Dimensions must be positive numbers");
         }
-        if (v1 > MAX_DIMENSION_SIZE || v2 > MAX_DIMENSION_SIZE)
+
+        if (n1 > MAX_DIMENSION_SIZE || n2 > MAX_DIMENSION_SIZE)
         {
                 error("Dimensions are too big");
         }
 
-        const long long count = v1 * v2;
+        const long long count = static_cast<long long>(n1) * n2;
 
-        LOG("Loading " + to_string(v1) + "x" + to_string(v2) + ", total number count " + to_string(count));
+        LOG("Loading " + to_string(n1) + "x" + to_string(n2) + ", count " + to_string(count));
 
-        std::vector<std::complex<T>> x(count);
-
+        std::vector<std::complex<T>> data(count);
         for (long long i = 0; i < count; ++i)
         {
                 T real;
@@ -69,14 +66,12 @@ void load_data(
                 file >> real >> imag;
                 if (!file)
                 {
-                        error("Error read number № " + to_string(i));
+                        error("Error reading number " + to_string(i));
                 }
-                x[i] = std::complex<T>(real, imag);
+                data[i] = std::complex<T>(real, imag);
         }
 
-        *n1 = v1;
-        *n2 = v2;
-        *data = std::move(x);
+        return {.n1 = n1, .n2 = n2, .data = std::move(data)};
 }
 
 template <typename T>
@@ -123,8 +118,8 @@ void generate_random_data(const std::filesystem::path& file_name, const int n1, 
         }
 }
 
-template void load_data(const std::filesystem::path&, int*, int*, std::vector<std::complex<float>>*);
-template void load_data(const std::filesystem::path&, int*, int*, std::vector<std::complex<double>>*);
+template LoadData<float> load_data(const std::filesystem::path&);
+template LoadData<double> load_data(const std::filesystem::path&);
 
 template void save_data(const std::filesystem::path&, const std::vector<std::complex<float>>&);
 template void save_data(const std::filesystem::path&, const std::vector<std::complex<double>>&);

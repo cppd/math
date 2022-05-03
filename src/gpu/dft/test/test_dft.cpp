@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using Complex = std::complex<float>;
 
-namespace ns::gpu::dft
+namespace ns::gpu::dft::test
 {
 namespace
 {
@@ -413,19 +413,16 @@ void random_data_test(ComputeVector* const dft, const std::array<int, 2>& dimens
 
         generate_random_data<Complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 
-        int n1;
-        int n2;
-        std::vector<Complex> source_data;
-        load_data(input_file_name, &n1, &n2, &source_data);
+        const LoadData data = load_data<Complex::value_type>(input_file_name);
 
-        if (dimensions[0] != n1 || dimensions[1] != n2)
+        if (dimensions[0] != data.n1 || dimensions[1] != data.n2)
         {
                 error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", "
-                      + to_string(dimensions[1]) + "), loaded from file (" + to_string(n1) + ", " + to_string(n2)
-                      + ")");
+                      + to_string(dimensions[1]) + "), loaded from file (" + to_string(data.n1) + ", "
+                      + to_string(data.n2) + ")");
         }
 
-        dft_test("random", dft, n1, n2, source_data, progress);
+        dft_test("random", dft, data.n1, data.n2, data.data, progress);
 
         LOG("---\nDFT check passed");
 }
