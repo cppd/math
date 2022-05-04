@@ -81,27 +81,28 @@ bool is_binary(const std::string& data)
                 });
 }
 
-template <typename Data>
-void read_keyword(const Data& data, const long long data_size, const std::string_view& word, long long* const i)
+const char* read_keyword(const char* const first, const char* const last, const std::string_view& keyword)
 {
-        if (*i + static_cast<long long>(word.size()) > data_size)
+        if (last - first < static_cast<std::ptrdiff_t>(keyword.size()))
         {
-                error("Keyword " + std::string(word) + " not found in STL file when expected");
+                error("Keyword \"" + std::string(keyword) + "\" not found in STL file when expected");
         }
-        long long d = *i;
-        const char* w = word.data();
-        const char* const end = word.data() + word.size();
-        while (w != end && data[d] == *w)
+
+        const char* v = first;
+        const char* w = keyword.data();
+        const char* const w_end = keyword.data() + keyword.size();
+        while (w != w_end && *v == *w)
         {
-                ++d;
+                ++v;
                 ++w;
         }
-        if (w == end)
+
+        if (w == w_end)
         {
-                *i = d;
-                return;
+                return v;
         }
-        error("Keyword " + std::string(word) + " not found in STL file when expected");
+
+        error("Keyword " + std::string(keyword) + " not found in STL file when expected");
 }
 
 template <std::size_t N>
@@ -118,60 +119,61 @@ void read_ascii_stl(
         static constexpr std::string_view END_FACET = "endfacet";
         static constexpr std::string_view END_SOLID = "endsolid";
 
-        const char* const data = file_data.c_str();
-        const long long size = file_data.size();
-        const double size_reciprocal = 1.0 / size;
+        const double size_reciprocal = 1.0 / file_data.size();
 
-        long long i = 0;
+        const char* const first = file_data.data();
+        const char* const last = file_data.data() + file_data.size();
 
-        read(data, size, ascii::is_space, &i);
-        read_keyword(data, size, SOLID, &i);
-        read(data, size, ascii::is_not_new_line, &i);
-        ++i;
+        const char* iter = first;
+
+        iter = read(iter, last, ascii::is_space);
+        iter = read_keyword(iter, last, SOLID);
+        iter = read(iter, last, ascii::is_not_new_line);
+        ++iter;
 
         std::array<Vector<N, float>, N> facet_vertices;
         unsigned facet_count = 0;
         while (true)
         {
-                read(data, size, ascii::is_space, &i);
+                iter = read(iter, last, ascii::is_space);
                 try
                 {
-                        read_keyword(data, size, FACET_NORMAL, &i);
+                        iter = read_keyword(iter, last, FACET_NORMAL);
                 }
                 catch (...)
                 {
-                        read_keyword(data, size, END_SOLID, &i);
+                        iter = read_keyword(iter, last, END_SOLID);
                         break;
                 }
 
                 // skip normal
-                read(data, size, ascii::is_not_new_line, &i);
+                iter = read(iter, last, ascii::is_not_new_line);
 
-                read(data, size, ascii::is_space, &i);
-                read_keyword(data, size, OUTER_LOOP, &i);
+                iter = read(iter, last, ascii::is_space);
+                iter = read_keyword(iter, last, OUTER_LOOP);
 
                 for (unsigned v = 0; v < N; ++v)
                 {
-                        read(data, size, ascii::is_space, &i);
-                        read_keyword(data, size, VERTEX, &i);
+                        iter = read(iter, last, ascii::is_space);
+                        iter = read_keyword(iter, last, VERTEX);
 
-                        if (i >= size)
+                        if (iter >= last)
                         {
                                 error("Vertex coordinates not found in STL file when expected");
                         }
-                        i = read_float(&data[i], &facet_vertices[v]) - data;
+                        iter = read_float(iter, &facet_vertices[v]);
                 }
                 yield_facet(facet_vertices);
 
-                read(data, size, ascii::is_space, &i);
-                read_keyword(data, size, END_LOOP, &i);
+                iter = read(iter, last, ascii::is_space);
+                iter = read_keyword(iter, last, END_LOOP);
 
-                read(data, size, ascii::is_space, &i);
-                read_keyword(data, size, END_FACET, &i);
+                iter = read(iter, last, ascii::is_space);
+                iter = read_keyword(iter, last, END_FACET);
 
                 if (((++facet_count) & 0xfff) == 0xfff)
                 {
-                        progress->set(i * size_reciprocal);
+                        progress->set((iter - first) * size_reciprocal);
                 }
         }
 

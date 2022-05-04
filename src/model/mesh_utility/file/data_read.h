@@ -25,64 +25,69 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace ns::mesh::file
 {
 namespace data_read_implementation
 {
-template <typename Integer, typename T>
-Integer digits_to_integer(const T& data, const long long begin, long long end)
+template <typename Integer>
+Integer digits_to_integer(const char* const first, const char* last)
 {
         static_assert(std::is_integral_v<Integer>);
 
-        long long length = end - begin;
-
-        if (length > Limits<Integer>::digits10() || length < 1)
+        if (const auto length = last - first; length > Limits<Integer>::digits10() || length < 1)
         {
-                error("Error convert " + std::string(&data[begin], length) + " to integral");
+                error("Error converting " + std::string(first, last) + " to integral");
         }
 
-        --end;
-        Integer sum = ascii::char_to_int(data[end]);
+        --last;
+        Integer sum = ascii::char_to_int(*last);
         Integer mul = 1;
-        while (--end >= begin)
+        while (last-- > first)
         {
                 mul *= 10;
-                sum += ascii::char_to_int(data[end]) * mul;
+                sum += ascii::char_to_int(*last) * mul;
         }
 
         return sum;
 }
 
 template <typename T>
-T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, float>)
+std::tuple<T, const char*> str_to_floating_point(const char* const str) requires(std::is_same_v<T, float>)
 {
-        return std::strtof(str, end);
+        char* end;
+        const T v = std::strtof(str, &end);
+        return {v, end};
 }
 
 template <typename T>
-T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, double>)
+std::tuple<T, const char*> str_to_floating_point(const char* const str) requires(std::is_same_v<T, double>)
 {
-        return std::strtod(str, end);
+        char* end;
+        const T v = std::strtod(str, &end);
+        return {v, end};
 }
 
 template <typename T>
-T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, long double>)
+std::tuple<T, const char*> str_to_floating_point(const char* const str) requires(std::is_same_v<T, long double>)
 {
-        return std::strtold(str, end);
+        char* end;
+        const T v = std::strtold(str, &end);
+        return {v, end};
 }
 
 template <typename T>
 bool read_one_float_from_string(const char** const str, T* const p)
 {
-        char* end;
-        T value = str_to_floating_point<T>(*str, &end);
+        const auto [value, end] = str_to_floating_point<T>(*str);
 
         if (end == *str || errno == ERANGE || !std::isfinite(value))
         {
                 return false;
         }
+
         if (!(ascii::is_space(*end) || *end == '\0' || *end == '#'))
         {
                 return false;
@@ -121,17 +126,18 @@ int read_vector(const char** const str, Vector<N, T>* const v, T* const n, std::
         return string_to_floats(str, &(*v)[I]..., n);
 }
 
+struct Split final
+{
+        long long first_b;
+        long long first_e;
+        long long second_b;
+        long long second_e;
+};
+
 // split string into two parts
 // 1. not space characters
 // 2. all other characters before a comment or the end of the string
-inline void split(
-        const std::vector<char>& data,
-        const long long first,
-        const long long last,
-        long long* const first_b,
-        long long* const first_e,
-        long long* const second_b,
-        long long* const second_e)
+inline Split split(const std::vector<char>& data, const long long first, const long long last)
 {
         const auto is_comment = [](char c)
         {
@@ -144,13 +150,10 @@ inline void split(
         {
                 ++i;
         }
+
         if (i == last || is_comment(data[i]))
         {
-                *first_b = i;
-                *first_e = i;
-                *second_b = i;
-                *second_e = i;
-                return;
+                return {.first_b = i, .first_e = i, .second_b = i, .second_e = i};
         }
 
         long long i2 = i + 1;
@@ -158,16 +161,19 @@ inline void split(
         {
                 ++i2;
         }
-        *first_b = i;
-        *first_e = i2;
+
+        Split split;
+
+        split.first_b = i;
+        split.first_e = i2;
 
         i = i2;
 
         if (i == last || is_comment(data[i]))
         {
-                *second_b = i;
-                *second_e = i;
-                return;
+                split.second_b = i;
+                split.second_e = i;
+                return split;
         }
 
         // skip the first space
@@ -179,8 +185,9 @@ inline void split(
                 ++i2;
         }
 
-        *second_b = i;
-        *second_e = i2;
+        split.second_b = i;
+        split.second_e = i2;
+        return split;
 }
 }
 
@@ -206,6 +213,16 @@ bool check_range(const T1& v, const T2& min, const T3& max)
         return v >= min && v <= max;
 }
 
+template <typename Op>
+[[nodiscard]] const char* read(const char* first, const char* const last, const Op& op)
+{
+        while (first < last && op(*first))
+        {
+                ++first;
+        }
+        return first;
+}
+
 template <typename Data, typename Op>
 void read(const Data& data, const long long size, const Op& op, long long* const i)
 {
@@ -215,29 +232,20 @@ void read(const Data& data, const long long size, const Op& op, long long* const
         }
 }
 
-template <typename T, typename Integer>
-bool read_integer(const T& data, const long long size, long long* const pos, Integer* const value)
+template <typename Integer>
+bool read_integer(const char* const first, const char* const last, const char** const pos, Integer* const value)
 {
         static_assert(std::is_signed_v<Integer>);
         namespace impl = data_read_implementation;
 
-        long long begin = *pos;
+        const char* const i1 = (first < last && *first == '-') ? first + 1 : first;
+        const char* const i2 = read(i1, last, ascii::is_digit);
 
-        if (begin < size && data[begin] == '-')
+        if (i2 > i1)
         {
-                ++begin;
-        }
-
-        long long end = begin;
-
-        read(data, size, ascii::is_digit, &end);
-
-        if (end > begin)
-        {
-                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end)
-                                         : -impl::digits_to_integer<Integer>(data, begin, end);
-                *pos = end;
-
+                const Integer v = impl::digits_to_integer<Integer>(i1, i2);
+                *value = (first == i1) ? v : -v;
+                *pos = i2;
                 return true;
         }
 
@@ -297,6 +305,8 @@ inline void split_line(
         long long* const second_b,
         long long* const second_e)
 {
+        namespace impl = data_read_implementation;
+
         long long line_count = line_begin.size();
 
         long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
@@ -304,46 +314,38 @@ inline void split_line(
         // move to '\n' at the end of the string
         --last;
 
-        long long first_b;
-        long long first_e;
+        const impl::Split split = impl::split(*data, line_begin[line_num], last);
 
-        data_read_implementation::split(*data, line_begin[line_num], last, &first_b, &first_e, second_b, second_e);
+        *first = &(*data)[split.first_b];
+        (*data)[split.first_e] = 0; // space, '#', '\n'
 
-        *first = &(*data)[first_b];
-        (*data)[first_e] = 0; // space, '#', '\n'
+        *second = &(*data)[split.second_b];
+        (*data)[split.second_e] = 0; // '#', '\n'
 
-        *second = &(*data)[*second_b];
-        (*data)[*second_e] = 0; // '#', '\n'
+        *second_b = split.second_b;
+        *second_e = split.second_e;
 }
 
-template <typename T>
-void read_name(
-        const char* const object_name,
-        const T& data,
-        const long long begin,
-        const long long end,
-        std::string* const name)
+inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
 {
-        const long long size = end;
-
-        long long i = begin;
-        read(data, size, ascii::is_space, &i);
-        if (i == size)
+        const char* const i1 = read(first, last, ascii::is_space);
+        if (i1 == last)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
-        long long i2 = i;
-        read(data, size, ascii::is_not_space, &i2);
-
-        *name = std::string(&data[i], i2 - i);
-
-        i = i2;
-
-        read(data, size, ascii::is_space, &i);
-        if (i != size)
+        const char* const i2 = read(i1, last, ascii::is_not_space);
+        if (i2 == i1)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
+
+        const char* const i3 = read(i2, last, ascii::is_space);
+        if (i3 != last)
+        {
+                error("Error read " + std::string(object_name) + " name");
+        }
+
+        return {i1, i2};
 }
 }

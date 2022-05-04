@@ -73,12 +73,12 @@ image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
 template <std::size_t N>
 void load_image(
         const std::filesystem::path& dir_name,
-        const std::filesystem::path& image_name,
-        std::map<std::string, int>* const image_index,
+        const std::string_view& image_name,
+        std::map<std::filesystem::path, int>* const image_index,
         std::vector<image::Image<N - 1>>* const images,
         int* const index)
 {
-        std::filesystem::path file_name = path_from_utf8(trim(generic_utf8_filename(image_name)));
+        std::filesystem::path file_name = path_from_utf8(trim(image_name));
 
         if (file_name.empty())
         {
@@ -105,14 +105,14 @@ class ReadLib final
         const std::vector<char>* data_;
         Mesh<N>* mesh_;
         std::map<std::string, int>* material_index_;
-        std::map<std::string, int>* image_index_;
+        std::map<std::filesystem::path, int>* image_index_;
 
 public:
         ReadLib(const std::filesystem::path* const lib_dir,
                 const std::vector<char>* const data,
                 Mesh<N>* const mesh,
                 std::map<std::string, int>* const material_index,
-                std::map<std::string, int>* const image_index)
+                std::map<std::filesystem::path, int>* const image_index)
                 : lib_dir_(lib_dir),
                   data_(data),
                   mesh_(mesh),
@@ -146,8 +146,7 @@ bool ReadLib<N>::read_line(
                         return false;
                 }
 
-                std::string name;
-                read_name("material", *data_, second_b, second_e, &name);
+                const std::string name{read_name("material", &(*data_)[second_b], &(*data_)[second_e])};
 
                 const auto iter = material_index_->find(name);
                 if (iter != material_index_->end())
@@ -182,8 +181,7 @@ bool ReadLib<N>::read_line(
                         return true;
                 }
 
-                std::string name;
-                read_name("file", *data_, second_b, second_e, &name);
+                const std::string_view name{read_name("file", &(*data_)[second_b], &(*data_)[second_e])};
                 load_image<N>(*lib_dir_, name, image_index_, &mesh_->images, &mtl->image);
         }
 
@@ -197,7 +195,7 @@ void read_lib(
         const std::filesystem::path& file_name,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
-        std::map<std::string, int>* const image_index,
+        std::map<std::filesystem::path, int>* const image_index,
         Mesh<N>* const mesh)
 {
         std::vector<char> data;
@@ -253,7 +251,7 @@ void read_lib(
 #define READ_LIB_INSTANTIATION(N)                                                           \
         template void read_lib(                                                             \
                 const std::filesystem::path&, const std::filesystem::path&, ProgressRatio*, \
-                std::map<std::string, int>*, std::map<std::string, int>*, Mesh<(N)>*);
+                std::map<std::string, int>*, std::map<std::filesystem::path, int>*, Mesh<(N)>*);
 
 READ_LIB_INSTANTIATION(3)
 READ_LIB_INSTANTIATION(4)

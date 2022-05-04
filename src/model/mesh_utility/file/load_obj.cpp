@@ -151,7 +151,7 @@ void read_obj_line(
         else if (str_equal(first, "f"))
         {
                 lp->type = ObjLineType::F;
-                read_facets<N>(data, lp->second_b, lp->second_e, &lp->facets, &lp->facet_count);
+                read_facets<N>(&data[lp->second_b], &data[lp->second_e], &lp->facets, &lp->facet_count);
 
                 ++((*counters)[thread_num].facet);
         }
@@ -280,9 +280,8 @@ void read_obj_stage_two(
                         break;
                 case ObjLineType::USEMTL:
                 {
-                        std::string mtl_name;
-                        read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
-                        const auto iter = material_index->find(mtl_name);
+                        const std::string name{read_name("material", &data[lp.second_b], &data[lp.second_e])};
+                        const auto iter = material_index->find(name);
                         if (iter != material_index->end())
                         {
                                 mtl_index = iter->second;
@@ -290,9 +289,9 @@ void read_obj_stage_two(
                         else
                         {
                                 typename Mesh<N>::Material mtl;
-                                mtl.name = mtl_name;
+                                mtl.name = name;
                                 mesh->materials.push_back(std::move(mtl));
-                                material_index->emplace(std::move(mtl_name), mesh->materials.size() - 1);
+                                material_index->emplace(name, mesh->materials.size() - 1);
                                 mtl_index = mesh->materials.size() - 1;
                         }
                         break;
@@ -401,7 +400,7 @@ void read_libs(
         const std::vector<std::filesystem::path>& library_names,
         Mesh<N>* const mesh)
 {
-        std::map<std::string, int> image_index;
+        std::map<std::filesystem::path, int> image_index;
 
         for (std::size_t i = 0; (i < library_names.size()) && !material_index->empty(); ++i)
         {

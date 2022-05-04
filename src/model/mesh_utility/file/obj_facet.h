@@ -37,15 +37,14 @@ namespace obj_facet_implementation
 // "x/x/"
 // "x/x"
 // "x"
-template <typename T, std::size_t GROUP_SIZE, typename IndexType>
-void read_digit_group(
-        const T& line,
-        const long long end,
-        long long* const from,
+template <std::size_t GROUP_SIZE, typename IndexType>
+const char* read_digit_group(
+        const char* first,
+        const char* const last,
         std::array<IndexType, GROUP_SIZE>* const group_indices)
 {
         // vertex
-        if (read_integer(line, end, from, &(*group_indices)[0]))
+        if (read_integer(first, last, &first, &(*group_indices)[0]))
         {
                 if ((*group_indices)[0] == 0)
                 {
@@ -58,28 +57,28 @@ void read_digit_group(
         }
 
         // texture and normal
-        for (int a = 1; a < static_cast<int>(group_indices->size()); ++a)
+        for (unsigned a = 1; a < group_indices->size(); ++a)
         {
-                if (*from == end || ascii::is_space(line[*from]))
+                if (first == last || ascii::is_space(*first))
                 {
                         (*group_indices)[a] = 0;
                         continue;
                 }
 
-                if (line[*from] != '/')
+                if (*first != '/')
                 {
-                        error(std::string("Error read facet number, expected '/', found '") + line[*from] + "'");
+                        error(std::string("Error read facet number, expected '/', found '") + *first + "'");
                 }
 
-                ++(*from);
+                ++first;
 
-                if (*from == end || ascii::is_space(line[*from]))
+                if (first == last || ascii::is_space(*first))
                 {
                         (*group_indices)[a] = 0;
                         continue;
                 }
 
-                if (read_integer(line, end, from, &(*group_indices)[a]))
+                if (read_integer(first, last, &first, &(*group_indices)[a]))
                 {
                         if ((*group_indices)[a] == 0)
                         {
@@ -91,39 +90,38 @@ void read_digit_group(
                         (*group_indices)[a] = 0;
                 }
         }
+
+        return first;
 }
 
-template <typename T, std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
+template <std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
 void read_digit_groups(
-        const T& line,
-        const long long begin,
-        const long long end,
+        const char* first,
+        const char* const last,
         std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr,
         int* const group_count)
 {
-        int group_index = -1;
-
-        long long i = begin;
+        unsigned group_index = -1;
 
         while (true)
         {
                 ++group_index;
 
-                read(line, end, ascii::is_space, &i);
+                first = read(first, last, ascii::is_space);
 
-                if (i == end)
+                if (first == last)
                 {
                         *group_count = group_index;
                         return;
                 }
 
-                if (group_index >= static_cast<int>(group_ptr->size()))
+                if (group_index >= group_ptr->size())
                 {
                         error("Found too many facet vertices " + to_string(group_index + 1)
                               + " (max supported = " + to_string(group_ptr->size()) + ")");
                 }
 
-                read_digit_group(line, end, &i, &(*group_ptr)[group_index]);
+                first = read_digit_group(first, last, &(*group_ptr)[group_index]);
         }
 }
 
@@ -156,11 +154,10 @@ void check_index_consistency(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>
 }
 }
 
-template <std::size_t N, typename T, std::size_t MAX_FACETS>
+template <std::size_t N, std::size_t MAX_FACETS>
 void read_facets(
-        const T& data,
-        const long long begin,
-        const long long end,
+        const char* const first,
+        const char* const last,
         std::array<typename Mesh<N>::Facet, MAX_FACETS>* const facets,
         int* const facet_count)
 {
@@ -174,7 +171,7 @@ void read_facets(
 
         int group_count;
 
-        impl::read_digit_groups(data, begin, end, &groups, &group_count);
+        impl::read_digit_groups(first, last, &groups, &group_count);
 
         if (group_count < static_cast<int>(N))
         {

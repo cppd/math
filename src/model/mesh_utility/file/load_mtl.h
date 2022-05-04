@@ -33,6 +33,6 @@ void read_lib(
         const std::filesystem::path& file_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::map<std::string, int>* image_index,
+        std::map<std::filesystem::path, int>* image_index,
         Mesh<N>* mesh);
 }
