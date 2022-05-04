@@ -36,6 +36,8 @@ namespace
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_POLE = 0.99;
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_AB = -0.9999;
 
+constexpr double MAX_VORONOI_EDGE_RADIUS = Limits<double>::max();
+
 struct VertexConnections final
 {
         struct Facet final
@@ -172,7 +174,7 @@ double voronoi_edge_radius(
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
-                return Limits<double>::max();
+                return MAX_VORONOI_EDGE_RADIUS;
         }
 
         if (!facet.one_sided() && cocone_inside_or_equal(cos_n_a, cos_n_b))
@@ -226,45 +228,59 @@ double voronoi_edge_radius(
         return *max_distance;
 }
 
+template <std::size_t N>
+struct EdgePoint final
+{
+        Vector<N, double> v;
+        double length;
+        double cos;
+};
+
+template <std::size_t N>
+EdgePoint<N> compute_edge_point(
+        const unsigned index,
+        const Vector<N, double>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const Vector<N, double>& positive_pole,
+        const DelaunayFacet<N>& facet)
+{
+        const Vector<N, double> v = delaunay_objects[facet.delaunay(index)].voronoi_vertex() - vertex;
+        const double length = v.norm();
+        const double cos = dot(positive_pole, v) / length;
+        return {.v = v, .length = length, .cos = cos};
+}
+
 // Definition 5.3 (The radius and the height of a Voronoi cell).
 template <std::size_t N>
-void cocone_facets_and_voronoi_radius(
+double cocone_facets_and_voronoi_radius_impl(
         const Vector<N, double>& vertex,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
-        const bool find_radius,
         std::vector<ManifoldFacet<N>>* const facet_data,
-        double* const radius)
+        const bool find_radius)
 {
         ASSERT(delaunay_facets.size() == facet_data->size());
 
-        *radius = 0;
+        double radius = 0;
 
         for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
         {
                 const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
-                const Vector<N, double> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
-                const double pa_length = pa.norm();
-                const double cos_n_a = dot(positive_pole, pa) / pa_length;
+                const EdgePoint pa = compute_edge_point(0, vertex, delaunay_objects, positive_pole, facet);
 
-                double pb_length;
-                double cos_n_b;
-                if (facet.one_sided())
+                const EdgePoint pb = [&]
                 {
-                        pb_length = 0;
-                        cos_n_b = dot(positive_pole, facet.ortho());
-                }
-                else
-                {
-                        const Vector<N, double> pb = delaunay_objects[facet.delaunay(1)].voronoi_vertex() - vertex;
-                        pb_length = pb.norm();
-                        cos_n_b = dot(positive_pole, pb) / pb_length;
-                }
+                        if (facet.one_sided())
+                        {
+                                return EdgePoint<N>{.v = {}, .length = 0, .cos = dot(positive_pole, facet.ortho())};
+                        }
+                        return compute_edge_point(1, vertex, delaunay_objects, positive_pole, facet);
+                }();
 
-                if (!voronoi_edge_intersects_cocone(cos_n_a, cos_n_b))
+                if (!voronoi_edge_intersects_cocone(pa.cos, pb.cos))
                 {
                         continue;
                 }
@@ -274,16 +290,46 @@ void cocone_facets_and_voronoi_radius(
                 // The intersection is found for this facet vertex.
                 (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.facet_vertex_index] = true;
 
-                if (find_radius && *radius != Limits<double>::max())
+                if (find_radius && radius != MAX_VORONOI_EDGE_RADIUS)
                 {
                         const double edge_radius = voronoi_edge_radius(
-                                delaunay_objects, facet, positive_pole, pa, pa_length, pb_length, cos_n_a, cos_n_b);
+                                delaunay_objects, facet, positive_pole, pa.v, pa.length, pb.length, pa.cos, pb.cos);
 
-                        *radius = std::max(*radius, edge_radius);
+                        radius = std::max(radius, edge_radius);
                 }
         }
 
-        ASSERT(!find_radius || (*radius > 0 && *radius <= Limits<double>::max()));
+        ASSERT(!find_radius || (radius > 0 && radius <= MAX_VORONOI_EDGE_RADIUS));
+
+        return radius;
+}
+
+template <std::size_t N>
+double cocone_facets_and_voronoi_radius(
+        const Vector<N, double>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const Vector<N, double>& positive_pole,
+        const VertexConnections& vertex_connections,
+        std::vector<ManifoldFacet<N>>* const facet_data)
+{
+        constexpr bool FIND_RADIUS = true;
+        return cocone_facets_and_voronoi_radius_impl(
+                vertex, delaunay_objects, delaunay_facets, positive_pole, vertex_connections, facet_data, FIND_RADIUS);
+}
+
+template <std::size_t N>
+void cocone_facets(
+        const Vector<N, double>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const Vector<N, double>& positive_pole,
+        const VertexConnections& vertex_connections,
+        std::vector<ManifoldFacet<N>>* const facet_data)
+{
+        constexpr bool FIND_RADIUS = false;
+        cocone_facets_and_voronoi_radius_impl(
+                vertex, delaunay_objects, delaunay_facets, positive_pole, vertex_connections, facet_data, FIND_RADIUS);
 }
 
 // 5.1.2 Flat Sample Points.
@@ -391,13 +437,9 @@ void find_vertex_and_facet_data(
                 const Vector<N, double> positive_norm =
                         voronoi_positive_norm(points[v], objects, facets, connections[v]);
 
-                double radius;
-
                 if (!find_cocone_neighbors)
                 {
-                        cocone_facets_and_voronoi_radius(
-                                points[v], objects, facets, positive_norm, connections[v], false /*find_radius*/,
-                                facet_data, &radius);
+                        cocone_facets(points[v], objects, facets, positive_norm, connections[v], facet_data);
 
                         vertex_data->emplace_back(positive_norm, 0, 0);
                 }
@@ -405,11 +447,10 @@ void find_vertex_and_facet_data(
                 {
                         const double height = voronoi_height(points[v], objects, positive_norm, connections[v].objects);
 
-                        cocone_facets_and_voronoi_radius(
-                                points[v], objects, facets, positive_norm, connections[v], true /*find_radius*/,
-                                facet_data, &radius);
+                        const double voronoi_radius = cocone_facets_and_voronoi_radius(
+                                points[v], objects, facets, positive_norm, connections[v], facet_data);
 
-                        vertex_data->emplace_back(positive_norm, height, radius);
+                        vertex_data->emplace_back(positive_norm, height, voronoi_radius);
                 }
         }
 

@@ -50,6 +50,53 @@ void check_pixel_buffer_size(
                       + ")");
         }
 }
+
+struct FormatInfo final
+{
+        image::ColorFormat format;
+        bool swap;
+        bool color;
+};
+
+FormatInfo format_info(const VkFormat format)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (format)
+        {
+        case VK_FORMAT_R8G8B8_SRGB:
+                return {.format = image::ColorFormat::R8G8B8_SRGB, .swap = false, .color = true};
+        case VK_FORMAT_B8G8R8_SRGB:
+                return {.format = image::ColorFormat::R8G8B8_SRGB, .swap = true, .color = true};
+        case VK_FORMAT_R8G8B8A8_SRGB:
+                return {.format = image::ColorFormat::R8G8B8A8_SRGB, .swap = false, .color = true};
+        case VK_FORMAT_B8G8R8A8_SRGB:
+                return {.format = image::ColorFormat::R8G8B8A8_SRGB, .swap = true, .color = true};
+        case VK_FORMAT_R16G16B16_UNORM:
+                return {.format = image::ColorFormat::R16G16B16, .swap = false, .color = true};
+        case VK_FORMAT_R16G16B16A16_UNORM:
+                return {.format = image::ColorFormat::R16G16B16A16, .swap = false, .color = true};
+        case VK_FORMAT_R32G32B32_SFLOAT:
+                return {.format = image::ColorFormat::R32G32B32, .swap = false, .color = true};
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+                return {.format = image::ColorFormat::R32G32B32A32, .swap = false, .color = true};
+        case VK_FORMAT_R8_SRGB:
+                return {.format = image::ColorFormat::R8_SRGB, .swap = false, .color = true};
+        case VK_FORMAT_R16_UNORM:
+                return {.format = image::ColorFormat::R16, .swap = false, .color = true};
+        case VK_FORMAT_R32_SFLOAT:
+                return {.format = image::ColorFormat::R32, .swap = false, .color = true};
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+                return {.format = image::ColorFormat::R16, .swap = false, .color = false};
+        case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+                return {.format = image::ColorFormat::R32, .swap = false, .color = false};
+        default:
+                error("Unsupported image format " + format_to_string(format) + " for writing");
+        }
+#pragma GCC diagnostic pop
+}
 }
 
 void write_pixels_to_image(
@@ -75,80 +122,18 @@ void write_pixels_to_image(
 
         check_pixel_buffer_size(pixels, color_format, extent);
 
-        image::ColorFormat required_format;
-        bool swap = false;
-        bool color = true;
+        const FormatInfo info = format_info(format);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (format)
+        if ((!info.color && aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT)
+            || (info.color && aspect_flag == VK_IMAGE_ASPECT_DEPTH_BIT))
         {
-        case VK_FORMAT_R8G8B8_SRGB:
-                required_format = image::ColorFormat::R8G8B8_SRGB;
-                break;
-        case VK_FORMAT_B8G8R8_SRGB:
-                required_format = image::ColorFormat::R8G8B8_SRGB;
-                swap = true;
-                break;
-        case VK_FORMAT_R8G8B8A8_SRGB:
-                required_format = image::ColorFormat::R8G8B8A8_SRGB;
-                break;
-        case VK_FORMAT_B8G8R8A8_SRGB:
-                required_format = image::ColorFormat::R8G8B8A8_SRGB;
-                swap = true;
-                break;
-        case VK_FORMAT_R16G16B16_UNORM:
-                required_format = image::ColorFormat::R16G16B16;
-                break;
-        case VK_FORMAT_R16G16B16A16_UNORM:
-                required_format = image::ColorFormat::R16G16B16A16;
-                break;
-        case VK_FORMAT_R32G32B32_SFLOAT:
-                required_format = image::ColorFormat::R32G32B32;
-                break;
-        case VK_FORMAT_R32G32B32A32_SFLOAT:
-                required_format = image::ColorFormat::R32G32B32A32;
-                break;
-        case VK_FORMAT_R8_SRGB:
-                required_format = image::ColorFormat::R8_SRGB;
-                break;
-        case VK_FORMAT_R16_UNORM:
-                required_format = image::ColorFormat::R16;
-                break;
-        case VK_FORMAT_R32_SFLOAT:
-                required_format = image::ColorFormat::R32;
-                break;
-        case VK_FORMAT_D16_UNORM:
-        case VK_FORMAT_D16_UNORM_S8_UINT:
-                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
-                {
-                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
-                }
-                required_format = image::ColorFormat::R16;
-                color = false;
-                break;
-        case VK_FORMAT_D32_SFLOAT:
-        case VK_FORMAT_D32_SFLOAT_S8_UINT:
-                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
-                {
-                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
-                }
-                required_format = image::ColorFormat::R32;
-                color = false;
-                break;
-        default:
-                error("Unsupported image format " + format_to_string(format) + " for writing");
-        }
-#pragma GCC diagnostic pop
-
-        if (color && aspect_flag != VK_IMAGE_ASPECT_COLOR_BIT)
-        {
-                error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
+                error("Unsupported image format " + format_to_string(format) + " and image aspect "
+                      + to_string_binary(aspect_flag) + " for writing");
         }
 
-        if (color_format == required_format)
+        if (color_format == info.format)
         {
-                if (!swap)
+                if (!info.swap)
                 {
                         write(pixels);
                         return;
@@ -161,12 +146,12 @@ void write_pixels_to_image(
         }
 
         std::vector<std::byte> buffer;
-        image::format_conversion(color_format, pixels, required_format, &buffer);
-        if (swap)
+        image::format_conversion(color_format, pixels, info.format, &buffer);
+        if (info.swap)
         {
-                image::swap_rb(required_format, buffer);
+                image::swap_rb(info.format, buffer);
         }
-        check_pixel_buffer_size(buffer, required_format, extent);
+        check_pixel_buffer_size(buffer, info.format, extent);
         write(buffer);
 }
 

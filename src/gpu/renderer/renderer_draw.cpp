@@ -82,45 +82,36 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         const TransparencyBuffers::Info info = transparency_buffers.read();
         const bool nodes = info.required_node_memory > transparency_node_buffer_max_size_;
         const bool overload = info.overload_counter > 0;
-        bool transparency;
-        bool opacity;
-        if (nodes || overload)
+
+        if (!nodes && !overload)
         {
-                ASSERT(mesh_renderer_->render_command_buffer_transparent_as_opaque(index));
-                vulkan::queue_submit(
-                        semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                        *mesh_renderer_->render_command_buffer_transparent_as_opaque(index),
-                        transparent_as_opaque_semaphore_, graphics_queue);
-
-                semaphore = transparent_as_opaque_semaphore_;
-
-                transparency = false;
-                opacity = true;
-
-                transparency_message_.process(
-                        [&]()
-                        {
-                                TransparencyMessage::Data data;
-                                if (nodes)
-                                {
-                                        data.required_node_memory = info.required_node_memory;
-                                }
-                                if (overload)
-                                {
-                                        data.overload_count = info.overload_counter;
-                                }
-                                return data;
-                        }());
-        }
-        else
-        {
-                transparency = true;
-                opacity = mesh_renderer_->has_opaque_meshes();
-
                 transparency_message_.process({});
+
+                return {.semaphore = semaphore, .transparency = true, .opacity = mesh_renderer_->has_opaque_meshes()};
         }
 
-        return {.semaphore = semaphore, .transparency = transparency, .opacity = opacity};
+        const auto command_buffer = mesh_renderer_->render_command_buffer_transparent_as_opaque(index);
+        ASSERT(command_buffer);
+        vulkan::queue_submit(
+                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, *command_buffer, transparent_as_opaque_semaphore_,
+                graphics_queue);
+
+        transparency_message_.process(
+                [&]()
+                {
+                        TransparencyMessage::Data data;
+                        if (nodes)
+                        {
+                                data.required_node_memory = info.required_node_memory;
+                        }
+                        if (overload)
+                        {
+                                data.overload_count = info.overload_counter;
+                        }
+                        return data;
+                }());
+
+        return {.semaphore = transparent_as_opaque_semaphore_, .transparency = false, .opacity = true};
 }
 
 VkSemaphore RendererDraw::draw(
