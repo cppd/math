@@ -110,11 +110,11 @@ template <std::size_t N>
 void read_obj_line(
         std::vector<Counters>* const counters,
         const unsigned thread_num,
-        const char* const first,
+        const std::string_view first,
         const std::vector<char>& data,
         ObjLine<N>* const lp)
 {
-        if (str_equal(first, "v"))
+        if (first == "v")
         {
                 lp->type = ObjLineType::V;
                 Vector<N, float> v;
@@ -123,7 +123,7 @@ void read_obj_line(
 
                 ++((*counters)[thread_num].vertex);
         }
-        else if (str_equal(first, "vt"))
+        else if (first == "vt")
         {
                 lp->type = ObjLineType::VT;
                 Vector<N - 1, float> v;
@@ -135,7 +135,7 @@ void read_obj_line(
 
                 ++((*counters)[thread_num].texcoord);
         }
-        else if (str_equal(first, "vn"))
+        else if (first == "vn")
         {
                 lp->type = ObjLineType::VN;
                 Vector<N, float> v;
@@ -148,22 +148,22 @@ void read_obj_line(
 
                 ++((*counters)[thread_num].normal);
         }
-        else if (str_equal(first, "f"))
+        else if (first == "f")
         {
                 lp->type = ObjLineType::F;
                 read_facets<N>(&data[lp->second_b], &data[lp->second_e], &lp->facets, &lp->facet_count);
 
                 ++((*counters)[thread_num].facet);
         }
-        else if (str_equal(first, "usemtl"))
+        else if (first == "usemtl")
         {
                 lp->type = ObjLineType::USEMTL;
         }
-        else if (str_equal(first, "mtllib"))
+        else if (first == "mtllib")
         {
                 lp->type = ObjLineType::MTLLIB;
         }
-        else if (!*first)
+        else if (first.empty())
         {
                 lp->type = ObjLineType::NONE;
         }
@@ -195,12 +195,10 @@ void read_obj_stage_one(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
+                std::string_view first;
                 ObjLine<N> obj_line;
 
-                const char* first;
-                const char* second;
-
-                split_line(data_ptr, *line_begin, line_num, &first, &second, &obj_line.second_b, &obj_line.second_e);
+                split_line(data_ptr, *line_begin, line_num, &first, &obj_line.second_b, &obj_line.second_e);
 
                 try
                 {
@@ -208,11 +206,15 @@ void read_obj_stage_one(
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + e.what());
+                        error("Line " + to_string(line_num) + ": " + std::string(first) + " "
+                              + std::string(&(*data_ptr)[obj_line.second_b], &(*data_ptr)[obj_line.second_e]) + "\n"
+                              + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + "Unknown error");
+                        error("Line " + to_string(line_num) + ": " + std::string(first) + " "
+                              + std::string(&(*data_ptr)[obj_line.second_b], &(*data_ptr)[obj_line.second_e]) + "\n"
+                              + "Unknown error");
                 }
 
                 (*line_prop)[line_num] = obj_line;
@@ -280,7 +282,7 @@ void read_obj_stage_two(
                         break;
                 case ObjLineType::USEMTL:
                 {
-                        const std::string name{read_name("material", &data[lp.second_b], &data[lp.second_e])};
+                        const std::string name{read_name("material", {&data[lp.second_b], &data[lp.second_e]})};
                         const auto iter = material_index->find(name);
                         if (iter != material_index->end())
                         {
@@ -297,7 +299,8 @@ void read_obj_stage_two(
                         break;
                 }
                 case ObjLineType::MTLLIB:
-                        read_library_names(data, lp.second_b, lp.second_e, library_names, &unique_library_names);
+                        read_library_names(
+                                {&data[lp.second_b], &data[lp.second_e]}, library_names, &unique_library_names);
                         break;
                 case ObjLineType::NONE:
                 case ObjLineType::NOT_SUPPORTED:

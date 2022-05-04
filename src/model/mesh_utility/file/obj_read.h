@@ -51,24 +51,21 @@ void read_float_texture(const char* const str, Vector<N, T>* const v)
         }
 }
 
-template <typename T>
-void read_library_names(
-        const T& data,
-        const long long begin,
-        const long long end,
+inline void read_library_names(
+        const std::string_view str,
         std::vector<std::filesystem::path>* const library_names,
         std::set<std::filesystem::path>* const unique_library_names)
 {
-        const long long size = end;
-
         bool found = false;
-        long long i = begin;
+
+        auto begin = str.begin();
+        const auto end = str.end();
 
         while (true)
         {
-                read(data, size, ascii::is_space, &i);
+                begin = read(begin, end, ascii::is_space);
 
-                if (i == size)
+                if (begin == end)
                 {
                         if (!found)
                         {
@@ -77,10 +74,9 @@ void read_library_names(
                         return;
                 }
 
-                long long i2 = i;
-                read(data, size, ascii::is_not_space, &i2);
-                std::filesystem::path name = path_from_utf8(std::string(&data[i], i2 - i));
-                i = i2;
+                const auto iter = begin;
+                begin = read(begin, end, ascii::is_not_space);
+                std::filesystem::path name = path_from_utf8(std::string(iter, begin));
                 found = true;
 
                 if (!unique_library_names->contains(name))

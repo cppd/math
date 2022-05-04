@@ -121,32 +121,35 @@ public:
         {
         }
 
-        bool read_line(const char* first, long long second_b, long long second_e, typename Mesh<N>::Material** material)
-                const;
+        bool read_line(
+                std::string_view first,
+                long long second_b,
+                long long second_e,
+                typename Mesh<N>::Material** material) const;
 };
 
 template <std::size_t N>
 bool ReadLib<N>::read_line(
-        const char* const first,
+        const std::string_view first,
         const long long second_b,
         const long long second_e,
         typename Mesh<N>::Material** const material) const
 {
         auto& mtl = *material;
 
-        if (!*first)
+        if (first.empty())
         {
                 return true;
         }
 
-        if (str_equal(first, "newmtl"))
+        if (first == "newmtl")
         {
                 if (material_index_->empty())
                 {
                         return false;
                 }
 
-                const std::string name{read_name("material", &(*data_)[second_b], &(*data_)[second_e])};
+                const std::string name{read_name("material", {&(*data_)[second_b], &(*data_)[second_e]})};
 
                 const auto iter = material_index_->find(name);
                 if (iter != material_index_->end())
@@ -159,7 +162,7 @@ bool ReadLib<N>::read_line(
                         mtl = nullptr;
                 }
         }
-        else if (str_equal(first, "Kd"))
+        else if (first == "Kd")
         {
                 if (!mtl)
                 {
@@ -174,14 +177,14 @@ bool ReadLib<N>::read_line(
                         error("Reading Kd in material " + mtl->name + "\n" + e.what());
                 }
         }
-        else if (str_equal(first, "map_Kd"))
+        else if (first == "map_Kd")
         {
                 if (!mtl)
                 {
                         return true;
                 }
 
-                const std::string_view name{read_name("file", &(*data_)[second_b], &(*data_)[second_e])};
+                const std::string_view name{read_name("file", {&(*data_)[second_b], &(*data_)[second_e]})};
                 load_image<N>(*lib_dir_, name, image_index_, &mesh_->images, &mtl->image);
         }
 
@@ -221,12 +224,11 @@ void read_lib(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                const char* first;
-                const char* second;
+                std::string_view first;
                 long long second_b;
                 long long second_e;
 
-                split_line(&data, line_begin, line_num, &first, &second, &second_b, &second_e);
+                split_line(&data, line_begin, line_num, &first, &second_b, &second_e);
 
                 try
                 {
@@ -238,12 +240,14 @@ void read_lib(
                 catch (const std::exception& e)
                 {
                         error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + first + " " + second + "\n" + e.what());
+                              + ": " + std::string(first) + " " + std::string(&data[second_b], &data[second_e]) + "\n"
+                              + e.what());
                 }
                 catch (...)
                 {
                         error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + first + " " + second + "\n" + "Unknown error");
+                              + ": " + std::string(first) + " " + std::string{&data[second_b], &data[second_e]} + "\n"
+                              + "Unknown error");
                 }
         }
 }

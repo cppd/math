@@ -32,8 +32,8 @@ namespace ns::mesh::file
 {
 namespace data_read_implementation
 {
-template <typename Integer>
-Integer digits_to_integer(const char* const first, const char* last)
+template <typename Integer, typename Iter>
+Integer digits_to_integer(const Iter first, Iter last)
 {
         static_assert(std::is_integral_v<Integer>);
 
@@ -193,28 +193,14 @@ inline Split split(const std::vector<char>& data, const long long first, const l
 
 //
 
-constexpr bool str_equal(const char* s1, const char* s2)
-{
-        while (*s1 == *s2 && *s1)
-        {
-                ++s1;
-                ++s2;
-        }
-        return *s1 == *s2;
-}
-
-static_assert(
-        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
-        && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
-
 template <typename T1, typename T2, typename T3>
 bool check_range(const T1& v, const T2& min, const T3& max)
 {
         return v >= min && v <= max;
 }
 
-template <typename Op>
-[[nodiscard]] const char* read(const char* first, const char* const last, const Op& op)
+template <typename Iter, typename Op>
+[[nodiscard]] Iter read(Iter first, const Iter last, const Op& op)
 {
         while (first < last && op(*first))
         {
@@ -223,23 +209,14 @@ template <typename Op>
         return first;
 }
 
-template <typename Data, typename Op>
-void read(const Data& data, const long long size, const Op& op, long long* const i)
-{
-        while (*i < size && op(data[*i]))
-        {
-                ++(*i);
-        }
-}
-
-template <typename Integer>
-bool read_integer(const char* const first, const char* const last, const char** const pos, Integer* const value)
+template <typename Iter, typename Integer>
+bool read_integer(const Iter first, const Iter last, Iter* const pos, Integer* const value)
 {
         static_assert(std::is_signed_v<Integer>);
         namespace impl = data_read_implementation;
 
-        const char* const i1 = (first < last && *first == '-') ? first + 1 : first;
-        const char* const i2 = read(i1, last, ascii::is_digit);
+        const Iter i1 = (first < last && *first == '-') ? first + 1 : first;
+        const Iter i2 = read(i1, last, ascii::is_digit);
 
         if (i2 > i1)
         {
@@ -300,8 +277,7 @@ inline void split_line(
         std::vector<char>* const data,
         const std::vector<long long>& line_begin,
         const long long line_num,
-        const char** const first,
-        const char** const second,
+        std::string_view* const first,
         long long* const second_b,
         long long* const second_e)
 {
@@ -316,31 +292,30 @@ inline void split_line(
 
         const impl::Split split = impl::split(*data, line_begin[line_num], last);
 
-        *first = &(*data)[split.first_b];
-        (*data)[split.first_e] = 0; // space, '#', '\n'
-
-        *second = &(*data)[split.second_b];
         (*data)[split.second_e] = 0; // '#', '\n'
 
+        *first = {&(*data)[split.first_b], &(*data)[split.first_e]};
         *second_b = split.second_b;
         *second_e = split.second_e;
 }
 
-inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
+inline std::string_view read_name(const std::string_view object_name, const std::string_view str)
 {
-        const char* const i1 = read(first, last, ascii::is_space);
+        const auto last = str.end();
+
+        const auto i1 = read(str.begin(), last, ascii::is_space);
         if (i1 == last)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
-        const char* const i2 = read(i1, last, ascii::is_not_space);
+        const auto i2 = read(i1, last, ascii::is_not_space);
         if (i2 == i1)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
-        const char* const i3 = read(i2, last, ascii::is_space);
+        const auto i3 = read(i2, last, ascii::is_space);
         if (i3 != last)
         {
                 error("Error read " + std::string(object_name) + " name");

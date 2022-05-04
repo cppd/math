@@ -37,11 +37,8 @@ namespace obj_facet_implementation
 // "x/x/"
 // "x/x"
 // "x"
-template <std::size_t GROUP_SIZE, typename IndexType>
-const char* read_digit_group(
-        const char* first,
-        const char* const last,
-        std::array<IndexType, GROUP_SIZE>* const group_indices)
+template <typename Iter, std::size_t GROUP_SIZE, typename IndexType>
+Iter read_digit_group(Iter first, const Iter last, std::array<IndexType, GROUP_SIZE>* const group_indices)
 {
         // vertex
         if (read_integer(first, last, &first, &(*group_indices)[0]))
@@ -94,10 +91,10 @@ const char* read_digit_group(
         return first;
 }
 
-template <std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
+template <typename Iter, std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
 void read_digit_groups(
-        const char* first,
-        const char* const last,
+        Iter first,
+        const Iter last,
         std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr,
         int* const group_count)
 {
@@ -154,10 +151,10 @@ void check_index_consistency(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>
 }
 }
 
-template <std::size_t N, std::size_t MAX_FACETS>
+template <std::size_t N, std::size_t MAX_FACETS, typename Iter>
 void read_facets(
-        const char* const first,
-        const char* const last,
+        const Iter first,
+        const Iter last,
         std::array<typename Mesh<N>::Facet, MAX_FACETS>* const facets,
         int* const facet_count)
 {
