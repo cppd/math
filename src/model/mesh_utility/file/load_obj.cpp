@@ -83,8 +83,8 @@ template <std::size_t N>
 struct ObjLine final
 {
         ObjLineType type;
-        long long second_b;
-        long long second_e;
+        const char* second_b;
+        const char* second_e;
         std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
         int facet_count;
         Vector<N, float> v;
@@ -107,70 +107,77 @@ struct Counters final
 };
 
 template <std::size_t N>
-void read_obj_line(
+ObjLine<N> read_obj_line(
         std::vector<Counters>* const counters,
         const unsigned thread_num,
         const std::string_view first,
-        const std::vector<char>& data,
-        ObjLine<N>* const lp)
+        const char* const second_b,
+        const char* const second_e)
 {
+        ObjLine<N> obj_line;
+
+        obj_line.second_b = second_b;
+        obj_line.second_e = second_e;
+
         if (first == "v")
         {
-                lp->type = ObjLineType::V;
+                obj_line.type = ObjLineType::V;
                 Vector<N, float> v;
-                read_float(&data[lp->second_b], &v);
-                lp->v = v;
+                read_float(second_b, &v);
+                obj_line.v = v;
 
                 ++((*counters)[thread_num].vertex);
         }
         else if (first == "vt")
         {
-                lp->type = ObjLineType::VT;
+                obj_line.type = ObjLineType::VT;
                 Vector<N - 1, float> v;
-                read_float_texture(&data[lp->second_b], &v);
+                read_float_texture(second_b, &v);
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        lp->v[i] = v[i];
+                        obj_line.v[i] = v[i];
                 }
 
                 ++((*counters)[thread_num].texcoord);
         }
         else if (first == "vn")
         {
-                lp->type = ObjLineType::VN;
+                obj_line.type = ObjLineType::VN;
                 Vector<N, float> v;
-                read_float(&data[lp->second_b], &v);
-                lp->v = v.normalized();
-                if (!is_finite(lp->v))
+                read_float(second_b, &v);
+                obj_line.v = v.normalized();
+                if (!is_finite(obj_line.v))
                 {
-                        lp->v = Vector<N, float>(0);
+                        obj_line.v = Vector<N, float>(0);
                 }
 
                 ++((*counters)[thread_num].normal);
         }
         else if (first == "f")
         {
-                lp->type = ObjLineType::F;
-                read_facets<N>(&data[lp->second_b], &data[lp->second_e], &lp->facets, &lp->facet_count);
+                obj_line.type = ObjLineType::F;
+                read_facets<N>(second_b, second_e, &obj_line.facets, &obj_line.facet_count);
 
                 ++((*counters)[thread_num].facet);
         }
         else if (first == "usemtl")
         {
-                lp->type = ObjLineType::USEMTL;
+                obj_line.type = ObjLineType::USEMTL;
         }
         else if (first == "mtllib")
         {
-                lp->type = ObjLineType::MTLLIB;
+                obj_line.type = ObjLineType::MTLLIB;
         }
         else if (first.empty())
         {
-                lp->type = ObjLineType::NONE;
+                obj_line.type = ObjLineType::NONE;
         }
         else
         {
-                lp->type = ObjLineType::NOT_SUPPORTED;
+                obj_line.type = ObjLineType::NOT_SUPPORTED;
         }
+
+        return obj_line;
 }
 
 template <std::size_t N>
@@ -195,36 +202,29 @@ void read_obj_stage_one(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                std::string_view first;
-                ObjLine<N> obj_line;
-
-                split_line(data_ptr, *line_begin, line_num, &first, &obj_line.second_b, &obj_line.second_e);
+                const SplitLine split = split_line(data_ptr, *line_begin, line_num);
 
                 try
                 {
-                        read_obj_line(counters, thread_num, first, *data_ptr, &obj_line);
+                        (*line_prop)[line_num] =
+                                read_obj_line<N>(counters, thread_num, split.first, split.second_b, split.second_e);
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line_num) + ": " + std::string(first) + " "
-                              + std::string(&(*data_ptr)[obj_line.second_b], &(*data_ptr)[obj_line.second_e]) + "\n"
-                              + e.what());
+                        error("Line " + to_string(line_num) + ": " + std::string(split.first) + " "
+                              + std::string(split.second_b, split.second_e) + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line_num) + ": " + std::string(first) + " "
-                              + std::string(&(*data_ptr)[obj_line.second_b], &(*data_ptr)[obj_line.second_e]) + "\n"
-                              + "Unknown error");
+                        error("Line " + to_string(line_num) + ": " + std::string(split.first) + " "
+                              + std::string(split.second_b, split.second_e) + "\n" + "Unknown error");
                 }
-
-                (*line_prop)[line_num] = obj_line;
         }
 }
 
 template <std::size_t N>
 void read_obj_stage_two(
         const Counters& counters,
-        std::vector<char>* const data_ptr,
         std::vector<ObjLine<N>>* const line_prop,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
@@ -236,7 +236,6 @@ void read_obj_stage_two(
         mesh->normals.reserve(counters.normal);
         mesh->facets.reserve(counters.facet);
 
-        const std::vector<char>& data = *data_ptr;
         const long long line_count = line_prop->size();
         const double line_count_reciprocal = 1.0 / line_prop->size();
 
@@ -250,12 +249,12 @@ void read_obj_stage_two(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                ObjLine<N>& lp = (*line_prop)[line_num];
+                ObjLine<N>& obj_line = (*line_prop)[line_num];
 
-                switch (lp.type)
+                switch (obj_line.type)
                 {
                 case ObjLineType::V:
-                        mesh->vertices.push_back(lp.v);
+                        mesh->vertices.push_back(obj_line.v);
                         break;
                 case ObjLineType::VT:
                 {
@@ -263,26 +262,26 @@ void read_obj_stage_two(
                         Vector<N - 1, float>& new_vector = mesh->texcoords[mesh->texcoords.size() - 1];
                         for (unsigned i = 0; i < N - 1; ++i)
                         {
-                                new_vector[i] = lp.v[i];
+                                new_vector[i] = obj_line.v[i];
                         }
                         break;
                 }
                 case ObjLineType::VN:
-                        mesh->normals.push_back(lp.v);
+                        mesh->normals.push_back(obj_line.v);
                         break;
                 case ObjLineType::F:
-                        for (int i = 0; i < lp.facet_count; ++i)
+                        for (int i = 0; i < obj_line.facet_count; ++i)
                         {
-                                lp.facets[i].material = mtl_index;
+                                obj_line.facets[i].material = mtl_index;
                                 correct_indices<N>(
-                                        &lp.facets[i], mesh->vertices.size(), mesh->texcoords.size(),
+                                        &obj_line.facets[i], mesh->vertices.size(), mesh->texcoords.size(),
                                         mesh->normals.size());
-                                mesh->facets.push_back(std::move(lp.facets[i]));
+                                mesh->facets.push_back(std::move(obj_line.facets[i]));
                         }
                         break;
                 case ObjLineType::USEMTL:
                 {
-                        const std::string name{read_name("material", {&data[lp.second_b], &data[lp.second_e]})};
+                        const std::string name{read_name("material", obj_line.second_b, obj_line.second_e)};
                         const auto iter = material_index->find(name);
                         if (iter != material_index->end())
                         {
@@ -299,8 +298,7 @@ void read_obj_stage_two(
                         break;
                 }
                 case ObjLineType::MTLLIB:
-                        read_library_names(
-                                {&data[lp.second_b], &data[lp.second_e]}, library_names, &unique_library_names);
+                        read_library_names(obj_line.second_b, obj_line.second_e, library_names, &unique_library_names);
                         break;
                 case ObjLineType::NONE:
                 case ObjLineType::NOT_SUPPORTED:
@@ -358,7 +356,7 @@ void read_obj_thread(
         line_begin->clear();
         line_begin->shrink_to_fit();
 
-        read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names, mesh);
+        read_obj_stage_two(sum_counters(*counters), line_prop, progress, material_index, library_names, mesh);
 }
 
 template <std::size_t N>

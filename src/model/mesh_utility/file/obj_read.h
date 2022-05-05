@@ -46,14 +46,12 @@ void read_float_texture(const char* const str, Vector<N, T>* const v)
 }
 
 inline void read_library_names(
-        const std::string_view str,
+        const char* begin,
+        const char* const end,
         std::vector<std::filesystem::path>* const library_names,
         std::set<std::filesystem::path>* const unique_library_names)
 {
         bool found = false;
-
-        auto begin = str.begin();
-        const auto end = str.end();
 
         while (true)
         {
@@ -68,7 +66,7 @@ inline void read_library_names(
                         return;
                 }
 
-                const auto iter = begin;
+                const char* const iter = begin;
                 begin = read(begin, end, ascii::is_not_space);
                 std::filesystem::path name = path_from_utf8(std::string(iter, begin));
                 found = true;

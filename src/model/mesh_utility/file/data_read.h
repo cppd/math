@@ -293,13 +293,17 @@ const char* read_float(const char* str, Args* const... args) requires(
         return str;
 }
 
-inline void split_line(
+struct SplitLine final
+{
+        std::string_view first;
+        const char* second_b;
+        const char* second_e;
+};
+
+inline SplitLine split_line(
         std::vector<char>* const data,
         const std::vector<long long>& line_begin,
-        const long long line_num,
-        std::string_view* const first,
-        long long* const second_b,
-        long long* const second_e)
+        const long long line_num)
 {
         namespace impl = data_read_implementation;
 
@@ -314,28 +318,28 @@ inline void split_line(
 
         (*data)[split.second_e] = 0; // '#', '\n'
 
-        *first = {&(*data)[split.first_b], &(*data)[split.first_e]};
-        *second_b = split.second_b;
-        *second_e = split.second_e;
+        return {
+                .first = {&(*data)[split.first_b], &(*data)[split.first_e]},
+                .second_b = &(*data)[split.second_b],
+                .second_e = &(*data)[split.second_e]
+        };
 }
 
-inline std::string_view read_name(const std::string_view object_name, const std::string_view str)
+inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
 {
-        const auto last = str.end();
-
-        const auto i1 = read(str.begin(), last, ascii::is_space);
+        const char* const i1 = read(first, last, ascii::is_space);
         if (i1 == last)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
-        const auto i2 = read(i1, last, ascii::is_not_space);
+        const char* const i2 = read(i1, last, ascii::is_not_space);
         if (i2 == i1)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
-        const auto i3 = read(i2, last, ascii::is_space);
+        const char* const i3 = read(i2, last, ascii::is_space);
         if (i3 != last)
         {
                 error("Error read " + std::string(object_name) + " name");
