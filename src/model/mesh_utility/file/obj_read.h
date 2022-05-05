@@ -35,17 +35,11 @@ namespace ns::mesh::file
 template <std::size_t N, typename T>
 void read_float_texture(const char* const str, Vector<N, T>* const v)
 {
-        T tmp;
+        std::optional<T> t;
 
-        const int n = read_float(str, v, &tmp).first;
+        read_float(str, v, &t);
 
-        if (n != N && n != N + 1)
-        {
-                error("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of " + type_name<T>()
-                      + " type");
-        }
-
-        if (n == N + 1 && tmp != 0)
+        if (t && *t != 0)
         {
                 error(to_string(N + 1) + "-dimensional textures are not supported");
         }

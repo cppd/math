@@ -37,20 +37,27 @@ namespace obj_facet_implementation
 // "x/x/"
 // "x/x"
 // "x"
-template <typename Iter, std::size_t GROUP_SIZE, typename IndexType>
-Iter read_digit_group(Iter first, const Iter last, std::array<IndexType, GROUP_SIZE>* const group_indices)
+template <typename Iter, std::size_t GROUP_SIZE, typename T>
+Iter read_digit_group(Iter first, const Iter last, std::array<T, GROUP_SIZE>* const group_indices)
 {
+        static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+
         // vertex
-        if (read_integer(first, last, &first, &(*group_indices)[0]))
         {
-                if ((*group_indices)[0] == 0)
+                const auto [value, iter] = read_integer<T>(first, last);
+                if (value)
                 {
-                        error("Zero facet index");
+                        if (*value == 0)
+                        {
+                                error("Zero facet index");
+                        }
+                        (*group_indices)[0] = *value;
+                        first = iter;
                 }
-        }
-        else
-        {
-                error("Error read facet vertex first number");
+                else
+                {
+                        error("Error read facet vertex first number");
+                }
         }
 
         // texture and normal
@@ -75,12 +82,15 @@ Iter read_digit_group(Iter first, const Iter last, std::array<IndexType, GROUP_S
                         continue;
                 }
 
-                if (read_integer(first, last, &first, &(*group_indices)[a]))
+                const auto [value, iter] = read_integer<T>(first, last);
+                if (value)
                 {
-                        if ((*group_indices)[a] == 0)
+                        if (*value == 0)
                         {
                                 error("Zero facet index");
                         }
+                        (*group_indices)[a] = *value;
+                        first = iter;
                 }
                 else
                 {

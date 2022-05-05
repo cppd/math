@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -209,33 +210,48 @@ template <typename Iter, typename Op>
         return first;
 }
 
-template <typename Iter, typename Integer>
-bool read_integer(const Iter first, const Iter last, Iter* const pos, Integer* const value)
+template <typename T, typename Iter>
+std::tuple<std::optional<T>, Iter> read_integer(const Iter first, const Iter last)
 {
-        static_assert(std::is_signed_v<Integer>);
         namespace impl = data_read_implementation;
+
+        static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
 
         const Iter i1 = (first < last && *first == '-') ? first + 1 : first;
         const Iter i2 = read(i1, last, ascii::is_digit);
 
-        if (i2 > i1)
+        if (i2 == i1)
         {
-                const Integer v = impl::digits_to_integer<Integer>(i1, i2);
-                *value = (first == i1) ? v : -v;
-                *pos = i2;
-                return true;
+                return {std::nullopt, first};
         }
 
-        return false;
+        const T v = impl::digits_to_integer<T>(i1, i2);
+        return {(first == i1) ? v : -v, i2};
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::pair<int, const char*> read_float(const char* str, Vector<N, T>* const v, T* const n)
+const char* read_float(const char* str, Vector<N, T>* const v, std::optional<T>* const n)
 {
         namespace impl = data_read_implementation;
 
-        const int cnt = impl::read_vector(&str, v, n, std::make_integer_sequence<unsigned, N>());
-        return {cnt, str};
+        T t;
+        const int cnt = impl::read_vector(&str, v, &t, std::make_integer_sequence<unsigned, N>());
+
+        switch (cnt)
+        {
+        case N:
+                *n = std::nullopt;
+                break;
+        case N + 1:
+                *n = t;
+                break;
+        default:
+                error("Error reading " + std::to_string(N) + " or " + std::to_string(N + 1)
+                      + " floating point numbers of " + type_name<T>() + " type, found " + std::to_string(cnt)
+                      + " numbers");
+        }
+
+        return str;
 }
 
 template <std::size_t N, typename T>
@@ -244,11 +260,13 @@ const char* read_float(const char* str, Vector<N, T>* const v)
         namespace impl = data_read_implementation;
 
         const int cnt = impl::read_vector(&str, v, std::make_integer_sequence<unsigned, N>());
+
         if (N != cnt)
         {
                 error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
                       + " type, found " + std::to_string(cnt) + " numbers");
         }
+
         return str;
 }
 
@@ -265,11 +283,13 @@ const char* read_float(const char* str, Args* const... args) requires(
         static_assert((std::is_same_v<T, Args> && ...));
 
         const int cnt = impl::string_to_floats(&str, args...);
+
         if (N != cnt)
         {
                 error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
                       + " type, found " + std::to_string(cnt) + " numbers");
         }
+
         return str;
 }
 
