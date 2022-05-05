@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <set>
 #include <string>
+#include <variant>
 
 namespace ns::mesh::file
 {
@@ -67,29 +68,6 @@ std::string map_keys_to_string(const std::map<std::string, T>& m)
         return names;
 }
 
-enum class ObjLineType
-{
-        V,
-        VT,
-        VN,
-        F,
-        USEMTL,
-        MTLLIB,
-        NONE,
-        NOT_SUPPORTED
-};
-
-template <std::size_t N>
-struct ObjLine final
-{
-        ObjLineType type;
-        const char* second_b;
-        const char* second_e;
-        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
-        int facet_count;
-        Vector<N, float> v;
-};
-
 struct Counters final
 {
         int vertex = 0;
@@ -107,6 +85,54 @@ struct Counters final
 };
 
 template <std::size_t N>
+struct V final
+{
+        Vector<N, float> v;
+};
+
+template <std::size_t N>
+struct Vt final
+{
+        Vector<N - 1, float> v;
+};
+
+template <std::size_t N>
+struct Vn final
+{
+        Vector<N, float> v;
+};
+
+template <std::size_t N>
+struct F final
+{
+        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
+        int count;
+};
+
+struct UseMtl final
+{
+        const char* second_b;
+        const char* second_e;
+};
+
+struct MtlLib final
+{
+        const char* second_b;
+        const char* second_e;
+};
+
+struct None final
+{
+};
+
+struct NotSupported final
+{
+};
+
+template <std::size_t N>
+using ObjLine = std::variant<V<N>, Vt<N>, Vn<N>, F<N>, UseMtl, MtlLib, None, NotSupported>;
+
+template <std::size_t N>
 ObjLine<N> read_obj_line(
         std::vector<Counters>* const counters,
         const unsigned thread_num,
@@ -114,71 +140,145 @@ ObjLine<N> read_obj_line(
         const char* const second_b,
         const char* const second_e)
 {
-        ObjLine<N> obj_line;
-
-        obj_line.second_b = second_b;
-        obj_line.second_e = second_e;
-
         if (first == "v")
         {
-                obj_line.type = ObjLineType::V;
-                Vector<N, float> v;
-                read_float(second_b, &v);
-                obj_line.v = v;
-
+                V<N> data;
+                read_float(second_b, &data.v);
                 ++((*counters)[thread_num].vertex);
+                return data;
         }
-        else if (first == "vt")
-        {
-                obj_line.type = ObjLineType::VT;
-                Vector<N - 1, float> v;
-                read_float_texture(second_b, &v);
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        obj_line.v[i] = v[i];
-                }
 
+        if (first == "vt")
+        {
+                Vt<N> data;
+                read_float_texture(second_b, &data.v);
                 ++((*counters)[thread_num].texcoord);
+                return data;
         }
-        else if (first == "vn")
+
+        if (first == "vn")
         {
-                obj_line.type = ObjLineType::VN;
-                Vector<N, float> v;
-                read_float(second_b, &v);
-                obj_line.v = v.normalized();
-                if (!is_finite(obj_line.v))
+                Vn<N> data;
+                read_float(second_b, &data.v);
+                data.v.normalize();
+                if (!is_finite(data.v))
                 {
-                        obj_line.v = Vector<N, float>(0);
+                        data.v = Vector<N, float>(0);
+                }
+                ++((*counters)[thread_num].normal);
+                return data;
+        }
+
+        if (first == "f")
+        {
+                F<N> data;
+                read_facets<N>(second_b, second_e, &data.facets, &data.count);
+                ++((*counters)[thread_num].facet);
+                return data;
+        }
+
+        if (first == "usemtl")
+        {
+                UseMtl data;
+                data.second_b = second_b;
+                data.second_e = second_e;
+                return data;
+        }
+
+        if (first == "mtllib")
+        {
+                MtlLib data;
+                data.second_b = second_b;
+                data.second_e = second_e;
+                return data;
+        }
+
+        if (first.empty())
+        {
+                return None{};
+        }
+
+        return NotSupported{};
+}
+
+template <std::size_t N>
+class Visitor final
+{
+        std::map<std::string, int>* const material_index_;
+        std::vector<std::filesystem::path>* const library_names_;
+        Mesh<N>* const mesh_;
+
+        int mtl_index_ = -1;
+        std::set<std::filesystem::path> unique_library_names_;
+
+public:
+        Visitor(std::map<std::string, int>* const material_index,
+                std::vector<std::filesystem::path>* const library_names,
+                Mesh<N>* const mesh)
+                : material_index_(material_index),
+                  library_names_(library_names),
+                  mesh_(mesh)
+        {
+        }
+
+        void operator()(const V<N>& data)
+        {
+                mesh_->vertices.push_back(data.v);
+        }
+
+        void operator()(const Vt<N>& data)
+        {
+                mesh_->texcoords.resize(mesh_->texcoords.size() + 1);
+                mesh_->texcoords[mesh_->texcoords.size() - 1] = data.v;
+        }
+
+        void operator()(const Vn<N>& data)
+        {
+                mesh_->normals.push_back(data.v);
+        }
+
+        void operator()(F<N> data)
+        {
+                for (int i = 0; i < data.count; ++i)
+                {
+                        data.facets[i].material = mtl_index_;
+                        correct_indices<N>(
+                                &data.facets[i], mesh_->vertices.size(), mesh_->texcoords.size(),
+                                mesh_->normals.size());
+                        mesh_->facets.push_back(std::move(data.facets[i]));
+                }
+        }
+
+        void operator()(const UseMtl& data)
+        {
+                const std::string name{read_name("material", data.second_b, data.second_e)};
+                const auto iter = material_index_->find(name);
+                if (iter != material_index_->end())
+                {
+                        mtl_index_ = iter->second;
+                        return;
                 }
 
-                ++((*counters)[thread_num].normal);
-        }
-        else if (first == "f")
-        {
-                obj_line.type = ObjLineType::F;
-                read_facets<N>(second_b, second_e, &obj_line.facets, &obj_line.facet_count);
-
-                ++((*counters)[thread_num].facet);
-        }
-        else if (first == "usemtl")
-        {
-                obj_line.type = ObjLineType::USEMTL;
-        }
-        else if (first == "mtllib")
-        {
-                obj_line.type = ObjLineType::MTLLIB;
-        }
-        else if (first.empty())
-        {
-                obj_line.type = ObjLineType::NONE;
-        }
-        else
-        {
-                obj_line.type = ObjLineType::NOT_SUPPORTED;
+                typename Mesh<N>::Material mtl;
+                mtl.name = name;
+                mesh_->materials.push_back(std::move(mtl));
+                material_index_->emplace(name, mesh_->materials.size() - 1);
+                mtl_index_ = mesh_->materials.size() - 1;
         }
 
-        return obj_line;
-}
+        void operator()(const MtlLib& data)
+        {
+                read_library_names(data.second_b, data.second_e, library_names_, &unique_library_names_);
+        }
+
+        void operator()(const None&)
+        {
+        }
+
+        void operator()(const NotSupported&)
+        {
+        }
+};
 
 template <std::size_t N>
 void read_obj_stage_one(
@@ -187,7 +287,7 @@ void read_obj_stage_one(
         std::vector<Counters>* const counters,
         std::vector<char>* const data_ptr,
         std::vector<long long>* const line_begin,
-        std::vector<ObjLine<N>>* const line_prop,
+        std::vector<std::optional<ObjLine<N>>>* const obj_lines,
         ProgressRatio* const progress)
 {
         ASSERT(counters->size() == thread_count);
@@ -206,7 +306,7 @@ void read_obj_stage_one(
 
                 try
                 {
-                        (*line_prop)[line_num] =
+                        (*obj_lines)[line_num] =
                                 read_obj_line<N>(counters, thread_num, split.first, split.second_b, split.second_e);
                 }
                 catch (const std::exception& e)
@@ -225,7 +325,7 @@ void read_obj_stage_one(
 template <std::size_t N>
 void read_obj_stage_two(
         const Counters& counters,
-        std::vector<ObjLine<N>>* const line_prop,
+        std::vector<std::optional<ObjLine<N>>>* const obj_lines,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
@@ -236,11 +336,10 @@ void read_obj_stage_two(
         mesh->normals.reserve(counters.normal);
         mesh->facets.reserve(counters.facet);
 
-        const long long line_count = line_prop->size();
-        const double line_count_reciprocal = 1.0 / line_prop->size();
+        const long long line_count = obj_lines->size();
+        const double line_count_reciprocal = 1.0 / obj_lines->size();
 
-        int mtl_index = -1;
-        std::set<std::filesystem::path> unique_library_names;
+        Visitor<N> visitor(material_index, library_names, mesh);
 
         for (long long line_num = 0; line_num < line_count; ++line_num)
         {
@@ -249,61 +348,8 @@ void read_obj_stage_two(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                ObjLine<N>& obj_line = (*line_prop)[line_num];
-
-                switch (obj_line.type)
-                {
-                case ObjLineType::V:
-                        mesh->vertices.push_back(obj_line.v);
-                        break;
-                case ObjLineType::VT:
-                {
-                        mesh->texcoords.resize(mesh->texcoords.size() + 1);
-                        Vector<N - 1, float>& new_vector = mesh->texcoords[mesh->texcoords.size() - 1];
-                        for (unsigned i = 0; i < N - 1; ++i)
-                        {
-                                new_vector[i] = obj_line.v[i];
-                        }
-                        break;
-                }
-                case ObjLineType::VN:
-                        mesh->normals.push_back(obj_line.v);
-                        break;
-                case ObjLineType::F:
-                        for (int i = 0; i < obj_line.facet_count; ++i)
-                        {
-                                obj_line.facets[i].material = mtl_index;
-                                correct_indices<N>(
-                                        &obj_line.facets[i], mesh->vertices.size(), mesh->texcoords.size(),
-                                        mesh->normals.size());
-                                mesh->facets.push_back(std::move(obj_line.facets[i]));
-                        }
-                        break;
-                case ObjLineType::USEMTL:
-                {
-                        const std::string name{read_name("material", obj_line.second_b, obj_line.second_e)};
-                        const auto iter = material_index->find(name);
-                        if (iter != material_index->end())
-                        {
-                                mtl_index = iter->second;
-                        }
-                        else
-                        {
-                                typename Mesh<N>::Material mtl;
-                                mtl.name = name;
-                                mesh->materials.push_back(std::move(mtl));
-                                material_index->emplace(name, mesh->materials.size() - 1);
-                                mtl_index = mesh->materials.size() - 1;
-                        }
-                        break;
-                }
-                case ObjLineType::MTLLIB:
-                        read_library_names(obj_line.second_b, obj_line.second_e, library_names, &unique_library_names);
-                        break;
-                case ObjLineType::NONE:
-                case ObjLineType::NOT_SUPPORTED:
-                        break;
-                }
+                ASSERT((*obj_lines)[line_num]);
+                std::visit(visitor, *(*obj_lines)[line_num]);
         }
 }
 
@@ -326,7 +372,7 @@ void read_obj_thread(
         std::atomic_bool* const error_found,
         std::vector<char>* const data_ptr,
         std::vector<long long>* const line_begin,
-        std::vector<ObjLine<N>>* const line_prop,
+        std::vector<std::optional<ObjLine<N>>>* const obj_lines,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
@@ -334,7 +380,7 @@ void read_obj_thread(
 {
         try
         {
-                read_obj_stage_one(thread_num, thread_count, counters, data_ptr, line_begin, line_prop, progress);
+                read_obj_stage_one(thread_num, thread_count, counters, data_ptr, line_begin, obj_lines, progress);
         }
         catch (...)
         {
@@ -356,7 +402,7 @@ void read_obj_thread(
         line_begin->clear();
         line_begin->shrink_to_fit();
 
-        read_obj_stage_two(sum_counters(*counters), line_prop, progress, material_index, library_names, mesh);
+        read_obj_stage_two(sum_counters(*counters), obj_lines, progress, material_index, library_names, mesh);
 }
 
 template <std::size_t N>
@@ -374,7 +420,7 @@ void read_obj(
 
         read_file_lines(file_name, &data, &line_begin);
 
-        std::vector<ObjLine<N>> line_prop{line_begin.size()};
+        std::vector<std::optional<ObjLine<N>>> obj_lines{line_begin.size()};
         std::latch latch{thread_count};
         std::atomic_bool error_found{false};
         std::vector<Counters> counters{thread_count};
@@ -387,7 +433,7 @@ void read_obj(
                         {
                                 read_obj_thread(
                                         i, thread_count, &counters, &latch, &error_found, &data, &line_begin,
-                                        &line_prop, progress, material_index, library_names, mesh);
+                                        &obj_lines, progress, material_index, library_names, mesh);
                         });
         }
         threads.join();
