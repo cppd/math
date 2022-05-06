@@ -17,20 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "data_read.h"
+#include "../data_read.h"
 
 #include <src/com/error.h>
 #include <src/com/file/path.h>
-#include <src/com/print.h>
-#include <src/com/type/name.h>
-#include <src/model/mesh.h>
 #include <src/numerical/vector.h>
 
 #include <filesystem>
 #include <set>
 #include <vector>
 
-namespace ns::mesh::file
+namespace ns::mesh::file::obj
 {
 template <std::size_t N, typename T>
 void read_float_texture(const char* const str, Vector<N, T>* const v)
@@ -41,7 +38,7 @@ void read_float_texture(const char* const str, Vector<N, T>* const v)
 
         if (t && *t != 0)
         {
-                error(to_string(N + 1) + "-dimensional textures are not supported");
+                error(std::to_string(N + 1) + "-dimensional textures are not supported");
         }
 }
 
@@ -76,33 +73,6 @@ inline void read_library_names(
                         library_names->push_back(name);
                         unique_library_names->insert(std::move(name));
                 }
-        }
-}
-
-// Positive OBJ indices indicate absolute vertex numbers.
-// Negative OBJ indices indicate relative vertex numbers.
-// Convert to absolute numbers starting at 0.
-template <std::size_t N>
-void correct_indices(
-        typename Mesh<N>::Facet* const facet,
-        const int vertices_size,
-        const int texcoords_size,
-        const int normals_size)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                int& v = facet->vertices[i];
-                int& t = facet->texcoords[i];
-                int& n = facet->normals[i];
-
-                if (v == 0)
-                {
-                        error("Correct indices vertex index is zero");
-                }
-
-                v = v > 0 ? v - 1 : vertices_size + v;
-                t = t > 0 ? t - 1 : (t < 0 ? texcoords_size + t : -1);
-                n = n > 0 ? n - 1 : (n < 0 ? normals_size + n : -1);
         }
 }
 }

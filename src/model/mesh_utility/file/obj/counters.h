@@ -17,22 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../mesh.h"
+#include <vector>
 
-#include <src/progress/progress.h>
-
-#include <filesystem>
-#include <map>
-#include <string>
-
-namespace ns::mesh::file
+namespace ns::mesh::file::obj
 {
-template <std::size_t N>
-void read_lib(
-        const std::filesystem::path& dir_name,
-        const std::filesystem::path& file_name,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
-        std::map<std::filesystem::path, int>* image_index,
-        Mesh<N>* mesh);
+struct Counters final
+{
+        int vertex = 0;
+        int texcoord = 0;
+        int normal = 0;
+        int facet = 0;
+};
+
+inline Counters sum_counters(const std::vector<Counters>& counters)
+{
+        Counters sum;
+        for (const Counters& c : counters)
+        {
+                sum.vertex += c.vertex;
+                sum.texcoord += c.texcoord;
+                sum.normal += c.normal;
+                sum.facet += c.facet;
+        }
+        return sum;
+}
 }

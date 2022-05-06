@@ -15,10 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "load_mtl.h"
+#include "load_lib.h"
 
-#include "data_read.h"
-#include "file_lines.h"
+#include "name.h"
+
+#include "../data_read.h"
+#include "../file_lines.h"
 
 #include <src/com/file/path.h>
 #include <src/com/print.h>
@@ -26,15 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_load.h>
 #include <src/image/flip.h>
 
-namespace ns::mesh::file
+namespace ns::mesh::file::obj
 {
 namespace
 {
-std::string obj_type_name(const std::size_t n)
-{
-        return "OBJ-" + to_string(n);
-}
-
 color::Color read_color(const char* const str)
 {
         static constexpr float MIN = 0;
@@ -59,8 +56,7 @@ image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
 {
         if constexpr (N != 2)
         {
-                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N)
-                      + " is not supported");
+                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_name(N) + " is not supported");
         }
         else
         {
@@ -120,8 +116,8 @@ public:
 
         bool read_line(
                 std::string_view first,
-                const char* const second_b,
-                const char* const second_e,
+                const char* second_b,
+                const char* second_e,
                 typename Mesh<N>::Material** material) const;
 };
 

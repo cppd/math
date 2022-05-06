@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "data_read.h"
-
-#include "../../mesh.h"
+#include "../../../mesh.h"
+#include "../data_read.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -27,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ns::mesh::file
+namespace ns::mesh::file::obj
 {
-namespace obj_facet_implementation
+namespace facet_implementation
 {
 // "x/x/x"
 // "x//x"
@@ -170,7 +169,7 @@ void read_facets(
 {
         static_assert(N >= 3);
 
-        namespace impl = obj_facet_implementation;
+        namespace impl = facet_implementation;
 
         constexpr int MAX_GROUP_COUNT = MAX_FACETS + N - 1;
 
@@ -204,6 +203,33 @@ void read_facets(
                         (*facets)[i].texcoords[n] = groups[i + n][1];
                         (*facets)[i].normals[n] = groups[i + n][2];
                 }
+        }
+}
+
+// Positive OBJ indices indicate absolute vertex numbers.
+// Negative OBJ indices indicate relative vertex numbers.
+// Convert to absolute numbers starting at 0.
+template <std::size_t N>
+void correct_facet_indices(
+        typename Mesh<N>::Facet* const facet,
+        const int vertices_size,
+        const int texcoords_size,
+        const int normals_size)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                int& v = facet->vertices[i];
+                int& t = facet->texcoords[i];
+                int& n = facet->normals[i];
+
+                if (v == 0)
+                {
+                        error("Correct indices vertex index is zero");
+                }
+
+                v = v > 0 ? v - 1 : vertices_size + v;
+                t = t > 0 ? t - 1 : (t < 0 ? texcoords_size + t : -1);
+                n = n > 0 ? n - 1 : (n < 0 ? normals_size + n : -1);
         }
 }
 }
