@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load_lib.h"
 
+#include "data_read.h"
 #include "name.h"
 
 #include "../data_read.h"
@@ -34,15 +35,12 @@ namespace
 {
 color::Color read_color(const char* const str)
 {
-        static constexpr float MIN = 0;
-        static constexpr float MAX = 1;
-
         std::array<float, 3> rgb;
         read_float(str, &rgb[0], &rgb[1], &rgb[2]);
 
         for (int i = 0; i < 3; ++i)
         {
-                if (!(check_range(rgb[i], MIN, MAX)))
+                if (!(rgb[i] >= 0 && rgb[i] <= 1))
                 {
                         error("RGB components (" + to_string(rgb) + ") are not in the range [0, 1]");
                 }

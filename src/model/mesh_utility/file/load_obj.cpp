@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 #include "obj/counters.h"
+#include "obj/data_read.h"
 #include "obj/line.h"
 #include "obj/load_lib.h"
 #include "obj/name.h"
@@ -78,7 +79,7 @@ void read_obj_stage_one(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                const SplitLine split = split_line(data_ptr, line_begin, line_num);
+                const obj::SplitLine split = obj::split_line(data_ptr, line_begin, line_num);
 
                 try
                 {

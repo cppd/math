@@ -126,79 +126,9 @@ int read_vector(const char** const str, Vector<N, T>* const v, T* const n, std::
         static_assert(N == sizeof...(I));
         return string_to_floats(str, &(*v)[I]..., n);
 }
-
-struct Split final
-{
-        long long first_b;
-        long long first_e;
-        long long second_b;
-        long long second_e;
-};
-
-// split string into two parts
-// 1. not space characters
-// 2. all other characters before a comment or the end of the string
-inline Split split(const std::vector<char>& data, const long long first, const long long last)
-{
-        const auto is_comment = [](char c)
-        {
-                return c == '#';
-        };
-
-        long long i = first;
-
-        while (i < last && ascii::is_space(data[i]))
-        {
-                ++i;
-        }
-
-        if (i == last || is_comment(data[i]))
-        {
-                return {.first_b = i, .first_e = i, .second_b = i, .second_e = i};
-        }
-
-        long long i2 = i + 1;
-        while (i2 < last && !ascii::is_space(data[i2]) && !is_comment(data[i2]))
-        {
-                ++i2;
-        }
-
-        Split split;
-
-        split.first_b = i;
-        split.first_e = i2;
-
-        i = i2;
-
-        if (i == last || is_comment(data[i]))
-        {
-                split.second_b = i;
-                split.second_e = i;
-                return split;
-        }
-
-        // skip the first space
-        ++i;
-
-        i2 = i;
-        while (i2 < last && !is_comment(data[i2]))
-        {
-                ++i2;
-        }
-
-        split.second_b = i;
-        split.second_e = i2;
-        return split;
-}
 }
 
 //
-
-template <typename T1, typename T2, typename T3>
-bool check_range(const T1& v, const T2& min, const T3& max)
-{
-        return v >= min && v <= max;
-}
 
 template <typename Iter, typename Op>
 [[nodiscard]] Iter read(Iter first, const Iter last, const Op& op)
@@ -291,60 +221,5 @@ const char* read_float(const char* str, Args* const... args) requires(
         }
 
         return str;
-}
-
-struct SplitLine final
-{
-        std::string_view first;
-        const char* second_b;
-        const char* second_e;
-};
-
-inline SplitLine split_line(
-        std::vector<char>* const data,
-        const std::vector<long long>& line_begin,
-        const long long line_num)
-{
-        namespace impl = data_read_implementation;
-
-        long long line_count = line_begin.size();
-
-        long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
-
-        // move to '\n' at the end of the string
-        --last;
-
-        const impl::Split split = impl::split(*data, line_begin[line_num], last);
-
-        (*data)[split.second_e] = 0; // '#', '\n'
-
-        return {
-                .first = {&(*data)[split.first_b], &(*data)[split.first_e]},
-                .second_b = &(*data)[split.second_b],
-                .second_e = &(*data)[split.second_e]
-        };
-}
-
-inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
-{
-        const char* const i1 = read(first, last, ascii::is_space);
-        if (i1 == last)
-        {
-                error("Error read " + std::string(object_name) + " name");
-        }
-
-        const char* const i2 = read(i1, last, ascii::is_not_space);
-        if (i2 == i1)
-        {
-                error("Error read " + std::string(object_name) + " name");
-        }
-
-        const char* const i3 = read(i2, last, ascii::is_space);
-        if (i3 != last)
-        {
-                error("Error read " + std::string(object_name) + " name");
-        }
-
-        return {i1, i2};
 }
 }
