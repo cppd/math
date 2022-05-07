@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "stl/swap.h"
 
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/file/read.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -37,38 +38,43 @@ namespace ns::mesh::file
 {
 namespace
 {
-constexpr std::uintmax_t BINARY_HEADER_SIZE = 80 * sizeof(std::uint8_t);
+constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_OFFSET = 80 * sizeof(std::uint8_t);
 constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(std::uint32_t);
-constexpr std::uintmax_t BINARY_BEGIN_SIZE = BINARY_HEADER_SIZE + BINARY_NUMBER_OF_TRIANGLES_SIZE;
+constexpr std::uintmax_t BINARY_DATA_OFFSET = BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE;
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
 template <std::size_t N>
-constexpr std::uintmax_t BINARY_FACETS_SIZE = N* N * sizeof(float);
+constexpr std::uintmax_t BINARY_FACET_SIZE = N* N * sizeof(float);
+
+std::uint32_t binary_number_of_triangles(const std::string& data)
+{
+        ASSERT(data.size() >= BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE);
+
+        std::uint32_t v;
+        static_assert(sizeof(v) == BINARY_NUMBER_OF_TRIANGLES_SIZE);
+        std::memcpy(&v, &data[BINARY_NUMBER_OF_TRIANGLES_OFFSET], sizeof(v));
+        if constexpr (!stl::BYTE_SWAP)
+        {
+                return v;
+        }
+        else
+        {
+                return stl::byte_swap(v);
+        }
+}
 
 template <std::size_t N>
 bool is_binary(const std::string& data)
 {
-        if (data.size() <= BINARY_BEGIN_SIZE)
+        if (data.size() <= BINARY_DATA_OFFSET)
         {
                 return false;
         }
 
-        const std::uint32_t number_of_triangles = [&]
-        {
-                std::uint32_t v;
-                std::memcpy(&v, &data[BINARY_HEADER_SIZE], sizeof(v));
-                if constexpr (!stl::BYTE_SWAP)
-                {
-                        return v;
-                }
-                else
-                {
-                        return stl::byte_swap(v);
-                }
-        }();
+        const std::uint32_t number_of_triangles = binary_number_of_triangles(data);
 
         const std::uintmax_t required_binary_size =
-                BINARY_BEGIN_SIZE + number_of_triangles * (BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>);
+                BINARY_DATA_OFFSET + number_of_triangles * (BINARY_NORMAL_SIZE<N> + BINARY_FACET_SIZE<N>);
 
         if (data.size() < required_binary_size)
         {
@@ -84,7 +90,7 @@ bool is_binary(const std::string& data)
 
         return std::any_of(
                 data.cbegin(), data.cend(),
-                [](char c)
+                [](const char c)
                 {
                         return !ascii::is_print(c) && !ascii::is_space(c);
                 });
@@ -116,7 +122,7 @@ const char* read_keyword(const char* const first, const char* const last, const 
 
 template <std::size_t N>
 void read_ascii_stl(
-        const std::string& file_data,
+        const std::string& data,
         ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
@@ -128,10 +134,10 @@ void read_ascii_stl(
         static constexpr std::string_view END_FACET = "endfacet";
         static constexpr std::string_view END_SOLID = "endsolid";
 
-        const double size_reciprocal = 1.0 / file_data.size();
+        const double size_reciprocal = 1.0 / data.size();
 
-        const char* const first = file_data.data();
-        const char* const last = file_data.data() + file_data.size();
+        const char* const first = data.data();
+        const char* const last = data.data() + data.size();
 
         const char* iter = first;
 
@@ -191,33 +197,20 @@ void read_ascii_stl(
 
 template <std::size_t N>
 void read_binary_stl(
-        const std::string& file_data,
+        const std::string& data,
         ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
-        ASSERT(file_data.size() > BINARY_BEGIN_SIZE);
+        ASSERT(data.size() >= BINARY_DATA_OFFSET);
 
-        const std::uint32_t facet_count = [&]
-        {
-                std::uint32_t v;
-                std::memcpy(&v, &file_data[BINARY_HEADER_SIZE], sizeof(v));
-                if constexpr (!stl::BYTE_SWAP)
-                {
-                        return v;
-                }
-                else
-                {
-                        return stl::byte_swap(v);
-                }
-        }();
+        const std::uint32_t facet_count = binary_number_of_triangles(data);
+        ASSERT(BINARY_DATA_OFFSET + facet_count * (BINARY_NORMAL_SIZE<N> + BINARY_FACET_SIZE<N>) <= data.size());
 
-        ASSERT(BINARY_BEGIN_SIZE + facet_count * (BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>) <= file_data.size());
-
-        const char* read_ptr = &file_data[BINARY_BEGIN_SIZE];
+        const char* read_ptr = &data[BINARY_DATA_OFFSET];
         const double facet_count_reciprocal = 1.0 / facet_count;
 
         std::array<Vector<N, std::conditional_t<!stl::BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
-        static_assert(sizeof(facet_vertices) == BINARY_FACETS_SIZE<N>);
+        static_assert(sizeof(facet_vertices) == BINARY_FACET_SIZE<N>);
 
         read_ptr += BINARY_NORMAL_SIZE<N>;
         for (unsigned facet = 0; facet < facet_count; ++facet)
@@ -237,7 +230,7 @@ void read_binary_stl(
                         yield_facet(stl::byte_swap(facet_vertices));
                 }
 
-                read_ptr += BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>;
+                read_ptr += BINARY_NORMAL_SIZE<N> + BINARY_FACET_SIZE<N>;
         }
 
         LOG("STL facet count: " + to_string(facet_count));
@@ -279,16 +272,16 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 
         progress->set_undefined();
 
-        std::string file_data;
-        read_binary_file(file_name, &file_data);
+        std::string data;
+        read_binary_file(file_name, &data);
 
-        if (is_binary<N>(file_data))
+        if (is_binary<N>(data))
         {
-                read_binary_stl<N>(file_data, progress, yield_facet);
+                read_binary_stl<N>(data, progress, yield_facet);
         }
         else
         {
-                read_ascii_stl<N>(file_data, progress, yield_facet);
+                read_ascii_stl<N>(data, progress, yield_facet);
         }
 
         check_and_correct_mesh_facets(&mesh);
