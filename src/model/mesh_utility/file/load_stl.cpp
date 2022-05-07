@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 
 #include "../position.h"
+#include "stl/swap.h"
 
 #include <src/com/chrono.h>
 #include <src/com/file/read.h>
@@ -28,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
 
-#include <bit>
 #include <cstring>
 #include <filesystem>
 #include <unordered_map>
@@ -37,8 +37,6 @@ namespace ns::mesh::file
 {
 namespace
 {
-static_assert(std::endian::native == std::endian::little, "Binary STL numbers must be little-endian");
-
 constexpr std::uintmax_t BINARY_HEADER_SIZE = 80 * sizeof(std::uint8_t);
 constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(std::uint32_t);
 constexpr std::uintmax_t BINARY_BEGIN_SIZE = BINARY_HEADER_SIZE + BINARY_NUMBER_OF_TRIANGLES_SIZE;
@@ -55,8 +53,19 @@ bool is_binary(const std::string& data)
                 return false;
         }
 
-        std::uint32_t number_of_triangles;
-        std::memcpy(&number_of_triangles, &data[BINARY_HEADER_SIZE], sizeof(number_of_triangles));
+        const std::uint32_t number_of_triangles = [&]
+        {
+                std::uint32_t v;
+                std::memcpy(&v, &data[BINARY_HEADER_SIZE], sizeof(v));
+                if constexpr (!stl::BYTE_SWAP)
+                {
+                        return v;
+                }
+                else
+                {
+                        return stl::byte_swap(v);
+                }
+        }();
 
         const std::uintmax_t required_binary_size =
                 BINARY_BEGIN_SIZE + number_of_triangles * (BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>);
@@ -132,7 +141,7 @@ void read_ascii_stl(
         ++iter;
 
         std::array<Vector<N, float>, N> facet_vertices;
-        unsigned facet_count = 0;
+        unsigned long long facet_count = 0;
         while (true)
         {
                 iter = read(iter, last, ascii::is_space);
@@ -152,7 +161,7 @@ void read_ascii_stl(
                 iter = read(iter, last, ascii::is_space);
                 iter = read_keyword(iter, last, OUTER_LOOP);
 
-                for (unsigned v = 0; v < N; ++v)
+                for (std::size_t v = 0; v < N; ++v)
                 {
                         iter = read(iter, last, ascii::is_space);
                         iter = read_keyword(iter, last, VERTEX);
@@ -188,15 +197,26 @@ void read_binary_stl(
 {
         ASSERT(file_data.size() > BINARY_BEGIN_SIZE);
 
-        std::uint32_t facet_count;
-        std::memcpy(&facet_count, &file_data[BINARY_HEADER_SIZE], sizeof(facet_count));
+        const std::uint32_t facet_count = [&]
+        {
+                std::uint32_t v;
+                std::memcpy(&v, &file_data[BINARY_HEADER_SIZE], sizeof(v));
+                if constexpr (!stl::BYTE_SWAP)
+                {
+                        return v;
+                }
+                else
+                {
+                        return stl::byte_swap(v);
+                }
+        }();
 
         ASSERT(BINARY_BEGIN_SIZE + facet_count * (BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>) <= file_data.size());
 
         const char* read_ptr = &file_data[BINARY_BEGIN_SIZE];
         const double facet_count_reciprocal = 1.0 / facet_count;
 
-        std::array<Vector<N, float>, N> facet_vertices;
+        std::array<Vector<N, std::conditional_t<!stl::BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
         static_assert(sizeof(facet_vertices) == BINARY_FACETS_SIZE<N>);
 
         read_ptr += BINARY_NORMAL_SIZE<N>;
@@ -208,7 +228,14 @@ void read_binary_stl(
                 }
 
                 std::memcpy(&facet_vertices, read_ptr, sizeof(facet_vertices));
-                yield_facet(facet_vertices);
+                if constexpr (!stl::BYTE_SWAP)
+                {
+                        yield_facet(facet_vertices);
+                }
+                else
+                {
+                        yield_facet(stl::byte_swap(facet_vertices));
+                }
 
                 read_ptr += BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>;
         }
@@ -225,7 +252,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
         const auto yield_facet = [&](const std::array<Vector<N, float>, N>& facet_vertices)
         {
                 typename Mesh<N>::Facet& facet = mesh.facets.emplace_back();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         unsigned index;
 

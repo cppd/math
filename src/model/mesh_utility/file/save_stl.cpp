@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../file_info.h"
 #include "../unique.h"
 #include "../vertices.h"
+#include "stl/swap.h"
 
 #include <src/com/chrono.h>
+#include <src/com/container.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -30,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/numerical/complement.h>
 
-#include <bit>
 #include <fstream>
 
 namespace ns::mesh::file
@@ -38,8 +39,6 @@ namespace ns::mesh::file
 namespace
 {
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
-
-static_assert(std::endian::native == std::endian::little, "Binary STL numbers must be little-endian");
 
 std::string comment_to_solid_name(const std::string_view& comment)
 {
@@ -66,7 +65,13 @@ void write_end_ascii(std::ostream& file, const std::string& solid_name)
         file << "endsolid " << solid_name << '\n';
 }
 
-void write_begin_binary(std::ostream& file, unsigned facet_count)
+template <typename T>
+void write(std::ostream& file, const T& data)
+{
+        file.write(reinterpret_cast<const char*>(data_pointer(data)), data_size(data));
+}
+
+void write_begin_binary(std::ostream& file, const std::uint32_t facet_count)
 {
         struct Begin final
         {
@@ -77,23 +82,30 @@ void write_begin_binary(std::ostream& file, unsigned facet_count)
         static_assert(sizeof(Begin) == 84 * sizeof(std::uint8_t));
 
         Begin begin;
+
         std::memset(begin.header.data(), 0, begin.header.size());
-        begin.number_of_triangles = facet_count;
-        file.write(reinterpret_cast<const char*>(&begin), sizeof(begin));
+        if constexpr (!stl::BYTE_SWAP)
+        {
+                begin.number_of_triangles = facet_count;
+        }
+        else
+        {
+                begin.number_of_triangles = stl::byte_swap(facet_count);
+        }
+
+        write(file, begin);
 }
 
 void write_end_binary(std::ostream& file)
 {
         struct End final
         {
-                std::uint16_t attribute_byte_count;
+                std::uint16_t attribute_byte_count = 0;
         };
 
         static_assert(sizeof(End) == 2 * sizeof(std::uint8_t));
 
-        End end;
-        end.attribute_byte_count = 0;
-        file.write(reinterpret_cast<const char*>(&end), sizeof(end));
+        write(file, End());
 }
 
 template <bool ASCII, std::size_t N>
@@ -103,13 +115,17 @@ void write_facet(
         const std::array<int, N>& indices,
         const std::vector<Vector<N, float>>& vertices)
 {
-        Vector<N, float> n = to_vector<float>(normal.normalized());
-        if (!is_finite(n))
+        const Vector<N, float> n = [&]
         {
-                n = Vector<N, float>(0);
-        }
+                const Vector<N, float> v = to_vector<float>(normal.normalized());
+                if (is_finite(v))
+                {
+                        return v;
+                }
+                return Vector<N, float>(0);
+        }();
 
-        if (ASCII)
+        if constexpr (ASCII)
         {
                 // clang-format off
                 static constexpr std::string_view FACET_NORMAL = "facet normal";
@@ -120,17 +136,17 @@ void write_facet(
                 // clang-format on
 
                 file << FACET_NORMAL;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         file << ' ' << n[i];
                 }
                 file << '\n';
 
                 file << OUTER_LOOP << '\n';
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         file << VERTEX;
-                        for (unsigned j = 0; j < N; ++j)
+                        for (std::size_t j = 0; j < N; ++j)
                         {
                                 file << ' ' << vertices[indices[i]][j];
                         }
@@ -141,12 +157,21 @@ void write_facet(
         }
         else
         {
-                static_assert(sizeof(n) == N * sizeof(float));
-                file.write(reinterpret_cast<const char*>(&n), sizeof(n));
-                for (unsigned i = 0; i < N; ++i)
+                if constexpr (!stl::BYTE_SWAP)
                 {
-                        static_assert(sizeof(vertices[indices[i]]) == N * sizeof(float));
-                        file.write(reinterpret_cast<const char*>(&vertices[indices[i]]), sizeof(vertices[indices[i]]));
+                        write(file, n);
+                        for (std::size_t i = 0; i < N; ++i)
+                        {
+                                write(file, vertices[indices[i]]);
+                        }
+                }
+                else
+                {
+                        write(file, stl::byte_swap(n));
+                        for (std::size_t i = 0; i < N; ++i)
+                        {
+                                write(file, stl::byte_swap(vertices[indices[i]]));
+                        }
                 }
         }
 }
@@ -158,13 +183,13 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
         {
                 if (!f.has_normal)
                 {
-                        Vector<N, double> normal =
+                        const Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
                         write_facet<ASCII>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
-                        Vector<N, double> normal =
+                        const Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
                         write_facet<ASCII>(file, normal, f.vertices, vertices);
                 }
@@ -194,7 +219,7 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
 template <bool ASCII, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
-        if (NORMALIZE_VERTEX_COORDINATES)
+        if constexpr (NORMALIZE_VERTEX_COORDINATES)
         {
                 std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets(mesh);
                 if (!box)
@@ -239,7 +264,7 @@ void check_facets(const Mesh<N>& mesh)
                 error("Mesh has no facets");
         }
 
-        std::vector<int> facet_indices = unique_facet_indices(mesh);
+        const std::vector<int> facet_indices = unique_facet_indices(mesh);
 
         if (facet_indices.empty())
         {
@@ -276,7 +301,7 @@ std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const Path& file_name,
         const std::string_view& comment,
-        bool ascii_format)
+        const bool ascii_format)
 {
         static_assert(N >= 3);
 
