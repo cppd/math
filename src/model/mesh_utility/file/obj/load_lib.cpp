@@ -96,6 +96,7 @@ void load_image(
 template <std::size_t N>
 class ReadLib final
 {
+        typename Mesh<N>::Material* material_ = nullptr;
         const std::filesystem::path* lib_dir_;
         Mesh<N>* mesh_;
         std::map<std::string, int>* material_index_;
@@ -113,75 +114,49 @@ public:
         {
         }
 
-        bool read_line(
-                std::string_view first,
-                const char* second_b,
-                const char* second_e,
-                typename Mesh<N>::Material** material) const;
-};
-
-template <std::size_t N>
-bool ReadLib<N>::read_line(
-        const std::string_view first,
-        const char* const second_b,
-        const char* const second_e,
-        typename Mesh<N>::Material** const material) const
-{
-        auto& mtl = *material;
-
-        if (first.empty())
+        bool read_line(const std::string_view first, const char* const second_b, const char* const second_e)
         {
+                if (first == "newmtl")
+                {
+                        if (material_index_->empty())
+                        {
+                                return false;
+                        }
+
+                        const std::string name{read_name("material", second_b, second_e)};
+
+                        const auto iter = material_index_->find(name);
+                        if (iter != material_index_->end())
+                        {
+                                material_ = &(mesh_->materials[iter->second]);
+                                material_index_->erase(name);
+                        }
+                        else
+                        {
+                                material_ = nullptr;
+                        }
+
+                        return true;
+                }
+
+                if (!material_)
+                {
+                        return true;
+                }
+
+                if (first == "Kd")
+                {
+                        material_->color = read_color(second_b);
+                }
+                else if (first == "map_Kd")
+                {
+                        const std::string_view name{read_name("file", second_b, second_e)};
+                        load_image<N>(*lib_dir_, name, image_index_, &mesh_->images, &material_->image);
+                }
+
                 return true;
         }
-
-        if (first == "newmtl")
-        {
-                if (material_index_->empty())
-                {
-                        return false;
-                }
-
-                const std::string name{read_name("material", second_b, second_e)};
-
-                const auto iter = material_index_->find(name);
-                if (iter != material_index_->end())
-                {
-                        mtl = &(mesh_->materials[iter->second]);
-                        material_index_->erase(name);
-                }
-                else
-                {
-                        mtl = nullptr;
-                }
-        }
-        else if (first == "Kd")
-        {
-                if (!mtl)
-                {
-                        return true;
-                }
-                try
-                {
-                        mtl->color = read_color(second_b);
-                }
-                catch (const std::exception& e)
-                {
-                        error("Reading Kd in material " + mtl->name + "\n" + e.what());
-                }
-        }
-        else if (first == "map_Kd")
-        {
-                if (!mtl)
-                {
-                        return true;
-                }
-
-                const std::string_view name{read_name("file", second_b, second_e)};
-                load_image<N>(*lib_dir_, name, image_index_, &mesh_->images, &mtl->image);
-        }
-
-        return true;
-}
+};
 }
 
 template <std::size_t N>
@@ -207,8 +182,6 @@ void read_lib(
 
         ReadLib<N> read_lib(&lib_dir, mesh, material_index, image_index);
 
-        typename Mesh<N>::Material* mtl = nullptr;
-
         for (long long line_num = 0; line_num < line_count; ++line_num)
         {
                 if ((line_num & 0xfff) == 0xfff)
@@ -220,7 +193,7 @@ void read_lib(
 
                 try
                 {
-                        if (!read_lib.read_line(split.first, split.second_b, split.second_e, &mtl))
+                        if (!read_lib.read_line(split.first, split.second_b, split.second_e))
                         {
                                 break;
                         }
