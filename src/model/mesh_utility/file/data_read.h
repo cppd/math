@@ -84,19 +84,14 @@ bool read_one_float_from_string(const char** const str, T* const p)
 {
         const auto [value, end] = str_to_floating_point<T>(*str);
 
-        if (end == *str || errno == ERANGE || !std::isfinite(value))
+        if (end > *str && std::isfinite(value))
         {
-                return false;
+                *p = value;
+                *str = end;
+                return true;
         }
 
-        if (!(ascii::is_space(*end) || *end == '\0' || *end == '#'))
-        {
-                return false;
-        }
-
-        *p = value;
-        *str = end;
-        return true;
+        return false;
 }
 
 template <typename... T>
@@ -105,7 +100,6 @@ int string_to_floats(const char** const str, T* const... floats)
         static_assert(sizeof...(T) > 0);
         static_assert(((std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, long double>)&&...));
 
-        errno = 0;
         int cnt = 0;
 
         ((read_one_float_from_string(str, floats) ? ++cnt : false) && ...);
@@ -141,7 +135,7 @@ template <typename Iter, typename Op>
 }
 
 template <typename T, typename Iter>
-std::tuple<std::optional<T>, Iter> read_integer(const Iter first, const Iter last)
+[[nodiscard]] std::tuple<std::optional<T>, Iter> read_integer(const Iter first, const Iter last)
 {
         namespace impl = data_read_implementation;
 
@@ -190,29 +184,6 @@ const char* read_float(const char* str, Vector<N, T>* const v)
         namespace impl = data_read_implementation;
 
         const int cnt = impl::read_vector(&str, v, std::make_integer_sequence<unsigned, N>());
-
-        if (N != cnt)
-        {
-                error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
-                      + " type, found " + std::to_string(cnt) + " numbers");
-        }
-
-        return str;
-}
-
-template <typename... Args>
-const char* read_float(const char* str, Args* const... args) requires(
-        (sizeof...(Args) > 0) && (std::is_floating_point_v<Args> && ...))
-{
-        namespace impl = data_read_implementation;
-
-        static constexpr int N = sizeof...(Args);
-        static_assert(N > 0);
-        using T = std::tuple_element_t<0, std::tuple<Args...>>;
-        static_assert((std::is_floating_point_v<Args> && ...));
-        static_assert((std::is_same_v<T, Args> && ...));
-
-        const int cnt = impl::string_to_floats(&str, args...);
 
         if (N != cnt)
         {

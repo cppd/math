@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/image/file_load.h>
 #include <src/image/flip.h>
+#include <src/numerical/vector.h>
 
 namespace ns::mesh::file::obj
 {
@@ -35,8 +36,8 @@ namespace
 {
 color::Color read_color(const char* const str)
 {
-        std::array<float, 3> rgb;
-        read_float(str, &rgb[0], &rgb[1], &rgb[2]);
+        Vector<3, color::Color::DataType> rgb;
+        read_float(str, &rgb);
 
         for (int i = 0; i < 3; ++i)
         {

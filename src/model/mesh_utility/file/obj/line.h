@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../../mesh.h"
 
+#include <src/com/error.h>
+
 #include <array>
 #include <map>
 #include <optional>
@@ -34,22 +36,22 @@ namespace ns::mesh::file::obj
 template <std::size_t N>
 inline constexpr std::size_t MAX_FACETS_PER_LINE = (N == 3 ? 5 : 1);
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 struct Vertex final
 {
-        Vector<N, float> v;
+        Vector<N, T> v;
 };
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 struct TextureVertex final
 {
-        Vector<N - 1, float> v;
+        Vector<N - 1, T> v;
 };
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 struct Normal final
 {
-        Vector<N, float> v;
+        Vector<N, T> v;
 };
 
 template <std::size_t N>
@@ -71,13 +73,13 @@ struct MaterialLibrary final
         const char* second_e;
 };
 
-template <std::size_t N>
-using Line = std::variant<Vertex<N>, TextureVertex<N>, Normal<N>, Face<N>, UseMaterial, MaterialLibrary>;
+template <std::size_t N, typename T>
+using Line = std::variant<Vertex<N, T>, TextureVertex<N, T>, Normal<N, T>, Face<N>, UseMaterial, MaterialLibrary>;
 
 //
 
-template <std::size_t N>
-std::optional<Line<N>> read_line(
+template <std::size_t N, typename T>
+std::optional<Line<N, T>> read_line(
         const std::string_view first,
         const char* const second_b,
         const char* const second_e,
@@ -85,7 +87,7 @@ std::optional<Line<N>> read_line(
 {
         if (first == "v")
         {
-                Vertex<N> data;
+                Vertex<N, T> data;
                 read_float(second_b, &data.v);
                 ++counters->vertex;
                 return data;
@@ -93,20 +95,25 @@ std::optional<Line<N>> read_line(
 
         if (first == "vt")
         {
-                TextureVertex<N> data;
-                read_float_texture(second_b, &data.v);
+                TextureVertex<N, T> data;
+                std::optional<T> t;
+                read_float(second_b, &data.v, &t);
+                if (t && !(*t == 0))
+                {
+                        error(std::to_string(N) + "-dimensional textures are not supported");
+                }
                 ++counters->texcoord;
                 return data;
         }
 
         if (first == "vn")
         {
-                Normal<N> data;
+                Normal<N, T> data;
                 read_float(second_b, &data.v);
                 data.v.normalize();
                 if (!is_finite(data.v))
                 {
-                        data.v = Vector<N, float>(0);
+                        data.v = Vector<N, T>(0);
                 }
                 ++counters->normal;
                 return data;
@@ -140,7 +147,7 @@ std::optional<Line<N>> read_line(
 }
 
 template <std::size_t N>
-class ProcessLine final
+class LineProcess final
 {
         std::map<std::string, int>* const material_index_;
         std::vector<std::filesystem::path>* const library_names_;
@@ -150,7 +157,7 @@ class ProcessLine final
         std::set<std::filesystem::path> unique_library_names_;
 
 public:
-        ProcessLine(
+        LineProcess(
                 std::map<std::string, int>* const material_index,
                 std::vector<std::filesystem::path>* const library_names,
                 Mesh<N>* const mesh)
@@ -160,18 +167,17 @@ public:
         {
         }
 
-        void operator()(const Vertex<N>& data)
+        void operator()(const Vertex<N, float>& data)
         {
                 mesh_->vertices.push_back(data.v);
         }
 
-        void operator()(const TextureVertex<N>& data)
+        void operator()(const TextureVertex<N, float>& data)
         {
-                mesh_->texcoords.resize(mesh_->texcoords.size() + 1);
-                mesh_->texcoords[mesh_->texcoords.size() - 1] = data.v;
+                mesh_->texcoords.push_back(data.v);
         }
 
-        void operator()(const Normal<N>& data)
+        void operator()(const Normal<N, float>& data)
         {
                 mesh_->normals.push_back(data.v);
         }

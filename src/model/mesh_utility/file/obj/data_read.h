@@ -129,19 +129,6 @@ inline SplitLine split_line(
         };
 }
 
-template <std::size_t N, typename T>
-void read_float_texture(const char* const str, Vector<N, T>* const v)
-{
-        std::optional<T> t;
-
-        read_float(str, v, &t);
-
-        if (t && *t != 0)
-        {
-                error(std::to_string(N + 1) + "-dimensional textures are not supported");
-        }
-}
-
 inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
 {
         const char* const i1 = read(first, last, ascii::is_space);

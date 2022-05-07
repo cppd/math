@@ -42,6 +42,8 @@ namespace ns::mesh::file
 {
 namespace
 {
+using FloatingPointType = float;
+
 template <typename T>
 std::string map_keys_to_string(const std::map<std::string, T>& m)
 {
@@ -57,14 +59,14 @@ std::string map_keys_to_string(const std::map<std::string, T>& m)
         return names;
 }
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 void read_obj_stage_one(
         const unsigned thread_num,
         const unsigned thread_count,
         std::vector<obj::Counters>* const counters,
         std::vector<char>* const data_ptr,
         const std::vector<long long>& line_begin,
-        std::vector<std::optional<obj::Line<N>>>* const obj_lines,
+        std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         ProgressRatio* const progress)
 {
         ASSERT(counters->size() == thread_count);
@@ -83,7 +85,7 @@ void read_obj_stage_one(
 
                 try
                 {
-                        (*obj_lines)[line_num] = obj::read_line<N>(
+                        (*obj_lines)[line_num] = obj::read_line<N, T>(
                                 split.first, split.second_b, split.second_e, &(*counters)[thread_num]);
                 }
                 catch (const std::exception& e)
@@ -99,10 +101,10 @@ void read_obj_stage_one(
         }
 }
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 void read_obj_stage_two(
         const obj::Counters& counters,
-        const std::vector<std::optional<obj::Line<N>>>& obj_lines,
+        const std::vector<std::optional<obj::Line<N, T>>>& obj_lines,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
@@ -116,7 +118,7 @@ void read_obj_stage_two(
         const long long line_count = obj_lines.size();
         const double line_count_reciprocal = 1.0 / obj_lines.size();
 
-        obj::ProcessLine<N> visitor(material_index, library_names, mesh);
+        obj::LineProcess<N> visitor(material_index, library_names, mesh);
 
         for (long long line_num = 0; line_num < line_count; ++line_num)
         {
@@ -132,7 +134,7 @@ void read_obj_stage_two(
         }
 }
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 void read_obj_thread(
         const unsigned thread_num,
         const unsigned thread_count,
@@ -141,7 +143,7 @@ void read_obj_thread(
         std::atomic_bool* const error_found,
         std::vector<char>* const data_ptr,
         std::vector<long long>* const line_begin,
-        std::vector<std::optional<obj::Line<N>>>* const obj_lines,
+        std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         ProgressRatio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
@@ -189,7 +191,7 @@ void read_obj(
 
         read_file_lines(file_name, &data, &line_begin);
 
-        std::vector<std::optional<obj::Line<N>>> obj_lines{line_begin.size()};
+        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{line_begin.size()};
         std::latch latch{thread_count};
         std::atomic_bool error_found{false};
         std::vector<obj::Counters> counters{thread_count};
