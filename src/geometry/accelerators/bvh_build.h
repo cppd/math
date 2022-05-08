@@ -199,7 +199,7 @@ public:
 
                 const unsigned thread_count = hardware_concurrency();
 
-                ThreadsWithCatch threads(thread_count);
+                Threads threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add(f);

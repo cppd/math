@@ -196,7 +196,7 @@ void read_obj(
         std::atomic_bool error_found{false};
         std::vector<obj::Counters> counters{thread_count};
 
-        ThreadsWithCatch threads{thread_count};
+        Threads threads{thread_count};
         for (unsigned i = 0; i < thread_count; ++i)
         {
                 threads.add(

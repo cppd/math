@@ -95,7 +95,7 @@ void read_points(
 
         vertices->resize(line_begin.size());
 
-        ThreadsWithCatch threads(thread_count);
+        Threads threads(thread_count);
         for (int i = 0; i < thread_count; ++i)
         {
                 threads.add(

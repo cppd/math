@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <atomic>
-#include <functional>
+#include <future>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -32,109 +33,103 @@ namespace ns
 // positive signed integer
 inline int hardware_concurrency()
 {
-        return std::max(1u, std::thread::hardware_concurrency());
+        return std::max<int>(1, std::thread::hardware_concurrency());
 }
 
-class ThreadsWithCatch
+class Threads final
 {
-        class ThreadData
+        struct Thread final
         {
-                std::thread thread_;
-                bool has_error_ = false;
-                std::string error_message_;
+                std::future<void> future;
+                std::thread thread;
 
-        public:
-                explicit ThreadData(std::thread&& t) : thread_(std::move(t))
+                explicit Thread(std::packaged_task<void()>&& task) : future(task.get_future()), thread(std::move(task))
                 {
-                }
-
-                void join()
-                {
-                        thread_.join();
-                }
-
-                void set_error(const char* const s)
-                {
-                        has_error_ = true;
-                        error_message_ = s;
-                }
-
-                bool has_error() const
-                {
-                        return has_error_;
-                }
-
-                const std::string& error_message() const
-                {
-                        return error_message_;
                 }
         };
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        std::vector<ThreadData> threads_;
+        std::vector<Thread> threads_;
+
+        std::optional<std::string> join_threads()
+        {
+                std::optional<std::string> res;
+
+                const auto add_message = [&](const char* const message)
+                {
+                        if (!res)
+                        {
+                                res = message;
+                                return;
+                        }
+                        if (!res->empty())
+                        {
+                                *res += '\n';
+                        }
+                        *res += message;
+                };
+
+                for (Thread& thread : threads_)
+                {
+                        thread.thread.join();
+                        try
+                        {
+                                thread.future.get();
+                        }
+                        catch (const TerminateQuietlyException&)
+                        {
+                        }
+                        catch (const std::exception& e)
+                        {
+                                add_message(e.what());
+                        }
+                        catch (...)
+                        {
+                                add_message("Unknown error in thread");
+                        }
+                }
+
+                threads_.clear();
+
+                return res;
+        }
 
 public:
-        explicit ThreadsWithCatch(const unsigned thread_count)
+        explicit Threads(const unsigned thread_count)
         {
                 threads_.reserve(thread_count);
         }
 
-        ~ThreadsWithCatch()
+        ~Threads()
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 if (!threads_.empty())
                 {
-                        error_fatal("Thread vector is not empty");
+                        error_fatal("Threads are not joined");
                 }
         }
 
         template <typename F>
-        void add(F&& function) noexcept
+        void add(F&& f) noexcept requires(!std::is_same_v<std::packaged_task<void()>, std::remove_cvref_t<F>>)
         {
+                ASSERT(thread_id_ == std::this_thread::get_id());
+
                 try
                 {
-                        ASSERT(thread_id_ == std::this_thread::get_id());
                         try
                         {
-                                auto thread_function =
-                                        [this, thread_num = threads_.size(), f = std::forward<F>(function)]() noexcept
-                                {
-                                        try
-                                        {
-                                                try
-                                                {
-                                                        f();
-                                                }
-                                                catch (const TerminateQuietlyException&)
-                                                {
-                                                }
-                                                catch (const std::exception& e)
-                                                {
-                                                        threads_[thread_num].set_error(e.what());
-                                                }
-                                                catch (...)
-                                                {
-                                                        threads_[thread_num].set_error("Unknown error in thread");
-                                                }
-                                        }
-                                        catch (...)
-                                        {
-                                                error_fatal("Unknown error while calling a thread function");
-                                        }
-                                };
-
-                                threads_.emplace_back(std::thread(std::move(thread_function)));
+                                threads_.emplace_back(std::packaged_task<void()>(std::forward<F>(f)));
                         }
                         catch (const std::exception& e)
                         {
-                                error_fatal(std::string("Error while adding a thread-with-catch: ") + e.what());
+                                error_fatal(std::string("Error while adding a thread: ") + e.what());
                         }
                 }
                 catch (...)
                 {
-                        error_fatal("Unknown error while adding a thread-with-catch");
+                        error_fatal("Unknown error while adding a thread");
                 }
         }
 
@@ -142,68 +137,53 @@ public:
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                bool there_is_error = false;
-                std::string error_message;
+                std::optional<std::string> error_message;
 
                 try
                 {
                         try
                         {
-                                for (ThreadData& thread_data : threads_)
-                                {
-                                        thread_data.join();
-
-                                        if (thread_data.has_error())
-                                        {
-                                                there_is_error = true;
-                                                if (!error_message.empty())
-                                                {
-                                                        error_message += '\n';
-                                                }
-                                                error_message += thread_data.error_message();
-                                        }
-                                }
-
-                                threads_.clear();
+                                error_message = join_threads();
                         }
                         catch (const std::exception& e)
                         {
-                                error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
+                                error_fatal(std::string("Error while joining threads: ") + e.what());
                         }
                 }
                 catch (...)
                 {
-                        error_fatal("Unknown error while joining threads-with-catch");
+                        error_fatal("Unknown error while joining threads");
                 }
 
-                if (there_is_error)
+                if (error_message)
                 {
-                        error(error_message);
+                        error(*error_message);
                 }
         }
 };
 
-inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& function, const std::size_t count)
+template <typename F>
+void run_in_threads(const F& f, const std::size_t count)
 {
-        std::size_t concurrency = hardware_concurrency();
-        unsigned thread_count = std::min(count, concurrency);
+        const std::size_t concurrency = hardware_concurrency();
+        const unsigned thread_count = std::min(count, concurrency);
         std::atomic_size_t task = 0;
         if (thread_count > 1)
         {
-                ThreadsWithCatch threads(thread_count);
+                Threads threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add(
                                 [&]()
                                 {
-                                        function(task);
+                                        f(task);
                                 });
                 }
                 threads.join();
         }
         else if (thread_count == 1)
         {
-                function(task);
+                f(task);
         }
 }
 }

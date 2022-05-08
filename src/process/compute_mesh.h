@@ -240,7 +240,7 @@ void manifold_constructor(
         std::unique_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor =
                 create_manifold_constructor(progress_list, points);
 
-        ThreadsWithCatch threads(3);
+        Threads threads(3);
         try
         {
                 if (build_cocone)
@@ -292,7 +292,7 @@ void compute_meshes(
 {
         namespace impl = process_implementation;
 
-        ThreadsWithCatch threads(2);
+        Threads threads(2);
         try
         {
                 if (build_convex_hull)
