@@ -34,8 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 
 #include <filesystem>
-#include <latch>
 #include <map>
+#include <optional>
 #include <string>
 
 namespace ns::mesh::file
@@ -63,39 +63,37 @@ template <std::size_t N, typename T>
 void read_obj_stage_one(
         const unsigned thread_num,
         const unsigned thread_count,
-        std::vector<obj::Counters>* const counters,
+        obj::Counters* const counters,
         std::vector<char>* const data_ptr,
         const std::vector<long long>& line_begin,
         std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         ProgressRatio* const progress)
 {
-        ASSERT(counters->size() == thread_count);
-
-        const long long line_count = line_begin.size();
+        const std::size_t line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
 
-        for (long long line_num = thread_num; line_num < line_count; line_num += thread_count)
+        for (std::size_t line = thread_num; line < line_count; line += thread_count)
         {
-                if ((line_num & 0xfff) == 0xfff)
+                if ((line & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num * line_count_reciprocal);
+                        progress->set(line * line_count_reciprocal);
                 }
 
-                const obj::SplitLine split = obj::split_line(data_ptr, line_begin, line_num);
+                const obj::SplitLine split = obj::split_line(data_ptr, line_begin, line);
 
                 try
                 {
-                        (*obj_lines)[line_num] = obj::read_line<N, T>(
-                                split.first, split.second_b, split.second_e, &(*counters)[thread_num]);
+                        (*obj_lines)[line] =
+                                obj::read_line<N, T>(split.first, split.second_b, split.second_e, counters);
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line_num) + ": " + std::string(split.first) + " "
+                        error("Line " + to_string(line) + ": " + std::string(split.first) + " "
                               + std::string(split.second_b, split.second_e) + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line_num) + ": " + std::string(split.first) + " "
+                        error("Line " + to_string(line) + ": " + std::string(split.first) + " "
                               + std::string(split.second_b, split.second_e) + "\n" + "Unknown error");
                 }
         }
@@ -115,65 +113,23 @@ void read_obj_stage_two(
         mesh->normals.reserve(counters.normal);
         mesh->facets.reserve(counters.facet);
 
-        const long long line_count = obj_lines.size();
+        const std::size_t line_count = obj_lines.size();
         const double line_count_reciprocal = 1.0 / obj_lines.size();
 
         obj::LineProcess<N> visitor(material_index, library_names, mesh);
 
-        for (long long line_num = 0; line_num < line_count; ++line_num)
+        for (std::size_t line = 0; line < line_count; ++line)
         {
-                if ((line_num & 0xfff) == 0xfff)
+                if ((line & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num * line_count_reciprocal);
+                        progress->set(line * line_count_reciprocal);
                 }
 
-                if (obj_lines[line_num])
+                if (obj_lines[line])
                 {
-                        std::visit(visitor, *obj_lines[line_num]);
+                        std::visit(visitor, *obj_lines[line]);
                 }
         }
-}
-
-template <std::size_t N, typename T>
-void read_obj_thread(
-        const unsigned thread_num,
-        const unsigned thread_count,
-        std::vector<obj::Counters>* const counters,
-        std::latch* const latch,
-        std::atomic_bool* const error_found,
-        std::vector<char>* const data_ptr,
-        std::vector<long long>* const line_begin,
-        std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
-        ProgressRatio* const progress,
-        std::map<std::string, int>* const material_index,
-        std::vector<std::filesystem::path>* const library_names,
-        Mesh<N>* const mesh)
-{
-        try
-        {
-                read_obj_stage_one(thread_num, thread_count, counters, data_ptr, *line_begin, obj_lines, progress);
-        }
-        catch (...)
-        {
-                error_found->store(true);
-                latch->arrive_and_wait();
-                throw;
-        }
-        latch->arrive_and_wait();
-        if (*error_found)
-        {
-                return;
-        }
-
-        if (thread_num != 0)
-        {
-                return;
-        }
-
-        line_begin->clear();
-        line_begin->shrink_to_fit();
-
-        read_obj_stage_two(sum_counters(*counters), *obj_lines, progress, material_index, library_names, mesh);
 }
 
 template <std::size_t N>
@@ -184,30 +140,31 @@ void read_obj(
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
 {
-        const unsigned thread_count = hardware_concurrency();
-
         std::vector<char> data;
-        std::vector<long long> line_begin;
+        std::optional<std::vector<long long>> line_begin{std::in_place};
+        read_file_lines(file_name, &data, &*line_begin);
 
-        read_file_lines(file_name, &data, &line_begin);
+        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{line_begin->size()};
 
-        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{line_begin.size()};
-        std::latch latch{thread_count};
-        std::atomic_bool error_found{false};
+        const unsigned thread_count = std::min(line_begin->size(), static_cast<std::size_t>(hardware_concurrency()));
         std::vector<obj::Counters> counters{thread_count};
 
         Threads threads{thread_count};
-        for (unsigned i = 0; i < thread_count; ++i)
+        for (unsigned thread = 0; thread < thread_count; ++thread)
         {
                 threads.add(
-                        [&, i]()
+                        [&, thread]()
                         {
-                                read_obj_thread(
-                                        i, thread_count, &counters, &latch, &error_found, &data, &line_begin,
-                                        &obj_lines, progress, material_index, library_names, mesh);
+                                read_obj_stage_one(
+                                        thread, thread_count, &counters[thread], &data, *line_begin, &obj_lines,
+                                        progress);
                         });
         }
         threads.join();
+
+        line_begin.reset();
+
+        read_obj_stage_two(sum_counters(counters), obj_lines, progress, material_index, library_names, mesh);
 }
 
 template <std::size_t N>
