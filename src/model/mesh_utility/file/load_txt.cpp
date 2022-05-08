@@ -46,19 +46,19 @@ void read_points_thread(
         std::vector<Vector<N, float>>* const lines,
         ProgressRatio* const progress)
 {
-        const long long line_count = line_begin.size();
+        const std::size_t line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
 
-        for (long long line_num = thread_num; line_num < line_count; line_num += thread_count)
+        for (std::size_t line = thread_num; line < line_count; line += thread_count)
         {
-                if ((line_num & 0xfff) == 0xfff)
+                if ((line & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num * line_count_reciprocal);
+                        progress->set(line * line_count_reciprocal);
                 }
 
-                const char* str = &(*data_ptr)[line_begin[line_num]];
+                const char* const str = &(*data_ptr)[line_begin[line]];
 
-                long long last = (line_num < line_count - 1) ? line_begin[line_num + 1] : data_ptr->size();
+                long long last = (line < line_count - 1) ? line_begin[line + 1] : data_ptr->size();
 
                 // move to '\n' at the end of the string
                 --last;
@@ -67,15 +67,15 @@ void read_points_thread(
 
                 try
                 {
-                        read_float(str, &(*lines)[line_num]);
+                        read_float(str, &(*lines)[line]);
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line_num) + ": " + str + "\n" + e.what());
+                        error("Line " + to_string(line) + ": " + str + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line_num) + ": " + str + "\n" + "Unknown error");
+                        error("Line " + to_string(line) + ": " + str + "\n" + "Unknown error");
                 }
         }
 }
@@ -86,22 +86,21 @@ void read_points(
         const std::filesystem::path& file_name,
         ProgressRatio* const progress)
 {
-        const int thread_count = hardware_concurrency();
-
         std::vector<char> file_data;
         std::vector<long long> line_begin;
-
         read_file_lines(file_name, &file_data, &line_begin);
 
         vertices->resize(line_begin.size());
 
-        Threads threads(thread_count);
-        for (int i = 0; i < thread_count; ++i)
+        const unsigned thread_count = std::min(line_begin.size(), static_cast<std::size_t>(hardware_concurrency()));
+
+        Threads threads{thread_count};
+        for (unsigned thread = 0; thread < thread_count; ++thread)
         {
                 threads.add(
-                        [&, i]()
+                        [&, thread]()
                         {
-                                read_points_thread(i, thread_count, &file_data, line_begin, vertices, progress);
+                                read_points_thread(thread, thread_count, &file_data, line_begin, vertices, progress);
                         });
         }
         threads.join();
