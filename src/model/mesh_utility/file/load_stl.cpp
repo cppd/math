@@ -272,8 +272,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 
         progress->set_undefined();
 
-        std::string data;
-        read_binary_file(file_name, &data);
+        const std::string data = read_binary_file<std::string>(file_name);
 
         if (is_binary<N>(data))
         {

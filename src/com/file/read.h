@@ -17,14 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <filesystem>
-#include <vector>
-
 namespace ns
 {
-template <typename T>
-void read_text_file(const std::filesystem::path& file_name, T* s);
+template <typename T, typename Path>
+T read_text_file(const Path& path);
 
-template <typename T>
-void read_binary_file(const std::filesystem::path& file_name, T* s);
+template <typename T, typename Path>
+T read_binary_file(const Path& name);
 }

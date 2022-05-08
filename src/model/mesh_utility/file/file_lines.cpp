@@ -69,7 +69,7 @@ void read_file_lines(const Path& file_name, T* const file_data, std::vector<long
         static_assert(std::is_same_v<Path, std::filesystem::path>);
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
-        read_text_file(file_name, file_data);
+        *file_data = read_text_file<T>(file_name);
 
         find_line_begin(*file_data, line_begin);
 }

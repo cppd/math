@@ -21,20 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../error.h"
 
+#include <filesystem>
 #include <fstream>
+#include <string>
+#include <vector>
 
 namespace ns
 {
-template <typename T>
-void read_text_file(const std::filesystem::path& file_name, T* const s)
+template <typename T, typename Path>
+T read_text_file(const Path& path)
 {
-        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
+        static_assert(sizeof(typename T::value_type) == 1);
 
-        std::ifstream f(file_name, std::ios_base::binary);
+        std::ifstream f(path, std::ios_base::binary);
 
         if (!f)
         {
-                error("Failed to open file " + generic_utf8_filename(file_name));
+                error("Failed to open file " + generic_utf8_filename(path));
         }
 
         f.seekg(0, std::ios_base::end);
@@ -42,35 +45,38 @@ void read_text_file(const std::filesystem::path& file_name, T* const s)
 
         if (length == 0)
         {
-                s->clear();
-                return;
+                return {};
         }
+
+        T res;
 
         f.seekg(-1, std::ios_base::end);
         if (f.get() == '\n')
         {
-                s->resize(length);
+                res.resize(length);
         }
         else
         {
-                s->resize(length + 1);
-                (*s)[s->size() - 1] = '\n';
+                res.resize(length + 1);
+                res.back() = '\n';
         }
 
         f.seekg(0, std::ios_base::beg);
-        f.read(s->data(), length);
+        f.read(res.data(), length);
+
+        return res;
 }
 
-template <typename T>
-void read_binary_file(const std::filesystem::path& file_name, T* const s)
+template <typename T, typename Path>
+T read_binary_file(const Path& path)
 {
         static_assert(sizeof(typename T::value_type) == 1);
 
-        std::ifstream f(file_name, std::ios_base::binary);
+        std::ifstream f(path, std::ios_base::binary);
 
         if (!f)
         {
-                error("Failed to open file " + generic_utf8_filename(file_name));
+                error("Failed to open file " + generic_utf8_filename(path));
         }
 
         f.seekg(0, std::ios_base::end);
@@ -78,18 +84,21 @@ void read_binary_file(const std::filesystem::path& file_name, T* const s)
 
         if (length == 0)
         {
-                s->clear();
-                return;
+                return {};
         }
 
-        s->resize(length);
+        T res;
+
+        res.resize(length);
         f.seekg(0, std::ios_base::beg);
-        f.read(s->data(), length);
+        f.read(res.data(), length);
+
+        return res;
 }
 
-template void read_text_file(const std::filesystem::path&, std::string*);
-template void read_text_file(const std::filesystem::path&, std::vector<char>*);
+template std::string read_text_file(const std::filesystem::path&);
+template std::vector<char> read_text_file(const std::filesystem::path&);
 
-template void read_binary_file(const std::filesystem::path&, std::string*);
-template void read_binary_file(const std::filesystem::path&, std::vector<char>*);
+template std::string read_binary_file(const std::filesystem::path&);
+template std::vector<char> read_binary_file(const std::filesystem::path&);
 }
