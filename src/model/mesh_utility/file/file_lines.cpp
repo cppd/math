@@ -18,62 +18,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_lines.h"
 
 #include <src/com/error.h>
-#include <src/com/file/read.h>
-
-#include <filesystem>
 
 namespace ns::mesh::file
 {
-namespace
+Lines make_lines(std::vector<char>&& text_data)
 {
-template <typename T>
-void find_line_begin(const T& s, std::vector<long long>* const line_begin)
-{
-        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
-
-        long long size = s.size();
-
-        long long new_line_count = 0;
-        for (long long i = 0; i < size; ++i)
+        if (text_data.empty())
         {
-                if (s[i] == '\n')
+                return {};
+        }
+
+        if (text_data.back() != '\n')
+        {
+                text_data.push_back('\n');
+        }
+
+        const long long line_count = [&]
+        {
+                long long res = 0;
+                for (const char c : text_data)
                 {
-                        ++new_line_count;
+                        if (!c)
+                        {
+                                error("Text data contains null character");
+                        }
+                        if (c == '\n')
+                        {
+                                ++res;
+                        }
+                }
+                return res;
+        }();
+
+        std::vector<long long> beginnings(line_count);
+
+        long long beginning = 0;
+        std::size_t line = 0;
+        for (long long i = 0, size = text_data.size(); i < size; ++i)
+        {
+                if (text_data[i] == '\n')
+                {
+                        text_data[i] = '\0';
+                        beginnings[line++] = beginning;
+                        beginning = i + 1;
                 }
         }
+        ASSERT(text_data.back() == '\0');
 
-        line_begin->clear();
-        line_begin->reserve(new_line_count);
-        line_begin->shrink_to_fit();
-
-        long long begin = 0;
-        for (long long i = 0; i < size; ++i)
-        {
-                if (s[i] == '\n')
-                {
-                        line_begin->push_back(begin);
-                        begin = i + 1;
-                }
-        }
-
-        if (begin != size)
-        {
-                error("No new line at the end of file");
-        }
+        return {.data = std::move(text_data), .beginnings = std::move(beginnings)};
 }
-}
-
-template <typename T, typename Path>
-void read_file_lines(const Path& file_name, T* const file_data, std::vector<long long>* const line_begin)
-{
-        static_assert(std::is_same_v<Path, std::filesystem::path>);
-        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
-
-        *file_data = read_text_file<T>(file_name);
-
-        find_line_begin(*file_data, line_begin);
-}
-
-template void read_file_lines(const std::filesystem::path&, std::string*, std::vector<long long>*);
-template void read_file_lines(const std::filesystem::path&, std::vector<char>*, std::vector<long long>*);
 }

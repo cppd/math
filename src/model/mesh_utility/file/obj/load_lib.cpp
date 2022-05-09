@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../file_lines.h"
 
 #include <src/com/file/path.h>
+#include <src/com/file/read.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 #include <src/image/file_load.h>
@@ -168,28 +169,25 @@ void read_lib(
         std::map<std::filesystem::path, int>* const image_index,
         Mesh<N>* const mesh)
 {
-        std::vector<char> data;
-        std::vector<long long> line_begin;
-
         const std::filesystem::path lib_name = dir_name / file_name;
 
-        read_file_lines(lib_name, &data, &line_begin);
+        const Lines lines = make_lines(read_binary_file<std::vector<char>>(lib_name));
 
         const std::filesystem::path lib_dir = lib_name.parent_path();
 
-        const long long line_count = line_begin.size();
-        const double line_count_reciprocal = 1.0 / line_begin.size();
+        const long long line_count = lines.beginnings.size();
+        const double line_count_reciprocal = 1.0 / line_count;
 
         ReadLib<N> read_lib(&lib_dir, mesh, material_index, image_index);
 
-        for (long long line_num = 0; line_num < line_count; ++line_num)
+        for (long long line = 0; line < line_count; ++line)
         {
-                if ((line_num & 0xfff) == 0xfff)
+                if ((line & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num * line_count_reciprocal);
+                        progress->set(line * line_count_reciprocal);
                 }
 
-                const SplitLine split = split_line(&data, line_begin, line_num);
+                const SplitLine split = split_line(lines.data, lines.beginnings, line);
 
                 try
                 {
@@ -200,15 +198,15 @@ void read_lib(
                 }
                 catch (const std::exception& e)
                 {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + std::string(split.first) + " " + std::string(split.second_b, split.second_e)
-                              + "\n" + e.what());
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                              + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
+                              + e.what());
                 }
                 catch (...)
                 {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + std::string(split.first) + " " + std::string(split.second_b, split.second_e)
-                              + "\n" + "Unknown error");
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                              + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
+                              + "Unknown error");
                 }
         }
 }

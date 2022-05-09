@@ -21,6 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh::file
 {
-template <typename T, typename Path>
-void read_file_lines(const Path& file_name, T* file_data, std::vector<long long>* line_begin);
+struct Lines
+{
+        std::vector<char> data;
+        std::vector<long long> beginnings;
+};
+
+Lines make_lines(std::vector<char>&& text_data);
 }

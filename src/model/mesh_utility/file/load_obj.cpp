@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
+#include <src/com/file/read.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
@@ -63,14 +64,14 @@ template <std::size_t N, typename T>
 void read_obj_stage_one(
         const unsigned thread_num,
         const unsigned thread_count,
+        const std::vector<char>& data,
+        const std::vector<long long>& line_beginnings,
         obj::Counters* const counters,
-        std::vector<char>* const data_ptr,
-        const std::vector<long long>& line_begin,
         std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         ProgressRatio* const progress)
 {
-        const std::size_t line_count = line_begin.size();
-        const double line_count_reciprocal = 1.0 / line_begin.size();
+        const std::size_t line_count = line_beginnings.size();
+        const double line_count_reciprocal = 1.0 / line_count;
 
         for (std::size_t line = thread_num; line < line_count; line += thread_count)
         {
@@ -79,7 +80,7 @@ void read_obj_stage_one(
                         progress->set(line * line_count_reciprocal);
                 }
 
-                const obj::SplitLine split = obj::split_line(data_ptr, line_begin, line);
+                const obj::SplitLine split = obj::split_line(data, line_beginnings, line);
 
                 try
                 {
@@ -140,13 +141,12 @@ void read_obj(
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
 {
-        std::vector<char> data;
-        std::optional<std::vector<long long>> line_begin{std::in_place};
-        read_file_lines(file_name, &data, &*line_begin);
+        const Lines lines = make_lines(read_binary_file<std::vector<char>>(file_name));
 
-        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{line_begin->size()};
+        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{lines.beginnings.size()};
 
-        const unsigned thread_count = std::min(line_begin->size(), static_cast<std::size_t>(hardware_concurrency()));
+        const unsigned thread_count =
+                std::min(lines.beginnings.size(), static_cast<std::size_t>(hardware_concurrency()));
         std::vector<obj::Counters> counters{thread_count};
 
         Threads threads{thread_count};
@@ -156,13 +156,11 @@ void read_obj(
                         [&, thread]()
                         {
                                 read_obj_stage_one(
-                                        thread, thread_count, &counters[thread], &data, *line_begin, &obj_lines,
-                                        progress);
+                                        thread, thread_count, lines.data, lines.beginnings, &counters[thread],
+                                        &obj_lines, progress);
                         });
         }
         threads.join();
-
-        line_begin.reset();
 
         read_obj_stage_two(sum_counters(counters), obj_lines, progress, material_index, library_names, mesh);
 }

@@ -46,7 +46,7 @@ constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_FACET_SIZE = N* N * sizeof(float);
 
-std::uint32_t binary_number_of_triangles(const std::string& data)
+std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
 {
         ASSERT(data.size() >= BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE);
 
@@ -64,7 +64,7 @@ std::uint32_t binary_number_of_triangles(const std::string& data)
 }
 
 template <std::size_t N>
-bool is_binary(const std::string& data)
+bool is_binary(const std::vector<char>& data)
 {
         if (data.size() <= BINARY_DATA_OFFSET)
         {
@@ -98,7 +98,7 @@ bool is_binary(const std::string& data)
 
 const char* read_keyword(const char* const first, const char* const last, const std::string_view& keyword)
 {
-        if (last - first < static_cast<std::ptrdiff_t>(keyword.size()))
+        if (first + keyword.size() > last)
         {
                 error("Keyword \"" + std::string(keyword) + "\" not found in STL file when expected");
         }
@@ -106,6 +106,7 @@ const char* read_keyword(const char* const first, const char* const last, const 
         const char* v = first;
         const char* w = keyword.data();
         const char* const w_end = keyword.data() + keyword.size();
+
         while (w != w_end && *v == *w)
         {
                 ++v;
@@ -114,6 +115,10 @@ const char* read_keyword(const char* const first, const char* const last, const 
 
         if (w == w_end)
         {
+                if (v < last && !ascii::is_space(*v))
+                {
+                        error("Keyword " + std::string(keyword) + " not found in STL file when expected");
+                }
                 return v;
         }
 
@@ -122,7 +127,7 @@ const char* read_keyword(const char* const first, const char* const last, const 
 
 template <std::size_t N>
 void read_ascii_stl(
-        const std::string& data,
+        const std::vector<char>& data,
         ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
@@ -137,20 +142,22 @@ void read_ascii_stl(
         const double size_reciprocal = 1.0 / data.size();
 
         const char* const first = data.data();
-        const char* const last = data.data() + data.size();
+
+        ASSERT(!data.empty() && !data.back());
+        const char* const last = data.data() + data.size() - 1;
 
         const char* iter = first;
 
         iter = read(iter, last, ascii::is_space);
         iter = read_keyword(iter, last, SOLID);
         iter = read(iter, last, ascii::is_not_new_line);
-        ++iter;
 
         std::array<Vector<N, float>, N> facet_vertices;
         unsigned long long facet_count = 0;
         while (true)
         {
                 iter = read(iter, last, ascii::is_space);
+
                 try
                 {
                         iter = read_keyword(iter, last, FACET_NORMAL);
@@ -158,11 +165,23 @@ void read_ascii_stl(
                 catch (...)
                 {
                         iter = read_keyword(iter, last, END_SOLID);
+                        iter = read(iter, last, ascii::is_not_new_line);
+                        iter = read(iter, last, ascii::is_space);
+                        if (iter < last)
+                        {
+                                error("Nonspace found after solid end in STL file");
+                        }
                         break;
                 }
 
-                // skip normal
-                iter = read(iter, last, ascii::is_not_new_line);
+                {
+                        if (iter >= last)
+                        {
+                                error("Normal coordinates not found in STL file when expected");
+                        }
+                        Vector<N, float> n;
+                        iter = read_float(iter, &n);
+                }
 
                 iter = read(iter, last, ascii::is_space);
                 iter = read_keyword(iter, last, OUTER_LOOP);
@@ -171,7 +190,6 @@ void read_ascii_stl(
                 {
                         iter = read(iter, last, ascii::is_space);
                         iter = read_keyword(iter, last, VERTEX);
-
                         if (iter >= last)
                         {
                                 error("Vertex coordinates not found in STL file when expected");
@@ -197,7 +215,7 @@ void read_ascii_stl(
 
 template <std::size_t N>
 void read_binary_stl(
-        const std::string& data,
+        const std::vector<char>& data,
         ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
@@ -272,14 +290,15 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 
         progress->set_undefined();
 
-        const std::string data = read_binary_file<std::string>(file_name);
+        std::vector<char> data = read_binary_file<std::vector<char>>(file_name);
 
-        if (is_binary<N>(data))
+        if (is_binary<N>(std::as_const(data)))
         {
                 read_binary_stl<N>(data, progress, yield_facet);
         }
         else
         {
+                data.push_back('\0');
                 read_ascii_stl<N>(data, progress, yield_facet);
         }
 

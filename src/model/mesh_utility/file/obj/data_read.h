@@ -105,27 +105,24 @@ struct SplitLine final
 };
 
 inline SplitLine split_line(
-        std::vector<char>* const data,
+        const std::vector<char>& data,
         const std::vector<long long>& line_begin,
-        const long long line_num)
+        const long long line)
 {
         namespace impl = data_read_implementation;
 
-        long long line_count = line_begin.size();
+        const long long line_count = line_begin.size();
 
-        long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
+        const long long last = ((line + 1 < line_count) ? line_begin[line + 1] : data.size()) - 1;
 
-        // move to '\n' at the end of the string
-        --last;
+        ASSERT(last >= 0 && !data[last]);
 
-        const impl::Split split = impl::split(*data, line_begin[line_num], last);
-
-        (*data)[split.second_e] = 0; // '#', '\n'
+        const impl::Split split = impl::split(data, line_begin[line], last);
 
         return {
-                .first = {&(*data)[split.first_b], &(*data)[split.first_e]},
-                .second_b = &(*data)[split.second_b],
-                .second_e = &(*data)[split.second_e]
+                .first = {&data[split.first_b], &data[split.first_e]},
+                .second_b = &data[split.second_b],
+                .second_e = &data[split.second_e]
         };
 }
 

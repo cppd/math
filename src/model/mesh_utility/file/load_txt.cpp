@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
+#include <src/com/file/read.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
@@ -41,13 +42,13 @@ template <std::size_t N>
 void read_points_thread(
         const unsigned thread_num,
         const unsigned thread_count,
-        std::vector<char>* data_ptr,
-        const std::vector<long long>& line_begin,
+        const std::vector<char>& data,
+        const std::vector<long long>& line_beginnings,
         std::vector<Vector<N, float>>* const lines,
         ProgressRatio* const progress)
 {
-        const std::size_t line_count = line_begin.size();
-        const double line_count_reciprocal = 1.0 / line_begin.size();
+        const std::size_t line_count = line_beginnings.size();
+        const double line_count_reciprocal = 1.0 / line_count;
 
         for (std::size_t line = thread_num; line < line_count; line += thread_count)
         {
@@ -56,14 +57,7 @@ void read_points_thread(
                         progress->set(line * line_count_reciprocal);
                 }
 
-                const char* const str = &(*data_ptr)[line_begin[line]];
-
-                long long last = (line < line_count - 1) ? line_begin[line + 1] : data_ptr->size();
-
-                // move to '\n' at the end of the string
-                --last;
-
-                (*data_ptr)[last] = 0;
+                const char* const str = &data[line_beginnings[line]];
 
                 try
                 {
@@ -86,13 +80,12 @@ void read_points(
         const std::filesystem::path& file_name,
         ProgressRatio* const progress)
 {
-        std::vector<char> file_data;
-        std::vector<long long> line_begin;
-        read_file_lines(file_name, &file_data, &line_begin);
+        const Lines lines = make_lines(read_binary_file<std::vector<char>>(file_name));
 
-        vertices->resize(line_begin.size());
+        vertices->resize(lines.beginnings.size());
 
-        const unsigned thread_count = std::min(line_begin.size(), static_cast<std::size_t>(hardware_concurrency()));
+        const unsigned thread_count =
+                std::min(lines.beginnings.size(), static_cast<std::size_t>(hardware_concurrency()));
 
         Threads threads{thread_count};
         for (unsigned thread = 0; thread < thread_count; ++thread)
@@ -100,7 +93,8 @@ void read_points(
                 threads.add(
                         [&, thread]()
                         {
-                                read_points_thread(thread, thread_count, &file_data, line_begin, vertices, progress);
+                                read_points_thread(
+                                        thread, thread_count, lines.data, lines.beginnings, vertices, progress);
                         });
         }
         threads.join();
