@@ -171,7 +171,7 @@ void read_lib(
 {
         const std::filesystem::path lib_name = dir_name / file_name;
 
-        const Lines lines = make_lines(read_binary_file<std::vector<char>>(lib_name));
+        const Lines lines = make_lines(read_file(lib_name));
 
         const std::filesystem::path lib_dir = lib_name.parent_path();
 

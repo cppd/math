@@ -141,7 +141,7 @@ void read_obj(
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
 {
-        const Lines lines = make_lines(read_binary_file<std::vector<char>>(file_name));
+        const Lines lines = make_lines(read_file(file_name));
 
         std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{lines.beginnings.size()};
 

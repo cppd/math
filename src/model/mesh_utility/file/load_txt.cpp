@@ -80,7 +80,7 @@ void read_points(
         const std::filesystem::path& file_name,
         ProgressRatio* const progress)
 {
-        const Lines lines = make_lines(read_binary_file<std::vector<char>>(file_name));
+        const Lines lines = make_lines(read_file(file_name));
 
         vertices->resize(lines.beginnings.size());
 

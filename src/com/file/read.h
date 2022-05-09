@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <vector>
+
 namespace ns
 {
-template <typename T, typename Path>
-T read_text_file(const Path& path);
-
-template <typename T, typename Path>
-T read_binary_file(const Path& name);
+template <typename Path>
+std::vector<char> read_file(const Path& name);
 }
