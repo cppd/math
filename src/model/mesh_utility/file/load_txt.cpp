@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "load_txt.h"
 
 #include "data_read.h"
-#include "file_lines.h"
+#include "lines.h"
 #include "mesh_facet.h"
 
 #include "../position.h"

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
-
 #include <array>
 #include <vector>
 
@@ -27,30 +25,29 @@ namespace ns::mesh::file
 class Lines final
 {
         std::vector<char> data_;
-        std::vector<long long> beginnings_;
+        std::vector<const char*> lines_;
 
 public:
         explicit Lines(std::vector<char>&& text_data);
 
+        Lines(const Lines&) = delete;
+        Lines& operator=(const Lines&) = delete;
+        Lines(Lines&&) = delete;
+        Lines& operator=(Lines&&) = delete;
+
         std::size_t size() const
         {
-                return beginnings_.size();
+                return lines_.size();
         }
 
         std::array<const char*, 2> c_str_view(const std::size_t line) const
         {
-                const char* const first = &data_[beginnings_[line]];
-
-                const long long next_line_beginning =
-                        (line + 1 < beginnings_.size()) ? beginnings_[line + 1] : data_.size();
-                const char* const last = &data_[next_line_beginning - 1];
-
-                return {first, last};
+                return {lines_[line], (line + 1 < lines_.size()) ? lines_[line + 1] - 1 : &data_.back()};
         }
 
         const char* c_str(const std::size_t line) const
         {
-                return &data_[beginnings_[line]];
+                return lines_[line];
         }
 };
 }

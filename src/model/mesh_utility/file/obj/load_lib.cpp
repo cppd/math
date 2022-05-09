@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "name.h"
 
 #include "../data_read.h"
-#include "../file_lines.h"
+#include "../lines.h"
 
 #include <src/com/file/path.h>
 #include <src/com/file/read.h>

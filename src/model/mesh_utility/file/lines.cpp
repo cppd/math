@@ -15,12 +15,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "file_lines.h"
+#include "lines.h"
 
 #include <src/com/error.h>
 
 namespace ns::mesh::file
 {
+namespace
+{
+long long make_lines(std::vector<char>* const data)
+{
+        ASSERT(!data->empty() && data->back() == '\n');
+
+        long long count = 0;
+        for (char& c : *data)
+        {
+                if (!c)
+                {
+                        error("Text data contains null character");
+                }
+
+                if (c == '\n')
+                {
+                        ++count;
+                        c = '\0';
+                }
+        }
+        return count;
+}
+}
+
 Lines::Lines(std::vector<char>&& text_data) : data_(std::move(text_data))
 {
         if (data_.empty())
@@ -33,38 +57,21 @@ Lines::Lines(std::vector<char>&& text_data) : data_(std::move(text_data))
                 data_.push_back('\n');
         }
 
-        const long long line_count = [&]
-        {
-                long long res = 0;
-                for (const char c : data_)
-                {
-                        if (!c)
-                        {
-                                error("Text data contains null character");
-                        }
-                        if (c == '\n')
-                        {
-                                ++res;
-                        }
-                }
-                return res;
-        }();
+        const unsigned long long line_count = make_lines(&data_);
 
-        beginnings_.resize(line_count);
+        lines_.reserve(line_count);
 
-        long long beginning = 0;
-        long long line = 0;
-        for (long long i = 0, size = data_.size(); i < size; ++i)
+        const char* beginning = data_.data();
+        const char* const last = data_.data() + data_.size();
+        for (const char* ptr = data_.data(); ptr != last; ++ptr)
         {
-                if (data_[i] != '\n')
+                if (!*ptr)
                 {
-                        continue;
+                        lines_.push_back(beginning);
+                        beginning = ptr + 1;
                 }
-                data_[i] = '\0';
-                beginnings_[line++] = beginning;
-                beginning = i + 1;
         }
-        ASSERT(data_.back() == '\0');
-        ASSERT(line == line_count);
+
+        ASSERT(lines_.size() == line_count);
 }
 }
