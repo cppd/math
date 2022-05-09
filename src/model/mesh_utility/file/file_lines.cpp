@@ -21,22 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh::file
 {
-Lines make_lines(std::vector<char>&& text_data)
+Lines::Lines(std::vector<char>&& text_data) : data_(std::move(text_data))
 {
-        if (text_data.empty())
+        if (data_.empty())
         {
-                return {};
+                return;
         }
 
-        if (text_data.back() != '\n')
+        if (data_.back() != '\n')
         {
-                text_data.push_back('\n');
+                data_.push_back('\n');
         }
 
         const long long line_count = [&]
         {
                 long long res = 0;
-                for (const char c : text_data)
+                for (const char c : data_)
                 {
                         if (!c)
                         {
@@ -50,21 +50,21 @@ Lines make_lines(std::vector<char>&& text_data)
                 return res;
         }();
 
-        std::vector<long long> beginnings(line_count);
+        beginnings_.resize(line_count);
 
         long long beginning = 0;
-        std::size_t line = 0;
-        for (long long i = 0, size = text_data.size(); i < size; ++i)
+        long long line = 0;
+        for (long long i = 0, size = data_.size(); i < size; ++i)
         {
-                if (text_data[i] == '\n')
+                if (data_[i] != '\n')
                 {
-                        text_data[i] = '\0';
-                        beginnings[line++] = beginning;
-                        beginning = i + 1;
+                        continue;
                 }
+                data_[i] = '\0';
+                beginnings_[line++] = beginning;
+                beginning = i + 1;
         }
-        ASSERT(text_data.back() == '\0');
-
-        return {.data = std::move(text_data), .beginnings = std::move(beginnings)};
+        ASSERT(data_.back() == '\0');
+        ASSERT(line == line_count);
 }
 }

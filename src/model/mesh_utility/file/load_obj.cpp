@@ -64,13 +64,12 @@ template <std::size_t N, typename T>
 void read_obj_stage_one(
         const unsigned thread_num,
         const unsigned thread_count,
-        const std::vector<char>& data,
-        const std::vector<long long>& line_beginnings,
+        const Lines& lines,
         obj::Counters* const counters,
         std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         ProgressRatio* const progress)
 {
-        const std::size_t line_count = line_beginnings.size();
+        const std::size_t line_count = lines.size();
         const double line_count_reciprocal = 1.0 / line_count;
 
         for (std::size_t line = thread_num; line < line_count; line += thread_count)
@@ -80,7 +79,7 @@ void read_obj_stage_one(
                         progress->set(line * line_count_reciprocal);
                 }
 
-                const obj::SplitLine split = obj::split_line(data, line_beginnings, line);
+                const obj::Split split = obj::split_string(lines.c_str_view(line));
 
                 try
                 {
@@ -141,12 +140,11 @@ void read_obj(
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
 {
-        const Lines lines = make_lines(read_file(file_name));
+        const Lines lines(read_file(file_name));
 
-        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{lines.beginnings.size()};
+        std::vector<std::optional<obj::Line<N, FloatingPointType>>> obj_lines{lines.size()};
 
-        const unsigned thread_count =
-                std::min(lines.beginnings.size(), static_cast<std::size_t>(hardware_concurrency()));
+        const unsigned thread_count = std::min(lines.size(), static_cast<std::size_t>(hardware_concurrency()));
         std::vector<obj::Counters> counters{thread_count};
 
         Threads threads{thread_count};
@@ -156,8 +154,7 @@ void read_obj(
                         [&, thread]()
                         {
                                 read_obj_stage_one(
-                                        thread, thread_count, lines.data, lines.beginnings, &counters[thread],
-                                        &obj_lines, progress);
+                                        thread, thread_count, lines, &counters[thread], &obj_lines, progress);
                         });
         }
         threads.join();

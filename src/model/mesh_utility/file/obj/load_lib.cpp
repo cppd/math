@@ -171,23 +171,23 @@ void read_lib(
 {
         const std::filesystem::path lib_name = dir_name / file_name;
 
-        const Lines lines = make_lines(read_file(lib_name));
+        const Lines lines(read_file(lib_name));
 
         const std::filesystem::path lib_dir = lib_name.parent_path();
 
-        const long long line_count = lines.beginnings.size();
+        const std::size_t line_count = lines.size();
         const double line_count_reciprocal = 1.0 / line_count;
 
         ReadLib<N> read_lib(&lib_dir, mesh, material_index, image_index);
 
-        for (long long line = 0; line < line_count; ++line)
+        for (std::size_t line = 0; line < line_count; ++line)
         {
                 if ((line & 0xfff) == 0xfff)
                 {
                         progress->set(line * line_count_reciprocal);
                 }
 
-                const SplitLine split = split_line(lines.data, lines.beginnings, line);
+                const Split split = split_string(lines.c_str_view(line));
 
                 try
                 {

@@ -42,12 +42,11 @@ template <std::size_t N>
 void read_points_thread(
         const unsigned thread_num,
         const unsigned thread_count,
-        const std::vector<char>& data,
-        const std::vector<long long>& line_beginnings,
-        std::vector<Vector<N, float>>* const lines,
+        const Lines& lines,
+        std::vector<Vector<N, float>>* const vertices,
         ProgressRatio* const progress)
 {
-        const std::size_t line_count = line_beginnings.size();
+        const std::size_t line_count = lines.size();
         const double line_count_reciprocal = 1.0 / line_count;
 
         for (std::size_t line = thread_num; line < line_count; line += thread_count)
@@ -57,11 +56,11 @@ void read_points_thread(
                         progress->set(line * line_count_reciprocal);
                 }
 
-                const char* const str = &data[line_beginnings[line]];
+                const char* const str = lines.c_str(line);
 
                 try
                 {
-                        read_float(str, &(*lines)[line]);
+                        read_float(str, &(*vertices)[line]);
                 }
                 catch (const std::exception& e)
                 {
@@ -80,12 +79,11 @@ void read_points(
         const std::filesystem::path& file_name,
         ProgressRatio* const progress)
 {
-        const Lines lines = make_lines(read_file(file_name));
+        const Lines lines(read_file(file_name));
 
-        vertices->resize(lines.beginnings.size());
+        vertices->resize(lines.size());
 
-        const unsigned thread_count =
-                std::min(lines.beginnings.size(), static_cast<std::size_t>(hardware_concurrency()));
+        const unsigned thread_count = std::min(lines.size(), static_cast<std::size_t>(hardware_concurrency()));
 
         Threads threads{thread_count};
         for (unsigned thread = 0; thread < thread_count; ++thread)
@@ -93,8 +91,7 @@ void read_points(
                 threads.add(
                         [&, thread]()
                         {
-                                read_points_thread(
-                                        thread, thread_count, lines.data, lines.beginnings, vertices, progress);
+                                read_points_thread(thread, thread_count, lines, vertices, progress);
                         });
         }
         threads.join();
