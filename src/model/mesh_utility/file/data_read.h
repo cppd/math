@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/string/ascii.h>
-#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
 
+#include <charconv>
 #include <cmath>
+#include <cstdlib>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -33,28 +33,6 @@ namespace ns::mesh::file
 {
 namespace data_read_implementation
 {
-template <typename Integer, typename Iter>
-Integer digits_to_integer(const Iter first, Iter last)
-{
-        static_assert(std::is_integral_v<Integer>);
-
-        if (const auto length = last - first; length > Limits<Integer>::digits10() || length < 1)
-        {
-                error("Error converting " + std::string(first, last) + " to integral");
-        }
-
-        --last;
-        Integer sum = ascii::char_to_int(*last);
-        Integer mul = 1;
-        while (last-- > first)
-        {
-                mul *= 10;
-                sum += ascii::char_to_int(*last) * mul;
-        }
-
-        return sum;
-}
-
 template <typename T>
 std::tuple<T, const char*> str_to_floating_point(const char* const str) requires(std::is_same_v<T, float>)
 {
@@ -80,7 +58,7 @@ std::tuple<T, const char*> str_to_floating_point(const char* const str) requires
 }
 
 template <typename T>
-bool read_one_float_from_string(const char** const str, T* const p)
+bool read_float(const char** const str, T* const p)
 {
         const auto [value, end] = str_to_floating_point<T>(*str);
 
@@ -102,7 +80,7 @@ int string_to_floats(const char** const str, T* const... floats)
 
         int cnt = 0;
 
-        ((read_one_float_from_string(str, floats) ? ++cnt : false) && ...);
+        ((read_float(str, floats) ? ++cnt : false) && ...);
 
         return cnt;
 }
@@ -134,23 +112,25 @@ template <typename Iter, typename Op>
         return first;
 }
 
-template <typename T, typename Iter>
-[[nodiscard]] std::tuple<std::optional<T>, Iter> read_integer(const Iter first, const Iter last)
+template <typename T>
+[[nodiscard]] std::tuple<std::optional<T>, const char*> read_integer(const char* const first, const char* const last)
 {
-        namespace impl = data_read_implementation;
+        static_assert(std::is_integral_v<T>);
 
-        static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+        T v;
+        const auto [ptr, ec] = std::from_chars(first, last, v);
 
-        const Iter i1 = (first < last && *first == '-') ? first + 1 : first;
-        const Iter i2 = read(i1, last, ascii::is_digit);
+        if (ec == std::errc{})
+        {
+                return {v, ptr};
+        }
 
-        if (i2 == i1)
+        if (ptr == first)
         {
                 return {std::nullopt, first};
         }
 
-        const T v = impl::digits_to_integer<T>(i1, i2);
-        return {(first == i1) ? v : -v, i2};
+        error("Error reading integral from " + std::string(first, last));
 }
 
 template <std::size_t N, typename T>
