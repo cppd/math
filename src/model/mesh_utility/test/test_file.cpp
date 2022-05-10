@@ -38,8 +38,6 @@ namespace
 template <std::size_t N>
 void compare_obj(const mesh::Mesh<N>& mesh, const std::unique_ptr<const mesh::Mesh<N>>& file_mesh)
 {
-        LOG("Comparing meshes...");
-
         if (!file_mesh)
         {
                 error("Error writing and reading OBJ files (no mesh)");
@@ -89,8 +87,6 @@ void compare_obj(const mesh::Mesh<N>& mesh, const std::unique_ptr<const mesh::Me
 template <std::size_t N>
 void compare_stl(const mesh::Mesh<N>& mesh, const std::unique_ptr<const mesh::Mesh<N>>& file_mesh)
 {
-        LOG("Comparing meshes...");
-
         if (!file_mesh)
         {
                 error("Error writing and reading STL files (no mesh)");
@@ -127,7 +123,10 @@ void test_obj_file(
         const std::filesystem::path saved_file = mesh::save_to_obj(mesh, file_name, comment);
 
         LOG("Loading from OBJ...");
-        compare_obj<N>(mesh, mesh::load<N>(saved_file, progress));
+        const std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
+
+        LOG("Comparing meshes...");
+        compare_obj(mesh, file_mesh);
 }
 
 template <std::size_t N>
@@ -154,7 +153,10 @@ void test_stl_file(
                 const std::filesystem::path saved_file = mesh::save_to_stl(mesh, file_name, comment, ascii_format);
 
                 LOG("Loading from " + type_name + " STL...");
-                compare_stl<N>(mesh, mesh::load<N>(saved_file, progress));
+                const std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
+
+                LOG("Comparing meshes...");
+                compare_stl(mesh, file_mesh);
         }
 
         if (!ascii_format)
@@ -166,7 +168,21 @@ void test_stl_file(
                                 file::save_to_stl_file(mesh, file_name, comment, ascii_format, byte_swap);
 
                         LOG("Loading from " + type_name + " STL (" + (byte_swap ? "" : "no ") + "byte swap)...");
-                        compare_stl<N>(mesh, file::load_from_stl_file<N>(saved_file, progress, byte_swap));
+                        const std::unique_ptr<const mesh::Mesh<N>> file_mesh =
+                                file::load_from_stl_file<N>(saved_file, progress, byte_swap);
+
+                        LOG("Comparing meshes...");
+                        compare_stl(mesh, file_mesh);
+
+                        try
+                        {
+                                file::load_from_stl_file<N>(saved_file, progress, !byte_swap);
+                        }
+                        catch (...)
+                        {
+                                return;
+                        }
+                        error("Error writing and reading STL files (byte swap error)");
                 };
 
                 test(false);
