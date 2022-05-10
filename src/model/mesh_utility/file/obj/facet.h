@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../../../mesh.h"
-#include "../data_read.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/read.h>
 #include <src/com/string/ascii.h>
 
 #include <array>
@@ -43,7 +43,7 @@ const char* read_digit_group(const char* first, const char* const last, std::arr
 
         // vertex
         {
-                const auto [value, ptr] = read_integer<T>(first, last);
+                const auto [value, ptr] = read_from_chars<T>(first, last);
                 if (value)
                 {
                         if (*value == 0)
@@ -81,7 +81,7 @@ const char* read_digit_group(const char* first, const char* const last, std::arr
                         continue;
                 }
 
-                const auto [value, ptr] = read_integer<T>(first, last);
+                const auto [value, ptr] = read_from_chars<T>(first, last);
                 if (value)
                 {
                         if (*value == 0)

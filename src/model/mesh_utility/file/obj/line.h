@@ -88,7 +88,7 @@ std::optional<Line<N, T>> read_line(
         if (first == "v")
         {
                 Vertex<N, T> data;
-                read_float(second_b, &data.v);
+                read(second_b, &data.v);
                 ++counters->vertex;
                 return data;
         }
@@ -97,7 +97,7 @@ std::optional<Line<N, T>> read_line(
         {
                 TextureVertex<N, T> data;
                 std::optional<T> t;
-                read_float(second_b, &data.v, &t);
+                read(second_b, &data.v, &t);
                 if (t && !(*t == 0))
                 {
                         error(std::to_string(N) + "-dimensional textures are not supported");
@@ -109,7 +109,7 @@ std::optional<Line<N, T>> read_line(
         if (first == "vn")
         {
                 Normal<N, T> data;
-                read_float(second_b, &data.v);
+                read(second_b, &data.v);
                 data.v.normalize();
                 if (!is_finite(data.v))
                 {

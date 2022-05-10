@@ -38,7 +38,7 @@ namespace
 color::Color read_color(const char* const str)
 {
         Vector<3, color::Color::DataType> rgb;
-        read_float(str, &rgb);
+        read(str, &rgb);
 
         for (int i = 0; i < 3; ++i)
         {

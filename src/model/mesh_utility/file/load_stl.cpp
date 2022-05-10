@@ -181,7 +181,7 @@ void read_ascii_stl(
                                 error("Normal coordinates not found in STL file when expected");
                         }
                         Vector<N, float> n;
-                        iter = read_float(iter, &n);
+                        iter = read(iter, &n);
                 }
 
                 iter = read(iter, last, ascii::is_space);
@@ -195,7 +195,7 @@ void read_ascii_stl(
                         {
                                 error("Vertex coordinates not found in STL file when expected");
                         }
-                        iter = read_float(iter, &facet_vertices[v]);
+                        iter = read(iter, &facet_vertices[v]);
                 }
                 yield_facet(facet_vertices);
 

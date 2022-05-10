@@ -60,7 +60,7 @@ void read_points_thread(
 
                 try
                 {
-                        read_float(str, &(*vertices)[line]);
+                        read(str, &(*vertices)[line]);
                 }
                 catch (const std::exception& e)
                 {
