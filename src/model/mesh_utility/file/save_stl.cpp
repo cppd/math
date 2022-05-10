@@ -71,6 +71,7 @@ void write(std::ostream& file, const T& data)
         file.write(reinterpret_cast<const char*>(data_pointer(data)), data_size(data));
 }
 
+template <bool BYTE_SWAP>
 void write_begin_binary(std::ostream& file, const std::uint32_t facet_count)
 {
         struct Begin final
@@ -84,7 +85,7 @@ void write_begin_binary(std::ostream& file, const std::uint32_t facet_count)
         Begin begin;
 
         std::memset(begin.header.data(), 0, begin.header.size());
-        if constexpr (!stl::BYTE_SWAP)
+        if constexpr (!BYTE_SWAP)
         {
                 begin.number_of_triangles = facet_count;
         }
@@ -108,13 +109,15 @@ void write_end_binary(std::ostream& file)
         write(file, End());
 }
 
-template <bool ASCII, std::size_t N>
+template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facet(
         std::ostream& file,
         const Vector<N, double>& normal,
         const std::array<int, N>& indices,
         const std::vector<Vector<N, float>>& vertices)
 {
+        static_assert(!(ASCII && BYTE_SWAP));
+
         const Vector<N, float> n = [&]
         {
                 const Vector<N, float> v = to_vector<float>(normal.normalized());
@@ -157,7 +160,7 @@ void write_facet(
         }
         else
         {
-                if constexpr (!stl::BYTE_SWAP)
+                if constexpr (!BYTE_SWAP)
                 {
                         write(file, n);
                         for (std::size_t i = 0; i < N; ++i)
@@ -176,22 +179,24 @@ void write_facet(
         }
 }
 
-template <bool ASCII, std::size_t N>
+template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
+        static_assert(!(ASCII && BYTE_SWAP));
+
         for (const typename Mesh<N>::Facet& f : mesh.facets)
         {
                 if (!f.has_normal)
                 {
                         const Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
-                        write_facet<ASCII>(file, normal, f.vertices, vertices);
+                        write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
                         const Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
-                        write_facet<ASCII>(file, normal, f.vertices, vertices);
+                        write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else
                 {
@@ -211,14 +216,16 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
                                 normal = -normal;
                         }
 
-                        write_facet<ASCII>(file, normal, v, vertices);
+                        write_facet<ASCII, BYTE_SWAP>(file, normal, v, vertices);
                 }
         }
 }
 
-template <bool ASCII, std::size_t N>
+template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
+        static_assert(!(ASCII && BYTE_SWAP));
+
         if constexpr (NORMALIZE_VERTEX_COORDINATES)
         {
                 std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets(mesh);
@@ -226,11 +233,11 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
                 {
                         error("Facet coordinates are not found");
                 }
-                write_facets<ASCII>(file, mesh, normalize_vertices(mesh, *box));
+                write_facets<ASCII, BYTE_SWAP>(file, mesh, normalize_vertices(mesh, *box));
         }
         else
         {
-                write_facets<ASCII>(file, mesh, mesh.vertices);
+                write_facets<ASCII, BYTE_SWAP>(file, mesh, mesh.vertices);
         }
 }
 
@@ -277,20 +284,21 @@ void check_facets(const Mesh<N>& mesh)
         }
 }
 
-template <std::size_t N>
-void write(bool ascii, std::ostream& file, const Mesh<N>& mesh, const std::string_view& comment)
+template <bool ASCII, bool BYTE_SWAP, std::size_t N>
+void write(std::ostream& file, const Mesh<N>& mesh, const std::string_view& comment)
 {
-        if (ascii)
+        if constexpr (ASCII)
         {
+                static_assert(!BYTE_SWAP);
                 const std::string solid_name = comment_to_solid_name(comment);
                 write_begin_ascii(file, solid_name);
-                write_facets<true>(file, mesh);
+                write_facets<ASCII, BYTE_SWAP>(file, mesh);
                 write_end_ascii(file, solid_name);
         }
         else
         {
-                write_begin_binary(file, mesh.facets.size());
-                write_facets<false>(file, mesh);
+                write_begin_binary<BYTE_SWAP>(file, mesh.facets.size());
+                write_facets<ASCII, BYTE_SWAP>(file, mesh);
                 write_end_binary(file);
         }
 }
@@ -301,7 +309,8 @@ std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const Path& file_name,
         const std::string_view& comment,
-        const bool ascii_format)
+        const bool ascii_format,
+        const bool byte_swap)
 {
         static_assert(N >= 3);
 
@@ -326,7 +335,21 @@ std::filesystem::path save_to_stl_file(
 
         const Clock::time_point start_time = Clock::now();
 
-        write(ascii_format, file, mesh, comment);
+        if (ascii_format)
+        {
+                write<true, false>(file, mesh, comment);
+        }
+        else
+        {
+                if (byte_swap)
+                {
+                        write<false, true>(file, mesh, comment);
+                }
+                else
+                {
+                        write<false, false>(file, mesh, comment);
+                }
+        }
 
         if (!file)
         {
@@ -340,7 +363,7 @@ std::filesystem::path save_to_stl_file(
 
 #define SAVE_TO_STL_FILE_INSTANTIATION(N)                \
         template std::filesystem::path save_to_stl_file( \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool, bool);
 
 SAVE_TO_STL_FILE_INSTANTIATION(3)
 SAVE_TO_STL_FILE_INSTANTIATION(4)

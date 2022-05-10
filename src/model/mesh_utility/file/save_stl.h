@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../mesh.h"
 
+#include <bit>
 #include <filesystem>
 #include <string_view>
 
@@ -29,5 +30,6 @@ std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const Path& file_name,
         const std::string_view& comment,
-        bool ascii_format);
+        bool ascii_format,
+        bool byte_swap = (std::endian::native == std::endian::big));
 }

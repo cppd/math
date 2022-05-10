@@ -46,6 +46,7 @@ constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_FACET_SIZE = N* N * sizeof(float);
 
+template <bool BYTE_SWAP>
 std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
 {
         ASSERT(data.size() >= BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE);
@@ -53,7 +54,7 @@ std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
         std::uint32_t v;
         static_assert(sizeof(v) == BINARY_NUMBER_OF_TRIANGLES_SIZE);
         std::memcpy(&v, &data[BINARY_NUMBER_OF_TRIANGLES_OFFSET], sizeof(v));
-        if constexpr (!stl::BYTE_SWAP)
+        if constexpr (!BYTE_SWAP)
         {
                 return v;
         }
@@ -63,7 +64,7 @@ std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
         }
 }
 
-template <std::size_t N>
+template <std::size_t N, bool BYTE_SWAP>
 bool is_binary(const std::vector<char>& data)
 {
         if (data.size() <= BINARY_DATA_OFFSET)
@@ -71,7 +72,7 @@ bool is_binary(const std::vector<char>& data)
                 return false;
         }
 
-        const std::uint32_t number_of_triangles = binary_number_of_triangles(data);
+        const std::uint32_t number_of_triangles = binary_number_of_triangles<BYTE_SWAP>(data);
 
         const std::uintmax_t required_binary_size =
                 BINARY_DATA_OFFSET + number_of_triangles * (BINARY_NORMAL_SIZE<N> + BINARY_FACET_SIZE<N>);
@@ -213,7 +214,7 @@ void read_ascii_stl(
         LOG("STL facet count: " + to_string(facet_count));
 }
 
-template <std::size_t N>
+template <std::size_t N, bool BYTE_SWAP>
 void read_binary_stl(
         const std::vector<char>& data,
         ProgressRatio* const progress,
@@ -221,13 +222,13 @@ void read_binary_stl(
 {
         ASSERT(data.size() >= BINARY_DATA_OFFSET);
 
-        const std::uint32_t facet_count = binary_number_of_triangles(data);
+        const std::uint32_t facet_count = binary_number_of_triangles<BYTE_SWAP>(data);
         ASSERT(BINARY_DATA_OFFSET + facet_count * (BINARY_NORMAL_SIZE<N> + BINARY_FACET_SIZE<N>) <= data.size());
 
         const char* read_ptr = &data[BINARY_DATA_OFFSET];
         const double facet_count_reciprocal = 1.0 / facet_count;
 
-        std::array<Vector<N, std::conditional_t<!stl::BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
+        std::array<Vector<N, std::conditional_t<!BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
         static_assert(sizeof(facet_vertices) == BINARY_FACET_SIZE<N>);
 
         read_ptr += BINARY_NORMAL_SIZE<N>;
@@ -239,7 +240,7 @@ void read_binary_stl(
                 }
 
                 std::memcpy(&facet_vertices, read_ptr, sizeof(facet_vertices));
-                if constexpr (!stl::BYTE_SWAP)
+                if constexpr (!BYTE_SWAP)
                 {
                         yield_facet(facet_vertices);
                 }
@@ -254,7 +255,7 @@ void read_binary_stl(
         LOG("STL facet count: " + to_string(facet_count));
 }
 
-template <std::size_t N>
+template <std::size_t N, bool BYTE_SWAP>
 std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, ProgressRatio* const progress)
 {
         std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
@@ -292,9 +293,9 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 
         std::vector<char> data = read_file(file_name);
 
-        if (is_binary<N>(std::as_const(data)))
+        if (is_binary<N, BYTE_SWAP>(std::as_const(data)))
         {
-                read_binary_stl<N>(data, progress, yield_facet);
+                read_binary_stl<N, BYTE_SWAP>(data, progress, yield_facet);
         }
         else
         {
@@ -310,19 +311,20 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 }
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* const progress)
+std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* const progress, const bool byte_swap)
 {
         const Clock::time_point start_time = Clock::now();
 
-        std::unique_ptr<Mesh<N>> mesh = read_stl<N>(file_name, progress);
+        std::unique_ptr<Mesh<N>> mesh =
+                byte_swap ? read_stl<N, true>(file_name, progress) : read_stl<N, false>(file_name, progress);
 
         LOG("STL loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*, bool);
+template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*, bool);
+template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*, bool);
+template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*, bool);
 }

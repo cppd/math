@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh::file::stl
 {
-inline constexpr bool BYTE_SWAP = std::endian::native != std::endian::little;
-
 template <typename T>
 [[nodiscard]] constexpr T byte_swap(const T n) requires(std::is_same_v<std::uint32_t, T>)
 {

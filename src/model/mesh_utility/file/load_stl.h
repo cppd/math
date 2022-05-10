@@ -21,10 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
+#include <bit>
 #include <memory>
 
 namespace ns::mesh::file
 {
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* progress);
+std::unique_ptr<Mesh<N>> load_from_stl_file(
+        const Path& file_name,
+        ProgressRatio* progress,
+        bool byte_swap = (std::endian::native == std::endian::big));
 }
