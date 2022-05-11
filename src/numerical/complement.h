@@ -166,6 +166,14 @@ Vector<N, CalculationType> orthogonal_complement(
         return orthogonal_complement(vectors);
 }
 
+template <typename CalculationType, std::size_t N, typename T>
+Vector<N, CalculationType> orthogonal_complement(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N>& indices)
+{
+        return orthogonal_complement<N, T, CalculationType>(points, indices);
+}
+
 //
 
 namespace complement_implementation

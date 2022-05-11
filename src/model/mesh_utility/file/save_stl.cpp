@@ -188,14 +188,12 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
         {
                 if (!f.has_normal)
                 {
-                        const Vector<N, double> normal =
-                                numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
+                        const Vector<N, double> normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
                         write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
-                        const Vector<N, double> normal =
-                                numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
+                        const Vector<N, double> normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
                         write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else

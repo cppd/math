@@ -110,7 +110,7 @@ protected:
                 const int convex_hull_point,
                 const IntegerFacet* const convex_hull_facet)
                 : vertices_(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<N, DataType, ComputeType>(points, vertices_.data()))
+                  ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices_.data()))
         {
                 ASSERT(!ortho_.is_zero());
 
@@ -298,7 +298,7 @@ protected:
                 const int convex_hull_point,
                 const IntegerFacet* const convex_hull_facet)
                 : vertices_(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<N, DataType, mpz_class>(points, vertices_.data()))
+                  ortho_(numerical::orthogonal_complement<mpz_class>(points, vertices_.data()))
         {
                 ASSERT(!ortho_.is_zero());
 
