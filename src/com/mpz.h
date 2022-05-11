@@ -18,136 +18,61 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <gmpxx.h>
-
-#if 0
-
-#include "error.h"
-
-namespace ns
-{
-inline unsigned long long mpz_to_ull(mpz_t z)
-{
-        if (mpz_cmp(z, mpz_class("18446744073709551615").get_mpz_t()) > 0)
-        {
-                error("error convert mpz to unsigned long long");
-        }
-
-        unsigned long long result = 0;
-        mpz_export(&result, nullptr, -1, sizeof(result), 0, 0, z);
-        return result;
-}
-}
-
-#endif
+#include <type_traits>
 
 namespace ns
 {
 namespace mpz_implementation
 {
-
-inline void mpz_from_llong(mpz_t z, const unsigned long long v)
+template <typename T>
+void import(mpz_t mpz, const T v) requires(!std::is_class_v<T>)
 {
-        mpz_import(z, 1, -1, sizeof(v), 0, 0, &v);
+        mpz_import(mpz, 1, -1, sizeof(v), 0, 0, &v);
 }
 
-inline void mpz_from_llong(mpz_t z, const long long v)
+template <typename T>
+void mpz_from_any(mpz_t mpz, const T v) requires(T(-1) > T(0))
+{
+        import(mpz, v);
+}
+
+template <typename T>
+void mpz_from_any(mpz_t mpz, const T v) requires(T(-1) < T(0))
 {
         if (v >= 0)
         {
-                mpz_from_llong(z, static_cast<unsigned long long>(v));
+                import(mpz, v);
+                return;
         }
-        else
-        {
-                mpz_from_llong(z, static_cast<unsigned long long>(-v));
-                mpz_neg(z, z);
-        }
-}
-
-inline void mpz_from_int128(mpz_t z, const unsigned __int128 v)
-{
-        mpz_import(z, 1, -1, sizeof(v), 0, 0, &v);
-}
-
-inline void mpz_from_int128(mpz_t z, const __int128 v)
-{
-        if (v >= 0)
-        {
-                mpz_from_int128(z, static_cast<unsigned __int128>(v));
-        }
-        else
-        {
-                mpz_from_int128(z, static_cast<unsigned __int128>(-v));
-                mpz_neg(z, z);
-        }
+        import(mpz, -v);
+        mpz_neg(mpz, mpz);
 }
 }
 
 template <typename T>
-void mpz_from_any(mpz_class* const z, const T& v)
+void mpz_from_any(mpz_class* const mpz, const T v)
 {
-        *z = v;
+        static_assert(std::is_integral_v<T>);
+        *mpz = v;
 }
 
-inline void mpz_from_any(mpz_class* const z, const unsigned __int128 v)
+inline void mpz_from_any(mpz_class* const mpz, const long long v)
 {
-        mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const z, const __int128 v)
+inline void mpz_from_any(mpz_class* const mpz, const unsigned long long v)
 {
-        mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const z, const unsigned long long v)
+inline void mpz_from_any(mpz_class* const mpz, const __int128 v)
 {
-        mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const z, const long long v)
+inline void mpz_from_any(mpz_class* const mpz, const unsigned __int128 v)
 {
-        mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
 }
-
-#if 0
-class MPZ : public mpz_class
-{
-public:
-        MPZ() = default;
-        MPZ(const MPZ& v) = default;
-        MPZ& operator=(const MPZ& v) = default;
-        MPZ(MPZ&& v) = default;
-        MPZ& operator=(MPZ&& v) = default;
-        ~MPZ() = default;
-
-        template <typename... T>
-        MPZ(T&&... v) : mpz_class(std::forward<T>(v)...)
-        {
-        }
-        MPZ(const unsigned long long v)
-        {
-                *this = v;
-        }
-        MPZ(const long long v)
-        {
-                *this = v;
-        }
-
-        template <typename T>
-        MPZ& operator=(T&& v)
-        {
-                *(static_cast<mpz_class*>(this)) = std::forward<T>(v);
-                return *this;
-        }
-        MPZ& operator=(const unsigned long long v)
-        {
-                mpz_from_any(this, v);
-                return *this;
-        }
-        MPZ& operator=(const long long v)
-        {
-                mpz_from_any(this, v);
-                return *this;
-        }
-};
-#endif
 }
