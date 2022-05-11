@@ -20,31 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "max_values.h"
 
 #include <src/com/names.h>
-#include <src/com/print.h>
-#include <src/com/type/concept.h>
 #include <src/com/type/find.h>
-#include <src/com/type/limit.h>
+#include <src/com/type/name_ext.h>
 
+#include <gmpxx.h>
 #include <sstream>
 
 namespace ns::geometry::convex_hull
 {
-namespace integer_types_implementation
-{
-template <typename T>
-std::string type_str() requires(!std::is_same_v<std::remove_cv_t<T>, mpz_class>)
-{
-        static_assert(Integral<T>);
-        return to_string(Limits<T>::digits()) + " bits";
-}
-
-template <typename T>
-std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
-{
-        return "mpz_class";
-}
-}
-
 inline constexpr int CONVEX_HULL_BITS = 30;
 inline constexpr int DELAUNAY_BITS = 24;
 
@@ -81,30 +64,26 @@ using DelaunayDataType = LeastSignedInteger<DELAUNAY_BITS>;
 template <std::size_t N>
 std::string convex_hull_type_description()
 {
-        namespace impl = integer_types_implementation;
-
         std::ostringstream oss;
         oss << "Convex hull " << space_name(N) << '\n';
         oss << "  Max: " << CONVEX_HULL_BITS << '\n';
-        oss << "  Data: " << impl::type_str<ConvexHullDataType<N>>() << '\n';
-        oss << "  Compute: " << impl::type_str<ConvexHullComputeType<N>>();
+        oss << "  Data: " << type_bit_name<ConvexHullDataType<N>>() << '\n';
+        oss << "  Compute: " << type_bit_name<ConvexHullComputeType<N>>();
         return oss.str();
 }
 
 template <std::size_t N>
 std::string delaunay_type_description()
 {
-        namespace impl = integer_types_implementation;
-
         std::ostringstream oss;
         oss << "Delaunay" << '\n';
         oss << "  Convex hull " << space_name(N + 1) << '\n';
         oss << "    Max: " << DELAUNAY_BITS << '\n';
-        oss << "    Data: " << impl::type_str<DelaunayParaboloidDataType<N + 1>>() << '\n';
-        oss << "    Compute: " << impl::type_str<DelaunayParaboloidComputeType<N + 1>>() << '\n';
+        oss << "    Data: " << type_bit_name<DelaunayParaboloidDataType<N + 1>>() << '\n';
+        oss << "    Compute: " << type_bit_name<DelaunayParaboloidComputeType<N + 1>>() << '\n';
         oss << "  " << space_name(N) << '\n';
-        oss << "    Data: " << impl::type_str<DelaunayDataType<N>>() << '\n';
-        oss << "    Compute: " << impl::type_str<DelaunayComputeType<N>>();
+        oss << "    Data: " << type_bit_name<DelaunayDataType<N>>() << '\n';
+        oss << "    Compute: " << type_bit_name<DelaunayComputeType<N>>();
         return oss.str();
 }
 }

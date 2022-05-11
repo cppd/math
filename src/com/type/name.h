@@ -82,6 +82,108 @@ constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, _
         return "__float128";
 }
 
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, bool>)
+{
+        return "bool";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char>)
+{
+        return "char";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, signed char>)
+{
+        return "signed char";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned char>)
+{
+        return "unsigned char";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char8_t>)
+{
+        return "char8_t";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char16_t>)
+{
+        return "char16_t";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char32_t>)
+{
+        return "char32_t";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, short>)
+{
+        return "short";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned short>)
+{
+        return "unsigned short";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, int>)
+{
+        return "int";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned int>)
+{
+        return "unsigned int";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, long>)
+{
+        return "long";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned long>)
+{
+        return "unsigned long";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, long long>)
+{
+        return "long long";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned long long>)
+{
+        return "unsigned long long";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, __int128>)
+{
+        return "__int128";
+}
+
+template <typename T>
+constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+{
+        return "unsigned __int128";
+}
+
 //
 
 template <type_name_implementation::BitFloatingPoint T>
@@ -99,6 +201,58 @@ const char* type_bit_name()
         {
                 static constexpr std::array STR =
                         std::to_array<char>({'f', 'p', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
+                return STR.data();
+        }
+}
+
+template <typename T>
+const char* type_bit_name() requires(
+        (std::is_integral_v<T> && std::is_signed_v<T>) || (std::is_same_v<std::remove_cv_t<T>, signed __int128>))
+{
+        static constexpr std::size_t SIZE = 1 + Limits<T>::digits();
+        static_assert(SIZE >= 1 && SIZE <= 999);
+
+        if constexpr (SIZE < 10)
+        {
+                static constexpr std::array STR = std::to_array<char>({'i', 'n', 't', '0' + SIZE, 0});
+                return STR.data();
+        }
+        else if constexpr (SIZE < 100)
+        {
+                static constexpr std::array STR =
+                        std::to_array<char>({'i', 'n', 't', '0' + SIZE / 10, '0' + SIZE % 10, 0});
+                return STR.data();
+        }
+        else
+        {
+                static constexpr std::array STR = std::to_array<char>(
+                        {'i', 'n', 't', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
+                return STR.data();
+        }
+}
+
+template <typename T>
+const char* type_bit_name() requires(
+        (std::is_integral_v<T> && std::is_unsigned_v<T>) || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>))
+{
+        static constexpr std::size_t SIZE = Limits<T>::digits();
+        static_assert(SIZE >= 1 && SIZE <= 999);
+
+        if constexpr (SIZE < 10)
+        {
+                static constexpr std::array STR = std::to_array<char>({'u', 'i', 'n', 't', '0' + SIZE, 0});
+                return STR.data();
+        }
+        else if constexpr (SIZE < 100)
+        {
+                static constexpr std::array STR =
+                        std::to_array<char>({'u', 'i', 'n', 't', '0' + SIZE / 10, '0' + SIZE % 10, 0});
+                return STR.data();
+        }
+        else
+        {
+                static constexpr std::array STR = std::to_array<char>(
+                        {'u', 'i', 'n', 't', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
                 return STR.data();
         }
 }

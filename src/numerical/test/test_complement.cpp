@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
-#include <src/com/type/name.h>
+#include <src/com/type/name_ext.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -249,18 +249,6 @@ std::array<Vector<N, T>, N - 1> random_vectors(RandomEngine& engine)
         return vectors;
 }
 
-template <typename T>
-std::string type_name() requires std::is_same_v<mpz_class, T>
-{
-        return "mpz";
-}
-
-template <typename T>
-std::string type_name() requires std::is_same_v<long long, T>
-{
-        return "long long";
-}
-
 template <std::size_t N, typename T>
 void test_integer_impl()
 {
@@ -275,7 +263,7 @@ void test_integer_impl()
         {
                 if (++i > 10)
                 {
-                        error("Non-zero complement not found, " + type_name<T>());
+                        error(std::string("Non-zero complement not found, ") + type_name<T>());
                 }
                 vectors = random_vectors<N, T>(engine);
                 complement = orthogonal_complement(vectors);
@@ -285,7 +273,7 @@ void test_integer_impl()
         {
                 if (dot(complement, v) != 0)
                 {
-                        error("Complement is not orthogonal, " + type_name<T>());
+                        error(std::string("Complement is not orthogonal, ") + type_name<T>());
                 }
         }
 }

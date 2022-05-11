@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name_ext.h>
 #include <src/test/test.h>
 
 #include <gmpxx.h>
@@ -120,37 +121,28 @@ public:
 };
 
 template <typename T>
-void write(const std::string& name, const std::vector<T>& data)
+void write(const T value)
 {
+        const std::vector<T> data(N, value);
         const long long p = COUNT * (data.size() / computation(data));
-        LOG("Compare types <" + name + ">: " + to_string_digit_groups(p) + " o/s");
+        LOG(std::string("Compare types <") + type_name<T>() + ">: " + to_string_digit_groups(p) + " o/s");
 }
 
 void compare_types()
 {
         MpfPrecision mpf_precision(128);
 
-        write("MPZ", std::vector<mpz_class>(N, 1e16));
-
-        write("MPF", std::vector<mpf_class>(N, 1e12));
-
-        write("__float128", std::vector<__float128>(N, 1e12));
-
-        write("float", std::vector<float>(N, 1e6));
-
-        write("double", std::vector<double>(N, 1e12));
-
-        write("long double", std::vector<long double>(N, 1e12));
-
-        write("int", std::vector<int>(N, max_int<int>()));
-
-        write("long", std::vector<long>(N, max_int<long>()));
-
-        write("long long", std::vector<long long>(N, max_int<long long>()));
-
-        write("__int128", std::vector<__int128>(N, 1e16));
-
-        write("unsigned __int128", std::vector<unsigned __int128>(N, 1e16));
+        write<mpz_class>(1e16);
+        write<mpf_class>(1e12);
+        write<__float128>(1e12);
+        write<float>(1e6);
+        write<double>(1e12);
+        write<long double>(1e12);
+        write<int>(max_int<int>());
+        write<long>(max_int<long>());
+        write<long long>(max_int<long long>());
+        write<__int128>(1e16);
+        write<unsigned __int128>(1e16);
 }
 
 TEST_PERFORMANCE("Arithmetic types", compare_types)

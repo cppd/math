@@ -31,10 +31,10 @@ Wiley, 2014.
 #include "vector.h"
 
 #include <src/com/error.h>
-#include <src/com/mpz.h>
 
 #include <array>
 #include <cmath>
+#include <gmpxx.h>
 #include <vector>
 
 namespace ns::numerical

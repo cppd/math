@@ -17,28 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <cstdint>
 #include <gmpxx.h>
 #include <type_traits>
 
 namespace ns
 {
 // clang-format off
-template<int BITS>
+template<unsigned BIT_COUNT>
 using LeastSignedInteger =
-        std::conditional_t<BITS <=   7, std::int_least8_t,
-        std::conditional_t<BITS <=  15, std::int_least16_t,
-        std::conditional_t<BITS <=  31, std::int_least32_t,
-        std::conditional_t<BITS <=  63, std::int_least64_t,
-        std::conditional_t<BITS <= 127, signed __int128,
+        std::conditional_t<BIT_COUNT <=   7, std::int_least8_t,
+        std::conditional_t<BIT_COUNT <=  15, std::int_least16_t,
+        std::conditional_t<BIT_COUNT <=  31, std::int_least32_t,
+        std::conditional_t<BIT_COUNT <=  63, std::int_least64_t,
+        std::conditional_t<BIT_COUNT <= 127, signed __int128,
         mpz_class>>>>>;
 
-template<int BITS>
+template<unsigned BIT_COUNT>
 using LeastUnsignedInteger =
-        std::conditional_t<BITS <=   8, std::uint_least8_t,
-        std::conditional_t<BITS <=  16, std::uint_least16_t,
-        std::conditional_t<BITS <=  32, std::uint_least32_t,
-        std::conditional_t<BITS <=  64, std::uint_least64_t,
-        std::conditional_t<BITS <= 128, unsigned __int128,
+        std::conditional_t<BIT_COUNT <=   8, std::uint_least8_t,
+        std::conditional_t<BIT_COUNT <=  16, std::uint_least16_t,
+        std::conditional_t<BIT_COUNT <=  32, std::uint_least32_t,
+        std::conditional_t<BIT_COUNT <=  64, std::uint_least64_t,
+        std::conditional_t<BIT_COUNT <= 128, unsigned __int128,
         mpz_class>>>>>;
 // clang-format on
 }
