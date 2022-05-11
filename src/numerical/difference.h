@@ -37,7 +37,7 @@ void difference(Vector<N, mpz_class>* const result, const Vector<N, T>& a, const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                mpz_from_any(&(*result)[i], a[i] - b[i]);
+                set_mpz(&(*result)[i], a[i] - b[i]);
         }
 }
 

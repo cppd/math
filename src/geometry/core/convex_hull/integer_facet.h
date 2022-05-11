@@ -260,11 +260,11 @@ class IntegerFacet<N, DataType, mpz_class>
                 const Vector<N, DataType>& facet_point = points[vertices_[0]];
                 const Vector<N, DataType>& point = points[p];
 
-                mpz_from_any(&to_point, point[0] - facet_point[0]);
+                set_mpz(&to_point, point[0] - facet_point[0]);
                 mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
                 for (unsigned n = 1; n < N; ++n)
                 {
-                        mpz_from_any(&to_point, point[n] - facet_point[n]);
+                        set_mpz(&to_point, point[n] - facet_point[n]);
                         mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), to_point.get_mpz_t());
                 }
 

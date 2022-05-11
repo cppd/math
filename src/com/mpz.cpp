@@ -27,38 +27,43 @@ namespace ns
 namespace
 {
 template <typename T>
-T to_int(const mpz_t mpz)
+T export_mpz(const mpz_t mpz)
 {
+        static_assert(
+                (std::is_integral_v<T>) || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+                || (std::is_same_v<std::remove_cv_t<T>, signed __int128>));
+
         if (mpz_sizeinbase(mpz, Limits<T>::radix()) > static_cast<std::size_t>(Limits<T>::digits()))
         {
                 error("mpz size " + to_string(mpz_sizeinbase(mpz, Limits<T>::radix())) + " is too large for "
                       + to_string(Limits<T>::digits()) + " digit integer");
         }
+
         T res = 0;
         mpz_export(&res, nullptr, -1, sizeof(res), 0, 0, mpz);
         return res;
 }
 
 template <typename T>
-T mpz_to_int(const mpz_t mpz) requires(T(-1) > T(0))
+T to_int(const mpz_t mpz) requires(T(-1) > T(0))
 {
-        return to_int<T>(mpz);
+        return export_mpz<T>(mpz);
 }
 
 template <typename T>
-T mpz_to_int(const mpz_t mpz) requires(T(-1) < T(0))
+T to_int(const mpz_t mpz) requires(T(-1) < T(0))
 {
         if (mpz_sgn(mpz) >= 0)
         {
-                return to_int<T>(mpz);
+                return export_mpz<T>(mpz);
         }
-        return -to_int<T>(mpz);
+        return -export_mpz<T>(mpz);
 }
 
 template <typename T>
-T mpz_to_int(const mpz_class& mpz)
+T to_int(const mpz_class& mpz)
 {
-        return mpz_to_int<T>(mpz.get_mpz_t());
+        return to_int<T>(mpz.get_mpz_t());
 }
 
 template <typename T>
@@ -67,11 +72,11 @@ void compare(const T v)
         const mpz_class mpz = [&]
         {
                 mpz_class res;
-                mpz_from_any(&res, v);
+                set_mpz(&res, v);
                 return res;
         }();
 
-        const T mpz_value = mpz_to_int<T>(mpz);
+        const T mpz_value = to_int<T>(mpz);
         if (mpz_value == v)
         {
                 return;

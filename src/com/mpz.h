@@ -25,54 +25,58 @@ namespace ns
 namespace mpz_implementation
 {
 template <typename T>
-void import(mpz_t mpz, const T v) requires(!std::is_class_v<T>)
+void import_mpz(mpz_t mpz, const T v)
 {
+        static_assert(
+                (std::is_integral_v<T>) || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+                || (std::is_same_v<std::remove_cv_t<T>, signed __int128>));
+
         mpz_import(mpz, 1, -1, sizeof(v), 0, 0, &v);
 }
 
 template <typename T>
-void mpz_from_any(mpz_t mpz, const T v) requires(T(-1) > T(0))
+void set_mpz(mpz_t mpz, const T v) requires(T(-1) > T(0))
 {
-        import(mpz, v);
+        import_mpz(mpz, v);
 }
 
 template <typename T>
-void mpz_from_any(mpz_t mpz, const T v) requires(T(-1) < T(0))
+void set_mpz(mpz_t mpz, const T v) requires(T(-1) < T(0))
 {
         if (v >= 0)
         {
-                import(mpz, v);
+                import_mpz(mpz, v);
                 return;
         }
-        import(mpz, -v);
+        import_mpz(mpz, -v);
         mpz_neg(mpz, mpz);
 }
 }
 
 template <typename T>
-void mpz_from_any(mpz_class* const mpz, const T v)
+void set_mpz(mpz_class* const mpz, const T v)
 {
         static_assert(std::is_integral_v<T>);
         *mpz = v;
 }
 
-inline void mpz_from_any(mpz_class* const mpz, const long long v)
+inline void set_mpz(mpz_class* const mpz, const long long v)
 {
-        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
+        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const mpz, const unsigned long long v)
+inline void set_mpz(mpz_class* const mpz, const unsigned long long v)
 {
-        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
+        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const mpz, const __int128 v)
+inline void set_mpz(mpz_class* const mpz, const __int128 v)
 {
-        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
+        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
-inline void mpz_from_any(mpz_class* const mpz, const unsigned __int128 v)
+inline void set_mpz(mpz_class* const mpz, const unsigned __int128 v)
 {
-        mpz_implementation::mpz_from_any(mpz->get_mpz_t(), v);
+        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 }
