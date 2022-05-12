@@ -25,8 +25,8 @@ Wiley, 2014.
 
 #pragma once
 
+#include "conversion.h"
 #include "determinant.h"
-#include "difference.h"
 #include "identity.h"
 #include "vector.h"
 
@@ -159,9 +159,10 @@ Vector<N, CalculationType> orthogonal_complement(
         static_assert(N > 1);
 
         std::array<Vector<N, CalculationType>, N - 1> vectors;
+        const Vector<N, T>& p = points[indices[0]];
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
+                set_vector(&vectors[i], points[indices[i + 1]], p);
         }
         return orthogonal_complement(vectors);
 }

@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/numerical/conversion.h>
 #include <src/numerical/determinant.h>
-#include <src/numerical/difference.h>
 
 #include <algorithm>
 #include <array>
@@ -57,10 +57,10 @@ void find_simplex_points(
         static_assert(N > 1);
         static_assert(SIMPLEX_I <= N);
 
+        const Vector<N, SourceType>& p = points[(*simplex_points)[0]];
         for (; point_i < points.size(); ++point_i)
         {
-                numerical::difference(
-                        &(*simplex_vectors)[SIMPLEX_I - 1], points[point_i], points[(*simplex_points)[0]]);
+                numerical::set_vector(&(*simplex_vectors)[SIMPLEX_I - 1], points[point_i], p);
 
                 if (linearly_independent<SIMPLEX_I>(*simplex_vectors))
                 {
