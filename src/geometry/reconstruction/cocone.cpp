@@ -124,6 +124,7 @@ void create_voronoi_delaunay(
         ProgressRatio* const progress)
 {
         std::vector<DelaunaySimplex<N>> delaunay_simplices;
+
         LOG("compute delaunay...");
         compute_delaunay(source_points, points, &delaunay_simplices, progress, true);
 
@@ -135,19 +136,19 @@ void check_rho_and_aplha(const double rho, const double alpha)
 {
         if (!(rho > RHO_MIN && rho < RHO_MAX))
         {
-                std::string interval = "(" + to_string(RHO_MIN) + ", " + to_string(RHO_MAX) + ")";
-                error("Rho must be in the interval " + interval + ", but rho = " + to_string(rho, 10));
+                error("Rho (" + to_string(rho, 10) + ") must be in the interval (" + to_string(RHO_MIN) + ", "
+                      + to_string(RHO_MAX) + ")");
         }
 
         if (!(alpha > ALPHA_MIN && alpha < ALPHA_MAX))
         {
-                std::string interval = "(" + to_string(ALPHA_MIN) + ", " + to_string(ALPHA_MAX) + ")";
-                error("Alpha must be in the interval " + interval + ", but alpha = " + to_string(alpha, 10));
+                error("Alpha (" + to_string(alpha, 10) + ") must be in the interval (" + to_string(ALPHA_MIN) + ", "
+                      + to_string(ALPHA_MAX) + ")");
         }
 }
 
 template <std::size_t N>
-class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldConstructorCocone<N>
+class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCocone<N>
 {
         const bool cocone_only_;
 
@@ -270,10 +271,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         }
 
 public:
-        ManifoldConstructorImpl(
-                const std::vector<Vector<N, float>>& source_points,
-                const bool cocone_only,
-                ProgressRatio* const progress)
+        Impl(const std::vector<Vector<N, float>>& source_points, const bool cocone_only, ProgressRatio* const progress)
                 : cocone_only_(cocone_only),
                   source_points_(source_points)
         {
@@ -288,7 +286,7 @@ public:
                 create_voronoi_delaunay(source_points, &points_, &delaunay_objects_, &delaunay_facets_, progress);
 
                 find_vertex_and_facet_data(
-                        !cocone_only, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
+                        !cocone_only_, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
 
                 ASSERT(source_points.size() == points_.size());
         }
@@ -300,7 +298,7 @@ std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* const progress)
 {
-        return std::make_unique<ManifoldConstructorImpl<N>>(source_points, false, progress);
+        return std::make_unique<Impl<N>>(source_points, false, progress);
 }
 
 template <std::size_t N>
@@ -308,7 +306,7 @@ std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* const progress)
 {
-        return std::make_unique<ManifoldConstructorImpl<N>>(source_points, true, progress);
+        return std::make_unique<Impl<N>>(source_points, true, progress);
 }
 
 #define CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(N)                                    \
