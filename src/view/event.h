@@ -39,27 +39,28 @@ namespace command
 {
 struct UpdateMeshObject final
 {
-        std::weak_ptr<const mesh::MeshObject<3>> object;
+        std::weak_ptr<const model::mesh::MeshObject<3>> object;
 
-        explicit UpdateMeshObject(std::weak_ptr<const mesh::MeshObject<3>> object) : object(std::move(object))
+        explicit UpdateMeshObject(std::weak_ptr<const model::mesh::MeshObject<3>> object) : object(std::move(object))
         {
         }
 };
 
 struct UpdateVolumeObject final
 {
-        std::weak_ptr<const volume::VolumeObject<3>> object;
+        std::weak_ptr<const model::volume::VolumeObject<3>> object;
 
-        explicit UpdateVolumeObject(std::weak_ptr<const volume::VolumeObject<3>> object) : object(std::move(object))
+        explicit UpdateVolumeObject(std::weak_ptr<const model::volume::VolumeObject<3>> object)
+                : object(std::move(object))
         {
         }
 };
 
 struct DeleteObject final
 {
-        ObjectId id;
+        model::ObjectId id;
 
-        explicit DeleteObject(const ObjectId id) : id(id)
+        explicit DeleteObject(const model::ObjectId id) : id(id)
         {
         }
 };

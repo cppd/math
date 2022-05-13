@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <variant>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 template <std::size_t N>
 inline constexpr std::size_t MAX_FACETS_PER_LINE = (N == 3 ? 5 : 1);

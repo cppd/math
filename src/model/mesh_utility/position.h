@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 template <std::size_t N>
 void set_center_and_length(Mesh<N>* const mesh)
@@ -36,6 +36,6 @@ void set_center_and_length(Mesh<N>* const mesh)
         {
                 error("Mesh has no geometry");
         }
-        std::tie(mesh->center, mesh->length) = model::center_and_length_for_min_max(box->min, box->max);
+        std::tie(mesh->center, mesh->length) = center_and_length_for_min_max(box->min, box->max);
 }
 }

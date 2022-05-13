@@ -57,9 +57,9 @@ struct VolumeInfo final
 };
 
 template <std::size_t N>
-VolumeInfo read_volume(const volume::VolumeObject<N>& volume_object)
+VolumeInfo read_volume(const model::volume::VolumeObject<N>& volume_object)
 {
-        volume::Reading reading(volume_object);
+        model::volume::Reading reading(volume_object);
 
         return {.min = reading.level_min(),
                 .max = reading.level_max(),
@@ -141,9 +141,9 @@ void VolumeWidget::on_levels_changed(const double min, const double max)
         }
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Writing writing(volume_object.get());
+                        model::volume::Writing writing(volume_object.get());
                         writing.set_levels(min, max);
                 },
                 *volume_object_opt);
@@ -163,9 +163,9 @@ void VolumeWidget::on_transparency_changed()
         const double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Writing writing(volume_object.get());
+                        model::volume::Writing writing(volume_object.get());
                         writing.set_volume_alpha_coefficient(alpha_coefficient);
                 },
                 *volume_object_opt);
@@ -184,9 +184,9 @@ void VolumeWidget::on_isosurface_transparency_changed()
         const double alpha = 1.0 - slider_position(ui_.slider_isosurface_transparency);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Writing writing(volume_object.get());
+                        model::volume::Writing writing(volume_object.get());
                         writing.set_isosurface_alpha(alpha);
                 },
                 *volume_object_opt);
@@ -206,9 +206,9 @@ void VolumeWidget::on_isosurface_clicked()
         }
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Writing writing(volume_object.get());
+                        model::volume::Writing writing(volume_object.get());
                         writing.set_isosurface(checked);
                 },
                 *volume_object_opt);
@@ -227,9 +227,9 @@ void VolumeWidget::on_isovalue_changed()
         const float isovalue = slider_position(ui_.slider_isovalue);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Writing writing(volume_object.get());
+                        model::volume::Writing writing(volume_object.get());
                         writing.set_isovalue(isovalue);
                 },
                 *volume_object_opt);
@@ -247,9 +247,9 @@ void VolumeWidget::on_color_clicked()
 
         color::Color color;
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                 {
-                        volume::Reading reading(*object);
+                        model::volume::Reading reading(*object);
                         color = reading.color();
                 },
                 *object_opt);
@@ -264,10 +264,10 @@ void VolumeWidget::on_color_clicked()
                                 return;
                         }
                         std::visit(
-                                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                                 {
                                         set_widget_color(ui_.widget_color, c);
-                                        volume::Writing writing(object.get());
+                                        model::volume::Writing writing(object.get());
                                         writing.set_color(qcolor_to_color(c));
                                 },
                                 *object_opt);
@@ -289,9 +289,9 @@ void VolumeWidget::on_ambient_changed()
         set_label(ui_.label_ambient, ambient);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                 {
-                        volume::Writing writing(object.get());
+                        model::volume::Writing writing(object.get());
                         writing.set_ambient(ambient);
                 },
                 *object_opt);
@@ -312,9 +312,9 @@ void VolumeWidget::on_metalness_changed()
         set_label(ui_.label_metalness, metalness);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                 {
-                        volume::Writing writing(object.get());
+                        model::volume::Writing writing(object.get());
                         writing.set_metalness(metalness);
                 },
                 *object_opt);
@@ -335,9 +335,9 @@ void VolumeWidget::on_roughness_changed()
         set_label(ui_.label_roughness, roughness);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                 {
-                        volume::Writing writing(object.get());
+                        model::volume::Writing writing(object.get());
                         writing.set_roughness(roughness);
                 },
                 *object_opt);
@@ -347,7 +347,7 @@ void VolumeWidget::on_model_tree_item_update()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        const std::optional<ObjectId> id = model_tree_->current_item();
+        const std::optional<model::ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
@@ -419,7 +419,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
         set_enabled(true);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
                         const VolumeInfo info = read_volume(*volume_object);
 

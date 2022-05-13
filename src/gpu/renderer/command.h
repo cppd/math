@@ -194,27 +194,27 @@ struct SetShadowZoom final
 
 struct MeshUpdate final
 {
-        const mesh::MeshObject<3>* object;
+        const model::mesh::MeshObject<3>* object;
 
-        explicit MeshUpdate(const mesh::MeshObject<3>* const object) : object(object)
+        explicit MeshUpdate(const model::mesh::MeshObject<3>* const object) : object(object)
         {
         }
 };
 
 struct VolumeUpdate final
 {
-        const volume::VolumeObject<3>* object;
+        const model::volume::VolumeObject<3>* object;
 
-        explicit VolumeUpdate(const volume::VolumeObject<3>* const object) : object(object)
+        explicit VolumeUpdate(const model::volume::VolumeObject<3>* const object) : object(object)
         {
         }
 };
 
 struct DeleteObject final
 {
-        ObjectId id;
+        model::ObjectId id;
 
-        explicit DeleteObject(const ObjectId id) : id(id)
+        explicit DeleteObject(const model::ObjectId id) : id(id)
         {
         }
 };

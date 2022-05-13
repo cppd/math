@@ -37,21 +37,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::process
 {
 template <std::size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_mesh(
+std::shared_ptr<model::mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         ProgressRatioList* const progress_list,
         const std::filesystem::path& path)
 {
-        std::unique_ptr<mesh::Mesh<N>> mesh;
+        std::unique_ptr<model::mesh::Mesh<N>> mesh;
 
         {
                 ProgressRatio progress(progress_list);
                 progress.set_text("Loading: %p%");
-                mesh = mesh::load<N>(path, &progress);
+                mesh = model::mesh::load<N>(path, &progress);
         }
 
-        std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
-                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
+        std::shared_ptr<model::mesh::MeshObject<N>> mesh_object = std::make_shared<model::mesh::MeshObject<N>>(
+                std::move(mesh),
+                model::mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
                 object_name);
 
         mesh_object->insert();
@@ -60,15 +61,16 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh(
 }
 
 template <std::size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_point_mesh(
+std::shared_ptr<model::mesh::MeshObject<N>> load_point_mesh(
         const std::string& object_name,
         const int point_count,
         const storage::Repository& repository)
 {
-        std::unique_ptr<mesh::Mesh<N>> mesh = repository.point_mesh<N>(object_name, point_count);
+        std::unique_ptr<model::mesh::Mesh<N>> mesh = repository.point_mesh<N>(object_name, point_count);
 
-        std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
-                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
+        std::shared_ptr<model::mesh::MeshObject<N>> mesh_object = std::make_shared<model::mesh::MeshObject<N>>(
+                std::move(mesh),
+                model::mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
                 object_name);
 
         mesh_object->insert();
@@ -77,15 +79,16 @@ std::shared_ptr<mesh::MeshObject<N>> load_point_mesh(
 }
 
 template <std::size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_facet_mesh(
+std::shared_ptr<model::mesh::MeshObject<N>> load_facet_mesh(
         const std::string& object_name,
         const int facet_count,
         const storage::Repository& repository)
 {
-        std::unique_ptr<mesh::Mesh<N>> mesh = repository.facet_mesh<N>(object_name, facet_count);
+        std::unique_ptr<model::mesh::Mesh<N>> mesh = repository.facet_mesh<N>(object_name, facet_count);
 
-        std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
-                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
+        std::shared_ptr<model::mesh::MeshObject<N>> mesh_object = std::make_shared<model::mesh::MeshObject<N>>(
+                std::move(mesh),
+                model::mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
                 object_name);
 
         mesh_object->insert();
@@ -94,16 +97,18 @@ std::shared_ptr<mesh::MeshObject<N>> load_facet_mesh(
 }
 
 template <std::size_t N>
-std::shared_ptr<volume::VolumeObject<N>> load_volume(
+std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         const int image_size,
         const storage::Repository& repository)
 {
-        std::unique_ptr<volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
+        std::unique_ptr<model::volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
 
-        std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
-                std::move(volume),
-                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
+        std::shared_ptr<model::volume::VolumeObject<N>> volume_object =
+                std::make_shared<model::volume::VolumeObject<N>>(
+                        std::move(volume),
+                        model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>),
+                        object_name);
 
         volume_object->insert();
 
@@ -111,17 +116,19 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
 }
 
 template <std::size_t N, typename Image>
-std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_name, Image&& image)
+std::shared_ptr<model::volume::VolumeObject<N>> load_volume(const std::string& object_name, Image&& image)
 {
-        std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
+        std::unique_ptr<model::volume::Volume<N>> volume = std::make_unique<model::volume::Volume<N>>();
 
         volume->image = std::forward<Image>(image);
 
-        volume->matrix = volume::matrix_for_image_size(volume->image.size);
+        volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
 
-        std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
-                std::move(volume),
-                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
+        std::shared_ptr<model::volume::VolumeObject<N>> volume_object =
+                std::make_shared<model::volume::VolumeObject<N>>(
+                        std::move(volume),
+                        model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>),
+                        object_name);
 
         volume_object->insert();
 
@@ -129,24 +136,26 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_n
 }
 
 template <std::size_t N>
-std::shared_ptr<volume::VolumeObject<N>> load_volume(
+std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         ProgressRatioList* const progress_list,
         const std::filesystem::path& path)
 {
-        std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
+        std::unique_ptr<model::volume::Volume<N>> volume = std::make_unique<model::volume::Volume<N>>();
 
         {
                 ProgressRatio progress(progress_list);
                 progress.set_text("Loading: %p%");
-                volume->image = volume::load<N>(path, &progress);
+                volume->image = model::volume::load<N>(path, &progress);
         }
 
-        volume->matrix = volume::matrix_for_image_size(volume->image.size);
+        volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
 
-        std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
-                std::move(volume),
-                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
+        std::shared_ptr<model::volume::VolumeObject<N>> volume_object =
+                std::make_shared<model::volume::VolumeObject<N>>(
+                        std::move(volume),
+                        model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>),
+                        object_name);
 
         volume_object->insert();
 

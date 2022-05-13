@@ -150,7 +150,7 @@ class Impl final : public MeshObject
 
         //
 
-        void load_mesh_textures_and_materials(const mesh::Mesh<3>& mesh)
+        void load_mesh_textures_and_materials(const model::mesh::Mesh<3>& mesh)
         {
                 textures_.clear();
                 material_buffers_.clear();
@@ -170,7 +170,7 @@ class Impl final : public MeshObject
                         *device_, texture_sampler_, material_layouts_, mesh, textures_, material_buffers_);
         }
 
-        void load_mesh_geometry(const mesh::Mesh<3>& mesh)
+        void load_mesh_geometry(const model::mesh::Mesh<3>& mesh)
         {
                 faces_vertex_buffer_.reset();
                 faces_index_buffer_.reset();
@@ -185,7 +185,7 @@ class Impl final : public MeshObject
                         std::vector<int> material_face_offset;
                         std::vector<int> material_face_count;
 
-                        mesh::sort_facets_by_material(
+                        model::mesh::sort_facets_by_material(
                                 mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
 
                         ASSERT(material_face_offset.size() == material_face_count.size());
@@ -353,9 +353,9 @@ class Impl final : public MeshObject
                 vkCmdDraw(command_buffer, points_vertex_count_, 1, 0, 0);
         }
 
-        UpdateChanges update(const mesh::Reading<3>& mesh_object) override
+        UpdateChanges update(const model::mesh::Reading<3>& mesh_object) override
         {
-                const mesh::Updates updates = mesh_object.updates(&version_);
+                const model::mesh::Updates updates = mesh_object.updates(&version_);
                 if (updates.none())
                 {
                         return {};
@@ -366,13 +366,13 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                static_assert(mesh::Updates().size() == 8);
+                static_assert(model::mesh::Updates().size() == 8);
 
-                static constexpr mesh::Updates LIGHTING_UPDATES(
-                        (1ull << mesh::UPDATE_AMBIENT) | (1ull << mesh::UPDATE_METALNESS)
-                        | (1ull << mesh::UPDATE_ROUGHNESS));
+                static constexpr model::mesh::Updates LIGHTING_UPDATES(
+                        (1ull << model::mesh::UPDATE_AMBIENT) | (1ull << model::mesh::UPDATE_METALNESS)
+                        | (1ull << model::mesh::UPDATE_ROUGHNESS));
 
-                if (updates[mesh::UPDATE_MATRIX])
+                if (updates[model::mesh::UPDATE_MATRIX])
                 {
                         buffer_set_coordinates(mesh_object.matrix());
                         set_transform_matrix(mesh_object.matrix());
@@ -380,7 +380,7 @@ class Impl final : public MeshObject
                         update_changes.matrix = true;
                 }
 
-                if (updates[mesh::UPDATE_ALPHA])
+                if (updates[model::mesh::UPDATE_ALPHA])
                 {
                         buffer_set_alpha(mesh_object.alpha());
 
@@ -392,7 +392,7 @@ class Impl final : public MeshObject
                         }
                 }
 
-                if (updates[mesh::UPDATE_COLOR])
+                if (updates[model::mesh::UPDATE_COLOR])
                 {
                         buffer_set_color(mesh_object.color());
                 }
@@ -402,9 +402,9 @@ class Impl final : public MeshObject
                         buffer_set_lighting(mesh_object.ambient(), mesh_object.metalness(), mesh_object.roughness());
                 }
 
-                if (updates[mesh::UPDATE_MESH])
+                if (updates[model::mesh::UPDATE_MESH])
                 {
-                        const mesh::Mesh<3>& mesh = mesh_object.mesh();
+                        const model::mesh::Mesh<3>& mesh = mesh_object.mesh();
 
                         load_mesh_textures_and_materials(mesh);
                         load_mesh_geometry(mesh);

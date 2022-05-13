@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 namespace
 {

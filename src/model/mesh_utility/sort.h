@@ -33,7 +33,7 @@ Key-indexed counting
 #include <algorithm>
 #include <vector>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 template <std::size_t N>
 void sort_facets_by_material(

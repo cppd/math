@@ -48,7 +48,7 @@ struct VolumeObject
                 bool image = false;
         };
 
-        virtual UpdateChanges update(const volume::Reading<3>& volume_object) = 0;
+        virtual UpdateChanges update(const model::volume::Reading<3>& volume_object) = 0;
 
         virtual bool is_isosurface() const = 0;
 };

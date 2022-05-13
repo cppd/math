@@ -120,8 +120,8 @@ public:
 };
 
 void set_face_vertices(
-        const mesh::Mesh<3>& mesh,
-        const mesh::Mesh<3>::Facet& mesh_facet,
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
         std::array<Vertex, 3>* const face)
 {
         std::array<Vector3f, 3> p;
@@ -197,7 +197,9 @@ void set_face_vertices(
         }
 }
 
-std::vector<std::array<Vertex, 3>> create_faces(const mesh::Mesh<3>& mesh, const std::vector<int>& sorted_face_indices)
+std::vector<std::array<Vertex, 3>> create_faces(
+        const model::mesh::Mesh<3>& mesh,
+        const std::vector<int>& sorted_face_indices)
 {
         std::vector<std::array<Vertex, 3>> faces(sorted_face_indices.size());
 
@@ -291,7 +293,7 @@ void load_vertices(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>& mesh,
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* const index_buffer,
@@ -375,7 +377,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const mesh::Mesh<3>& mesh)
+        const model::mesh::Mesh<3>& mesh)
 {
         if (mesh.points.empty())
         {
@@ -385,7 +387,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         std::vector<PointsVertex> vertices;
         vertices.reserve(mesh.points.size());
 
-        for (const mesh::Mesh<3>::Point& p : mesh.points)
+        for (const model::mesh::Mesh<3>::Point& p : mesh.points)
         {
                 vertices.emplace_back(mesh.vertices[p.vertex]);
         }
@@ -404,7 +406,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const mesh::Mesh<3>& mesh)
+        const model::mesh::Mesh<3>& mesh)
 {
         if (mesh.lines.empty())
         {
@@ -414,7 +416,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         std::vector<PointsVertex> vertices;
         vertices.reserve(2 * mesh.lines.size());
 
-        for (const mesh::Mesh<3>::Line& line : mesh.lines)
+        for (const model::mesh::Mesh<3>::Line& line : mesh.lines)
         {
                 for (int index : line.vertices)
                 {
@@ -436,7 +438,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const mesh::Mesh<3>& mesh)
+        const model::mesh::Mesh<3>& mesh)
 {
         const std::vector<VkFormat> formats(std::cbegin(COLOR_IMAGE_FORMATS), std::cend(COLOR_IMAGE_FORMATS));
 
@@ -467,12 +469,12 @@ std::vector<MaterialBuffer> load_materials(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const mesh::Mesh<3>& mesh)
+        const model::mesh::Mesh<3>& mesh)
 {
         std::vector<MaterialBuffer> buffers;
         buffers.reserve(mesh.materials.size() + 1);
 
-        for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
+        for (const typename model::mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
                 const Vector3f color = mesh_material.color.rgb32().clamp(0, 1);
                 const bool use_texture = (mesh_material.image >= 0);

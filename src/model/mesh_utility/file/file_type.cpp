@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // if number is specified then use it.
 // to find txt dimensions count numbers in the first line.
 
-namespace ns::mesh::file
+namespace ns::model::mesh::file
 {
 namespace
 {

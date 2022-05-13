@@ -31,7 +31,7 @@ namespace ns::process
 template <std::size_t DIMENSION, std::size_t N>
 void compute_slice(
         ProgressRatioList* const /*progress_list*/,
-        const volume::VolumeObject<N>& volume_object,
+        const model::volume::VolumeObject<N>& volume_object,
         const std::vector<std::optional<int>>& slice_coordinates)
 {
         static_assert(DIMENSION < N);
@@ -66,19 +66,21 @@ void compute_slice(
                 error("Error slice parameters");
         }
 
-        std::unique_ptr<volume::Volume<DIMENSION>> volume = std::make_unique<volume::Volume<DIMENSION>>();
+        std::unique_ptr<model::volume::Volume<DIMENSION>> volume = std::make_unique<model::volume::Volume<DIMENSION>>();
 
         {
-                volume::Reading reading(volume_object);
+                model::volume::Reading reading(volume_object);
                 volume->image = image::slice(reading.volume().image, slices);
         }
 
-        volume->matrix = volume::matrix_for_image_size(volume->image.size);
+        volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
 
-        const std::shared_ptr<volume::VolumeObject<DIMENSION>> obj = std::make_shared<volume::VolumeObject<DIMENSION>>(
-                std::move(volume),
-                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<DIMENSION, double>),
-                "Slice " + object_name);
+        const std::shared_ptr<model::volume::VolumeObject<DIMENSION>> obj =
+                std::make_shared<model::volume::VolumeObject<DIMENSION>>(
+                        std::move(volume),
+                        model::volume::model_matrix_for_size_and_position(
+                                *volume, SCENE_SIZE, SCENE_CENTER<DIMENSION, double>),
+                        "Slice " + object_name);
 
         obj->insert(volume_object.id());
 }

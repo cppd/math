@@ -53,39 +53,39 @@ private:
 
         storage::Storage storage_;
 
-        std::unordered_map<QTreeWidgetItem*, ObjectId> map_item_id_;
-        std::unordered_map<ObjectId, Item> map_id_item_;
+        std::unordered_map<QTreeWidgetItem*, model::ObjectId> map_item_id_;
+        std::unordered_map<model::ObjectId, Item> map_id_item_;
 
         std::vector<Connection> connections_;
         ThreadQueue thread_queue_;
 
-        void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
-        void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
+        void insert(storage::MeshObject&& object, const std::optional<model::ObjectId>& parent_object_id) override;
+        void insert(storage::VolumeObject&& object, const std::optional<model::ObjectId>& parent_object_id) override;
         void update(storage::MeshObjectWeak&& object) override;
         void update(storage::VolumeObjectWeak&& object) override;
-        void erase(ObjectId id) override;
+        void erase(model::ObjectId id) override;
 
-        void show(ObjectId id, bool show) override;
-        void show_only_it(ObjectId id) override;
+        void show(model::ObjectId id, bool show) override;
+        void show_only_it(model::ObjectId id) override;
         void clear() override;
 
         void make_menu(const QPoint& pos);
 
         void insert_into_tree(
-                ObjectId id,
+                model::ObjectId id,
                 unsigned dimension,
                 const std::string& name,
-                const std::optional<ObjectId>& parent_object_id);
-        void erase_from_tree(ObjectId id);
+                const std::optional<model::ObjectId>& parent_object_id);
+        void erase_from_tree(model::ObjectId id);
 
         template <typename T>
         void update_weak(const T& object);
 
         template <std::size_t N>
-        void update_item(const std::shared_ptr<mesh::MeshObject<N>>& object);
+        void update_item(const std::shared_ptr<model::mesh::MeshObject<N>>& object);
 
         template <std::size_t N>
-        void update_item(const std::shared_ptr<volume::VolumeObject<N>>& object);
+        void update_item(const std::shared_ptr<model::volume::VolumeObject<N>>& object);
 
 public:
         ModelTree();
@@ -93,18 +93,18 @@ public:
 
         ModelTreeEvents* events();
 
-        std::optional<ObjectId> current_item() const;
+        std::optional<model::ObjectId> current_item() const;
 
         std::optional<storage::MeshObject> current_mesh() const;
         std::optional<storage::MeshObjectConst> current_mesh_const() const;
-        std::optional<storage::MeshObject> mesh_if_current(ObjectId id) const;
-        std::optional<storage::MeshObjectConst> mesh_const_if_current(ObjectId id) const;
+        std::optional<storage::MeshObject> mesh_if_current(model::ObjectId id) const;
+        std::optional<storage::MeshObjectConst> mesh_const_if_current(model::ObjectId id) const;
         std::vector<storage::MeshObjectConst> const_mesh_objects() const;
 
         std::optional<storage::VolumeObject> current_volume() const;
         std::optional<storage::VolumeObjectConst> current_volume_const() const;
-        std::optional<storage::VolumeObject> volume_if_current(ObjectId id) const;
-        std::optional<storage::VolumeObjectConst> volume_const_if_current(ObjectId id) const;
+        std::optional<storage::VolumeObject> volume_if_current(model::ObjectId id) const;
+        std::optional<storage::VolumeObjectConst> volume_const_if_current(model::ObjectId id) const;
         std::vector<storage::VolumeObjectConst> const_volume_objects() const;
 
 Q_SIGNALS:

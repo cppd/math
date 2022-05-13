@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 namespace
 {

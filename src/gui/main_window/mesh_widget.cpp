@@ -51,9 +51,9 @@ struct MeshInfo final
 };
 
 template <std::size_t N>
-MeshInfo read_mesh(const mesh::MeshObject<N>& mesh_object)
+MeshInfo read_mesh(const model::mesh::MeshObject<N>& mesh_object)
 {
-        const mesh::Reading reading(mesh_object);
+        const model::mesh::Reading reading(mesh_object);
 
         return {.alpha = reading.alpha(),
                 .color = reading.color(),
@@ -127,9 +127,9 @@ void MeshWidget::on_ambient_changed()
         set_label(ui_.label_ambient, ambient);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                 {
-                        mesh::Writing writing(object.get());
+                        model::mesh::Writing writing(object.get());
                         writing.set_ambient(ambient);
                 },
                 *object_opt);
@@ -150,9 +150,9 @@ void MeshWidget::on_metalness_changed()
         set_label(ui_.label_metalness, metalness);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                 {
-                        mesh::Writing writing(object.get());
+                        model::mesh::Writing writing(object.get());
                         writing.set_metalness(metalness);
                 },
                 *object_opt);
@@ -173,9 +173,9 @@ void MeshWidget::on_roughness_changed()
         set_label(ui_.label_roughness, roughness);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                 {
-                        mesh::Writing writing(object.get());
+                        model::mesh::Writing writing(object.get());
                         writing.set_roughness(roughness);
                 },
                 *object_opt);
@@ -194,9 +194,9 @@ void MeshWidget::on_transparency_changed()
         const double alpha = 1.0 - slider_position(ui_.slider_transparency);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                 {
-                        mesh::Writing writing(object.get());
+                        model::mesh::Writing writing(object.get());
                         writing.set_alpha(alpha);
                 },
                 *object_opt);
@@ -214,9 +214,9 @@ void MeshWidget::on_color_clicked()
 
         color::Color color;
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                 {
-                        const mesh::Reading reading(*object);
+                        const model::mesh::Reading reading(*object);
                         color = reading.color();
                 },
                 *object_opt);
@@ -231,10 +231,10 @@ void MeshWidget::on_color_clicked()
                                 return;
                         }
                         std::visit(
-                                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                                 {
                                         set_widget_color(ui_.widget_color, c);
-                                        mesh::Writing writing(object.get());
+                                        model::mesh::Writing writing(object.get());
                                         writing.set_color(qcolor_to_color(c));
                                 },
                                 *object_opt);
@@ -245,7 +245,7 @@ void MeshWidget::on_model_tree_item_update()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        const std::optional<ObjectId> id = model_tree_->current_item();
+        const std::optional<model::ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
@@ -301,7 +301,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
         set_enabled(true);
 
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
                 {
                         const MeshInfo info = read_mesh(*mesh_object);
 

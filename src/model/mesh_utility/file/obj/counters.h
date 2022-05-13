@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 struct Counters final
 {

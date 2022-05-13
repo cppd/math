@@ -124,7 +124,7 @@ void save_to_file(
         }
         else
         {
-                volume::save_to_images(path, image_view, progress);
+                model::volume::save_to_images(path, image_view, progress);
         }
 }
 

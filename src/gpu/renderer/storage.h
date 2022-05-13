@@ -53,7 +53,7 @@ class Storage final
 
         StorageEvents<T>* events_;
 
-        std::unordered_map<ObjectId, Object> map_;
+        std::unordered_map<model::ObjectId, Object> map_;
         std::vector<VisibleType*> visible_;
         std::vector<Object*> visible_ptr_;
 
@@ -74,7 +74,7 @@ public:
         {
         }
 
-        bool erase(const ObjectId id)
+        bool erase(const model::ObjectId id)
         {
                 const auto iter = map_.find(id);
                 if (iter == map_.cend())
@@ -113,12 +113,12 @@ public:
                 }
         }
 
-        bool contains(const ObjectId id) const
+        bool contains(const model::ObjectId id) const
         {
                 return map_.contains(id);
         }
 
-        T* object(const ObjectId id)
+        T* object(const model::ObjectId id)
         {
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
@@ -128,14 +128,14 @@ public:
                 return nullptr;
         }
 
-        T* insert(const ObjectId id, std::unique_ptr<T>&& object)
+        T* insert(const model::ObjectId id, std::unique_ptr<T>&& object)
         {
                 const auto pair = map_.emplace(id, std::move(object));
                 ASSERT(pair.second);
                 return pair.first->second.ptr.get();
         }
 
-        void set_visible(const ObjectId id, const bool visible)
+        void set_visible(const model::ObjectId id, const bool visible)
         {
                 const auto iter = map_.find(id);
                 if (iter == map_.cend())
@@ -168,7 +168,7 @@ public:
                 return visible_;
         }
 
-        bool is_visible(const ObjectId id) const
+        bool is_visible(const model::ObjectId id) const
         {
                 const auto iter = map_.find(id);
                 if (iter == map_.cend())

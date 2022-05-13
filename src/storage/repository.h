@@ -76,19 +76,19 @@ public:
         }
 
         template <std::size_t N>
-        std::unique_ptr<mesh::Mesh<N>> point_mesh(const std::string& name, const unsigned point_count) const
+        std::unique_ptr<model::mesh::Mesh<N>> point_mesh(const std::string& name, const unsigned point_count) const
         {
                 return std::get<Repositories<N>>(data_).meshes->point_object(name, point_count);
         }
 
         template <std::size_t N>
-        std::unique_ptr<mesh::Mesh<N>> facet_mesh(const std::string& name, const unsigned facet_count) const
+        std::unique_ptr<model::mesh::Mesh<N>> facet_mesh(const std::string& name, const unsigned facet_count) const
         {
                 return std::get<Repositories<N>>(data_).meshes->facet_object(name, facet_count);
         }
 
         template <std::size_t N>
-        std::unique_ptr<volume::Volume<N>> volume(const std::string& name, const unsigned size) const
+        std::unique_ptr<model::volume::Volume<N>> volume(const std::string& name, const unsigned size) const
         {
                 return std::get<Repositories<N>>(data_).volumes->object(name, size);
         }

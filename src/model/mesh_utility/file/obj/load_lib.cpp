@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/flip.h>
 #include <src/numerical/vector.h>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 namespace
 {

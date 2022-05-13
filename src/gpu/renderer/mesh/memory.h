@@ -38,7 +38,7 @@ std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory
         VkDevice device,
         VkSampler texture_sampler,
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
-        const mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers);
 }

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
-namespace ns::mesh::file
+namespace ns::model::mesh::file
 {
 namespace mesh_check_implementation
 {

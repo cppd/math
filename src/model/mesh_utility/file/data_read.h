@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::mesh::file
+namespace ns::model::mesh::file
 {
 template <typename Iter, typename Op>
 [[nodiscard]] Iter read(Iter first, const Iter last, const Op& op)

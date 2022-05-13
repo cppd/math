@@ -69,7 +69,7 @@ void ModelTree::clear()
 }
 
 template <std::size_t N>
-void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
+void ModelTree::update_item(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
 {
         const auto iter = map_id_item_.find(object->id());
         if (iter == map_id_item_.cend())
@@ -77,7 +77,7 @@ void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 return;
         }
         Item& item = iter->second;
-        item.visible = mesh::Reading(*object).visible();
+        item.visible = model::mesh::Reading(*object).visible();
         set_model_tree_item_style(item.item, item.visible);
         if (item.item == ui_.model_tree->currentItem())
         {
@@ -86,7 +86,7 @@ void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
 }
 
 template <std::size_t N>
-void ModelTree::update_item(const std::shared_ptr<volume::VolumeObject<N>>& object)
+void ModelTree::update_item(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
 {
         const auto iter = map_id_item_.find(object->id());
         if (iter == map_id_item_.cend())
@@ -94,7 +94,7 @@ void ModelTree::update_item(const std::shared_ptr<volume::VolumeObject<N>>& obje
                 return;
         }
         Item& item = iter->second;
-        item.visible = volume::Reading(*object).visible();
+        item.visible = model::volume::Reading(*object).visible();
         set_model_tree_item_style(item.item, item.visible);
         if (item.item == ui_.model_tree->currentItem())
         {
@@ -116,7 +116,7 @@ void ModelTree::update_weak(const T& object)
                 object);
 }
 
-void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert(storage::MeshObject&& object, const std::optional<model::ObjectId>& parent_object_id)
 {
         thread_queue_.push(
                 [this, object = std::move(object), parent_object_id]()
@@ -124,7 +124,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
                         std::visit(
-                                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
+                                [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& mesh)
                                 {
                                         insert_into_tree(mesh->id(), N, mesh->name(), parent_object_id);
                                         storage_.set_object(mesh);
@@ -134,7 +134,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
                 });
 }
 
-void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert(storage::VolumeObject&& object, const std::optional<model::ObjectId>& parent_object_id)
 {
         thread_queue_.push(
                 [this, object = std::move(object), parent_object_id]()
@@ -142,7 +142,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
                         std::visit(
-                                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
+                                [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume)
                                 {
                                         insert_into_tree(volume->id(), N, volume->name(), parent_object_id);
                                         storage_.set_object(volume);
@@ -174,7 +174,7 @@ void ModelTree::update(storage::VolumeObjectWeak&& object)
                 });
 }
 
-void ModelTree::erase(const ObjectId id)
+void ModelTree::erase(const model::ObjectId id)
 {
         thread_queue_.push(
                 [this, id]()
@@ -187,10 +187,10 @@ void ModelTree::erase(const ObjectId id)
 }
 
 void ModelTree::insert_into_tree(
-        const ObjectId id,
+        const model::ObjectId id,
         const unsigned dimension,
         const std::string& name,
-        const std::optional<ObjectId>& parent_object_id)
+        const std::optional<model::ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -228,7 +228,7 @@ void ModelTree::insert_into_tree(
         map_id_item_[id].item = item;
 }
 
-void ModelTree::erase_from_tree(const ObjectId id)
+void ModelTree::erase_from_tree(const model::ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -258,7 +258,7 @@ void ModelTree::erase_from_tree(const ObjectId id)
         } while (item != nullptr && item->childCount() == 0 && !map_item_id_.contains(item));
 }
 
-void ModelTree::show(const ObjectId id, const bool show)
+void ModelTree::show(const model::ObjectId id, const bool show)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -273,24 +273,24 @@ void ModelTree::show(const ObjectId id, const bool show)
         if (volume)
         {
                 std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                        [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
                         {
-                                volume::Writing(volume_object.get()).set_visible(show);
+                                model::volume::Writing(volume_object.get()).set_visible(show);
                         },
                         *volume);
         }
         else if (mesh)
         {
                 std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
+                        [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& mesh_object)
                         {
-                                mesh::Writing(mesh_object.get()).set_visible(show);
+                                model::mesh::Writing(mesh_object.get()).set_visible(show);
                         },
                         *mesh);
         }
 }
 
-void ModelTree::show_only_it(const ObjectId id)
+void ModelTree::show_only_it(const model::ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -304,7 +304,7 @@ void ModelTree::show_only_it(const ObjectId id)
         show(id, true);
 }
 
-std::optional<ObjectId> ModelTree::current_item() const
+std::optional<model::ObjectId> ModelTree::current_item() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -338,7 +338,7 @@ std::optional<storage::MeshObjectConst> ModelTree::current_mesh_const() const
         return std::nullopt;
 }
 
-std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(const ObjectId id) const
+std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(const model::ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -349,7 +349,7 @@ std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(const O
         return std::nullopt;
 }
 
-std::optional<storage::MeshObject> ModelTree::mesh_if_current(const ObjectId id) const
+std::optional<storage::MeshObject> ModelTree::mesh_if_current(const model::ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -382,7 +382,7 @@ std::optional<storage::VolumeObjectConst> ModelTree::current_volume_const() cons
         return std::nullopt;
 }
 
-std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(const ObjectId id) const
+std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(const model::ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -393,7 +393,7 @@ std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(con
         return std::nullopt;
 }
 
-std::optional<storage::VolumeObject> ModelTree::volume_if_current(const ObjectId id) const
+std::optional<storage::VolumeObject> ModelTree::volume_if_current(const model::ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 

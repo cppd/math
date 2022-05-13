@@ -36,7 +36,7 @@ public:
 
         //
 
-        void operator()(const mesh::event::Insert<N>& event) const
+        void operator()(const model::mesh::event::Insert<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -46,7 +46,7 @@ public:
                 tree_->insert(event.object, event.parent_object_id);
         }
 
-        void operator()(const mesh::event::Erase<N>& event) const
+        void operator()(const model::mesh::event::Erase<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -55,7 +55,7 @@ public:
                 tree_->erase(event.id);
         }
 
-        void operator()(const mesh::event::Update<N>& event) const
+        void operator()(const model::mesh::event::Update<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -66,7 +66,7 @@ public:
 
         //
 
-        void operator()(const volume::event::Insert<N>& event) const
+        void operator()(const model::volume::event::Insert<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -76,7 +76,7 @@ public:
                 tree_->insert(event.object, event.parent_object_id);
         }
 
-        void operator()(const volume::event::Erase<N>& event) const
+        void operator()(const model::volume::event::Erase<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -85,7 +85,7 @@ public:
                 tree_->erase(event.id);
         }
 
-        void operator()(const volume::event::Update<N>& event) const
+        void operator()(const model::volume::event::Update<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -97,13 +97,13 @@ public:
 }
 
 template <std::size_t N>
-void ModelEvents::Events<N>::send(mesh::MeshEvent<N>&& event) const
+void ModelEvents::Events<N>::send(model::mesh::MeshEvent<N>&& event) const
 {
         std::visit(Visitor<N>(tree, view), event);
 }
 
 template <std::size_t N>
-void ModelEvents::Events<N>::send(volume::VolumeEvent<N>&& event) const
+void ModelEvents::Events<N>::send(model::volume::VolumeEvent<N>&& event) const
 {
         std::visit(Visitor<N>(tree, view), event);
 }
@@ -117,8 +117,8 @@ ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
         {
                 events.tree = tree;
                 events.view = view;
-                mesh::MeshObject<N>::set_events(&events);
-                volume::VolumeObject<N>::set_events(&events);
+                model::mesh::MeshObject<N>::set_events(&events);
+                model::volume::VolumeObject<N>::set_events(&events);
         };
 
         std::apply(
@@ -135,8 +135,8 @@ ModelEvents::~ModelEvents()
 
         const auto f = []<std::size_t N>(const Events<N>&)
         {
-                mesh::MeshObject<N>::set_events(nullptr);
-                volume::VolumeObject<N>::set_events(nullptr);
+                model::mesh::MeshObject<N>::set_events(nullptr);
+                model::volume::VolumeObject<N>::set_events(nullptr);
         };
 
         std::apply(

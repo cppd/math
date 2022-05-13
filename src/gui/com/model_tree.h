@@ -29,10 +29,10 @@ protected:
         ~ModelTreeEvents() = default;
 
 public:
-        virtual void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
-        virtual void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
+        virtual void insert(storage::MeshObject&& object, const std::optional<model::ObjectId>& parent_object_id) = 0;
+        virtual void insert(storage::VolumeObject&& object, const std::optional<model::ObjectId>& parent_object_id) = 0;
         virtual void update(storage::MeshObjectWeak&& object) = 0;
         virtual void update(storage::VolumeObjectWeak&& object) = 0;
-        virtual void erase(ObjectId id) = 0;
+        virtual void erase(model::ObjectId id) = 0;
 };
 }

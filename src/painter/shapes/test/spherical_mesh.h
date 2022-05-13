@@ -52,7 +52,7 @@ Vector<N, T> random_center(const T radius, RandomEngine& engine)
 }
 
 template <std::size_t N, typename RandomEngine>
-std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
+std::unique_ptr<const model::mesh::Mesh<N>> create_spherical_mesh(
         const float radius,
         const int point_count,
         RandomEngine& engine,
@@ -80,7 +80,7 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
 
         progress->set_text("Mesh");
         progress->set(0);
-        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
+        return model::mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -134,13 +134,13 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
 
         SphericalMesh<N, T, Color> res;
 
-        std::unique_ptr<const mesh::Mesh<N>> mesh =
+        std::unique_ptr<const model::mesh::Mesh<N>> mesh =
                 impl::create_spherical_mesh<N>(impl::random_radius<N, T>(engine), point_count, engine, progress);
 
         res.facet_count = mesh->facets.size();
 
         res.surface = 0;
-        for (const typename mesh::Mesh<N>::Facet& facet : mesh->facets)
+        for (const typename model::mesh::Mesh<N>::Facet& facet : mesh->facets)
         {
                 std::array<Vector<N, T>, N> vertices;
                 for (std::size_t i = 0; i < N; ++i)
@@ -150,9 +150,9 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
                 res.surface += geometry::simplex_volume(vertices);
         }
 
-        mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+        model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
 
-        std::vector<const mesh::MeshObject<N>*> mesh_objects;
+        std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
 
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh =

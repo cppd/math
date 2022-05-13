@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <variant>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 template <std::size_t N>
 class VolumeObject;

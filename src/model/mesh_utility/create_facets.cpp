@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <unordered_map>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 namespace
 {

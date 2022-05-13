@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <functional>
 
-namespace ns
+namespace ns::model
 {
 class ObjectId final
 {
@@ -52,9 +52,9 @@ public:
 namespace std
 {
 template <>
-struct hash<::ns::ObjectId> final
+struct hash<::ns::model::ObjectId> final
 {
-        std::size_t operator()(const ::ns::ObjectId id) const noexcept
+        std::size_t operator()(const ::ns::model::ObjectId id) const noexcept
         {
                 return id.hash();
         }

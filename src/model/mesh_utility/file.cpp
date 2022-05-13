@@ -31,17 +31,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 std::vector<FileFormat> save_formats(const unsigned dimension)
 {
         std::vector<FileFormat> v(2);
 
         v[0].format_name = "OBJ";
-        v[0].file_name_extensions = {mesh::obj_file_extension(dimension)};
+        v[0].file_name_extensions = {obj_file_extension(dimension)};
 
         v[1].format_name = "STL";
-        v[1].file_name_extensions = {mesh::stl_file_extension(dimension)};
+        v[1].file_name_extensions = {stl_file_extension(dimension)};
 
         return v;
 }
@@ -51,15 +51,15 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
         std::vector<FileFormat> v(1);
 
         v[0].format_name = "All Supported Formats";
-        for (std::string& s : mesh::obj_file_extensions(dimensions))
+        for (std::string& s : obj_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }
-        for (std::string& s : mesh::stl_file_extensions(dimensions))
+        for (std::string& s : stl_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }
-        for (std::string& s : mesh::txt_file_extensions(dimensions))
+        for (std::string& s : txt_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 namespace vertices_implementation
 {

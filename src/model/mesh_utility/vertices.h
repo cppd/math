@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 template <std::size_t N>
 std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const BoundingBox<N>& box)

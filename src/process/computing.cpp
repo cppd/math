@@ -31,9 +31,9 @@ std::vector<int> volume_image_size(const storage::VolumeObjectConst& object)
 {
         std::vector<int> size;
         std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
-                        volume::Reading reading(*volume_object);
+                        model::volume::Reading reading(*volume_object);
                         size = [](const auto& array)
                         {
                                 return std::vector(array.cbegin(), array.cend());
@@ -53,7 +53,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
         }
 
         return std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
                 {
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {
@@ -88,7 +88,7 @@ std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObj
         }
 
         return std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {

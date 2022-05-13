@@ -34,7 +34,7 @@ namespace ns::storage
 class Storage final
 {
         mutable std::shared_mutex mutex_;
-        std::unordered_map<ObjectId, std::variant<MeshObject, VolumeObject>> map_;
+        std::unordered_map<model::ObjectId, std::variant<MeshObject, VolumeObject>> map_;
 
         template <typename To, typename From>
         static To to_type(From&& object)
@@ -50,7 +50,7 @@ class Storage final
         }
 
 public:
-        void delete_object(const ObjectId id)
+        void delete_object(const model::ObjectId id)
         {
                 typename decltype(map_)::mapped_type tmp;
                 std::unique_lock lock(mutex_);
@@ -71,7 +71,7 @@ public:
         }
 
         template <std::size_t N>
-        void set_object(const std::shared_ptr<mesh::MeshObject<N>>& object)
+        void set_object(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
         {
                 if (!object)
                 {
@@ -87,13 +87,14 @@ public:
                 }
 
                 ASSERT(std::holds_alternative<MeshObject>(iter->second));
-                ASSERT(std::holds_alternative<std::shared_ptr<mesh::MeshObject<N>>>(
+                ASSERT(std::holds_alternative<std::shared_ptr<model::mesh::MeshObject<N>>>(
                         std::get<MeshObject>(iter->second)));
-                ASSERT(object == std::get<std::shared_ptr<mesh::MeshObject<N>>>(std::get<MeshObject>(iter->second)));
+                ASSERT(object
+                       == std::get<std::shared_ptr<model::mesh::MeshObject<N>>>(std::get<MeshObject>(iter->second)));
         }
 
         template <std::size_t N>
-        void set_object(const std::shared_ptr<volume::VolumeObject<N>>& object)
+        void set_object(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
         {
                 if (!object)
                 {
@@ -109,13 +110,14 @@ public:
                 }
 
                 ASSERT(std::holds_alternative<VolumeObject>(iter->second));
-                ASSERT(std::holds_alternative<std::shared_ptr<volume::VolumeObject<N>>>(
+                ASSERT(std::holds_alternative<std::shared_ptr<model::volume::VolumeObject<N>>>(
                         std::get<VolumeObject>(iter->second)));
                 ASSERT(object
-                       == std::get<std::shared_ptr<volume::VolumeObject<N>>>(std::get<VolumeObject>(iter->second)));
+                       == std::get<std::shared_ptr<model::volume::VolumeObject<N>>>(
+                               std::get<VolumeObject>(iter->second)));
         }
 
-        std::optional<MeshObject> mesh_object(const ObjectId id) const
+        std::optional<MeshObject> mesh_object(const model::ObjectId id) const
         {
                 std::optional<MeshObject> opt;
 
@@ -135,7 +137,7 @@ public:
                 return opt;
         }
 
-        std::optional<MeshObjectConst> mesh_object_const(const ObjectId id) const
+        std::optional<MeshObjectConst> mesh_object_const(const model::ObjectId id) const
         {
                 std::optional<MeshObject> opt = mesh_object(id);
                 if (opt)
@@ -145,7 +147,7 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<VolumeObject> volume_object(const ObjectId id) const
+        std::optional<VolumeObject> volume_object(const model::ObjectId id) const
         {
                 std::optional<VolumeObject> opt;
 
@@ -165,7 +167,7 @@ public:
                 return opt;
         }
 
-        std::optional<VolumeObjectConst> volume_object_const(const ObjectId id) const
+        std::optional<VolumeObjectConst> volume_object_const(const model::ObjectId id) const
         {
                 std::optional<VolumeObject> opt = volume_object(id);
                 if (opt)

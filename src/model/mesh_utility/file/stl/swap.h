@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <bit>
 
-namespace ns::mesh::file::stl
+namespace ns::model::mesh::file::stl
 {
 template <typename T>
 [[nodiscard]] constexpr T byte_swap(const T n) requires(std::is_same_v<std::uint32_t, T>)

@@ -27,9 +27,9 @@ protected:
         ~ModelTreeActions() = default;
 
 public:
-        virtual void show(ObjectId id, bool show) = 0;
-        virtual void show_only_it(ObjectId id) = 0;
-        virtual void erase(ObjectId id) = 0;
+        virtual void show(model::ObjectId id, bool show) = 0;
+        virtual void show_only_it(model::ObjectId id) = 0;
+        virtual void erase(model::ObjectId id) = 0;
         virtual void clear() = 0;
 };
 }

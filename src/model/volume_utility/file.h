@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 #include <src/progress/progress.h>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 struct VolumeInfo final
 {

@@ -254,55 +254,55 @@ std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, 
 //
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> ellipsoid(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<N>> ellipsoid(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, false));
+        return model::mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> ellipsoid_bound(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<N>> ellipsoid_bound(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, true));
+        return model::mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, true));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere_with_notch(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<N>> sphere_with_notch(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, false));
+        return model::mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere_with_notch_bound(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<N>> sphere_with_notch_bound(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, true));
+        return model::mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, true));
 }
 
-std::unique_ptr<mesh::Mesh<3>> mobius_strip(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<3>> mobius_strip(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_mobius_strip(point_count));
-}
-
-template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> torus(const unsigned point_count)
-{
-        return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, false));
+        return model::mesh::create_mesh_for_points(generate_points_mobius_strip(point_count));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> torus_bound(const unsigned point_count)
+std::unique_ptr<model::mesh::Mesh<N>> torus(const unsigned point_count)
 {
-        return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, true));
+        return model::mesh::create_mesh_for_points(generate_points_torus<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere(const unsigned facet_count)
+std::unique_ptr<model::mesh::Mesh<N>> torus_bound(const unsigned point_count)
+{
+        return model::mesh::create_mesh_for_points(generate_points_torus<N>(point_count, true));
+}
+
+template <std::size_t N>
+std::unique_ptr<model::mesh::Mesh<N>> sphere(const unsigned facet_count)
 {
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
         geometry::create_sphere(facet_count, &points, &facets);
 
         constexpr bool WRITE_LOG = true;
-        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
+        return model::mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 //
@@ -324,8 +324,8 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public MeshObjectRepository<N>
 {
-        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> map_point_;
-        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> map_facet_;
+        std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_point_;
+        std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_facet_;
 
         std::vector<std::string> point_object_names() const override
         {
@@ -337,7 +337,7 @@ class Impl final : public MeshObjectRepository<N>
                 return names_of_map(map_facet_);
         }
 
-        std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, const unsigned point_count)
+        std::unique_ptr<model::mesh::Mesh<N>> point_object(const std::string& object_name, const unsigned point_count)
                 const override
         {
                 const auto iter = map_point_.find(object_name);
@@ -348,7 +348,7 @@ class Impl final : public MeshObjectRepository<N>
                 error("Point object not found in repository: " + object_name);
         }
 
-        std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, const unsigned facet_count)
+        std::unique_ptr<model::mesh::Mesh<N>> facet_object(const std::string& object_name, const unsigned facet_count)
                 const override
         {
                 const auto iter = map_facet_.find(object_name);

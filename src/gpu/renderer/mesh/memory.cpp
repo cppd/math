@@ -24,7 +24,7 @@ namespace ns::gpu::renderer
 namespace
 {
 std::vector<MaterialMemory::MaterialInfo> materials_info(
-        const mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers)
 {
@@ -39,7 +39,7 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
 
         for (std::size_t i = 0; i < mesh.materials.size(); ++i)
         {
-                const typename mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
+                const typename model::mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
 
                 ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 
@@ -79,7 +79,7 @@ std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory
         const VkDevice device,
         const VkSampler texture_sampler,
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
-        const mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers)
 {

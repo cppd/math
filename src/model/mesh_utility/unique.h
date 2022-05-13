@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 namespace unique_implementation
 {

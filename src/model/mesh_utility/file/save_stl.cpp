@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 
-namespace ns::mesh::file
+namespace ns::model::mesh::file
 {
 namespace
 {

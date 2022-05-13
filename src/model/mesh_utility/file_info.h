@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 int file_dimension(const std::filesystem::path& file_name);
 

@@ -111,7 +111,7 @@ class MeshData final
         std::vector<MeshFacet<N, T>> facets_;
         std::vector<std::array<int, N>> facet_vertex_indices_;
 
-        void create(const mesh::Reading<N>& mesh_object)
+        void create(const model::mesh::Reading<N>& mesh_object)
         {
                 namespace impl = mesh_data_implementation;
 
@@ -122,7 +122,7 @@ class MeshData final
                         return;
                 }
 
-                const mesh::Mesh<N>& mesh = mesh_object.mesh();
+                const model::mesh::Mesh<N>& mesh = mesh_object.mesh();
 
                 if (mesh.vertices.empty())
                 {
@@ -163,7 +163,7 @@ class MeshData final
 
                 bool facets_without_material = false;
 
-                for (const typename mesh::Mesh<N>::Facet& facet : mesh.facets)
+                for (const typename model::mesh::Mesh<N>::Facet& facet : mesh.facets)
                 {
                         const bool no_material = facet.material < 0;
                         const int facet_material = no_material ? default_material_index : facet.material;
@@ -183,7 +183,7 @@ class MeshData final
                         facets_without_material = facets_without_material || no_material;
                 }
 
-                for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
+                for (const typename model::mesh::Mesh<N>::Material& m : mesh.materials)
                 {
                         const int image = m.image < 0 ? -1 : (images_offset + m.image);
                         materials_.emplace_back(
@@ -203,7 +203,7 @@ class MeshData final
                 }
         }
 
-        void create(const std::vector<mesh::Reading<N>>& mesh_objects)
+        void create(const std::vector<model::mesh::Reading<N>>& mesh_objects)
         {
                 if (mesh_objects.empty())
                 {
@@ -222,13 +222,13 @@ class MeshData final
                 std::size_t material_count = 0;
                 std::size_t image_count = 0;
                 std::size_t facet_count = 0;
-                for (const mesh::Reading<N>& mesh : mesh_objects)
+                for (const model::mesh::Reading<N>& mesh : mesh_objects)
                 {
                         vertex_count += mesh.mesh().vertices.size();
                         normal_count += mesh.mesh().normals.size();
                         texcoord_count += mesh.mesh().texcoords.size();
                         bool no_material = false;
-                        for (const typename mesh::Mesh<N>::Facet& facet : mesh.mesh().facets)
+                        for (const typename model::mesh::Mesh<N>::Facet& facet : mesh.mesh().facets)
                         {
                                 if (facet.material < 0)
                                 {
@@ -247,7 +247,7 @@ class MeshData final
                 images_.reserve(image_count);
                 facets_.reserve(facet_count);
 
-                for (const mesh::Reading<N>& mesh_object : mesh_objects)
+                for (const model::mesh::Reading<N>& mesh_object : mesh_objects)
                 {
                         create(mesh_object);
                 }
@@ -266,13 +266,13 @@ class MeshData final
         }
 
 public:
-        MeshData(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, const bool write_log)
+        MeshData(const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects, const bool write_log)
         {
                 const Clock::time_point start_time = Clock::now();
 
-                std::vector<mesh::Reading<N>> reading;
+                std::vector<model::mesh::Reading<N>> reading;
                 reading.reserve(mesh_objects.size());
-                for (const mesh::MeshObject<N>* mesh_object : mesh_objects)
+                for (const model::mesh::MeshObject<N>* mesh_object : mesh_objects)
                 {
                         reading.emplace_back(*mesh_object);
                 }

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 template <std::size_t N>
 struct Volume final

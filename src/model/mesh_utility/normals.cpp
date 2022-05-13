@@ -32,7 +32,7 @@ Springer-Verlag London, 2012.
 #include <src/numerical/complement.h>
 #include <src/numerical/normal.h>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 namespace
 {

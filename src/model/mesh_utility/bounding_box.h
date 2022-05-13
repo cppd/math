@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 template <std::size_t N>
 struct BoundingBox final

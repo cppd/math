@@ -53,7 +53,9 @@ std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh, ProgressRatio* const progress)
+std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
+        const model::mesh::Mesh<N>& mesh,
+        ProgressRatio* const progress)
 {
         std::vector<Vector<N, float>> points;
         if (!mesh.facets.empty())
@@ -85,13 +87,13 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
                 facets.push_back(f.vertices());
         }
 
-        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
+        return model::mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 template <std::size_t N>
-void convex_hull(ProgressRatioList* const progress_list, const mesh::Reading<N>& object)
+void convex_hull(ProgressRatioList* const progress_list, const model::mesh::Reading<N>& object)
 {
-        std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
+        std::unique_ptr<const model::mesh::Mesh<N>> ch_mesh;
         {
                 ProgressRatio progress(progress_list);
                 progress.set_text(object.name() + " convex hull in " + space_name(N) + ": %v of %m");
@@ -103,8 +105,8 @@ void convex_hull(ProgressRatioList* const progress_list, const mesh::Reading<N>&
                 return;
         }
 
-        const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
+        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
+                std::make_shared<model::mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         obj->insert(object.id());
 }
@@ -112,11 +114,11 @@ void convex_hull(ProgressRatioList* const progress_list, const mesh::Reading<N>&
 template <std::size_t N>
 void cocone(
         ProgressRatioList* const progress_list,
-        const ObjectId parent_id,
+        const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
-        std::unique_ptr<const mesh::Mesh<N>> cocone_mesh;
+        std::unique_ptr<const model::mesh::Mesh<N>> cocone_mesh;
         {
                 ProgressRatio progress(progress_list);
 
@@ -127,7 +129,7 @@ void cocone(
 
                 constructor.cocone(&normals, &facets, &progress);
 
-                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
+                cocone_mesh = model::mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
@@ -136,8 +138,8 @@ void cocone(
                 return;
         }
 
-        const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
+        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
+                std::make_shared<model::mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
 
         obj->insert(parent_id);
 }
@@ -145,13 +147,13 @@ void cocone(
 template <std::size_t N>
 void bound_cocone(
         ProgressRatioList* const progress_list,
-        const ObjectId parent_id,
+        const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
         const double rho,
         const double alpha)
 {
-        std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
+        std::unique_ptr<const model::mesh::Mesh<N>> bound_cocone_mesh;
         {
                 ProgressRatio progress(progress_list);
 
@@ -162,7 +164,7 @@ void bound_cocone(
 
                 constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
+                bound_cocone_mesh = model::mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
@@ -172,8 +174,8 @@ void bound_cocone(
         }
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
+        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
+                std::make_shared<model::mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
 
         obj->insert(parent_id);
 }
@@ -181,7 +183,7 @@ void bound_cocone(
 template <std::size_t N>
 void mst(
         ProgressRatioList* const progress_list,
-        const ObjectId parent_id,
+        const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
@@ -192,14 +194,15 @@ void mst(
                 mst_lines = geometry::minimum_spanning_tree(
                         constructor.points(), constructor.delaunay_objects(), &progress);
         }
-        std::unique_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(constructor.points(), mst_lines);
+        std::unique_ptr<const model::mesh::Mesh<N>> mst_mesh =
+                model::mesh::create_mesh_for_lines(constructor.points(), mst_lines);
         if (mst_mesh->lines.empty())
         {
                 return;
         }
 
-        const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
+        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
+                std::make_shared<model::mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
         obj->insert(parent_id);
 }
@@ -227,7 +230,7 @@ void manifold_constructor(
         const bool build_bound_cocone,
         const bool build_mst,
         const Matrix<N + 1, N + 1, double>& matrix,
-        const ObjectId id,
+        const model::ObjectId id,
         const std::vector<Vector<N, float>>& points,
         const double rho,
         const double alpha)
@@ -286,7 +289,7 @@ void compute_meshes(
         const bool build_cocone,
         const bool build_bound_cocone,
         const bool build_mst,
-        const mesh::MeshObject<N>& mesh_object,
+        const model::mesh::MeshObject<N>& mesh_object,
         const double rho,
         const double alpha)
 {
@@ -300,7 +303,7 @@ void compute_meshes(
                         threads.add(
                                 [&]()
                                 {
-                                        const mesh::Reading reading(mesh_object);
+                                        const model::mesh::Reading reading(mesh_object);
                                         impl::convex_hull(progress_list, reading);
                                 });
                 }
@@ -311,10 +314,10 @@ void compute_meshes(
                                 [&]()
                                 {
                                         std::optional<Matrix<N + 1, N + 1, double>> matrix;
-                                        std::optional<ObjectId> id;
+                                        std::optional<model::ObjectId> id;
                                         std::vector<Vector<N, float>> points;
                                         {
-                                                const mesh::Reading reading(mesh_object);
+                                                const model::mesh::Reading reading(mesh_object);
                                                 points = !reading.mesh().facets.empty()
                                                                  ? unique_facet_vertices(reading.mesh())
                                                                  : unique_point_vertices(reading.mesh());

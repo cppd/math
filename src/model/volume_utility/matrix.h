@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 template <std::size_t N>
 Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& size)

@@ -31,7 +31,8 @@ struct VolumeObjectRepository
         virtual ~VolumeObjectRepository() = default;
 
         virtual std::vector<std::string> object_names() const = 0;
-        virtual std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, unsigned size) const = 0;
+        virtual std::unique_ptr<model::volume::Volume<N>> object(const std::string& object_name, unsigned size)
+                const = 0;
 };
 
 template <std::size_t N>

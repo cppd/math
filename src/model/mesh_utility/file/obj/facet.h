@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 namespace facet_implementation
 {

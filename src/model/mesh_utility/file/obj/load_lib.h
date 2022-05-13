@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <string>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 template <std::size_t N>
 void read_lib(

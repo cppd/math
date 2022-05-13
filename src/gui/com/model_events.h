@@ -33,13 +33,13 @@ namespace ns::gui
 class ModelEvents final
 {
         template <std::size_t N>
-        struct Events final : public mesh::MeshEvents<N>, public volume::VolumeEvents<N>
+        struct Events final : public model::mesh::MeshEvents<N>, public model::volume::VolumeEvents<N>
         {
                 ModelTreeEvents* tree;
                 view::View* view;
 
-                void send(mesh::MeshEvent<N>&& event) const override;
-                void send(volume::VolumeEvent<N>&& event) const override;
+                void send(model::mesh::MeshEvent<N>&& event) const override;
+                void send(model::volume::VolumeEvent<N>&& event) const override;
         };
 
         const std::thread::id thread_id_ = std::this_thread::get_id();

@@ -225,7 +225,7 @@ class ShapeImpl final : public Shape<N, T, Color>
 
 public:
         ShapeImpl(
-                const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+                const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
                 const bool write_log,
                 ProgressRatio* const progress)
                 : mesh_data_(mesh_objects, write_log),
@@ -241,7 +241,7 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
-        const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+        const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
         const bool write_log,
         ProgressRatio* const progress)
 {
@@ -250,7 +250,7 @@ std::unique_ptr<Shape<N, T, Color>> create_mesh(
 
 #define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \
         template std::unique_ptr<Shape<(N), T, C>> create_mesh( \
-                const std::vector<const mesh::MeshObject<(N)>*>&, bool, ProgressRatio*);
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, bool, ProgressRatio*);
 
 #define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
         CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \

@@ -23,7 +23,7 @@ namespace ns::gui::main_window
 {
 std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         ModelTreeActions* const actions,
-        const ObjectId id,
+        const model::ObjectId id,
         const bool visible)
 {
         std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();

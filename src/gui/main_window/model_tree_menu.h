@@ -24,5 +24,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::main_window
 {
-std::unique_ptr<QMenu> make_model_tree_menu_for_object(ModelTreeActions* actions, ObjectId id, bool visible);
+std::unique_ptr<QMenu> make_model_tree_menu_for_object(ModelTreeActions* actions, model::ObjectId id, bool visible);
 }

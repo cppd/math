@@ -85,15 +85,15 @@ void image_coordinates(const std::array<int, N>& size, const F& f)
 }
 
 template <std::size_t N>
-volume::Volume<N> create_volume(const std::array<int, N>& size, const image::ColorFormat color_format)
+model::volume::Volume<N> create_volume(const std::array<int, N>& size, const image::ColorFormat color_format)
 {
-        volume::Volume<N> volume;
+        model::volume::Volume<N> volume;
 
         volume.image.size = size;
         volume.image.color_format = color_format;
         volume.image.pixels.resize(
                 image::format_pixel_size_in_bytes(color_format) * multiply_all<long long>(volume.image.size));
-        volume.matrix = volume::matrix_for_image_size(size);
+        volume.matrix = model::volume::matrix_for_image_size(size);
 
         return volume;
 }
@@ -107,7 +107,7 @@ I float_to_uint(const F v)
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> scalar_cube(const unsigned size)
+std::unique_ptr<model::volume::Volume<N>> scalar_cube(const unsigned size)
 {
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         using Type = std::uint16_t;
@@ -125,7 +125,7 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(const unsigned size)
                 sizes[i] = size;
         }
 
-        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
+        model::volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::byte* ptr = volume.image.pixels.data();
 
@@ -151,11 +151,11 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(const unsigned size)
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
-        return std::make_unique<volume::Volume<N>>(std::move(volume));
+        return std::make_unique<model::volume::Volume<N>>(std::move(volume));
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(const unsigned size)
+std::unique_ptr<model::volume::Volume<N>> scalar_ellipsoid(const unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         using Type = std::uint16_t;
@@ -178,7 +178,7 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(const unsigned size)
                 sizes[i] = size / 2;
         }
 
-        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
+        model::volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::byte* ptr = volume.image.pixels.data();
 
@@ -196,11 +196,11 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(const unsigned size)
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
-        return std::make_unique<volume::Volume<N>>(std::move(volume));
+        return std::make_unique<model::volume::Volume<N>>(std::move(volume));
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> color_cube(const unsigned size)
+std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
 {
         static_assert(N >= 3);
 
@@ -214,7 +214,7 @@ std::unique_ptr<volume::Volume<N>> color_cube(const unsigned size)
                 sizes[i] = size;
         }
 
-        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
+        model::volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::array<std::uint8_t, 4> color;
         std::uint8_t alpha = std::max(std::uint8_t(1), float_to_uint<std::uint8_t>(1.0f / size));
@@ -237,7 +237,7 @@ std::unique_ptr<volume::Volume<N>> color_cube(const unsigned size)
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
-        return std::make_unique<volume::Volume<N>>(std::move(volume));
+        return std::make_unique<model::volume::Volume<N>>(std::move(volume));
 }
 
 template <typename T>
@@ -257,14 +257,15 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public VolumeObjectRepository<N>
 {
-        std::map<std::string, std::function<std::unique_ptr<volume::Volume<N>>(unsigned)>> map_;
+        std::map<std::string, std::function<std::unique_ptr<model::volume::Volume<N>>(unsigned)>> map_;
 
         std::vector<std::string> object_names() const override
         {
                 return names_of_map(map_);
         }
 
-        std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, const unsigned size) const override
+        std::unique_ptr<model::volume::Volume<N>> object(const std::string& object_name, const unsigned size)
+                const override
         {
                 const auto iter = map_.find(object_name);
                 if (iter != map_.cend())

@@ -278,9 +278,9 @@ class Impl final : public VolumeObject
                 buffer_set_clip_plane();
         }
 
-        UpdateChanges update(const volume::Reading<3>& volume_object) override
+        UpdateChanges update(const model::volume::Reading<3>& volume_object) override
         {
-                const volume::Updates updates = volume_object.updates(&version_);
+                const model::volume::Updates updates = volume_object.updates(&version_);
                 if (updates.none())
                 {
                         return {};
@@ -288,21 +288,21 @@ class Impl final : public VolumeObject
 
                 UpdateChanges update_changes;
 
-                static_assert(volume::Updates().size() == 12);
+                static_assert(model::volume::Updates().size() == 12);
 
-                static constexpr volume::Updates PARAMETERS_UPDATE(
-                        (1ull << volume::UPDATE_COLOR) | (1ull << volume::UPDATE_LEVELS)
-                        | (1ull << volume::UPDATE_ISOVALUE) | (1ull << volume::UPDATE_ISOSURFACE)
-                        | (1ull << volume::UPDATE_ISOSURFACE_ALPHA)
-                        | (1ull << volume::UPDATE_VOLUME_ALPHA_COEFFICIENT));
+                static constexpr model::volume::Updates PARAMETERS_UPDATE(
+                        (1ull << model::volume::UPDATE_COLOR) | (1ull << model::volume::UPDATE_LEVELS)
+                        | (1ull << model::volume::UPDATE_ISOVALUE) | (1ull << model::volume::UPDATE_ISOSURFACE)
+                        | (1ull << model::volume::UPDATE_ISOSURFACE_ALPHA)
+                        | (1ull << model::volume::UPDATE_VOLUME_ALPHA_COEFFICIENT));
 
-                static constexpr volume::Updates LIGHTING_UPDATE(
-                        (1ull << volume::UPDATE_AMBIENT) | (1ull << volume::UPDATE_METALNESS)
-                        | (1ull << volume::UPDATE_ROUGHNESS));
+                static constexpr model::volume::Updates LIGHTING_UPDATE(
+                        (1ull << model::volume::UPDATE_AMBIENT) | (1ull << model::volume::UPDATE_METALNESS)
+                        | (1ull << model::volume::UPDATE_ROUGHNESS));
 
                 bool size_changed = false;
 
-                if (updates[volume::UPDATE_IMAGE])
+                if (updates[model::volume::UPDATE_IMAGE])
                 {
                         size_changed = set_image(volume_object.volume().image);
                         update_changes.image = true;
@@ -323,7 +323,7 @@ class Impl final : public VolumeObject
                                 volume_object.ambient(), volume_object.metalness(), volume_object.roughness());
                 }
 
-                if (size_changed || updates[volume::UPDATE_MATRICES])
+                if (size_changed || updates[model::volume::UPDATE_MATRICES])
                 {
                         set_texture_to_world_matrix(volume_object.matrix() * volume_object.volume().matrix);
                 }

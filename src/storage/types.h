@@ -30,20 +30,20 @@ namespace ns::storage
 namespace types_implementation
 {
 template <std::size_t N>
-using MeshObjectPtr = std::shared_ptr<mesh::MeshObject<N>>;
+using MeshObjectPtr = std::shared_ptr<model::mesh::MeshObject<N>>;
 template <std::size_t N>
-using MeshObjectWeakPtr = std::weak_ptr<mesh::MeshObject<N>>;
+using MeshObjectWeakPtr = std::weak_ptr<model::mesh::MeshObject<N>>;
 
 template <std::size_t N>
-using MeshObjectConstPtr = std::shared_ptr<const mesh::MeshObject<N>>;
+using MeshObjectConstPtr = std::shared_ptr<const model::mesh::MeshObject<N>>;
 
 template <std::size_t N>
-using VolumeObjectPtr = std::shared_ptr<volume::VolumeObject<N>>;
+using VolumeObjectPtr = std::shared_ptr<model::volume::VolumeObject<N>>;
 template <std::size_t N>
-using VolumeObjectWeakPtr = std::weak_ptr<volume::VolumeObject<N>>;
+using VolumeObjectWeakPtr = std::weak_ptr<model::volume::VolumeObject<N>>;
 
 template <std::size_t N>
-using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
+using VolumeObjectConstPtr = std::shared_ptr<const model::volume::VolumeObject<N>>;
 }
 
 using MeshObject = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectPtr>;

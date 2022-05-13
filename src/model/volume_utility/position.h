@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::volume
+namespace ns::model::volume
 {
 template <std::size_t N>
 std::tuple<Vector<N, double>, double> center_and_length(const Volume<N>& volume)
@@ -34,6 +34,6 @@ std::tuple<Vector<N, double>, double> center_and_length(const Volume<N>& volume)
         {
                 error("Volume has no geometry");
         }
-        return model::center_and_length_for_min_max(box->min, box->max);
+        return center_and_length_for_min_max(box->min, box->max);
 }
 }

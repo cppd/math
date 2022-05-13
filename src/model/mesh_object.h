@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <variant>
 
-namespace ns::mesh
+namespace ns::model::mesh
 {
 template <std::size_t N>
 class MeshObject;

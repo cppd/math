@@ -56,7 +56,7 @@ constexpr std::size_t DEFAULT_COLOR_INDEX = 0;
 
 template <typename T, typename Color, std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
         const Color& light,
         const Color& background_light,
@@ -66,9 +66,9 @@ void thread_function(
 {
         std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
-                std::vector<const mesh::MeshObject<N>*> meshes;
+                std::vector<const model::mesh::MeshObject<N>*> meshes;
                 meshes.reserve(mesh_objects.size());
-                for (const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object : mesh_objects)
+                for (const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object : mesh_objects)
                 {
                         meshes.push_back(mesh_object.get());
                 }
@@ -109,7 +109,7 @@ void thread_function(
 
 template <typename T, std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
@@ -142,7 +142,7 @@ void thread_function(
 
 template <std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
@@ -169,11 +169,11 @@ void thread_function(
 }
 
 template <std::size_t N>
-bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects)
+bool has_facets(const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects)
 {
-        for (const std::shared_ptr<const mesh::MeshObject<N>>& object : mesh_objects)
+        for (const std::shared_ptr<const model::mesh::MeshObject<N>>& object : mesh_objects)
         {
-                if (!mesh::Reading<N>(*object).mesh().facets.empty())
+                if (!model::mesh::Reading<N>(*object).mesh().facets.empty())
                 {
                         return true;
                 }
@@ -183,7 +183,7 @@ bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& m
 
 template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
-        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
@@ -265,9 +265,9 @@ std::function<void(ProgressRatioList*)> action_painter(
         for (const storage::MeshObjectConst& storage_object : objects)
         {
                 std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
+                        [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& object)
                         {
-                                if (mesh::Reading(*object).visible())
+                                if (model::mesh::Reading(*object).visible())
                                 {
                                         dimensions.insert(N);
                                         visible_objects.push_back(object);
@@ -292,11 +292,11 @@ std::function<void(ProgressRatioList*)> action_painter(
                 *dimensions.cbegin(),
                 [&]<std::size_t N>(const Dimension<N>&)
                 {
-                        std::vector<std::shared_ptr<const mesh::MeshObject<N>>> meshes;
+                        std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>> meshes;
                         for (storage::MeshObjectConst& visible_object : visible_objects)
                         {
                                 std::visit(
-                                        [&]<std::size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object)
+                                        [&]<std::size_t M>(std::shared_ptr<const model::mesh::MeshObject<M>>&& object)
                                         {
                                                 if constexpr (N == M)
                                                 {

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::mesh::file::obj
+namespace ns::model::mesh::file::obj
 {
 inline std::string obj_name(const std::size_t n)
 {

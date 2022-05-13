@@ -56,12 +56,12 @@ public:
                 return storage_.visible_objects();
         }
 
-        decltype(auto) contains(const ObjectId id) const
+        decltype(auto) contains(const model::ObjectId id) const
         {
                 return storage_.contains(id);
         }
 
-        decltype(auto) erase(const ObjectId id)
+        decltype(auto) erase(const model::ObjectId id)
         {
                 return storage_.erase(id);
         }
@@ -71,7 +71,7 @@ public:
                 storage_.clear();
         }
 
-        void update(const volume::VolumeObject<3>& object)
+        void update(const model::volume::VolumeObject<3>& object)
         {
                 VolumeObject* const ptr = [&]
                 {
@@ -88,7 +88,7 @@ public:
 
                 try
                 {
-                        volume::Reading reading(object);
+                        model::volume::Reading reading(object);
                         visible = reading.visible();
                         update_changes = ptr->update(reading);
                 }

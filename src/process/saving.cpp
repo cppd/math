@@ -44,7 +44,7 @@ template <std::size_t N>
 std::vector<gui::dialog::FileFilter> create_filters()
 {
         std::vector<gui::dialog::FileFilter> res;
-        for (const mesh::FileFormat& v : mesh::save_formats(N))
+        for (const model::mesh::FileFormat& v : model::mesh::save_formats(N))
         {
                 gui::dialog::FileFilter& filter = res.emplace_back();
                 filter.name = v.format_name;
@@ -55,7 +55,7 @@ std::vector<gui::dialog::FileFilter> create_filters()
 
 template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_save_function(
-        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+        const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
 {
         const std::string name = mesh_object->name();
 
@@ -71,19 +71,19 @@ std::function<void(ProgressRatioList*)> action_save_function(
         }
         const std::filesystem::path file_name = path_from_utf8(*file_name_string);
 
-        const mesh::FileType file_type = mesh::file_type_by_name(file_name);
+        const model::mesh::FileType file_type = model::mesh::file_type_by_name(file_name);
 
         return [=](ProgressRatioList*)
         {
-                const mesh::Reading reading(*mesh_object);
+                const model::mesh::Reading reading(*mesh_object);
                 switch (file_type)
                 {
-                case mesh::FileType::OBJ:
-                        mesh::save_to_obj(reading.mesh(), file_name, name);
+                case model::mesh::FileType::OBJ:
+                        model::mesh::save_to_obj(reading.mesh(), file_name, name);
                         message_information(name + " saved to OBJ file " + generic_utf8_filename(file_name));
                         return;
-                case mesh::FileType::STL:
-                        mesh::save_to_stl(reading.mesh(), file_name, name, STL_FORMAT_ASCII);
+                case model::mesh::FileType::STL:
+                        model::mesh::save_to_stl(reading.mesh(), file_name, name, STL_FORMAT_ASCII);
                         message_information(name + " saved to STL file " + generic_utf8_filename(file_name));
                         return;
                 }
@@ -117,7 +117,7 @@ std::string image_info(const image::Image<2>& image)
 std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object)
 {
         return std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
                 {
                         return action_save_function(mesh_object);
                 },

@@ -64,7 +64,7 @@ void save_image(const std::filesystem::path& path, image::Image<N>&& image)
         }
 
         ProgressRatio progress(nullptr);
-        volume::save_to_images(path, image::ImageView(image), &progress);
+        model::volume::save_to_images(path, image::ImageView(image), &progress);
 }
 
 template <std::size_t N>
@@ -157,7 +157,7 @@ float random_radius()
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(const int facet_count)
+std::unique_ptr<const model::mesh::Mesh<N>> sphere_mesh(const int facet_count)
 {
         LOG("creating sphere in " + space_name(N) + "...");
 
@@ -178,14 +178,14 @@ std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(const int facet_count)
         }
 
         LOG("creating mesh...");
-        return mesh::create_mesh_for_facets(vertices, facets, WRITE_LOG);
+        return model::mesh::create_mesh_for_facets(vertices, facets, WRITE_LOG);
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* const progress)
+std::unique_ptr<const model::mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* const progress)
 {
         LOG("Loading geometry from file...");
-        return mesh::load<N>(path_from_utf8(file_name), progress);
+        return model::mesh::load<N>(path_from_utf8(file_name), progress);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -242,7 +242,7 @@ enum class OutputType
 
 template <OutputType OUTPUT_TYPE, std::size_t N, typename T, typename Color>
 void test_painter(
-        std::unique_ptr<const mesh::Mesh<N>>&& mesh,
+        std::unique_ptr<const model::mesh::Mesh<N>>&& mesh,
         ProgressRatio* const progress,
         const int max_screen_size,
         const int samples_per_pixel,
@@ -250,8 +250,8 @@ void test_painter(
 {
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
-                mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
-                std::vector<const mesh::MeshObject<N>*> mesh_objects;
+                model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+                std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
 
                 painter_mesh = create_mesh<N, T, Color>(mesh_objects, WRITE_LOG, progress);
@@ -280,7 +280,7 @@ void test_painter(const int samples_per_pixel, const int facet_count, const int 
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<const mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
+        std::unique_ptr<const model::mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
 
         test_painter<OUTPUT_TYPE, N, T, Color>(
                 std::move(mesh), &progress, max_screen_size, samples_per_pixel, thread_count);
@@ -292,7 +292,7 @@ void test_painter(const int samples_per_pixel, const std::string& file_name, con
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<const mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
+        std::unique_ptr<const model::mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
 
         test_painter<OUTPUT_TYPE, N, T, Color>(
                 std::move(mesh), &progress, max_screen_size, samples_per_pixel, thread_count);
