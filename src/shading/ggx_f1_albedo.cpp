@@ -607,12 +607,12 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<6, T> = std::to_array
 // clang-format on
 
 template <std::size_t N, typename T>
-constexpr Interpolation<2, T, T> INTERPOLATION_ALBEDO_COSINE_ROUGHNESS(
+constexpr numerical::Interpolation<2, T, T> INTERPOLATION_ALBEDO_COSINE_ROUGHNESS(
         GGX_F1_ALBEDO_COSINE_ROUGHNESS_SIZE,
         GGX_F1_ALBEDO_COSINE_ROUGHNESS<N, T>);
 
 template <std::size_t N, typename T>
-constexpr Interpolation<1, T, T> INTERPOLATION_COSINE(
+constexpr numerical::Interpolation<1, T, T> INTERPOLATION_COSINE(
         GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE,
         GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>);
 }

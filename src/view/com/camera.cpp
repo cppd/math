@@ -81,12 +81,12 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 
 Matrix4d Camera::main_view_matrix() const
 {
-        return matrix::look_at<double>(Vector3d(0, 0, 0), camera_direction_from_, camera_up_);
+        return numerical::transform::look_at<double>(Vector3d(0, 0, 0), camera_direction_from_, camera_up_);
 }
 
 Matrix4d Camera::shadow_view_matrix() const
 {
-        return matrix::look_at(Vector3d(0, 0, 0), light_direction_from_, light_up_);
+        return numerical::transform::look_at(Vector3d(0, 0, 0), light_direction_from_, light_up_);
 }
 
 gpu::renderer::CameraInfo Camera::camera_info() const

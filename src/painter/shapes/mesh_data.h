@@ -148,7 +148,7 @@ class MeshData final
                         const auto iter_end = vertices_.end();
                         std::transform(
                                 iter_begin, iter_end, iter_begin,
-                                matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
+                                numerical::transform::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
                 }
                 {
                         const std::vector<Vector<N, T>>& normals = to_vector<T>(mesh.normals);

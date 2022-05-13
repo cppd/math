@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::numerical::determinant_implementation
+namespace ns::numerical
 {
 namespace
 {
@@ -47,9 +47,12 @@ constexpr std::array VECTORS = std::to_array<Vector<7, T>>({
 template <typename T>
 constexpr bool TEST_COFACTOR_EXPANSION =
         (1'868'201'030'776'500
-         == determinant_cofactor_expansion(VECTORS<T>, SEQUENCE_UCHAR_ARRAY<7>, SEQUENCE_UCHAR_ARRAY<7>))
+         == determinant_implementation::determinant_cofactor_expansion(
+                 VECTORS<T>,
+                 SEQUENCE_UCHAR_ARRAY<7>,
+                 SEQUENCE_UCHAR_ARRAY<7>))
         && (-28
-            == determinant_cofactor_expansion(
+            == determinant_implementation::determinant_cofactor_expansion(
                     VECTORS<T>,
                     std::to_array<unsigned char>({2, 4}),
                     std::to_array<unsigned char>({3, 5})));
@@ -70,10 +73,12 @@ static_assert(TEST_ROW_REDUCTION<__float128>);
 template <typename T>
 constexpr bool test_cofactor_expansion()
 {
+        namespace impl = determinant_implementation;
+
         Vector<7, T> d;
         for (int i = 0; i < 7; ++i)
         {
-                d[i] = determinant_cofactor_expansion(
+                d[i] = impl::determinant_cofactor_expansion(
                         del_elem(VECTORS<T>, 6), SEQUENCE_UCHAR_ARRAY<6>, del_elem(SEQUENCE_UCHAR_ARRAY<7>, i));
         }
         return d
@@ -146,6 +151,8 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
 template <std::size_t N, typename T>
 void test_determinant(const int count, const std::type_identity_t<T>& precision)
 {
+        namespace impl = determinant_implementation;
+
         LOG("Test determinant, " + to_string(N) + ", " + type_name<T>());
 
         const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
@@ -156,7 +163,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
-                        res[i] = determinant_cofactor_expansion(
+                        res[i] = impl::determinant_cofactor_expansion(
                                 matrices[i], SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
@@ -206,6 +213,8 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
 template <std::size_t N, typename T>
 void test_determinant_column(const int count, const std::type_identity_t<T>& precision)
 {
+        namespace impl = determinant_implementation;
+
         LOG("Test determinant column, " + to_string(N) + ", " + type_name<T>());
 
         const std::vector<std::array<Vector<N, T>, N - 1>> matrices = random_matrices<N - 1, N, T>(count);
@@ -218,7 +227,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
                 {
                         for (std::size_t c = 0; c < N; ++c)
                         {
-                                res[i][c] = determinant_cofactor_expansion(
+                                res[i][c] = impl::determinant_cofactor_expansion(
                                         matrices[i], SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, c));
                         }
                 }

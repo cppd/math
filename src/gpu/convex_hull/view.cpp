@@ -106,8 +106,8 @@ class Impl final : public View
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
+                Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
                 data_buffer_.set_matrix(p * t);
 
                 pipeline_ = program_.create_pipeline(

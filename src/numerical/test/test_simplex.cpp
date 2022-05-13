@@ -52,7 +52,7 @@ void print_simplex_data(
 template <typename T>
 void test_pivot()
 {
-        namespace impl = numerical::simplex_algorithm_implementation;
+        namespace impl = simplex_algorithm_implementation;
 
         LOG(std::string("PIVOT, ") + type_name<T>());
 

@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <span>
 
-namespace ns
+namespace ns::numerical
 {
 template <std::size_t N, typename DataType, typename InterpolationType>
 class Interpolation

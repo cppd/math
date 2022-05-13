@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::numerical::complement_implementation
+namespace ns::numerical
 {
 namespace
 {
@@ -70,6 +70,8 @@ std::vector<Vector<N, T>> random_vectors(const int count)
 template <bool GRAM_SCHMIDT, std::size_t N, typename T>
 std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vector<Vector<N, T>>& vectors)
 {
+        namespace impl = complement_implementation;
+
         std::vector<std::array<Vector<N, T>, N - 1>> res;
         res.reserve(vectors.size());
 
@@ -79,11 +81,11 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         {
                 if (GRAM_SCHMIDT)
                 {
-                        res.push_back(orthogonal_complement_by_gram_schmidt(unit_vector));
+                        res.push_back(impl::orthogonal_complement_by_gram_schmidt(unit_vector));
                 }
                 else
                 {
-                        res.push_back(orthogonal_complement_by_subspace(unit_vector));
+                        res.push_back(impl::orthogonal_complement_by_subspace(unit_vector));
                 }
         }
 

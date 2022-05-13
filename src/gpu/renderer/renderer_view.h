@@ -58,7 +58,7 @@ class RendererView final
 
         static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
         {
-                return matrix::ortho_vulkan<double>(
+                return numerical::transform::ortho_vulkan<double>(
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
         }
 
@@ -157,7 +157,8 @@ class RendererView final
                         // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
                         // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
                         static constexpr Matrix4d TEXTURE_MATRIX =
-                                matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
+                                numerical::transform::scale<double>(0.5, 0.5, 1)
+                                * numerical::transform::translate<double>(1, 1, 0);
 
                         shadow_vp_matrix_ = camera_volume_to_projection(c.shadow_volume) * c.shadow_view_matrix;
                         world_to_shadow_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;

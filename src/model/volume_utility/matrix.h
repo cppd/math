@@ -46,9 +46,9 @@ Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Vector<N, double>& position)
 {
         const auto [center, length] = center_and_length(volume);
-        const Matrix<N + 1, N + 1, double> t1 = matrix::translate(-center);
-        const Matrix<N + 1, N + 1, double> t2 = matrix::scale(Vector<N, double>(size / length));
-        const Matrix<N + 1, N + 1, double> t3 = matrix::translate(position);
+        const Matrix<N + 1, N + 1, double> t1 = numerical::transform::translate(-center);
+        const Matrix<N + 1, N + 1, double> t2 = numerical::transform::scale(Vector<N, double>(size / length));
+        const Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
         return t3 * t2 * t1;
 }
 }

@@ -144,7 +144,7 @@ class Impl final : public View
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                buffer_.set_matrix(matrix::ortho_vulkan<double>(left, right, bottom, top, near, far));
+                buffer_.set_matrix(numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override

@@ -56,7 +56,7 @@ class MeshTexture
         }
 
         std::vector<Vector<3, float>> pixels_;
-        Interpolation<N, Vector<3, float>, float> interpolation_;
+        numerical::Interpolation<N, Vector<3, float>, float> interpolation_;
 
 public:
         explicit MeshTexture(const image::Image<N>& image)

@@ -54,7 +54,7 @@ std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
 {
         namespace impl = vertices_implementation;
 
-        const matrix::MatrixVectorMultiplier transform(volume.matrix);
+        const numerical::transform::MatrixVectorMultiplier transform(volume.matrix);
 
         Vector<N, double> org = transform(Vector<N, double>(0));
 
