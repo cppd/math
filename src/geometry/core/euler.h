@@ -23,32 +23,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace ns::geometry
 {
-template <std::size_t D, std::size_t N>
+namespace euler_implementation
+{
+template <std::size_t SIMPLEX_DIMENSION, std::size_t N>
 long long simplex_count(const std::vector<std::array<int, N>>& facets)
 {
-        static_assert(D < N);
+        static_assert(SIMPLEX_DIMENSION < N);
+
+        constexpr std::size_t VERTEX_COUNT = SIMPLEX_DIMENSION + 1;
 
         struct Hash final
         {
-                std::size_t operator()(const std::array<int, D + 1>& v) const
+                std::size_t operator()(const std::array<int, VERTEX_COUNT>& v) const
                 {
                         return compute_hash(v);
                 }
         };
 
-        std::unordered_set<std::array<int, D + 1>, Hash> simplex_set;
+        std::unordered_set<std::array<int, VERTEX_COUNT>, Hash> simplex_set;
 
         for (std::array<int, N> facet : facets)
         {
                 facet = sort(std::move(facet));
-                for (const std::array<unsigned char, D + 1>& simplex : COMBINATIONS<N, D + 1>)
+                for (const std::array<unsigned char, VERTEX_COUNT>& simplex : COMBINATIONS<N, VERTEX_COUNT>)
                 {
-                        std::array<int, D + 1> simplex_vertex_indices;
-                        for (unsigned i = 0; i < D + 1; ++i)
+                        std::array<int, VERTEX_COUNT> simplex_vertex_indices;
+                        for (std::size_t i = 0; i < VERTEX_COUNT; ++i)
                         {
                                 simplex_vertex_indices[i] = facet[simplex[i]];
                         }
@@ -59,14 +64,12 @@ long long simplex_count(const std::vector<std::array<int, N>>& facets)
         return simplex_set.size();
 }
 
-namespace euler_characteristic_implementation
-{
 template <std::size_t N, std::size_t... I>
 int euler_characteristic(const std::vector<std::array<int, N>>& facets, std::integer_sequence<std::size_t, I...>&&)
 {
         static_assert(sizeof...(I) == N);
 
-        return ((((I & 1) ? -1 : 1) * simplex_count<I>(facets)) + ...);
+        return (((I & 1) ? -simplex_count<I>(facets) : simplex_count<I>(facets)) + ...);
 }
 
 template <std::size_t N, std::size_t... I>
@@ -83,17 +86,13 @@ std::array<long long, N> simplex_counts(
 template <std::size_t N>
 int euler_characteristic(const std::vector<std::array<int, N>>& facets)
 {
-        namespace impl = euler_characteristic_implementation;
-
-        return impl::euler_characteristic(facets, std::make_integer_sequence<std::size_t, N>());
+        return euler_implementation::euler_characteristic(facets, std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N>
 std::array<long long, N> simplex_counts(const std::vector<std::array<int, N>>& facets)
 {
-        namespace impl = euler_characteristic_implementation;
-
-        return impl::simplex_counts(facets, std::make_integer_sequence<std::size_t, N>());
+        return euler_implementation::simplex_counts(facets, std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N>
