@@ -83,13 +83,12 @@ public:
 template <typename Facet>
 class RidgeDataElement final
 {
-        const Facet* facet_;
+        const Facet* facet_ = nullptr;
         int external_vertex_index_;
 
 public:
         RidgeDataElement()
         {
-                reset();
         }
 
         RidgeDataElement(const Facet* const facet, const int external_vertex_index)
@@ -112,23 +111,17 @@ public:
         {
                 return facet_;
         }
-
-        void reset()
-        {
-                facet_ = nullptr;
-        }
 };
 
-template <int MAX_SIZE, typename Facet>
-class RidgeDataC final
+template <typename Facet>
+class RidgeData2 final
 {
-        static_assert(MAX_SIZE > 1);
-
+        static constexpr int MAX_SIZE = 2;
         std::array<RidgeDataElement<Facet>, MAX_SIZE> data_;
         int size_;
 
 public:
-        RidgeDataC(const Facet* const facet, const int external_point_index)
+        RidgeData2(const Facet* const facet, const int external_point_index)
                 : data_{{{facet, external_point_index}, {}}},
                   size_(1)
         {
@@ -136,39 +129,19 @@ public:
 
         void add(const Facet* const facet, const int external_point_index)
         {
-                for (int i = 0; i < MAX_SIZE; ++i)
+                static_assert(MAX_SIZE == 2);
+
+                static constexpr int INDEX = 1;
+                if (!data_[INDEX].facet())
                 {
-                        if (!data_[i].facet())
-                        {
-                                data_[i] = {facet, external_point_index};
-                                ++size_;
-                                return;
-                        }
+                        data_[INDEX] = {facet, external_point_index};
+                        size_ = MAX_SIZE;
+                        return;
                 }
 
                 error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices())
                       + ", index " + to_string(external_point_index) + ", not ridge point "
                       + to_string(facet->vertices()[external_point_index]));
-        }
-
-        void remove(const Facet* const facet)
-        {
-                for (int i = 0; i < MAX_SIZE; ++i)
-                {
-                        if (data_[i].facet() == facet)
-                        {
-                                data_[i].reset();
-                                --size_;
-                                return;
-                        }
-                }
-
-                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->vertices()));
-        }
-
-        bool empty() const
-        {
-                return size_ == 0;
         }
 
         int size() const
@@ -182,9 +155,6 @@ public:
                 return data_[i];
         }
 };
-
-template <typename Facet>
-using RidgeData2 = RidgeDataC<2, Facet>;
 
 template <typename Facet>
 class RidgeDataN final
@@ -212,7 +182,7 @@ public:
                                 return;
                         }
                 }
-                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->vertices()));
+                error("Remove ridge facet: facet not found in the link. Facet " + to_string(facet->vertices()));
         }
 
         auto cbegin() const
