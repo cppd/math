@@ -45,7 +45,7 @@ void test_random_engine()
         constexpr int COUNT = 20'000'000;
         constexpr std::string_view NAME = random_engine_name<RandomEngine>();
 
-        RandomEngine engine = create_engine<RandomEngine>();
+        auto engine = create_engine<RandomEngine>();
         std::uniform_real_distribution<T> urd(0, 1);
 
         const Clock::time_point start_time = Clock::now();

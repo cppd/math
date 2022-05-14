@@ -57,7 +57,7 @@ constexpr int one_dimension_sample_count()
 template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(const bool shuffle)
 {
-        RandomEngine engine = create_engine<RandomEngine>();
+        auto engine = create_engine<RandomEngine>();
 
         constexpr int ITER_COUNT = 100'000;
         constexpr int SAMPLE_COUNT = power<N>(one_dimension_sample_count<N>());

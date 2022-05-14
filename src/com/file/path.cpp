@@ -30,7 +30,7 @@ std::string generic_utf8_filename(const T& path)
 template <typename T>
 std::filesystem::path path_from_utf8(const T& filename)
 {
-        const char8_t* data = reinterpret_cast<const char8_t*>(filename.data());
+        const auto* data = reinterpret_cast<const char8_t*>(filename.data());
         return std::filesystem::path(data, data + filename.size());
 }
 

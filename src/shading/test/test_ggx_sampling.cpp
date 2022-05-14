@@ -182,7 +182,7 @@ void test_performance(ProgressRatio* const progress, const T alpha, const Vector
 template <std::size_t N, typename T, typename RandomEngine>
 void test_ggx(ProgressRatio* const progress, RandomEngine& engine)
 {
-        const T alpha = random_alpha<T>(engine);
+        const auto alpha = random_alpha<T>(engine);
 
         LOG("GGX, " + space_name(N) + ", " + type_name<T>() + ", alpha " + to_string_fixed(alpha, 2));
 
@@ -231,7 +231,7 @@ void test_performance(const T alpha, const Vector<N, T>& normal, const Vector<N,
 template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(RandomEngine& engine)
 {
-        const T alpha = random_alpha<T>(engine);
+        const auto alpha = random_alpha<T>(engine);
         const Vector<N, T> n = random_normal<N, T>(engine);
         const Vector<N, T> v = random_v<N, T>(n, engine);
 

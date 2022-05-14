@@ -69,7 +69,7 @@ void test_fresnel_performance()
         constexpr T N_1 = 1;
         constexpr T N_2 = 1.5;
         constexpr T ETA = N_1 / N_2;
-        constexpr T K = T(0.5);
+        constexpr T K = 0.5;
 
         PCG engine;
 

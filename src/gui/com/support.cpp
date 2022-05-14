@@ -127,7 +127,7 @@ QWidget* parent_for_dialog()
 
 QSplitter* find_widget_splitter(QObject* const object, QWidget* const widget)
 {
-        QSplitter* const splitter = qobject_cast<QSplitter*>(object);
+        auto* const splitter = qobject_cast<QSplitter*>(object);
         if (splitter && splitter->indexOf(widget) >= 0)
         {
                 return splitter;
@@ -334,7 +334,7 @@ void add_widget(QWidget* const dst, QWidget* const src)
         {
                 error("Error setting widget: there already is a layout manager");
         }
-        QVBoxLayout* const l = new QVBoxLayout(dst);
+        auto* const l = new QVBoxLayout(dst);
         l->setContentsMargins(0, 0, 0, 0);
         l->addWidget(src);
 }

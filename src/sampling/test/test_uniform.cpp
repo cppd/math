@@ -131,7 +131,7 @@ void test_performance()
         oss << "Sample " << type_to_string<SAMPLE_TYPE>();
         oss << " <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">:";
 
-        RandomEngine engine = create_engine<RandomEngine>();
+        auto engine = create_engine<RandomEngine>();
 
         static_assert(SAMPLE_TYPE == SampleType::ON_SPHERE || SAMPLE_TYPE == SampleType::IN_SPHERE);
         switch (SAMPLE_TYPE)

@@ -76,7 +76,7 @@ void compare(const T v)
                 return res;
         }();
 
-        const T mpz_value = to_int<T>(mpz);
+        const auto mpz_value = to_int<T>(mpz);
         if (mpz_value == v)
         {
                 return;

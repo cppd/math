@@ -60,7 +60,7 @@ class AngleDistribution
         static T mean_pdf(const Distribution& d, const PDF& pdf)
         {
                 static constexpr int COUNT = 100;
-                const T integral = numerical::integrate<T>(pdf, d.angle_from, d.angle_to, COUNT);
+                const T integral = numerical::integrate(pdf, d.angle_from, d.angle_to, COUNT);
                 return integral / (d.angle_to - d.angle_from);
         }
 

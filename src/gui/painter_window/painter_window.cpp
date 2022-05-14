@@ -86,12 +86,12 @@ void PainterWindow::create_interface()
         ui_.status_bar->setFixedHeight(ui_.status_bar->height());
 
         ASSERT(!ui_.main_widget->layout());
-        QVBoxLayout* const main_layout = new QVBoxLayout(ui_.main_widget);
+        auto* const main_layout = new QVBoxLayout(ui_.main_widget);
         main_layout->setContentsMargins(0, 0, 0, 0);
         main_layout->setSpacing(0);
 
-        QWidget* const image_widget = new QWidget(this);
-        QHBoxLayout* const image_layout = new QHBoxLayout(image_widget);
+        auto* const image_widget = new QWidget(this);
+        auto* const image_layout = new QHBoxLayout(image_widget);
         image_layout->setContentsMargins(0, 0, 0, 0);
         image_layout->setSpacing(0);
         main_layout->addWidget(image_widget);

@@ -215,7 +215,7 @@ void ModelTree::insert_into_tree(
                 {
                         return new QTreeWidgetItem(ui_.model_tree);
                 }
-                QTreeWidgetItem* const new_item = new QTreeWidgetItem(parent_item);
+                auto* const new_item = new QTreeWidgetItem(parent_item);
                 parent_item->setExpanded(true);
                 return new_item;
         }();

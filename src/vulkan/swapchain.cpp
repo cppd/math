@@ -216,7 +216,7 @@ handle::ImageView create_image_view(
 
 std::string extent_to_string(const VkExtent2D extent)
 {
-        const char* const multiplication_sign = reinterpret_cast<const char*>(u8"\U000000D7");
+        const auto* const multiplication_sign = reinterpret_cast<const char*>(u8"\U000000D7");
         return to_string(extent.width) + multiplication_sign + to_string(extent.height);
 }
 

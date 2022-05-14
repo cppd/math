@@ -40,10 +40,9 @@ template <typename T>
 bool voronoi_edge_intersects_cocone(const T cos_n_pa, const T cos_n_pb)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = functions_implementation;
+        static constexpr auto COS = functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
 
-        if ((std::abs(cos_n_pa) < impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)
-            || (std::abs(cos_n_pb) < impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>))
+        if ((std::abs(cos_n_pa) < COS) || (std::abs(cos_n_pb) < COS))
         {
                 return true;
         }
@@ -65,9 +64,8 @@ template <typename... T>
 bool cocone_inside_or_equal(const T... cos_n_p)
 {
         static_assert((std::is_floating_point_v<T> && ...));
-        namespace impl = functions_implementation;
 
-        return ((std::abs(cos_n_p) <= impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((std::abs(cos_n_p) <= functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
 
 /*
@@ -99,6 +97,7 @@ std::optional<T> intersect_cocone_max_distance(
         const Vector<N, T>& vector_from_point_a)
 {
         static_assert(std::is_floating_point_v<T>);
+        static constexpr auto COS_SQUARED = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
         const Vector<N, T>& vec_a = from_apex_to_point_a;
         const Vector<N, T>& vec_ab = vector_from_point_a;
@@ -109,12 +108,11 @@ std::optional<T> intersect_cocone_max_distance(
         const T square_a = dot(vec_a, vec_a);
         const T square_ab = dot(vec_ab, vec_ab);
         const T a_ab = dot(vec_a, vec_ab);
-        const T square_cos = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
         // ax² + bx + c = 0
-        const T a = square(n_ab) - square_cos * square_ab;
-        const T b = 2 * (a_n * n_ab - a_ab * square_cos);
-        const T c = square(a_n) - square_a * square_cos;
+        const T a = square(n_ab) - COS_SQUARED * square_ab;
+        const T b = 2 * (a_n * n_ab - a_ab * COS_SQUARED);
+        const T c = square(a_n) - square_a * COS_SQUARED;
 
         T t1;
         T t2;

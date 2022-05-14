@@ -63,17 +63,17 @@ void create_slider(
 {
         constexpr bool CHECKED = false;
 
-        QLabel* const label_d = new QLabel(QString::fromStdString("d[" + to_string(i) + "]"), dialog);
-        QLabel* const label_e = new QLabel("=", dialog);
+        auto* const label_d = new QLabel(QString::fromStdString("d[" + to_string(i) + "]"), dialog);
+        auto* const label_e = new QLabel("=", dialog);
 
-        QCheckBox* const check_box = new QCheckBox(dialog);
+        auto* const check_box = new QCheckBox(dialog);
         check_box->setChecked(CHECKED);
 
-        QLabel* const label = new QLabel(dialog);
+        auto* const label = new QLabel(dialog);
         set_label_minimum_width_for_text(label, to_string_digit_groups(max_size - 1));
         label->setEnabled(CHECKED);
 
-        QSlider* const slider = new QSlider(dialog);
+        auto* const slider = new QSlider(dialog);
         slider->setOrientation(Qt::Horizontal);
         slider->setMinimum(0);
         slider->setMaximum(size - 1);
@@ -134,8 +134,8 @@ ImageSliceDialog::ImageSliceDialog(
 
         const int max_size = *std::max_element(size.cbegin(), size.cend());
 
-        QWidget* const widget = new QWidget(this);
-        QGridLayout* const layout = new QGridLayout(widget);
+        auto* const widget = new QWidget(this);
+        auto* const layout = new QGridLayout(widget);
         layout->setContentsMargins(5, 5, 5, 5);
 
         slices_.resize(size.size());

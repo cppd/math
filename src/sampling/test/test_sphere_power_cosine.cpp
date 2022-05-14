@@ -57,7 +57,7 @@ Vector<N, T> random_normal()
 template <std::size_t N, typename T>
 void test_power_cosine_on_hemisphere(ProgressRatio* progress)
 {
-        const T power = random_power<T>();
+        const auto power = random_power<T>();
 
         LOG("Sphere Power Cosine, " + space_name(N) + ", " + type_name<T>() + ", power " + to_string_fixed(power, 1));
 
@@ -116,7 +116,7 @@ void test_power_cosine_on_hemisphere(ProgressRatio* const progress)
 template <std::size_t N, typename T>
 void test_performance()
 {
-        const T power = random_power<T>();
+        const auto power = random_power<T>();
         const Vector<N, T> normal = random_normal<N, T>();
 
         const long long p = testing::test_performance<PERFORMANCE_COUNT>(
