@@ -28,7 +28,7 @@ class PCG final
         std::uint64_t state_;
         std::uint64_t increment_;
 
-        PCG(const std::array<std::uint32_t, 4>& data);
+        explicit PCG(const std::array<std::uint32_t, 4>& data);
 
 public:
         using result_type = std::uint32_t;

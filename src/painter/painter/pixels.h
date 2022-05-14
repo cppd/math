@@ -215,8 +215,6 @@ public:
 
         void images(image::Image<N>* const image_rgb, image::Image<N>* const image_rgba) const
         {
-                namespace impl = pixels_implementation;
-
                 constexpr std::size_t RGB_PIXEL_SIZE = 3 * sizeof(float);
                 constexpr std::size_t RGBA_PIXEL_SIZE = 4 * sizeof(float);
 

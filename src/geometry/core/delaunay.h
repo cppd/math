@@ -136,26 +136,25 @@ void create_delaunay_objects_and_facets(
         for (const auto& f : facets)
         {
                 const Ridge<N + 1>& facet = f.first;
-                const RidgeData2<DelaunaySimplex<N>>& facet_data = f.second;
+                const RidgeData2<DelaunaySimplex<N>>& ridge_data = f.second;
 
-                ASSERT(facet_data.size() == 1 || facet_data.size() == 2);
+                ASSERT(ridge_data[0].facet());
 
-                if (facet_data.size() == 1)
+                if (!ridge_data[1].facet())
                 {
-                        const int index = facet_data[0].facet() ? 0 : 1;
-                        const DelaunaySimplex<N>* const simplex = facet_data[index].facet();
-                        const Vector<N, double> ortho = simplex->ortho(facet_data[index].vertex_index());
+                        const DelaunaySimplex<N>* const simplex = ridge_data[0].facet();
+                        const Vector<N, double> ortho = simplex->ortho(ridge_data[0].vertex_index());
 
                         delaunay_facets->emplace_back(
                                 facet.vertices(), ortho, delaunay_index_for_simplex(simplex), NULL_INDEX);
                 }
                 else
                 {
-                        const DelaunaySimplex<N>* const simplex_0 = facet_data[0].facet();
-                        const DelaunaySimplex<N>* const simplex_1 = facet_data[1].facet();
+                        const DelaunaySimplex<N>* const simplex_0 = ridge_data[0].facet();
+                        const DelaunaySimplex<N>* const simplex_1 = ridge_data[1].facet();
 
-                        const Vector<N, double> ortho = simplex_0->ortho(facet_data[0].vertex_index());
-                        ASSERT(ortho == -simplex_1->ortho(facet_data[1].vertex_index()));
+                        const Vector<N, double> ortho = simplex_0->ortho(ridge_data[0].vertex_index());
+                        ASSERT(ortho == -simplex_1->ortho(ridge_data[1].vertex_index()));
 
                         delaunay_facets->emplace_back(
                                 facet.vertices(), ortho, delaunay_index_for_simplex(simplex_0),

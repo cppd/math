@@ -293,7 +293,7 @@ void worker_threads(
         PixelData<N, T, Color>* const pixel_data,
         PassData* const pass_data,
         PaintingStatistics* const statistics,
-        Notifier<N - 1>* const notifier) noexcept
+        Notifier<N - 1>* const notifier)
 {
         std::barrier barrier(thread_count);
 

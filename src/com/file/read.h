@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename Path>
-std::vector<char> read_file(const Path& name);
+std::vector<char> read_file(const Path& path);
 }

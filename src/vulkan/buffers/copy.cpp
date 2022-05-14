@@ -90,7 +90,6 @@ VkPipelineStageFlags src_stage(const VkImageLayout old_layout)
         switch (old_layout)
         {
         case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-                return VK_PIPELINE_STAGE_TRANSFER_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
                 return VK_PIPELINE_STAGE_TRANSFER_BIT;
         default:
@@ -122,7 +121,6 @@ VkPipelineStageFlags dst_stage(const VkImageLayout new_layout)
         switch (new_layout)
         {
         case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-                return VK_PIPELINE_STAGE_TRANSFER_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
                 return VK_PIPELINE_STAGE_TRANSFER_BIT;
         default:

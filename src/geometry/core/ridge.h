@@ -116,26 +116,22 @@ public:
 template <typename Facet>
 class RidgeData2 final
 {
-        static constexpr int MAX_SIZE = 2;
-        std::array<RidgeDataElement<Facet>, MAX_SIZE> data_;
-        int size_;
+        static constexpr std::size_t SIZE = 2;
+
+        std::array<RidgeDataElement<Facet>, SIZE> data_;
 
 public:
-        RidgeData2(const Facet* const facet, const int external_point_index)
-                : data_{{{facet, external_point_index}, {}}},
-                  size_(1)
+        RidgeData2(const Facet* const facet, const int external_point_index) : data_{{{facet, external_point_index}}}
         {
         }
 
         void add(const Facet* const facet, const int external_point_index)
         {
-                static_assert(MAX_SIZE == 2);
+                constexpr int INDEX = 1;
 
-                static constexpr int INDEX = 1;
                 if (!data_[INDEX].facet())
                 {
                         data_[INDEX] = {facet, external_point_index};
-                        size_ = MAX_SIZE;
                         return;
                 }
 
@@ -144,15 +140,10 @@ public:
                       + to_string(facet->vertices()[external_point_index]));
         }
 
-        int size() const
+        const RidgeDataElement<Facet>& operator[](const std::size_t index) const
         {
-                return size_;
-        }
-
-        const RidgeDataElement<Facet>& operator[](const unsigned i) const
-        {
-                ASSERT(i < MAX_SIZE);
-                return data_[i];
+                ASSERT(index < SIZE);
+                return data_[index];
         }
 };
 
