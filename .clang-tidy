@@ -35,7 +35,6 @@ hicpp-*,
 -hicpp-signed-bitwise,
 -hicpp-special-member-functions,
 -hicpp-uppercase-literal-suffix,
--hicpp-use-auto,
 -hicpp-use-equals-default,
 
 misc-*,
@@ -45,7 +44,6 @@ misc-*,
 modernize-*,
 -modernize-avoid-c-arrays,
 -modernize-return-braced-init-list,
--modernize-use-auto,
 -modernize-use-equals-default,
 -modernize-use-nodiscard,
 -modernize-use-trailing-return-type,
@@ -70,6 +68,8 @@ CheckOptions:
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-loop-convert.UseCxx20ReverseRanges
+  value: '0'
+- key:   modernize-use-auto.MinTypeNameLength
   value: '0'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
