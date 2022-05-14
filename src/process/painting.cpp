@@ -124,7 +124,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<0, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, std::get<Color>(lighting_color), background_color.to_illuminant<Color>(),
+                        mesh_objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
                         parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -132,7 +132,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<1, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, std::get<Color>(lighting_color), background_color.to_illuminant<Color>(),
+                        mesh_objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
                         parameters, dimension_parameters, progress_list);
                 return;
         }

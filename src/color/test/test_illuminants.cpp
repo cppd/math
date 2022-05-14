@@ -27,7 +27,7 @@ namespace
 {
 void compare(const Spectrum& s, const RGB<float>& c, const char* const text)
 {
-        const RGB<float> rgb = s.to_color<RGB<float>>();
+        const RGB<float> rgb = to_color<RGB<float>>(s);
         if (!rgb.equal_to_relative(c, 1e-4))
         {
                 error(std::string(text) + " " + to_string(rgb) + " is not equal to " + to_string(c));

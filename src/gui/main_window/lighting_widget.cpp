@@ -194,7 +194,7 @@ void LightingWidget::on_daylight_changed()
         }
 
         spectrum_ = color::daylight(cct);
-        rgb_ = spectrum_.to_color<color::Color>();
+        rgb_ = to_color<color::Color>(spectrum_);
 
         send_color();
 }
@@ -207,7 +207,7 @@ void LightingWidget::on_blackbody_a_toggled()
         }
 
         spectrum_ = color::blackbody_a();
-        rgb_ = spectrum_.to_color<color::Color>();
+        rgb_ = to_color<color::Color>(spectrum_);
 
         send_color();
 }
@@ -237,7 +237,7 @@ void LightingWidget::on_blackbody_changed()
         }
 
         spectrum_ = color::blackbody(t);
-        rgb_ = spectrum_.to_color<color::Color>();
+        rgb_ = to_color<color::Color>(spectrum_);
 
         send_color();
 }

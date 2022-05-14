@@ -111,15 +111,15 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] Color to_color() const
+        [[nodiscard]] friend Color to_color(const RGB& c)
         {
-                return Color(Base::data()[0], Base::data()[1], Base::data()[2]);
+                return Color(c.data()[0], c.data()[1], c.data()[2]);
         }
 
         template <typename Color>
-        [[nodiscard]] Color to_illuminant() const
+        [[nodiscard]] friend Color to_illuminant(const RGB& c)
         {
-                return Color::illuminant(Base::data()[0], Base::data()[1], Base::data()[2]);
+                return Color::illuminant(c.data()[0], c.data()[1], c.data()[2]);
         }
 };
 
@@ -361,16 +361,18 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] Color to_color() const requires std::is_same_v<Color, RGB<typename Color::DataType>>
+        [[nodiscard]] friend Color to_color(
+                const SpectrumSamples& c) requires std::is_same_v<Color, RGB<typename Color::DataType>>
         {
-                Vector<3, T> rgb = spectrum_to_rgb(Base::data());
+                const Vector<3, T> rgb = spectrum_to_rgb(c.data());
                 return Color(rgb[0], rgb[1], rgb[2]);
         }
 
         template <typename Color>
-        [[nodiscard]] const Color& to_color() const requires std::is_same_v<Color, SpectrumSamples>
+        [[nodiscard]] friend const Color& to_color(
+                const SpectrumSamples& c) requires std::is_same_v<Color, SpectrumSamples>
         {
-                return *this;
+                return c;
         }
 };
 

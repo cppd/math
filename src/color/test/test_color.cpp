@@ -201,7 +201,7 @@ void test_color_conversions(RandomEngine& engine, const std::string_view& test_n
 
         {
                 const ColorType c1(rgb[0], rgb[1], rgb[2]);
-                const ColorType c2 = RGB<FloatType>(rgb[0], rgb[1], rgb[2]).template to_color<ColorType>();
+                const ColorType c2 = to_color<ColorType>(RGB<FloatType>(rgb[0], rgb[1], rgb[2]));
                 if (!(c1 == c2))
                 {
                         error(std::string(test_name) + ": error to_color: RGB " + to_string(c1) + ", RGB "
@@ -210,7 +210,7 @@ void test_color_conversions(RandomEngine& engine, const std::string_view& test_n
         }
         {
                 const ColorType c1 = ColorType::illuminant(rgb[0], rgb[1], rgb[2]);
-                const ColorType c2 = RGB<FloatType>(rgb[0], rgb[1], rgb[2]).template to_illuminant<ColorType>();
+                const ColorType c2 = to_illuminant<ColorType>(RGB<FloatType>(rgb[0], rgb[1], rgb[2]));
                 if (!(c1 == c2))
                 {
                         error(std::string(test_name) + ": error to_color illumination: RGB " + to_string(c1) + ", RGB "

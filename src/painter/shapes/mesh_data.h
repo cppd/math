@@ -93,7 +93,7 @@ struct Material
         Material(const T metalness, const T roughness, const color::Color& color, const int image, const T alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
-                  color(color.to_color<Color>().clamp(0, 1)),
+                  color(to_color<Color>(color).clamp(0, 1)),
                   alpha(std::clamp(alpha, T(0), T(1))),
                   image(image)
         {
