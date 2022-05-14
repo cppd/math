@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_save.h>
 #include <src/image/flip.h>
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <optional>

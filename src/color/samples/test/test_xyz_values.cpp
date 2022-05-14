@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <array>
 #include <sstream>
 

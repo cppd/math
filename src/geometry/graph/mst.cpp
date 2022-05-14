@@ -34,6 +34,8 @@ Kruskal’s algorithm
 #include <src/com/print.h>
 #include <src/com/union_find.h>
 
+#include <algorithm>
+
 namespace ns::geometry
 {
 namespace

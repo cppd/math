@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <array>
 #include <random>
 #include <unordered_map>
@@ -36,7 +37,7 @@ std::string to_string(const std::unordered_map<int, int>& map)
 {
         std::vector<std::array<int, 2>> data;
         data.reserve(map.size());
-        for (const auto [key, value] : map)
+        for (const auto& [key, value] : map)
         {
                 data.push_back({key, value});
         }
@@ -78,7 +79,7 @@ std::unordered_map<int, int> test_distribution(T&& engine)
                 ++map[uid(engine)];
         }
 
-        for (const auto v : map)
+        for (const auto& v : map)
         {
                 if (!(v.second >= MIN && v.second <= MAX))
                 {

@@ -40,8 +40,9 @@ namespace
 constexpr double BOUND_COCONE_RHO = 0.3;
 constexpr double BOUND_COCONE_ALPHA = 0.14;
 
-constexpr double COS_FOR_BOUND = -0.3;
+constexpr double LAST_AXIS_VALUE = -0.3;
 
+#if 0
 template <typename T, std::size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
 {
@@ -50,6 +51,13 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
 
 template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
+#endif
+
+template <std::size_t N, typename T>
+constexpr T last_axis(const Vector<N, T>& v)
+{
+        return v[N - 1];
+}
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
@@ -62,7 +70,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
         do
         {
                 v = sampling::uniform_on_sphere<N, T>(engine);
-        } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
+        } while (last_axis(v) < LAST_AXIS_VALUE);
         return v;
 }
 
@@ -76,13 +84,11 @@ std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_coun
         while (points.size() < point_count)
         {
                 Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
-
-                double dot_z = dot(LAST_AXIS<N, double>, v);
-                if (dot_z > 0)
+                const double cos = last_axis(v);
+                if (cos > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_z));
+                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(cos));
                 }
-
                 points.push_back(to_vector<float>(v));
         }
 
@@ -98,7 +104,7 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
         // so shift by 3 to avoid intersection
         constexpr float SHIFT = 3;
 
-        unsigned all_object_count = (1 + clone_count);
+        const unsigned all_object_count = (1 + clone_count);
 
         std::vector<Vector<N, float>> clones(points.begin(), points.end());
 
@@ -139,7 +145,7 @@ constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
                 // Mark de Berg, Otfried Cheong, Marc van Kreveld, Mark Overmars
                 // Computational Geometry. Algorithms and Applications. Third Edition.
                 // Theorem 11.1.
-                unsigned count = 2 * point_count - 4;
+                const unsigned count = 2 * point_count - 4;
                 return {count, count};
         }
 
@@ -151,8 +157,8 @@ constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
                 // 22.3 COMPUTING COMBINATORIAL DESCRIPTIONS.
                 // Some experiments (the convex hull of random points on a sphere)
                 // show that it is about 6.7
-                unsigned min = std::lround(6.55 * point_count);
-                unsigned max = std::lround(6.85 * point_count);
+                const unsigned min = std::lround(6.55 * point_count);
+                const unsigned max = std::lround(6.85 * point_count);
                 return {min, max};
         }
 }
@@ -192,9 +198,9 @@ void test_algorithms(
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                unsigned expected_facets_min = FACETS_MIN * object_count;
-                unsigned expected_facets_max = FACETS_MAX * object_count;
-                std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
+                const unsigned expected_facets_min = FACETS_MIN * object_count;
+                const unsigned expected_facets_max = FACETS_MAX * object_count;
+                const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
                 LOG("Cocone expected facet count: " + facet_count_str);
 
@@ -217,9 +223,9 @@ void test_algorithms(
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
-                unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
-                std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
+                const unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
+                const unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
+                const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
                 LOG("BoundCocone expected facet count: " + facet_count_str);
 

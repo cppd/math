@@ -39,9 +39,10 @@ namespace
 {
 constexpr int POINT_DISCRETIZATION = 100000;
 
-constexpr double COS_FOR_BOUND = -0.3;
+constexpr double LAST_AXIS_VALUE = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
 
+#if 0
 template <typename T, std::size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
 {
@@ -51,7 +52,6 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
 template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
-#if 0
 template <typename T, std::size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> add_axis(
         const Vector<sizeof...(I), T>& vector,
@@ -75,6 +75,12 @@ constexpr Vector<N, T> vector_with_last_dimension(V&& v)
         return make_last_axis<T>(std::forward<V>(v), std::make_integer_sequence<std::size_t, N - 1>());
 }
 #endif
+
+template <std::size_t N, typename T>
+constexpr T last_axis(const Vector<N, T>& v)
+{
+        return v[N - 1];
+}
 
 template <std::size_t N>
 class DiscretePoints
@@ -146,7 +152,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
         do
         {
                 v = sampling::uniform_on_sphere<N, T>(engine);
-        } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
+        } while (last_axis(v) < LAST_AXIS_VALUE);
         return v;
 }
 
@@ -179,9 +185,9 @@ std::vector<Vector<2, float>> generate_points_semicircle(const unsigned point_co
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_count, const bool bound)
 {
-        DiscretePoints<N> points(point_count);
-
         PCG engine(point_count);
+
+        DiscretePoints<N> points(point_count);
 
         while (points.size() < point_count)
         {
@@ -196,17 +202,17 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_cou
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
-        DiscretePoints<N> points(point_count);
-
         PCG engine(point_count);
+
+        DiscretePoints<N> points(point_count);
 
         while (points.size() < point_count)
         {
                 Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
-                double dot_last_axis = v[N - 1];
-                if (dot_last_axis > 0)
+                const double cos = last_axis(v);
+                if (cos > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_last_axis));
+                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(cos));
                 }
                 points.add(v);
         }
@@ -216,9 +222,9 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned p
 
 std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_count)
 {
-        DiscretePoints<3> points(point_count);
-
         PCG engine(point_count);
+
+        DiscretePoints<3> points(point_count);
 
         while (points.size() < point_count)
         {
@@ -234,14 +240,14 @@ std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, 
 {
         static_assert(N >= 3);
 
-        DiscretePoints<N> points(point_count);
-
         PCG engine(point_count);
+
+        DiscretePoints<N> points(point_count);
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = geometry::torus_point<N, double>(engine);
-                if (bound && dot(v, LAST_AXIS<N, double>) < COS_FOR_BOUND)
+                const Vector<N, double> v = geometry::torus_point<N, double>(engine);
+                if (bound && last_axis(v) < LAST_AXIS_VALUE)
                 {
                         continue;
                 }
