@@ -37,8 +37,8 @@ void r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::byte>
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &red, sizeof(To));
+                const To value = color::linear_float_to_srgb_uint8<float>(*from++);
+                std::memcpy(to, &value, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -55,8 +55,8 @@ void r32_to_r16(const std::vector<float>& floats, const std::span<std::byte>& by
 
         while (from != end)
         {
-                To red = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
+                const To value = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &value, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -74,17 +74,12 @@ void r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint8<float>(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
         }
 }
 
@@ -99,22 +94,16 @@ void r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::spa
         const float* const end = from + floats.size();
         std::byte* to = bytes.data();
 
+        static constexpr To ALPHA = Limits<To>::max();
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = Limits<To>::max();
-                std::memcpy(to, &alpha, sizeof(To));
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint8<float>(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
+                std::memcpy(to, &ALPHA, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -132,17 +121,12 @@ void r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::span<st
 
         while (from != end)
         {
-                To red = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_linear_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
         }
 }
 
@@ -159,17 +143,12 @@ void r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::sp
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
         }
 }
 
@@ -184,22 +163,16 @@ void r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span
         const float* const end = from + floats.size();
         std::byte* to = bytes.data();
 
+        static constexpr To ALPHA = Limits<To>::max();
         while (from != end)
         {
-                To red = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = Limits<To>::max();
-                std::memcpy(to, &alpha, sizeof(To));
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_linear_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
+                std::memcpy(to, &ALPHA, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -215,22 +188,16 @@ void r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std:
         const float* const end = from + floats.size();
         std::byte* to = bytes.data();
 
+        static constexpr To ALPHA = Limits<To>::max();
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = Limits<To>::max();
-                std::memcpy(to, &alpha, sizeof(To));
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
+                std::memcpy(to, &ALPHA, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -246,14 +213,14 @@ void r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const std::span
         const float* const end = from + floats.size();
         std::byte* to = bytes.data();
 
+        static constexpr To ALPHA = 1;
         while (from != end)
         {
                 std::memcpy(to, from, 3 * sizeof(To));
                 from += 3;
                 to += 3 * sizeof(To);
 
-                To alpha = 1;
-                std::memcpy(to, &alpha, sizeof(To));
+                std::memcpy(to, &ALPHA, sizeof(To));
                 to += sizeof(To);
         }
 }
@@ -271,19 +238,13 @@ void r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = color::linear_float_to_linear_uint8<float>(*from++);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint8<float>(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
+                const To alpha = color::linear_float_to_linear_uint8<float>(*from++);
                 std::memcpy(to, &alpha, sizeof(To));
                 to += sizeof(To);
         }
@@ -302,18 +263,12 @@ void r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::sp
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint8<float>(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint8<float>(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
                 ++from;
         }
 }
@@ -331,21 +286,12 @@ void r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::s
 
         while (from != end)
         {
-                To red = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &alpha, sizeof(To));
-                to += sizeof(To);
+                for (int i = 0; i < 4; ++i)
+                {
+                        const To value = color::linear_float_to_linear_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
         }
 }
 
@@ -362,19 +308,13 @@ void r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const s
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
-                To alpha = color::linear_float_to_linear_uint16(*from++);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
+                const To alpha = color::linear_float_to_linear_uint16(*from++);
                 std::memcpy(to, &alpha, sizeof(To));
                 to += sizeof(To);
         }
@@ -393,18 +333,12 @@ void r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span
 
         while (from != end)
         {
-                To red = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_linear_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_linear_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
                 ++from;
         }
 }
@@ -422,18 +356,12 @@ void r32g32b32a32_to_r16g16b16_srgb(const std::vector<float>& floats, const std:
 
         while (from != end)
         {
-                To red = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &red, sizeof(To));
-                to += sizeof(To);
-
-                To green = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &green, sizeof(To));
-                to += sizeof(To);
-
-                To blue = color::linear_float_to_srgb_uint16(*from++);
-                std::memcpy(to, &blue, sizeof(To));
-                to += sizeof(To);
-
+                for (int i = 0; i < 3; ++i)
+                {
+                        const To value = color::linear_float_to_srgb_uint16(*from++);
+                        std::memcpy(to, &value, sizeof(To));
+                        to += sizeof(To);
+                }
                 ++from;
         }
 }

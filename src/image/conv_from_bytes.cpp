@@ -38,11 +38,11 @@ void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>*
         const std::byte* const end = from + bytes.size();
         auto to = floats->begin();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(red);
+                std::memcpy(&value, from, sizeof(From));
+                *to++ = color::srgb_uint8_to_linear_float(value);
                 from += sizeof(From);
         }
 }
@@ -61,11 +61,11 @@ void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* con
         const std::byte* const end = from + bytes.size();
         auto to = floats->begin();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(red);
+                std::memcpy(&value, from, sizeof(From));
+                *to++ = color::linear_uint16_to_linear_float(value);
                 from += sizeof(From);
         }
 }
@@ -84,22 +84,15 @@ void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vect
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(blue);
-                from += sizeof(From);
+                for (int i = 0; i < 3; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::srgb_uint8_to_linear_float(value);
+                        from += sizeof(From);
+                }
         }
 }
 
@@ -117,22 +110,15 @@ void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(blue);
-                from += sizeof(From);
+                for (int i = 0; i < 3; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::linear_uint16_to_linear_float(value);
+                        from += sizeof(From);
+                }
         }
 }
 
@@ -150,22 +136,15 @@ void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::v
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(blue);
-                from += sizeof(From);
+                for (int i = 0; i < 3; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::srgb_uint16_to_linear_float(value);
+                        from += sizeof(From);
+                }
         }
 }
 
@@ -183,26 +162,17 @@ void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std:
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(blue);
-                from += sizeof(From);
-
-                From alpha;
-                std::memcpy(&alpha, from, sizeof(From));
-                *to++ = color::linear_uint8_to_linear_float(alpha);
+                for (int i = 0; i < 3; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::srgb_uint8_to_linear_float(value);
+                        from += sizeof(From);
+                }
+                std::memcpy(&value, from, sizeof(From));
+                *to++ = color::linear_uint8_to_linear_float(value);
                 from += sizeof(From);
         }
 }
@@ -221,27 +191,15 @@ void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(blue);
-                from += sizeof(From);
-
-                From alpha;
-                std::memcpy(&alpha, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(alpha);
-                from += sizeof(From);
+                for (int i = 0; i < 4; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::linear_uint16_to_linear_float(value);
+                        from += sizeof(From);
+                }
         }
 }
 
@@ -259,26 +217,17 @@ void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, 
         const std::byte* const end = from + bytes.size();
         float* to = floats->data();
 
+        From value = 0;
         while (from != end)
         {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::srgb_uint16_to_linear_float(blue);
-                from += sizeof(From);
-
-                From alpha;
-                std::memcpy(&alpha, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(alpha);
+                for (int i = 0; i < 3; ++i)
+                {
+                        std::memcpy(&value, from, sizeof(From));
+                        *to++ = color::srgb_uint16_to_linear_float(value);
+                        from += sizeof(From);
+                }
+                std::memcpy(&value, from, sizeof(From));
+                *to++ = color::linear_uint16_to_linear_float(value);
                 from += sizeof(From);
         }
 }
