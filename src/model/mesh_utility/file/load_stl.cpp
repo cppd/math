@@ -38,9 +38,10 @@ namespace ns::model::mesh::file
 {
 namespace
 {
+using BinaryNumberOfTriangles = std::uint32_t;
+
 constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_OFFSET = 80 * sizeof(std::uint8_t);
-constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(std::uint32_t);
-constexpr std::uintmax_t BINARY_DATA_OFFSET = BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE;
+constexpr std::uintmax_t BINARY_DATA_OFFSET = BINARY_NUMBER_OF_TRIANGLES_OFFSET + sizeof(BinaryNumberOfTriangles);
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
 template <std::size_t N>
@@ -49,10 +50,9 @@ constexpr std::uintmax_t BINARY_FACET_SIZE = N* N * sizeof(float);
 template <bool BYTE_SWAP>
 std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
 {
-        ASSERT(data.size() >= BINARY_NUMBER_OF_TRIANGLES_OFFSET + BINARY_NUMBER_OF_TRIANGLES_SIZE);
+        ASSERT(data.size() >= BINARY_NUMBER_OF_TRIANGLES_OFFSET + sizeof(BinaryNumberOfTriangles));
 
-        std::uint32_t v;
-        static_assert(sizeof(v) == BINARY_NUMBER_OF_TRIANGLES_SIZE);
+        BinaryNumberOfTriangles v;
         std::memcpy(&v, &data[BINARY_NUMBER_OF_TRIANGLES_OFFSET], sizeof(v));
         if constexpr (!BYTE_SWAP)
         {
@@ -264,23 +264,22 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
         const auto yield_facet = [&](const std::array<Vector<N, float>, N>& facet_vertices)
         {
                 typename Mesh<N>::Facet& facet = mesh.facets.emplace_back();
+
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        unsigned index;
-
-                        const auto iter = unique_vertices.find(facet_vertices[i]);
-                        if (iter != unique_vertices.cend())
+                        facet.vertices[i] = [&]
                         {
-                                index = iter->second;
-                        }
-                        else
-                        {
-                                index = mesh.vertices.size();
+                                const auto iter = unique_vertices.find(facet_vertices[i]);
+                                if (iter != unique_vertices.cend())
+                                {
+                                        return iter->second;
+                                }
+                                const unsigned index = mesh.vertices.size();
                                 mesh.vertices.push_back(facet_vertices[i]);
                                 unique_vertices.emplace(facet_vertices[i], index);
-                        }
+                                return index;
+                        }();
 
-                        facet.vertices[i] = index;
                         facet.normals[i] = -1;
                         facet.texcoords[i] = -1;
                         facet.material = -1;

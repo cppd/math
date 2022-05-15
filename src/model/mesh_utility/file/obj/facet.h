@@ -102,11 +102,10 @@ const char* read_digit_group(const char* first, const char* const last, std::arr
 }
 
 template <std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
-void read_digit_groups(
+unsigned read_digit_groups(
         const char* first,
         const char* const last,
-        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr,
-        int* const group_count)
+        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr)
 {
         unsigned group_index = -1;
 
@@ -118,8 +117,7 @@ void read_digit_groups(
 
                 if (first == last)
                 {
-                        *group_count = group_index;
-                        return;
+                        return group_index;
                 }
 
                 if (group_index >= group_ptr->size())
@@ -176,9 +174,7 @@ void read_facets(
 
         std::array<std::array<int, 3>, MAX_GROUP_COUNT> groups;
 
-        int group_count;
-
-        impl::read_digit_groups(first, last, &groups, &group_count);
+        const unsigned group_count = impl::read_digit_groups(first, last, &groups);
 
         if (group_count < static_cast<int>(N))
         {

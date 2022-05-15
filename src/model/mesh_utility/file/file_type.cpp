@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/ascii.h>
 
 #include <algorithm>
+#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -46,7 +47,7 @@ std::string read_first_line_from_file(const std::filesystem::path& file_name, in
         }
 
         int char_count = 0;
-        char c;
+        char c = 0;
         std::string line;
 
         while (f.get(c) && c != '\n' && ++char_count <= max_char_count)
@@ -72,38 +73,34 @@ int count_numbers(const std::string& s)
 {
         std::istringstream iss(s);
 
-        int d = 0;
+        int count = 0;
 
         while (iss)
         {
-                long double tmp;
-                iss >> tmp;
-                if (iss)
+                if (long double tmp; iss >> tmp)
                 {
-                        ++d;
+                        ++count;
                 }
         }
 
-        if (d == 0)
+        if (count == 0)
         {
                 error("Failed to read a floating point number from string \"" + s + "\"");
         }
 
         iss.clear();
 
-        std::string tmp;
-        iss >> tmp;
-        if (iss)
+        if (std::string tmp; iss >> tmp)
         {
                 error("Failed to find dimension number from string \"" + s + "\"");
         }
 
-        return d;
+        return count;
 }
 
 int count_numbers_in_file(const std::filesystem::path& file_name)
 {
-        std::string line = read_first_line_from_file(file_name, 1000000);
+        const std::string line = read_first_line_from_file(file_name, 1000000);
 
         if (line.empty())
         {
@@ -163,33 +160,18 @@ std::tuple<int, MeshFileType> dimension_and_file_type(const Path& file_name)
 
 int read_dimension_number(const std::string& s)
 {
-        if (!std::all_of(
-                    s.cbegin(), s.cend(),
-                    [](char c)
-                    {
-                            return ascii::is_digit(c);
-                    }))
+        const char* const first = s.data();
+        const char* const last = s.data() + s.size();
+
+        int number;
+        const auto [ptr, ec] = std::from_chars(first, last, number);
+
+        if (ec == std::errc{} && ptr == last && number > 0)
         {
-                error("Wrong dimension number string \"" + s + "\"");
+                return number;
         }
 
-        std::istringstream iss(s);
-
-        int d;
-
-        iss >> d;
-        if (!iss)
-        {
-                error("Failed to read dimension number from string \"" + s + "\"");
-        }
-
-        char tmp;
-        if (iss.get(tmp))
-        {
-                error("Wrong dimension number string \"" + s + "\"");
-        }
-
-        return d;
+        error("Failed to read dimension number from string \"" + s + "\"");
 }
 
 template <typename Path>
