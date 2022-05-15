@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 
+#include <optional>
+
 namespace ns::gpu::renderer
 {
 class StorageVolumeEvents
@@ -44,6 +46,43 @@ class StorageVolume final : private StorageEvents<VolumeObject>
         void visibility_changed() override
         {
                 events_->volume_visibility_changed();
+        }
+
+        struct Updates final
+        {
+                bool visible;
+                VolumeObject::UpdateChanges changes;
+        };
+
+        std::optional<Updates> update_volume(const model::volume::VolumeObject<3>& object)
+        {
+                VolumeObject* const ptr = [&]
+                {
+                        VolumeObject* const p = storage_.object(object.id());
+                        if (p)
+                        {
+                                return p;
+                        }
+                        return storage_.insert(object.id(), events_->volume_create());
+                }();
+
+                try
+                {
+                        model::volume::Reading reading(object);
+                        return Updates{.visible = reading.visible(), .changes = ptr->update(reading)};
+                }
+                catch (const std::exception& e)
+                {
+                        storage_.erase(object.id());
+                        LOG(std::string("Error updating volume object: ") + e.what());
+                        return std::nullopt;
+                }
+                catch (...)
+                {
+                        storage_.erase(object.id());
+                        LOG("Unknown error updating volume object");
+                        return std::nullopt;
+                }
         }
 
 public:
@@ -73,49 +112,24 @@ public:
 
         void update(const model::volume::VolumeObject<3>& object)
         {
-                VolumeObject* const ptr = [&]
-                {
-                        VolumeObject* const p = storage_.object(object.id());
-                        if (p)
-                        {
-                                return p;
-                        }
-                        return storage_.insert(object.id(), events_->volume_create());
-                }();
+                const std::optional<Updates> updates = update_volume(object);
 
-                VolumeObject::UpdateChanges update_changes;
-                bool visible;
-
-                try
+                if (!updates)
                 {
-                        model::volume::Reading reading(object);
-                        visible = reading.visible();
-                        update_changes = ptr->update(reading);
-                }
-                catch (const std::exception& e)
-                {
-                        storage_.erase(object.id());
-                        LOG(std::string("Error updating volume object: ") + e.what());
-                        return;
-                }
-                catch (...)
-                {
-                        storage_.erase(object.id());
-                        LOG("Unknown error updating volume object");
                         return;
                 }
 
                 const bool storage_visible = storage_.is_visible(object.id());
 
-                if (visible && storage_visible)
+                if (updates->visible && storage_visible)
                 {
-                        events_->volume_visible_changed(update_changes);
+                        events_->volume_visible_changed(updates->changes);
                         return;
                 }
 
-                if (visible != storage_visible)
+                if (updates->visible != storage_visible)
                 {
-                        storage_.set_visible(object.id(), visible);
+                        storage_.set_visible(object.id(), updates->visible);
                 }
         }
 };

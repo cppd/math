@@ -187,17 +187,20 @@ class Impl final : public VolumeObject
 
         bool set_image(const image::Image<3>& image)
         {
-                bool size_changed;
-                VkImageLayout image_layout;
-
-                if (!image_ || image_formats_ != volume_image_formats(image.color_format)
-                    || image_->image().extent().width != static_cast<unsigned>(image.size[0])
-                    || image_->image().extent().height != static_cast<unsigned>(image.size[1])
-                    || image_->image().extent().depth != static_cast<unsigned>(image.size[2]))
+                const auto write = [&](const VkImageLayout image_layout)
                 {
-                        size_changed = true;
-                        image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+                        write_volume_image(
+                                image,
+                                [&](const image::ColorFormat format, const std::vector<std::byte>& pixels)
+                                {
+                                        image_->write(
+                                                *transfer_command_pool_, *transfer_queue_, image_layout,
+                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, format, pixels);
+                                });
+                };
 
+                const auto create = [&]
+                {
                         image_scalar_ = is_scalar_volume(image.color_format);
 
                         buffer_set_color_volume(!image_scalar_);
@@ -208,27 +211,29 @@ class Impl final : public VolumeObject
                         image_ = std::make_unique<vulkan::ImageWithMemory>(
                                 *device_, family_indices_, image_formats_, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
-                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout,
-                                *transfer_command_pool_, *transfer_queue_);
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+                        write(VK_IMAGE_LAYOUT_UNDEFINED);
 
                         set_memory_image();
-                }
-                else
+                };
+
+                if (!image_ || image_->image().extent().width != static_cast<unsigned>(image.size[0])
+                    || image_->image().extent().height != static_cast<unsigned>(image.size[1])
+                    || image_->image().extent().depth != static_cast<unsigned>(image.size[2]))
                 {
-                        size_changed = false;
-                        image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        create();
+                        return true;
                 }
 
-                write_volume_image(
-                        image,
-                        [&](const image::ColorFormat format, const std::vector<std::byte>& pixels)
-                        {
-                                image_->write(
-                                        *transfer_command_pool_, *transfer_queue_, image_layout,
-                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, format, pixels);
-                        });
+                if (image_formats_ != volume_image_formats(image.color_format))
+                {
+                        create();
+                        return false;
+                }
 
-                return size_changed;
+                write(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                return false;
         }
 
         void set_texture_to_world_matrix(const Matrix4d& texture_to_world_matrix)

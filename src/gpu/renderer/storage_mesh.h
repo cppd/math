@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 
+#include <optional>
+
 namespace ns::gpu::renderer
 {
 class StorageMeshEvents
@@ -44,6 +46,43 @@ class StorageMesh final : private StorageEvents<MeshObject>
         void visibility_changed() override
         {
                 events_->mesh_visibility_changed();
+        }
+
+        struct Updates final
+        {
+                bool visible;
+                MeshObject::UpdateChanges changes;
+        };
+
+        std::optional<Updates> update_mesh(const model::mesh::MeshObject<3>& object)
+        {
+                MeshObject* const ptr = [&]
+                {
+                        MeshObject* const p = storage_.object(object.id());
+                        if (p)
+                        {
+                                return p;
+                        }
+                        return storage_.insert(object.id(), events_->mesh_create());
+                }();
+
+                try
+                {
+                        const model::mesh::Reading reading(object);
+                        return Updates{.visible = reading.visible(), .changes = ptr->update(reading)};
+                }
+                catch (const std::exception& e)
+                {
+                        storage_.erase(object.id());
+                        LOG(std::string("Error updating mesh object: ") + e.what());
+                        return std::nullopt;
+                }
+                catch (...)
+                {
+                        storage_.erase(object.id());
+                        LOG("Unknown error updating mesh object");
+                        return std::nullopt;
+                }
         }
 
 public:
@@ -73,49 +112,24 @@ public:
 
         void update(const model::mesh::MeshObject<3>& object)
         {
-                MeshObject* const ptr = [&]
-                {
-                        MeshObject* const p = storage_.object(object.id());
-                        if (p)
-                        {
-                                return p;
-                        }
-                        return storage_.insert(object.id(), events_->mesh_create());
-                }();
+                const std::optional<Updates> updates = update_mesh(object);
 
-                MeshObject::UpdateChanges update_changes;
-                bool visible;
-
-                try
+                if (!updates)
                 {
-                        const model::mesh::Reading reading(object);
-                        visible = reading.visible();
-                        update_changes = ptr->update(reading);
-                }
-                catch (const std::exception& e)
-                {
-                        storage_.erase(object.id());
-                        LOG(std::string("Error updating mesh object: ") + e.what());
-                        return;
-                }
-                catch (...)
-                {
-                        storage_.erase(object.id());
-                        LOG("Unknown error updating mesh object");
                         return;
                 }
 
                 const bool storage_visible = storage_.is_visible(object.id());
 
-                if (visible && storage_visible)
+                if (updates->visible && storage_visible)
                 {
-                        events_->mesh_visible_changed(update_changes);
+                        events_->mesh_visible_changed(updates->changes);
                         return;
                 }
 
-                if (visible != storage_visible)
+                if (updates->visible != storage_visible)
                 {
-                        storage_.set_visible(object.id(), visible);
+                        storage_.set_visible(object.id(), updates->visible);
                 }
         }
 };
