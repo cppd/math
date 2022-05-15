@@ -37,8 +37,13 @@ static_assert(2 - binary_epsilon<double>() == max_binary_fraction<double>());
 static_assert(2 - binary_epsilon<long double>() == max_binary_fraction<long double>());
 static_assert(2 - binary_epsilon<__float128>() == max_binary_fraction<__float128>());
 
+static_assert(1 == binary_exponent<float>(0));
+static_assert(1 == binary_exponent<double>(0));
+
 static_assert(std::numeric_limits<float>::max() == max_binary_fraction<float>() * binary_exponent<float>(127));
+static_assert(std::numeric_limits<float>::min() == binary_exponent<float>(-126));
 static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>() * binary_exponent<double>(1023));
+static_assert(std::numeric_limits<double>::min() == binary_exponent<double>(-1022));
 }
 }
 

@@ -54,29 +54,29 @@ constexpr T max_binary_fraction() noexcept
 }
 
 template <typename T>
-constexpr T binary_exponent(int e) noexcept
+constexpr T binary_exponent(const int e) noexcept
 {
-        if (e == 0)
-        {
-                return 1;
-        }
-        T r = 1;
         if (e > 0)
         {
+                T r = 1;
                 for (int i = 1; i <= e; ++i)
                 {
                         r *= 2;
                 }
+                return r;
         }
+
         if (e < 0)
         {
-                e = -e;
-                for (int i = 1; i <= e; ++i)
+                T r = 1;
+                for (int i = -1; i >= e; --i)
                 {
                         r /= 2;
                 }
+                return r;
         }
-        return r;
+
+        return 1;
 }
 
 template <typename T>
@@ -96,18 +96,22 @@ requires IntegralType<T> && std::numeric_limits<T>::is_specialized struct Limits
         {
                 return std::numeric_limits<T>::max();
         }
+
         static constexpr T lowest() noexcept
         {
                 return std::numeric_limits<T>::lowest();
         }
+
         static constexpr int digits() noexcept
         {
                 return std::numeric_limits<T>::digits;
         }
+
         static constexpr int digits10() noexcept
         {
                 return std::numeric_limits<T>::digits10;
         }
+
         static constexpr int radix() noexcept
         {
                 return std::numeric_limits<T>::radix;
@@ -121,39 +125,48 @@ requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized struct L
         {
                 return std::numeric_limits<T>::epsilon();
         }
+
         static constexpr T max() noexcept
         {
                 return std::numeric_limits<T>::max();
         }
+
         static constexpr T lowest() noexcept
         {
                 return std::numeric_limits<T>::lowest();
         }
+
         static constexpr T infinity() noexcept
         {
                 static_assert(std::numeric_limits<T>::has_infinity);
                 return std::numeric_limits<T>::infinity();
         }
+
         static constexpr int digits() noexcept
         {
                 return std::numeric_limits<T>::digits;
         }
+
         static constexpr int digits10() noexcept
         {
                 return std::numeric_limits<T>::digits10;
         }
+
         static constexpr int max_digits10() noexcept
         {
                 return std::numeric_limits<T>::max_digits10;
         }
+
         static constexpr int max_exponent() noexcept
         {
                 return std::numeric_limits<T>::max_exponent;
         }
+
         static constexpr int radix() noexcept
         {
                 return std::numeric_limits<T>::radix;
         }
+
         static constexpr bool is_iec559() noexcept
         {
                 return std::numeric_limits<T>::is_iec559;
@@ -167,18 +180,22 @@ requires std::is_same_v<T, unsigned __int128> &&(!std::numeric_limits<T>::is_spe
         {
                 return -1;
         }
+
         static constexpr T lowest() noexcept
         {
                 return 0;
         }
+
         static constexpr int digits() noexcept
         {
                 return 128;
         }
+
         static constexpr int digits10() noexcept
         {
                 return 38;
         }
+
         static constexpr int radix() noexcept
         {
                 return 2;
@@ -192,18 +209,22 @@ requires std::is_same_v<T, signed __int128> &&(!std::numeric_limits<T>::is_speci
         {
                 return static_cast<unsigned __int128>(-1) >> 1;
         }
+
         static constexpr T lowest() noexcept
         {
                 return -max() - 1;
         }
+
         static constexpr int digits() noexcept
         {
                 return 127;
         }
+
         static constexpr int digits10() noexcept
         {
                 return 38;
         }
+
         static constexpr int radix() noexcept
         {
                 return 2;
@@ -220,34 +241,42 @@ requires std::is_same_v<T, __float128> &&(!std::numeric_limits<T>::is_specialize
         {
                 return binary_epsilon<T>();
         }
+
         static constexpr T max() noexcept
         {
                 return max_binary_fraction<T>() * binary_exponent<T>(16383);
         }
+
         static constexpr T lowest() noexcept
         {
                 return -max();
         }
+
         static constexpr int digits() noexcept
         {
                 return 113;
         }
+
         static constexpr int digits10() noexcept
         {
                 return 33;
         }
+
         static constexpr int max_digits10() noexcept
         {
                 return 36;
         }
+
         static constexpr int max_exponent() noexcept
         {
                 return 16384;
         }
+
         static constexpr int radix() noexcept
         {
                 return 2;
         }
+
         static constexpr bool is_iec559() noexcept
         {
                 return true;
