@@ -45,6 +45,7 @@ template <std::size_t N>
         }
         return res;
 }
+
 template <std::size_t N>
 [[nodiscard]] Vector<N, std::uint32_t> byte_swap(const Vector<N, float>& v)
 {
