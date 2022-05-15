@@ -308,7 +308,6 @@ std::optional<std::uint32_t> acquire_next_image(
         static constexpr std::uint64_t TIMEOUT = Limits<std::uint64_t>::max();
 
         std::uint32_t image_index;
-
         const VkResult result =
                 vkAcquireNextImageKHR(device, swapchain, TIMEOUT, semaphore, VK_NULL_HANDLE /*fence*/, &image_index);
 

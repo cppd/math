@@ -40,7 +40,6 @@ void copy_host_to_device(
         const void* const data)
 {
         void* map_memory_data;
-
         VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
 
         std::memcpy(map_memory_data, data, size);
@@ -57,7 +56,6 @@ void copy_device_to_host(
         void* const data)
 {
         void* map_memory_data;
-
         VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
 
         std::memcpy(data, map_memory_data, size);
