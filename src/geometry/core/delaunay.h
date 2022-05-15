@@ -125,10 +125,10 @@ void create_delaunay_objects_and_facets(
                 return iter->second;
         };
 
-        std::unordered_map<Ridge<N + 1>, RidgeData2<DelaunaySimplex<N>>> facets(simplices.size());
+        std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> facets(simplices.size());
         for (const DelaunaySimplex<N>& simplex : simplices)
         {
-                add_to_ridges(simplex, &facets);
+                add_to_ridges(&simplex, &facets);
         }
 
         delaunay_facets->clear();
@@ -136,25 +136,25 @@ void create_delaunay_objects_and_facets(
         for (const auto& f : facets)
         {
                 const Ridge<N + 1>& facet = f.first;
-                const RidgeData2<DelaunaySimplex<N>>& ridge_data = f.second;
+                const RidgeFacets2<DelaunaySimplex<N>>& ridge_facets = f.second;
 
-                ASSERT(ridge_data[0].facet());
+                ASSERT(ridge_facets.f0().facet());
 
-                if (!ridge_data[1].facet())
+                if (!ridge_facets.f1().facet())
                 {
-                        const DelaunaySimplex<N>* const simplex = ridge_data[0].facet();
-                        const Vector<N, double> ortho = simplex->ortho(ridge_data[0].vertex_index());
+                        const DelaunaySimplex<N>* const simplex = ridge_facets.f0().facet();
+                        const Vector<N, double> ortho = simplex->ortho(ridge_facets.f0().vertex_index());
 
                         delaunay_facets->emplace_back(
                                 facet.vertices(), ortho, delaunay_index_for_simplex(simplex), NULL_INDEX);
                 }
                 else
                 {
-                        const DelaunaySimplex<N>* const simplex_0 = ridge_data[0].facet();
-                        const DelaunaySimplex<N>* const simplex_1 = ridge_data[1].facet();
+                        const DelaunaySimplex<N>* const simplex_0 = ridge_facets.f0().facet();
+                        const DelaunaySimplex<N>* const simplex_1 = ridge_facets.f1().facet();
 
-                        const Vector<N, double> ortho = simplex_0->ortho(ridge_data[0].vertex_index());
-                        ASSERT(ortho == -simplex_1->ortho(ridge_data[1].vertex_index()));
+                        const Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
+                        ASSERT(ortho == -simplex_1->ortho(ridge_facets.f1().vertex_index()));
 
                         delaunay_facets->emplace_back(
                                 facet.vertices(), ortho, delaunay_index_for_simplex(simplex_0),

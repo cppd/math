@@ -41,10 +41,7 @@ namespace ns::geometry
 namespace prune_facets_implementation
 {
 template <std::size_t N>
-using RidgeData = RidgeDataN<DelaunayFacet<N>>;
-
-template <std::size_t N>
-using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
+using RidgeMap = std::unordered_map<Ridge<N>, RidgeFacets<DelaunayFacet<N>>>;
 
 template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
@@ -100,24 +97,25 @@ bool sharp_ridge(
         const std::vector<Vector<N, T>>& points,
         const std::vector<bool>& interior_vertices,
         const Ridge<N>& ridge,
-        const RidgeData<N>& ridge_data)
+        const RidgeFacets<DelaunayFacet<N>>& ridge_facets)
 {
-        ASSERT(!ridge_data.empty());
+        ASSERT(!ridge_facets.empty());
 
         if (boundary_ridge(interior_vertices, ridge))
         {
                 return false;
         }
 
-        if (ridge_data.size() == 1)
+        if (ridge_facets.size() == 1)
         {
                 // sharp by default
                 return true;
         }
 
-        const RidgeComplement basis(points, ridge.vertices(), ridge_data.cbegin()->point());
+        const RidgeComplement basis(points, ridge.vertices(), ridge_facets.cbegin()->point());
 
-        const Vector<2, T> base = basis.coordinates(points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]]);
+        const Vector<2, T> base =
+                basis.coordinates(points[ridge_facets.cbegin()->point()] - points[ridge.vertices()[0]]);
         ASSERT(is_finite(base));
 
         T cos_plus = 1;
@@ -125,7 +123,7 @@ bool sharp_ridge(
         T sin_plus = 0;
         T sin_minus = 0;
 
-        for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
+        for (auto ridge_facet = std::next(ridge_facets.cbegin()); ridge_facet != ridge_facets.cend(); ++ridge_facet)
         {
                 const Vector<2, T> v = basis.coordinates(points[ridge_facet->point()] - points[ridge.vertices()[0]]);
                 ASSERT(is_finite(v));
@@ -205,7 +203,7 @@ RidgeSet<N> prune(
 
                 for (const DelaunayFacet<N>* const facet : facets_to_remove)
                 {
-                        remove_from_ridges(*facet, ridge_map);
+                        remove_from_ridges(facet, ridge_map);
                 }
         }
 
@@ -231,7 +229,7 @@ void prune_facets_incident_to_sharp_ridges(
         {
                 if ((*cocone_facets)[i])
                 {
-                        add_to_ridges(delaunay_facets[i], &ridge_map);
+                        add_to_ridges(&delaunay_facets[i], &ridge_map);
                         facet_ptr_index.emplace(&delaunay_facets[i], i);
                 }
         }
