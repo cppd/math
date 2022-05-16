@@ -43,7 +43,7 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
                 return false;
         }
         ray.set_org(surface_1.point());
-        return scene.intersect(surface_1.geometric_normal(), ray);
+        return static_cast<bool>(scene.intersect(surface_1.geometric_normal(), ray));
 }
 
 template <std::size_t N, typename T, typename Color>

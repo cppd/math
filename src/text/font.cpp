@@ -55,13 +55,11 @@ public:
                 FT_Done_FreeType(library_);
         }
 
-        operator FT_Library() const&
+        FT_Library get() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Library>);
                 return library_;
         }
-
-        operator FT_Library() const&& = delete;
 
         Library(const Library&) = delete;
         Library& operator=(const Library&) = delete;
@@ -98,15 +96,13 @@ public:
                 FT_Done_Face(face_);
         }
 
-        operator FT_Face() const&
+        FT_Face get() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Face>);
                 return face_;
         }
 
-        operator FT_Face() const&& = delete;
-
-        FT_Face operator->() const
+        FT_Face operator->() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Face>);
                 return face_;
@@ -177,7 +173,9 @@ class Font::Impl final
 
 public:
         template <typename T>
-        Impl(const int size_in_pixels, T&& font_data) : face_(library_, std::forward<T>(font_data))
+        Impl(const int size_in_pixels, T&& font_data)
+                : library_(),
+                  face_(library_.get(), std::forward<T>(font_data))
         {
                 set_size(size_in_pixels);
         }
@@ -197,14 +195,14 @@ public:
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 size_ = size_in_pixels;
-                FT_Set_Pixel_Sizes(face_, 0, size_in_pixels);
+                FT_Set_Pixel_Sizes(face_.get(), 0, size_in_pixels);
         }
 
         std::optional<Char> render(const char32_t code_point) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                if (FT_Load_Char(face_, code_point, FT_LOAD_RENDER))
+                if (FT_Load_Char(face_.get(), code_point, FT_LOAD_RENDER))
                 {
                         return std::nullopt;
                 }

@@ -38,18 +38,15 @@ class RelaxedAtomic
         static_assert(decltype(counter_)::is_always_lock_free == LOCK_FREE);
 
 public:
-        RelaxedAtomic& operator=(const T& v)
+        void set(const T& v)
         {
                 counter_.store(v, std::memory_order_relaxed);
-                return *this;
         }
 
-        operator T() const&
+        T value() const
         {
                 return counter_.load(std::memory_order_relaxed);
         }
-
-        operator T() const&& = delete;
 
         void operator|=(const T& v)
         {
@@ -80,7 +77,7 @@ public:
 
         void check_terminate() const
         {
-                const DataType terminate = terminate_;
+                const DataType terminate = terminate_.value();
 
                 if (terminate & TERMINATE_QUIETLY)
                 {
@@ -136,7 +133,7 @@ public:
         {
                 terminate_.check_terminate();
 
-                counter_ = (static_cast<CounterType>(maximum & MAX) << SHIFT) | (value & MAX);
+                counter_.set((static_cast<CounterType>(maximum & MAX) << SHIFT) | (value & MAX));
         }
 
         void set(double v)
@@ -168,7 +165,7 @@ public:
 
         Info info() const override
         {
-                const CounterType c = counter_;
+                const CounterType c = counter_.value();
                 const unsigned value = c & MAX;
                 const unsigned maximum = c >> SHIFT;
                 return {.value = value, .maximum = maximum};
