@@ -30,7 +30,6 @@ cppcoreguidelines-*,
 -cppcoreguidelines-virtual-class-destructor,
 
 google-*,
--google-explicit-constructor,
 -google-readability-namespace-comments,
 -google-runtime-int,
 
