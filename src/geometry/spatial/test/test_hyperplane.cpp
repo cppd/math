@@ -79,7 +79,7 @@ bool test_point_on_plane(
 {
         const Vector<N, T> to_point = point - plane_point;
 
-        if (!(to_point.norm() > T(0.1)))
+        if (!(to_point.norm() > T{0.1}))
         {
                 return false;
         }

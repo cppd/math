@@ -30,7 +30,7 @@ namespace
 template <typename T>
 struct Check final
 {
-        static constexpr T NEGATIVE_EPSILON = T(1) - PREVIOUS_BEFORE_ONE<T>;
+        static constexpr T NEGATIVE_EPSILON = T{1} - PREVIOUS_BEFORE_ONE<T>;
         static_assert(1 - NEGATIVE_EPSILON < 1);
         static_assert(1 - (NEGATIVE_EPSILON / 2) == 1);
 };
@@ -41,7 +41,7 @@ template struct Check<long double>;
 template <typename T>
 void test_negative_epsilon()
 {
-        const T next = std::nextafter(T(1), T(0));
+        const T next = std::nextafter(T{1}, T{0});
         if (!(PREVIOUS_BEFORE_ONE<T> == next))
         {
                 error("Next before one " + to_string(PREVIOUS_BEFORE_ONE<T>) + " is not equal to nextafter(1, 0) "

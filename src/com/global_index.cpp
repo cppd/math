@@ -42,7 +42,7 @@ static_assert(
 static_assert(
         GlobalIndex<5, __int128>(std::array<long long, 5>{123456, 789876, 543212, 345678, 987654})
                 .compute(std::array<int, 5>{12345, 67898, 76543, 21234, 56789})
-        == __int128(1039864870365) * __int128(1000000000000000) + 704301544246713);
+        == __int128{1039864870365} * __int128{1000000000000000} + 704301544246713);
 
 // count
 
@@ -58,7 +58,7 @@ static_assert(GlobalIndex<5, long long>(std::array<std::size_t, 5>{123, 456, 789
 
 static_assert(
         GlobalIndex<5, __int128>(std::array<long long, 5>{123456, 789876, 543212, 345678, 987654}).count()
-        == __int128(18084938769185) * __int128(1000000000000000) + 969371161636864);
+        == __int128{18084938769185} * __int128{1000000000000000} + 969371161636864);
 
 // stride
 
@@ -69,13 +69,13 @@ static_assert(GlobalIndex<5, __int128>(std::array<long long, 5>{11111, 22222, 33
 
 static_assert(
         GlobalIndex<5, unsigned __int128>(std::array<long long, 5>{11111, 22222, 33333, 44444, 55555}).stride(2)
-        == static_cast<unsigned __int128>(11111) * 22222);
+        == __int128{11111} * 22222);
 
 static_assert(
         GlobalIndex<5, __int128>(std::array<long long, 5>{11111, 22222, 33333, 44444, 55555}).stride(3)
-        == static_cast<__int128>(11111) * 22222 * 33333);
+        == __int128{11111} * 22222 * 33333);
 
 static_assert(
         GlobalIndex<5, unsigned __int128>(std::array<long long, 5>{11111, 22222, 33333, 44444, 55555}).stride(4)
-        == static_cast<unsigned __int128>(11111) * 22222 * 33333 * 44444);
+        == __int128{11111} * 22222 * 33333 * 44444);
 }

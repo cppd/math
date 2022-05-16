@@ -193,7 +193,7 @@ bool compare_cost(
         for (unsigned i = 0; i < forward_sum.size(); ++i)
         {
                 const T relative_error = std::abs(1 - (forward_sum[i].cost + backward_sum[i].cost) / cost);
-                if (!(relative_error < T(1e-5)))
+                if (!(relative_error < T{1e-5}))
                 {
                         return false;
                 }

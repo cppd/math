@@ -180,7 +180,7 @@ void test_erf_inv(const std::type_identity_t<T>& precision, const int divisions)
         {
                 for (int j = 0; j < divisions; ++j)
                 {
-                        test_erf_inv<T>(T(i) + T(j) / T(divisions), precision);
+                        test_erf_inv<T>(i + static_cast<T>(j) / divisions, precision);
                 }
         }
 }
@@ -190,27 +190,27 @@ void test_erf_inv_array(const std::type_identity_t<T>& precision)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        if (!std::isnan(erf_inv(T(-2))))
+        if (!std::isnan(erf_inv<T>(-2)))
         {
                 error("erf_inv(-2) is not NAN");
         }
 
-        if (!std::isnan(erf_inv(T(2))))
+        if (!std::isnan(erf_inv<T>(2)))
         {
                 error("erf_inv(2) is not NAN");
         }
 
-        if (!(erf_inv(T(-1)) == -Limits<T>::infinity()))
+        if (!(erf_inv<T>(-1) == -Limits<T>::infinity()))
         {
                 error("erf_inv(-1) is not -infinity");
         }
 
-        if (!(erf_inv(T(0)) == 0))
+        if (!(erf_inv<T>(0) == 0))
         {
                 error("erf_inv(0) is not 0");
         }
 
-        if (!(erf_inv(T(1)) == Limits<T>::infinity()))
+        if (!(erf_inv<T>(1) == Limits<T>::infinity()))
         {
                 error("erf_inv(1) is not infinity");
         }

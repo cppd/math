@@ -98,7 +98,7 @@ constexpr bool test_row_reduction()
 {
         const auto cmp = [](const T& v, const long long c)
         {
-                return v > c - T(0.1) && v < c + T(0.1);
+                return v > c - T{0.1} && v < c + T{0.1};
         };
         constexpr Vector<7, long long> VECTOR(
                 -2555210922012, 336840375312, -206347990212, 159370731576, -135170325612, 120413980512, 4125807482688);

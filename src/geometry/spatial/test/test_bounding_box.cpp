@@ -98,7 +98,7 @@ BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
                 {
                         p1[i] = urd(engine);
                         p2[i] = urd(engine);
-                } while (!(std::abs(p1[i] - p2[i]) >= T(0.5)));
+                } while (!(std::abs(p1[i] - p2[i]) >= T{0.5}));
         }
         return {p1, p2};
 }

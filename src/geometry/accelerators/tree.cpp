@@ -247,7 +247,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
         }
 
         ray_offset_ = std::max(root.min().norm_infinity(), root.max().norm_infinity())
-                      * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T(N)));
+                      * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T{N}));
 }
 
 #define SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N_T(N, T) template class SpatialSubdivisionTree<ParallelotopeAA<(N), T>>;

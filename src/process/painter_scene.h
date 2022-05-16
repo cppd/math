@@ -43,7 +43,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
         const int width,
         const int height)
 {
-        const Vector<3, T> camera_position = view_center - camera_direction * T(2) * shape_size;
+        const Vector<3, T> camera_position = view_center - camera_direction * (2 * shape_size);
         const Vector<3, T> camera_right = cross(camera_direction, camera_up);
 
         const std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};

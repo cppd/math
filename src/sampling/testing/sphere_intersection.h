@@ -83,7 +83,7 @@ inline void check_sphere_intersections(const long long intersection_count, const
                 oss << "Too many missed intersections" << '\n';
                 oss << "missed intersections = " << missed_intersection_count << '\n';
                 oss << "all samples = " << sample_count << '\n';
-                oss << "missed/all = " << (double(missed_intersection_count) / sample_count);
+                oss << "missed/all = " << (static_cast<double>(missed_intersection_count) / sample_count);
                 error(oss.str());
         }
 }

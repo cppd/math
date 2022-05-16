@@ -81,7 +81,7 @@ public:
 
                 if (p.color_weight == sum || (p.color_weight / sum) == 1)
                 {
-                        return std::make_tuple(p.color / sum, T(1));
+                        return std::make_tuple(p.color / sum, T{1});
                 }
 
                 return std::make_tuple(p.color / sum, p.color_weight / sum);

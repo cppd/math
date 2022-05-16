@@ -138,9 +138,9 @@ T sphere_simplex_area(const std::array<Vector<N, T>, 3>& vectors)
         const T cos_b = dot(a, c);
         const T cos_c = dot(a, b);
 
-        const T sin_a_2 = T(1) - square(cos_a);
-        const T sin_b_2 = T(1) - square(cos_b);
-        const T sin_c_2 = T(1) - square(cos_c);
+        const T sin_a_2 = 1 - square(cos_a);
+        const T sin_b_2 = 1 - square(cos_b);
+        const T sin_c_2 = 1 - square(cos_c);
 
         const T dihedral_cosine_a = (cos_a - cos_b * cos_c) / std::sqrt(sin_b_2 * sin_c_2);
         const T dihedral_cosine_b = (cos_b - cos_a * cos_c) / std::sqrt(sin_a_2 * sin_c_2);

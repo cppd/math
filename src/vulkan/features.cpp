@@ -48,7 +48,7 @@ public:
 template <typename T>
 [[noreturn]] void feature_is_not_supported_error(T&& name)
 {
-        throw FeatureIsNotSupported(std::string(std::forward<T>(name)));
+        throw FeatureIsNotSupported(std::forward<T>(name));
 }
 
 template <typename Features>

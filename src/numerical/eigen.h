@@ -50,7 +50,7 @@ T threshold(const Matrix<N, N, T>& a)
                         sum += std::abs(a(i, j));
                 }
         }
-        return T(0.5) * sum / (N * (N - 1));
+        return T{0.5} * sum / (N * (N - 1));
 }
 
 template <std::size_t N, typename T>

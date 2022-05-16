@@ -78,7 +78,7 @@ void test_gram_and_complement(RandomEngine& engine)
         const T norm_squared = orthogonal_complement(vectors).norm_squared();
         const T gram_determinant = gram_matrix(vectors).determinant();
 
-        if (!are_equal(norm_squared, gram_determinant, T(1e-8)))
+        if (!are_equal(norm_squared, gram_determinant, T{1e-8}))
         {
                 error("Test <" + to_string(N) + ", " + type_name<T>() + ">, norm squared " + to_string(norm_squared)
                       + " is not equal to Gram determinant " + to_string(gram_determinant));
@@ -95,7 +95,7 @@ void test_gram_and_determinant(RandomEngine& engine)
         const T determinant_squared = square(determinant(vectors));
         const T gram_determinant = gram_matrix(vectors).determinant();
 
-        if (!are_equal(determinant_squared, gram_determinant, T(1e-3)))
+        if (!are_equal(determinant_squared, gram_determinant, T{1e-3}))
         {
                 error("Test <" + to_string(N) + ", " + type_name<T>() + ">, determinat squared "
                       + to_string(determinant_squared) + " is not equal to Gram determinant "

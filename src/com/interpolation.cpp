@@ -31,12 +31,12 @@ struct Check final
         static_assert(interpolation<T>(1, MAX, 1) == MAX);
         static_assert(interpolation<T>(MAX, 1, 0) == MAX);
         static_assert(interpolation<T>(MAX, 1, 1) == 1);
-        static_assert(interpolation<T>(1, MAX, T(1) / 2) == MAX / 2);
-        static_assert(interpolation<T>(MAX, 1, T(1) / 2) == MAX / 2);
-        static_assert(interpolation<T>(3, 11, T(1) / 4) == 5);
-        static_assert(interpolation<T>(-3, -11, T(1) / 4) == -5);
-        static_assert(interpolation<T>(-3, 5, T(1) / 4) == -1);
-        static_assert(interpolation<T>(3, -5, T(1) / 4) == 1);
+        static_assert(interpolation<T>(1, MAX, T{1} / 2) == MAX / 2);
+        static_assert(interpolation<T>(MAX, 1, T{1} / 2) == MAX / 2);
+        static_assert(interpolation<T>(3, 11, T{1} / 4) == 5);
+        static_assert(interpolation<T>(-3, -11, T{1} / 4) == -5);
+        static_assert(interpolation<T>(-3, 5, T{1} / 4) == -1);
+        static_assert(interpolation<T>(3, -5, T{1} / 4) == 1);
 };
 template struct Check<float>;
 template struct Check<double>;

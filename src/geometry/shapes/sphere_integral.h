@@ -172,12 +172,12 @@ T sphere_cosine_weighted_average_by_cosine(const F& f, const int count)
 
         const auto function = [&](const T v)
         {
-                const T cosine = std::max(T(0), std::cos(v));
+                const T cosine = std::max(T{0}, std::cos(v));
                 const T sine = std::sin(v);
                 return power<N - 2>(sine) * cosine * f(cosine);
         };
 
-        return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
+        return (N - 1) * numerical::integrate(function, T{0}, PI<T> / 2, count);
 }
 
 /*
@@ -209,7 +209,7 @@ T sphere_integrate_power_cosine_factor_over_hemisphere(const std::type_identity_
         }
         else
         {
-                return std::pow(PI<T>, T(N - 1) / T(2)) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
+                return std::pow(PI<T>, T{N - 1} / 2) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
         }
 }
 }

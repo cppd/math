@@ -146,13 +146,13 @@ T linear_float_to_srgb_float(const T c)
         {
                 return 1;
         }
-        if (c >= T(0.0031308))
+        if (c >= T{0.0031308})
         {
-                return T(1.055) * std::pow(c, T(1) / T(2.4)) - T(0.055);
+                return T{1.055} * std::pow(c, T{1} / T{2.4}) - T{0.055};
         }
         if (c > 0)
         {
-                return c * T(12.92);
+                return c * T{12.92};
         }
         return 0;
 }
@@ -166,13 +166,13 @@ T srgb_float_to_linear_float(const T c)
         {
                 return 1;
         }
-        if (c >= T(0.04045))
+        if (c >= T{0.04045})
         {
-                return std::pow((c + T(0.055)) / T(1.055), T(2.4));
+                return std::pow((c + T{0.055}) / T{1.055}, T{2.4});
         }
         if (c > 0)
         {
-                return c / T(12.92);
+                return c / T{12.92};
         }
         return 0;
 }
@@ -255,7 +255,7 @@ constexpr T linear_float_to_linear_luminance(const T red, const T green, const T
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return T(0.2126) * red + T(0.7152) * green + T(0.0722) * blue;
+        return T{0.2126} * red + T{0.7152} * green + T{0.0722} * blue;
 }
 
 //
@@ -267,9 +267,9 @@ constexpr Vector<3, T> xyz_to_linear_srgb(const T x, const T y, const T z)
 
         Vector<3, T> rgb;
 
-        rgb[0] = T(+3.2406255) * x + T(-1.5372080) * y + T(-0.4986286) * z;
-        rgb[1] = T(-0.9689307) * x + T(+1.8757561) * y + T(+0.0415175) * z;
-        rgb[2] = T(+0.0557101) * x + T(-0.2040211) * y + T(+1.0569959) * z;
+        rgb[0] = T{+3.2406255} * x + T{-1.5372080} * y + T{-0.4986286} * z;
+        rgb[1] = T{-0.9689307} * x + T{+1.8757561} * y + T{+0.0415175} * z;
+        rgb[2] = T{+0.0557101} * x + T{-0.2040211} * y + T{+1.0569959} * z;
 
         return rgb;
 }
@@ -281,9 +281,9 @@ constexpr Vector<3, T> linear_srgb_to_xyz(const T r, const T g, const T b)
 
         Vector<3, T> xyz;
 
-        xyz[0] = T(0.4124) * r + T(0.3576) * g + T(0.1805) * b;
-        xyz[1] = T(0.2126) * r + T(0.7152) * g + T(0.0722) * b;
-        xyz[2] = T(0.0193) * r + T(0.1192) * g + T(0.9505) * b;
+        xyz[0] = T{0.4124} * r + T{0.3576} * g + T{0.1805} * b;
+        xyz[1] = T{0.2126} * r + T{0.7152} * g + T{0.0722} * b;
+        xyz[2] = T{0.0193} * r + T{0.1192} * g + T{0.9505} * b;
 
         return xyz;
 }

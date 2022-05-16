@@ -92,7 +92,7 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                 }
         }
 
-        const T coverage_area = T(intersect_count) / RAY_COUNT;
+        const T coverage_area = static_cast<T>(intersect_count) / RAY_COUNT;
 
         if (coverage_area < MIN_RELATIVE_AREA && relative_area < MIN_RELATIVE_AREA)
         {

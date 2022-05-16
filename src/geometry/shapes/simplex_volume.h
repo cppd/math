@@ -34,6 +34,6 @@ T simplex_volume(const std::array<Vector<N, T>, M>& vertices)
                 vectors[i] = vertices[i + 1] - vertices[0];
         }
 
-        return parallelotope_volume(vectors) * (T(1) / FACTORIAL<M - 1>);
+        return parallelotope_volume(vectors) * (T{1} / FACTORIAL<M - 1>);
 }
 }

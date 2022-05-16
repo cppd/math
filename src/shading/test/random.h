@@ -35,7 +35,7 @@ std::array<Vector<N, T>, 2> random_n_v(RandomEngine& engine)
         {
                 v = sampling::uniform_on_sphere<N, T>(engine);
                 d = dot(n, v);
-        } while (!(std::abs(d) > T(0.1)));
+        } while (!(std::abs(d) > T{0.1}));
 
         if (d > 0)
         {

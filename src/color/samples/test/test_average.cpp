@@ -50,19 +50,19 @@ void compare(const std::vector<T>& a, const std::vector<T>& b)
                 }
 
                 const T absolute = std::abs(a[i] - b[i]);
-                if (!(absolute <= T(0.01)))
+                if (!(absolute <= T{0.01}))
                 {
                         error(to_string(a[i]) + " and " + to_string(b[i])
                               + " are not equal, absolute error = " + to_string(absolute));
                 }
 
-                if (std::abs(a[i]) <= T(0.1) || std::abs(b[i]) <= T(0.1))
+                if (std::abs(a[i]) <= T{0.1} || std::abs(b[i]) <= T{0.1})
                 {
                         continue;
                 }
 
                 const T relative = absolute / std::max(std::abs(a[i]), std::abs(b[i]));
-                if (!(relative <= T(0.01)))
+                if (!(relative <= T{0.01}))
                 {
                         error(to_string(a[i]) + " and " + to_string(b[i])
                               + " are not equal, relative error = " + to_string(relative));

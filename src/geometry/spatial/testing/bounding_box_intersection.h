@@ -52,7 +52,7 @@ BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
                 {
                         p1[i] = urd(engine);
                         p2[i] = urd(engine);
-                } while (!(std::abs(p1[i] - p2[i]) >= T(0.5)));
+                } while (!(std::abs(p1[i] - p2[i]) >= T{0.5}));
         }
         return {p1, p2};
 }
@@ -63,6 +63,7 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
         const T length = box.diagonal().norm();
         const T move_distance = length;
         const int ray_count = 3 * point_count;
+
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (const Vector<N, T>& point : random_internal_points(box.min(), box.diagonal(), point_count, engine))
@@ -73,6 +74,7 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
                 rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
+
         return rays;
 }
 
@@ -83,15 +85,22 @@ void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<Ra
         {
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
-        std::size_t count = 0;
-        for (const Ray<N, T>& ray : rays)
+
+        const std::size_t count = [&]
         {
-                if (box.intersect(ray))
+                std::size_t res = 0;
+                for (const Ray<N, T>& ray : rays)
                 {
-                        ++count;
+                        if (box.intersect(ray))
+                        {
+                                ++res;
+                        }
                 }
-        }
+                return res;
+        }();
+
         const std::size_t expected_count = (rays.size() / 3) * 2;
+
         if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
@@ -109,19 +118,27 @@ void check_intersection_count(
         {
                 error("Ray count " + to_string(orgs.size()) + " is not a multiple of 3");
         }
+
         if (orgs.size() != dirs_reciprocal.size() || orgs.size() != dirs_negative.size())
         {
                 error("Ray data error");
         }
-        std::size_t count = 0;
-        for (std::size_t i = 0; i < orgs.size(); ++i)
+
+        const std::size_t count = [&]
         {
-                if (box.intersect(orgs[i], dirs_reciprocal[i], dirs_negative[i]))
+                std::size_t res = 0;
+                for (std::size_t i = 0; i < orgs.size(); ++i)
                 {
-                        ++count;
+                        if (box.intersect(orgs[i], dirs_reciprocal[i], dirs_negative[i]))
+                        {
+                                ++res;
+                        }
                 }
-        }
+                return res;
+        }();
+
         const std::size_t expected_count = (orgs.size() / 3) * 2;
+
         if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));

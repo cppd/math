@@ -80,7 +80,7 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigne
                                 }
                         }
                         m.determinant = m.matrix.determinant();
-                } while (!(std::isfinite(m.determinant) && m.determinant >= T(0.001)));
+                } while (!(std::isfinite(m.determinant) && m.determinant >= T{0.001}));
         }
         return matrices;
 }
@@ -152,12 +152,12 @@ void test_eigen_random(const unsigned count)
                         sum += eigenvalues[i];
                         product *= eigenvalues[i];
                 }
-                if (std::abs((trace - sum) / std::max(std::abs(trace), std::abs(sum))) > T(0.01))
+                if (std::abs((trace - sum) / std::max(std::abs(trace), std::abs(sum))) > T{0.01})
                 {
                         error(std::string("Eigenvalues error for ") + type_name<T>() + ": trace " + to_string(trace)
                               + " and sum " + to_string(sum) + " are not equal");
                 }
-                if (std::abs((det - product) / std::max(std::abs(det), std::abs(product))) > T(0.01))
+                if (std::abs((det - product) / std::max(std::abs(det), std::abs(product))) > T{0.01})
                 {
                         error(std::string("Eigenvalues error for ") + type_name<T>() + ": determinant " + to_string(det)
                               + " and product " + to_string(product) + " are not equal");

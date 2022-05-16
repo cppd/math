@@ -102,7 +102,7 @@ T pdf_ggx_cosine(
 
         const T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
 
-        return T(0.5) * (pdf_cosine + pdf_ggx);
+        return T{0.5} * (pdf_cosine + pdf_ggx);
 }
 
 template <bool GGX_ONLY, std::size_t N, typename T, typename RandomEngine>

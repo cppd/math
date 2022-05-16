@@ -160,8 +160,8 @@ void check_non_negative(const std::string_view& name, const F& f)
 {
         for (int i = 3800; i <= 7800; ++i)
         {
-                T w = T(i) / 10;
-                T v = f(w);
+                const T w = static_cast<T>(i) / 10;
+                const T v = f(w);
                 if (!(v >= 0))
                 {
                         std::ostringstream oss;
@@ -188,7 +188,7 @@ T check_abs(const std::string_view& name, const T& wave, const T& f, const T& ta
         oss << ", tab = " << tab;
         oss << ", error = " << abs_error;
         error(oss.str());
-};
+}
 
 template <typename T>
 void check_mean(const std::string_view& name, const T& mean, const T& max_error)
@@ -201,7 +201,7 @@ void check_mean(const std::string_view& name, const T& mean, const T& max_error)
         oss.precision(Limits<T>::max_digits10());
         oss << name << ", mean error = " << mean;
         error(oss.str());
-};
+}
 
 template <typename T, typename F>
 void check(

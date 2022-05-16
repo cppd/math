@@ -108,6 +108,7 @@ T test_stratified_jittered(const unsigned sample_count, const std::type_identity
         std::ostringstream oss;
         oss << sampler_name(sampler) << ", " << N << "D, " << type_name<T>();
         oss << ", [" << to_string(min) << ", " << to_string(max) << ")";
+
         return test_discrepancy(oss.str(), min, max, data, max_discrepancy, engine);
 }
 
@@ -132,6 +133,7 @@ T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T
         std::ostringstream oss;
         oss << sampler_name(sampler) << ", " << N << "D, " << type_name<T>();
         oss << ", [" << to_string(min) << ", " << to_string(max) << ")";
+
         return test_discrepancy(oss.str(), min, max, data, max_discrepancy, engine);
 }
 
@@ -150,7 +152,10 @@ T test_halton(const int sample_count, const std::type_identity_t<T> max_discrepa
 
         std::ostringstream oss;
         oss << sampler_name(sampler) << ", " << N << "D, " << type_name<T>();
-        return test_discrepancy(oss.str(), T(0), T(1), data, max_discrepancy, engine);
+
+        constexpr T MIN = 0;
+        constexpr T MAX = 1;
+        return test_discrepancy(oss.str(), MIN, MAX, data, max_discrepancy, engine);
 }
 
 template <std::size_t N>

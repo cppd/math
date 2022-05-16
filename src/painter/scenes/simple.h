@@ -122,7 +122,7 @@ void create_light_sources(
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
         const Vector<N, T> box_diagonal = bounding_box.diagonal();
-        const Vector<N, T> center = bounding_box.min() + box_diagonal / T(2);
+        const Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
         const T object_size = box_diagonal.norm();
 
         static constexpr T DISTANCE = 100;

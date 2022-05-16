@@ -137,7 +137,7 @@ void check_bucket_sizes(const std::vector<SphereBucket<N, T>>& buckets)
         oss << "Buckets max/min is too large" << '\n';
         oss << "max = " << max << '\n';
         oss << "min = " << min << '\n';
-        oss << "max/min = " << (T(max) / min);
+        oss << "max/min = " << (static_cast<T>(max) / min);
         error(oss.str());
 }
 }

@@ -256,7 +256,7 @@ public:
                         const SphereBucket<N, T>& bucket = buckets[i];
 
                         const T bucket_area = sphere_facet_area(i, bucket.uniform_count(), uniform_count);
-                        const T sampled_distribution = T(bucket.sample_count()) / sample_count;
+                        const T sampled_distribution = static_cast<T>(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();
                         const T expected_distribution = expected_density * bucket_area;
@@ -293,7 +293,7 @@ public:
                                 continue;
                         }
 
-                        const T uniform_distribution = T(bucket.uniform_count()) / uniform_count;
+                        const T uniform_distribution = static_cast<T>(bucket.uniform_count()) / uniform_count;
                         const T uniform_density = uniform_distribution / bucket_area;
                         const T bucket_relative_area = bucket_area / geometry::SPHERE_AREA<N, T>;
 

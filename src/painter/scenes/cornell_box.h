@@ -63,7 +63,7 @@ void create_shapes(
                 {
                         res -= camera[i];
                 }
-                res *= T(0.5);
+                res *= T{0.5};
                 res -= NEAR * camera[N - 1];
                 res += center;
                 return res;
@@ -152,14 +152,14 @@ void create_light_sources(
         case 0:
         {
                 constexpr T SIZE = 0.1;
-                constexpr T INTENSITY = power<N - 1>(T(8));
+                constexpr T INTENSITY = power<N - 1>(T{8});
 
                 Vector<N, T> org = center;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         org -= (SIZE / 2) * camera[i];
                 }
-                org += T(0.49) * camera[N - 2];
+                org += T{0.49} * camera[N - 2];
                 org -= (SIZE / 2) * camera[N - 1];
 
                 std::array<Vector<N, T>, N - 1> vectors;
@@ -180,7 +180,7 @@ void create_light_sources(
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
 
-                const Vector<N, T> org = center + T(0.49) * camera[N - 2];
+                const Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
 
                 light_sources->push_back(std::make_unique<const SpotLight<N, T, Color>>(
@@ -192,7 +192,7 @@ void create_light_sources(
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1;
 
-                const Vector<N, T> org = center + T(0.45) * camera[N - 2];
+                const Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
                 light_sources->push_back(
                         std::make_unique<const PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
@@ -233,7 +233,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 template <std::size_t N, typename T>
 std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::BoundingBox<N, T>& bb)
 {
-        const T size = bb.diagonal().norm() * T(1.5);
+        const T size = bb.diagonal().norm() * T{1.5};
 
         std::array<Vector<N, T>, N> camera;
         for (std::size_t i = 0; i < N; ++i)
@@ -247,7 +247,7 @@ std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const ge
         camera[N - 1][N - 1] = -size;
 
         Vector<N, T> center = bb.center();
-        center[N - 2] += (size - (bb.max()[N - 2] - bb.min()[N - 2])) * T(0.5);
+        center[N - 2] += (size - (bb.max()[N - 2] - bb.min()[N - 2])) * T{0.5};
 
         return {camera, center};
 }

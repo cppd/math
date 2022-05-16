@@ -65,7 +65,7 @@ void sort_facets_by_material(
                 ++(*facet_count)[m];
         }
 
-        *facet_offset = std::vector<int>(new_material_size);
+        *facet_offset = std::vector<int>(new_material_size, 0);
         for (int i = 0, sum = 0; i < new_material_size; ++i)
         {
                 (*facet_offset)[i] = sum;

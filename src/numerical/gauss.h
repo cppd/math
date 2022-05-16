@@ -41,7 +41,7 @@ constexpr int find_pivot(const Matrix<N, N, T>& a, const int column, const int f
 {
         T max = absolute(a(from_row, column));
         int pivot = from_row;
-        for (int r = from_row + 1; r < int(N); ++r)
+        for (int r = from_row + 1, max_r = N; r < max_r; ++r)
         {
                 T v = absolute(a(r, column));
                 if (v > max)

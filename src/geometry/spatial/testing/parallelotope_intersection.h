@@ -57,6 +57,7 @@ std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point
 {
         const T move_distance = p.length();
         const int ray_count = 3 * point_count;
+
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (const Vector<N, T>& point : random_internal_points(p.org(), p.vectors(), point_count, engine))
@@ -67,6 +68,7 @@ std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point
                 rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
+
         return rays;
 }
 
@@ -77,15 +79,22 @@ void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ra
         {
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
-        std::size_t count = 0;
-        for (const Ray<N, T>& ray : rays)
+
+        const std::size_t count = [&]
         {
-                if (p.intersect(ray))
+                std::size_t res = 0;
+                for (const Ray<N, T>& ray : rays)
                 {
-                        ++count;
+                        if (p.intersect(ray))
+                        {
+                                ++res;
+                        }
                 }
-        }
+                return res;
+        }();
+
         const std::size_t expected_count = (rays.size() / 3) * 2;
+
         if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));

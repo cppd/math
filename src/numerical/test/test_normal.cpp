@@ -65,7 +65,7 @@ void test_normal_defined()
         const Vector<N, T> computed_normal = point_normal(points);
         const Vector<N, T> real_normal = Vector<N, T>(1).normalized();
 
-        compare_normals(real_normal, computed_normal, T(0.9999999));
+        compare_normals(real_normal, computed_normal, T{0.9999999});
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -87,8 +87,8 @@ void test_normal_random(const unsigned test_count)
 
         PCG engine;
 
-        std::uniform_real_distribution<T> urd_for_normal(T(0.0), T(0.01));
-        std::uniform_real_distribution<T> urd_for_complement(T(0.1), T(1.0));
+        std::uniform_real_distribution<T> urd_for_normal(0.0, 0.01);
+        std::uniform_real_distribution<T> urd_for_complement(0.1, 1.0);
 
         for (const Vector<N, T>& real_normal : random_vectors<N, T>(test_count, engine))
         {
@@ -106,7 +106,7 @@ void test_normal_random(const unsigned test_count)
 
                 const Vector<N, T> computed_normal = point_normal(points);
 
-                compare_normals(real_normal, computed_normal, T(0.999));
+                compare_normals(real_normal, computed_normal, T{0.999});
         }
 }
 

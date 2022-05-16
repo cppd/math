@@ -203,7 +203,7 @@ public:
 
         [[nodiscard]] constexpr Vector<N, T> center() const
         {
-                return T(0.5) * (bounds_[0] + bounds_[1]);
+                return T{0.5} * (bounds_[0] + bounds_[1]);
         }
 
         [[nodiscard]] constexpr unsigned maximum_extent() const

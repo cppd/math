@@ -164,7 +164,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
-        const T s = T(0.5) * (T(1) + vh[N - 1]);
+        const T s = T{0.5} * (T{1} + vh[N - 1]);
         const T a = [&]
         {
                 T sum = 0;
@@ -179,7 +179,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         // Section 4.3: reprojection onto hemisphere
         const Vector<N, T> nh = [&]
         {
-                Vector<N, T> v = vh * std::sqrt(std::max(T(0), 1 - dot(t, t)));
+                Vector<N, T> v = vh * std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         v.multiply_add(t[i], orthonormal_basis[i]);
@@ -193,7 +193,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         {
                 ne[i] = alpha * nh[i];
         }
-        ne[N - 1] = std::max(T(0), nh[N - 1]);
+        ne[N - 1] = std::max(T{0}, nh[N - 1]);
 
         return ne.normalized();
 }

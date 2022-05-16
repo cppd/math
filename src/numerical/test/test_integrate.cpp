@@ -38,12 +38,12 @@ constexpr T f(const T& x)
 template <typename T>
 constexpr bool test(const T& p_100, const T& p_1000, const T& p_10000)
 {
-        return equal(integrate(f<T>, T(1), T(2), 100), T(15) / 4, p_100)
-               && equal(integrate(f<T>, T(-2), T(-1), 100), -T(15) / 4, p_100)
-               && equal(integrate(f<T>, T(1), T(2), 1000), T(15) / 4, p_1000)
-               && equal(integrate(f<T>, T(-2), T(-1), 1000), -T(15) / 4, p_1000)
-               && equal(integrate(f<T>, T(1), T(2), 10000), T(15) / 4, p_10000)
-               && equal(integrate(f<T>, T(-2), T(-1), 10000), -T(15) / 4, p_10000);
+        return equal(integrate<T>(f<T>, 1, 2, 100), T{15} / 4, p_100)
+               && equal(integrate<T>(f<T>, -2, -1, 100), -T{15} / 4, p_100)
+               && equal(integrate<T>(f<T>, 1, 2, 1000), T{15} / 4, p_1000)
+               && equal(integrate<T>(f<T>, -2, -1, 1000), -T{15} / 4, p_1000)
+               && equal(integrate<T>(f<T>, 1, 2, 10000), T{15} / 4, p_10000)
+               && equal(integrate<T>(f<T>, -2, -1, 10000), -T{15} / 4, p_10000);
 }
 
 static_assert(test<float>(1e-4, 1e-5, 1e-5));

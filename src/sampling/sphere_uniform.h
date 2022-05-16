@@ -107,7 +107,7 @@ void uniform_in_sphere_by_normal_distribution(RandomEngine& engine, Vector<N, T>
         }
         else
         {
-                k = std::pow(k, T(1) / N);
+                k = std::pow(k, T{1} / N);
         }
         v *= k;
         v_length_square = k * k;

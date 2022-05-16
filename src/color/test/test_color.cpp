@@ -46,8 +46,8 @@ struct Check final
         static_assert(RGB<T>(RGB8(100, 150, 50)).rgb32() == RGB8(100, 150, 50).linear_rgb());
         static_assert(RGB<T>(RGB8(250, 10, 100)).rgb32() == RGB8(250, 10, 100).linear_rgb());
         static_assert(absolute(RGB<T>(RGB8(255, 255, 255)).luminance() - 1) < 1000 * Limits<T>::epsilon());
-        static_assert(RGB<T>(0.1, 0.9, 0.2).luminance() == linear_float_to_linear_luminance(T(0.1), T(0.9), T(0.2)));
-        static_assert(RGB<T>(0.9, 0.3, 0.8).luminance() == linear_float_to_linear_luminance(T(0.9), T(0.3), T(0.8)));
+        static_assert(RGB<T>(0.1, 0.9, 0.2).luminance() == linear_float_to_linear_luminance<T>(0.1, 0.9, 0.2));
+        static_assert(RGB<T>(0.9, 0.3, 0.8).luminance() == linear_float_to_linear_luminance<T>(0.9, 0.3, 0.8));
 
         static_assert(RGB<T>(0.1, 0.2, 0.3) == RGB<T>(0.1, 0.2, 0.3));
         static_assert(RGB<T>(0.1, 0.2, 0.3) != RGB<T>(0.4, 0.5, 0.6));
@@ -56,36 +56,36 @@ struct Check final
 
         static_assert(
                 RGB<T>(0.1, 0.2, 0.3) + RGB<T>(0.4, 0.5, 0.6)
-                == RGB<T>(T(0.1) + T(0.4), T(0.2) + T(0.5), T(0.3) + T(0.6)));
+                == RGB<T>(T{0.1} + T{0.4}, T{0.2} + T{0.5}, T{0.3} + T{0.6}));
         static_assert(
                 [] { RGB<T> r(0.1, 0.2, 0.3); r += RGB<T>(0.4, 0.5, 0.6); return r; }()
-                == RGB<T>(T(0.1) + T(0.4), T(0.2) + T(0.5), T(0.3) + T(0.6)));
+                == RGB<T>(T{0.1} + T{0.4}, T{0.2} + T{0.5}, T{0.3} + T{0.6}));
 
         static_assert(
                 RGB<T>(0.4, 0.5, 0.6) - RGB<T>(0.1, 0.2, 0.3)
-                == RGB<T>(T(0.4) - T(0.1), T(0.5) - T(0.2), T(0.6) - T(0.3)));
+                == RGB<T>(T{0.4} - T{0.1}, T{0.5} - T{0.2}, T{0.6} - T{0.3}));
         static_assert(
                 [] { RGB<T> r(0.4, 0.5, 0.6); r -= RGB<T>(0.1, 0.2, 0.3); return r; }()
-                == RGB<T>(T(0.4) - T(0.1), T(0.5) - T(0.2), T(0.6) - T(0.3)));
+                == RGB<T>(T{0.4} - T{0.1}, T{0.5} - T{0.2}, T{0.6} - T{0.3}));
 
         static_assert(
                 RGB<T>(0.1, 0.2, 0.3) * RGB<T>(0.4, 0.5, 0.6)
-                == RGB<T>(T(0.1) * T(0.4), T(0.2) * T(0.5), T(0.3) * T(0.6)));
+                == RGB<T>(T{0.1} * T{0.4}, T{0.2} * T{0.5}, T{0.3} * T{0.6}));
         static_assert(
                 [] { RGB<T> r(0.1, 0.2, 0.3); r *= RGB<T>(0.4, 0.5, 0.6); return r; }()
-                == RGB<T>(T(0.1) * T(0.4), T(0.2) * T(0.5), T(0.3) * T(0.6)));
+                == RGB<T>(T{0.1} * T{0.4}, T{0.2} * T{0.5}, T{0.3} * T{0.6}));
 
         static_assert(RGB<T>(0.1, 0.2, 0.3) * 4.1
-                == RGB<T>(T(0.1) * T(4.1), T(0.2) * T(4.1), T(0.3) * T(4.1)));
+                == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
         static_assert(
                 [] { RGB<T> r(0.1, 0.2, 0.3); r *= 4.1; return r; }()
-                == RGB<T>(T(0.1) * T(4.1), T(0.2) * T(4.1), T(0.3) * T(4.1)));
+                == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
 
         static_assert(RGB<T>(0.1, 0.2, 0.3) / 4.1
-                == RGB<T>(T(0.1) / T(4.1), T(0.2) / T(4.1), T(0.3) / T(4.1)));
+                == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
         static_assert(
                 [] { RGB<T> r(0.1, 0.2, 0.3); r /= 4.1; return r; }()
-                == RGB<T>(T(0.1) / T(4.1), T(0.2) / T(4.1), T(0.3) / T(4.1)));
+                == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
 
         static_assert(RGB<T>(0.1, 0.2, 0.3) * 4.1 == 4.1 * RGB<T>(0.1, 0.2, 0.3));
 

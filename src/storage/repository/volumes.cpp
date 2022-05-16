@@ -103,7 +103,7 @@ I float_to_uint(const F v)
 {
         static_assert(std::is_same_v<F, float>);
         static_assert(std::is_same_v<I, std::uint8_t> || std::is_same_v<I, std::uint16_t>);
-        return v * F(Limits<I>::max()) + F(0.5);
+        return v * F{Limits<I>::max()} + F{0.5};
 }
 
 template <std::size_t N>
@@ -217,7 +217,7 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
         model::volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::array<std::uint8_t, 4> color;
-        std::uint8_t alpha = std::max(std::uint8_t(1), float_to_uint<std::uint8_t>(1.0f / size));
+        std::uint8_t alpha = std::max(std::uint8_t{1}, float_to_uint<std::uint8_t>(1.0f / size));
         color[3] = alpha;
 
         std::byte* ptr = volume.image.pixels.data();

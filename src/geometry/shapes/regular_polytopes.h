@@ -111,7 +111,7 @@ std::vector<std::array<Vector<3, T>, 3>> create_icosahedron()
         constexpr unsigned FACET_COUNT = 20;
         constexpr unsigned VERTEX_COUNT = 12;
 
-        const T p = (1 + std::sqrt(T(5))) / 2;
+        const T p = (1 + std::sqrt(T{5})) / 2;
 
         std::vector<Vector<3, T>> vertices;
         vertices.reserve(VERTEX_COUNT);

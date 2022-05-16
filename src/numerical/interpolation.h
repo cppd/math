@@ -93,7 +93,7 @@ public:
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        const T v = p[i] * size_[i] - T(0.5);
+                        const T v = p[i] * size_[i] - T{0.5};
                         const T floor = std::floor(v);
 
                         x[i] = v - floor;

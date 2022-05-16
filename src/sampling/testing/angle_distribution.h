@@ -79,7 +79,7 @@ class AngleDistribution
         static int sample_bucket(const Vector<N, T>& normal, const Vector<N, T>& random_vector)
         {
                 const Vector<N, T> v = random_vector.normalized();
-                const T cosine = std::clamp(dot(v, normal), T(-1), T(1));
+                const T cosine = std::clamp<T>(dot(v, normal), -1, 1);
                 const T angle = std::acos(cosine);
                 const int bucket = angle * BUCKETS_PER_RADIAN;
                 return std::clamp(bucket, 0, BUCKET_COUNT - 1);
@@ -315,13 +315,13 @@ public:
                         }
 
                         const T discrepancy_abs = std::abs(pdf_mean_value - distribution_value);
-                        if (discrepancy_abs <= T(0.05))
+                        if (discrepancy_abs <= T{0.05})
                         {
                                 continue;
                         }
 
                         const T discrepancy_rel = discrepancy_abs / std::max(pdf_mean_value, distribution_value);
-                        if (discrepancy_rel <= T(0.05))
+                        if (discrepancy_rel <= T{0.05})
                         {
                                 continue;
                         }

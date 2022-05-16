@@ -95,8 +95,8 @@ void compute(
 {
         static_assert(N >= 2);
 
-        const T roughness = static_cast<T>(roughness_index == 0 ? T(0.01) : roughness_index) / (COUNT - 1);
-        const T cosine = static_cast<T>(cosine_index == 0 ? T(0.01) : cosine_index) / (COUNT - 1);
+        const T roughness = static_cast<T>(roughness_index == 0 ? T{0.01} : roughness_index) / (COUNT - 1);
+        const T cosine = static_cast<T>(cosine_index == 0 ? T{0.01} : cosine_index) / (COUNT - 1);
         const T sine = std::sqrt(1 - square(cosine));
 
         ASSERT(roughness > 0 && roughness <= 1);
@@ -201,12 +201,12 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
                         error("Cosine-weighted average " + to_string(average) + " is not non-negative");
                 }
 
-                if (!(average < T(1.01)))
+                if (!(average < T{1.01}))
                 {
                         error("Cosine-weighted average " + to_string(average) + " is greater than 1");
                 }
 
-                res[roughness_i] = std::min<decltype(average)>(average, 1);
+                res[roughness_i] = std::min(average, T{1});
         }
         return res;
 }

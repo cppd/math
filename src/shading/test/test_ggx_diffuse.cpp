@@ -143,7 +143,7 @@ void test_brdf_pdf(const unsigned sample_count, RandomEngine& engine)
         {
                 const auto [n, v] = random_n_v<N, T>(engine);
                 const T integral = compute::directional_pdf_integral(brdf, n, v, sample_count, engine);
-                if (!(std::abs(integral - 1) <= T(0.05)))
+                if (!(std::abs(integral - 1) <= T{0.05}))
                 {
                         error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
                 }

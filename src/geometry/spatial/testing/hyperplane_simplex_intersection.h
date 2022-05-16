@@ -99,6 +99,7 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
         const T distance = max_vertex_distance(simplex);
 
         const int ray_count = 3 * point_count;
+
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (int i = 0; i < point_count; ++i)
@@ -108,10 +109,11 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random_direction_for_normal(T(0), T(0.5), normal, engine);
+                const Vector<N, T> direction = random_direction_for_normal(T{0}, T{0.5}, normal, engine);
                 rays.push_back(Ray(ray.org() + distance * normal, -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
+
         return rays;
 }
 
@@ -123,17 +125,22 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
 
-        std::size_t count = 0;
-        for (const Ray<N, T>& ray : rays)
+        const std::size_t count = [&]
         {
-                if (simplex.simplex.intersect(ray))
+                std::size_t res = 0;
+                for (const Ray<N, T>& ray : rays)
                 {
-                        ++count;
+                        if (simplex.simplex.intersect(ray))
+                        {
+                                ++res;
+                        }
                 }
-        }
+                return res;
+        }();
 
         const std::size_t expected_count = (rays.size() / 3) * 2;
-        const T v = T(count) / expected_count;
+
+        const T v = static_cast<T>(count) / expected_count;
         if (!(v >= ERROR_MIN<T> && v <= ERROR_MAX<T>))
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));

@@ -104,7 +104,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::vector<long long> busy_indices_2d_;
 
         std::vector<std::byte> pixels_r8g8b8a8_{make_initial_image(screen_size_, COLOR_FORMAT)};
-        std::vector<Vector<3, float>> pixels_original_{std::size_t(global_index_.count()), Vector<3, float>(MIN)};
+        std::vector<Vector<3, float>> pixels_original_{
+                static_cast<std::size_t>(global_index_.count()), Vector<3, float>(MIN)};
         std::vector<Spinlock> pixels_lock_{pixels_original_.size()};
         float pixels_coef_ = 1;
 

@@ -42,8 +42,8 @@ template struct Test<unsigned, 1'000'000'000, unsigned>;
 template struct Test<long long, 1'000'000'000'000, long long>;
 template struct Test<long long, -1'000'000'000'000, long long>;
 template struct Test<unsigned long long, 1'000'000'000'000, unsigned long long>;
-template struct Test<__int128, __int128(1e12) * __int128(1e12), __int128>;
-template struct Test<__int128, __int128(-1e12) * __int128(1e12), __int128>;
-template struct Test<unsigned __int128, __int128(1e12) * __int128(1e12), unsigned __int128>;
+template struct Test<__int128, __int128{1'000'000'000'000} * __int128{1'000'000'000'000}, __int128>;
+template struct Test<__int128, __int128{-1'000'000'000'000} * __int128{1'000'000'000'000}, __int128>;
+template struct Test<unsigned __int128, __int128{1'000'000'000'000} * __int128{1'000'000'000'000}, unsigned __int128>;
 }
 }

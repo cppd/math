@@ -35,13 +35,13 @@ void import_mpz(mpz_t mpz, const T v)
 }
 
 template <typename T>
-void set_mpz(mpz_t mpz, const T v) requires(T(-1) > T(0))
+void set_mpz(mpz_t mpz, const T v) requires(static_cast<T>(-1) > T{0})
 {
         import_mpz(mpz, v);
 }
 
 template <typename T>
-void set_mpz(mpz_t mpz, const T v) requires(T(-1) < T(0))
+void set_mpz(mpz_t mpz, const T v) requires(static_cast<T>(-1) < T{0})
 {
         if (v >= 0)
         {

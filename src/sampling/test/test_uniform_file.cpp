@@ -128,7 +128,7 @@ void write_samples_to_files()
                                         res[i] = Vector<N, T>(0);
                                         res[i][i] = 1;
                                 }
-                                res[N] = Vector<N, T>(1 / std::sqrt(T(N)));
+                                res[N] = Vector<N, T>(1 / std::sqrt(T{N}));
                                 return res;
                         }();
                         return uniform_in_simplex(vertices, engine);

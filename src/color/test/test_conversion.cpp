@@ -64,7 +64,7 @@ constexpr bool check(Vector<3, T>& v, const T& precision)
         {
                 for (int i = 0; i <= MAX; ++i)
                 {
-                        v[I] = T(i) / MAX;
+                        v[I] = static_cast<T>(i) / MAX;
                         if (!check<I + 1, MAX, T>(v, precision))
                         {
                                 return false;
