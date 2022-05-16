@@ -57,19 +57,19 @@ void DrawingBuffer::set_transparency_max_node_count(const std::uint32_t count) c
 void DrawingBuffer::set_clip_plane(const Vector4d& equation, const bool enabled) const
 {
         static_assert(
-                offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
-                == offsetof(Drawing, clip_plane_enabled));
+                offsetof(Drawing, clip_plane_enabled) + sizeof(Drawing::clip_plane_enabled)
+                == offsetof(Drawing, clip_plane_equation));
 
-        constexpr std::size_t OFFSET = offsetof(Drawing, clip_plane_equation);
-        constexpr std::size_t SIZE = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
+        constexpr std::size_t OFFSET = offsetof(Drawing, clip_plane_enabled);
+        constexpr std::size_t SIZE = sizeof(Drawing::clip_plane_enabled) + sizeof(Drawing::clip_plane_equation);
 
         vulkan::BufferMapper map(buffer_, OFFSET, SIZE);
 
-        decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
         decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
+        decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
 
-        map.write(0, clip_plane_equation);
-        map.write(sizeof(clip_plane_equation), clip_plane_enabled);
+        map.write(0, clip_plane_enabled);
+        map.write(sizeof(clip_plane_enabled), clip_plane_equation);
 }
 
 void DrawingBuffer::set_viewport(const Vector2d& center, const Vector2d& factor) const

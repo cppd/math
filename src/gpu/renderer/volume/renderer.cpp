@@ -193,6 +193,7 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
                         draw_commands_fragments(type, command_buffer);
                 };
                 *commands = vulkan::create_command_buffers(info);
+                info.render_pass_commands = nullptr;
         };
 
         commands_fragments_.emplace();

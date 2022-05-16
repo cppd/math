@@ -33,22 +33,22 @@ class DrawingBuffer final
                 alignas(sizeof(Vector4f)) Vector3f lighting_color;
                 alignas(sizeof(Vector4f)) Vector3f background_color;
                 alignas(sizeof(Vector4f)) Vector3f wireframe_color;
-                alignas(sizeof(Vector4f)) Vector3f normal_color_positive;
-                alignas(sizeof(Vector4f)) Vector3f normal_color_negative;
-                float normal_length;
-                std::uint32_t show_materials;
                 std::uint32_t show_wireframe;
+                alignas(sizeof(Vector4f)) Vector3f normal_color_positive;
+                float normal_length;
+                alignas(sizeof(Vector4f)) Vector3f normal_color_negative;
+                std::uint32_t show_materials;
                 std::uint32_t show_shadow;
                 std::uint32_t show_fog;
                 std::uint32_t show_smooth;
+                std::uint32_t transparency_max_node_count;
                 alignas(sizeof(Vector4f)) Vector3f clip_plane_color;
-                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 std::uint32_t clip_plane_enabled;
+                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f direction_to_light;
                 alignas(sizeof(Vector4f)) Vector3f direction_to_camera;
                 alignas(sizeof(Vector2f)) Vector2f viewport_center;
                 alignas(sizeof(Vector2f)) Vector2f viewport_factor;
-                std::uint32_t transparency_max_node_count;
         };
 
         vulkan::BufferWithMemory buffer_;

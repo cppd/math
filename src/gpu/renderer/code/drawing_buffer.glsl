@@ -25,22 +25,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 vec3 lighting_color;                                                        \
                 vec3 background_color;                                                      \
                 vec3 wireframe_color;                                                       \
-                vec3 normal_color_positive;                                                 \
-                vec3 normal_color_negative;                                                 \
-                float normal_length;                                                        \
-                bool show_materials;                                                        \
                 bool show_wireframe;                                                        \
+                vec3 normal_color_positive;                                                 \
+                float normal_length;                                                        \
+                vec3 normal_color_negative;                                                 \
+                bool show_materials;                                                        \
                 bool show_shadow;                                                           \
                 bool show_fog;                                                              \
                 bool show_smooth;                                                           \
+                uint transparency_max_node_count;                                           \
                 vec3 clip_plane_color;                                                      \
-                vec4 clip_plane_equation;                                                   \
                 bool clip_plane_enabled;                                                    \
+                vec4 clip_plane_equation;                                                   \
                 vec3 direction_to_light;                                                    \
                 vec3 direction_to_camera;                                                   \
                 vec2 viewport_center;                                                       \
                 vec2 viewport_factor;                                                       \
-                uint transparency_max_node_count;                                           \
         }                                                                                   \
         drawing;
 
