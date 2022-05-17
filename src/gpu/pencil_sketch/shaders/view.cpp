@@ -62,7 +62,7 @@ void ViewMemory::set_image(const VkSampler sampler, const vulkan::ImageView& ima
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);

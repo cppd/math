@@ -193,7 +193,7 @@ SharedMemory::SharedMemory(
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = drawing;
+                buffer_info.buffer = drawing.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = drawing.size();
 
@@ -217,7 +217,7 @@ const VkDescriptorSet& SharedMemory::descriptor_set() const
 void SharedMemory::set_shadow_matrices(const vulkan::Buffer& shadow_matrices) const
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = shadow_matrices;
+        buffer_info.buffer = shadow_matrices.handle();
         buffer_info.offset = 0;
         buffer_info.range = shadow_matrices.size();
 
@@ -240,7 +240,7 @@ void SharedMemory::set_ggx_f1_albedo(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = cosine_roughness;
+                image_info.imageView = cosine_roughness.handle();
                 image_info.sampler = sampler;
 
                 infos.emplace_back(image_info);
@@ -249,7 +249,7 @@ void SharedMemory::set_ggx_f1_albedo(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = cosine_weighted_average;
+                image_info.imageView = cosine_weighted_average.handle();
                 image_info.sampler = sampler;
 
                 infos.emplace_back(image_info);
@@ -266,7 +266,7 @@ void SharedMemory::set_objects_image(const vulkan::ImageView& objects) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = objects;
+        image_info.imageView = objects.handle();
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
@@ -290,7 +290,7 @@ void SharedMemory::set_transparency(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads;
+                image_info.imageView = heads.handle();
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_BINDING);
@@ -298,14 +298,14 @@ void SharedMemory::set_transparency(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads_size;
+                image_info.imageView = heads_size.handle();
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_SIZE_BINDING);
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = counters;
+                buffer_info.buffer = counters.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = counters.size();
 
@@ -314,7 +314,7 @@ void SharedMemory::set_transparency(
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = nodes;
+                buffer_info.buffer = nodes.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = nodes.size();
 
@@ -332,7 +332,7 @@ void SharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::Image
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_image;
+        image_info.imageView = shadow_image.handle();
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
@@ -371,10 +371,10 @@ MeshMemory::MeshMemory(
         const vulkan::Buffer& buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
-        ASSERT(buffer != VK_NULL_HANDLE && buffer.size() > 0);
+        ASSERT(buffer.handle() != VK_NULL_HANDLE && buffer.size() > 0);
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 

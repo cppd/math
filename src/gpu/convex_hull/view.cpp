@@ -81,7 +81,8 @@ class Impl final : public View
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
                 ASSERT(indirect_buffer_.buffer().has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
-                vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
+                vkCmdDrawIndirect(
+                        command_buffer, indirect_buffer_.buffer().handle(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
         void create_buffers(
@@ -123,7 +124,7 @@ class Impl final : public View
                 info.render_area->offset.y = 0;
                 info.render_area->extent.width = render_buffers->width();
                 info.render_area->extent.height = render_buffers->height();
-                info.render_pass = render_buffers->render_pass();
+                info.render_pass = render_buffers->render_pass().handle();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = graphics_command_pool_;
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
@@ -166,7 +167,7 @@ class Impl final : public View
 
                 vulkan::queue_submit(
                         wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*command_buffers_)[index], semaphore_,
-                        queue);
+                        queue.handle());
 
                 return semaphore_;
         }
@@ -189,7 +190,7 @@ public:
                 : sample_shading_(sample_shading),
                   family_index_(graphics_command_pool->family_index()),
                   device_(device),
-                  graphics_command_pool_(*graphics_command_pool),
+                  graphics_command_pool_(graphics_command_pool->handle()),
                   semaphore_(*device_),
                   data_buffer_(*device_, {family_index_}),
                   program_(device_),

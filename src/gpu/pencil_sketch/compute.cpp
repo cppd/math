@@ -135,7 +135,7 @@ class Impl final : public Compute
 
                 //
 
-                image_ = output.image();
+                image_ = output.image().handle();
 
                 //
 

@@ -73,7 +73,7 @@ void CopyOutputMemory::set(const vulkan::Buffer& input, const vulkan::ImageView&
                 ASSERT(input.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = input;
+                buffer_info.buffer = input.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = input.size();
 
@@ -85,7 +85,7 @@ void CopyOutputMemory::set(const vulkan::Buffer& input, const vulkan::ImageView&
 
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = output;
+                image_info.imageView = output.handle();
 
                 descriptors_.update_descriptor_set(0, DST_BINDING, image_info);
         }

@@ -124,7 +124,7 @@ class DftImage final : public ComputeImage
 
                 copy_groups_ = group_count(width, height, GROUP_SIZE_2D);
 
-                output_ = output.image();
+                output_ = output.image().handle();
         }
 
         void delete_buffers() override
@@ -147,7 +147,7 @@ class DftImage final : public ComputeImage
                         CopyInputMemory::set_number(), 1, &copy_input_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, copy_groups_[0], copy_groups_[1], 1);
 
-                buffer_barrier(command_buffer, dft_->buffer());
+                buffer_barrier(command_buffer, dft_->buffer().handle());
 
                 //
 
@@ -225,7 +225,8 @@ class DftVector final : public ComputeVector
 
                 dft_->create_buffers(width, height, device_compute_.compute_queue().family_index());
 
-                command_buffers_ = vulkan::handle::CommandBuffers(device_compute_.device(), compute_command_pool_, 2);
+                command_buffers_ =
+                        vulkan::handle::CommandBuffers(device_compute_.device(), compute_command_pool_.handle(), 2);
 
                 for (const int index : {DftType::FORWARD, DftType::INVERSE})
                 {
@@ -262,8 +263,8 @@ class DftVector final : public ComputeVector
 
                 vulkan::queue_submit(
                         (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD],
-                        device_compute_.compute_queue());
-                VULKAN_CHECK(vkQueueWaitIdle(device_compute_.compute_queue()));
+                        device_compute_.compute_queue().handle());
+                VULKAN_CHECK(vkQueueWaitIdle(device_compute_.compute_queue().handle()));
 
                 {
                         vulkan::BufferMapper mapper(dft_->buffer_with_memory());

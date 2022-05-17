@@ -173,7 +173,7 @@ class Impl final : public VolumeObject
         {
                 for (const auto& [layout, memory] : image_memory_)
                 {
-                        memory.set_image(image_sampler_, image_->image_view());
+                        memory.set_image(image_sampler_, image_->image_view().handle());
                 }
         }
 
@@ -181,7 +181,8 @@ class Impl final : public VolumeObject
         {
                 for (const auto& [layout, memory] : image_memory_)
                 {
-                        memory.set_transfer_function(transfer_function_sampler_, transfer_function_.image_view());
+                        memory.set_transfer_function(
+                                transfer_function_sampler_, transfer_function_.image_view().handle());
                 }
         }
 

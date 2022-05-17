@@ -49,7 +49,7 @@ Swapchain::Swapchain(
                 attachments[1] = (image_views.size() == 1) ? image_views[0] : image_views[i];
 
                 framebuffers_.push_back(vulkan::create_framebuffer(
-                        device, render_pass_, swapchain.width(), swapchain.height(), attachments));
+                        device, render_pass_.handle(), swapchain.width(), swapchain.height(), attachments));
         }
 
         std::vector<VkFramebuffer> framebuffers;
@@ -68,9 +68,9 @@ Swapchain::Swapchain(
         info.render_area->offset.y = 0;
         info.render_area->extent.width = swapchain.width();
         info.render_area->extent.height = swapchain.height();
-        info.render_pass = render_pass_;
+        info.render_pass = render_pass_.handle();
         info.framebuffers = &framebuffers;
-        info.command_pool = command_pool;
+        info.command_pool = command_pool.handle();
 
         command_buffers_ = vulkan::create_command_buffers(info);
 }
@@ -98,7 +98,7 @@ VkSemaphore Swapchain::resolve(
 
         vulkan::queue_submit(
                 wait_semaphores, wait_stages, command_buffers_[image_index], signal_semaphores_[semaphore_index],
-                graphics_queue);
+                graphics_queue.handle());
 
         return signal_semaphores_[semaphore_index];
 }

@@ -247,7 +247,7 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
         create_info.layout = info.pipeline_layout.value();
 
-        create_info.renderPass = *info.render_pass;
+        create_info.renderPass = info.render_pass->handle();
         create_info.subpass = info.sub_pass.value();
 
         // create_info.basePipelineHandle = VK_NULL_HANDLE;

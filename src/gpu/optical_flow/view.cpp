@@ -156,9 +156,9 @@ class Impl final : public View
                 info.render_area->offset.y = 0;
                 info.render_area->extent.width = render_buffers->width();
                 info.render_area->extent.height = render_buffers->height();
-                info.render_pass = render_buffers->render_pass();
+                info.render_pass = render_buffers->render_pass().handle();
                 info.framebuffers = &render_buffers->framebuffers();
-                info.command_pool = *graphics_command_pool_;
+                info.command_pool = graphics_command_pool_->handle();
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
@@ -207,7 +207,7 @@ class Impl final : public View
 
                 vulkan::queue_submit(
                         wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*command_buffers_)[index],
-                        signal_semaphore_, graphics_queue);
+                        signal_semaphore_, graphics_queue.handle());
 
                 return signal_semaphore_;
         }

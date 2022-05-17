@@ -50,7 +50,7 @@ class RendererDraw
 
         DrawInfo draw_meshes(
                 VkSemaphore semaphore,
-                const vulkan::Queue& graphics_queue,
+                VkQueue graphics_queue,
                 unsigned index,
                 bool shadow_mapping,
                 const TransparencyBuffers& transparency_buffers) const;
@@ -64,8 +64,8 @@ public:
 
         VkSemaphore draw(
                 VkSemaphore semaphore,
-                const vulkan::Queue& graphics_queue_1,
-                const vulkan::Queue& graphics_queue_2,
+                VkQueue graphics_queue_1,
+                VkQueue graphics_queue_2,
                 unsigned index,
                 bool shadow_mapping,
                 const TransparencyBuffers& transparency_buffers) const;

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../../com/groups.h"
 
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/image/file_save.h>
 #include <src/vulkan/error.h>
@@ -43,7 +44,7 @@ void save_to_file(const std::string_view& name, const image::Image<2>& image)
 
 vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
         const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
+        const VkCommandPool compute_command_pool,
         const RayTracingProgram& program,
         const RayTracingMemory& memory,
         const unsigned width,
@@ -72,7 +73,7 @@ vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
 
 vulkan::handle::CommandBuffer create_ray_query_command_buffer(
         const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
+        const VkCommandPool compute_command_pool,
         const RayQueryProgram& program,
         const RayTracingMemory& memory,
         const unsigned width,
@@ -108,6 +109,8 @@ image::Image<2> ray_tracing(
         const VkAccelerationStructureKHR acceleration_structure,
         const std::string_view& file_name)
 {
+        ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
+
         const RayTracingProgram program(device, {compute_command_pool.family_index()});
 
         const RayTracingMemory memory(
@@ -117,10 +120,11 @@ image::Image<2> ray_tracing(
         memory.set_image(ray_tracing_image.image_view());
 
         const vulkan::handle::CommandBuffer command_buffer = create_ray_tracing_command_buffer(
-                device, compute_command_pool, program, memory, ray_tracing_image.width(), ray_tracing_image.height());
+                device, compute_command_pool.handle(), program, memory, ray_tracing_image.width(),
+                ray_tracing_image.height());
 
-        vulkan::queue_submit(command_buffer, compute_queue);
-        VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
+        vulkan::queue_submit(command_buffer, compute_queue.handle());
+        VULKAN_CHECK(vkQueueWaitIdle(compute_queue.handle()));
 
         image::Image<2> image = ray_tracing_image.image();
         save_to_file(file_name, image);
@@ -135,6 +139,8 @@ image::Image<2> ray_query(
         const VkAccelerationStructureKHR acceleration_structure,
         const std::string_view& file_name)
 {
+        ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
+
         const RayQueryProgram program(device, GROUP_SIZE);
 
         const RayTracingMemory memory(
@@ -144,10 +150,11 @@ image::Image<2> ray_query(
         memory.set_image(ray_tracing_image.image_view());
 
         const vulkan::handle::CommandBuffer command_buffer = create_ray_query_command_buffer(
-                device, compute_command_pool, program, memory, ray_tracing_image.width(), ray_tracing_image.height());
+                device, compute_command_pool.handle(), program, memory, ray_tracing_image.width(),
+                ray_tracing_image.height());
 
-        vulkan::queue_submit(command_buffer, compute_queue);
-        VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
+        vulkan::queue_submit(command_buffer, compute_queue.handle());
+        VULKAN_CHECK(vkQueueWaitIdle(compute_queue.handle()));
 
         image::Image<2> image = ray_tracing_image.image();
         save_to_file(file_name, image);

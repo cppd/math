@@ -160,7 +160,7 @@ const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 void VolumeSharedMemory::set_drawing(const vulkan::Buffer& drawing) const
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = drawing;
+        buffer_info.buffer = drawing.handle();
         buffer_info.offset = 0;
         buffer_info.range = drawing.size();
 
@@ -170,7 +170,7 @@ void VolumeSharedMemory::set_drawing(const vulkan::Buffer& drawing) const
 void VolumeSharedMemory::set_coordinates(const vulkan::Buffer& coordinates) const
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = coordinates;
+        buffer_info.buffer = coordinates.handle();
         buffer_info.offset = 0;
         buffer_info.range = coordinates.size();
 
@@ -193,7 +193,7 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = cosine_roughness;
+                image_info.imageView = cosine_roughness.handle();
                 image_info.sampler = sampler;
 
                 infos.emplace_back(image_info);
@@ -202,7 +202,7 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = cosine_weighted_average;
+                image_info.imageView = cosine_weighted_average.handle();
                 image_info.sampler = sampler;
 
                 infos.emplace_back(image_info);
@@ -225,7 +225,7 @@ void VolumeSharedMemory::set_opacity(const vulkan::ImageView& opacity_0, const v
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = opacity_0;
+                image_info.imageView = opacity_0.handle();
 
                 infos.emplace_back(image_info);
                 bindings.push_back(OPACITY_0_BINDING);
@@ -233,7 +233,7 @@ void VolumeSharedMemory::set_opacity(const vulkan::ImageView& opacity_0, const v
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = opacity_1;
+                image_info.imageView = opacity_1.handle();
 
                 infos.emplace_back(image_info);
                 bindings.push_back(OPACITY_1_BINDING);
@@ -264,14 +264,14 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const 
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads;
+                image_info.imageView = heads.handle();
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_BINDING);
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = nodes;
+                buffer_info.buffer = nodes.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = nodes.size();
 
@@ -289,7 +289,7 @@ void VolumeSharedMemory::set_shadow_image(const VkSampler sampler, const vulkan:
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_image;
+        image_info.imageView = shadow_image.handle();
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
@@ -363,7 +363,7 @@ VolumeImageMemory::VolumeImageMemory(
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffer_coordinates;
+                buffer_info.buffer = buffer_coordinates.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = buffer_coordinates.size();
 
@@ -372,7 +372,7 @@ VolumeImageMemory::VolumeImageMemory(
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffer_volume;
+                buffer_info.buffer = buffer_volume.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = buffer_volume.size();
 

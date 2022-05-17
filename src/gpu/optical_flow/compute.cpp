@@ -130,8 +130,8 @@ class Impl final : public Compute
                 vkCmdDispatch(command_buffer, grayscale_groups_[0], grayscale_groups_[1], 1);
 
                 image_barrier(
-                        command_buffer, images_[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
-                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                        command_buffer, images_[index][0].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
 
                 for (std::size_t i = 0; i < downsample_groups_.size(); ++i)
                 {
@@ -144,7 +144,7 @@ class Impl final : public Compute
                         vkCmdDispatch(command_buffer, downsample_groups_[i][0], downsample_groups_[i][1], 1);
 
                         image_barrier(
-                                command_buffer, images_[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
+                                command_buffer, images_[index][i + 1].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
@@ -169,8 +169,8 @@ class Impl final : public Compute
                 images.reserve(dx_.size() + dy_.size());
                 for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
                 {
-                        images.push_back(dx_[i].image());
-                        images.push_back(dy_[i].image());
+                        images.push_back(dx_[i].image().handle());
+                        images.push_back(dy_[i].image().handle());
                 }
                 image_barrier(
                         command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
@@ -195,7 +195,7 @@ class Impl final : public Compute
                         vkCmdDispatch(command_buffer, flow_groups_[i][0], flow_groups_[i][1], 1);
 
                         buffer_barrier(
-                                command_buffer, (i != 0) ? flow_buffers_[i - 1].buffer() : top_flow,
+                                command_buffer, (i != 0) ? flow_buffers_[i - 1].buffer().handle() : top_flow,
                                 VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
@@ -205,7 +205,7 @@ class Impl final : public Compute
                 for (const vulkan::ImageWithMemory& image : images_[index])
                 {
                         image_barrier(
-                                command_buffer, image.image(), VK_IMAGE_LAYOUT_GENERAL,
+                                command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
@@ -215,14 +215,15 @@ class Impl final : public Compute
                 for (const vulkan::ImageWithMemory& image : images_[index])
                 {
                         image_barrier(
-                                command_buffer, image.image(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                 VK_IMAGE_LAYOUT_GENERAL, 0, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
 
         void create_command_buffer_first_pyramid()
         {
-                command_buffer_first_pyramid_ = vulkan::handle::CommandBuffer(*device_, *compute_command_pool_);
+                command_buffer_first_pyramid_ =
+                        vulkan::handle::CommandBuffer(*device_, compute_command_pool_->handle());
 
                 const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
@@ -235,7 +236,7 @@ class Impl final : public Compute
 
         void create_command_buffers(const VkBuffer top_flow)
         {
-                command_buffers_ = vulkan::handle::CommandBuffers(*device_, *compute_command_pool_, 2);
+                command_buffers_ = vulkan::handle::CommandBuffers(*device_, compute_command_pool_->handle(), 2);
 
                 for (int index = 0; index < 2; ++index)
                 {
@@ -272,7 +273,7 @@ class Impl final : public Compute
                         ASSERT(command_buffer_first_pyramid_);
                         vulkan::queue_submit(
                                 wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *command_buffer_first_pyramid_,
-                                semaphore_first_pyramid_, queue);
+                                semaphore_first_pyramid_, queue.handle());
                         wait_semaphore = semaphore_first_pyramid_;
                 }
                 else
@@ -282,7 +283,7 @@ class Impl final : public Compute
 
                 vulkan::queue_submit(
                         wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*command_buffers_)[i_index_], semaphore_,
-                        queue);
+                        queue.handle());
 
                 return semaphore_;
         }
@@ -360,7 +361,7 @@ class Impl final : public Compute
                         images_, dx_, dy_);
 
                 create_command_buffer_first_pyramid();
-                create_command_buffers(top_flow);
+                create_command_buffers(top_flow.handle());
         }
 
         void delete_buffers() override

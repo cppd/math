@@ -74,7 +74,7 @@ void MulDMemory::set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data)
                 ASSERT(diagonal.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = diagonal;
+                buffer_info.buffer = diagonal.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = diagonal.size();
 
@@ -84,7 +84,7 @@ void MulDMemory::set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data)
                 ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = data;
+                buffer_info.buffer = data.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = data.size();
 

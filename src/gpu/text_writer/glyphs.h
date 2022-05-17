@@ -50,7 +50,7 @@ public:
 
         VkImageView image_view() const
         {
-                return image_->image_view();
+                return image_->image_view().handle();
         }
 };
 }

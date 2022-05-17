@@ -377,12 +377,13 @@ class Impl final
                 semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
-                            semaphore, swapchain_->swapchain(), *image_index, device_graphics_.presentation_queue()))
+                            semaphore, swapchain_->swapchain(), *image_index,
+                            device_graphics_.presentation_queue().handle()))
                 {
                         return false;
                 }
 
-                VULKAN_CHECK(vkQueueWaitIdle(queue));
+                VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
 
                 return true;
         }
@@ -405,7 +406,7 @@ public:
                   transfer_command_pool_(vulkan::create_transient_command_pool(
                           device_graphics_.device(),
                           device_graphics_.transfer_family_index())),
-                  clear_buffer_(device_graphics_.device(), graphics_compute_command_pool_),
+                  clear_buffer_(device_graphics_.device(), graphics_compute_command_pool_.handle()),
                   renderer_(gpu::renderer::create_renderer(
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,

@@ -126,7 +126,7 @@ BufferWithMemory::BufferWithMemory(
           device_memory_(create_device_memory(
                   device,
                   device.physical_device(),
-                  buffer_,
+                  buffer_.handle(),
                   memory_properties_,
                   (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) == VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                           ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT
@@ -151,7 +151,8 @@ void BufferWithMemory::write(
 
         check_family_index(command_pool, queue, family_indices_);
 
-        write_data_to_buffer(buffer_.device(), physical_device_, command_pool, queue, buffer_, offset, size, data);
+        write_data_to_buffer(
+                buffer_.device(), physical_device_, command_pool, queue, buffer_.handle(), offset, size, data);
 }
 
 void BufferWithMemory::write(
@@ -187,7 +188,7 @@ VkDeviceAddress BufferWithMemory::device_address() const
 {
         VkBufferDeviceAddressInfo info{};
         info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-        info.buffer = buffer_;
+        info.buffer = buffer_.handle();
         return vkGetBufferDeviceAddress(buffer_.device(), &info);
 }
 
@@ -249,7 +250,8 @@ ImageWithMemory::ImageWithMemory(
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   usage)),
-          device_memory_(create_device_memory(device, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+          device_memory_(
+                  create_device_memory(device, physical_device_, image_.handle(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (has_usage_for_image_view(usage))
         {
@@ -278,7 +280,9 @@ ImageWithMemory::ImageWithMemory(
         {
                 check_family_index(command_pool, queue, family_indices_);
 
-                transition_image_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, image_, layout);
+                transition_image_layout(
+                        VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool.handle(), queue.handle(), image_.handle(),
+                        layout);
         }
 }
 
@@ -295,8 +299,8 @@ void ImageWithMemory::write(
         check_family_index(command_pool, queue, family_indices_);
 
         write_pixels_to_image(
-                image_.device(), physical_device_, command_pool, queue, image_, image_.format(), image_.extent(),
-                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
+                image_.device(), physical_device_, command_pool, queue, image_.handle(), image_.format(),
+                image_.extent(), VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
 
 void ImageWithMemory::read(
@@ -312,8 +316,8 @@ void ImageWithMemory::read(
         check_family_index(command_pool, queue, family_indices_);
 
         read_pixels_from_image(
-                image_.device(), physical_device_, command_pool, queue, image_, image_.format(), image_.extent(),
-                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
+                image_.device(), physical_device_, command_pool, queue, image_.handle(), image_.format(),
+                image_.extent(), VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
 
 const Image& ImageWithMemory::image() const
@@ -323,7 +327,7 @@ const Image& ImageWithMemory::image() const
 
 const ImageView& ImageWithMemory::image_view() const
 {
-        ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
+        ASSERT(image_view_.handle() != VK_NULL_HANDLE);
         return image_view_;
 }
 
@@ -353,8 +357,11 @@ DepthImageWithMemory::DepthImageWithMemory(
                 sample_count,
                 VK_IMAGE_TILING_OPTIMAL,
                 usage)),
-          device_memory_(
-                  create_device_memory(device, device.physical_device(), image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+          device_memory_(create_device_memory(
+                  device,
+                  device.physical_device(),
+                  image_.handle(),
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
@@ -412,7 +419,8 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_image_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, image_, layout);
+                transition_image_layout(
+                        VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, image_.handle(), layout);
         }
 }
 
@@ -423,7 +431,7 @@ const Image& DepthImageWithMemory::image() const
 
 const ImageView& DepthImageWithMemory::image_view() const
 {
-        ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
+        ASSERT(image_view_.handle() != VK_NULL_HANDLE);
         return image_view_;
 }
 }

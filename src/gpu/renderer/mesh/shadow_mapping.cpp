@@ -89,7 +89,7 @@ void ShadowMapping::create_command_buffers(
         info.render_area->offset.y = 0;
         info.render_area->extent.width = buffers_->width();
         info.render_area->extent.height = buffers_->height();
-        info.render_pass = buffers_->render_pass();
+        info.render_pass = buffers_->render_pass().handle();
         info.framebuffers = &buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
         info.clear_values = &buffers_->clear_values();

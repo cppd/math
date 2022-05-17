@@ -80,7 +80,7 @@ const VkDescriptorSet& SobelMemory::descriptor_set(const int index) const
 
 void SobelMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)
 {
-        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.handle() != image_1.handle());
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -89,9 +89,9 @@ void SobelMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageVie
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0;
+        image_info.imageView = image_0.handle();
         descriptors_.update_descriptor_set(0, I_BINDING, image_info);
-        image_info.imageView = image_1;
+        image_info.imageView = image_1.handle();
         descriptors_.update_descriptor_set(1, I_BINDING, image_info);
 }
 
@@ -102,7 +102,7 @@ void SobelMemory::set_dx(const vulkan::ImageView& image_dx)
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image_dx;
+        image_info.imageView = image_dx.handle();
 
         for (int s = 0; s < 2; ++s)
         {
@@ -117,7 +117,7 @@ void SobelMemory::set_dy(const vulkan::ImageView& image_dy)
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image_dy;
+        image_info.imageView = image_dy.handle();
 
         for (int s = 0; s < 2; ++s)
         {

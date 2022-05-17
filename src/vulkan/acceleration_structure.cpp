@@ -119,13 +119,13 @@ void build_acceleration_structure(
 
         const std::vector<VkAccelerationStructureBuildRangeInfoKHR*> build_range_infos = {&build_range_info};
 
-        const handle::CommandBuffer command_buffer(device, compute_command_pool);
+        const handle::CommandBuffer command_buffer(device, compute_command_pool.handle());
 
         begin_commands(command_buffer);
 
         vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &build_geometry_info, build_range_infos.data());
 
-        end_commands(compute_queue, command_buffer);
+        end_commands(compute_queue.handle(), command_buffer);
 }
 
 void check_data(const std::span<const Vector3f>& vertices, const std::span<const std::uint32_t>& indices)
@@ -288,7 +288,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
 
         VkAccelerationStructureCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-        create_info.buffer = acceleration_structure_buffer.buffer();
+        create_info.buffer = acceleration_structure_buffer.buffer().handle();
         create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
@@ -365,7 +365,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
 
         VkAccelerationStructureCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-        create_info.buffer = acceleration_structure_buffer.buffer();
+        create_info.buffer = acceleration_structure_buffer.buffer().handle();
         create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 

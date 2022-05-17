@@ -41,7 +41,7 @@ RendererDraw::RendererDraw(
 
 RendererDraw::DrawInfo RendererDraw::draw_meshes(
         VkSemaphore semaphore,
-        const vulkan::Queue& graphics_queue,
+        const VkQueue graphics_queue,
         const unsigned index,
         const bool shadow_mapping,
         const TransparencyBuffers& transparency_buffers) const
@@ -116,8 +116,8 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
 
 VkSemaphore RendererDraw::draw(
         const VkSemaphore semaphore,
-        const vulkan::Queue& graphics_queue_1,
-        const vulkan::Queue& graphics_queue_2,
+        const VkQueue graphics_queue_1,
+        const VkQueue graphics_queue_2,
         const unsigned index,
         const bool shadow_mapping,
         const TransparencyBuffers& transparency_buffers) const

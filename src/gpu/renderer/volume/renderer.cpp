@@ -181,7 +181,7 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         info.render_area->offset.y = 0;
         info.render_area->extent.width = render_buffers_->width();
         info.render_area->extent.height = render_buffers_->height();
-        info.render_pass = render_buffers_->render_pass();
+        info.render_pass = render_buffers_->render_pass().handle();
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
 
@@ -237,7 +237,7 @@ void VolumeRenderer::create_command_buffers(
         info.render_area->offset.y = 0;
         info.render_area->extent.width = render_buffers_->width();
         info.render_area->extent.height = render_buffers_->height();
-        info.render_pass = render_buffers_->render_pass();
+        info.render_pass = render_buffers_->render_pass().handle();
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;

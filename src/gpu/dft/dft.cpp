@@ -93,7 +93,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_to_buffer_groups_[0], mul_rows_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, buffer_->buffer());
+                buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
         void rows_mul_d(const VkCommandBuffer command_buffer, const bool inverse) const
@@ -106,7 +106,7 @@ class Impl final : public Dft
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_row_groups_[0], mul_d_row_groups_[1], 1);
 
-                buffer_barrier(command_buffer, buffer_->buffer());
+                buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
         void rows_from_buffer(const VkCommandBuffer command_buffer, const bool inverse) const
@@ -119,7 +119,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_from_buffer_groups_[0], mul_rows_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, x_d_->buffer());
+                buffer_barrier(command_buffer, x_d_->buffer().handle());
         }
 
         void columns_to_buffer(const VkCommandBuffer command_buffer, const bool inverse) const
@@ -132,7 +132,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_columns_to_buffer_groups_[0], mul_columns_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, buffer_->buffer());
+                buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
         void columns_mul_d(const VkCommandBuffer command_buffer, const bool inverse) const
@@ -145,7 +145,7 @@ class Impl final : public Dft
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_column_groups_[0], mul_d_column_groups_[1], 1);
 
-                buffer_barrier(command_buffer, buffer_->buffer());
+                buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
         void columns_from_buffer(const VkCommandBuffer command_buffer, const bool inverse) const
@@ -159,7 +159,7 @@ class Impl final : public Dft
                 vkCmdDispatch(
                         command_buffer, mul_columns_from_buffer_groups_[0], mul_columns_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, x_d_->buffer());
+                buffer_barrier(command_buffer, x_d_->buffer().handle());
         }
 
         void create_diagonals(const std::uint32_t family_index)
@@ -187,16 +187,20 @@ class Impl final : public Dft
                 d2_inv_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d2_inv);
 
                 {
-                        std::unique_ptr<Fft> fft =
+                        const std::unique_ptr<Fft> fft =
                                 create_fft(*device_, {compute_command_pool_->family_index()}, 1, m1_);
-                        fft->run_for_data(false, *d1_fwd_, *device_, *compute_command_pool_, *compute_queue_);
-                        fft->run_for_data(true, *d1_inv_, *device_, *compute_command_pool_, *compute_queue_);
+                        fft->run_for_data(
+                                false, *d1_fwd_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                        fft->run_for_data(
+                                true, *d1_inv_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
                 }
                 {
-                        std::unique_ptr<Fft> fft =
+                        const std::unique_ptr<Fft> fft =
                                 create_fft(*device_, {compute_command_pool_->family_index()}, 1, m2_);
-                        fft->run_for_data(false, *d2_fwd_, *device_, *compute_command_pool_, *compute_queue_);
-                        fft->run_for_data(true, *d2_inv_, *device_, *compute_command_pool_, *compute_queue_);
+                        fft->run_for_data(
+                                false, *d2_fwd_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                        fft->run_for_data(
+                                true, *d2_inv_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
                 }
         }
 

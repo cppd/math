@@ -32,7 +32,7 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
         ASSERT(textures.size() == mesh.images.size() + 1);
         ASSERT(material_buffers.size() == mesh.materials.size() + 1);
 
-        VkImageView no_texture = textures.back().image_view();
+        const VkImageView no_texture = textures.back().image_view().handle();
 
         std::vector<MaterialMemory::MaterialInfo> materials;
         materials.reserve(mesh.materials.size() + 1);
@@ -44,13 +44,14 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
                 ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 
                 MaterialMemory::MaterialInfo& m = materials.emplace_back();
-                m.buffer = material_buffers[i].buffer();
+                m.buffer = material_buffers[i].buffer().handle();
                 m.buffer_size = material_buffers[i].buffer().size();
-                m.texture = (mesh_material.image >= 0) ? textures[mesh_material.image].image_view() : no_texture;
+                m.texture =
+                        (mesh_material.image >= 0) ? textures[mesh_material.image].image_view().handle() : no_texture;
         }
 
         MaterialMemory::MaterialInfo& m = materials.emplace_back();
-        m.buffer = material_buffers.back().buffer();
+        m.buffer = material_buffers.back().buffer().handle();
         m.buffer_size = material_buffers.back().buffer().size();
         m.texture = no_texture;
 

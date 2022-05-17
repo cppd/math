@@ -155,7 +155,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
 
                 return renderer_draw_.draw(
-                        semaphore, graphics_queue_1, graphics_queue_2, index, shadow_mapping, transparency_buffers_);
+                        semaphore, graphics_queue_1.handle(), graphics_queue_2.handle(), index, shadow_mapping,
+                        transparency_buffers_);
         }
 
         bool empty() const override
@@ -196,8 +197,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
-                        render_buffers_, viewport_, depth_copy_image_->image_view(), transparency_buffers_.heads(),
-                        transparency_buffers_.nodes(), opacity_buffers_);
+                        render_buffers_, viewport_, depth_copy_image_->image_view().handle(),
+                        transparency_buffers_.heads(), transparency_buffers_.nodes(), opacity_buffers_);
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -222,7 +223,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
-                        *graphics_command_pool_, *graphics_queue_);
+                        graphics_command_pool_->handle(), graphics_queue_->handle());
         }
 
         void create_transparency_buffers()
@@ -267,8 +268,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 mesh_renderer_.create_shadow_mapping_buffers(
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
-                        *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
-                        renderer_view_.shadow_zoom());
+                        graphics_command_pool_->handle(), graphics_queue_->handle(), *device_, viewport_.width(),
+                        viewport_.height(), renderer_view_.shadow_zoom());
 
                 volume_renderer_.set_shadow_image(
                         mesh_renderer_.shadow_mapping_sampler(), mesh_renderer_.shadow_mapping_image_view());
@@ -279,7 +280,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 mesh_renderer_.delete_render_command_buffers();
 
                 mesh_renderer_.create_render_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_,
+                        mesh_storage_.visible_objects(), graphics_command_pool_->handle(),
                         renderer_view_.clip_plane().has_value(), renderer_view_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
@@ -301,7 +302,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 mesh_renderer_.delete_shadow_mapping_command_buffers();
 
                 mesh_renderer_.create_shadow_mapping_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_);
+                        mesh_storage_.visible_objects(), graphics_command_pool_->handle());
         }
 
         void create_mesh_command_buffers()
@@ -316,7 +317,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 if (volume_storage_.visible_objects().size() != 1)
                 {
-                        volume_renderer_.create_command_buffers(*graphics_command_pool_);
+                        volume_renderer_.create_command_buffers(graphics_command_pool_->handle());
                         return;
                 }
 
@@ -327,11 +328,12 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         constexpr int INDEX = 0;
 
                         render_buffers_->commands_depth_copy(
-                                command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
+                                command_buffer, depth_copy_image_->image().handle(), DEPTH_COPY_IMAGE_LAYOUT, viewport_,
+                                INDEX);
                 };
 
                 volume_renderer_.create_command_buffers(
-                        volume_storage_.visible_objects().front(), *graphics_command_pool_, copy_depth);
+                        volume_storage_.visible_objects().front(), graphics_command_pool_->handle(), copy_depth);
         }
 
         void set_volume_matrix()

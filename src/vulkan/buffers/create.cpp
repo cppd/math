@@ -177,7 +177,7 @@ ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 
-        create_info.image = image;
+        create_info.image = image.handle();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"

@@ -38,12 +38,10 @@ public:
         {
         }
 
-        operator VkQueue() const& noexcept
+        VkQueue handle() const noexcept
         {
                 return queue_;
         }
-
-        operator VkQueue() const&& noexcept = delete;
 
         std::uint32_t family_index() const noexcept
         {
@@ -63,12 +61,10 @@ public:
         {
         }
 
-        operator VkCommandPool() const& noexcept
+        VkCommandPool handle() const noexcept
         {
                 return command_pool_;
         }
-
-        operator VkCommandPool() const&& noexcept = delete;
 
         std::uint32_t family_index() const noexcept
         {
@@ -90,12 +86,10 @@ public:
         {
         }
 
-        operator VkRenderPass() const& noexcept
+        VkRenderPass handle() const noexcept
         {
                 return render_pass_;
         }
-
-        operator VkRenderPass() const&& noexcept = delete;
 
         std::uint32_t color_attachment_count() const noexcept
         {
@@ -117,12 +111,10 @@ public:
         {
         }
 
-        operator VkBuffer() const& noexcept
+        VkBuffer handle() const noexcept
         {
                 return buffer_;
         }
-
-        operator VkBuffer() const&& noexcept = delete;
 
         VkDevice device() const noexcept
         {
@@ -160,12 +152,10 @@ public:
         {
         }
 
-        operator VkImage() const& noexcept
+        VkImage handle() const noexcept
         {
                 return image_;
         }
-
-        operator VkImage() const&& noexcept = delete;
 
         VkDevice device() const noexcept
         {
@@ -220,16 +210,14 @@ public:
                   usage_(image.usage())
         {
                 ASSERT(!create_info.pNext);
-                ASSERT(image == create_info.image);
+                ASSERT(image.handle() == create_info.image);
                 ASSERT(image.format() == create_info.format);
         }
 
-        operator VkImageView() const& noexcept
+        VkImageView handle() const noexcept
         {
                 return image_view_;
         }
-
-        operator VkImageView() const&& noexcept = delete;
 
         VkFormat format() const noexcept
         {

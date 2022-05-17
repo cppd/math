@@ -159,12 +159,12 @@ Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, 
         {
                 for (std::size_t image_index = 0; image_index < images.size(); ++image_index)
                 {
-                        attachments[image_index] = images[image_index].image_view();
+                        attachments[image_index] = images[image_index].image_view().handle();
                 }
                 attachments.back() = render_buffers->depth_image_view(i);
 
                 framebuffers_.push_back(vulkan::create_framebuffer(
-                        device, render_pass_, render_buffers->width(), render_buffers->height(), attachments));
+                        device, render_pass_.handle(), render_buffers->width(), render_buffers->height(), attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

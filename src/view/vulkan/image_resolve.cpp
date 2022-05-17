@@ -54,7 +54,7 @@ ImageResolve::ImageResolve(
 
         images_.reserve(count);
 
-        command_buffers_ = vulkan::handle::CommandBuffers(device, command_pool, count);
+        command_buffers_ = vulkan::handle::CommandBuffers(device, command_pool.handle(), count);
 
         for (unsigned i = 0; i < count; ++i)
         {
@@ -67,7 +67,7 @@ ImageResolve::ImageResolve(
                 begin_command_buffer(command_buffers_[i]);
 
                 render_buffers.commands_color_resolve(
-                        command_buffers_[i], images_[i].image(), image_layout, rectangle, i);
+                        command_buffers_[i], images_[i].image().handle(), image_layout, rectangle, i);
 
                 end_command_buffer(command_buffers_[i]);
         }
@@ -90,7 +90,7 @@ void ImageResolve::resolve(
 
         vulkan::queue_submit(
                 wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index], signal_semaphore,
-                graphics_queue);
+                graphics_queue.handle());
 }
 
 void ImageResolve::resolve(
@@ -102,7 +102,8 @@ void ImageResolve::resolve(
         ASSERT(image_index < command_buffers_.count());
 
         vulkan::queue_submit(
-                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index], graphics_queue);
+                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index],
+                graphics_queue.handle());
 }
 
 image::Image<2> resolve_to_image(
@@ -123,7 +124,7 @@ image::Image<2> resolve_to_image(
                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
         image.resolve(queue, wait_semaphore, image_index);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
+        VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
 
         image::Image<2> res;
 

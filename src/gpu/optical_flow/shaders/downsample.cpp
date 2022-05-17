@@ -70,7 +70,7 @@ const VkDescriptorSet& DownsampleMemory::descriptor_set(const int index) const
 
 void DownsampleMemory::set_big(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
 {
-        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.handle() != image_1.handle());
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -79,15 +79,15 @@ void DownsampleMemory::set_big(const vulkan::ImageView& image_0, const vulkan::I
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0;
+        image_info.imageView = image_0.handle();
         descriptors_.update_descriptor_set(0, BIG_BINDING, image_info);
-        image_info.imageView = image_1;
+        image_info.imageView = image_1.handle();
         descriptors_.update_descriptor_set(1, BIG_BINDING, image_info);
 }
 
 void DownsampleMemory::set_small(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
 {
-        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.handle() != image_1.handle());
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -96,9 +96,9 @@ void DownsampleMemory::set_small(const vulkan::ImageView& image_0, const vulkan:
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0;
+        image_info.imageView = image_0.handle();
         descriptors_.update_descriptor_set(0, SMALL_BINDING, image_info);
-        image_info.imageView = image_1;
+        image_info.imageView = image_1.handle();
         descriptors_.update_descriptor_set(1, SMALL_BINDING, image_info);
 }
 

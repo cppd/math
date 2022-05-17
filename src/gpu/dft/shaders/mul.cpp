@@ -74,7 +74,7 @@ void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) co
                 ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = data;
+                buffer_info.buffer = data.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = data.size();
 
@@ -84,7 +84,7 @@ void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) co
                 ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffer;
+                buffer_info.buffer = buffer.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = buffer.size();
 

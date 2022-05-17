@@ -74,7 +74,7 @@ void CopyInputMemory::set(const VkSampler sampler, const vulkan::ImageView& inpu
 
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = input;
+                image_info.imageView = input.handle();
                 image_info.sampler = sampler;
 
                 descriptors_.update_descriptor_set(0, SRC_BINDING, image_info);
@@ -83,7 +83,7 @@ void CopyInputMemory::set(const VkSampler sampler, const vulkan::ImageView& inpu
                 ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = output;
+                buffer_info.buffer = output.handle();
                 buffer_info.offset = 0;
                 buffer_info.range = output.size();
 

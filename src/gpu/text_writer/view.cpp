@@ -96,13 +96,14 @@ class Impl final : public View
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
                         Memory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                std::array<VkBuffer, 1> buffers = {vertex_buffer_->buffer()};
+                std::array<VkBuffer, 1> buffers = {vertex_buffer_->buffer().handle()};
                 std::array<VkDeviceSize, 1> offsets = {0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
                 ASSERT(indirect_buffer_.buffer().has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
-                vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
+                vkCmdDrawIndirect(
+                        command_buffer, indirect_buffer_.buffer().handle(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
         vulkan::handle::CommandBuffers create_commands()
@@ -114,9 +115,9 @@ class Impl final : public View
                 info.render_area->offset.y = 0;
                 info.render_area->extent.width = render_buffers_->width();
                 info.render_area->extent.height = render_buffers_->height();
-                info.render_pass = render_buffers_->render_pass();
+                info.render_pass = render_buffers_->render_pass().handle();
                 info.framebuffers = &render_buffers_->framebuffers();
-                info.command_pool = *graphics_command_pool_;
+                info.command_pool = graphics_command_pool_->handle();
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
@@ -186,7 +187,7 @@ class Impl final : public View
 
                 if (vertex_buffer_->buffer().size() < size)
                 {
-                        VULKAN_CHECK(vkQueueWaitIdle(queue));
+                        VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
 
                         command_buffers_.reset();
 
@@ -213,7 +214,7 @@ class Impl final : public View
 
                 vulkan::queue_submit(
                         wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, (*command_buffers_)[index],
-                        semaphore_, queue);
+                        semaphore_, queue.handle());
 
                 return semaphore_;
         }

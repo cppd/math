@@ -113,7 +113,7 @@ class Impl final : public Compute
                 //
 
                 buffer_barrier(
-                        command_buffer, lines_buffer_->buffer(), VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, lines_buffer_->buffer().handle(), VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
@@ -127,7 +127,7 @@ class Impl final : public Compute
                 //
 
                 buffer_barrier(
-                        command_buffer, lines_buffer_->buffer(), VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, lines_buffer_->buffer().handle(), VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
@@ -172,8 +172,8 @@ class Impl final : public Compute
                 lines_buffer_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_, std::vector<std::uint32_t>({family_index}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sizeof(std::int32_t) * 2 * height);
-                points_buffer_ = points_buffer;
-                point_count_buffer_ = point_count_buffer;
+                points_buffer_ = points_buffer.handle();
+                point_count_buffer_ = point_count_buffer.handle();
 
                 prepare_memory_.set_object_image(objects.image_view());
                 prepare_memory_.set_lines(lines_buffer_->buffer());

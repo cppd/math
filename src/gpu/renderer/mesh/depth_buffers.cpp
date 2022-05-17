@@ -234,10 +234,10 @@ Impl::Impl(
         std::vector<VkImageView> attachments(1);
         for (const vulkan::DepthImageWithMemory& depth_attachment : depth_attachments_)
         {
-                attachments[0] = depth_attachment.image_view();
+                attachments[0] = depth_attachment.image_view().handle();
 
                 framebuffers_.push_back(
-                        create_framebuffer(device, render_pass_, depth_width, depth_height, attachments));
+                        create_framebuffer(device, render_pass_.handle(), depth_width, depth_height, attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

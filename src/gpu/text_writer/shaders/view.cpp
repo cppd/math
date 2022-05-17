@@ -86,7 +86,7 @@ Memory::Memory(
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer;
+        buffer_info.buffer = data_buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = data_buffer.size();
 

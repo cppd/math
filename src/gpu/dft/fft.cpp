@@ -151,7 +151,7 @@ class Impl final : public Fft
                 }
 
                 ASSERT(data.size() >= data_size_);
-                buffer_ = data.buffer();
+                buffer_ = data.buffer().handle();
                 fft_memory_->set(data.buffer());
                 if (only_shared_)
                 {

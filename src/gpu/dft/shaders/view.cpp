@@ -93,7 +93,7 @@ ViewMemory::ViewMemory(
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer;
+        buffer_info.buffer = data_buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = data_buffer.size();
 
@@ -116,7 +116,7 @@ void ViewMemory::set_image(const VkSampler sampler, const vulkan::ImageView& ima
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);

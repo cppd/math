@@ -76,7 +76,7 @@ void RayTracingMemory::set_image(const vulkan::ImageView& image) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
 
         descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);
 }

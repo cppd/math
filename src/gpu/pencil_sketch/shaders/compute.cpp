@@ -83,7 +83,7 @@ void ComputeMemory::set_input(const VkSampler sampler, const vulkan::ImageView& 
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, INPUT_BINDING, image_info);
@@ -96,7 +96,7 @@ void ComputeMemory::set_output_image(const vulkan::ImageView& image) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
 
         descriptors_.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
@@ -108,7 +108,7 @@ void ComputeMemory::set_object_image(const vulkan::ImageView& image) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }

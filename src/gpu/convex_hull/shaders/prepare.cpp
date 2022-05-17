@@ -73,7 +73,7 @@ void PrepareMemory::set_object_image(const vulkan::ImageView& storage_image) con
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image;
+        image_info.imageView = storage_image.handle();
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
@@ -83,7 +83,7 @@ void PrepareMemory::set_lines(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 

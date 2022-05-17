@@ -245,23 +245,23 @@ void write_data_to_buffer(
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer,
+                device, physical_device, staging_buffer.handle(),
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
 
         copy_host_to_device(staging_device_memory, 0, size, data);
 
-        handle::CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool.handle());
         begin_commands(command_buffer);
 
         VkBufferCopy copy = {};
         copy.srcOffset = 0;
         copy.dstOffset = offset;
         copy.size = size;
-        vkCmdCopyBuffer(command_buffer, staging_buffer, buffer, 1, &copy);
+        vkCmdCopyBuffer(command_buffer, staging_buffer.handle(), buffer, 1, &copy);
 
-        end_commands(queue, command_buffer);
+        end_commands(queue.handle(), command_buffer);
 }
 
 void staging_image_write(
@@ -283,7 +283,7 @@ void staging_image_write(
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer,
+                device, physical_device, staging_buffer.handle(),
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
@@ -292,18 +292,18 @@ void staging_image_write(
 
         //
 
-        handle::CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool.handle());
         begin_commands(command_buffer);
 
         cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer, extent);
+        cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.handle(), extent);
 
         cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
 
-        end_commands(queue, command_buffer);
+        end_commands(queue.handle(), command_buffer);
 }
 
 void staging_image_read(
@@ -325,23 +325,23 @@ void staging_image_read(
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer,
+                device, physical_device, staging_buffer.handle(),
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
 
-        handle::CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool.handle());
         begin_commands(command_buffer);
 
         cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-        cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer, image, extent);
+        cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.handle(), image, extent);
 
         cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
 
-        end_commands(queue, command_buffer);
+        end_commands(queue.handle(), command_buffer);
 
         //
 

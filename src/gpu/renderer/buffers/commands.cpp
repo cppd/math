@@ -35,7 +35,7 @@ void commands_init_uint32_storage_image(
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image.image();
+        barrier.image = image.image().handle();
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
@@ -64,7 +64,8 @@ void commands_init_uint32_storage_image(
                 const VkImageSubresourceRange range = barrier.subresourceRange;
 
                 vkCmdClearColorImage(
-                        command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
+                        command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1,
+                        &range);
         }
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -89,7 +90,7 @@ void commands_init_buffer(
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
         buffer_copy.size = dst.buffer().size();
-        vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
+        vkCmdCopyBuffer(command_buffer, src.buffer().handle(), dst.buffer().handle(), 1, &buffer_copy);
 
         VkBufferMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -97,7 +98,7 @@ void commands_init_buffer(
         barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = dst.buffer();
+        barrier.buffer = dst.buffer().handle();
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
@@ -120,7 +121,7 @@ void commands_read_buffer(
         barrier.dstAccessMask = 0;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = src.buffer();
+        barrier.buffer = src.buffer().handle();
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
@@ -132,6 +133,6 @@ void commands_read_buffer(
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
         buffer_copy.size = dst.buffer().size();
-        vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
+        vkCmdCopyBuffer(command_buffer, src.buffer().handle(), dst.buffer().handle(), 1, &buffer_copy);
 }
 }

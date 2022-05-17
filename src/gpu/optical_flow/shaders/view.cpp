@@ -90,7 +90,7 @@ ViewMemory::ViewMemory(
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer;
+        buffer_info.buffer = data_buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = data_buffer.size();
 
@@ -112,7 +112,7 @@ void ViewMemory::set_points(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
@@ -124,7 +124,7 @@ void ViewMemory::set_flow(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 

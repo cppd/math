@@ -39,7 +39,7 @@ void commands_init_storage_image(const VkCommandBuffer command_buffer, const vul
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image.image();
+        barrier.image = image.image().handle();
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
@@ -68,7 +68,8 @@ void commands_init_storage_image(const VkCommandBuffer command_buffer, const vul
                 const VkImageSubresourceRange range = barrier.subresourceRange;
 
                 vkCmdClearColorImage(
-                        command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
+                        command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1,
+                        &range);
         }
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -109,7 +110,7 @@ void ClearBuffer::delete_buffers()
 VkSemaphore ClearBuffer::clear(const vulkan::Queue& graphics_queue, const unsigned index) const
 {
         ASSERT(index < command_buffers_.count());
-        vulkan::queue_submit(command_buffers_[index], clear_semaphore_, graphics_queue);
+        vulkan::queue_submit(command_buffers_[index], clear_semaphore_, graphics_queue.handle());
         return clear_semaphore_;
 }
 

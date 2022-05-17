@@ -149,7 +149,7 @@ FlowMemory::FlowMemory(
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer;
+        buffer_info.buffer = data_buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = data_buffer.size();
 
@@ -177,7 +177,7 @@ void FlowMemory::set_dx(const vulkan::ImageView& image) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
 
         for (int s = 0; s < 2; ++s)
         {
@@ -192,7 +192,7 @@ void FlowMemory::set_dy(const vulkan::ImageView& image) const
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image;
+        image_info.imageView = image.handle();
 
         for (int s = 0; s < 2; ++s)
         {
@@ -202,7 +202,7 @@ void FlowMemory::set_dy(const vulkan::ImageView& image) const
 
 void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
 {
-        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.handle() != image_1.handle());
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -211,16 +211,16 @@ void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0;
+        image_info.imageView = image_0.handle();
         descriptors_.update_descriptor_set(0, I_BINDING, image_info);
-        image_info.imageView = image_1;
+        image_info.imageView = image_1.handle();
         descriptors_.update_descriptor_set(1, I_BINDING, image_info);
 }
 
 void FlowMemory::set_j(const VkSampler sampler, const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)
         const
 {
-        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.handle() != image_1.handle());
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
@@ -228,9 +228,9 @@ void FlowMemory::set_j(const VkSampler sampler, const vulkan::ImageView& image_0
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.sampler = sampler;
 
-        image_info.imageView = image_0;
+        image_info.imageView = image_0.handle();
         descriptors_.update_descriptor_set(0, J_BINDING, image_info);
-        image_info.imageView = image_1;
+        image_info.imageView = image_1.handle();
         descriptors_.update_descriptor_set(1, J_BINDING, image_info);
 }
 
@@ -239,7 +239,7 @@ void FlowMemory::set_top_points(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
@@ -254,7 +254,7 @@ void FlowMemory::set_flow(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
@@ -269,7 +269,7 @@ void FlowMemory::set_flow_guess(const vulkan::Buffer& buffer) const
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
+        buffer_info.buffer = buffer.handle();
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
