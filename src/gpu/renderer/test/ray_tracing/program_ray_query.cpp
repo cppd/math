@@ -97,7 +97,7 @@ std::vector<VkDescriptorSetLayoutBinding> RayQueryProgram::descriptor_set_layout
         return RayTracingMemory::descriptor_set_layout_bindings(RAYGEN);
 }
 
-RayQueryProgram::RayQueryProgram(const vulkan::Device& device, const unsigned local_size)
+RayQueryProgram::RayQueryProgram(const VkDevice device, const unsigned local_size)
         : descriptor_set_layout_(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           pipeline_layout_(
                   vulkan::create_pipeline_layout(device, {RayTracingMemory::set_number()}, {descriptor_set_layout_}))

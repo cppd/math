@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image.h"
 
 #include <src/image/image.h>
+#include <src/vulkan/device.h>
 
 namespace ns::gpu::renderer::test
 {
@@ -32,7 +33,7 @@ image::Image<2> ray_tracing(
         const std::string_view& file_name);
 
 image::Image<2> ray_query(
-        const vulkan::Device& device,
+        VkDevice device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const RayTracingImage& ray_tracing_image,

@@ -138,7 +138,7 @@ class Impl final
         const vulkan::CommandPool graphics_compute_command_pool_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
-        const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device()};
+        const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device().handle()};
 
         std::optional<PixelSizes> pixel_sizes_;
         FrameRate frame_rate_;
@@ -328,7 +328,8 @@ class Impl final
                 create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
                 swapchain_resolve_.emplace(
-                        device_graphics_.device(), graphics_compute_command_pool_, *render_buffers_, *swapchain_);
+                        device_graphics_.device().handle(), graphics_compute_command_pool_, *render_buffers_,
+                        *swapchain_);
         }
 
         void delete_swapchain()
@@ -363,7 +364,7 @@ class Impl final
         [[nodiscard]] bool render_swapchain() const
         {
                 const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
-                        device_graphics_.device(), swapchain_->swapchain(), swapchain_image_semaphore_);
+                        device_graphics_.device().handle(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
                 if (!image_index)
                 {
@@ -398,15 +399,15 @@ public:
                         }),
                   device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
                   graphics_compute_command_pool_(vulkan::create_command_pool(
-                          device_graphics_.device(),
+                          device_graphics_.device().handle(),
                           device_graphics_.graphics_compute_family_index())),
                   compute_command_pool_(vulkan::create_command_pool(
-                          device_graphics_.device(),
+                          device_graphics_.device().handle(),
                           device_graphics_.compute_family_index())),
                   transfer_command_pool_(vulkan::create_transient_command_pool(
-                          device_graphics_.device(),
+                          device_graphics_.device().handle(),
                           device_graphics_.transfer_family_index())),
-                  clear_buffer_(device_graphics_.device(), graphics_compute_command_pool_.handle()),
+                  clear_buffer_(device_graphics_.device().handle(), graphics_compute_command_pool_.handle()),
                   renderer_(gpu::renderer::create_renderer(
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,

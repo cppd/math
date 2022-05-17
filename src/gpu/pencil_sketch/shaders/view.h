@@ -40,7 +40,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        ViewMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         const VkDescriptorSet& descriptor_set() const;
 

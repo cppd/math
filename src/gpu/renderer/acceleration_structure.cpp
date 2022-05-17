@@ -67,7 +67,7 @@ void AccelerationStructure::create(
 }
 
 void AccelerationStructure::update_matrices(
-        const vulkan::Device& device,
+        const VkDevice device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<const MeshObject*>& meshes) const

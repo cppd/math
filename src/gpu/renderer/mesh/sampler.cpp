@@ -58,7 +58,7 @@ vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return vulkan::handle::Sampler(device.handle(), create_info);
 }
 
 vulkan::handle::Sampler create_mesh_shadow_sampler(const VkDevice device)

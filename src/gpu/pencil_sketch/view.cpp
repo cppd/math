@@ -118,7 +118,7 @@ class Impl final : public View
                 compute_->create_buffers(sampler_, input, objects, rectangle, *image_);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = *device_;
+                info.device = device_->handle();
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -193,10 +193,10 @@ public:
                   // transfer_command_pool_(transfer_command_pool),
                   // transfer_queue_(transfer_queue),
                   graphics_family_index_(graphics_queue->family_index()),
-                  signal_semaphore_(*device_),
+                  signal_semaphore_(device_->handle()),
                   program_(device_),
-                  memory_(*device_, program_.descriptor_set_layout()),
-                  sampler_(create_sampler(*device_)),
+                  memory_(device_->handle(), program_.descriptor_set_layout()),
+                  sampler_(create_sampler(device_->handle())),
                   compute_(create_compute(device_))
         {
                 create_vertices();

@@ -47,7 +47,7 @@ std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layou
 }
 
 RayTracingMemory::RayTracingMemory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)

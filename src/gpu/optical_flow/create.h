@@ -44,12 +44,12 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         std::uint32_t family_index);
 
 std::vector<DownsampleMemory> create_downsample_memory(
-        const vulkan::Device& device,
+        VkDevice device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images);
 
 std::vector<SobelMemory> create_sobel_memory(
-        const vulkan::Device& device,
+        VkDevice device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
         const std::vector<vulkan::ImageWithMemory>& dx,

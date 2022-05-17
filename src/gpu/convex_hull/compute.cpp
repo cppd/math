@@ -211,12 +211,12 @@ class Impl final : public Compute
 public:
         explicit Impl(const vulkan::Device* const device)
                 : device_(device),
-                  prepare_program_(*device_),
-                  prepare_memory_(*device_, prepare_program_.descriptor_set_layout()),
-                  merge_program_(*device_),
-                  merge_memory_(*device_, merge_program_.descriptor_set_layout()),
-                  filter_program_(*device_),
-                  filter_memory_(*device_, filter_program_.descriptor_set_layout())
+                  prepare_program_(device_->handle()),
+                  prepare_memory_(device_->handle(), prepare_program_.descriptor_set_layout()),
+                  merge_program_(device_->handle()),
+                  merge_memory_(device_->handle(), merge_program_.descriptor_set_layout()),
+                  filter_program_(device_->handle()),
+                  filter_memory_(device_->handle(), filter_program_.descriptor_set_layout())
         {
         }
 

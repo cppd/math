@@ -143,7 +143,7 @@ std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bind
 }
 
 FlowMemory::FlowMemory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& data_buffer)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())

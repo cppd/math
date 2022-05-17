@@ -183,8 +183,8 @@ class Impl final : public Compute
 public:
         explicit Impl(const vulkan::Device* const device)
                 : device_(device),
-                  program_(*device_),
-                  memory_(*device_, program_.descriptor_set_layout())
+                  program_(device_->handle()),
+                  memory_(device_->handle(), program_.descriptor_set_layout())
         {
         }
 

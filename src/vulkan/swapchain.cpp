@@ -390,17 +390,17 @@ Swapchain::Swapchain(
                 preferred_image_count, image_count));
 
         swapchain_ = create_swapchain_khr(
-                device, surface, surface_format_, present_mode, extent_, image_count,
+                device.handle(), surface, surface_format_, present_mode, extent_, image_count,
                 surface_capabilities.currentTransform, family_indices);
 
-        images_ = swapchain_images(device, swapchain_);
+        images_ = swapchain_images(device.handle(), swapchain_);
 
         image_view_handles_.reserve(images_.size());
         image_views_.reserve(images_.size());
         for (const VkImage image : images_)
         {
                 image_view_handles_.push_back(
-                        create_image_view(device, image, surface_format_.format, VK_IMAGE_ASPECT_COLOR_BIT));
+                        create_image_view(device.handle(), image, surface_format_.format, VK_IMAGE_ASPECT_COLOR_BIT));
                 image_views_.push_back(image_view_handles_.back());
         }
 }

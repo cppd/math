@@ -34,26 +34,26 @@ MeshRenderer::MeshRenderer(
         const vulkan::Buffer& drawing_buffer,
         const std::vector<std::uint32_t>& drawing_family_indices,
         const GgxF1Albedo& ggx_f1_albedo)
-        : device_(*device),
+        : device_(device->handle()),
           sample_shading_(sample_shading),
           //
           triangles_program_(device, code),
           triangles_shared_memory_(
-                  *device,
+                  device_,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
           triangle_lines_program_(device, code),
           triangle_lines_shared_memory_(
-                  *device,
+                  device_,
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
           normals_program_(device, code),
           normals_shared_memory_(
-                  *device,
+                  device_,
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
@@ -61,7 +61,7 @@ MeshRenderer::MeshRenderer(
           //
           points_program_(device, code),
           points_shared_memory_(
-                  *device,
+                  device_,
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),

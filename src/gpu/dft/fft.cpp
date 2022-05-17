@@ -239,11 +239,11 @@ public:
                 //
 
                 const bool fft_reverse_input = only_shared_;
-                fft_program_.emplace(device);
+                fft_program_.emplace(device.handle());
                 fft_program_->create_pipelines(
                         data_size_, n, n_mask, n_bits, n_shared_, fft_reverse_input,
                         group_size(n, device.properties().properties_10.limits));
-                fft_memory_.emplace(device, fft_program_->descriptor_set_layout());
+                fft_memory_.emplace(device.handle(), fft_program_->descriptor_set_layout());
                 fft_groups_ = group_count(data_size_, n_shared_);
 
                 if (only_shared_)
@@ -253,14 +253,14 @@ public:
 
                 //
 
-                bit_reverse_program_.emplace(device);
+                bit_reverse_program_.emplace(device.handle());
                 bit_reverse_program_->create_pipeline(GROUP_SIZE_1D, data_size_, n_mask, n_bits);
-                bit_reverse_memory_.emplace(device, bit_reverse_program_->descriptor_set_layout());
+                bit_reverse_memory_.emplace(device.handle(), bit_reverse_program_->descriptor_set_layout());
                 bit_reverse_groups_ = group_count(data_size_, GROUP_SIZE_1D);
 
                 //
 
-                fft_g_program_.emplace(device);
+                fft_g_program_.emplace(device.handle());
                 fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
                 fft_g_groups_ = group_count(data_size_ / 2, GROUP_SIZE_1D);
 
@@ -269,7 +269,8 @@ public:
                 for (; m_div_2 < n_; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
                         const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
-                        fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), buffer.buffer());
+                        fft_g_memory_.emplace_back(
+                                device.handle(), fft_g_program_->descriptor_set_layout(), buffer.buffer());
                         buffer.set(two_pi_div_m, m_div_2);
                 }
                 ASSERT(!fft_g_memory_.empty());

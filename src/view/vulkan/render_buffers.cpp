@@ -232,8 +232,8 @@ void Impl::create_buffers(
 
         std::vector<VkImageView> attachments;
 
-        render_pass_3d_ = render_pass_color_depth(device, format_, depth_format, sample_count, false);
-        render_pass_3d_clear_ = render_pass_color_depth(device, format_, depth_format, sample_count, true);
+        render_pass_3d_ = render_pass_color_depth(device.handle(), format_, depth_format, sample_count, false);
+        render_pass_3d_clear_ = render_pass_color_depth(device.handle(), format_, depth_format, sample_count, true);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -241,24 +241,24 @@ void Impl::create_buffers(
                 attachments[0] = color_attachments_[i].image_view().handle();
                 attachments[1] = depth_attachments_[i].image_view().handle();
 
-                framebuffers_3d_.push_back(
-                        vulkan::create_framebuffer(device, render_pass_3d_.handle(), width_, height_, attachments));
+                framebuffers_3d_.push_back(vulkan::create_framebuffer(
+                        device.handle(), render_pass_3d_.handle(), width_, height_, attachments));
                 framebuffers_handles_3d_.push_back(framebuffers_3d_.back());
 
                 framebuffers_3d_clear_.push_back(vulkan::create_framebuffer(
-                        device, render_pass_3d_clear_.handle(), width_, height_, attachments));
+                        device.handle(), render_pass_3d_clear_.handle(), width_, height_, attachments));
                 framebuffers_handles_3d_clear_.push_back(framebuffers_3d_clear_.back());
         }
 
-        render_pass_2d_ = render_pass_color(device, format_, sample_count);
+        render_pass_2d_ = render_pass_color(device.handle(), format_, sample_count);
 
         attachments.resize(1);
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 attachments[0] = color_attachments_[i].image_view().handle();
 
-                framebuffers_2d_.push_back(
-                        vulkan::create_framebuffer(device, render_pass_2d_.handle(), width_, height_, attachments));
+                framebuffers_2d_.push_back(vulkan::create_framebuffer(
+                        device.handle(), render_pass_2d_.handle(), width_, height_, attachments));
                 framebuffers_handles_2d_.push_back(framebuffers_2d_.back());
         }
 }

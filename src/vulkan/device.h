@@ -44,12 +44,10 @@ public:
 
         ~Device();
 
-        operator VkDevice() const& noexcept
+        VkDevice handle() const noexcept
         {
                 return device_;
         }
-
-        operator VkDevice() const&& = delete;
 
         VkPhysicalDevice physical_device() const;
 

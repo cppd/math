@@ -153,7 +153,8 @@ void test(const vulkan::Device& device, const vulkan::Queue& compute_queue)
                 return;
         }
 
-        const vulkan::CommandPool command_pool = vulkan::create_command_pool(device, compute_queue.family_index());
+        const vulkan::CommandPool command_pool =
+                vulkan::create_command_pool(device.handle(), compute_queue.family_index());
 
         const RayTracingImage ray_tracing_image(IMAGE_SIZE, IMAGE_SIZE, device, &command_pool, &compute_queue);
 
@@ -174,7 +175,8 @@ void test(const vulkan::Device& device, const vulkan::Queue& compute_queue)
         }
         {
                 const image::Image<2> image = ray_query(
-                        device, command_pool, compute_queue, ray_tracing_image, top_level.handle(), "ray_query");
+                        device.handle(), command_pool, compute_queue, ray_tracing_image, top_level.handle(),
+                        "ray_query");
                 check_ray_query_1(image);
         }
 
@@ -183,7 +185,7 @@ void test(const vulkan::Device& device, const vulkan::Queue& compute_queue)
                 m.matrix[0][3] += 0.1;
         }
 
-        top_level.update_matrices(device, command_pool, compute_queue, matrices);
+        top_level.update_matrices(device.handle(), command_pool, compute_queue, matrices);
 
         {
                 const image::Image<2> image = ray_tracing(
@@ -193,7 +195,8 @@ void test(const vulkan::Device& device, const vulkan::Queue& compute_queue)
         }
         {
                 const image::Image<2> image = ray_query(
-                        device, command_pool, compute_queue, ray_tracing_image, top_level.handle(), "ray_query_update");
+                        device.handle(), command_pool, compute_queue, ray_tracing_image, top_level.handle(),
+                        "ray_query_update");
                 check_ray_query_2(image);
         }
 }

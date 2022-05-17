@@ -182,10 +182,10 @@ public:
                         transfer_queue,
                         vulkan::BufferMemoryType::DEVICE_LOCAL,
                         GROUP_SIZE_2D)),
-                  copy_input_program_(*device),
-                  copy_input_memory_(*device, copy_input_program_.descriptor_set_layout()),
-                  copy_output_program_(*device),
-                  copy_output_memory_(*device, copy_output_program_.descriptor_set_layout())
+                  copy_input_program_(device->handle()),
+                  copy_input_memory_(device->handle(), copy_input_program_.descriptor_set_layout()),
+                  copy_output_program_(device->handle()),
+                  copy_output_memory_(device->handle(), copy_output_program_.descriptor_set_layout())
         {
         }
 };
@@ -225,8 +225,8 @@ class DftVector final : public ComputeVector
 
                 dft_->create_buffers(width, height, device_compute_.compute_queue().family_index());
 
-                command_buffers_ =
-                        vulkan::handle::CommandBuffers(device_compute_.device(), compute_command_pool_.handle(), 2);
+                command_buffers_ = vulkan::handle::CommandBuffers(
+                        device_compute_.device().handle(), compute_command_pool_.handle(), 2);
 
                 for (const int index : {DftType::FORWARD, DftType::INVERSE})
                 {
@@ -275,10 +275,12 @@ class DftVector final : public ComputeVector
 public:
         explicit DftVector(const vulkan::PhysicalDeviceSearchType search_type)
                 : device_compute_(search_type, vulkan::Instance::handle(), vulkan::DeviceFunctionality()),
-                  compute_command_pool_(
-                          create_command_pool(device_compute_.device(), device_compute_.compute_family_index())),
-                  transfer_command_pool_(
-                          create_command_pool(device_compute_.device(), device_compute_.transfer_family_index())),
+                  compute_command_pool_(vulkan::create_command_pool(
+                          device_compute_.device().handle(),
+                          device_compute_.compute_family_index())),
+                  transfer_command_pool_(vulkan::create_command_pool(
+                          device_compute_.device().handle(),
+                          device_compute_.transfer_family_index())),
                   dft_(create_dft(
                           &device_compute_.device(),
                           &compute_command_pool_,

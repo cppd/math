@@ -229,15 +229,15 @@ Impl::Impl(
         const unsigned depth_width = depth_attachments_[0].image().extent().width;
         const unsigned depth_height = depth_attachments_[0].image().extent().height;
 
-        render_pass_ = create_render_pass_depth(device, depth_format);
+        render_pass_ = create_render_pass_depth(device.handle(), depth_format);
 
         std::vector<VkImageView> attachments(1);
         for (const vulkan::DepthImageWithMemory& depth_attachment : depth_attachments_)
         {
                 attachments[0] = depth_attachment.image_view().handle();
 
-                framebuffers_.push_back(
-                        create_framebuffer(device, render_pass_.handle(), depth_width, depth_height, attachments));
+                framebuffers_.push_back(vulkan::create_framebuffer(
+                        device.handle(), render_pass_.handle(), depth_width, depth_height, attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

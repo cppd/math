@@ -109,7 +109,7 @@ class Impl final : public View
         vulkan::handle::CommandBuffers create_commands()
         {
                 vulkan::CommandBufferCreateInfo info;
-                info.device = *device_;
+                info.device = device_->handle();
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -231,11 +231,11 @@ public:
                   device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
-                  semaphore_(*device_),
-                  sampler_(create_sampler(*device_)),
+                  semaphore_(device_->handle()),
+                  sampler_(create_sampler(device_->handle())),
                   program_(device_),
                   buffer_(*device_, std::vector<std::uint32_t>({graphics_queue->family_index()})),
-                  memory_(*device_, program_.descriptor_set_layout(), buffer_.buffer()),
+                  memory_(device_->handle(), program_.descriptor_set_layout(), buffer_.buffer()),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,

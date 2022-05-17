@@ -253,7 +253,7 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return handle::Pipeline(*info.device, create_info);
+        return handle::Pipeline(info.device->handle(), create_info);
 }
 
 handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)

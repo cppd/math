@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
-#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -34,7 +33,7 @@ class RayQueryProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        RayQueryProgram(const vulkan::Device& device, unsigned local_size);
+        RayQueryProgram(VkDevice device, unsigned local_size);
 
         RayQueryProgram(const RayQueryProgram&) = delete;
         RayQueryProgram& operator=(const RayQueryProgram&) = delete;

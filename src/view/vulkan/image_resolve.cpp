@@ -54,7 +54,7 @@ ImageResolve::ImageResolve(
 
         images_.reserve(count);
 
-        command_buffers_ = vulkan::handle::CommandBuffers(device, command_pool.handle(), count);
+        command_buffers_ = vulkan::handle::CommandBuffers(device.handle(), command_pool.handle(), count);
 
         for (unsigned i = 0; i < count; ++i)
         {

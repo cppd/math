@@ -182,7 +182,7 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 }
 
 SharedMemory::SharedMemory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& drawing)

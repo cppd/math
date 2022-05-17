@@ -48,14 +48,14 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowProgram::descriptor_set_layout_m
 ShadowProgram::ShadowProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
+                  vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
-                  *device,
+                  device->handle(),
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(*device_, code.mesh_shadow_vert(), VK_SHADER_STAGE_VERTEX_BIT)
+          vertex_shader_(device_->handle(), code.mesh_shadow_vert(), VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
 

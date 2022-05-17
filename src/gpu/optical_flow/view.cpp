@@ -150,7 +150,7 @@ class Impl final : public View
                 buffer_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = *device_;
+                info.device = device_->handle();
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -239,11 +239,11 @@ public:
                   // compute_queue_(compute_queue),
                   // transfer_command_pool_(transfer_command_pool),
                   // transfer_queue_(transfer_queue),
-                  signal_semaphore_(*device_),
+                  signal_semaphore_(device_->handle()),
                   program_(device_),
-                  buffer_(*device, {graphics_queue->family_index()}),
-                  memory_(*device, program_.descriptor_set_layout(), buffer_.buffer()),
-                  sampler_(create_sampler(*device_)),
+                  buffer_(*device_, {graphics_queue->family_index()}),
+                  memory_(device_->handle(), program_.descriptor_set_layout(), buffer_.buffer()),
+                  sampler_(create_sampler(device_->handle())),
                   compute_(create_compute(device_, compute_command_pool, compute_queue))
         {
         }

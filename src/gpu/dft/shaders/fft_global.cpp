@@ -77,7 +77,7 @@ std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout
 }
 
 FftGlobalMemory::FftGlobalMemory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())

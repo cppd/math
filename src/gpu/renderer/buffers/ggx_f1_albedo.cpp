@@ -114,7 +114,7 @@ GgxF1Albedo::GgxF1Albedo(
                   merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue.family_index()),
                   transfer_command_pool,
                   transfer_queue)),
-          sampler_(create_sampler(device))
+          sampler_(create_sampler(device.handle()))
 {
 }
 

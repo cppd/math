@@ -190,17 +190,21 @@ class Impl final : public Dft
                         const std::unique_ptr<Fft> fft =
                                 create_fft(*device_, {compute_command_pool_->family_index()}, 1, m1_);
                         fft->run_for_data(
-                                false, *d1_fwd_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                                false, *d1_fwd_, device_->handle(), compute_command_pool_->handle(),
+                                compute_queue_->handle());
                         fft->run_for_data(
-                                true, *d1_inv_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                                true, *d1_inv_, device_->handle(), compute_command_pool_->handle(),
+                                compute_queue_->handle());
                 }
                 {
                         const std::unique_ptr<Fft> fft =
                                 create_fft(*device_, {compute_command_pool_->family_index()}, 1, m2_);
                         fft->run_for_data(
-                                false, *d2_fwd_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                                false, *d2_fwd_, device_->handle(), compute_command_pool_->handle(),
+                                compute_queue_->handle());
                         fft->run_for_data(
-                                true, *d2_inv_, *device_, compute_command_pool_->handle(), compute_queue_->handle());
+                                true, *d2_inv_, device_->handle(), compute_command_pool_->handle(),
+                                compute_queue_->handle());
                 }
         }
 
@@ -329,13 +333,13 @@ public:
                   transfer_queue_(transfer_queue),
                   buffer_memory_type_(buffer_memory_type),
                   group_size_(group_size),
-                  mul_program_(*device_),
-                  mul_memory_(*device_, mul_program_.descriptor_set_layout()),
-                  mul_d_program_(*device_),
-                  mul_d_d1_fwd_(*device_, mul_d_program_.descriptor_set_layout()),
-                  mul_d_d1_inv_(*device_, mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_fwd_(*device_, mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_inv_(*device_, mul_d_program_.descriptor_set_layout())
+                  mul_program_(device_->handle()),
+                  mul_memory_(device_->handle(), mul_program_.descriptor_set_layout()),
+                  mul_d_program_(device_->handle()),
+                  mul_d_d1_fwd_(device_->handle(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d1_inv_(device_->handle(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_fwd_(device_->handle(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_inv_(device_->handle(), mul_d_program_.descriptor_set_layout())
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
                 ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());

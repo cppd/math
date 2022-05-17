@@ -167,7 +167,7 @@ class Impl final : public MeshObject
                         load_materials(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
 
                 material_memory_ = create_material_memory(
-                        *device_, texture_sampler_, material_layouts_, mesh, textures_, material_buffers_);
+                        device_->handle(), texture_sampler_, material_layouts_, mesh, textures_, material_buffers_);
         }
 
         void load_mesh_geometry(const model::mesh::Mesh<3>& mesh)
@@ -453,7 +453,7 @@ public:
                   acceleration_structure_family_indices_(graphics_family_indices),
                   mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
-                  mesh_memory_(create_mesh_memory(*device_, mesh_layouts_, mesh_buffer_.buffer())),
+                  mesh_memory_(create_mesh_memory(device_->handle(), mesh_layouts_, mesh_buffer_.buffer())),
                   texture_sampler_(texture_sampler),
                   material_layouts_(std::move(material_layouts))
         {

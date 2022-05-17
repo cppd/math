@@ -80,7 +80,7 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 }
 
 Memory::Memory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
@@ -162,10 +162,11 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 Program::Program(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_(
-                  vulkan::create_descriptor_set_layout(*device, Memory::descriptor_set_layout_bindings())),
-          pipeline_layout_(vulkan::create_pipeline_layout(*device, {Memory::set_number()}, {descriptor_set_layout_})),
-          vertex_shader_(*device_, code_view_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_(*device_, code_view_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+                  vulkan::create_descriptor_set_layout(device_->handle(), Memory::descriptor_set_layout_bindings())),
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device_->handle(), {Memory::set_number()}, {descriptor_set_layout_})),
+          vertex_shader_(device_->handle(), code_view_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_(device_->handle(), code_view_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

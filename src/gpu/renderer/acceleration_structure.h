@@ -47,7 +47,7 @@ public:
                 const std::vector<const MeshObject*>& meshes);
 
         void update_matrices(
-                const vulkan::Device& device,
+                VkDevice device,
                 const vulkan::CommandPool& compute_command_pool,
                 const vulkan::Queue& compute_queue,
                 const std::vector<const MeshObject*>& meshes) const;

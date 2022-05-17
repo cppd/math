@@ -32,11 +32,11 @@ ShadowMapping::ShadowMapping(
         const std::vector<std::uint32_t>& drawing_family_indices)
         : triangles_program_(device, code),
           triangles_shared_memory_(
-                  *device,
+                  device->handle(),
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
-          sampler_(create_mesh_shadow_sampler(*device)),
+          sampler_(create_mesh_shadow_sampler(device->handle())),
           shadow_matrices_buffer_(*device, drawing_family_indices)
 {
         ASSERT(!code.ray_tracing());

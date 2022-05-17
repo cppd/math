@@ -80,7 +80,7 @@ public:
         }
 
         void update_matrices(
-                const Device& device,
+                VkDevice device,
                 const CommandPool& compute_command_pool,
                 const Queue& compute_queue,
                 const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const;

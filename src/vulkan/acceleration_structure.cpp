@@ -54,7 +54,7 @@ void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
 }
 
 VkAccelerationStructureBuildSizesInfoKHR acceleration_structure_build_sizes(
-        const Device& device,
+        const VkDevice device,
         const VkAccelerationStructureGeometryKHR& geometry,
         const VkAccelerationStructureTypeKHR type,
         const std::uint32_t primitive_count,
@@ -82,7 +82,7 @@ VkAccelerationStructureBuildSizesInfoKHR acceleration_structure_build_sizes(
 }
 
 void build_acceleration_structure(
-        const Device& device,
+        const VkDevice device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const BufferWithMemory& scratch_buffer,
@@ -185,7 +185,7 @@ TopLevelAccelerationStructure::TopLevelAccelerationStructure(
 }
 
 void TopLevelAccelerationStructure::update_matrices(
-        const Device& device,
+        const VkDevice device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const
@@ -278,7 +278,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         constexpr bool ALLOW_UPDATE = false;
 
         const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
-                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, geometry_primitive_count,
+                device.handle(), geometry, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, geometry_primitive_count,
                 ALLOW_UPDATE);
 
         BufferWithMemory acceleration_structure_buffer(
@@ -292,7 +292,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
-        handle::AccelerationStructureKHR acceleration_structure(device, create_info);
+        handle::AccelerationStructureKHR acceleration_structure(device.handle(), create_info);
 
         {
                 const BufferWithMemory scratch_buffer(
@@ -301,7 +301,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
                         build_sizes.buildScratchSize);
 
                 build_acceleration_structure(
-                        device, compute_command_pool, compute_queue, scratch_buffer, geometry,
+                        device.handle(), compute_command_pool, compute_queue, scratch_buffer, geometry,
                         VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
                         acceleration_structure, geometry_primitive_count, ALLOW_UPDATE);
         }
@@ -356,7 +356,8 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         constexpr bool ALLOW_UPDATE = true;
 
         const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
-                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, geometry_primitive_count, ALLOW_UPDATE);
+                device.handle(), geometry, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, geometry_primitive_count,
+                ALLOW_UPDATE);
 
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
@@ -369,7 +370,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 
-        handle::AccelerationStructureKHR acceleration_structure(device, create_info);
+        handle::AccelerationStructureKHR acceleration_structure(device.handle(), create_info);
 
         {
                 const BufferWithMemory scratch_buffer_build(
@@ -378,7 +379,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
                         std::max<std::size_t>(MIN_BUFFER_SIZE, build_sizes.buildScratchSize));
 
                 build_acceleration_structure(
-                        device, compute_command_pool, compute_queue, scratch_buffer_build, geometry,
+                        device.handle(), compute_command_pool, compute_queue, scratch_buffer_build, geometry,
                         VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
                         acceleration_structure, geometry_primitive_count, ALLOW_UPDATE);
         }

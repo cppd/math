@@ -49,17 +49,17 @@ std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_m
 PointsProgram::PointsProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
+                  vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
-                  *device,
+                  device->handle(),
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
                   push_constant_ranges())),
-          vertex_shader_0d_(*device_, code.mesh_points_0d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          vertex_shader_1d_(*device_, code.mesh_points_1d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_(*device_, code.mesh_points_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          vertex_shader_0d_(device_->handle(), code.mesh_points_0d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          vertex_shader_1d_(device_->handle(), code.mesh_points_1d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_(device_->handle(), code.mesh_points_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

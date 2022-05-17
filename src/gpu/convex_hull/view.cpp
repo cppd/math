@@ -118,7 +118,7 @@ class Impl final : public View
                         objects, rectangle, points_->buffer(), indirect_buffer_.buffer(), family_index_);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = *device_;
+                info.device = device_->handle();
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -191,10 +191,10 @@ public:
                   family_index_(graphics_command_pool->family_index()),
                   device_(device),
                   graphics_command_pool_(graphics_command_pool->handle()),
-                  semaphore_(*device_),
+                  semaphore_(device_->handle()),
                   data_buffer_(*device_, {family_index_}),
                   program_(device_),
-                  memory_(*device_, program_.descriptor_set_layout(), data_buffer_.buffer()),
+                  memory_(device_->handle(), program_.descriptor_set_layout(), data_buffer_.buffer()),
                   indirect_buffer_(
                           vulkan::BufferMemoryType::DEVICE_LOCAL,
                           *device_,

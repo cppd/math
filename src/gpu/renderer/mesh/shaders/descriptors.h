@@ -70,7 +70,7 @@ public:
         static unsigned set_number();
 
         SharedMemory(
-                const vulkan::Device& device,
+                VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& drawing);

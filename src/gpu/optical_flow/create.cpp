@@ -137,7 +137,7 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
 }
 
 std::vector<DownsampleMemory> create_downsample_memory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
 {
@@ -156,7 +156,7 @@ std::vector<DownsampleMemory> create_downsample_memory(
 }
 
 std::vector<SobelMemory> create_sobel_memory(
-        const vulkan::Device& device,
+        const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
         const std::vector<vulkan::ImageWithMemory>& dx,
@@ -219,7 +219,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
                         flow_info(i, top_points, top_flow, flow_buffers, sizes, top_point_count_x, top_point_count_y);
 
                 flow_buffer.emplace_back(device, family_indices);
-                flow_memory.emplace_back(device, descriptor_set_layout, flow_buffer[i].buffer());
+                flow_memory.emplace_back(device.handle(), descriptor_set_layout, flow_buffer[i].buffer());
 
                 flow_buffer[i].set(info.data);
 

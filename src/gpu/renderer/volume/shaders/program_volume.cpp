@@ -46,31 +46,37 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
         : device_(device),
           ray_tracing_(code.ray_tracing()),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(device_->handle(), descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_image_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_image_bindings())),
+                  vulkan::create_descriptor_set_layout(device_->handle(), descriptor_set_layout_image_bindings())),
           pipeline_layout_shared_image_(vulkan::create_pipeline_layout(
-                  *device,
+                  device_->handle(),
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
           pipeline_layout_shared_(vulkan::create_pipeline_layout(
-                  *device,
+                  device_->handle(),
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
-          vertex_shader_(*device_, code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_fragments_(*device_, code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          vertex_shader_(device_->handle(), code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_fragments_(device_->handle(), code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_fragments_opacity_(
-                  *device_,
+                  device_->handle(),
                   code.volume_fragments_opacity_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_(*device_, code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_fragments_(*device_, code.volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_(device_->handle(), code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_fragments_(
+                  device_->handle(),
+                  code.volume_image_fragments_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_fragments_opacity_(
-                  *device_,
+                  device_->handle(),
                   code.volume_image_fragments_opacity_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_opacity_(*device_, code.volume_image_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_opacity_(*device_, code.volume_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_image_opacity_(
+                  device_->handle(),
+                  code.volume_image_opacity_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_opacity_(device_->handle(), code.volume_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

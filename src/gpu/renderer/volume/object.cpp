@@ -365,7 +365,7 @@ public:
                           *transfer_queue_)),
                   image_layouts_(std::move(image_layouts)),
                   image_memory_(create_image_memory(
-                          *device_,
+                          device_->handle(),
                           image_layouts_,
                           buffer_.buffer_coordinates(),
                           buffer_.buffer_volume())),

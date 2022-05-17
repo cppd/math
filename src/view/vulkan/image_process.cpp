@@ -58,8 +58,8 @@ ImageProcess::ImageProcess(
         resolve_semaphores_.resize(image_count);
         for (std::array<vulkan::handle::Semaphore, 2>& semaphores : resolve_semaphores_)
         {
-                semaphores[0] = vulkan::handle::Semaphore(*device);
-                semaphores[1] = vulkan::handle::Semaphore(*device);
+                semaphores[0] = vulkan::handle::Semaphore(device->handle());
+                semaphores[1] = vulkan::handle::Semaphore(device->handle());
         }
 }
 

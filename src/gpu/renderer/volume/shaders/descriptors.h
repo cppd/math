@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/vulkan/descriptor.h>
-#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vector>
@@ -60,7 +59,7 @@ public:
         static unsigned set_number();
 
         VolumeSharedMemory(
-                const vulkan::Device& device,
+                VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings);
 

@@ -378,7 +378,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         return;
                 }
                 acceleration_structure_->update_matrices(
-                        *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
+                        device_->handle(), *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
         }
 
         // StorageMeshEvents
@@ -525,7 +525,11 @@ public:
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
                   renderer_view_(!ray_tracing_, &drawing_buffer_, this),
-                  renderer_draw_(*device_, transparency_buffers_.buffer_size(), &mesh_renderer_, &volume_renderer_)
+                  renderer_draw_(
+                          device_->handle(),
+                          transparency_buffers_.buffer_size(),
+                          &mesh_renderer_,
+                          &volume_renderer_)
         {
                 if (ray_tracing_)
                 {

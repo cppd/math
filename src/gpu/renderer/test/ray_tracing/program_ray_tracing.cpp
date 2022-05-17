@@ -35,9 +35,12 @@ std::vector<VkDescriptorSetLayoutBinding> RayTracingProgram::descriptor_set_layo
 }
 
 RayTracingProgram::RayTracingProgram(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
-        : descriptor_set_layout_(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          pipeline_layout_(
-                  vulkan::create_pipeline_layout(device, {RayTracingMemory::set_number()}, {descriptor_set_layout_}))
+        : descriptor_set_layout_(
+                vulkan::create_descriptor_set_layout(device.handle(), descriptor_set_layout_bindings())),
+          pipeline_layout_(vulkan::create_pipeline_layout(
+                  device.handle(),
+                  {RayTracingMemory::set_number()},
+                  {descriptor_set_layout_}))
 {
         create(device, family_indices);
 }
@@ -60,11 +63,12 @@ VkPipeline RayTracingProgram::pipeline() const
 void RayTracingProgram::create(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
 {
         const vulkan::Shader ray_closest_hit_shader(
-                device, code_ray_closest_hit_rchit(), VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR);
+                device.handle(), code_ray_closest_hit_rchit(), VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR);
 
-        const vulkan::Shader ray_generation_shader(device, code_ray_generation_rgen(), VK_SHADER_STAGE_RAYGEN_BIT_KHR);
+        const vulkan::Shader ray_generation_shader(
+                device.handle(), code_ray_generation_rgen(), VK_SHADER_STAGE_RAYGEN_BIT_KHR);
 
-        const vulkan::Shader ray_miss_shader(device, code_ray_miss_rmiss(), VK_SHADER_STAGE_MISS_BIT_KHR);
+        const vulkan::Shader ray_miss_shader(device.handle(), code_ray_miss_rmiss(), VK_SHADER_STAGE_MISS_BIT_KHR);
 
         std::vector<const vulkan::Shader*> shaders(3);
 
@@ -96,7 +100,7 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
         shader_groups[2].intersectionShader = VK_SHADER_UNUSED_KHR;
 
         vulkan::RayTracingPipelineCreateInfo info;
-        info.device = device;
+        info.device = device.handle();
         info.pipeline_layout = pipeline_layout_;
         info.shaders = &shaders;
         info.shader_groups = &shader_groups;
@@ -111,7 +115,7 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
         std::vector<std::uint8_t> shader_group_handles(handle_size * GROUP_COUNT);
 
         VULKAN_CHECK(vkGetRayTracingShaderGroupHandlesKHR(
-                device, pipeline_, 0, GROUP_COUNT, shader_group_handles.size(), shader_group_handles.data()));
+                device.handle(), pipeline_, 0, GROUP_COUNT, shader_group_handles.size(), shader_group_handles.data()));
 
         constexpr VkBufferUsageFlags USAGE_FLAGS =
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR;

@@ -223,7 +223,7 @@ class Impl final : public Compute
         void create_command_buffer_first_pyramid()
         {
                 command_buffer_first_pyramid_ =
-                        vulkan::handle::CommandBuffer(*device_, compute_command_pool_->handle());
+                        vulkan::handle::CommandBuffer(device_->handle(), compute_command_pool_->handle());
 
                 const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
@@ -236,7 +236,8 @@ class Impl final : public Compute
 
         void create_command_buffers(const VkBuffer top_flow)
         {
-                command_buffers_ = vulkan::handle::CommandBuffers(*device_, compute_command_pool_->handle(), 2);
+                command_buffers_ =
+                        vulkan::handle::CommandBuffers(device_->handle(), compute_command_pool_->handle(), 2);
 
                 for (int index = 0; index < 2; ++index)
                 {
@@ -343,13 +344,13 @@ class Impl final : public Compute
 
                 downsample_groups_ = downsample_groups(GROUPS, sizes);
                 downsample_program_.create_pipeline(GROUPS_X, GROUPS_Y);
-                downsample_memory_ =
-                        create_downsample_memory(*device_, downsample_program_.descriptor_set_layout(), images_);
+                downsample_memory_ = create_downsample_memory(
+                        device_->handle(), downsample_program_.descriptor_set_layout(), images_);
 
                 sobel_groups_ = sobel_groups(GROUPS, sizes);
                 sobel_program_.create_pipeline(GROUPS_X, GROUPS_Y);
-                sobel_memory_ =
-                        create_sobel_memory(*device_, sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
+                sobel_memory_ = create_sobel_memory(
+                        device_->handle(), sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
 
                 flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 flow_program_.create_pipeline(
@@ -401,13 +402,13 @@ public:
                 : device_(device),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
-                  semaphore_first_pyramid_(*device_),
-                  semaphore_(*device_),
-                  grayscale_program_(*device_),
-                  grayscale_memory_(*device_, grayscale_program_.descriptor_set_layout()),
-                  downsample_program_(*device_),
-                  sobel_program_(*device_),
-                  flow_program_(*device_)
+                  semaphore_first_pyramid_(device_->handle()),
+                  semaphore_(device_->handle()),
+                  grayscale_program_(device_->handle()),
+                  grayscale_memory_(device_->handle(), grayscale_program_.descriptor_set_layout()),
+                  downsample_program_(device_->handle()),
+                  sobel_program_(device_->handle()),
+                  flow_program_(device_->handle())
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
         }

@@ -59,7 +59,7 @@ public:
         static unsigned set_number();
 
         FftGlobalMemory(
-                const vulkan::Device& device,
+                VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& data_buffer);
 
