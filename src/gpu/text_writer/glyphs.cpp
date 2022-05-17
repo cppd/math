@@ -59,13 +59,13 @@ Glyphs::Glyphs(
         ASSERT(std::find(family_indices.cbegin(), family_indices.cend(), graphics_queue.family_index())
                != family_indices.cend());
 
-        text::Font font(size_, font_data());
+        std::unique_ptr<text::Font> font = text::create_font(size_, font_data());
 
         image::Image<2> image;
 
         const auto max_image_dimension = device.properties().properties_10.limits.maxImageDimension2D;
 
-        create_font_glyphs(font, max_image_dimension, max_image_dimension, &glyphs_, &image);
+        create_font_glyphs(*font, max_image_dimension, max_image_dimension, &glyphs_, &image);
 
         image_.emplace(
                 device, family_indices,

@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ft2build.h>
 #include <sstream>
 #include <thread>
-#include <type_traits>
 
 #include FT_FREETYPE_H
 
@@ -114,17 +113,18 @@ public:
         Face& operator=(Face&&) = delete;
 };
 
-void save_to_file(const char32_t code_point, const std::optional<Font::Char>& data)
+void save_to_file(const char32_t code_point, const std::optional<Char>& data)
 {
         if (!data)
         {
                 std::ostringstream oss;
                 oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
+                const std::filesystem::path path = std::filesystem::temp_directory_path() / path_from_utf8(oss.str());
                 // create empty file
-                std::ofstream f(oss.str());
+                std::ofstream f(path);
                 if (!f)
                 {
-                        error("Error creating the file " + oss.str());
+                        error("Error creating the file " + generic_utf8_filename(path));
                 }
                 return;
         }
@@ -155,14 +155,13 @@ void save_to_file(const char32_t code_point, const std::optional<Font::Char>& da
         oss << ".png";
 
         image::save(
-                path_from_utf8(oss.str()),
+                std::filesystem::temp_directory_path() / path_from_utf8(oss.str()),
                 image::ImageView<2>(
                         {data->width, data->height}, image::ColorFormat::R8_SRGB,
                         std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));
 }
-}
 
-class Font::Impl final
+class Impl final : public Font
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -171,26 +170,7 @@ class Font::Impl final
 
         int size_;
 
-public:
-        template <typename T>
-        Impl(const int size_in_pixels, T&& font_data)
-                : library_(),
-                  face_(library_.get(), std::forward<T>(font_data))
-        {
-                set_size(size_in_pixels);
-        }
-
-        ~Impl()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-        }
-
-        Impl(const Impl&) = delete;
-        Impl& operator=(const Impl&) = delete;
-        Impl(Impl&&) = delete;
-        Impl& operator=(Impl&&) = delete;
-
-        void set_size(const int size_in_pixels)
+        void set_size(const int size_in_pixels) override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -198,7 +178,7 @@ public:
                 FT_Set_Pixel_Sizes(face_.get(), 0, size_in_pixels);
         }
 
-        std::optional<Char> render(const char32_t code_point) const
+        std::optional<Char> render_impl(const char32_t code_point) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -221,34 +201,30 @@ public:
                 return res;
         }
 
-        void render_ascii_printable_characters_to_files() const
+        void render_ascii_printable_characters_to_files() const override
         {
                 for (char32_t code_point = 32; code_point <= 126; ++code_point)
                 {
                         save_to_file(code_point, render(code_point));
                 }
         }
+
+public:
+        Impl(const int size_in_pixels, std::vector<unsigned char>&& font_data)
+                : face_(library_.get(), std::move(font_data))
+        {
+                set_size(size_in_pixels);
+        }
+
+        ~Impl() override
+        {
+                ASSERT(std::this_thread::get_id() == thread_id_);
+        }
 };
-
-Font::Font(const int size_in_pixels, std::vector<unsigned char>&& font_data)
-        : impl_(std::make_unique<Impl>(size_in_pixels, std::move(font_data)))
-{
 }
 
-Font::~Font() = default;
-
-void Font::set_size(const int size_in_pixels)
+std::unique_ptr<Font> create_font(const int size_in_pixels, std::vector<unsigned char>&& font_data)
 {
-        impl_->set_size(size_in_pixels);
+        return std::make_unique<Impl>(size_in_pixels, std::move(font_data));
 }
-
-template <typename T>
-std::optional<Font::Char> Font::render(const T code_point) const
-{
-        static_assert(std::is_same_v<T, char32_t>);
-
-        return impl_->render(code_point);
-}
-
-template std::optional<Font::Char> Font::render(char32_t) const;
 }

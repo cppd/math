@@ -110,7 +110,7 @@ void render_glyphs(
 
         for (char32_t code_point : code_points)
         {
-                std::optional<Font::Char> rc = font.render(code_point);
+                std::optional<Char> rc = font.render(code_point);
 
                 if (!rc)
                 {

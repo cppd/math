@@ -23,30 +23,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::text
 {
-class Font final
+struct Char final
 {
-        class Impl;
-        std::unique_ptr<Impl> impl_;
+        const unsigned char* image;
+        int size;
+        int width;
+        int height;
+        int left;
+        int top;
+        int advance_x;
+        char32_t code_point;
+};
+
+class Font
+{
+        virtual std::optional<Char> render_impl(char32_t code_point) const = 0;
 
 public:
-        Font(int size_in_pixels, std::vector<unsigned char>&& font_data);
-        ~Font();
+        virtual ~Font() = default;
 
-        void set_size(int size_in_pixels);
-
-        struct Char final
-        {
-                const unsigned char* image;
-                int size;
-                int width;
-                int height;
-                int left;
-                int top;
-                int advance_x;
-                char32_t code_point;
-        };
+        virtual void set_size(int size_in_pixels) = 0;
 
         template <typename T>
-        std::optional<Char> render(T code_point) const;
+        std::optional<Char> render(const T code_point) const
+        {
+                static_assert(std::is_same_v<T, char32_t>);
+                return render_impl(code_point);
+        }
+
+        virtual void render_ascii_printable_characters_to_files() const = 0;
 };
+
+std::unique_ptr<Font> create_font(int size_in_pixels, std::vector<unsigned char>&& font_data);
 }
