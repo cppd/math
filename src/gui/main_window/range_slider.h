@@ -41,8 +41,8 @@ private:
         void on_min_value_changed();
         void on_max_value_changed();
 
-        int min_value() const;
-        int max_value() const;
+        [[nodiscard]] int min_value() const;
+        [[nodiscard]] int max_value() const;
         void set_min_value(int);
         void set_max_value(int);
 

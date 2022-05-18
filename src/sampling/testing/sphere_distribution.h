@@ -47,7 +47,7 @@ class SphereDistribution final
 
         SphereMesh<N, T> sphere_mesh_;
 
-        double sphere_facet_area(
+        [[nodiscard]] double sphere_facet_area(
                 const unsigned facet_index,
                 const long long uniform_count,
                 const long long all_uniform_count) const
@@ -85,7 +85,8 @@ class SphereDistribution final
         }
 
         template <typename F>
-        std::vector<SphereBucket<N, T>> compute_buckets_threads(const unsigned thread_count, const F& f) const
+        [[nodiscard]] std::vector<SphereBucket<N, T>> compute_buckets_threads(const unsigned thread_count, const F& f)
+                const
         {
                 std::vector<std::vector<SphereBucket<N, T>>> thread_buckets(thread_count);
                 for (std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
@@ -133,7 +134,7 @@ class SphereDistribution final
         }
 
         template <typename RandomVector, typename PDF>
-        std::vector<SphereBucket<N, T>> compute_buckets(
+        [[nodiscard]] std::vector<SphereBucket<N, T>> compute_buckets(
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
@@ -218,12 +219,12 @@ public:
         {
         }
 
-        unsigned bucket_count() const
+        [[nodiscard]] unsigned bucket_count() const
         {
                 return sphere_mesh_.facet_count();
         }
 
-        long long distribution_count(const long long uniform_min_count_per_bucket) const
+        [[nodiscard]] long long distribution_count(const long long uniform_min_count_per_bucket) const
         {
                 const double count = uniform_min_count_per_bucket * bucket_count();
                 const double round_to = std::pow(10, std::round(std::log10(count)) - 2);

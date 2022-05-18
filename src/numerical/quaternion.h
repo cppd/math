@@ -45,41 +45,41 @@ public:
         {
         }
 
-        T operator[](const unsigned i) const
+        [[nodiscard]] T operator[](const unsigned i) const
         {
                 return data_[i];
         }
 
-        T& operator[](const unsigned i)
+        [[nodiscard]] T& operator[](const unsigned i)
         {
                 return data_[i];
         }
 
-        const Vector<4, T>& data() const
+        [[nodiscard]] const Vector<4, T>& data() const
         {
                 return data_;
         }
 
-        Vector<3, T> imag() const
+        [[nodiscard]] Vector<3, T> imag() const
         {
                 return Vector<3, T>(data_[1], data_[2], data_[3]);
         }
 };
 
 template <typename T>
-Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         return a.data() + b.data();
 }
 
 template <typename T>
-Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         return a.data() - b.data();
 }
 
 template <typename T>
-Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         const Vector<3, T> a_v = a.imag();
         const Vector<3, T> b_v = b.imag();
@@ -88,13 +88,13 @@ Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 }
 
 template <typename T>
-Quaternion<T> operator*(const Quaternion<T>& a, const T b)
+[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const T b)
 {
         return a.data() * b;
 }
 
 template <typename T>
-Quaternion<T> operator/(const Quaternion<T>& a, const T b)
+[[nodiscard]] Quaternion<T> operator/(const Quaternion<T>& a, const T b)
 {
         return a.data() / b;
 }

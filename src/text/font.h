@@ -37,7 +37,7 @@ struct Char final
 
 class Font
 {
-        virtual std::optional<Char> render_impl(char32_t code_point) const = 0;
+        [[nodiscard]] virtual std::optional<Char> render_impl(char32_t code_point) const = 0;
 
 public:
         virtual ~Font() = default;
@@ -45,7 +45,7 @@ public:
         virtual void set_size(int size_in_pixels) = 0;
 
         template <typename T>
-        std::optional<Char> render(const T code_point) const
+        [[nodiscard]] std::optional<Char> render(const T code_point) const
         {
                 static_assert(std::is_same_v<T, char32_t>);
                 return render_impl(code_point);
@@ -54,5 +54,5 @@ public:
         virtual void render_ascii_printable_characters_to_files() const = 0;
 };
 
-std::unique_ptr<Font> create_font(int size_in_pixels, std::vector<unsigned char>&& font_data);
+[[nodiscard]] std::unique_ptr<Font> create_font(int size_in_pixels, std::vector<unsigned char>&& font_data);
 }

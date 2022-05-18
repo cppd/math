@@ -49,12 +49,12 @@ class ThreadPool final
                         error_message_.clear();
                 }
 
-                bool has_error() const
+                [[nodiscard]] bool has_error() const
                 {
                         return has_error_;
                 }
 
-                const std::string& error_message() const
+                [[nodiscard]] const std::string& error_message() const
                 {
                         return error_message_;
                 }
@@ -196,7 +196,7 @@ public:
                 }
         }
 
-        unsigned thread_count() const
+        [[nodiscard]] unsigned thread_count() const
         {
                 return thread_count_;
         }

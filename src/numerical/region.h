@@ -45,68 +45,68 @@ public:
         {
         }
 
-        const Vector<N, T>& from() const
+        [[nodiscard]] const Vector<N, T>& from() const
         {
                 return offset0_;
         }
 
-        const Vector<N, T>& to() const
+        [[nodiscard]] const Vector<N, T>& to() const
         {
                 return offset1_;
         }
 
-        const Vector<N, T>& extent() const
+        [[nodiscard]] const Vector<N, T>& extent() const
         {
                 return extent_;
         }
 
-        T x0() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T x0() const requires(N == 1 || N == 2 || N == 3)
         {
                 return offset0_[0];
         }
 
-        T y0() const requires(N == 2 || N == 3)
+        [[nodiscard]] T y0() const requires(N == 2 || N == 3)
         {
                 return offset0_[1];
         }
 
-        T z0() const requires(N == 3)
+        [[nodiscard]] T z0() const requires(N == 3)
         {
                 return offset0_[2];
         }
 
-        T x1() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T x1() const requires(N == 1 || N == 2 || N == 3)
         {
                 return offset1_[0];
         }
 
-        T y1() const requires(N == 2 || N == 3)
+        [[nodiscard]] T y1() const requires(N == 2 || N == 3)
         {
                 return offset1_[1];
         }
 
-        T z1() const requires(N == 3)
+        [[nodiscard]] T z1() const requires(N == 3)
         {
                 return offset1_[2];
         }
 
-        T width() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T width() const requires(N == 1 || N == 2 || N == 3)
         {
                 return extent_[0];
         }
 
-        T height() const requires(N == 2 || N == 3)
+        [[nodiscard]] T height() const requires(N == 2 || N == 3)
         {
                 return extent_[1];
         }
 
-        T depth() const requires(N == 3)
+        [[nodiscard]] T depth() const requires(N == 3)
         {
                 return extent_[2];
         }
 
         template <typename Type>
-        bool is_inside(const Vector<N, Type>& p) const
+        [[nodiscard]] bool is_inside(const Vector<N, Type>& p) const
         {
                 static_assert(std::is_integral_v<Type>);
 
@@ -121,7 +121,7 @@ public:
         }
 
         template <typename... Types>
-        bool is_inside(const Types&... p) const
+        [[nodiscard]] bool is_inside(const Types&... p) const
         {
                 static_assert(sizeof...(Types) == N);
                 static_assert((std::is_integral_v<Types> && ...));
@@ -130,7 +130,7 @@ public:
                 return (((++i, p >= offset0_[i] && p < offset1_[i])) && ...);
         }
 
-        bool is_positive() const
+        [[nodiscard]] bool is_positive() const
         {
                 for (unsigned i = 0; i < N; ++i)
                 {

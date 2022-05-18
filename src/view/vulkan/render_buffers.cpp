@@ -36,17 +36,17 @@ constexpr VkImageLayout DEPTH_ATTACHMENT_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_ST
 
 class Impl3D : public gpu::RenderBuffers3D
 {
-        virtual const vulkan::RenderPass& render_pass_3d() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
+        [[nodiscard]] virtual const vulkan::RenderPass& render_pass_3d() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
 
         //
 
-        const vulkan::RenderPass& render_pass() const final
+        [[nodiscard]] const vulkan::RenderPass& render_pass() const final
         {
                 return render_pass_3d();
         }
 
-        const std::vector<VkFramebuffer>& framebuffers() const final
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_3d();
         }
@@ -59,17 +59,17 @@ protected:
 
 class Impl2D : public gpu::RenderBuffers2D
 {
-        virtual const vulkan::RenderPass& render_pass_2d() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers_2d() const = 0;
+        [[nodiscard]] virtual const vulkan::RenderPass& render_pass_2d() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers_2d() const = 0;
 
         //
 
-        const vulkan::RenderPass& render_pass() const final
+        [[nodiscard]] const vulkan::RenderPass& render_pass() const final
         {
                 return render_pass_2d();
         }
 
-        const std::vector<VkFramebuffer>& framebuffers() const final
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_2d();
         }
@@ -110,20 +110,20 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 VkSampleCountFlagBits sample_count,
                 const std::vector<std::uint32_t>& attachment_family_indices);
 
-        RenderBuffers3D& buffers_3d() override;
-        RenderBuffers2D& buffers_2d() override;
+        [[nodiscard]] RenderBuffers3D& buffers_3d() override;
+        [[nodiscard]] RenderBuffers2D& buffers_2d() override;
 
-        unsigned width() const override;
-        unsigned height() const override;
-        VkFormat color_format() const override;
-        VkFormat depth_format() const override;
-        VkImageView depth_image_view(unsigned index) const override;
-        VkSampleCountFlagBits sample_count() const override;
-        const std::vector<VkImageView>& image_views() const override;
+        [[nodiscard]] unsigned width() const override;
+        [[nodiscard]] unsigned height() const override;
+        [[nodiscard]] VkFormat color_format() const override;
+        [[nodiscard]] VkFormat depth_format() const override;
+        [[nodiscard]] VkImageView depth_image_view(unsigned index) const override;
+        [[nodiscard]] VkSampleCountFlagBits sample_count() const override;
+        [[nodiscard]] const std::vector<VkImageView>& image_views() const override;
 
-        VkRenderPass render_pass_clear() const override;
-        const std::vector<VkFramebuffer>& framebuffers_clear() const override;
-        std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const override;
+        [[nodiscard]] VkRenderPass render_pass_clear() const override;
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers_clear() const override;
+        [[nodiscard]] std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const override;
 
         void commands_color_resolve(
                 VkCommandBuffer command_buffer,
@@ -141,11 +141,11 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         //
 
-        const vulkan::RenderPass& render_pass_3d() const override;
-        const std::vector<VkFramebuffer>& framebuffers_3d() const override;
+        [[nodiscard]] const vulkan::RenderPass& render_pass_3d() const override;
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers_3d() const override;
 
-        const vulkan::RenderPass& render_pass_2d() const override;
-        const std::vector<VkFramebuffer>& framebuffers_2d() const override;
+        [[nodiscard]] const vulkan::RenderPass& render_pass_2d() const override;
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
         Impl(unsigned buffer_count,

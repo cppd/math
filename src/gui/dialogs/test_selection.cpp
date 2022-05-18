@@ -152,7 +152,7 @@ public:
                 }
         }
 
-        std::vector<std::string> selected() const
+        [[nodiscard]] std::vector<std::string> selected() const
         {
                 std::vector<std::string> names;
                 for (const Item& item : items_)

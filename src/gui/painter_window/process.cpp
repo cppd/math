@@ -54,7 +54,7 @@ struct Parameters final
         bool background;
         bool to_8_bit;
 
-        std::string to_string() const
+        [[nodiscard]] std::string to_string() const
         {
                 std::string s;
                 s += background ? "with_background" : "transparent";

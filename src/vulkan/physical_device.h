@@ -37,21 +37,21 @@ class PhysicalDevice final
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
-        VkPhysicalDevice device() const;
+        [[nodiscard]] VkPhysicalDevice device() const;
 
-        const PhysicalDeviceInfo& info() const;
-        const std::unordered_set<std::string>& extensions() const;
-        const PhysicalDeviceProperties& properties() const;
-        const PhysicalDeviceFeatures& features() const;
-        const std::vector<VkQueueFamilyProperties>& queue_families() const;
+        [[nodiscard]] const PhysicalDeviceInfo& info() const;
+        [[nodiscard]] const std::unordered_set<std::string>& extensions() const;
+        [[nodiscard]] const PhysicalDeviceProperties& properties() const;
+        [[nodiscard]] const PhysicalDeviceFeatures& features() const;
+        [[nodiscard]] const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
         [[nodiscard]] std::optional<std::uint32_t> find_family_index(
                 VkQueueFlags present_flags,
                 VkQueueFlags absent_flags = 0) const;
 
-        std::uint32_t presentation_family_index() const;
+        [[nodiscard]] std::uint32_t presentation_family_index() const;
 
-        bool queue_family_supports_presentation(std::uint32_t index) const;
+        [[nodiscard]] bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 
 std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);

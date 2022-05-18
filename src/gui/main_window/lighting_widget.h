@@ -59,8 +59,8 @@ public:
 
         void set_view(view::View* view);
 
-        std::tuple<color::Spectrum, color::Color> color() const;
-        color::Spectrum spectrum() const;
-        color::Color rgb() const;
+        [[nodiscard]] std::tuple<color::Spectrum, color::Color> color() const;
+        [[nodiscard]] color::Spectrum spectrum() const;
+        [[nodiscard]] color::Color rgb() const;
 };
 }

@@ -35,8 +35,8 @@ public:
 
         virtual void terminate_quietly() = 0;
         virtual void terminate_with_message() = 0;
-        virtual Info info() const = 0;
-        virtual std::string text() const = 0;
+        [[nodiscard]] virtual Info info() const = 0;
+        [[nodiscard]] virtual std::string text() const = 0;
 };
 
 class ProgressRatios

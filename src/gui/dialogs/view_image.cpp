@@ -37,7 +37,7 @@ class DialogParameters final
         ViewImageParameters parameters_{.path_string = {}, .normalize = false, .convert_to_8_bit = false};
 
 public:
-        ViewImageParameters read() const
+        [[nodiscard]] ViewImageParameters read() const
         {
                 return parameters_;
         }

@@ -42,7 +42,7 @@ class UnionFind
         std::vector<T> component_size_;
         T component_count_;
 
-        T find_root(T p) const
+        [[nodiscard]] T find_root(T p) const
         {
                 while (p != parent_[p])
                 {
@@ -61,7 +61,7 @@ class UnionFind
                 }
         }
 
-        T find_and_compress(const T p)
+        [[nodiscard]] T find_and_compress(const T p)
         {
                 const T root = find_root(p);
                 compress_path(p, root);

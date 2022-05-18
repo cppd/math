@@ -194,17 +194,17 @@ public:
                 std::visit(visitor, view_command);
         }
 
-        bool vertical_sync() const
+        [[nodiscard]] bool vertical_sync() const
         {
                 return vertical_sync_;
         }
 
-        bool text_active() const
+        [[nodiscard]] bool text_active() const
         {
                 return text_active_;
         }
 
-        Vector3f clear_color_rgb32() const
+        [[nodiscard]] Vector3f clear_color_rgb32() const
         {
                 return clear_color_rgb32_;
         }

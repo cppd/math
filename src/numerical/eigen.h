@@ -126,7 +126,7 @@ class EigenException final : public std::exception
         static constexpr const char* MSG = "Jacobi method did not converge";
 
 public:
-        const char* what() const noexcept override
+        [[nodiscard]] const char* what() const noexcept override
         {
                 return MSG;
         }

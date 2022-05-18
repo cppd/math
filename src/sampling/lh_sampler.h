@@ -104,17 +104,17 @@ public:
         {
         }
 
-        bool shuffled() const
+        [[nodiscard]] bool shuffled() const
         {
                 return shuffle_;
         }
 
-        T min() const
+        [[nodiscard]] T min() const
         {
                 return min_;
         }
 
-        T max() const
+        [[nodiscard]] T max() const
         {
                 return max_;
         }

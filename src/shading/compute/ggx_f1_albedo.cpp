@@ -61,17 +61,18 @@ class ComputeBRDF final : public BRDF<N, T, Color>
         T roughness_ = 1;
 
 public:
-        Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 return ggx_diffuse::f<GGX_ONLY>(roughness_, COLORS, n, v, l);
         }
 
-        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 return ggx_diffuse::pdf<GGX_ONLY>(roughness_, n, v, l);
         }
 
-        Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
+        [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
+                const override
         {
                 return ggx_diffuse::sample_f<GGX_ONLY>(engine, roughness_, COLORS, n, v);
         }

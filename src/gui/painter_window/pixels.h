@@ -60,19 +60,19 @@ struct Pixels
 
         virtual ~Pixels() = default;
 
-        virtual const char* floating_point_name() const = 0;
-        virtual const char* color_name() const = 0;
-        virtual std::optional<float> pixel_max() const = 0;
+        [[nodiscard]] virtual const char* floating_point_name() const = 0;
+        [[nodiscard]] virtual const char* color_name() const = 0;
+        [[nodiscard]] virtual std::optional<float> pixel_max() const = 0;
 
-        virtual const std::vector<int>& screen_size() const = 0;
+        [[nodiscard]] virtual const std::vector<int>& screen_size() const = 0;
 
         virtual void set_brightness_parameter(float brightness_parameter) = 0;
-        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) = 0;
-        virtual const std::vector<long long>& busy_indices_2d() const = 0;
-        virtual painter::Statistics statistics() const = 0;
+        [[nodiscard]] virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) const = 0;
+        [[nodiscard]] virtual const std::vector<long long>& busy_indices_2d() const = 0;
+        [[nodiscard]] virtual painter::Statistics statistics() const = 0;
 
-        virtual std::optional<Images> slice(long long slice_number) const = 0;
-        virtual std::optional<Images> pixels() const = 0;
+        [[nodiscard]] virtual std::optional<Images> slice(long long slice_number) const = 0;
+        [[nodiscard]] virtual std::optional<Images> pixels() const = 0;
 };
 
 template <std::size_t N>
@@ -131,7 +131,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(ptr, rgba8.data(), PIXEL_SIZE);
         }
 
-        std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
+        [[nodiscard]] std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
         {
                 pixel[1] = screen_size_[1] - 1 - pixel[1];
                 return pixel;
@@ -242,17 +242,17 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         // Pixels
 
-        const char* floating_point_name() const override
+        [[nodiscard]] const char* floating_point_name() const override
         {
                 return floating_point_name_;
         }
 
-        const char* color_name() const override
+        [[nodiscard]] const char* color_name() const override
         {
                 return color_name_;
         }
 
-        std::optional<float> pixel_max() const override
+        [[nodiscard]] std::optional<float> pixel_max() const override
         {
                 float max = pixel_max_.load(std::memory_order_relaxed);
                 if (max != MIN)
@@ -262,17 +262,17 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return std::nullopt;
         }
 
-        const std::vector<int>& screen_size() const override
+        [[nodiscard]] const std::vector<int>& screen_size() const override
         {
                 return screen_size_;
         }
 
-        const std::vector<long long>& busy_indices_2d() const override
+        [[nodiscard]] const std::vector<long long>& busy_indices_2d() const override
         {
                 return busy_indices_2d_;
         }
 
-        painter::Statistics statistics() const override
+        [[nodiscard]] painter::Statistics statistics() const override
         {
                 return painter_->statistics();
         }
@@ -288,7 +288,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 pixel_brightness_parameter_.store(brightness_parameter, std::memory_order_relaxed);
         }
 
-        std::span<const std::byte> slice_r8g8b8a8(const long long slice_number) override
+        [[nodiscard]] std::span<const std::byte> slice_r8g8b8a8(const long long slice_number) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -297,7 +297,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return std::span(&pixels_r8g8b8a8_[slice_number * slice_size_], slice_size_);
         }
 
-        std::optional<Images> slice(const long long slice_number) const override
+        [[nodiscard]] std::optional<Images> slice(const long long slice_number) const override
         {
                 if (!painter_images_ready_)
                 {
@@ -335,7 +335,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return images;
         }
 
-        std::optional<Images> pixels() const override
+        [[nodiscard]] std::optional<Images> pixels() const override
         {
                 if (!painter_images_ready_)
                 {

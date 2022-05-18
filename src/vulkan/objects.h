@@ -38,12 +38,12 @@ public:
         {
         }
 
-        VkQueue handle() const noexcept
+        [[nodiscard]] VkQueue handle() const noexcept
         {
                 return queue_;
         }
 
-        std::uint32_t family_index() const noexcept
+        [[nodiscard]] std::uint32_t family_index() const noexcept
         {
                 return family_index_;
         }
@@ -61,12 +61,12 @@ public:
         {
         }
 
-        VkCommandPool handle() const noexcept
+        [[nodiscard]] VkCommandPool handle() const noexcept
         {
                 return command_pool_;
         }
 
-        std::uint32_t family_index() const noexcept
+        [[nodiscard]] std::uint32_t family_index() const noexcept
         {
                 return family_index_;
         }
@@ -86,12 +86,12 @@ public:
         {
         }
 
-        VkRenderPass handle() const noexcept
+        [[nodiscard]] VkRenderPass handle() const noexcept
         {
                 return render_pass_;
         }
 
-        std::uint32_t color_attachment_count() const noexcept
+        [[nodiscard]] std::uint32_t color_attachment_count() const noexcept
         {
                 return color_attachment_count_;
         }
@@ -111,22 +111,22 @@ public:
         {
         }
 
-        VkBuffer handle() const noexcept
+        [[nodiscard]] VkBuffer handle() const noexcept
         {
                 return buffer_;
         }
 
-        VkDevice device() const noexcept
+        [[nodiscard]] VkDevice device() const noexcept
         {
                 return buffer_.device();
         }
 
-        VkDeviceSize size() const noexcept
+        [[nodiscard]] VkDeviceSize size() const noexcept
         {
                 return size_;
         }
 
-        bool has_usage(const VkBufferUsageFlagBits flag) const noexcept
+        [[nodiscard]] bool has_usage(const VkBufferUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }
@@ -152,42 +152,42 @@ public:
         {
         }
 
-        VkImage handle() const noexcept
+        [[nodiscard]] VkImage handle() const noexcept
         {
                 return image_;
         }
 
-        VkDevice device() const noexcept
+        [[nodiscard]] VkDevice device() const noexcept
         {
                 return image_.device();
         }
 
-        VkFormat format() const noexcept
+        [[nodiscard]] VkFormat format() const noexcept
         {
                 return format_;
         }
 
-        VkExtent3D extent() const noexcept
+        [[nodiscard]] VkExtent3D extent() const noexcept
         {
                 return extent_;
         }
 
-        VkImageType type() const noexcept
+        [[nodiscard]] VkImageType type() const noexcept
         {
                 return type_;
         }
 
-        VkSampleCountFlagBits sample_count() const noexcept
+        [[nodiscard]] VkSampleCountFlagBits sample_count() const noexcept
         {
                 return sample_count_;
         }
 
-        bool has_usage(const VkImageUsageFlagBits flag) const noexcept
+        [[nodiscard]] bool has_usage(const VkImageUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }
 
-        VkImageUsageFlags usage() const noexcept
+        [[nodiscard]] VkImageUsageFlags usage() const noexcept
         {
                 return usage_;
         }
@@ -214,22 +214,22 @@ public:
                 ASSERT(image.format() == create_info.format);
         }
 
-        VkImageView handle() const noexcept
+        [[nodiscard]] VkImageView handle() const noexcept
         {
                 return image_view_;
         }
 
-        VkFormat format() const noexcept
+        [[nodiscard]] VkFormat format() const noexcept
         {
                 return format_;
         }
 
-        VkSampleCountFlagBits sample_count() const noexcept
+        [[nodiscard]] VkSampleCountFlagBits sample_count() const noexcept
         {
                 return sample_count_;
         }
 
-        bool has_usage(const VkImageUsageFlagBits flag) const noexcept
+        [[nodiscard]] bool has_usage(const VkImageUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }

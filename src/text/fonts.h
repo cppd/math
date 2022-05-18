@@ -32,7 +32,7 @@ class Fonts
 public:
         static const Fonts& instance();
 
-        std::vector<std::string> names() const;
-        std::vector<unsigned char> data(const std::string_view& name) const;
+        [[nodiscard]] std::vector<std::string> names() const;
+        [[nodiscard]] std::vector<unsigned char> data(const std::string_view& name) const;
 };
 }

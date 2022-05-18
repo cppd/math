@@ -28,7 +28,7 @@ class TerminateQuietlyException final : public std::exception
         static constexpr const char* MSG = "Thread termination requested";
 
 public:
-        const char* what() const noexcept override
+        [[nodiscard]] const char* what() const noexcept override
         {
                 return MSG;
         }
@@ -39,7 +39,7 @@ class TerminateWithMessageException final : public std::exception
         static constexpr const char* MSG = "Terminated by user";
 
 public:
-        const char* what() const noexcept override
+        [[nodiscard]] const char* what() const noexcept override
         {
                 return MSG;
         }

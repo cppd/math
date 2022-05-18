@@ -58,7 +58,7 @@ public:
         {
         }
 
-        int count_points(const std::array<std::array<T, 2>, N>& box) const
+        [[nodiscard]] int count_points(const std::array<std::array<T, 2>, N>& box) const
         {
                 int point_count = 0;
                 for (const Vector<N, T>& p : points_)

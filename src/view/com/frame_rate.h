@@ -34,7 +34,7 @@ public:
 
         void calculate();
 
-        const text::TextData& text_data() const
+        [[nodiscard]] const text::TextData& text_data() const
         {
                 return text_data_;
         }

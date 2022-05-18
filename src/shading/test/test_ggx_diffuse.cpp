@@ -56,27 +56,28 @@ public:
         {
         }
 
-        Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 return ggx_diffuse::f(roughness_, colors_, n, v, l);
         }
 
-        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 return ggx_diffuse::pdf(roughness_, n, v, l);
         }
 
-        Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
+        [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
+                const override
         {
                 return ggx_diffuse::sample_f(engine, roughness_, colors_, n, v);
         }
 
-        const Color& color() const
+        [[nodiscard]] const Color& color() const
         {
                 return color_;
         }
 
-        std::string description() const
+        [[nodiscard]] std::string description() const
         {
                 return space_name(N) + ", roughness = " + to_string(roughness_);
         }

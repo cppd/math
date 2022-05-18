@@ -239,7 +239,7 @@ std::vector<std::size_t> suitable_physical_devices(
                 {
                         try
                         {
-                                physical_device.presentation_family_index();
+                                static_cast<void>(physical_device.presentation_family_index());
                         }
                         catch (...)
                         {

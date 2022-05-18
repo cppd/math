@@ -74,7 +74,7 @@ public:
 
         void command(const ImageCommand& image_command);
 
-        bool two_windows() const;
+        [[nodiscard]] bool two_windows() const;
 
         void delete_buffers();
 

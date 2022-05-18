@@ -125,7 +125,7 @@ public:
                 }
         }
 
-        unsigned size() const
+        [[nodiscard]] unsigned size() const
         {
                 return points_.size();
         }
@@ -333,18 +333,19 @@ class Impl final : public MeshObjectRepository<N>
         std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_point_;
         std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_facet_;
 
-        std::vector<std::string> point_object_names() const override
+        [[nodiscard]] std::vector<std::string> point_object_names() const override
         {
                 return names_of_map(map_point_);
         }
 
-        std::vector<std::string> facet_object_names() const override
+        [[nodiscard]] std::vector<std::string> facet_object_names() const override
         {
                 return names_of_map(map_facet_);
         }
 
-        std::unique_ptr<model::mesh::Mesh<N>> point_object(const std::string& object_name, const unsigned point_count)
-                const override
+        [[nodiscard]] std::unique_ptr<model::mesh::Mesh<N>> point_object(
+                const std::string& object_name,
+                const unsigned point_count) const override
         {
                 const auto iter = map_point_.find(object_name);
                 if (iter != map_point_.cend())
@@ -354,8 +355,9 @@ class Impl final : public MeshObjectRepository<N>
                 error("Point object not found in repository: " + object_name);
         }
 
-        std::unique_ptr<model::mesh::Mesh<N>> facet_object(const std::string& object_name, const unsigned facet_count)
-                const override
+        [[nodiscard]] std::unique_ptr<model::mesh::Mesh<N>> facet_object(
+                const std::string& object_name,
+                const unsigned facet_count) const override
         {
                 const auto iter = map_facet_.find(object_name);
                 if (iter != map_facet_.cend())

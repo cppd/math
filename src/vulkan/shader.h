@@ -31,9 +31,9 @@ class Shader final
 public:
         Shader(VkDevice device, const std::span<const std::uint32_t>& code, VkShaderStageFlagBits stage);
 
-        VkShaderModule module() const;
-        VkShaderStageFlagBits stage() const;
+        [[nodiscard]] VkShaderModule module() const;
+        [[nodiscard]] VkShaderStageFlagBits stage() const;
 
-        static const char* entry_point_name();
+        [[nodiscard]] static const char* entry_point_name();
 };
 }

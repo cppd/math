@@ -52,7 +52,7 @@ protected:
 
         ~Samples() = default;
 
-        constexpr const Vector<N, T>& data() const
+        [[nodiscard]] constexpr const Vector<N, T>& data() const
         {
                 return data_;
         }

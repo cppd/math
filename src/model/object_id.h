@@ -37,12 +37,12 @@ public:
         {
         }
 
-        bool operator==(const ObjectId id) const noexcept
+        [[nodiscard]] bool operator==(const ObjectId id) const noexcept
         {
                 return id_ == id.id_;
         }
 
-        std::size_t hash() const noexcept
+        [[nodiscard]] std::size_t hash() const noexcept
         {
                 return std::hash<T>()(id_);
         }

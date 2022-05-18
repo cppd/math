@@ -43,7 +43,7 @@ struct WorkerThreads
 
         virtual ~WorkerThreads() = default;
 
-        virtual unsigned count() const = 0;
+        [[nodiscard]] virtual unsigned count() const = 0;
         virtual void terminate_with_message(unsigned id) = 0;
         virtual void terminate_all() = 0;
         virtual bool terminate_and_start(

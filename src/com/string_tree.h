@@ -42,6 +42,6 @@ public:
         std::size_t add(std::string s);
         std::size_t add(std::size_t parent, std::string s);
 
-        std::string text(unsigned indent) const;
+        [[nodiscard]] std::string text(unsigned indent) const;
 };
 }

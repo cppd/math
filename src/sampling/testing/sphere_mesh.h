@@ -64,18 +64,18 @@ class SphereMesh final
                         }
                 }
 
-                const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
+                [[nodiscard]] const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
                 {
                         return simplices_;
                 }
 
-                std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
+                [[nodiscard]] std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
                 {
                         ASSERT(index < facets_.size());
                         return vertices_to_array(vertices_, facets_[index]);
                 }
 
-                std::vector<geometry::BvhObject<N, T>> bvh_objects() const
+                [[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects() const
                 {
                         ASSERT(facets_.size() == simplices_.size());
                         const auto intersection_cost = decltype(simplices_)::value_type::intersection_cost();
@@ -99,17 +99,17 @@ public:
         {
         }
 
-        decltype(auto) facet_count() const
+        [[nodiscard]] decltype(auto) facet_count() const
         {
                 return sphere_.simplices().size();
         }
 
-        decltype(auto) facet_vertices(const std::size_t index) const
+        [[nodiscard]] decltype(auto) facet_vertices(const std::size_t index) const
         {
                 return sphere_.facet_vertices(index);
         }
 
-        std::optional<unsigned> intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<unsigned> intersect(const Ray<N, T>& ray) const
         {
                 const auto intersection = bvh_.intersect(
                         ray, Limits<T>::max(),

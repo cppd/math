@@ -47,27 +47,27 @@ public:
         DeviceCompute& operator=(const DeviceCompute&) = delete;
         DeviceCompute& operator=(DeviceCompute&&) = delete;
 
-        const Device& device() const
+        [[nodiscard]] const Device& device() const
         {
                 return *device_;
         }
 
-        std::uint32_t compute_family_index() const
+        [[nodiscard]] std::uint32_t compute_family_index() const
         {
                 return compute_family_index_;
         }
 
-        std::uint32_t transfer_family_index() const
+        [[nodiscard]] std::uint32_t transfer_family_index() const
         {
                 return transfer_family_index_;
         }
 
-        const Queue& compute_queue() const
+        [[nodiscard]] const Queue& compute_queue() const
         {
                 return compute_queues_[0];
         }
 
-        const Queue& transfer_queue() const
+        [[nodiscard]] const Queue& transfer_queue() const
         {
                 return transfer_queues_[0];
         }

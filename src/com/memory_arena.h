@@ -89,19 +89,19 @@ public:
                 return memory_arena;
         }
 
-        static constexpr std::size_t block_size()
+        [[nodiscard]] static constexpr std::size_t block_size()
         {
                 return BLOCK_SIZE;
         }
 
-        std::size_t used_blocks() const
+        [[nodiscard]] std::size_t used_blocks() const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 return block_ + 1;
         }
 
-        std::size_t used_bytes() const
+        [[nodiscard]] std::size_t used_bytes() const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -117,7 +117,7 @@ public:
         }
 
         template <class T, class... Args>
-        T* make(Args&&... args)
+        [[nodiscard]] T* make(Args&&... args)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -154,7 +154,7 @@ public:
 };
 
 template <class T, class... Args>
-T* make_arena_ptr(Args&&... args)
+[[nodiscard]] T* make_arena_ptr(Args&&... args)
 {
         return MemoryArena::thread_local_instance().make<T>(std::forward<Args>(args)...);
 }

@@ -41,7 +41,7 @@ public:
                 VkImageLayout image_layout,
                 VkImageUsageFlags usage);
 
-        const vulkan::ImageWithMemory& image(unsigned image_index) const;
+        [[nodiscard]] const vulkan::ImageWithMemory& image(unsigned image_index) const;
 
         void resolve(
                 const vulkan::Queue& graphics_queue,

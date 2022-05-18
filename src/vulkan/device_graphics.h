@@ -50,42 +50,42 @@ public:
         DeviceGraphics& operator=(const DeviceGraphics&) = delete;
         DeviceGraphics& operator=(DeviceGraphics&&) = delete;
 
-        const Device& device() const
+        [[nodiscard]] const Device& device() const
         {
                 return *device_;
         }
 
-        std::uint32_t graphics_compute_family_index() const
+        [[nodiscard]] std::uint32_t graphics_compute_family_index() const
         {
                 return graphics_compute_family_index_;
         }
 
-        std::uint32_t compute_family_index() const
+        [[nodiscard]] std::uint32_t compute_family_index() const
         {
                 return compute_family_index_;
         }
 
-        std::uint32_t transfer_family_index() const
+        [[nodiscard]] std::uint32_t transfer_family_index() const
         {
                 return transfer_family_index_;
         }
 
-        const std::vector<Queue>& graphics_compute_queues() const
+        [[nodiscard]] const std::vector<Queue>& graphics_compute_queues() const
         {
                 return graphics_compute_queues_;
         }
 
-        const Queue& compute_queue() const
+        [[nodiscard]] const Queue& compute_queue() const
         {
                 return compute_queues_[0];
         }
 
-        const Queue& transfer_queue() const
+        [[nodiscard]] const Queue& transfer_queue() const
         {
                 return transfer_queues_[0];
         }
 
-        const Queue& presentation_queue() const
+        [[nodiscard]] const Queue& presentation_queue() const
         {
                 return presentation_queues_[0];
         }

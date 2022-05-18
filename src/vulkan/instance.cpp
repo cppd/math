@@ -100,7 +100,7 @@ public:
         {
         }
 
-        VkInstance handle() const
+        [[nodiscard]] VkInstance handle() const
         {
                 return instance_;
         }

@@ -56,20 +56,20 @@ public:
 
         void set_view(view::View* view);
 
-        double dft_brightness() const;
-        double shadow_zoom() const;
-        double normal_length() const;
-        bool smooth_checked() const;
-        bool wireframe_checked() const;
-        bool shadow_checked() const;
-        bool fog_checked() const;
-        bool materials_checked() const;
-        bool fps_checked() const;
-        bool pencil_sketch_checked() const;
-        bool dft_checked() const;
-        bool convex_hull_2d_checked() const;
-        bool optical_flow_checked() const;
-        bool normals_checked() const;
-        bool vertical_sync_checked() const;
+        [[nodiscard]] double dft_brightness() const;
+        [[nodiscard]] double shadow_zoom() const;
+        [[nodiscard]] double normal_length() const;
+        [[nodiscard]] bool smooth_checked() const;
+        [[nodiscard]] bool wireframe_checked() const;
+        [[nodiscard]] bool shadow_checked() const;
+        [[nodiscard]] bool fog_checked() const;
+        [[nodiscard]] bool materials_checked() const;
+        [[nodiscard]] bool fps_checked() const;
+        [[nodiscard]] bool pencil_sketch_checked() const;
+        [[nodiscard]] bool dft_checked() const;
+        [[nodiscard]] bool convex_hull_2d_checked() const;
+        [[nodiscard]] bool optical_flow_checked() const;
+        [[nodiscard]] bool normals_checked() const;
+        [[nodiscard]] bool vertical_sync_checked() const;
 };
 }

@@ -38,7 +38,7 @@ protected:
         ~Interface() = default;
 
 public:
-        virtual T value() const = 0;
+        [[nodiscard]] virtual T value() const = 0;
 };
 
 template <typename T>
@@ -48,7 +48,7 @@ class Impl final : public Interface<T>
         T data_;
         std::array<std::byte, 7> padding_2_;
 
-        T value() const override
+        [[nodiscard]] T value() const override
         {
                 return data_;
         }

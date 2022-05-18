@@ -39,7 +39,7 @@ public:
         {
         }
 
-        const char* what() const noexcept override
+        [[nodiscard]] const char* what() const noexcept override
         {
                 return text_.c_str();
         }

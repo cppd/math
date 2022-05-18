@@ -38,12 +38,12 @@ class BottomLevelAccelerationStructure final
 public:
         BottomLevelAccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle);
 
-        VkAccelerationStructureKHR handle() const
+        [[nodiscard]] VkAccelerationStructureKHR handle() const
         {
                 return acceleration_structure_;
         }
 
-        VkDeviceAddress device_address() const
+        [[nodiscard]] VkDeviceAddress device_address() const
         {
                 return device_address_;
         }
@@ -69,12 +69,12 @@ public:
                 BufferWithMemory&& instance_buffer,
                 BufferWithMemory&& scratch_buffer_update);
 
-        VkAccelerationStructureKHR handle() const
+        [[nodiscard]] VkAccelerationStructureKHR handle() const
         {
                 return acceleration_structure_;
         }
 
-        VkDeviceAddress device_address() const
+        [[nodiscard]] VkDeviceAddress device_address() const
         {
                 return device_address_;
         }

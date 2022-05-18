@@ -191,12 +191,12 @@ public:
                 }
         }
 
-        const std::string& name() const
+        [[nodiscard]] const std::string& name() const
         {
                 return name_;
         }
 
-        ObjectId id() const
+        [[nodiscard]] ObjectId id() const
         {
                 return id_;
         }
@@ -264,22 +264,22 @@ public:
                 }
         }
 
-        const std::string& name() const
+        [[nodiscard]] const std::string& name() const
         {
                 return object_->name_;
         }
 
-        ObjectId id() const
+        [[nodiscard]] ObjectId id() const
         {
                 return object_->id_;
         }
 
-        const Mesh<N>& mesh() const
+        [[nodiscard]] const Mesh<N>& mesh() const
         {
                 return *object_->mesh_;
         }
 
-        const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }
@@ -290,7 +290,7 @@ public:
                 object_->matrix_ = matrix;
         }
 
-        float alpha() const
+        [[nodiscard]] float alpha() const
         {
                 return object_->alpha_;
         }
@@ -301,7 +301,7 @@ public:
                 object_->alpha_ = alpha;
         }
 
-        const color::Color& color() const
+        [[nodiscard]] const color::Color& color() const
         {
                 return object_->color_;
         }
@@ -312,7 +312,7 @@ public:
                 object_->color_ = color;
         }
 
-        float ambient() const
+        [[nodiscard]] float ambient() const
         {
                 return object_->ambient_;
         }
@@ -323,7 +323,7 @@ public:
                 object_->ambient_ = ambient;
         }
 
-        float metalness() const
+        [[nodiscard]] float metalness() const
         {
                 return object_->metalness_;
         }
@@ -334,7 +334,7 @@ public:
                 object_->metalness_ = metalness;
         }
 
-        float roughness() const
+        [[nodiscard]] float roughness() const
         {
                 return object_->roughness_;
         }
@@ -345,7 +345,7 @@ public:
                 object_->roughness_ = roughness;
         }
 
-        bool visible() const
+        [[nodiscard]] bool visible() const
         {
                 return object_->visible_;
         }
@@ -368,57 +368,57 @@ public:
         {
         }
 
-        Updates updates(std::optional<int>* const version) const
+        [[nodiscard]] Updates updates(std::optional<int>* const version) const
         {
                 return object_->versions_.updates(version);
         }
 
-        const std::string& name() const
+        [[nodiscard]] const std::string& name() const
         {
                 return object_->name_;
         }
 
-        ObjectId id() const
+        [[nodiscard]] ObjectId id() const
         {
                 return object_->id_;
         }
 
-        const Mesh<N>& mesh() const
+        [[nodiscard]] const Mesh<N>& mesh() const
         {
                 return *object_->mesh_;
         }
 
-        const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }
 
-        float alpha() const
+        [[nodiscard]] float alpha() const
         {
                 return object_->alpha_;
         }
 
-        const color::Color& color() const
+        [[nodiscard]] const color::Color& color() const
         {
                 return object_->color_;
         }
 
-        float ambient() const
+        [[nodiscard]] float ambient() const
         {
                 return object_->ambient_;
         }
 
-        float metalness() const
+        [[nodiscard]] float metalness() const
         {
                 return object_->metalness_;
         }
 
-        float roughness() const
+        [[nodiscard]] float roughness() const
         {
                 return object_->roughness_;
         }
 
-        bool visible() const
+        [[nodiscard]] bool visible() const
         {
                 return object_->visible_;
         }

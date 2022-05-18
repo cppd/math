@@ -57,7 +57,7 @@ class Descriptors final
         std::unordered_map<std::uint32_t, std::uint32_t> binding_map_;
 
         // VkDescriptorSetLayoutBinding::binding -> const VkDescriptorSetLayoutBinding&
-        const VkDescriptorSetLayoutBinding& layout_binding(std::uint32_t binding) const;
+        [[nodiscard]] const VkDescriptorSetLayoutBinding& layout_binding(std::uint32_t binding) const;
 
 public:
         Descriptors(
@@ -75,10 +75,10 @@ public:
 
         //
 
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const noexcept;
 
-        std::uint32_t descriptor_set_count() const;
-        const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
+        [[nodiscard]] std::uint32_t descriptor_set_count() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
 
         using Info = std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo, VkAccelerationStructureKHR>;
 

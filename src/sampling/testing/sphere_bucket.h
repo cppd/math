@@ -53,7 +53,7 @@ public:
                 ++sample_count_;
         }
 
-        long long sample_count() const
+        [[nodiscard]] long long sample_count() const
         {
                 return sample_count_;
         }
@@ -63,7 +63,7 @@ public:
                 ++uniform_count_;
         }
 
-        long long uniform_count() const
+        [[nodiscard]] long long uniform_count() const
         {
                 return uniform_count_;
         }
@@ -74,7 +74,7 @@ public:
                 pdf_sum_ += pdf;
         }
 
-        double pdf() const
+        [[nodiscard]] double pdf() const
         {
                 if (!(pdf_count_ > 0))
                 {

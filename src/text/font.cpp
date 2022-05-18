@@ -54,7 +54,7 @@ public:
                 FT_Done_FreeType(library_);
         }
 
-        FT_Library get() const noexcept
+        [[nodiscard]] FT_Library get() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Library>);
                 return library_;
@@ -95,13 +95,13 @@ public:
                 FT_Done_Face(face_);
         }
 
-        FT_Face get() const noexcept
+        [[nodiscard]] FT_Face get() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Face>);
                 return face_;
         }
 
-        FT_Face operator->() const noexcept
+        [[nodiscard]] FT_Face operator->() const noexcept
         {
                 static_assert(std::is_pointer_v<FT_Face>);
                 return face_;
@@ -178,7 +178,7 @@ class Impl final : public Font
                 FT_Set_Pixel_Sizes(face_.get(), 0, size_in_pixels);
         }
 
-        std::optional<Char> render_impl(const char32_t code_point) const override
+        [[nodiscard]] std::optional<Char> render_impl(const char32_t code_point) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 

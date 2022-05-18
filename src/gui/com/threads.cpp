@@ -158,7 +158,7 @@ class Impl final : public WorkerThreads
                 return threads_[id];
         }
 
-        const ThreadData& thread_data(const unsigned id) const
+        [[nodiscard]] const ThreadData& thread_data(const unsigned id) const
         {
                 ASSERT(id < threads_.size());
                 return threads_[id];
@@ -198,7 +198,7 @@ class Impl final : public WorkerThreads
                 return true;
         }
 
-        bool is_working(const unsigned id) const
+        [[nodiscard]] bool is_working(const unsigned id) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -249,7 +249,7 @@ class Impl final : public WorkerThreads
                 }
         }
 
-        unsigned count() const override
+        [[nodiscard]] unsigned count() const override
         {
                 return threads_.size();
         }

@@ -62,12 +62,12 @@ public:
 
         void set_view(view::View* view);
 
-        color::Color background_color() const;
-        color::Color wireframe_color() const;
-        color::Color clip_plane_color() const;
-        color::Color normal_color_positive() const;
-        color::Color normal_color_negative() const;
-        color::Color dft_background_color() const;
-        color::Color dft_color() const;
+        [[nodiscard]] color::Color background_color() const;
+        [[nodiscard]] color::Color wireframe_color() const;
+        [[nodiscard]] color::Color clip_plane_color() const;
+        [[nodiscard]] color::Color normal_color_positive() const;
+        [[nodiscard]] color::Color normal_color_negative() const;
+        [[nodiscard]] color::Color dft_background_color() const;
+        [[nodiscard]] color::Color dft_color() const;
 };
 }

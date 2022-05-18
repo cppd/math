@@ -54,9 +54,9 @@ class Mouse final
         double width_ = -1;
         double height_ = -1;
 
-        std::tuple<int, int> position(double x, double y) const;
+        [[nodiscard]] std::tuple<int, int> position(double x, double y) const;
 
-        const MouseButtonInfo& info(MouseButton button) const;
+        [[nodiscard]] const MouseButtonInfo& info(MouseButton button) const;
 
         void command(const command::MousePress& v);
         void command(const command::MouseRelease& v);

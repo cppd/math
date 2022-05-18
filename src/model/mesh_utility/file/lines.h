@@ -35,17 +35,17 @@ public:
         Lines(Lines&&) = delete;
         Lines& operator=(Lines&&) = delete;
 
-        std::size_t size() const
+        [[nodiscard]] std::size_t size() const
         {
                 return lines_.size();
         }
 
-        std::array<const char*, 2> c_str_view(const std::size_t line) const
+        [[nodiscard]] std::array<const char*, 2> c_str_view(const std::size_t line) const
         {
                 return {lines_[line], (line + 1 < lines_.size()) ? lines_[line + 1] - 1 : &data_.back()};
         }
 
-        const char* c_str(const std::size_t line) const
+        [[nodiscard]] const char* c_str(const std::size_t line) const
         {
                 return lines_[line];
         }

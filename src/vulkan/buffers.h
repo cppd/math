@@ -74,12 +74,12 @@ public:
 
         void write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data) const;
 
-        const Buffer& buffer() const;
+        [[nodiscard]] const Buffer& buffer() const;
 
-        VkMemoryPropertyFlags memory_properties() const;
-        bool host_visible() const;
+        [[nodiscard]] VkMemoryPropertyFlags memory_properties() const;
+        [[nodiscard]] bool host_visible() const;
 
-        VkDeviceAddress device_address() const;
+        [[nodiscard]] VkDeviceAddress device_address() const;
 };
 
 class BufferMapper final
@@ -224,9 +224,9 @@ public:
                 image::ColorFormat* color_format,
                 std::vector<std::byte>* pixels) const;
 
-        const Image& image() const;
+        [[nodiscard]] const Image& image() const;
 
-        const ImageView& image_view() const;
+        [[nodiscard]] const ImageView& image_view() const;
 };
 
 class DepthImageWithMemory final
@@ -275,8 +275,8 @@ public:
 
         //
 
-        const Image& image() const;
+        [[nodiscard]] const Image& image() const;
 
-        const ImageView& image_view() const;
+        [[nodiscard]] const ImageView& image_view() const;
 };
 }

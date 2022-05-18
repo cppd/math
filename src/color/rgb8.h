@@ -37,48 +37,48 @@ public:
         {
         }
 
-        constexpr bool operator==(const RGB8 v) const
+        [[nodiscard]] constexpr bool operator==(const RGB8 v) const
         {
                 return red_ == v.red_ && green_ == v.green_ && blue_ == v.blue_;
         }
 
-        constexpr unsigned char red() const
+        [[nodiscard]] constexpr unsigned char red() const
         {
                 return red_;
         }
 
-        constexpr unsigned char green() const
+        [[nodiscard]] constexpr unsigned char green() const
         {
                 return green_;
         }
 
-        constexpr unsigned char blue() const
+        [[nodiscard]] constexpr unsigned char blue() const
         {
                 return blue_;
         }
 
-        constexpr float linear_red() const
+        [[nodiscard]] constexpr float linear_red() const
         {
                 return color::srgb_uint8_to_linear_float(red_);
         }
 
-        constexpr float linear_green() const
+        [[nodiscard]] constexpr float linear_green() const
         {
                 return color::srgb_uint8_to_linear_float(green_);
         }
 
-        constexpr float linear_blue() const
+        [[nodiscard]] constexpr float linear_blue() const
         {
                 return color::srgb_uint8_to_linear_float(blue_);
         }
 
-        constexpr Vector<3, float> linear_rgb() const
+        [[nodiscard]] constexpr Vector<3, float> linear_rgb() const
         {
                 return {linear_red(), linear_green(), linear_blue()};
         }
 };
 
-inline RGB8 make_rgb8(const float red, const float green, const float blue)
+[[nodiscard]] inline RGB8 make_rgb8(const float red, const float green, const float blue)
 {
         const unsigned char r = color::linear_float_to_srgb_uint8(red);
         const unsigned char g = color::linear_float_to_srgb_uint8(green);
@@ -87,7 +87,7 @@ inline RGB8 make_rgb8(const float red, const float green, const float blue)
 }
 
 template <typename T>
-RGB8 make_rgb8(const Vector<3, T>& v)
+[[nodiscard]] RGB8 make_rgb8(const Vector<3, T>& v)
 {
         static_assert(std::is_floating_point_v<T>);
         return make_rgb8(v[0], v[1], v[2]);

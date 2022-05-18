@@ -76,7 +76,7 @@ private:
 
         QTimer timer_;
 
-        std::tuple<double, double> graphics_widget_position(const QSinglePointEvent* event) const;
+        [[nodiscard]] std::tuple<double, double> graphics_widget_position(const QSinglePointEvent* event) const;
 
         void on_graphics_widget_mouse_move(const QMouseEvent* event);
         void on_graphics_widget_mouse_press(const QMouseEvent* event);
@@ -89,7 +89,7 @@ private:
         void constructor_objects();
         void first_shown();
 
-        std::vector<view::Command> view_initial_commands() const;
+        [[nodiscard]] std::vector<view::Command> view_initial_commands() const;
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;

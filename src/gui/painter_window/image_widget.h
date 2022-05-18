@@ -42,7 +42,7 @@ private:
 public:
         ImageWidget(int width, int height, QMenu* menu);
 
-        QSize size_difference() const;
+        [[nodiscard]] QSize size_difference() const;
 
         void update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices);
 };

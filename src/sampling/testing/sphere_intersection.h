@@ -57,12 +57,12 @@ public:
                 error("Too many missed intersections");
         }
 
-        long long intersection_count() const
+        [[nodiscard]] long long intersection_count() const
         {
                 return intersection_count_;
         }
 
-        long long missed_intersection_count() const
+        [[nodiscard]] long long missed_intersection_count() const
         {
                 return missed_intersection_count_;
         }

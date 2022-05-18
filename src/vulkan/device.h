@@ -44,19 +44,19 @@ public:
 
         ~Device();
 
-        VkDevice handle() const noexcept
+        [[nodiscard]] VkDevice handle() const noexcept
         {
                 return device_;
         }
 
-        VkPhysicalDevice physical_device() const;
+        [[nodiscard]] VkPhysicalDevice physical_device() const;
 
-        const PhysicalDeviceProperties& properties() const;
-        const std::unordered_set<std::string>& extensions() const;
-        const PhysicalDeviceFeatures& features() const;
+        [[nodiscard]] const PhysicalDeviceProperties& properties() const;
+        [[nodiscard]] const std::unordered_set<std::string>& extensions() const;
+        [[nodiscard]] const PhysicalDeviceFeatures& features() const;
 
-        Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
-        std::uint32_t queue_count(std::uint32_t family_index) const;
+        [[nodiscard]] Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
+        [[nodiscard]] std::uint32_t queue_count(std::uint32_t family_index) const;
 
         void wait_idle() const;
         void wait_idle_noexcept(const char* msg) const noexcept;

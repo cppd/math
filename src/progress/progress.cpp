@@ -31,7 +31,7 @@ namespace
 constexpr bool LOCK_FREE = true;
 
 template <typename T>
-class RelaxedAtomic
+class RelaxedAtomic final
 {
         std::atomic<T> counter_{0};
 
@@ -43,7 +43,7 @@ public:
                 counter_.store(v, std::memory_order_relaxed);
         }
 
-        T value() const
+        [[nodiscard]] T value() const
         {
                 return counter_.load(std::memory_order_relaxed);
         }
@@ -55,7 +55,7 @@ public:
 };
 }
 
-class AtomicTerminate
+class AtomicTerminate final
 {
         using DataType = std::uint_least8_t;
 

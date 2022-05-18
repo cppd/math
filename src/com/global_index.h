@@ -103,19 +103,19 @@ public:
         {
         }
 
-        constexpr IndexType count() const
+        [[nodiscard]] constexpr IndexType count() const
         {
                 return count_;
         }
 
-        constexpr IndexType stride(const unsigned n) const
+        [[nodiscard]] constexpr IndexType stride(const unsigned n) const
         {
                 ASSERT(n < N);
                 return strides_[n];
         }
 
         template <typename T>
-        constexpr IndexType compute(const T& p) const
+        [[nodiscard]] constexpr IndexType compute(const T& p) const
         {
                 check_input_type<T>();
 

@@ -45,7 +45,7 @@ public:
         {
         }
 
-        Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
                 {
@@ -54,7 +54,7 @@ public:
                 return lambertian::f(color_, n, l);
         }
 
-        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
                 {
@@ -63,7 +63,8 @@ public:
                 return lambertian::pdf(n, l);
         }
 
-        Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
+        [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
+                const override
         {
                 if (dot(n, v) <= 0)
                 {
@@ -72,12 +73,12 @@ public:
                 return lambertian::sample_f(engine, color_, n);
         }
 
-        const Color& color() const
+        [[nodiscard]] const Color& color() const
         {
                 return color_;
         }
 
-        std::string description() const
+        [[nodiscard]] std::string description() const
         {
                 return space_name(N);
         }

@@ -58,13 +58,13 @@ public:
 
         //
 
-        VkSwapchainKHR swapchain() const;
+        [[nodiscard]] VkSwapchainKHR swapchain() const;
 
-        std::uint32_t width() const;
-        std::uint32_t height() const;
-        VkFormat format() const;
-        VkColorSpaceKHR color_space() const;
-        const std::vector<VkImageView>& image_views() const;
+        [[nodiscard]] std::uint32_t width() const;
+        [[nodiscard]] std::uint32_t height() const;
+        [[nodiscard]] VkFormat format() const;
+        [[nodiscard]] VkColorSpaceKHR color_space() const;
+        [[nodiscard]] const std::vector<VkImageView>& image_views() const;
 };
 
 [[nodiscard]] std::optional<std::uint32_t> acquire_next_image(

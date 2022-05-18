@@ -81,7 +81,7 @@ public:
         }
 
         template <typename T>
-        DataType compute(const Vector<N, T>& p) const
+        [[nodiscard]] DataType compute(const Vector<N, T>& p) const
         {
                 static_assert(std::is_floating_point_v<T>);
 

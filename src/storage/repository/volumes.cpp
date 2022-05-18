@@ -259,13 +259,14 @@ class Impl final : public VolumeObjectRepository<N>
 {
         std::map<std::string, std::function<std::unique_ptr<model::volume::Volume<N>>(unsigned)>> map_;
 
-        std::vector<std::string> object_names() const override
+        [[nodiscard]] std::vector<std::string> object_names() const override
         {
                 return names_of_map(map_);
         }
 
-        std::unique_ptr<model::volume::Volume<N>> object(const std::string& object_name, const unsigned size)
-                const override
+        [[nodiscard]] std::unique_ptr<model::volume::Volume<N>> object(
+                const std::string& object_name,
+                const unsigned size) const override
         {
                 const auto iter = map_.find(object_name);
                 if (iter != map_.cend())

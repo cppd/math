@@ -68,9 +68,9 @@ class Tests final
 public:
         static Tests& instance();
 
-        std::vector<std::string> small_names() const;
-        std::vector<std::string> large_names() const;
-        std::vector<std::string> performance_names() const;
+        [[nodiscard]] std::vector<std::string> small_names() const;
+        [[nodiscard]] std::vector<std::string> large_names() const;
+        [[nodiscard]] std::vector<std::string> performance_names() const;
 
         void run_small(const std::string_view& name, ProgressRatios* progress_ratios) const;
         void run_large(const std::string_view& name, ProgressRatios* progress_ratios) const;

@@ -32,19 +32,19 @@ struct RenderBuffers
 {
         virtual ~RenderBuffers() = default;
 
-        virtual gpu::RenderBuffers3D& buffers_3d() = 0;
-        virtual gpu::RenderBuffers2D& buffers_2d() = 0;
+        [[nodiscard]] virtual gpu::RenderBuffers3D& buffers_3d() = 0;
+        [[nodiscard]] virtual gpu::RenderBuffers2D& buffers_2d() = 0;
 
-        virtual unsigned width() const = 0;
-        virtual unsigned height() const = 0;
-        virtual VkFormat color_format() const = 0;
-        virtual VkFormat depth_format() const = 0;
-        virtual VkSampleCountFlagBits sample_count() const = 0;
-        virtual const std::vector<VkImageView>& image_views() const = 0;
+        [[nodiscard]] virtual unsigned width() const = 0;
+        [[nodiscard]] virtual unsigned height() const = 0;
+        [[nodiscard]] virtual VkFormat color_format() const = 0;
+        [[nodiscard]] virtual VkFormat depth_format() const = 0;
+        [[nodiscard]] virtual VkSampleCountFlagBits sample_count() const = 0;
+        [[nodiscard]] virtual const std::vector<VkImageView>& image_views() const = 0;
 
-        virtual VkRenderPass render_pass_clear() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
-        virtual std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const = 0;
+        [[nodiscard]] virtual VkRenderPass render_pass_clear() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
+        [[nodiscard]] virtual std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const = 0;
 
         virtual void commands_color_resolve(
                 VkCommandBuffer command_buffer,
