@@ -254,7 +254,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
-        std::vector<std::array<int, N + 1>> delaunay_objects() const override
+        [[nodiscard]] std::vector<std::array<int, N + 1>> delaunay_objects() const override
         {
                 std::vector<std::array<int, N + 1>> objects;
                 objects.reserve(delaunay_objects_.size());
@@ -265,7 +265,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 return objects;
         }
 
-        const std::vector<Vector<N, float>>& points() const override
+        [[nodiscard]] const std::vector<Vector<N, float>>& points() const override
         {
                 return source_points_;
         }

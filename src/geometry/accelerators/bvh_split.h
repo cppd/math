@@ -60,17 +60,17 @@ public:
         {
         }
 
-        bool is_point() const
+        [[nodiscard]] bool is_point() const
         {
                 return box_.min()[axis_] == box_.max()[axis_];
         }
 
-        unsigned axis() const
+        [[nodiscard]] unsigned axis() const
         {
                 return axis_;
         }
 
-        unsigned bucket(const BvhObject<N, T>& object) const
+        [[nodiscard]] unsigned bucket(const BvhObject<N, T>& object) const
         {
                 const unsigned n = BUCKET_COUNT * ((object.center()[axis_] - min_) * length_r_);
                 return std::min(n, BUCKET_COUNT - 1);

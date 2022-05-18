@@ -42,7 +42,7 @@ class BoundingBox final
         static_assert(std::is_floating_point_v<T>);
 
         template <std::size_t M>
-        static constexpr T volume(const Vector<N, T>& d)
+        [[nodiscard]] static constexpr T volume(const Vector<N, T>& d)
         {
                 static_assert(M <= N);
                 static_assert(M >= 1);
@@ -65,7 +65,7 @@ class BoundingBox final
         }
 
         template <std::size_t M>
-        static constexpr T surface(const Vector<N, T>& d)
+        [[nodiscard]] static constexpr T surface(const Vector<N, T>& d)
         {
                 static_assert(M <= N);
                 static_assert(M >= 2);
@@ -87,7 +87,7 @@ class BoundingBox final
 
         static_assert(Limits<T>::is_iec559());
 
-        std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
         {
                 T near = 0;
                 T far = max_distance;
@@ -124,7 +124,7 @@ class BoundingBox final
         //   (-infinity, infinity) -> near=near, far=far -> continue
         //   (-infinity, NaN) -> near=near, far=far -> continue
         //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
-        bool intersect_impl(
+        [[nodiscard]] bool intersect_impl(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
                 const Vector<N, bool>& dir_negative,

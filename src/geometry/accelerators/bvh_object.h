@@ -38,22 +38,22 @@ public:
         {
         }
 
-        const BoundingBox<N, T>& bounds() const
+        [[nodiscard]] const BoundingBox<N, T>& bounds() const
         {
                 return bounds_;
         }
 
-        const Vector<N, T>& center() const
+        [[nodiscard]] const Vector<N, T>& center() const
         {
                 return center_;
         }
 
-        T intersection_cost() const
+        [[nodiscard]] T intersection_cost() const
         {
                 return intersection_cost_;
         }
 
-        unsigned index() const
+        [[nodiscard]] unsigned index() const
         {
                 return index_;
         }

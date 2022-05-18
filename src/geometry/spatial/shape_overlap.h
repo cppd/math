@@ -363,22 +363,22 @@ public:
                 // min_ = find_min_vector(vertices_);
         }
 
-        bool inside(const Vector<N, T>& p) const
+        [[nodiscard]] bool inside(const Vector<N, T>& p) const
         {
                 return shape_->inside(p);
         }
 
-        const Vertices& vertices() const
+        [[nodiscard]] const Vertices& vertices() const
         {
                 return vertices_;
         }
 
-        const Constraints& constraints() const
+        [[nodiscard]] const Constraints& constraints() const
         {
                 return constraints_;
         }
 
-        // const Vector<N, T>& min() const
+        // [[nodiscard]] const Vector<N, T>& min() const
         // {
         //         return min_;
         // }
@@ -409,29 +409,29 @@ public:
         {
         }
 
-        bool inside(const Vector<N, T>& p) const
+        [[nodiscard]] bool inside(const Vector<N, T>& p) const
         {
                 return shape_->inside(p);
         }
 
-        std::optional<T> intersect(const Ray<N, T>& r) const
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r) const
         {
                 return shape_->intersect(r);
         }
 
-        const Vertices& vertices() const
+        [[nodiscard]] const Vertices& vertices() const
         {
                 return vertices_;
         }
 
-        const Edges& edges() const
+        [[nodiscard]] const Edges& edges() const
         {
                 return edges_;
         }
 };
 
 template <typename Shape1, typename Shape2>
-bool shapes_overlap(const ShapeOverlap<Shape1>& shape_1, const ShapeOverlap<Shape2>& shape_2)
+[[nodiscard]] bool shapes_overlap(const ShapeOverlap<Shape1>& shape_1, const ShapeOverlap<Shape2>& shape_2)
 {
         namespace impl = shape_overlap_implementation;
 

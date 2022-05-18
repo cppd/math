@@ -50,7 +50,7 @@ public:
                 error("Facet not found in facet storage");
         }
 
-        std::size_t size() const noexcept
+        [[nodiscard]] std::size_t size() const noexcept
         {
                 return data_.size();
         }
@@ -60,12 +60,12 @@ public:
                 data_.clear();
         }
 
-        auto begin() const noexcept
+        [[nodiscard]] auto begin() const noexcept
         {
                 return data_.cbegin();
         }
 
-        auto end() const noexcept
+        [[nodiscard]] auto end() const noexcept
         {
                 return data_.cend();
         }

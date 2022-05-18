@@ -71,30 +71,30 @@ public:
 
         void set_normal_direction(const Vector<N, T>& direction);
 
-        Constraints<N, T, 2 * (N - 1), 1> constraints() const;
+        [[nodiscard]] Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
-        std::optional<T> intersect(const Ray<N, T>& r) const;
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r) const;
 
-        const Vector<N, T>& normal() const;
+        [[nodiscard]] const Vector<N, T>& normal() const;
 
-        Vector<N, T> project(const Vector<N, T>& point) const;
+        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const;
 
-        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+        [[nodiscard]] std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        decltype(auto) edges() const
+        [[nodiscard]] decltype(auto) edges() const
         {
                 return parallelotope_edges(org_, vectors_);
         }
 
-        decltype(auto) length() const
+        [[nodiscard]] decltype(auto) length() const
         {
                 return parallelotope_length(vectors_);
         }
 
-        const Vector<N, T>& org() const;
-        const std::array<Vector<N, T>, N - 1>& vectors() const;
+        [[nodiscard]] const Vector<N, T>& org() const;
+        [[nodiscard]] const std::array<Vector<N, T>, N - 1>& vectors() const;
 
-        auto overlap_function() const;
+        [[nodiscard]] auto overlap_function() const;
 };
 
 template <std::size_t N, typename T>

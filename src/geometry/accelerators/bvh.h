@@ -60,7 +60,7 @@ class Bvh final
                         return stack_[--next_];
                 }
 
-                bool empty() const
+                [[nodiscard]] bool empty() const
                 {
                         return next_ == 0;
                 }
@@ -87,12 +87,12 @@ class Bvh final
 public:
         explicit Bvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* progress);
 
-        const BoundingBox<N, T>& bounding_box() const
+        [[nodiscard]] const BoundingBox<N, T>& bounding_box() const
         {
                 return nodes_[0].bounds;
         }
 
-        std::optional<T> intersect_root(const Ray<N, T>& ray, const T& max_distance) const
+        [[nodiscard]] std::optional<T> intersect_root(const Ray<N, T>& ray, const T& max_distance) const
         {
                 return nodes_[0].bounds.intersect(ray, max_distance);
         }
@@ -100,7 +100,7 @@ public:
         // The signature of the object_intersect function
         // std::optional<std::tuple<T, ...> f(const auto& indices, const auto& max_distance);
         template <typename ObjectIntersect>
-        std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
+        [[nodiscard]] std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
                 const Ray<N, T>& ray,
                 const T& max_distance,
                 const ObjectIntersect& object_intersect) const

@@ -63,7 +63,7 @@ class Parallelotope final
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
-        bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
+        [[nodiscard]] bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
 
         template <int INDEX, typename F>
         void binary_division_impl(
@@ -90,36 +90,36 @@ public:
         Parallelotope(const Vector<N, T>& org, const std::array<T, N>& vectors);
         Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max);
 
-        Constraints<N, T, 2 * N, 0> constraints() const;
+        [[nodiscard]] Constraints<N, T, 2 * N, 0> constraints() const;
 
-        bool inside(const Vector<N, T>& p) const;
+        [[nodiscard]] bool inside(const Vector<N, T>& p) const;
 
-        std::optional<T> intersect(const Ray<N, T>& ray) const;
-        std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
-        std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
 
-        Vector<N, T> normal(const Vector<N, T>& point) const;
+        [[nodiscard]] Vector<N, T> normal(const Vector<N, T>& point) const;
 
-        Vector<N, T> project(const Vector<N, T>& point) const;
+        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const;
 
-        std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
+        [[nodiscard]] std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
-        const Vector<N, T>& org() const;
-        const std::array<Vector<N, T>, N>& vectors() const;
+        [[nodiscard]] const Vector<N, T>& org() const;
+        [[nodiscard]] const std::array<Vector<N, T>, N>& vectors() const;
 
-        auto overlap_function() const;
+        [[nodiscard]] auto overlap_function() const;
 
-        decltype(auto) edges() const
+        [[nodiscard]] decltype(auto) edges() const
         {
                 return parallelotope_edges(org_, vectors_);
         }
 
-        decltype(auto) length() const
+        [[nodiscard]] decltype(auto) length() const
         {
                 return parallelotope_length(vectors_);
         }
 
-        decltype(auto) vertices() const
+        [[nodiscard]] decltype(auto) vertices() const
         {
                 return parallelotope_vertices(org_, vectors_);
         }

@@ -43,12 +43,12 @@ public:
         {
         }
 
-        const std::array<int, N>& data() const
+        [[nodiscard]] const std::array<int, N>& data() const
         {
                 return vertices_;
         }
 
-        int operator[](const unsigned i) const
+        [[nodiscard]] int operator[](const unsigned i) const
         {
                 return vertices_[i];
         }
@@ -72,7 +72,7 @@ class IntegerFacet
         }
 
         template <typename T>
-        static bool opposite_orthos(const Vector<N, T>& v1, const Vector<N, T>& v2)
+        [[nodiscard]] static bool opposite_orthos(const Vector<N, T>& v1, const Vector<N, T>& v2)
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
@@ -90,7 +90,7 @@ class IntegerFacet
         Vector<N, ComputeType> ortho_;
 
         // dot(ortho, vector from facet to point)
-        ComputeType visible(const std::vector<Vector<N, DataType>>& points, const int p) const
+        [[nodiscard]] ComputeType visible(const std::vector<Vector<N, DataType>>& points, const int p) const
         {
                 const Vector<N, DataType>& facet_point = points[vertices_[0]];
                 const Vector<N, DataType>& point = points[p];
@@ -141,23 +141,23 @@ protected:
         ~IntegerFacet() = default;
 
 public:
-        const std::array<int, N>& vertices() const
+        [[nodiscard]] const std::array<int, N>& vertices() const
         {
                 return vertices_.data();
         }
 
-        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
+        [[nodiscard]] bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
         {
                 // strictly greater than 0
                 return visible(points, point) > 0;
         }
 
-        Vector<N, double> double_ortho() const
+        [[nodiscard]] Vector<N, double> double_ortho() const
         {
                 return to_vector<double>(ortho_).normalized();
         }
 
-        bool last_ortho_coord_is_negative() const
+        [[nodiscard]] bool last_ortho_coord_is_negative() const
         {
                 return ortho_[N - 1] < 0;
         }
@@ -208,7 +208,7 @@ class IntegerFacet<N, DataType, mpz_class>
                 }
         }
 
-        static Vector<N, double> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
+        [[nodiscard]] static Vector<N, double> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
         {
                 static constexpr int FLOAT_BIT_PRECISION = 128;
 
@@ -232,7 +232,7 @@ class IntegerFacet<N, DataType, mpz_class>
                 return res;
         }
 
-        static bool opposite_orthos(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+        [[nodiscard]] static bool opposite_orthos(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
@@ -252,7 +252,7 @@ class IntegerFacet<N, DataType, mpz_class>
         Vector<N, mpz_class> ortho_;
 
         // sign of dot(ortho, vector from facet to point)
-        int visible(const std::vector<Vector<N, DataType>>& points, const int p) const
+        [[nodiscard]] int visible(const std::vector<Vector<N, DataType>>& points, const int p) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
@@ -272,7 +272,7 @@ class IntegerFacet<N, DataType, mpz_class>
         }
 
         // sign of dot(ortho, vector from facet to point)
-        int visible(const std::vector<Vector<N, mpz_class>>& points, const int p) const
+        [[nodiscard]] int visible(const std::vector<Vector<N, mpz_class>>& points, const int p) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
@@ -334,23 +334,23 @@ protected:
         ~IntegerFacet() = default;
 
 public:
-        const std::array<int, N>& vertices() const
+        [[nodiscard]] const std::array<int, N>& vertices() const
         {
                 return vertices_.data();
         }
 
-        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
+        [[nodiscard]] bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
         {
                 // strictly greater than 0
                 return visible(points, point) > 0;
         }
 
-        Vector<N, double> double_ortho() const
+        [[nodiscard]] Vector<N, double> double_ortho() const
         {
                 return normalized_double_vector(ortho_);
         }
 
-        bool last_ortho_coord_is_negative() const
+        [[nodiscard]] bool last_ortho_coord_is_negative() const
         {
                 return mpz_sgn(ortho_[N - 1].get_mpz_t()) < 0;
         }

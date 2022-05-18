@@ -209,12 +209,12 @@ public:
                 ASSERT(object_indices_size_ == objects.size());
         }
 
-        const std::vector<unsigned>& object_indices() const
+        [[nodiscard]] const std::vector<unsigned>& object_indices() const
         {
                 return object_indices_;
         }
 
-        const std::deque<BvhBuildNode<N, T>>& nodes() const
+        [[nodiscard]] const std::deque<BvhBuildNode<N, T>>& nodes() const
         {
                 return nodes_;
         }

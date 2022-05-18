@@ -33,11 +33,11 @@ namespace ns::geometry
 template <std::size_t N>
 class DelaunayFacet final
 {
-        const std::array<int, N> vertices_;
+        std::array<int, N> vertices_;
         // the vector is directed outside if there is only one Delaunay object
-        const Vector<N, double> ortho_;
+        Vector<N, double> ortho_;
         // the second element is negative if there is only one Delaunay object
-        const std::array<int, 2> delaunay_;
+        std::array<int, 2> delaunay_;
 
 public:
         DelaunayFacet(
@@ -51,22 +51,22 @@ public:
         {
         }
 
-        bool one_sided() const
+        [[nodiscard]] bool one_sided() const
         {
                 return delaunay_[1] < 0;
         }
 
-        const std::array<int, N>& vertices() const
+        [[nodiscard]] const std::array<int, N>& vertices() const
         {
                 return vertices_;
         }
 
-        const Vector<N, double>& ortho() const
+        [[nodiscard]] const Vector<N, double>& ortho() const
         {
                 return ortho_;
         }
 
-        int delaunay(const unsigned i) const
+        [[nodiscard]] int delaunay(const unsigned i) const
         {
                 ASSERT(i == 0 || (i == 1 && delaunay_[1] >= 0));
                 return delaunay_[i];
@@ -76,8 +76,8 @@ public:
 template <std::size_t N>
 class DelaunayObject final
 {
-        const std::array<int, N + 1> vertices_;
-        const Vector<N, double> voronoi_vertex_;
+        std::array<int, N + 1> vertices_;
+        Vector<N, double> voronoi_vertex_;
 
 public:
         DelaunayObject(const std::array<int, N + 1>& vertices, const Vector<N, double>& voronoi_vertex)
@@ -86,12 +86,12 @@ public:
         {
         }
 
-        const std::array<int, N + 1>& vertices() const
+        [[nodiscard]] const std::array<int, N + 1>& vertices() const
         {
                 return vertices_;
         }
 
-        const Vector<N, double>& voronoi_vertex() const
+        [[nodiscard]] const Vector<N, double>& voronoi_vertex() const
         {
                 return voronoi_vertex_;
         }

@@ -60,7 +60,7 @@ class SpatialSubdivisionTree final
         std::vector<Box> boxes_;
         T ray_offset_;
 
-        const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
+        [[nodiscard]] const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
         {
                 if (!box.parallelotope.inside(p))
                 {
@@ -81,7 +81,7 @@ class SpatialSubdivisionTree final
                 return nullptr;
         }
 
-        const Box* find_box_for_point(const Vector<N, T>& p) const
+        [[nodiscard]] const Box* find_box_for_point(const Vector<N, T>& p) const
         {
                 return find_box_for_point(boxes_[ROOT_BOX], p);
         }
@@ -93,21 +93,23 @@ public:
                 ~Objects() = default;
 
         public:
-                virtual int count() const = 0;
-                virtual const BoundingBox<N, T>& bounding_box() const = 0;
-                virtual std::vector<int> intersection_indices(
+                [[nodiscard]] virtual int count() const = 0;
+
+                [[nodiscard]] virtual const BoundingBox<N, T>& bounding_box() const = 0;
+
+                [[nodiscard]] virtual std::vector<int> intersection_indices(
                         const Parallelotope& parallelotope,
                         const std::vector<int>& object_indices) const = 0;
         };
 
         SpatialSubdivisionTree(const Objects& objects, ProgressRatio* progress);
 
-        const Parallelotope& root() const
+        [[nodiscard]] const Parallelotope& root() const
         {
                 return boxes_[ROOT_BOX].parallelotope;
         }
 
-        std::optional<T> intersect_root(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<T> intersect_root(const Ray<N, T>& ray) const
         {
                 return boxes_[ROOT_BOX].parallelotope.intersect_volume(ray);
         }
@@ -118,7 +120,7 @@ public:
         // The signature of the object_intersect function
         // std::optional<std::tuple<T, ...> f(const auto& indices);
         template <typename ObjectIntersect>
-        std::invoke_result_t<ObjectIntersect, const std::vector<int>&> intersect(
+        [[nodiscard]] std::invoke_result_t<ObjectIntersect, const std::vector<int>&> intersect(
                 const Ray<N, T>& ray,
                 const T& root_t,
                 const ObjectIntersect& object_intersect) const

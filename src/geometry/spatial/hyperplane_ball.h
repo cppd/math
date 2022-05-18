@@ -50,7 +50,7 @@ public:
                 plane_.d = dot(plane_.n, center_);
         }
 
-        std::optional<T> intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray) const
         {
                 const T t = plane_.intersect(ray);
                 if (!(t > 0))
@@ -67,17 +67,17 @@ public:
                 return std::nullopt;
         }
 
-        const Vector<N, T>& center() const
+        [[nodiscard]] const Vector<N, T>& center() const
         {
                 return center_;
         }
 
-        const Vector<N, T>& normal() const
+        [[nodiscard]] const Vector<N, T>& normal() const
         {
                 return plane_.n;
         }
 
-        const T& radius_squared() const
+        [[nodiscard]] const T& radius_squared() const
         {
                 return radius_squared_;
         }

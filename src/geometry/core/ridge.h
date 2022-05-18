@@ -42,7 +42,7 @@ public:
                 ASSERT(std::is_sorted(vertices.cbegin(), vertices.cend()));
         }
 
-        bool operator==(const Ridge& a) const
+        [[nodiscard]] bool operator==(const Ridge& a) const
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
@@ -54,7 +54,7 @@ public:
                 return true;
         }
 
-        bool operator<(const Ridge& a) const
+        [[nodiscard]] bool operator<(const Ridge& a) const
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
@@ -70,12 +70,12 @@ public:
                 return false;
         }
 
-        const std::array<int, N - 1>& vertices() const
+        [[nodiscard]] const std::array<int, N - 1>& vertices() const
         {
                 return vertices_;
         }
 
-        std::size_t hash() const
+        [[nodiscard]] std::size_t hash() const
         {
                 return compute_hash(vertices_);
         }
@@ -99,17 +99,17 @@ public:
                 ASSERT(facet);
         }
 
-        int point() const
+        [[nodiscard]] int point() const
         {
                 return facet_->vertices()[external_vertex_index_];
         }
 
-        int vertex_index() const
+        [[nodiscard]] int vertex_index() const
         {
                 return external_vertex_index_;
         }
 
-        const Facet* facet() const
+        [[nodiscard]] const Facet* facet() const
         {
                 return facet_;
         }
@@ -139,12 +139,12 @@ public:
                       + to_string(facet->vertices()[external_point_index]));
         }
 
-        const RidgeFacet<Facet>& f0() const
+        [[nodiscard]] const RidgeFacet<Facet>& f0() const
         {
                 return facet_0_;
         }
 
-        const RidgeFacet<Facet>& f1() const
+        [[nodiscard]] const RidgeFacet<Facet>& f1() const
         {
                 return facet_1_;
         }
@@ -182,22 +182,22 @@ public:
                 error("Remove ridge facet: facet not found in the link. Facet " + to_string(facet->vertices()));
         }
 
-        decltype(auto) cbegin() const
+        [[nodiscard]] decltype(auto) cbegin() const
         {
                 return data_.cbegin();
         }
 
-        decltype(auto) cend() const
+        [[nodiscard]] decltype(auto) cend() const
         {
                 return data_.cend();
         }
 
-        decltype(auto) empty() const
+        [[nodiscard]] decltype(auto) empty() const
         {
                 return data_.empty();
         }
 
-        decltype(auto) size() const
+        [[nodiscard]] decltype(auto) size() const
         {
                 return data_.size();
         }

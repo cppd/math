@@ -71,7 +71,7 @@ class ParallelotopeAA final
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
-        bool intersect_impl(const Ray<N, T>& ray, T* first, T* second) const;
+        [[nodiscard]] bool intersect_impl(const Ray<N, T>& ray, T* first, T* second) const;
 
         template <int INDEX, typename F>
         void binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f) const;
@@ -89,34 +89,34 @@ public:
         ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes);
         ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max);
 
-        Constraints<N, T, 2 * N, 0> constraints() const;
+        [[nodiscard]] Constraints<N, T, 2 * N, 0> constraints() const;
 
-        bool inside(const Vector<N, T>& point) const;
+        [[nodiscard]] bool inside(const Vector<N, T>& point) const;
 
-        std::optional<T> intersect(const Ray<N, T>& ray) const;
-        std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
-        std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
+        [[nodiscard]] std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
 
-        Vector<N, T> normal(const Vector<N, T>& point) const;
+        [[nodiscard]] Vector<N, T> normal(const Vector<N, T>& point) const;
 
-        std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
+        [[nodiscard]] std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
 
-        T length() const;
+        [[nodiscard]] T length() const;
 
-        Vector<N, T> org() const;
-        std::array<Vector<N, T>, N> vectors() const;
+        [[nodiscard]] Vector<N, T> org() const;
+        [[nodiscard]] std::array<Vector<N, T>, N> vectors() const;
 
-        Vector<N, T> min() const;
-        Vector<N, T> max() const;
+        [[nodiscard]] Vector<N, T> min() const;
+        [[nodiscard]] Vector<N, T> max() const;
 
-        auto overlap_function() const;
+        [[nodiscard]] auto overlap_function() const;
 
-        decltype(auto) edges() const
+        [[nodiscard]] decltype(auto) edges() const
         {
                 return parallelotope_edges(min(), max());
         }
 
-        decltype(auto) vertices() const
+        [[nodiscard]] decltype(auto) vertices() const
         {
                 return parallelotope_vertices(min(), max());
         }

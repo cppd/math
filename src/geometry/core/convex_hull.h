@@ -29,8 +29,8 @@ namespace ns::geometry
 template <std::size_t N>
 class ConvexHullFacet final
 {
-        const std::array<int, N> indices_;
-        const Vector<N, double> ortho_;
+        std::array<int, N> indices_;
+        Vector<N, double> ortho_;
 
 public:
         ConvexHullFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho)
@@ -39,12 +39,12 @@ public:
         {
         }
 
-        const std::array<int, N>& vertices() const
+        [[nodiscard]] const std::array<int, N>& vertices() const
         {
                 return indices_;
         }
 
-        const Vector<N, double>& ortho() const
+        [[nodiscard]] const Vector<N, double>& ortho() const
         {
                 return ortho_;
         }
@@ -53,8 +53,8 @@ public:
 template <std::size_t N>
 class DelaunaySimplex final
 {
-        const std::array<int, N + 1> indices_;
-        const std::array<Vector<N, double>, N + 1> orthos_;
+        std::array<int, N + 1> indices_;
+        std::array<Vector<N, double>, N + 1> orthos_;
 
 public:
         DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<Vector<N, double>, N + 1>& orthos)
@@ -63,12 +63,12 @@ public:
         {
         }
 
-        const std::array<int, N + 1>& vertices() const
+        [[nodiscard]] const std::array<int, N + 1>& vertices() const
         {
                 return indices_;
         }
 
-        const Vector<N, double>& ortho(unsigned i) const
+        [[nodiscard]] const Vector<N, double>& ortho(unsigned i) const
         {
                 ASSERT(i < orthos_.size());
                 return orthos_[i];

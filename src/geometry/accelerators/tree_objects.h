@@ -35,12 +35,13 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
+        [[nodiscard]] static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
         {
                 if (objects.empty())
                 {
                         error("No objects for tree");
                 }
+
                 BoundingBox<N, T> box = objects[0].bounding_box();
                 for (std::size_t i = 1; i < objects.size(); ++i)
                 {
@@ -52,18 +53,19 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
         BoundingBox<N, T> bounding_box_;
         std::vector<std::remove_cvref_t<decltype(std::declval<Object>().overlap_function())>> overlap_functions_;
 
-        int count() const override
+        [[nodiscard]] int count() const override
         {
                 return overlap_functions_.size();
         }
 
-        const BoundingBox<N, T>& bounding_box() const override
+        [[nodiscard]] const BoundingBox<N, T>& bounding_box() const override
         {
                 return bounding_box_;
         }
 
-        std::vector<int> intersection_indices(const Parallelotope& parallelotope, const std::vector<int>& indices)
-                const override
+        [[nodiscard]] std::vector<int> intersection_indices(
+                const Parallelotope& parallelotope,
+                const std::vector<int>& indices) const override
         {
                 ShapeOverlap p(&parallelotope);
                 std::vector<int> intersections;

@@ -42,7 +42,7 @@ namespace
 {
 using Edge2 = Ridge<3>;
 
-class WeightedEdge
+class WeightedEdge final
 {
         double weight_;
         Edge2 edge_;
@@ -55,12 +55,12 @@ public:
         {
         }
 
-        double weight() const
+        [[nodiscard]] double weight() const
         {
                 return weight_;
         }
 
-        int vertex(const int i) const
+        [[nodiscard]] int vertex(const int i) const
         {
                 return edge_.vertices()[i];
         }

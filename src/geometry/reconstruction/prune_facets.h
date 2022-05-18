@@ -73,7 +73,7 @@ public:
                 e1_ = numerical::orthogonal_complement(vectors).normalized();
         }
 
-        Vector<2, T> coordinates(const Vector<N, T>& v) const
+        [[nodiscard]] Vector<2, T> coordinates(const Vector<N, T>& v) const
         {
                 return Vector<2, T>(dot(e0_, v), dot(e1_, v)).normalized();
         }

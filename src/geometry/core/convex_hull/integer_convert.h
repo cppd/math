@@ -67,7 +67,7 @@ public:
                 scale_ = max_value / max_d;
         }
 
-        Vector<N, IntegerType> to_integer(const std::size_t i) const
+        [[nodiscard]] Vector<N, IntegerType> to_integer(const std::size_t i) const
         {
                 ASSERT(i < points_->size());
 
