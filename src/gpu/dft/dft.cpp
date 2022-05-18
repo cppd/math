@@ -302,7 +302,7 @@ class Impl final : public Dft
                 }
         }
 
-        const vulkan::Buffer& buffer() const override
+        [[nodiscard]] const vulkan::Buffer& buffer() const override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -310,7 +310,7 @@ class Impl final : public Dft
                 return x_d_->buffer();
         }
 
-        const vulkan::BufferWithMemory& buffer_with_memory() const override
+        [[nodiscard]] const vulkan::BufferWithMemory& buffer_with_memory() const override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

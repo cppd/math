@@ -56,7 +56,7 @@ class RendererView final
         std::optional<Vector4d> clip_plane_;
         bool show_normals_ = false;
 
-        static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
+        [[nodiscard]] static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
         {
                 return numerical::transform::ortho_vulkan<double>(
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
@@ -201,37 +201,37 @@ public:
                 std::visit(visitor, view_command);
         }
 
-        bool show_shadow() const
+        [[nodiscard]] bool show_shadow() const
         {
                 return show_shadow_;
         }
 
-        const std::optional<Vector4d>& clip_plane() const
+        [[nodiscard]] const std::optional<Vector4d>& clip_plane() const
         {
                 return clip_plane_;
         }
 
-        bool show_normals() const
+        [[nodiscard]] bool show_normals() const
         {
                 return show_normals_;
         }
 
-        const Matrix4d& vp_matrix() const
+        [[nodiscard]] const Matrix4d& vp_matrix() const
         {
                 return vp_matrix_;
         }
 
-        const Matrix4d& shadow_vp_matrix() const
+        [[nodiscard]] const Matrix4d& shadow_vp_matrix() const
         {
                 return shadow_vp_matrix_;
         }
 
-        const Matrix4d& world_to_shadow_matrix() const
+        [[nodiscard]] const Matrix4d& world_to_shadow_matrix() const
         {
                 return world_to_shadow_matrix_;
         }
 
-        double shadow_zoom() const
+        [[nodiscard]] double shadow_zoom() const
         {
                 ASSERT(shadow_mapping_);
                 return shadow_zoom_;

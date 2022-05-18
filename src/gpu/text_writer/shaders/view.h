@@ -42,7 +42,7 @@ class Buffer final
 public:
         Buffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_matrix(const Matrix4d& matrix) const;
         void set_color(const Vector3f& color) const;
@@ -58,14 +58,14 @@ class Memory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         Memory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& data_buffer);
 
         void set_image(VkSampler sampler, VkImageView image) const;
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 };
 
 struct Vertex final
@@ -73,8 +73,8 @@ struct Vertex final
         Vector<2, std::int32_t> window_coordinates;
         Vector<2, float> texture_coordinates;
 
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
 class Program final
@@ -96,13 +96,13 @@ public:
         Program(Program&&) = default;
         ~Program() = default;
 
-        vulkan::handle::Pipeline create_pipeline(
+        [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 };
 }

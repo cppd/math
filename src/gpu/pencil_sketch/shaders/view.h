@@ -37,12 +37,12 @@ class ViewMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         ViewMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_image(VkSampler sampler, const vulkan::ImageView& image) const;
 };
@@ -52,8 +52,8 @@ struct ViewVertex final
         Vector4f position;
         Vector2f texture_coordinates;
 
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
 class ViewProgram final
@@ -75,12 +75,12 @@ public:
         ViewProgram(ViewProgram&&) = default;
         ~ViewProgram() = default;
 
-        vulkan::handle::Pipeline create_pipeline(
+        [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 };
 }

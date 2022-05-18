@@ -25,32 +25,32 @@ class ShaderCode final : public Code
 {
         bool ray_tracing_;
 
-        bool ray_tracing() const override
+        [[nodiscard]] bool ray_tracing() const override
         {
                 return ray_tracing_;
         }
 
-        std::vector<std::uint32_t> mesh_triangles_vert() const override;
-        std::vector<std::uint32_t> mesh_triangles_geom() const override;
-        std::vector<std::uint32_t> mesh_triangles_frag() const override;
-        std::vector<std::uint32_t> mesh_shadow_vert() const override;
-        std::vector<std::uint32_t> mesh_triangle_lines_vert() const override;
-        std::vector<std::uint32_t> mesh_triangle_lines_geom() const override;
-        std::vector<std::uint32_t> mesh_triangle_lines_frag() const override;
-        std::vector<std::uint32_t> mesh_points_0d_vert() const override;
-        std::vector<std::uint32_t> mesh_points_1d_vert() const override;
-        std::vector<std::uint32_t> mesh_points_frag() const override;
-        std::vector<std::uint32_t> mesh_normals_vert() const override;
-        std::vector<std::uint32_t> mesh_normals_geom() const override;
-        std::vector<std::uint32_t> mesh_normals_frag() const override;
-        std::vector<std::uint32_t> volume_vert() const override;
-        std::vector<std::uint32_t> volume_image_frag() const override;
-        std::vector<std::uint32_t> volume_image_fragments_frag() const override;
-        std::vector<std::uint32_t> volume_fragments_frag() const override;
-        std::vector<std::uint32_t> volume_image_opacity_frag() const override;
-        std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const override;
-        std::vector<std::uint32_t> volume_fragments_opacity_frag() const override;
-        std::vector<std::uint32_t> volume_opacity_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangles_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangles_geom() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangles_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_shadow_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangle_lines_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangle_lines_geom() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_triangle_lines_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_points_0d_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_points_1d_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_points_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_normals_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_normals_geom() const override;
+        [[nodiscard]] std::vector<std::uint32_t> mesh_normals_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_vert() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_image_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_image_fragments_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_fragments_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_image_opacity_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_fragments_opacity_frag() const override;
+        [[nodiscard]] std::vector<std::uint32_t> volume_opacity_frag() const override;
 
 public:
         explicit ShaderCode(bool ray_tracing);

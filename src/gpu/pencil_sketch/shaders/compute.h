@@ -38,12 +38,12 @@ class ComputeMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         ComputeMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_input(VkSampler sampler, const vulkan::ImageView& image) const;
         void set_output_image(const vulkan::ImageView& image) const;
@@ -64,9 +64,9 @@ class ComputeConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         ComputeConstant();
@@ -97,8 +97,8 @@ public:
         void create_pipeline(unsigned group_size, const Region<2, int>& rectangle);
         void delete_pipeline();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 };
 }

@@ -38,21 +38,21 @@ public:
                 const vulkan::CommandPool* compute_command_pool,
                 const vulkan::Queue* compute_queue);
 
-        unsigned width() const
+        [[nodiscard]] unsigned width() const
         {
                 return width_;
         }
 
-        unsigned height() const
+        [[nodiscard]] unsigned height() const
         {
                 return height_;
         }
 
-        const vulkan::ImageView& image_view() const
+        [[nodiscard]] const vulkan::ImageView& image_view() const
         {
                 return image_.image_view();
         }
 
-        image::Image<2> image() const;
+        [[nodiscard]] image::Image<2> image() const;
 };
 }

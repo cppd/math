@@ -38,7 +38,7 @@ public:
                 const vulkan::Queue& compute_queue,
                 std::vector<std::uint32_t> family_indices);
 
-        VkAccelerationStructureKHR handle() const;
+        [[nodiscard]] VkAccelerationStructureKHR handle() const;
 
         void create(
                 const vulkan::Device& device,

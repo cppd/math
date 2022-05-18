@@ -30,7 +30,8 @@ struct VolumeObject
 {
         virtual ~VolumeObject() = default;
 
-        virtual const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const = 0;
+        [[nodiscard]] virtual const VkDescriptorSet& descriptor_set(
+                VkDescriptorSetLayout descriptor_set_layout) const = 0;
 
         virtual void set_matrix_and_clip_plane(
                 const Matrix4d& vp_matrix,
@@ -48,9 +49,9 @@ struct VolumeObject
                 bool image = false;
         };
 
-        virtual UpdateChanges update(const model::volume::Reading<3>& volume_object) = 0;
+        [[nodiscard]] virtual UpdateChanges update(const model::volume::Reading<3>& volume_object) = 0;
 
-        virtual bool is_isosurface() const = 0;
+        [[nodiscard]] virtual bool is_isosurface() const = 0;
 };
 
 std::unique_ptr<VolumeObject> create_volume_object(

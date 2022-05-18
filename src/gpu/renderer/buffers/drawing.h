@@ -59,7 +59,7 @@ class DrawingBuffer final
 public:
         DrawingBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_matrix(const Matrix4d& vp_matrix) const;
         void set_transparency_max_node_count(std::uint32_t count) const;

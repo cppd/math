@@ -39,9 +39,9 @@ class Constant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         Constant();

@@ -32,8 +32,8 @@ struct PointsVertex final
         {
         }
 
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 }

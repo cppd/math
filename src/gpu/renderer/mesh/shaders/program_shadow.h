@@ -48,17 +48,17 @@ public:
         ShadowProgram(ShadowProgram&&) = default;
         ~ShadowProgram() = default;
 
-        vulkan::handle::Pipeline create_pipeline(
+        [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
 
-        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings();
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings();
 
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 };
 }

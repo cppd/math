@@ -37,11 +37,11 @@ struct TrianglesVertex final
         {
         }
 
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangles();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_shadow();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangle_lines();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_normals();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangles();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_shadow();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangle_lines();
+        [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_normals();
 };
 }

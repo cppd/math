@@ -42,11 +42,11 @@ public:
         RayQueryProgram(RayQueryProgram&&) = default;
         ~RayQueryProgram() = default;
 
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 };
 }

@@ -90,12 +90,12 @@ public:
         {
         }
 
-        decltype(auto) visible_objects() const
+        [[nodiscard]] decltype(auto) visible_objects() const
         {
                 return storage_.visible_objects();
         }
 
-        decltype(auto) contains(const model::ObjectId id) const
+        [[nodiscard]] decltype(auto) contains(const model::ObjectId id) const
         {
                 return storage_.contains(id);
         }

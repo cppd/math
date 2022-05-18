@@ -64,8 +64,8 @@ public:
                 const std::vector<std::uint32_t>& graphics_family_indices,
                 const std::vector<std::uint32_t>& transfer_family_indices);
 
-        const vulkan::Buffer& buffer_coordinates() const;
-        const vulkan::Buffer& buffer_volume() const;
+        [[nodiscard]] const vulkan::Buffer& buffer_coordinates() const;
+        [[nodiscard]] const vulkan::Buffer& buffer_volume() const;
 
         void set_coordinates(
                 const Matrix4d& device_to_texture_matrix,

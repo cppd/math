@@ -35,12 +35,12 @@ class BitReverseMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         BitReverseMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set(const vulkan::Buffer& buffer) const;
 };
@@ -57,9 +57,9 @@ class BitReverseConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         BitReverseConstant();
@@ -94,8 +94,8 @@ public:
                 std::uint32_t n_bits);
         void delete_pipeline();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 };
 }

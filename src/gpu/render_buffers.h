@@ -31,15 +31,15 @@ protected:
         ~RenderBuffers3D() = default;
 
 public:
-        virtual unsigned width() const = 0;
-        virtual unsigned height() const = 0;
-        virtual VkSampleCountFlagBits sample_count() const = 0;
+        [[nodiscard]] virtual unsigned width() const = 0;
+        [[nodiscard]] virtual unsigned height() const = 0;
+        [[nodiscard]] virtual VkSampleCountFlagBits sample_count() const = 0;
 
-        virtual VkFormat depth_format() const = 0;
-        virtual VkImageView depth_image_view(unsigned index) const = 0;
+        [[nodiscard]] virtual VkFormat depth_format() const = 0;
+        [[nodiscard]] virtual VkImageView depth_image_view(unsigned index) const = 0;
 
-        virtual const vulkan::RenderPass& render_pass() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
+        [[nodiscard]] virtual const vulkan::RenderPass& render_pass() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 
         virtual void commands_depth_copy(
                 VkCommandBuffer command_buffer,
@@ -55,10 +55,10 @@ protected:
         ~RenderBuffers2D() = default;
 
 public:
-        virtual unsigned width() const = 0;
-        virtual unsigned height() const = 0;
-        virtual VkSampleCountFlagBits sample_count() const = 0;
-        virtual const vulkan::RenderPass& render_pass() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
+        [[nodiscard]] virtual unsigned width() const = 0;
+        [[nodiscard]] virtual unsigned height() const = 0;
+        [[nodiscard]] virtual VkSampleCountFlagBits sample_count() const = 0;
+        [[nodiscard]] virtual const vulkan::RenderPass& render_pass() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 };
 }

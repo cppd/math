@@ -30,17 +30,17 @@ protected:
         ~Opacity() = default;
 
 public:
-        virtual const std::vector<vulkan::ImageWithMemory>& images() const = 0;
+        [[nodiscard]] virtual const std::vector<vulkan::ImageWithMemory>& images() const = 0;
 
-        virtual std::vector<VkClearValue> clear_values() const = 0;
+        [[nodiscard]] virtual std::vector<VkClearValue> clear_values() const = 0;
 };
 
 class OpacityBuffers final : public Opacity
 {
         std::vector<vulkan::ImageWithMemory> images_;
 
-        const std::vector<vulkan::ImageWithMemory>& images() const override;
-        std::vector<VkClearValue> clear_values() const override;
+        [[nodiscard]] const std::vector<vulkan::ImageWithMemory>& images() const override;
+        [[nodiscard]] std::vector<VkClearValue> clear_values() const override;
 
 public:
         void create_buffers(

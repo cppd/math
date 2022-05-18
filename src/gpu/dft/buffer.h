@@ -45,17 +45,17 @@ public:
                 const std::vector<std::uint32_t>& family_indices,
                 const std::vector<std::complex<double>>& data);
 
-        unsigned size() const
+        [[nodiscard]] unsigned size() const
         {
                 return size_;
         }
 
-        const vulkan::Buffer& buffer() const
+        [[nodiscard]] const vulkan::Buffer& buffer() const
         {
                 return buffer_.buffer();
         }
 
-        const vulkan::BufferWithMemory& buffer_with_memory() const
+        [[nodiscard]] const vulkan::BufferWithMemory& buffer_with_memory() const
         {
                 return buffer_;
         }

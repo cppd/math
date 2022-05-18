@@ -70,22 +70,22 @@ public:
                 hash_ = compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
 
-        const Vector3f& p() const
+        [[nodiscard]] const Vector3f& p() const
         {
                 return p_;
         }
 
-        const Vector3f& n() const
+        [[nodiscard]] const Vector3f& n() const
         {
                 return n_;
         }
 
-        const Vector2f& t() const
+        [[nodiscard]] const Vector2f& t() const
         {
                 return t_;
         }
 
-        const std::size_t& hash() const
+        [[nodiscard]] const std::size_t& hash() const
         {
                 return hash_;
         }
@@ -95,7 +95,7 @@ class MapVertex final
 {
         const Vertex* data_;
 
-        std::size_t hash() const noexcept
+        [[nodiscard]] std::size_t hash() const noexcept
         {
                 return data_->hash();
         }
@@ -105,14 +105,14 @@ public:
         {
         }
 
-        bool operator==(const MapVertex& v) const noexcept
+        [[nodiscard]] bool operator==(const MapVertex& v) const noexcept
         {
                 return data_->p() == v.data_->p() && data_->n() == v.data_->n() && data_->t() == v.data_->t();
         }
 
         struct Hash final
         {
-                std::size_t operator()(const MapVertex& v) const
+                [[nodiscard]] std::size_t operator()(const MapVertex& v) const
                 {
                         return v.hash();
                 }

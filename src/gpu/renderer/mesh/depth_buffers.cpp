@@ -172,13 +172,13 @@ class Impl final : public DepthBuffers
 
         //
 
-        const vulkan::ImageView& image_view(unsigned index) const override;
-        unsigned width() const override;
-        unsigned height() const override;
-        const vulkan::RenderPass& render_pass() const override;
-        VkSampleCountFlagBits sample_count() const override;
-        const std::vector<VkFramebuffer>& framebuffers() const override;
-        const std::vector<VkClearValue>& clear_values() const override;
+        [[nodiscard]] const vulkan::ImageView& image_view(unsigned index) const override;
+        [[nodiscard]] unsigned width() const override;
+        [[nodiscard]] unsigned height() const override;
+        [[nodiscard]] const vulkan::RenderPass& render_pass() const override;
+        [[nodiscard]] VkSampleCountFlagBits sample_count() const override;
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers() const override;
+        [[nodiscard]] const std::vector<VkClearValue>& clear_values() const override;
 
 public:
         Impl(unsigned buffer_count,

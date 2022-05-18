@@ -57,8 +57,8 @@ class VolumeProgram final
         vulkan::Shader fragment_shader_image_opacity_;
         vulkan::Shader fragment_shader_opacity_;
 
-        VkPipelineLayout pipeline_layout(VolumeProgramPipelineType type) const;
-        const vulkan::Shader* fragment_shader(VolumeProgramPipelineType type) const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout(VolumeProgramPipelineType type) const;
+        [[nodiscard]] const vulkan::Shader* fragment_shader(VolumeProgramPipelineType type) const;
 
 public:
         explicit VolumeProgram(const vulkan::Device* device, const Code& code);
@@ -70,20 +70,20 @@ public:
         VolumeProgram(VolumeProgram&&) = default;
         ~VolumeProgram() = default;
 
-        vulkan::handle::Pipeline create_pipeline(
+        [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
                 const Region<2, int>& viewport,
                 VolumeProgramPipelineType type) const;
 
-        VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        [[nodiscard]] std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
 
-        VkDescriptorSetLayout descriptor_set_layout_image() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_image() const;
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
 
-        VkPipelineLayout pipeline_layout_shared() const;
-        VkPipelineLayout pipeline_layout_shared_image() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout_shared() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout_shared_image() const;
 };
 }

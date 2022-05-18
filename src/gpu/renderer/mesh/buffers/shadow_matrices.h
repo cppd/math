@@ -37,7 +37,7 @@ class ShadowMatricesBuffer final
 public:
         ShadowMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
 };

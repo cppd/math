@@ -44,7 +44,7 @@ class MeshBuffer final
 public:
         MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const Matrix4d& model_matrix, const Matrix3d& normal_matrix) const;
         void set_color(const Vector3f& color) const;

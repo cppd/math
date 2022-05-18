@@ -90,9 +90,9 @@ public:
                 const vulkan::Buffer& drawing_buffer,
                 const GgxF1Albedo& ggx_f1_albedo);
 
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
-        VkSampler image_sampler() const;
-        VkSampler transfer_function_sampler() const;
+        [[nodiscard]] std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
+        [[nodiscard]] VkSampler image_sampler() const;
+        [[nodiscard]] VkSampler transfer_function_sampler() const;
 
         void create_buffers(
                 const RenderBuffers3D* render_buffers,
@@ -113,8 +113,8 @@ public:
         void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image);
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
-        bool has_volume() const;
-        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool fragments, bool opacity) const;
+        [[nodiscard]] bool has_volume() const;
+        [[nodiscard]] std::optional<VkCommandBuffer> command_buffer(unsigned index, bool fragments, bool opacity) const;
 
         void set_matrix(const Matrix4d& vp_matrix);
         void set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix);

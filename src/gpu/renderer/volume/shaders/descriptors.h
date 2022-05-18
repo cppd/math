@@ -55,8 +55,9 @@ public:
                 VkShaderStageFlags acceleration_structure;
         };
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(const Flags& flags);
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
+                const Flags& flags);
+        [[nodiscard]] static unsigned set_number();
 
         VolumeSharedMemory(
                 VkDevice device,
@@ -72,7 +73,7 @@ public:
 
         //
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_drawing(const vulkan::Buffer& drawing) const;
         void set_coordinates(const vulkan::Buffer& coordinates) const;
@@ -104,8 +105,8 @@ class VolumeImageMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         VolumeImageMemory(
                 VkDevice device,
@@ -114,7 +115,7 @@ public:
                 const vulkan::Buffer& buffer_coordinates,
                 const vulkan::Buffer& buffer_volume);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_image(VkSampler sampler, VkImageView image) const;
         void set_transfer_function(VkSampler sampler, VkImageView transfer_function) const;

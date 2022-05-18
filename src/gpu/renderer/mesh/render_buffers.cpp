@@ -113,12 +113,12 @@ class Impl final : public RenderBuffers
         std::vector<VkFramebuffer> framebuffers_handles_;
         std::vector<VkClearValue> clear_values_;
 
-        unsigned width() const override;
-        unsigned height() const override;
-        VkSampleCountFlagBits sample_count() const override;
-        const vulkan::RenderPass& render_pass() const override;
-        const std::vector<VkFramebuffer>& framebuffers() const override;
-        const std::vector<VkClearValue>& clear_values() const override;
+        [[nodiscard]] unsigned width() const override;
+        [[nodiscard]] unsigned height() const override;
+        [[nodiscard]] VkSampleCountFlagBits sample_count() const override;
+        [[nodiscard]] const vulkan::RenderPass& render_pass() const override;
+        [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers() const override;
+        [[nodiscard]] const std::vector<VkClearValue>& clear_values() const override;
 
 public:
         Impl(const RenderBuffers3D* render_buffers, const Opacity& opacity, VkDevice device);

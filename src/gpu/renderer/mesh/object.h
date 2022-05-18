@@ -31,7 +31,7 @@ struct MeshObject
 {
         virtual ~MeshObject() = default;
 
-        virtual bool transparent() const = 0;
+        [[nodiscard]] virtual bool transparent() const = 0;
 
         virtual void commands_triangles(
                 VkCommandBuffer buffer,
@@ -67,10 +67,10 @@ struct MeshObject
                 bool transparency = false;
         };
 
-        virtual UpdateChanges update(const model::mesh::Reading<3>& mesh_object) = 0;
+        [[nodiscard]] virtual UpdateChanges update(const model::mesh::Reading<3>& mesh_object) = 0;
 
-        virtual std::optional<VkDeviceAddress> acceleration_structure_device_address() const = 0;
-        virtual const VkTransformMatrixKHR& acceleration_structure_matrix() const = 0;
+        [[nodiscard]] virtual std::optional<VkDeviceAddress> acceleration_structure_device_address() const = 0;
+        [[nodiscard]] virtual const VkTransformMatrixKHR& acceleration_structure_matrix() const = 0;
 };
 
 std::unique_ptr<MeshObject> create_mesh_object(

@@ -36,12 +36,12 @@ class MulDMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         MulDMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const;
 };
@@ -58,9 +58,9 @@ class MulDConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         MulDConstant();
@@ -98,9 +98,9 @@ public:
                 std::uint32_t group_size_y);
         void delete_pipelines();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline_rows() const;
-        VkPipeline pipeline_columns() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline_rows() const;
+        [[nodiscard]] VkPipeline pipeline_columns() const;
 };
 }

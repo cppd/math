@@ -38,8 +38,8 @@ public:
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue);
 
-        const vulkan::ImageView& cosine_roughness() const;
-        const vulkan::ImageView& cosine_weighted_average() const;
-        VkSampler sampler() const;
+        [[nodiscard]] const vulkan::ImageView& cosine_roughness() const;
+        [[nodiscard]] const vulkan::ImageView& cosine_weighted_average() const;
+        [[nodiscard]] VkSampler sampler() const;
 };
 }

@@ -35,8 +35,8 @@ struct Dft
 
         virtual void compute_commands(VkCommandBuffer command_buffer, bool inverse) const = 0;
 
-        virtual const vulkan::Buffer& buffer() const = 0;
-        virtual const vulkan::BufferWithMemory& buffer_with_memory() const = 0;
+        [[nodiscard]] virtual const vulkan::Buffer& buffer() const = 0;
+        [[nodiscard]] virtual const vulkan::BufferWithMemory& buffer_with_memory() const = 0;
 };
 
 std::unique_ptr<Dft> create_dft(

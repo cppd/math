@@ -47,7 +47,7 @@ class TransparencyBuffers final
 public:
         TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        unsigned long long buffer_size() const;
+        [[nodiscard]] unsigned long long buffer_size() const;
 
         void create_buffers(
                 const vulkan::Device& device,
@@ -60,13 +60,13 @@ public:
 
         void delete_buffers();
 
-        const vulkan::Buffer& counters() const;
-        const vulkan::Buffer& nodes() const;
+        [[nodiscard]] const vulkan::Buffer& counters() const;
+        [[nodiscard]] const vulkan::Buffer& nodes() const;
 
-        unsigned node_count() const;
+        [[nodiscard]] unsigned node_count() const;
 
-        const vulkan::ImageWithMemory& heads() const;
-        const vulkan::ImageWithMemory& heads_size() const;
+        [[nodiscard]] const vulkan::ImageWithMemory& heads() const;
+        [[nodiscard]] const vulkan::ImageWithMemory& heads_size() const;
 
         void commands_init(VkCommandBuffer command_buffer) const;
         void commands_read(VkCommandBuffer command_buffer) const;
@@ -77,6 +77,6 @@ public:
                 unsigned overload_counter;
         };
 
-        Info read() const;
+        [[nodiscard]] Info read() const;
 };
 }

@@ -41,7 +41,7 @@ class ViewDataBuffer final
 public:
         ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_matrix(const Matrix4d& matrix) const;
         void set_brightness(float brightness) const;
@@ -57,12 +57,12 @@ class ViewMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         ViewMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& data_buffer);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_points(const vulkan::Buffer& buffer) const;
 };
@@ -86,13 +86,13 @@ public:
         ViewProgram(ViewProgram&&) = default;
         ~ViewProgram() = default;
 
-        vulkan::handle::Pipeline create_pipeline(
+        [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 };
 }

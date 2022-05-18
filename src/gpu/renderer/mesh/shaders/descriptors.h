@@ -66,8 +66,9 @@ public:
                 VkShaderStageFlags transparency;
         };
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(const Flags& flags);
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
+                const Flags& flags);
+        [[nodiscard]] static unsigned set_number();
 
         SharedMemory(
                 VkDevice device,
@@ -75,7 +76,7 @@ public:
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& drawing);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_shadow_matrices(const vulkan::Buffer& shadow_matrices) const;
 
@@ -105,8 +106,9 @@ class MeshMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(VkShaderStageFlags coordinates);
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
+                VkShaderStageFlags coordinates);
+        [[nodiscard]] static unsigned set_number();
 
         MeshMemory(
                 VkDevice device,
@@ -114,7 +116,7 @@ public:
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& buffer);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 };
 
 class MaterialMemory final
@@ -127,8 +129,8 @@ class MaterialMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         struct MaterialInfo final
         {
@@ -144,7 +146,7 @@ public:
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const std::vector<MaterialInfo>& materials);
 
-        std::uint32_t descriptor_set_count() const;
-        const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
+        [[nodiscard]] std::uint32_t descriptor_set_count() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
 };
 }

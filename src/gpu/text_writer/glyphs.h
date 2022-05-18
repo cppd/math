@@ -38,17 +38,17 @@ public:
                const vulkan::Queue& graphics_queue,
                const std::vector<std::uint32_t>& family_indices);
 
-        unsigned size() const
+        [[nodiscard]] unsigned size() const
         {
                 return size_;
         }
 
-        const std::unordered_map<char32_t, text::FontGlyph>& glyphs() const
+        [[nodiscard]] const std::unordered_map<char32_t, text::FontGlyph>& glyphs() const
         {
                 return glyphs_;
         }
 
-        VkImageView image_view() const
+        [[nodiscard]] VkImageView image_view() const
         {
                 return image_->image_view().handle();
         }

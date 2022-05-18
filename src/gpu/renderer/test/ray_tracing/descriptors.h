@@ -34,15 +34,15 @@ class RayTracingMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(bool raygen);
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(bool raygen);
+        [[nodiscard]] static unsigned set_number();
 
         RayTracingMemory(
                 VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
         void set_image(const vulkan::ImageView& image) const;

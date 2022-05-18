@@ -53,12 +53,12 @@ public:
         RayTracingProgram(RayTracingProgram&&) = default;
         ~RayTracingProgram() = default;
 
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
-        VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
 
         void command_trace_rays(VkCommandBuffer command_buffer, unsigned width, unsigned height, unsigned depth) const;
 };

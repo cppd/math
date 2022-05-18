@@ -33,12 +33,12 @@ struct RenderBuffers
 {
         virtual ~RenderBuffers() = default;
 
-        virtual unsigned width() const = 0;
-        virtual unsigned height() const = 0;
-        virtual VkSampleCountFlagBits sample_count() const = 0;
-        virtual const vulkan::RenderPass& render_pass() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
-        virtual const std::vector<VkClearValue>& clear_values() const = 0;
+        [[nodiscard]] virtual unsigned width() const = 0;
+        [[nodiscard]] virtual unsigned height() const = 0;
+        [[nodiscard]] virtual VkSampleCountFlagBits sample_count() const = 0;
+        [[nodiscard]] virtual const vulkan::RenderPass& render_pass() const = 0;
+        [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
+        [[nodiscard]] virtual const std::vector<VkClearValue>& clear_values() const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(

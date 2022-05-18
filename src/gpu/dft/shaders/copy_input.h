@@ -37,12 +37,12 @@ class CopyInputMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         CopyInputMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set(VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const;
 };
@@ -61,9 +61,9 @@ class CopyInputConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         CopyInputConstant();
@@ -94,8 +94,8 @@ public:
         void create_pipeline(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle);
         void delete_pipeline();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 };
 }

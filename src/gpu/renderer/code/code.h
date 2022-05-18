@@ -28,28 +28,28 @@ protected:
         ~Code() = default;
 
 public:
-        virtual bool ray_tracing() const = 0;
+        [[nodiscard]] virtual bool ray_tracing() const = 0;
 
-        virtual std::vector<std::uint32_t> mesh_triangles_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangles_geom() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangles_frag() const = 0;
-        virtual std::vector<std::uint32_t> mesh_shadow_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangle_lines_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangle_lines_geom() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangle_lines_frag() const = 0;
-        virtual std::vector<std::uint32_t> mesh_points_0d_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_points_1d_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_points_frag() const = 0;
-        virtual std::vector<std::uint32_t> mesh_normals_vert() const = 0;
-        virtual std::vector<std::uint32_t> mesh_normals_geom() const = 0;
-        virtual std::vector<std::uint32_t> mesh_normals_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_vert() const = 0;
-        virtual std::vector<std::uint32_t> volume_image_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_image_fragments_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_fragments_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_image_opacity_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_fragments_opacity_frag() const = 0;
-        virtual std::vector<std::uint32_t> volume_opacity_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangles_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangles_geom() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangles_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_shadow_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangle_lines_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangle_lines_geom() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_triangle_lines_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_points_0d_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_points_1d_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_points_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_normals_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_normals_geom() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> mesh_normals_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_vert() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_image_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_image_fragments_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_fragments_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_image_opacity_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_image_fragments_opacity_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_fragments_opacity_frag() const = 0;
+        [[nodiscard]] virtual std::vector<std::uint32_t> volume_opacity_frag() const = 0;
 };
 }

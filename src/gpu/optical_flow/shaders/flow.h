@@ -45,7 +45,7 @@ class FlowDataBuffer final
 public:
         FlowDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         struct Data final
         {
@@ -77,12 +77,12 @@ class FlowMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         FlowMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& data_buffer);
 
-        const VkDescriptorSet& descriptor_set(int index) const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set(int index) const;
 
         void set_dx(const vulkan::ImageView& image) const;
         void set_dy(const vulkan::ImageView& image) const;
@@ -108,9 +108,9 @@ class FlowConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         FlowConstant();
@@ -153,8 +153,8 @@ public:
                 float min_determinant);
         void delete_pipeline();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline() const;
 };
 }

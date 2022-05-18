@@ -284,7 +284,7 @@ class Impl final : public VolumeObject
                 buffer_set_clip_plane();
         }
 
-        UpdateChanges update(const model::volume::Reading<3>& volume_object) override
+        [[nodiscard]] UpdateChanges update(const model::volume::Reading<3>& volume_object) override
         {
                 const model::volume::Updates updates = volume_object.updates(&version_);
                 if (updates.none())
@@ -337,7 +337,7 @@ class Impl final : public VolumeObject
                 return update_changes;
         }
 
-        bool is_isosurface() const override
+        [[nodiscard]] bool is_isosurface() const override
         {
                 return image_scalar_ && isosurface_;
         }

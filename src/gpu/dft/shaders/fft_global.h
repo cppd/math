@@ -40,7 +40,7 @@ class FftGlobalBuffer final
 public:
         FftGlobalBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set(float two_pi_div_m, int m_div_2) const;
 };
@@ -55,15 +55,15 @@ class FftGlobalMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
+        [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        [[nodiscard]] static unsigned set_number();
 
         FftGlobalMemory(
                 VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& data_buffer);
 
-        const VkDescriptorSet& descriptor_set() const;
+        [[nodiscard]] const VkDescriptorSet& descriptor_set() const;
 
         void set(const vulkan::Buffer& buffer) const;
 };
@@ -80,9 +80,9 @@ class FftGlobalConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
+        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
+        [[nodiscard]] const void* data() const override;
+        [[nodiscard]] std::size_t size() const override;
 
 public:
         FftGlobalConstant();
@@ -114,8 +114,8 @@ public:
         void create_pipelines(std::uint32_t group_size, std::uint32_t data_size, std::uint32_t n);
         void delete_pipelines();
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
-        VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline(bool inverse) const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
+        [[nodiscard]] VkPipelineLayout pipeline_layout() const;
+        [[nodiscard]] VkPipeline pipeline(bool inverse) const;
 };
 }

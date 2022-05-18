@@ -37,7 +37,7 @@ class VolumeCoordinatesBuffer final
 public:
         VolumeCoordinatesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set(const Matrix4d& device_to_world) const;
         void set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const;

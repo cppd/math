@@ -78,8 +78,8 @@ class MeshRenderer
         std::unique_ptr<ShadowMapping> shadow_mapping_;
         std::unique_ptr<RenderBuffers> render_buffers_;
 
-        const std::optional<Pipelines>& render_pipelines(bool transparent) const;
-        std::optional<Pipelines>& render_pipelines(bool transparent);
+        [[nodiscard]] const std::optional<Pipelines>& render_pipelines(bool transparent) const;
+        [[nodiscard]] std::optional<Pipelines>& render_pipelines(bool transparent);
 
         void draw_commands(
                 const std::vector<const MeshObject*>& meshes,
@@ -98,9 +98,9 @@ public:
                 const std::vector<std::uint32_t>& drawing_family_indices,
                 const GgxF1Albedo& ggx_f1_albedo);
 
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts() const;
-        VkSampler texture_sampler() const;
+        [[nodiscard]] std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
+        [[nodiscard]] std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts() const;
+        [[nodiscard]] VkSampler texture_sampler() const;
 
         void create_render_buffers(
                 const RenderBuffers3D* render_buffers,
@@ -141,15 +141,15 @@ public:
         void set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
-        bool has_meshes() const;
-        bool has_opaque_meshes() const;
-        bool has_transparent_meshes() const;
+        [[nodiscard]] bool has_meshes() const;
+        [[nodiscard]] bool has_opaque_meshes() const;
+        [[nodiscard]] bool has_transparent_meshes() const;
 
-        std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
-        std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
+        [[nodiscard]] std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
+        [[nodiscard]] std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
 
-        VkCommandBuffer shadow_mapping_command_buffer(unsigned index) const;
-        const vulkan::ImageView& shadow_mapping_image_view() const;
-        VkSampler shadow_mapping_sampler() const;
+        [[nodiscard]] VkCommandBuffer shadow_mapping_command_buffer(unsigned index) const;
+        [[nodiscard]] const vulkan::ImageView& shadow_mapping_image_view() const;
+        [[nodiscard]] VkSampler shadow_mapping_sampler() const;
 };
 }

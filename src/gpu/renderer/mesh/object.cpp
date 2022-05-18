@@ -231,7 +231,7 @@ class Impl final : public MeshObject
 
         //
 
-        bool transparent() const override
+        [[nodiscard]] bool transparent() const override
         {
                 return transparent_;
         }
@@ -415,7 +415,7 @@ class Impl final : public MeshObject
                 return update_changes;
         }
 
-        std::optional<VkDeviceAddress> acceleration_structure_device_address() const override
+        [[nodiscard]] std::optional<VkDeviceAddress> acceleration_structure_device_address() const override
         {
                 ASSERT(ray_tracing_);
                 if (acceleration_structure_)
@@ -425,7 +425,7 @@ class Impl final : public MeshObject
                 return {};
         }
 
-        const VkTransformMatrixKHR& acceleration_structure_matrix() const override
+        [[nodiscard]] const VkTransformMatrixKHR& acceleration_structure_matrix() const override
         {
                 ASSERT(ray_tracing_);
                 return transform_matrix_;

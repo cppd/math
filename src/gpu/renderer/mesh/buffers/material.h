@@ -45,6 +45,6 @@ public:
                 bool use_texture,
                 bool use_material);
 
-        const vulkan::Buffer& buffer() const;
+        [[nodiscard]] const vulkan::Buffer& buffer() const;
 };
 }

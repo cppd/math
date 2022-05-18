@@ -96,7 +96,7 @@ public:
                 return true;
         }
 
-        bool empty() const
+        [[nodiscard]] bool empty() const
         {
                 ASSERT(!map_.empty() || visible_.empty());
                 return map_.empty();
@@ -113,12 +113,12 @@ public:
                 }
         }
 
-        bool contains(const model::ObjectId id) const
+        [[nodiscard]] bool contains(const model::ObjectId id) const
         {
                 return map_.contains(id);
         }
 
-        T* object(const model::ObjectId id)
+        [[nodiscard]] T* object(const model::ObjectId id)
         {
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
@@ -128,7 +128,7 @@ public:
                 return nullptr;
         }
 
-        T* insert(const model::ObjectId id, std::unique_ptr<T>&& object)
+        [[nodiscard]] T* insert(const model::ObjectId id, std::unique_ptr<T>&& object)
         {
                 const auto pair = map_.emplace(id, std::move(object));
                 ASSERT(pair.second);
@@ -163,12 +163,12 @@ public:
                 }
         }
 
-        const std::vector<VisibleType*>& visible_objects() const
+        [[nodiscard]] const std::vector<VisibleType*>& visible_objects() const
         {
                 return visible_;
         }
 
-        bool is_visible(const model::ObjectId id) const
+        [[nodiscard]] bool is_visible(const model::ObjectId id) const
         {
                 const auto iter = map_.find(id);
                 if (iter == map_.cend())

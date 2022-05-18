@@ -70,11 +70,11 @@ public:
 
         void set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
 
-        const vulkan::ImageView& image_view() const;
-        VkSampler sampler() const;
-        const vulkan::Buffer& shadow_matrices_buffer() const;
-        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings() const;
-        VkCommandBuffer command_buffer(unsigned index) const;
+        [[nodiscard]] const vulkan::ImageView& image_view() const;
+        [[nodiscard]] VkSampler sampler() const;
+        [[nodiscard]] const vulkan::Buffer& shadow_matrices_buffer() const;
+        [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+        [[nodiscard]] std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings() const;
+        [[nodiscard]] VkCommandBuffer command_buffer(unsigned index) const;
 };
 }
