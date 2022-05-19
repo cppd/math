@@ -50,7 +50,6 @@ modernize-*,
 -modernize-avoid-c-arrays,
 -modernize-return-braced-init-list,
 -modernize-use-equals-default,
--modernize-use-nodiscard,
 -modernize-use-trailing-return-type,
 
 performance-*,
