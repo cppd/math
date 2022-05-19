@@ -70,8 +70,7 @@ bool cocone_facet(const ManifoldFacet<N>& facet)
 template <std::size_t N>
 std::vector<bool> find_cocone_facets(const std::vector<ManifoldFacet<N>>& facets)
 {
-        std::vector<bool> cocone_facets;
-        cocone_facets.resize(facets.size());
+        std::vector<bool> cocone_facets(facets.size());
         for (std::size_t i = 0; i < facets.size(); ++i)
         {
                 cocone_facets[i] = cocone_facet(facets[i]);
@@ -80,39 +79,45 @@ std::vector<bool> find_cocone_facets(const std::vector<ManifoldFacet<N>>& facets
 }
 
 template <std::size_t N>
-void create_normals_and_facets(
+std::vector<std::array<int, N>> create_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
-        const std::vector<bool>& cocone_facets,
-        const std::vector<ManifoldVertex<N>>& vertices,
-        std::vector<Vector<N, double>>* const normals,
-        std::vector<std::array<int, N>>* const facets)
+        const std::vector<bool>& cocone_facets)
 {
-        std::unordered_set<int> used_points;
-
-        facets->clear();
-
+        std::vector<std::array<int, N>> facets;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
-                if (!cocone_facets[i])
+                if (cocone_facets[i])
                 {
-                        continue;
-                }
-
-                facets->push_back(delaunay_facets[i].vertices());
-
-                for (const auto index : delaunay_facets[i].vertices())
-                {
-                        used_points.insert(index);
+                        facets.push_back(delaunay_facets[i].vertices());
                 }
         }
+        return facets;
+}
 
-        normals->clear();
-        normals->resize(vertices.size(), Vector<N, double>(0));
-
-        for (const auto p : used_points)
+template <std::size_t N>
+std::vector<Vector<N, double>> create_normals(
+        const std::vector<ManifoldVertex<N>>& vertices,
+        const std::vector<std::array<int, N>>& facets)
+{
+        const std::unordered_set<int> used_vertices = [&]
         {
-                (*normals)[p] = vertices[p].positive_norm;
+                std::unordered_set<int> res;
+                for (const std::array<int, N>& facet : facets)
+                {
+                        for (const auto index : facet)
+                        {
+                                res.insert(index);
+                        }
+                }
+                return res;
+        }();
+
+        std::vector<Vector<N, double>> normals(vertices.size(), Vector<N, double>(0));
+        for (const auto index : used_vertices)
+        {
+                normals[index] = vertices[index].positive_norm;
         }
+        return normals;
 }
 
 template <std::size_t N>
@@ -189,7 +194,8 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 progress->set(3, 4);
                 LOG("create result...");
 
-                create_normals_and_facets(delaunay_facets_, cocone_facets, vertex_data_, normals, facets);
+                *facets = create_facets(delaunay_facets_, cocone_facets);
+                *normals = create_normals(vertex_data_, *facets);
 
                 ASSERT(normals->size() == points_.size());
         }
