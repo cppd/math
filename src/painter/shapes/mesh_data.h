@@ -36,7 +36,7 @@ namespace ns::painter
 namespace mesh_data_implementation
 {
 template <std::size_t N>
-std::array<int, N> add_offset(const std::array<int, N>& src, const int offset, const bool add)
+[[nodiscard]] std::array<int, N> add_offset(const std::array<int, N>& src, const int offset, const bool add)
 {
         std::array<int, N> r;
         if (add)
@@ -57,7 +57,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, const int offset, c
 }
 
 template <std::size_t N>
-std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
+[[nodiscard]] std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
 {
         std::array<int, N> r;
         for (unsigned i = 0; i < N; ++i)
@@ -68,7 +68,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> vertices_to_array(
+[[nodiscard]] std::array<Vector<N, T>, N> vertices_to_array(
         const std::vector<Vector<N, T>>& vertices,
         const std::array<int, N>& indices)
 {
@@ -82,7 +82,7 @@ std::array<Vector<N, T>, N> vertices_to_array(
 }
 
 template <typename T, typename Color>
-struct Material
+struct Material final
 {
         T metalness;
         T roughness;
@@ -288,32 +288,32 @@ public:
                 }
         }
 
-        const std::vector<Vector<N, T>>& normals() const
+        [[nodiscard]] const std::vector<Vector<N, T>>& normals() const
         {
                 return normals_;
         }
 
-        const std::vector<Vector<N - 1, T>>& texcoords() const
+        [[nodiscard]] const std::vector<Vector<N - 1, T>>& texcoords() const
         {
                 return texcoords_;
         }
 
-        const std::vector<Material<T, Color>>& materials() const
+        [[nodiscard]] const std::vector<Material<T, Color>>& materials() const
         {
                 return materials_;
         }
 
-        const std::vector<MeshTexture<N - 1>>& images() const
+        [[nodiscard]] const std::vector<MeshTexture<N - 1>>& images() const
         {
                 return images_;
         }
 
-        const std::vector<MeshFacet<N, T>>& facets() const
+        [[nodiscard]] const std::vector<MeshFacet<N, T>>& facets() const
         {
                 return facets_;
         }
 
-        geometry::BoundingBox<N, T> facet_bounding_box(const std::size_t facet_index) const
+        [[nodiscard]] geometry::BoundingBox<N, T> facet_bounding_box(const std::size_t facet_index) const
         {
                 ASSERT(facet_index < facet_vertex_indices_.size());
                 return geometry::BoundingBox(vertices_, facet_vertex_indices_[facet_index]);

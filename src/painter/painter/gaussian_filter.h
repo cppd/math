@@ -62,7 +62,7 @@ public:
         }
 
         template <std::size_t N>
-        T compute(const Vector<N, T>& p) const
+        [[nodiscard]] T compute(const Vector<N, T>& p) const
         {
                 static_assert(N >= 1);
 

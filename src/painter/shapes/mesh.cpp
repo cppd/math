@@ -44,7 +44,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         const MeshData<N, T, Color>* mesh_data_;
         const MeshFacet<N, T>* facet_;
 
-        shading::Colors<Color> surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
+        [[nodiscard]] shading::Colors<Color> surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
         {
                 if (facet_->has_texcoord() && m.image >= 0)
                 {
@@ -58,28 +58,31 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         //
 
-        Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
+        [[nodiscard]] Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
         {
                 return facet_->project(ray.point(distance));
         }
 
-        Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
         {
                 return facet_->geometric_normal();
         }
 
-        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
+        [[nodiscard]] std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
         {
                 return facet_->shading_normal(mesh_data_->normals(), point);
         }
 
-        std::optional<Color> light_source() const override
+        [[nodiscard]] std::optional<Color> light_source() const override
         {
                 return std::nullopt;
         }
 
-        Color brdf(const Vector<N, T>& point, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
-                const override
+        [[nodiscard]] Color brdf(
+                const Vector<N, T>& point,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -88,10 +91,11 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return shading::ggx_diffuse::f(m.roughness, surface_color(point, m), n, v, l);
         }
 
-        T pdf(const Vector<N, T>& /*point*/,
-              const Vector<N, T>& n,
-              const Vector<N, T>& v,
-              const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(
+                const Vector<N, T>& /*point*/,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -100,7 +104,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return shading::ggx_diffuse::pdf(m.roughness, n, v, l);
         }
 
-        Sample<N, T, Color> sample_brdf(
+        [[nodiscard]] Sample<N, T, Color> sample_brdf(
                 PCG& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
@@ -130,7 +134,7 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-std::vector<geometry::BvhObject<N, T>> bvh_objects(const MeshData<N, T, Color>& mesh_data)
+[[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects(const MeshData<N, T, Color>& mesh_data)
 {
         const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets();
         std::vector<geometry::BvhObject<N, T>> res;
@@ -143,7 +147,7 @@ std::vector<geometry::BvhObject<N, T>> bvh_objects(const MeshData<N, T, Color>& 
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::Bvh<N, T> create_bvh(
+[[nodiscard]] geometry::Bvh<N, T> create_bvh(
         const MeshData<N, T, Color>& mesh_data,
         const bool write_log,
         ProgressRatio* const progress)
@@ -171,17 +175,17 @@ class ShapeImpl final : public Shape<N, T, Color>
         geometry::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
 
-        T intersection_cost() const override
+        [[nodiscard]] T intersection_cost() const override
         {
                 return intersection_cost_;
         }
 
-        std::optional<T> intersect_bounds(const Ray<N, T>& ray, const T max_distance) const override
+        [[nodiscard]] std::optional<T> intersect_bounds(const Ray<N, T>& ray, const T max_distance) const override
         {
                 return bvh_.intersect_root(ray, max_distance);
         }
 
-        std::tuple<T, const Surface<N, T, Color>*> intersect(
+        [[nodiscard]] std::tuple<T, const Surface<N, T, Color>*> intersect(
                 const Ray<N, T>& ray,
                 const T max_distance,
                 const T /*bounding_distance*/) const override
@@ -207,13 +211,13 @@ class ShapeImpl final : public Shape<N, T, Color>
                 return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_data_, facet)};
         }
 
-        geometry::BoundingBox<N, T> bounding_box() const override
+        [[nodiscard]] geometry::BoundingBox<N, T> bounding_box() const override
         {
                 return bounding_box_;
         }
 
-        std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
-                const override
+        [[nodiscard]] std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)>
+                overlap_function() const override
         {
                 auto root = std::make_shared<geometry::ParallelotopeAA<N, T>>(bounding_box_.min(), bounding_box_.max());
                 return [root = root, overlap_function = root->overlap_function()](

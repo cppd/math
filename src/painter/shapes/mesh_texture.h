@@ -30,7 +30,7 @@ namespace ns::painter
 template <std::size_t N>
 class MeshTexture
 {
-        static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
+        [[nodiscard]] static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {
                 const std::size_t pixel_count = image.pixels.size() / format_pixel_size_in_bytes(image.color_format);
 
@@ -66,7 +66,7 @@ public:
         }
 
         template <typename T>
-        Vector<3, float> color(const Vector<N, T>& p) const
+        [[nodiscard]] Vector<3, float> color(const Vector<N, T>& p) const
         {
                 return interpolation_.compute(p);
         }

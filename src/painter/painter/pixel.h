@@ -49,7 +49,7 @@ public:
                 background_.merge(samples);
         }
 
-        std::optional<Color> color(const Color& background_color, const T& background_contribution) const
+        [[nodiscard]] std::optional<Color> color(const Color& background_color, const T& background_contribution) const
         {
                 const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
 
@@ -68,7 +68,7 @@ public:
                 return (p.color + p.background_weight * background_color) / sum;
         }
 
-        std::optional<std::tuple<Color, T>> color_alpha(const T& background_contribution) const
+        [[nodiscard]] std::optional<std::tuple<Color, T>> color_alpha(const T& background_contribution) const
         {
                 const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
 

@@ -126,17 +126,19 @@ public:
                 }
         }
 
-        int material() const
+        [[nodiscard]] int material() const
         {
                 return material_;
         }
 
-        bool has_texcoord() const
+        [[nodiscard]] bool has_texcoord() const
         {
                 return t_[0] >= 0;
         }
 
-        Vector<N - 1, T> texcoord(const std::vector<Vector<N - 1, T>>& mesh_texcoords, const Vector<N, T>& point) const
+        [[nodiscard]] Vector<N - 1, T> texcoord(
+                const std::vector<Vector<N - 1, T>>& mesh_texcoords,
+                const Vector<N, T>& point) const
         {
                 if (has_texcoord())
                 {
@@ -150,7 +152,9 @@ public:
                 error("Mesh facet texture coordinates request when there are no texture coordinates");
         }
 
-        Vector<N, T> shading_normal(const std::vector<Vector<N, T>>& mesh_normals, const Vector<N, T>& point) const
+        [[nodiscard]] Vector<N, T> shading_normal(
+                const std::vector<Vector<N, T>>& mesh_normals,
+                const Vector<N, T>& point) const
         {
                 switch (normal_type_)
                 {
@@ -182,22 +186,22 @@ public:
 
         //
 
-        static decltype(auto) intersection_cost()
+        [[nodiscard]] static decltype(auto) intersection_cost()
         {
                 return decltype(simplex_)::intersection_cost();
         }
 
-        decltype(auto) intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] decltype(auto) intersect(const Ray<N, T>& ray) const
         {
                 return simplex_.intersect(ray);
         }
 
-        decltype(auto) geometric_normal() const
+        [[nodiscard]] decltype(auto) geometric_normal() const
         {
                 return simplex_.normal();
         }
 
-        decltype(auto) project(const Vector<N, T>& point) const
+        [[nodiscard]] decltype(auto) project(const Vector<N, T>& point) const
         {
                 return simplex_.project(point);
         }

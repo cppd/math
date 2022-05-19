@@ -35,18 +35,18 @@ struct Shape
 {
         virtual ~Shape() = default;
 
-        virtual T intersection_cost() const = 0;
+        [[nodiscard]] virtual T intersection_cost() const = 0;
 
-        virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
+        [[nodiscard]] virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
 
-        virtual std::tuple<T, const Surface<N, T, Color>*> intersect(
+        [[nodiscard]] virtual std::tuple<T, const Surface<N, T, Color>*> intersect(
                 const Ray<N, T>& ray,
                 T max_distance,
                 T bounding_distance) const = 0;
 
-        virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
+        [[nodiscard]] virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
 
-        virtual std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
-                const = 0;
+        [[nodiscard]] virtual std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)>
+                overlap_function() const = 0;
 };
 }

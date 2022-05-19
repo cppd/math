@@ -48,23 +48,27 @@ protected:
         ~Surface() = default;
 
 public:
-        virtual Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const = 0;
+        [[nodiscard]] virtual Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const = 0;
 
-        virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
-        virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
 
-        virtual std::optional<Color> light_source() const = 0;
+        [[nodiscard]] virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const = 0;
 
-        virtual Color brdf(
+        [[nodiscard]] virtual std::optional<Color> light_source() const = 0;
+
+        [[nodiscard]] virtual Color brdf(
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        virtual T pdf(const Vector<N, T>& point, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
-                const = 0;
+        [[nodiscard]] virtual T pdf(
+                const Vector<N, T>& point,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const = 0;
 
-        virtual Sample<N, T, Color> sample_brdf(
+        [[nodiscard]] virtual Sample<N, T, Color> sample_brdf(
                 PCG& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
@@ -88,42 +92,42 @@ public:
         {
         }
 
-        explicit operator bool() const
+        [[nodiscard]] explicit operator bool() const
         {
                 return surface_ != nullptr;
         }
 
-        const Vector<N, T>& point() const
+        [[nodiscard]] const Vector<N, T>& point() const
         {
                 return point_;
         }
 
-        decltype(auto) geometric_normal() const
+        [[nodiscard]] decltype(auto) geometric_normal() const
         {
                 return surface_->geometric_normal(point_);
         }
 
-        decltype(auto) shading_normal() const
+        [[nodiscard]] decltype(auto) shading_normal() const
         {
                 return surface_->shading_normal(point_);
         }
 
-        decltype(auto) light_source() const
+        [[nodiscard]] decltype(auto) light_source() const
         {
                 return surface_->light_source();
         }
 
-        decltype(auto) brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] decltype(auto) brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
         {
                 return surface_->brdf(point_, n, v, l);
         }
 
-        decltype(auto) pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] decltype(auto) pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
         {
                 return surface_->pdf(point_, n, v, l);
         }
 
-        decltype(auto) sample_brdf(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
+        [[nodiscard]] decltype(auto) sample_brdf(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
         {
                 return surface_->sample_brdf(engine, point_, n, v);
         }
@@ -159,11 +163,12 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
+        [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)
+                const = 0;
 
-        virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
 
-        virtual bool is_delta() const = 0;
+        [[nodiscard]] virtual bool is_delta() const = 0;
 };
 
 template <std::size_t N, typename T>
@@ -171,9 +176,9 @@ struct Projector
 {
         virtual ~Projector() = default;
 
-        virtual const std::array<int, N - 1>& screen_size() const = 0;
+        [[nodiscard]] virtual const std::array<int, N - 1>& screen_size() const = 0;
 
-        virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
+        [[nodiscard]] virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -181,16 +186,16 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] virtual SurfacePoint<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray) const = 0;
 
-        virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
+        [[nodiscard]] virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 
-        virtual const Color& background_light() const = 0;
+        [[nodiscard]] virtual const Color& background_light() const = 0;
 
-        virtual const Projector<N, T>& projector() const = 0;
+        [[nodiscard]] virtual const Projector<N, T>& projector() const = 0;
 
-        virtual long long thread_ray_count() const noexcept = 0;
+        [[nodiscard]] virtual long long thread_ray_count() const noexcept = 0;
 };
 }

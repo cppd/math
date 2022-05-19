@@ -28,7 +28,7 @@ namespace ns::painter::lights::common
 {
 // power<N - 1>(distance)
 template <std::size_t N, typename T>
-T power_n1(const T& squared_distance, const T& distance)
+[[nodiscard]] T power_n1(const T& squared_distance, const T& distance)
 {
         if constexpr ((N & 1) == 1)
         {
@@ -47,7 +47,7 @@ class Spotlight final
         T width_;
         T falloff_width_;
 
-        T falloff_coef(const T& cosine) const
+        [[nodiscard]] T falloff_coef(const T& cosine) const
         {
                 return power<4>((cosine - width_) / falloff_width_);
         }
@@ -67,7 +67,7 @@ public:
                 ASSERT(falloff_start_ >= width_ && falloff_width_ >= 0);
         }
 
-        T coef(const T& cosine) const
+        [[nodiscard]] T coef(const T& cosine) const
         {
                 if (cosine >= falloff_start_)
                 {
@@ -81,7 +81,7 @@ public:
         }
 
         template <typename Color>
-        Color color(const Color& color, const T& cosine) const
+        [[nodiscard]] Color color(const Color& color, const T& cosine) const
         {
                 if (cosine >= falloff_start_)
                 {

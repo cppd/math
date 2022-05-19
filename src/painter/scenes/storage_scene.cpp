@@ -34,7 +34,7 @@ template <typename T>
 constexpr T RAY_OFFSET = 64 * Limits<T>::epsilon();
 
 template <std::size_t N, typename T>
-Vector<N, T> ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
+[[nodiscard]] Vector<N, T> ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
 {
         if (!geometric_normal)
         {
@@ -50,7 +50,7 @@ Vector<N, T> ray_org(const std::optional<Vector<N, T>>& geometric_normal, const 
 }
 
 template <typename P>
-std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
+[[nodiscard]] std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 {
         std::vector<P*> result;
         result.reserve(objects.size());
@@ -75,8 +75,9 @@ class Impl final : public Scene<N, T, Color>
 
         geometry::Bvh<N, T> bvh_;
 
-        SurfacePoint<N, T, Color> intersect(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
-                const override
+        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
@@ -102,22 +103,22 @@ class Impl final : public Scene<N, T, Color>
                 return {};
         }
 
-        const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
+        [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
         {
                 return light_source_pointers_;
         }
 
-        const Projector<N, T>& projector() const override
+        [[nodiscard]] const Projector<N, T>& projector() const override
         {
                 return *projector_;
         }
 
-        const Color& background_light() const override
+        [[nodiscard]] const Color& background_light() const override
         {
                 return background_light_;
         }
 
-        long long thread_ray_count() const noexcept override
+        [[nodiscard]] long long thread_ray_count() const noexcept override
         {
                 return thread_ray_count_;
         }

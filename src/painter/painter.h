@@ -62,12 +62,12 @@ public:
         {
         }
 
-        image::Image<N>& image_with_background() const
+        [[nodiscard]] image::Image<N>& image_with_background() const
         {
                 return images_->image_with_background_;
         }
 
-        image::Image<N>& image_without_background() const
+        [[nodiscard]] image::Image<N>& image_without_background() const
         {
                 return images_->image_without_background_;
         }
@@ -84,12 +84,12 @@ public:
         {
         }
 
-        const image::Image<N>& image_with_background() const
+        [[nodiscard]] const image::Image<N>& image_with_background() const
         {
                 return images_->image_with_background_;
         }
 
-        const image::Image<N>& image_without_background() const
+        [[nodiscard]] const image::Image<N>& image_without_background() const
         {
                 return images_->image_without_background_;
         }
@@ -105,7 +105,7 @@ public:
         virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
         virtual void thread_free(unsigned thread_number) = 0;
         virtual void pixel_set(const std::array<int, N>& pixel, const Vector<3, float>& rgb) = 0;
-        virtual Images<N>* images(long long pass_number) = 0;
+        [[nodiscard]] virtual Images<N>* images(long long pass_number) = 0;
         virtual void pass_done(long long pass_number) = 0;
 
         virtual void error_message(const std::string& msg) = 0;
@@ -130,7 +130,7 @@ struct Painter
         virtual ~Painter() = default;
 
         virtual void wait() noexcept = 0;
-        virtual Statistics statistics() const = 0;
+        [[nodiscard]] virtual Statistics statistics() const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>

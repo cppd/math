@@ -85,7 +85,7 @@ public:
                 spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 
-        LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
+        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
         {
                 if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
                 {
@@ -118,7 +118,7 @@ public:
                 return s;
         }
 
-        LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
+        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
         {
                 if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
                 {
@@ -152,7 +152,7 @@ public:
                 return info;
         }
 
-        bool is_delta() const override
+        [[nodiscard]] bool is_delta() const override
         {
                 return false;
         }

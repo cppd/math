@@ -111,7 +111,7 @@ public:
                 ASSERT(!max_number || *max_number > 0);
         }
 
-        bool continue_painting()
+        [[nodiscard]] bool continue_painting()
         {
                 return !(max_number_ && ++number_ == *max_number_);
         }
@@ -381,7 +381,7 @@ class Impl final : public Painter
                 join_thread(&thread_);
         }
 
-        Statistics statistics() const override
+        [[nodiscard]] Statistics statistics() const override
         {
                 return statistics_->statistics();
         }
