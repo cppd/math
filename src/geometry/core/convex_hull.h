@@ -68,10 +68,10 @@ public:
                 return indices_;
         }
 
-        [[nodiscard]] const Vector<N, double>& ortho(unsigned i) const
+        [[nodiscard]] const Vector<N, double>& ortho(const unsigned index) const
         {
-                ASSERT(i < orthos_.size());
-                return orthos_[i];
+                ASSERT(index < orthos_.size());
+                return orthos_[index];
         }
 };
 

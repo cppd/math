@@ -34,8 +34,10 @@ template <std::size_t N>
 class DelaunayFacet final
 {
         std::array<int, N> vertices_;
+
         // the vector is directed outside if there is only one Delaunay object
         Vector<N, double> ortho_;
+
         // the second element is negative if there is only one Delaunay object
         std::array<int, 2> delaunay_;
 
@@ -66,10 +68,10 @@ public:
                 return ortho_;
         }
 
-        [[nodiscard]] int delaunay(const unsigned i) const
+        [[nodiscard]] int delaunay(const unsigned index) const
         {
-                ASSERT(i == 0 || (i == 1 && delaunay_[1] >= 0));
-                return delaunay_[i];
+                ASSERT(index == 0 || (index == 1 && delaunay_[1] >= 0));
+                return delaunay_[index];
         }
 };
 

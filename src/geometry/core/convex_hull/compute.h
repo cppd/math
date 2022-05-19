@@ -80,7 +80,7 @@ void create_initial_convex_hull(
         std::array<int, N + 1>* const vertices,
         FacetList<Facet<N, S, C>>* const facets)
 {
-        find_simplex_points<N, S, C>(points, vertices);
+        *vertices = find_simplex_points<N, S, C>(points);
 
         facets->clear();
         for (std::size_t i = 0; i < N + 1; ++i)
@@ -316,7 +316,7 @@ void add_point_to_convex_hull(
                 error("All facets are visible from the point");
         }
 
-        for (const Facet<N, S, C>* facet : (*point_conflicts)[point])
+        for (const Facet<N, S, C>* const facet : (*point_conflicts)[point])
         {
                 facet->mark_as_visible();
         }
@@ -337,6 +337,7 @@ void add_point_to_convex_hull(
         {
                 constexpr unsigned THREAD_ID = 0;
                 constexpr unsigned THREAD_COUNT = 1;
+
                 create_horizon_facets(
                         THREAD_ID, THREAD_COUNT, points, point, point_conflicts, unique_points_work, &new_facets,
                         barrier);

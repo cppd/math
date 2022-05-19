@@ -83,7 +83,7 @@ void find_simplex_points(
 }
 
 template <std::size_t N, typename SourceType, typename ComputeType>
-void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* const simplex_points)
+std::array<int, N + 1> find_simplex_points(const std::vector<Vector<N, SourceType>>& points)
 {
         static_assert(N > 1);
 
@@ -94,8 +94,11 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
 
         std::array<Vector<N, ComputeType>, N> simplex_vectors;
 
-        (*simplex_points)[0] = 0;
+        std::array<int, N + 1> simplex_points;
+        simplex_points[0] = 0;
 
-        simplex_points_implementation::find_simplex_points<1>(points, simplex_points, &simplex_vectors, 1);
+        simplex_points_implementation::find_simplex_points<1>(points, &simplex_points, &simplex_vectors, 1);
+
+        return simplex_points;
 }
 }

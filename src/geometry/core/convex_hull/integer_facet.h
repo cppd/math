@@ -48,9 +48,9 @@ public:
                 return vertices_;
         }
 
-        [[nodiscard]] int operator[](const unsigned i) const
+        [[nodiscard]] int operator[](const unsigned index) const
         {
-                return vertices_[i];
+                return vertices_[index];
         }
 };
 }

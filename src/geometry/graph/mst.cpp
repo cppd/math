@@ -60,9 +60,9 @@ public:
                 return weight_;
         }
 
-        [[nodiscard]] int vertex(const int i) const
+        [[nodiscard]] int vertex(const int index) const
         {
-                return edge_.vertices()[i];
+                return edge_.vertices()[index];
         }
 };
 

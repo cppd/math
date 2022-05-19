@@ -50,9 +50,9 @@ public:
         {
         }
 
-        int find_index_for_point(const int point) const
+        [[nodiscard]] unsigned find_index_for_point(const int point) const
         {
-                for (unsigned r = 0; r < N; ++r)
+                for (std::size_t r = 0; r < N; ++r)
                 {
                         if (Base::vertices()[r] == point)
                         {
@@ -67,7 +67,7 @@ public:
                 conflict_points_.push_back(point);
         }
 
-        const std::vector<int>& conflict_points() const
+        [[nodiscard]] const std::vector<int>& conflict_points() const
         {
                 return conflict_points_;
         }
@@ -77,26 +77,26 @@ public:
                 facet_iter_ = std::move(iter);
         }
 
-        typename FacetList<Facet>::const_iterator iter() const
+        [[nodiscard]] typename FacetList<Facet>::const_iterator iter() const
         {
                 return facet_iter_;
         }
 
-        void set_link(const unsigned i, Facet* const facet)
+        void set_link(const unsigned index, Facet* const facet)
         {
-                ASSERT(i < N);
-                links_[i] = facet;
+                ASSERT(index < N);
+                links_[index] = facet;
         }
 
-        Facet* link(const unsigned i) const
+        [[nodiscard]] Facet* link(const unsigned index) const
         {
-                ASSERT(i < N);
-                return links_[i];
+                ASSERT(index < N);
+                return links_[index];
         }
 
-        unsigned find_link_index(const Facet* const facet)
+        [[nodiscard]] unsigned find_link_index(const Facet* const facet) const
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (links_[i] == facet)
                         {
@@ -111,7 +111,7 @@ public:
                 marked_as_visible_ = true;
         }
 
-        bool marked_as_visible() const
+        [[nodiscard]] bool marked_as_visible() const
         {
                 return marked_as_visible_;
         }

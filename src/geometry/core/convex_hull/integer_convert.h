@@ -67,11 +67,11 @@ public:
                 scale_ = max_value / max_d;
         }
 
-        [[nodiscard]] Vector<N, IntegerType> to_integer(const std::size_t i) const
+        [[nodiscard]] Vector<N, IntegerType> to_integer(const std::size_t index) const
         {
-                ASSERT(i < points_->size());
+                ASSERT(index < points_->size());
 
-                const Vector<N, double> float_value = to_vector<double>((*points_)[i] - min_) * scale_;
+                const Vector<N, double> float_value = to_vector<double>((*points_)[index] - min_) * scale_;
 
                 Vector<N, IntegerType> integer_value;
                 for (std::size_t n = 0; n < N; ++n)
