@@ -56,7 +56,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         }
         ASSERT(idx == static_cast<int>(vertices.size()));
 
-        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
+        auto mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
         for (const auto& [old_index, new_index] : vertices)

@@ -36,7 +36,7 @@ std::unique_ptr<Mesh<N>> create_mesh(T&& points)
                 error("No points for point object");
         }
 
-        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
+        auto mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices = std::forward<T>(points);
 

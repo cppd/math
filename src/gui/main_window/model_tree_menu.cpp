@@ -26,7 +26,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         const model::ObjectId id,
         const bool visible)
 {
-        std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
+        auto menu = std::make_unique<QMenu>();
 
         QAction* action = nullptr;
 

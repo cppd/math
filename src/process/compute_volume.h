@@ -66,7 +66,7 @@ void compute_slice(
                 error("Error slice parameters");
         }
 
-        std::unique_ptr<model::volume::Volume<DIMENSION>> volume = std::make_unique<model::volume::Volume<DIMENSION>>();
+        auto volume = std::make_unique<model::volume::Volume<DIMENSION>>();
 
         {
                 model::volume::Reading reading(volume_object);
@@ -75,12 +75,10 @@ void compute_slice(
 
         volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
 
-        const std::shared_ptr<model::volume::VolumeObject<DIMENSION>> obj =
-                std::make_shared<model::volume::VolumeObject<DIMENSION>>(
-                        std::move(volume),
-                        model::volume::model_matrix_for_size_and_position(
-                                *volume, SCENE_SIZE, SCENE_CENTER<DIMENSION, double>),
-                        "Slice " + object_name);
+        const auto obj = std::make_shared<model::volume::VolumeObject<DIMENSION>>(
+                std::move(volume),
+                model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<DIMENSION, double>),
+                "Slice " + object_name);
 
         obj->insert(volume_object.id());
 }

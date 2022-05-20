@@ -180,7 +180,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         items_ = std::make_unique<Items>(test_names.size());
         for (std::string& name : test_names)
         {
-                std::unique_ptr<QListWidgetItem> item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
+                auto item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
                 items_->add(std::move(name), item.get());
                 ui_.listWidget->addItem(item.release());
         }

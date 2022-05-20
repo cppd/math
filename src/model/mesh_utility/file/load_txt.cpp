@@ -102,7 +102,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
 {
         progress->set_undefined();
 
-        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
+        auto mesh = std::make_unique<Mesh<N>>();
 
         read_points(&mesh->vertices, file_name, progress);
 

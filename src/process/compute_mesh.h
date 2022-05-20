@@ -105,7 +105,7 @@ void convex_hull(ProgressRatioList* const progress_list, const model::mesh::Read
                 return;
         }
 
-        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
+        const auto obj =
                 std::make_shared<model::mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         obj->insert(object.id());
@@ -195,8 +195,7 @@ void mst(
                 return;
         }
 
-        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
-                std::make_shared<model::mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
+        const auto obj = std::make_shared<model::mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
         obj->insert(parent_id);
 }
