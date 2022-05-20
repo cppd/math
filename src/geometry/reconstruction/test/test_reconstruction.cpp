@@ -174,8 +174,78 @@ std::string min_max_to_string(const T min, const T max)
 }
 
 template <std::size_t N>
+void test_normals(const std::vector<Vector<N, float>>& points, const ManifoldConstructor<N>& constructor)
+{
+        const std::vector<Vector<N, double>> normals = constructor.normals();
+        if (normals.size() != points.size())
+        {
+                error("Error normal count: expected " + to_string(points.size()) + ", computed "
+                      + to_string(normals.size()));
+        }
+}
+
+template <std::size_t N>
+void test_objects(
+        const unsigned object_count,
+        const std::vector<Vector<N, float>>& points,
+        const ManifoldConstructor<N>& constructor,
+        ProgressRatio* const progress)
+{
+        ASSERT(points.size() % object_count == 0);
+
+        const auto [facets_min, facets_max] = facet_count<N>(points.size() / object_count);
+        const unsigned expected_facets_min = facets_min * object_count;
+        const unsigned expected_facets_max = facets_max * object_count;
+
+        const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
+
+        LOG("Cocone expected facet count: " + facet_count_str);
+
+        const std::vector<std::array<int, N>> facets = constructor.cocone(progress);
+
+        LOG("Cocone facet count: " + to_string(facets.size()));
+        if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
+        {
+                error("Error facet count: expected " + facet_count_str + ", Cocone computed "
+                      + to_string(facets.size()));
+        }
+
+        constexpr bool HAS_BOUNDARY = false;
+        const int euler_characteristic = object_count * euler_characteristic_for_convex_polytope<N>();
+        check_mesh("Cocone reconstruction", points, facets, HAS_BOUNDARY, euler_characteristic);
+}
+
+template <std::size_t N>
+void test_bound_objects(
+        const unsigned object_count,
+        const std::vector<Vector<N, float>>& points,
+        const ManifoldConstructor<N>& constructor,
+        ProgressRatio* const progress)
+{
+        ASSERT(points.size() % object_count == 0);
+
+        const auto [facets_min, facets_max] = facet_count<N>(points.size() / object_count);
+        const unsigned expected_facets_min = std::llround(0.9 * facets_min * object_count);
+        const unsigned expected_facets_max = std::llround(1.1 * facets_max * object_count);
+
+        const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
+
+        LOG("BoundCocone expected facet count: " + facet_count_str);
+
+        const std::vector<std::array<int, N>> facets =
+                constructor.bound_cocone(BOUND_COCONE_RHO, BOUND_COCONE_ALPHA, progress);
+
+        LOG("BoundCocone facet count: " + to_string(facets.size()));
+        if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
+        {
+                error("Error facet count: expected " + facet_count_str + ", BoundCocone computed "
+                      + to_string(facets.size()));
+        }
+}
+
+template <std::size_t N>
 void test_algorithms(
-        const bool bounded_object,
+        const bool bound_object,
         const unsigned object_count,
         const std::vector<Vector<N, float>>& points,
         ProgressRatio* const progress)
@@ -184,81 +254,39 @@ void test_algorithms(
         ASSERT(object_count > 0);
         ASSERT(points.size() % object_count == 0);
 
-        const auto [FACETS_MIN, FACETS_MAX] = facet_count<N>(points.size() / object_count);
-
         const Clock::time_point start_time = Clock::now();
 
         LOG("Point count: " + to_string(points.size()));
 
-        std::unique_ptr<ManifoldConstructor<N>> constructor = create_manifold_constructor(points, progress);
+        const std::unique_ptr<const ManifoldConstructor<N>> constructor = create_manifold_constructor(points, progress);
 
+        test_normals(points, *constructor);
+
+        if (!bound_object)
         {
-                const std::vector<Vector<N, double>> normals = constructor->normals();
-                if (normals.size() != points.size())
-                {
-                        error("Error normal count: expected " + to_string(points.size()) + ", computed "
-                              + to_string(normals.size()));
-                }
+                test_objects(object_count, points, *constructor, progress);
         }
 
-        if (!bounded_object)
-        {
-                const unsigned expected_facets_min = FACETS_MIN * object_count;
-                const unsigned expected_facets_max = FACETS_MAX * object_count;
-                const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
+        test_bound_objects(object_count, points, *constructor, progress);
 
-                LOG("Cocone expected facet count: " + facet_count_str);
-
-                const std::vector<std::array<int, N>> facets = constructor->cocone(progress);
-
-                LOG("Cocone facet count: " + to_string(facets.size()));
-                if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
-                {
-                        error("Error facet count: expected " + facet_count_str + ", Cocone computed "
-                              + to_string(facets.size()));
-                }
-
-                constexpr bool HAS_BOUNDARY = false;
-                const int euler_characteristic = object_count * euler_characteristic_for_convex_polytope<N>();
-                check_mesh("Cocone reconstruction", points, facets, HAS_BOUNDARY, euler_characteristic);
-        }
-
-        {
-                const unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
-                const unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
-                const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
-
-                LOG("BoundCocone expected facet count: " + facet_count_str);
-
-                const std::vector<std::array<int, N>> facets =
-                        constructor->bound_cocone(BOUND_COCONE_RHO, BOUND_COCONE_ALPHA, progress);
-
-                LOG("BoundCocone facet count: " + to_string(facets.size()));
-                if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
-                {
-                        error("Error facet count: expected " + facet_count_str + ", BoundCocone computed "
-                              + to_string(facets.size()));
-                }
-        }
-
-        LOG("Time: " + to_string_fixed(duration_from(start_time), 5) + " s");
-        LOG("Successful manifold reconstruction in " + space_name(N));
+        LOG("Manifold reconstruction in " + space_name(N) + ": " + to_string_fixed(duration_from(start_time), 5)
+            + " s");
 }
 
 template <std::size_t N>
-void all_tests(const bool bounded_object, std::vector<Vector<N, float>>&& points, ProgressRatio* const progress)
+void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, ProgressRatio* const progress)
 {
         static_assert(2 <= N && N <= 4);
 
         LOG("------- " + space_name(N) + ", 1 object -------");
-        test_algorithms(bounded_object, 1, points, progress);
+        test_algorithms(bound_object, 1, points, progress);
 
         LOG("");
 
         constexpr unsigned CLONE_COUNT = 1 << N;
         constexpr unsigned OBJECT_COUNT = (1 + CLONE_COUNT);
         LOG("------- " + space_name(N) + ", " + to_string(OBJECT_COUNT) + " objects -------");
-        test_algorithms(bounded_object, OBJECT_COUNT, clone_object(points, CLONE_COUNT), progress);
+        test_algorithms(bound_object, OBJECT_COUNT, clone_object(points, CLONE_COUNT), progress);
 }
 
 template <std::size_t N>

@@ -176,13 +176,13 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 progress->set(0, 4);
                 LOG("vertex data...");
 
+                const std::vector<bool> interior_vertices(vertex_data_.size(), true);
+
                 std::vector<bool> cocone_facets = find_cocone_facets(facet_data_);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone facets not found. " + to_string(N - 1) + "-manifold is not reconstructable.");
                 }
-
-                const std::vector<bool> interior_vertices(vertex_data_.size(), true);
 
                 return compute_facets(interior_vertices, std::move(cocone_facets), progress);
         }
