@@ -119,81 +119,102 @@ public:
         };
 };
 
+std::array<Vector3f, 3> face_vertices(const model::mesh::Mesh<3>& mesh, const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        std::array<Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = mesh.vertices[mesh_facet.vertices[i]];
+        }
+        return res;
+}
+
+std::array<Vector3f, 3> face_normals(const Vector3f& geometric_normal)
+{
+        std::array<Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = geometric_normal;
+        }
+        return res;
+}
+
+std::array<Vector3f, 3> face_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
+        const std::array<Vector3f, 3>& vertices)
+{
+        const Vector3f geometric_normal = cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized();
+        if (!is_finite(geometric_normal))
+        {
+                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(vertices[0])
+                      + ", " + to_string(vertices[1]) + ", " + to_string(vertices[2]) + ")");
+        }
+
+        if (!mesh_facet.has_normal)
+        {
+                return face_normals(geometric_normal);
+        }
+
+        const bool use_mesh_normals = [&]
+        {
+                static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+                for (int i = 0; i < 3; ++i)
+                {
+                        const auto d = dot(mesh.normals[mesh_facet.normals[i]], geometric_normal);
+                        if (!(std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
+                        {
+                                return false;
+                        }
+                }
+                return true;
+        }();
+
+        if (!use_mesh_normals)
+        {
+                return face_normals(geometric_normal);
+        }
+
+        std::array<Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = mesh.normals[mesh_facet.normals[i]];
+        }
+        return res;
+}
+
+std::array<Vector2f, 3> face_texcoords(const model::mesh::Mesh<3>& mesh, const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        if (mesh_facet.has_texcoord)
+        {
+                std::array<Vector2f, 3> res;
+                for (int i = 0; i < 3; ++i)
+                {
+                        res[i] = mesh.texcoords[mesh_facet.texcoords[i]];
+                }
+                return res;
+        }
+
+        std::array<Vector2f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = NULL_TEXTURE_COORDINATES;
+        }
+        return res;
+}
+
 void set_face_vertices(
         const model::mesh::Mesh<3>& mesh,
         const model::mesh::Mesh<3>::Facet& mesh_facet,
         std::array<Vertex, 3>* const face)
 {
-        std::array<Vector3f, 3> p;
-        std::array<Vector3f, 3> n;
-        std::array<Vector2f, 3> t;
+        const std::array<Vector3f, 3> v = face_vertices(mesh, mesh_facet);
+        const std::array<Vector3f, 3> n = face_normals(mesh, mesh_facet, v);
+        const std::array<Vector2f, 3> t = face_texcoords(mesh, mesh_facet);
 
         for (int i = 0; i < 3; ++i)
         {
-                p[i] = mesh.vertices[mesh_facet.vertices[i]];
-        }
-
-        const Vector3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
-        if (!is_finite(geometric_normal))
-        {
-                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(p[0]) + ", "
-                      + to_string(p[1]) + ", " + to_string(p[2]) + ")");
-        }
-
-        if (mesh_facet.has_normal)
-        {
-                std::array<float, 3> dots;
-                for (int i = 0; i < 3; ++i)
-                {
-                        dots[i] = dot(mesh.normals[mesh_facet.normals[i]], geometric_normal);
-                }
-                if (std::all_of(
-                            dots.cbegin(), dots.cend(),
-                            [](const auto& d)
-                            {
-                                    static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                                    return std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
-                            }))
-                {
-                        for (int i = 0; i < 3; ++i)
-                        {
-                                n[i] = mesh.normals[mesh_facet.normals[i]];
-                        }
-                }
-                else
-                {
-                        for (int i = 0; i < 3; ++i)
-                        {
-                                n[i] = geometric_normal;
-                        }
-                }
-        }
-        else
-        {
-                for (int i = 0; i < 3; ++i)
-                {
-                        n[i] = geometric_normal;
-                }
-        }
-
-        if (mesh_facet.has_texcoord)
-        {
-                for (int i = 0; i < 3; ++i)
-                {
-                        t[i] = mesh.texcoords[mesh_facet.texcoords[i]];
-                }
-        }
-        else
-        {
-                for (int i = 0; i < 3; ++i)
-                {
-                        t[i] = NULL_TEXTURE_COORDINATES;
-                }
-        }
-
-        for (int i = 0; i < 3; ++i)
-        {
-                (*face)[i].set(p[i], n[i], t[i]);
+                (*face)[i].set(v[i], n[i], t[i]);
         }
 }
 
@@ -392,7 +413,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
                 vertices.emplace_back(mesh.vertices[p.vertex]);
         }
 
-        std::unique_ptr<vulkan::BufferWithMemory> buffer = std::make_unique<vulkan::BufferWithMemory>(
+        auto buffer = std::make_unique<vulkan::BufferWithMemory>(
                 vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
 
@@ -424,7 +445,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
                 }
         }
 
-        std::unique_ptr<vulkan::BufferWithMemory> buffer = std::make_unique<vulkan::BufferWithMemory>(
+        auto buffer = std::make_unique<vulkan::BufferWithMemory>(
                 vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
 
