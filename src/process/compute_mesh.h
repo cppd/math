@@ -118,28 +118,25 @@ void cocone(
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
-        std::unique_ptr<const model::mesh::Mesh<N>> cocone_mesh;
+        std::unique_ptr<const model::mesh::Mesh<N>> mesh;
+
         {
                 ProgressRatio progress(progress_list);
 
                 const Clock::time_point start_time = Clock::now();
 
-                std::vector<Vector<N, double>> normals;
-                std::vector<std::array<int, N>> facets;
-
-                constructor.cocone(&normals, &facets, &progress);
-
-                cocone_mesh = model::mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
+                mesh = model::mesh::create_mesh_for_facets(
+                        constructor.points(), constructor.cocone(&progress), WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
-        if (cocone_mesh->facets.empty())
+
+        if (mesh->facets.empty())
         {
                 return;
         }
 
-        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
-                std::make_shared<model::mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
+        const auto obj = std::make_shared<model::mesh::MeshObject<N>>(std::move(mesh), model_matrix, "Cocone");
 
         obj->insert(parent_id);
 }
@@ -153,29 +150,26 @@ void bound_cocone(
         const double rho,
         const double alpha)
 {
-        std::unique_ptr<const model::mesh::Mesh<N>> bound_cocone_mesh;
+        std::unique_ptr<const model::mesh::Mesh<N>> mesh;
+
         {
                 ProgressRatio progress(progress_list);
 
                 const Clock::time_point start_time = Clock::now();
 
-                std::vector<Vector<N, double>> normals;
-                std::vector<std::array<int, N>> facets;
-
-                constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
-
-                bound_cocone_mesh = model::mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
+                mesh = model::mesh::create_mesh_for_facets(
+                        constructor.points(), constructor.bound_cocone(rho, alpha, &progress), WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
-        if (bound_cocone_mesh->facets.empty())
+
+        if (mesh->facets.empty())
         {
                 return;
         }
 
-        std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        const std::shared_ptr<model::mesh::MeshObject<N>> obj =
-                std::make_shared<model::mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
+        const auto obj = std::make_shared<model::mesh::MeshObject<N>>(
+                std::move(mesh), model_matrix, "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")");
 
         obj->insert(parent_id);
 }

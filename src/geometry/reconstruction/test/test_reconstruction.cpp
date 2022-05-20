@@ -192,19 +192,24 @@ void test_algorithms(
 
         std::unique_ptr<ManifoldConstructor<N>> constructor = create_manifold_constructor(points, progress);
 
+        {
+                const std::vector<Vector<N, double>> normals = constructor->normals();
+                if (normals.size() != points.size())
+                {
+                        error("Error normal count: expected " + to_string(points.size()) + ", computed "
+                              + to_string(normals.size()));
+                }
+        }
+
         if (!bounded_object)
         {
-                // set initial size to check resizing in functions
-                std::vector<Vector<N, double>> normals(10000);
-                std::vector<std::array<int, N>> facets(10000);
-
                 const unsigned expected_facets_min = FACETS_MIN * object_count;
                 const unsigned expected_facets_max = FACETS_MAX * object_count;
                 const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
                 LOG("Cocone expected facet count: " + facet_count_str);
 
-                constructor->cocone(&normals, &facets, progress);
+                const std::vector<std::array<int, N>> facets = constructor->cocone(progress);
 
                 LOG("Cocone facet count: " + to_string(facets.size()));
                 if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
@@ -219,17 +224,14 @@ void test_algorithms(
         }
 
         {
-                // set initial size to check resizing in functions
-                std::vector<Vector<N, double>> normals(10000);
-                std::vector<std::array<int, N>> facets(10000);
-
                 const unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
                 const unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
                 const std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
                 LOG("BoundCocone expected facet count: " + facet_count_str);
 
-                constructor->bound_cocone(BOUND_COCONE_RHO, BOUND_COCONE_ALPHA, &normals, &facets, progress);
+                const std::vector<std::array<int, N>> facets =
+                        constructor->bound_cocone(BOUND_COCONE_RHO, BOUND_COCONE_ALPHA, progress);
 
                 LOG("BoundCocone facet count: " + to_string(facets.size()));
                 if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))

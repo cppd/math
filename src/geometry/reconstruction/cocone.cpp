@@ -95,32 +95,6 @@ std::vector<std::array<int, N>> create_facets(
 }
 
 template <std::size_t N>
-std::vector<Vector<N, double>> create_normals(
-        const std::vector<ManifoldVertex<N>>& vertices,
-        const std::vector<std::array<int, N>>& facets)
-{
-        const std::unordered_set<int> used_vertices = [&]
-        {
-                std::unordered_set<int> res;
-                for (const std::array<int, N>& facet : facets)
-                {
-                        for (const auto index : facet)
-                        {
-                                res.insert(index);
-                        }
-                }
-                return res;
-        }();
-
-        std::vector<Vector<N, double>> normals(vertices.size(), Vector<N, double>(0));
-        for (const auto index : used_vertices)
-        {
-                normals[index] = vertices[index].positive_norm;
-        }
-        return normals;
-}
-
-template <std::size_t N>
 void create_voronoi_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<Vector<N, double>>* const points,
@@ -164,11 +138,9 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
         std::vector<ManifoldVertex<N>> vertex_data_;
         std::vector<ManifoldFacet<N>> facet_data_;
 
-        void common_computation(
+        std::vector<std::array<int, N>> compute_facets(
                 const std::vector<bool>& interior_vertices,
                 std::vector<bool>&& cocone_facets,
-                std::vector<Vector<N, double>>* const normals,
-                std::vector<std::array<int, N>>* const facets,
                 ProgressRatio* const progress) const
         {
                 progress->set(1, 4);
@@ -194,16 +166,10 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 progress->set(3, 4);
                 LOG("create result...");
 
-                *facets = create_facets(delaunay_facets_, cocone_facets);
-                *normals = create_normals(vertex_data_, *facets);
-
-                ASSERT(normals->size() == points_.size());
+                return create_facets(delaunay_facets_, cocone_facets);
         }
 
-        void cocone(
-                std::vector<Vector<N, double>>* const normals,
-                std::vector<std::array<int, N>>* const facets,
-                ProgressRatio* const progress) const override
+        [[nodiscard]] std::vector<std::array<int, N>> cocone(ProgressRatio* const progress) const override
         {
                 progress->set_text("Cocone reconstruction: %v of %m");
 
@@ -218,17 +184,15 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
 
                 const std::vector<bool> interior_vertices(vertex_data_.size(), true);
 
-                common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
+                return compute_facets(interior_vertices, std::move(cocone_facets), progress);
         }
 
         // ε-sample, epsilon = 0.1
         // ρ ratio condition, rho = 1.3 * epsilon
         // α normal condition, alpha = 0.14
-        void bound_cocone(
+        [[nodiscard]] std::vector<std::array<int, N>> bound_cocone(
                 const double rho,
                 const double alpha,
-                std::vector<Vector<N, double>>* const normals,
-                std::vector<std::array<int, N>>* const facets,
                 ProgressRatio* const progress) const override
         {
                 if (cocone_only_)
@@ -257,18 +221,29 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                               + "-manifold is not reconstructable.");
                 }
 
-                common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
+                return compute_facets(interior_vertices, std::move(cocone_facets), progress);
         }
 
         [[nodiscard]] std::vector<std::array<int, N + 1>> delaunay_objects() const override
         {
-                std::vector<std::array<int, N + 1>> objects;
-                objects.reserve(delaunay_objects_.size());
-                for (const DelaunayObject<N>& d : delaunay_objects_)
+                std::vector<std::array<int, N + 1>> res;
+                res.reserve(delaunay_objects_.size());
+                for (const DelaunayObject<N>& object : delaunay_objects_)
                 {
-                        objects.push_back(d.vertices());
+                        res.push_back(object.vertices());
                 }
-                return objects;
+                return res;
+        }
+
+        [[nodiscard]] std::vector<Vector<N, double>> normals() const override
+        {
+                std::vector<Vector<N, double>> res;
+                res.reserve(vertex_data_.size());
+                for (const ManifoldVertex<N>& vertex : vertex_data_)
+                {
+                        res.push_back(vertex.positive_norm);
+                }
+                return res;
         }
 
         [[nodiscard]] const std::vector<Vector<N, float>>& points() const override
@@ -295,6 +270,7 @@ public:
                         !cocone_only_, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
 
                 ASSERT(source_points.size() == points_.size());
+                ASSERT(source_points.size() == vertex_data_.size());
         }
 };
 }
