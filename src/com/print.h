@@ -34,7 +34,7 @@ namespace ns
 namespace print_implementation
 {
 template <unsigned DIGIT_GROUP_SIZE, typename T>
-void f(T v, int i, std::string& r, [[maybe_unused]] const char s)
+void make_string(T value, int index, [[maybe_unused]] const char separator, std::string& str)
 {
         constexpr bool LONGLONG_LESS_I128 =
                 Limits<long long>::max() < Limits<__int128>::max()
@@ -46,176 +46,183 @@ void f(T v, int i, std::string& r, [[maybe_unused]] const char s)
         {
                 if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
                 {
-                        if (Limits<long long>::lowest() <= v && v <= Limits<long long>::max())
+                        if (Limits<long long>::lowest() <= value && value <= Limits<long long>::max())
                         {
-                                f<DIGIT_GROUP_SIZE, long long>(v, i, r, s);
+                                make_string<DIGIT_GROUP_SIZE, long long>(value, index, separator, str);
                                 break;
                         }
                 }
+
                 if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
                 {
-                        if (v <= Limits<unsigned long long>::max())
+                        if (value <= Limits<unsigned long long>::max())
                         {
-                                f<DIGIT_GROUP_SIZE, unsigned long long>(v, i, r, s);
+                                make_string<DIGIT_GROUP_SIZE, unsigned long long>(value, index, separator, str);
                                 break;
                         }
                 }
 
                 if constexpr (DIGIT_GROUP_SIZE > 0)
                 {
-                        if ((++i % DIGIT_GROUP_SIZE) == 0 && i != 0)
+                        ++index;
+                        if ((index % DIGIT_GROUP_SIZE) == 0 && index != 0)
                         {
-                                r += s;
+                                str += separator;
                         }
                 }
 
-                int remainder = v % 10;
-                if constexpr (Signed<T>)
+                const int remainder = [&]()
                 {
-                        remainder = std::abs(remainder);
-                }
-                r += static_cast<char>(remainder + '0');
+                        const int res = value % 10;
+                        if constexpr (Signed<T>)
+                        {
+                                return std::abs(res);
+                        }
+                        return res;
+                }();
 
-        } while ((v /= 10) != 0);
+                str += static_cast<char>(remainder + '0');
+
+        } while ((value /= 10) != 0);
 }
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
         requires Integral<T>
-[[nodiscard]] std::string to_string_digit_groups(const T& v, const char s)
+[[nodiscard]] std::string to_string_digit_groups(const T& value, const char separator)
 {
         static_assert(!std::is_class_v<T>);
         static_assert(Signed<T> != Unsigned<T>);
 
-        std::string r;
-        r.reserve(Limits<T>::digits10() * 1.5);
+        std::string res;
+        res.reserve(Limits<T>::digits10() * 1.5);
 
-        f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
+        make_string<DIGIT_GROUP_SIZE, T>(value, -1, separator, res);
 
-        if (Signed<T> && v < 0)
+        if (Signed<T> && value < 0)
         {
-                r += '-';
+                res += '-';
         }
 
-        std::reverse(r.begin(), r.end());
+        std::reverse(res.begin(), res.end());
 
-        return r;
+        return res;
 }
 }
 
-[[nodiscard]] std::string to_string(__float128 t);
+[[nodiscard]] std::string to_string(__float128 value);
 
 template <typename T>
         requires std::is_floating_point_v<T>
-[[nodiscard]] std::string to_string(const std::complex<T> t)
+[[nodiscard]] std::string to_string(const std::complex<T> value)
 {
-        std::ostringstream o;
-        o << std::setprecision(Limits<T>::max_digits10());
+        std::ostringstream oss;
+        oss << std::setprecision(Limits<T>::max_digits10());
 
-        if (t.real() >= 0)
+        if (value.real() >= 0)
         {
-                o << " ";
+                oss << " ";
         }
         else
         {
-                o << "-";
+                oss << "-";
         }
-        o << std::abs(t.real());
+        oss << std::abs(value.real());
 
-        if (t.imag() >= 0)
+        if (value.imag() >= 0)
         {
-                o << " + ";
+                oss << " + ";
         }
         else
         {
-                o << " - ";
+                oss << " - ";
         }
-        o << std::abs(t.imag()) << "*I";
+        oss << std::abs(value.imag()) << "*I";
 
-        return o.str();
+        return oss.str();
 }
 
 template <typename T>
         requires std::is_floating_point_v<T>
-[[nodiscard]] std::string to_string(const T t)
+[[nodiscard]] std::string to_string(const T value)
 {
-        std::ostringstream o;
-        o << std::setprecision(Limits<T>::max_digits10());
-        o << t;
-        return o.str();
+        std::ostringstream oss;
+        oss << std::setprecision(Limits<T>::max_digits10());
+        oss << value;
+        return oss.str();
 }
 
 template <typename T>
         requires std::is_floating_point_v<T>
-[[nodiscard]] std::string to_string(const T t, const unsigned digits)
+[[nodiscard]] std::string to_string(const T value, const unsigned digits)
 {
-        std::ostringstream o;
-        o << std::setprecision(digits);
-        o << t;
-        return o.str();
+        std::ostringstream oss;
+        oss << std::setprecision(digits);
+        oss << value;
+        return oss.str();
 }
 
 template <typename T>
         requires std::is_floating_point_v<T>
-[[nodiscard]] std::string to_string_fixed(const T t, const unsigned digits)
+[[nodiscard]] std::string to_string_fixed(const T value, const unsigned digits)
 {
-        std::ostringstream o;
-        o << std::setprecision(digits);
-        o << std::fixed;
-        o << t;
+        std::ostringstream oss;
+        oss << std::setprecision(digits);
+        oss << std::fixed;
+        oss << value;
 
-        std::string r = o.str();
+        std::string res = oss.str();
 
-        while (!r.empty() && r[r.size() - 1] == '0')
+        while (!res.empty() && res[res.size() - 1] == '0')
         {
-                r.resize(r.size() - 1);
+                res.resize(res.size() - 1);
         }
 
-        if (!r.empty() && r[r.size() - 1] == '.')
+        if (!res.empty() && res[res.size() - 1] == '.')
         {
-                r.resize(r.size() - 1);
+                res.resize(res.size() - 1);
         }
 
-        if (r.empty())
+        if (res.empty())
         {
-                return o.str();
+                return oss.str();
         }
 
-        return r;
+        return res;
 }
 
 template <typename T>
         requires std::is_unsigned_v<T>
-[[nodiscard]] std::string to_string_binary(T v, const std::string_view& prefix = "")
+[[nodiscard]] std::string to_string_binary(T value, const std::string_view& prefix = "")
 {
-        if (v == 0)
+        if (value == 0)
         {
                 return std::string(prefix) + '0';
         }
-        unsigned width = std::bit_width(v);
-        std::string s(prefix);
-        s.resize(s.size() + width);
-        for (std::ptrdiff_t i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)
+
+        std::string res(prefix);
+        res.resize(res.size() + std::bit_width(value));
+        for (std::ptrdiff_t i = std::ssize(res) - 1; i >= std::ssize(prefix); --i)
         {
-                s[i] = (v & 1u) ? '1' : '0';
-                v >>= 1u;
+                res[i] = (value & 1u) ? '1' : '0';
+                value >>= 1u;
         }
-        return s;
+        return res;
 }
 
 //
 
 template <typename T>
         requires Integral<T>
-[[nodiscard]] std::string to_string(const T v)
+[[nodiscard]] std::string to_string(const T value)
 {
-        return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
+        return print_implementation::to_string_digit_groups<0, T>(value, '\x20');
 }
 
 template <typename T>
         requires Integral<T>
-[[nodiscard]] std::string to_string_digit_groups(const T v, const char s = '\x20')
+[[nodiscard]] std::string to_string_digit_groups(const T value, const char separator = '\x20')
 {
-        return print_implementation::to_string_digit_groups<3, T>(v, s);
+        return print_implementation::to_string_digit_groups<3, T>(value, separator);
 }
 
 //
@@ -254,6 +261,7 @@ template <typename T>
         {
                 return {};
         }
+
         std::string res = to_string(*i);
         while (++i != std::end(data))
         {
