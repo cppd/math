@@ -128,9 +128,9 @@ void check(
         T a = from;
         for (std::size_t i = 1; i <= averages.size(); ++i)
         {
-                T b = std::lerp(from, to, static_cast<T>(i) / averages.size());
-                T integral = numerical::integrate(function, a, b, INTEGRATE_COUNT);
-                T average = integral / (b - a);
+                const T b = std::lerp(from, to, static_cast<T>(i) / averages.size());
+                const T integral = numerical::integrate(function, a, b, INTEGRATE_COUNT);
+                const T average = integral / (b - a);
                 test_averages.push_back(average);
                 a = b;
         }
@@ -184,6 +184,7 @@ std::array<T, 2> min_max(
 {
         ASSERT(from < to);
         ASSERT(min_distance < (to - from));
+
         T min;
         T max;
         do
@@ -191,11 +192,13 @@ std::array<T, 2> min_max(
                 min = std::uniform_real_distribution<T>(from, to)(engine);
                 max = std::uniform_real_distribution<T>(from, to)(engine);
         } while (!(std::abs(min - max) > min_distance));
+
         if (min > max)
         {
                 std::swap(min, max);
         }
         ASSERT((max - min) > min_distance && min >= from && max <= to);
+
         return {min, max};
 }
 
