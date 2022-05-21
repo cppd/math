@@ -185,7 +185,8 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 }
 
 // template <typename Shape>
-// constexpr std::size_t constraint_count() requires(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0)
+//         requires(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0)
+// constexpr std::size_t constraint_count()
 // {
 //         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
 //         static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
@@ -197,7 +198,8 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 // }
 
 // template <typename Shape>
-// constexpr std::size_t constraint_count() requires(Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION)
+//         requires(Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION)
+// constexpr std::size_t constraint_count()
 // {
 //         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
 //         return size<decltype(std::declval<Shape>().constraints().c)>();

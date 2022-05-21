@@ -33,12 +33,12 @@ class PCG final
 public:
         using result_type = std::uint32_t;
 
-        static constexpr result_type min()
+        [[nodiscard]] static constexpr result_type min()
         {
                 return 0;
         }
 
-        static constexpr result_type max()
+        [[nodiscard]] static constexpr result_type max()
         {
                 return 0xffff'ffff;
         }
@@ -49,7 +49,7 @@ public:
 
         explicit PCG(result_type value);
 
-        result_type operator()()
+        [[nodiscard]] result_type operator()()
         {
                 constexpr std::uint64_t MULTIPLIER = 6'364136'223846'793005;
 

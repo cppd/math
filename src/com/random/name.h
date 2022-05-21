@@ -25,61 +25,71 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::knuth_b>
+        requires std::is_same_v<std::remove_cv_t<T>, std::knuth_b>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::knuth_b";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::minstd_rand>
+        requires std::is_same_v<std::remove_cv_t<T>, std::minstd_rand>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::minstd_rand";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::minstd_rand0>
+        requires std::is_same_v<std::remove_cv_t<T>, std::minstd_rand0>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::minstd_rand0";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937>
+        requires std::is_same_v<std::remove_cv_t<T>, std::mt19937>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::mt19937";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>
+        requires std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::mt19937_64";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::ranlux24>
+        requires std::is_same_v<std::remove_cv_t<T>, std::ranlux24>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::ranlux24";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::ranlux24_base>
+        requires std::is_same_v<std::remove_cv_t<T>, std::ranlux24_base>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::ranlux24_base";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::ranlux48>
+        requires std::is_same_v<std::remove_cv_t<T>, std::ranlux48>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::ranlux48";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::ranlux48_base>
+        requires std::is_same_v<std::remove_cv_t<T>, std::ranlux48_base>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "std::ranlux48_base";
 }
 
 template <typename T>
-constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, PCG>
+        requires std::is_same_v<std::remove_cv_t<T>, PCG>
+[[nodiscard]] constexpr const char* random_engine_name()
 {
         return "PCG";
 }

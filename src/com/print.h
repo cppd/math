@@ -80,7 +80,8 @@ void f(T v, int i, std::string& r, [[maybe_unused]] const char s)
 }
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
-std::string to_string_digit_groups(const T& v, const char s) requires Integral<T>
+        requires Integral<T>
+[[nodiscard]] std::string to_string_digit_groups(const T& v, const char s)
 {
         static_assert(!std::is_class_v<T>);
         static_assert(Signed<T> != Unsigned<T>);
@@ -101,10 +102,11 @@ std::string to_string_digit_groups(const T& v, const char s) requires Integral<T
 }
 }
 
-std::string to_string(__float128 t);
+[[nodiscard]] std::string to_string(__float128 t);
 
 template <typename T>
-std::string to_string(const std::complex<T> t) requires std::is_floating_point_v<T>
+        requires std::is_floating_point_v<T>
+[[nodiscard]] std::string to_string(const std::complex<T> t)
 {
         std::ostringstream o;
         o << std::setprecision(Limits<T>::max_digits10());
@@ -133,7 +135,8 @@ std::string to_string(const std::complex<T> t) requires std::is_floating_point_v
 }
 
 template <typename T>
-std::string to_string(const T t) requires std::is_floating_point_v<T>
+        requires std::is_floating_point_v<T>
+[[nodiscard]] std::string to_string(const T t)
 {
         std::ostringstream o;
         o << std::setprecision(Limits<T>::max_digits10());
@@ -142,7 +145,8 @@ std::string to_string(const T t) requires std::is_floating_point_v<T>
 }
 
 template <typename T>
-std::string to_string(const T t, const unsigned digits) requires std::is_floating_point_v<T>
+        requires std::is_floating_point_v<T>
+[[nodiscard]] std::string to_string(const T t, const unsigned digits)
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -151,7 +155,8 @@ std::string to_string(const T t, const unsigned digits) requires std::is_floatin
 }
 
 template <typename T>
-std::string to_string_fixed(const T t, const unsigned digits) requires std::is_floating_point_v<T>
+        requires std::is_floating_point_v<T>
+[[nodiscard]] std::string to_string_fixed(const T t, const unsigned digits)
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -179,7 +184,8 @@ std::string to_string_fixed(const T t, const unsigned digits) requires std::is_f
 }
 
 template <typename T>
-std::string to_string_binary(T v, const std::string_view& prefix = "") requires std::is_unsigned_v<T>
+        requires std::is_unsigned_v<T>
+[[nodiscard]] std::string to_string_binary(T v, const std::string_view& prefix = "")
 {
         if (v == 0)
         {
@@ -199,42 +205,45 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
 //
 
 template <typename T>
-std::string to_string(const T v) requires Integral<T>
+        requires Integral<T>
+[[nodiscard]] std::string to_string(const T v)
 {
         return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
-std::string to_string_digit_groups(const T v, const char s = '\x20') requires Integral<T>
+        requires Integral<T>
+[[nodiscard]] std::string to_string_digit_groups(const T v, const char s = '\x20')
 {
         return print_implementation::to_string_digit_groups<3, T>(v, s);
 }
 
 //
 
-std::string to_string(char) = delete;
-std::string to_string(wchar_t) = delete;
-std::string to_string(char8_t) = delete;
-std::string to_string(char16_t) = delete;
-std::string to_string(char32_t) = delete;
-std::string to_string_digit_groups(char v, char) = delete;
-std::string to_string_digit_groups(wchar_t v, char) = delete;
-std::string to_string_digit_groups(char8_t v, char) = delete;
-std::string to_string_digit_groups(char16_t v, char) = delete;
-std::string to_string_digit_groups(char32_t v, char) = delete;
+void to_string(char) = delete;
+void to_string(wchar_t) = delete;
+void to_string(char8_t) = delete;
+void to_string(char16_t) = delete;
+void to_string(char32_t) = delete;
+void to_string_digit_groups(char v, char) = delete;
+void to_string_digit_groups(wchar_t v, char) = delete;
+void to_string_digit_groups(char8_t v, char) = delete;
+void to_string_digit_groups(char16_t v, char) = delete;
+void to_string_digit_groups(char32_t v, char) = delete;
 
 template <typename T>
-std::string to_string(const T&) requires(std::is_pointer_v<T>) = delete;
+        requires std::is_pointer_v<T>
+void to_string(const T&) = delete;
 
 template <typename T>
-std::string to_string(std::basic_string<T>) = delete;
+void to_string(std::basic_string<T>) = delete;
 template <typename T>
-std::string to_string(std::basic_string_view<T>) = delete;
+void to_string(std::basic_string_view<T>) = delete;
 
 //
 
 template <typename T>
-std::string to_string(const T& data) requires requires
+[[nodiscard]] std::string to_string(const T& data) requires requires
 {
         std::begin(data);
         std::end(data);

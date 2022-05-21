@@ -31,7 +31,8 @@ using Matrix3d = Matrix<3, 4, double>;
 }
 
 template <typename Dst, typename Src>
-Matrix<4, 4, Dst> to_std140(const Matrix<4, 4, Src>& m) requires(!std::is_same_v<Dst, Src>)
+        requires(!std::is_same_v<Dst, Src>)
+[[nodiscard]] Matrix<4, 4, Dst> to_std140(const Matrix<4, 4, Src>& m)
 {
         Matrix<4, 4, Dst> res;
         for (int r = 0; r < 4; ++r)
@@ -45,19 +46,21 @@ Matrix<4, 4, Dst> to_std140(const Matrix<4, 4, Src>& m) requires(!std::is_same_v
 }
 
 template <typename Dst, typename Src>
-const Matrix<4, 4, Dst>& to_std140(const Matrix<4, 4, Src>& m) requires(std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) to_std140(const Matrix<4, 4, Src>& m)
 {
         return m;
 }
 
 template <typename Dst, typename Src>
-Matrix<4, 4, Dst>&& to_std140(Matrix<4, 4, Src>&& m) requires(std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) to_std140(Matrix<4, 4, Src>&& m)
 {
         return std::move(m);
 }
 
 template <typename Dst, typename Src>
-std140::Matrix3<Dst> to_std140(const Matrix<3, 3, Src>& m)
+[[nodiscard]] std140::Matrix3<Dst> to_std140(const Matrix<3, 3, Src>& m)
 {
         std140::Matrix3<Dst> res;
         for (int r = 0; r < 3; ++r)

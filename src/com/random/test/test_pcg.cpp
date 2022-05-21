@@ -124,7 +124,7 @@ void test_value(T&& engine, const int count, const typename T::result_type expec
 
         for (int i = 1; i < count; ++i)
         {
-                engine();
+                static_cast<void>(engine());
         }
 
         const auto v = engine();

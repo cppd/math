@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-constexpr T absolute(const T& v)
+[[nodiscard]] constexpr T absolute(const T& v)
 {
         constexpr bool HAS_ABS = requires
         {
@@ -42,7 +42,8 @@ constexpr T absolute(const T& v)
 }
 
 template <typename T>
-constexpr bool is_finite(const T& v) requires(std::is_floating_point_v<T>)
+        requires std::is_floating_point_v<T>
+[[nodiscard]] constexpr bool is_finite(const T& v)
 {
         if (std::is_constant_evaluated())
         {
@@ -52,7 +53,7 @@ constexpr bool is_finite(const T& v) requires(std::is_floating_point_v<T>)
 }
 
 template <typename I, typename T>
-constexpr I integral_floor(const T& v)
+[[nodiscard]] constexpr I integral_floor(const T& v)
 {
         static_assert(std::is_integral_v<I> && std::is_signed_v<I>);
         static_assert(std::is_floating_point_v<T>);
@@ -61,7 +62,7 @@ constexpr I integral_floor(const T& v)
 }
 
 template <typename I, typename T>
-constexpr I integral_ceil(const T& v)
+[[nodiscard]] constexpr I integral_ceil(const T& v)
 {
         static_assert(std::is_integral_v<I> && std::is_signed_v<I>);
         static_assert(std::is_floating_point_v<T>);

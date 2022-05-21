@@ -33,7 +33,8 @@ namespace ns
 namespace read_implementation
 {
 template <typename T>
-std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T, float>)
+        requires(std::is_same_v<T, float>)
+std::tuple<T, const char*> read(const char* const str)
 {
         char* end;
         const T v = std::strtof(str, &end);
@@ -41,7 +42,8 @@ std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T
 }
 
 template <typename T>
-std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T, double>)
+        requires(std::is_same_v<T, double>)
+std::tuple<T, const char*> read(const char* const str)
 {
         char* end;
         const T v = std::strtod(str, &end);
@@ -49,7 +51,8 @@ std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T
 }
 
 template <typename T>
-std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T, long double>)
+        requires(std::is_same_v<T, long double>)
+std::tuple<T, const char*> read(const char* const str)
 {
         char* end;
         const T v = std::strtold(str, &end);
@@ -58,8 +61,8 @@ std::tuple<T, const char*> read(const char* const str) requires(std::is_same_v<T
 }
 
 template <typename T>
-[[nodiscard]] std::tuple<std::optional<T>, const char*> read_from_chars(const char* const str) requires(
-        std::is_floating_point_v<T>)
+        requires(std::is_floating_point_v<T>)
+[[nodiscard]] std::tuple<std::optional<T>, const char*> read_from_chars(const char* const str)
 {
         namespace impl = read_implementation;
 
@@ -77,9 +80,8 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::tuple<std::optional<T>, const char*> read_from_chars(
-        const char* const first,
-        const char* const last) requires(std::is_integral_v<T>)
+        requires(std::is_integral_v<T>)
+[[nodiscard]] std::tuple<std::optional<T>, const char*> read_from_chars(const char* const first, const char* const last)
 {
         T v;
         const auto [ptr, ec] = std::from_chars(first, last, v);

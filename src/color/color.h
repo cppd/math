@@ -361,16 +361,16 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] friend Color to_color(
-                const SpectrumSamples& c) requires std::is_same_v<Color, RGB<typename Color::DataType>>
+                requires std::is_same_v<Color, RGB<typename Color::DataType>>
+        [[nodiscard]] friend Color to_color(const SpectrumSamples& c)
         {
                 const Vector<3, T> rgb = spectrum_to_rgb(c.data());
                 return Color(rgb[0], rgb[1], rgb[2]);
         }
 
         template <typename Color>
-        [[nodiscard]] friend const Color& to_color(
-                const SpectrumSamples& c) requires std::is_same_v<Color, SpectrumSamples>
+                requires std::is_same_v<Color, SpectrumSamples>
+        [[nodiscard]] friend const Color& to_color(const SpectrumSamples& c)
         {
                 return c;
         }

@@ -31,23 +31,26 @@ concept Indirection = requires(T&& v)
 }
 
 template <typename T>
-T& to_ref(T* const object)
+[[nodiscard]] decltype(auto) to_ref(T* const object)
 {
         return *object;
 }
 
 template <typename T>
-T&& to_ref(T&& object) requires(!reference_implementation::Indirection<T>)
+        requires(!reference_implementation::Indirection<T>)
+[[nodiscard]] decltype(auto) to_ref(T&& object)
 {
         return std::forward<T>(object);
 }
 
 template <typename T>
-decltype(auto) to_ref(T& object) requires(reference_implementation::Indirection<T>)
+        requires(reference_implementation::Indirection<T>)
+[[nodiscard]] decltype(auto) to_ref(T& object)
 {
         return *object;
 }
 
 template <typename T>
-void to_ref(const T&& object) requires(reference_implementation::Indirection<T>) = delete;
+        requires(reference_implementation::Indirection<T>)
+void to_ref(const T&& object) = delete;
 }

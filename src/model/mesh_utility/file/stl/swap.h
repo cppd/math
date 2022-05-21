@@ -25,7 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model::mesh::file::stl
 {
 template <typename T>
-[[nodiscard]] constexpr T byte_swap(const T n) requires(std::is_same_v<std::uint32_t, T>)
+        requires std::is_same_v<std::uint32_t, T>
+[[nodiscard]] constexpr T byte_swap(const T n)
 {
         static_assert(__builtin_bswap32(0x12345678) == 0x78563412);
         static_assert(__builtin_bswap32(0x78563412) == 0x12345678);

@@ -38,7 +38,8 @@ std::array<std::uint32_t, 4> random_data(std::seed_seq& seed_seq)
 }
 
 template <typename T>
-std::array<std::uint32_t, 4> random_data(const T value) requires(std::is_integral_v<T>)
+        requires(std::is_integral_v<T>)
+std::array<std::uint32_t, 4> random_data(const T value)
 {
         std::seed_seq seed_seq({value});
         std::array<std::uint32_t, 4> data;

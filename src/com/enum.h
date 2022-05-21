@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-constexpr auto enum_to_int(const T v) requires(std::is_enum_v<T>)
+        requires std::is_enum_v<T>
+[[nodiscard]] constexpr auto enum_to_int(const T v)
 {
         if constexpr (std::is_signed_v<std::underlying_type_t<T>>)
         {

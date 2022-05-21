@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-[[nodiscard]] constexpr T interpolation(const T& a, const T& b, const T& t) requires(std::is_floating_point_v<T>)
+        requires std::is_floating_point_v<T>
+[[nodiscard]] constexpr T interpolation(const T& a, const T& b, const T& t)
 {
         return (1 - t) * a + t * b;
 }

@@ -22,22 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-int compute_m(int n);
-std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef);
-std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
+[[nodiscard]] int compute_m(int n);
+
+[[nodiscard]] std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef);
+
+[[nodiscard]] std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
 
 template <typename T>
-unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size);
+[[nodiscard]] unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size);
 
 template <typename T>
-unsigned group_size(
+[[nodiscard]] unsigned group_size(
         unsigned dft_size,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
 
 template <typename Dst, typename Src>
-std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data) requires(!std::is_same_v<Dst, Src>)
+        requires(!std::is_same_v<Dst, Src>)
+[[nodiscard]] std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
 {
         std::vector<std::complex<Dst>> res;
         res.reserve(data.size());
@@ -49,14 +52,15 @@ std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data) 
 }
 
 template <typename Dst, typename Src>
-const std::vector<std::complex<Dst>>& conv(const std::vector<std::complex<Src>>& data) requires(
-        std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) conv(const std::vector<std::complex<Src>>& data)
 {
         return data;
 }
 
 template <typename Dst, typename Src>
-std::vector<std::complex<Dst>>&& conv(std::vector<std::complex<Src>>&& data) requires(std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) conv(std::vector<std::complex<Src>>&& data)
 {
         return std::move(data);
 }

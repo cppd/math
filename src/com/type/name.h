@@ -59,127 +59,148 @@ static_assert(128 == floating_point_bit_count<__float128>());
 //
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, float>)
+        requires(std::is_same_v<std::remove_cv_t<T>, float>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "float";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, double>)
+        requires(std::is_same_v<std::remove_cv_t<T>, double>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "double";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, long double>)
+        requires(std::is_same_v<std::remove_cv_t<T>, long double>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "long double";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, __float128>)
+        requires(std::is_same_v<std::remove_cv_t<T>, __float128>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "__float128";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, bool>)
+        requires(std::is_same_v<std::remove_cv_t<T>, bool>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "bool";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char>)
+        requires(std::is_same_v<std::remove_cv_t<T>, char>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "char";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, signed char>)
+        requires(std::is_same_v<std::remove_cv_t<T>, signed char>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "signed char";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned char>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned char>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned char";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char8_t>)
+        requires(std::is_same_v<std::remove_cv_t<T>, char8_t>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "char8_t";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char16_t>)
+        requires(std::is_same_v<std::remove_cv_t<T>, char16_t>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "char16_t";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, char32_t>)
+        requires(std::is_same_v<std::remove_cv_t<T>, char32_t>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "char32_t";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, short>)
+        requires(std::is_same_v<std::remove_cv_t<T>, short>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "short";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned short>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned short>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned short";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, int>)
+        requires(std::is_same_v<std::remove_cv_t<T>, int>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "int";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned int>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned int>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned int";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, long>)
+        requires(std::is_same_v<std::remove_cv_t<T>, long>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "long";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned long>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned long>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned long";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, long long>)
+        requires(std::is_same_v<std::remove_cv_t<T>, long long>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "long long";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned long long>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned long long>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned long long";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, __int128>)
+        requires(std::is_same_v<std::remove_cv_t<T>, __int128>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "__int128";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+        requires(std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+[[nodiscard]] constexpr const char* type_name()
 {
         return "unsigned __int128";
 }
@@ -187,7 +208,7 @@ constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, u
 //
 
 template <type_name_implementation::BitFloatingPoint T>
-const char* type_bit_name()
+[[nodiscard]] const char* type_bit_name()
 {
         static constexpr std::size_t SIZE = type_name_implementation::floating_point_bit_count<T>();
         static_assert(SIZE >= 10 && SIZE <= 999);
@@ -206,8 +227,10 @@ const char* type_bit_name()
 }
 
 template <typename T>
-const char* type_bit_name() requires(
-        (std::is_integral_v<T> && std::is_signed_v<T>) || (std::is_same_v<std::remove_cv_t<T>, signed __int128>))
+        requires(
+                (std::is_integral_v<T> && std::is_signed_v<T>)
+                || (std::is_same_v<std::remove_cv_t<T>, signed __int128>))
+[[nodiscard]] const char* type_bit_name()
 {
         static constexpr std::size_t SIZE = 1 + Limits<T>::digits();
         static_assert(SIZE >= 1 && SIZE <= 999);
@@ -232,8 +255,10 @@ const char* type_bit_name() requires(
 }
 
 template <typename T>
-const char* type_bit_name() requires(
-        (std::is_integral_v<T> && std::is_unsigned_v<T>) || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>))
+        requires(
+                (std::is_integral_v<T> && std::is_unsigned_v<T>)
+                || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>))
+[[nodiscard]] const char* type_bit_name()
 {
         static constexpr std::size_t SIZE = Limits<T>::digits();
         static_assert(SIZE >= 1 && SIZE <= 999);
@@ -260,19 +285,22 @@ const char* type_bit_name() requires(
 //
 
 template <typename T>
-constexpr const char* floating_point_suffix() requires(std::is_same_v<std::remove_cv_t<T>, float>)
+        requires(std::is_same_v<std::remove_cv_t<T>, float>)
+[[nodiscard]] constexpr const char* floating_point_suffix()
 {
         return "f";
 }
 
 template <typename T>
-constexpr const char* floating_point_suffix() requires(std::is_same_v<std::remove_cv_t<T>, double>)
+        requires(std::is_same_v<std::remove_cv_t<T>, double>)
+[[nodiscard]] constexpr const char* floating_point_suffix()
 {
         return "";
 }
 
 template <typename T>
-constexpr const char* floating_point_suffix() requires(std::is_same_v<std::remove_cv_t<T>, long double>)
+        requires(std::is_same_v<std::remove_cv_t<T>, long double>)
+[[nodiscard]] constexpr const char* floating_point_suffix()
 {
         return "l";
 }

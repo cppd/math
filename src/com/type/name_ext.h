@@ -24,25 +24,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, mpz_class>)
+        requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
+[[nodiscard]] constexpr const char* type_name()
 {
         return "mpz_class";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, mpq_class>)
+        requires std::is_same_v<std::remove_cv_t<T>, mpq_class>
+[[nodiscard]] constexpr const char* type_name()
 {
         return "mpq_class";
 }
 
 template <typename T>
-constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, mpf_class>)
+        requires std::is_same_v<std::remove_cv_t<T>, mpf_class>
+[[nodiscard]] constexpr const char* type_name()
 {
         return "mpf_class";
 }
 
 template <typename T>
-constexpr const char* type_bit_name() requires(std::is_same_v<std::remove_cv_t<T>, mpz_class>)
+        requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
+[[nodiscard]] constexpr const char* type_bit_name()
 {
         return "mpz_class";
 }

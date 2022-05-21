@@ -110,15 +110,14 @@ public:
         }
 
         template <typename... Args>
-        explicit constexpr Matrix(Args&&... args) requires(
-                (sizeof...(args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
-                : rows_{std::forward<Args>(args)...}
+                requires((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
+        explicit constexpr Matrix(Args&&... args) : rows_{std::forward<Args>(args)...}
         {
         }
 
         template <typename Arg>
-        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS && std::is_convertible_v<Arg, T>)
-                : rows_(make_diagonal_matrix(v))
+                requires std::is_convertible_v<Arg, T>
+        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS) : rows_(make_diagonal_matrix(v))
         {
         }
 
@@ -283,8 +282,8 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-[[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m) requires(
-        !std::is_same_v<Dst, Src>)
+        requires(!std::is_same_v<Dst, Src>)
+[[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
 {
         Matrix<ROWS, COLUMNS, Dst> res;
         for (std::size_t r = 0; r < ROWS; ++r)
@@ -298,14 +297,15 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-[[nodiscard]] const Matrix<ROWS, COLUMNS, Src>& to_matrix(const Matrix<ROWS, COLUMNS, Src>& m) requires(
-        std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
 {
         return m;
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-[[nodiscard]] Matrix<ROWS, COLUMNS, Src>&& to_matrix(Matrix<ROWS, COLUMNS, Src>&& m) requires(std::is_same_v<Dst, Src>)
+        requires(std::is_same_v<Dst, Src>)
+[[nodiscard]] decltype(auto) to_matrix(Matrix<ROWS, COLUMNS, Src>&& m)
 {
         return std::move(m);
 }
