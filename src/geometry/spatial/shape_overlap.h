@@ -385,7 +385,8 @@ public:
 };
 
 template <typename Shape>
-requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class ShapeOverlap<Shape> final
+        requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2)
+class ShapeOverlap<Shape> final
 {
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
