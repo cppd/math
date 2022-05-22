@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "radical_inverse.h"
+#include "../radical_inverse.h"
 
-#include "type/limit.h"
+#include <src/com/type/limit.h>
 
 namespace ns
 {

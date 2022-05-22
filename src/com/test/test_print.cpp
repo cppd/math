@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../error.h"
-#include "../exponent.h"
 #include "../print.h"
-#include "../type/limit.h"
 
+#include <src/com/error.h>
+#include <src/com/exponent.h>
+#include <src/com/type/limit.h>
 #include <src/test/test.h>
 
 namespace ns
