@@ -75,6 +75,9 @@ inline constexpr int MAX_PARABOLOID = []
         // max = x*x + x*x + x*x
         // max = (x ^ 2) * (N - 1)
 
-        return BITS * 2 + bit_width(N - 1);
+        static_assert(N >= 2);
+        static_assert(BITS > 0);
+
+        return BITS * 2 + bit_width(N - 2);
 }();
 }

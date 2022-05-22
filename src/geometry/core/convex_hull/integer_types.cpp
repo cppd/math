@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "integer_types.h"
 
+#include <src/com/type/concept.h>
+
 namespace ns::geometry::convex_hull
 {
 namespace
