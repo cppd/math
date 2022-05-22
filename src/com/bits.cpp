@@ -19,8 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-static_assert(bit_width(__int128{0b10000}) == 5);
-static_assert(bit_width(__int128{0b10001}) == 5);
-static_assert(bit_width(__int128{0b10101}) == 5);
-static_assert(bit_width(__int128{0b11111}) == 5);
+static_assert(bit_width(0u) == 0);
+static_assert(bit_width(1u) == 1);
+static_assert(bit_width(2u) == 2);
+static_assert(bit_width(3u) == 2);
+static_assert(bit_width(4u) == 3);
+
+static_assert(bit_width(0b10000u) == 5);
+static_assert(bit_width(0b10001u) == 5);
+static_assert(bit_width(0b10101u) == 5);
+static_assert(bit_width(0b11111u) == 5);
+
+static_assert(bit_width(static_cast<unsigned __int128>(0b10000)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b10001)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b10101)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b11111)) == 5);
 }
