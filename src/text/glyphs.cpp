@@ -19,41 +19,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code_points.h"
 
+#include <src/com/alg.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/image/file_save.h>
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstring>
-#include <numeric>
-#include <utility>
+#include <vector>
 
 namespace ns::text
 {
 namespace
 {
-template <std::size_t... I>
-[[maybe_unused]] bool check(
-        const std::array<int, sizeof...(I)>& offset,
-        const std::array<int, sizeof...(I)>& copy_size,
-        const std::array<int, sizeof...(I)>& size,
-        std::integer_sequence<std::size_t, I...>&&)
-{
-        return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...)
-               && ((offset[I] + copy_size[I] <= size[I]) && ...);
-}
-
 template <std::size_t N>
 [[maybe_unused]] bool check(
         const std::array<int, N>& offset,
         const std::array<int, N>& copy_size,
         const std::array<int, N>& size)
 {
-        return check(offset, copy_size, size, std::make_integer_sequence<std::size_t, N>());
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(offset[i] >= 0 && copy_size[i] >= 0 && size[i] >= 0 && offset[i] + copy_size[i] <= size[i]))
+                {
+                        return false;
+                }
+        }
+        return true;
 }
-
-//
 
 template <typename T>
 void copy_image(
@@ -66,15 +62,13 @@ void copy_image(
         const std::array<int, 2>& copy_size)
 {
         ASSERT(dst);
-        ASSERT(src.size()
-               == std::accumulate(src_size.begin(), src_size.end(), 1ull, std::multiplies<unsigned long long>()));
-        ASSERT(dst->size()
-               == std::accumulate(dst_size.begin(), dst_size.end(), 1ull, std::multiplies<unsigned long long>()));
+        ASSERT(static_cast<long long>(src.size()) == multiply_all<long long>(src_size));
+        ASSERT(static_cast<long long>(dst->size()) == multiply_all<long long>(dst_size));
         ASSERT(check(src_offset, copy_size, src_size));
         ASSERT(check(dst_offset, copy_size, dst_size));
 
-        long long dst_y_stride = dst_size[0];
-        long long src_y_stride = src_size[0];
+        const long long dst_y_stride = dst_size[0];
+        const long long src_y_stride = src_size[0];
 
         for (int s_y = src_offset[1], d_y = dst_offset[1]; s_y < src_offset[1] + copy_size[1]; ++s_y, ++d_y)
         {
@@ -83,17 +77,6 @@ void copy_image(
                         (*dst)[d_y * dst_y_stride + d_x] = src[s_y * src_y_stride + s_x];
                 }
         }
-}
-
-template <typename T>
-void copy_image(
-        std::vector<T>* const dst,
-        const std::array<int, 2>& dst_size,
-        const std::array<int, 2>& dst_offset,
-        const std::vector<T>& src,
-        const std::array<int, 2>& src_size)
-{
-        copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
 void render_glyphs(
@@ -108,37 +91,39 @@ void render_glyphs(
         font_glyphs->reserve(code_points.size());
         glyph_pixels->reserve(code_points.size());
 
-        for (char32_t code_point : code_points)
+        for (const char32_t code_point : code_points)
         {
-                std::optional<Char> rc = font.render(code_point);
+                const std::optional<Char> font_char = font.render(code_point);
 
-                if (!rc)
+                if (!font_char)
                 {
                         continue;
                 }
 
-                if (rc->width < 0 || rc->height < 0)
+                if (font_char->width < 0 || font_char->height < 0)
                 {
                         error("Negative character size");
                 }
-                if ((rc->width <= 0 && rc->height > 0) || (rc->width > 0 && rc->height <= 0))
+
+                if ((font_char->width <= 0 && font_char->height > 0)
+                    || (font_char->width > 0 && font_char->height <= 0))
                 {
                         error("One-dimensional character image");
                 }
 
                 FontGlyph& font_glyph = font_glyphs->try_emplace(code_point).first->second;
 
-                font_glyph.left = rc->left;
-                font_glyph.top = rc->top;
-                font_glyph.width = rc->width;
-                font_glyph.height = rc->height;
-                font_glyph.advance_x = rc->advance_x;
+                font_glyph.left = font_char->left;
+                font_glyph.top = font_char->top;
+                font_glyph.width = font_char->width;
+                font_glyph.height = font_char->height;
+                font_glyph.advance_x = font_char->advance_x;
 
-                static_assert(std::is_same_v<const unsigned char*, decltype(rc->image)>);
+                static_assert(std::is_same_v<const unsigned char*, decltype(font_char->image)>);
 
                 std::vector<std::byte>& pixels = glyph_pixels->try_emplace(code_point).first->second;
-                pixels.resize(1ull * rc->width * rc->height);
-                std::memcpy(data_pointer(pixels), rc->image, data_size(pixels));
+                pixels.resize(1ull * font_char->width * font_char->height);
+                std::memcpy(data_pointer(pixels), font_char->image, data_size(pixels));
         }
 }
 
@@ -178,6 +163,7 @@ void place_rectangles_on_rectangle(
                 {
                         error("Maximum rectangle width exceeded");
                 }
+
                 if (insert_y + value.height > max_rectangle_height)
                 {
                         error("Maximum rectangle height exceeded");
@@ -202,56 +188,56 @@ void fill_texture_pixels_and_texture_coordinates(
         std::vector<std::byte>* const texture_pixels)
 {
         texture_pixels->clear();
-        texture_pixels->resize(1ull * texture_width * texture_height);
+        texture_pixels->resize(static_cast<long long>(texture_width) * texture_height);
         std::memset(texture_pixels->data(), 0, texture_pixels->size());
 
-        float r_width = 1.0f / texture_width;
-        float r_height = 1.0f / texture_height;
+        const float texture_width_f = texture_width;
+        const float texture_height_f = texture_height;
+
+        const std::array<int, 2> texture_size{texture_width, texture_height};
 
         for (auto& [cp, font_glyph] : *font_glyphs)
         {
                 ASSERT(glyph_pixels.count(cp) == 1);
                 ASSERT(glyph_coordinates.count(cp) == 1);
 
+                const std::array<int, 2>& texture_offset = glyph_coordinates.find(cp)->second;
+
                 const std::vector<std::byte>& pixels = glyph_pixels.find(cp)->second;
-                const std::array<int, 2>& coordinates = glyph_coordinates.find(cp)->second;
+                const std::array<int, 2> size{font_glyph.width, font_glyph.height};
+                const std::array<int, 2> offset{0, 0};
 
-                copy_image(
-                        texture_pixels, {texture_width, texture_height}, coordinates, pixels,
-                        {font_glyph.width, font_glyph.height});
+                copy_image(texture_pixels, texture_size, texture_offset, pixels, size, offset, size);
 
-                font_glyph.s0 = r_width * coordinates[0];
-                font_glyph.s1 = r_width * (coordinates[0] + font_glyph.width);
+                font_glyph.s0 = texture_offset[0] / texture_width_f;
+                font_glyph.s1 = (texture_offset[0] + font_glyph.width) / texture_width_f;
 
-                font_glyph.t0 = r_height * coordinates[1];
-                font_glyph.t1 = r_height * (coordinates[1] + font_glyph.height);
+                font_glyph.t0 = texture_offset[1] / texture_height_f;
+                font_glyph.t1 = (texture_offset[1] + font_glyph.height) / texture_height_f;
         }
 }
 }
 
-void create_font_glyphs(
-        const Font& font,
-        const int max_width,
-        const int max_height,
-        std::unordered_map<char32_t, FontGlyph>* const font_glyphs,
-        image::Image<2>* const image)
+FontGlyphs create_font_glyphs(const Font& font, const int max_width, const int max_height)
 {
-        std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
+        FontGlyphs res;
 
-        render_glyphs(supported_code_points(), font, font_glyphs, &glyph_pixels);
+        std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
+        render_glyphs(supported_code_points(), font, &res.glyphs, &glyph_pixels);
 
         std::unordered_map<char32_t, std::array<int, 2>> glyph_coordinates;
-
         place_rectangles_on_rectangle(
-                *font_glyphs, max_width, max_height, &image->size[0], &image->size[1], &glyph_coordinates);
+                res.glyphs, max_width, max_height, &res.image.size[0], &res.image.size[1], &glyph_coordinates);
 
         fill_texture_pixels_and_texture_coordinates(
-                image->size[0], image->size[1], glyph_pixels, glyph_coordinates, font_glyphs, &image->pixels);
+                res.image.size[0], res.image.size[1], glyph_pixels, glyph_coordinates, &res.glyphs, &res.image.pixels);
 
-        image->color_format = image::ColorFormat::R8_SRGB;
+        res.image.color_format = image::ColorFormat::R8_SRGB;
 
         // image::save(
         //         std::filesystem::temp_directory_path() / path_from_utf8(std::string_view("font_texture.png")),
-        //         image::ImageView<2>(*image));
+        //         image::ImageView<2>(res.image));
+
+        return res;
 }
 }
