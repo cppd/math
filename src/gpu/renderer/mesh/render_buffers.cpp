@@ -100,7 +100,7 @@ vulkan::RenderPass create_render_pass(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return {device, create_info};
 }
 
 class Impl final : public RenderBuffers

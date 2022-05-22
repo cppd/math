@@ -43,7 +43,7 @@ vulkan::handle::Sampler create_volume_image_sampler(const VkDevice device)
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return {device, create_info};
 }
 
 vulkan::handle::Sampler create_volume_depth_image_sampler(const VkDevice device)
@@ -69,7 +69,7 @@ vulkan::handle::Sampler create_volume_depth_image_sampler(const VkDevice device)
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return {device, create_info};
 }
 
 vulkan::handle::Sampler create_volume_transfer_function_sampler(const VkDevice device)
@@ -95,6 +95,6 @@ vulkan::handle::Sampler create_volume_transfer_function_sampler(const VkDevice d
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return {device, create_info};
 }
 }

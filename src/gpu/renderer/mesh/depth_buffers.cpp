@@ -95,7 +95,7 @@ vulkan::RenderPass create_render_pass_depth(const VkDevice device, const VkForma
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return {device, create_info};
 }
 
 void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)

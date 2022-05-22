@@ -310,7 +310,7 @@ vulkan::RenderPass render_pass_swapchain_color(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return {device, create_info};
 }
 
 vulkan::RenderPass render_pass_color_depth(
@@ -397,7 +397,7 @@ vulkan::RenderPass render_pass_color_depth(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return {device, create_info};
 }
 
 vulkan::RenderPass render_pass_color(
@@ -444,6 +444,6 @@ vulkan::RenderPass render_pass_color(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return {device, create_info};
 }
 }

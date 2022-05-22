@@ -57,7 +57,7 @@ handle::DescriptorPool create_descriptor_pool(
         create_info.maxSets = max_sets;
         create_info.flags = flags;
 
-        return handle::DescriptorPool(device, create_info);
+        return {device, create_info};
 }
 
 void write_descriptor_set(
@@ -128,7 +128,7 @@ handle::DescriptorSetLayout create_descriptor_set_layout(
         create_info.bindingCount = bindings.size();
         create_info.pBindings = bindings.data();
 
-        return handle::DescriptorSetLayout(device, create_info);
+        return {device, create_info};
 }
 
 Descriptors::Descriptors(

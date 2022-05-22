@@ -187,7 +187,7 @@ handle::SwapchainKHR create_swapchain_khr(
         create_info.clipped = VK_TRUE;
         create_info.oldSwapchain = VK_NULL_HANDLE;
 
-        return handle::SwapchainKHR(device, create_info);
+        return {device, create_info};
 }
 
 handle::ImageView create_image_view(
@@ -211,7 +211,7 @@ handle::ImageView create_image_view(
         create_info.subresourceRange.baseArrayLayer = 0;
         create_info.subresourceRange.layerCount = 1;
 
-        return handle::ImageView(device, create_info);
+        return {device, create_info};
 }
 
 std::string extent_to_string(const VkExtent2D extent)

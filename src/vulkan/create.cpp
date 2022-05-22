@@ -45,7 +45,7 @@ handle::PipelineLayout create_pipeline_layout(
                 create_info.pPushConstantRanges = push_constant_ranges->data();
         }
 
-        return handle::PipelineLayout(device, create_info);
+        return {device, create_info};
 }
 
 handle::PipelineLayout create_pipeline_layout(
@@ -138,7 +138,7 @@ CommandPool create_command_pool(const VkDevice device, const std::uint32_t queue
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         create_info.queueFamilyIndex = queue_family_index;
 
-        return CommandPool(device, create_info);
+        return {device, create_info};
 }
 
 CommandPool create_transient_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
@@ -148,7 +148,7 @@ CommandPool create_transient_command_pool(const VkDevice device, const std::uint
         create_info.queueFamilyIndex = queue_family_index;
         create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
-        return CommandPool(device, create_info);
+        return {device, create_info};
 }
 
 handle::Framebuffer create_framebuffer(
@@ -167,7 +167,7 @@ handle::Framebuffer create_framebuffer(
         create_info.height = height;
         create_info.layers = 1;
 
-        return handle::Framebuffer(device, create_info);
+        return {device, create_info};
 }
 
 VkClearValue create_color_clear_value(const VkFormat format, const Vector<4, float>& rgba)

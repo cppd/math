@@ -306,8 +306,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
                         acceleration_structure, geometry_primitive_count, ALLOW_UPDATE);
         }
 
-        return BottomLevelAccelerationStructure(
-                std::move(acceleration_structure_buffer), std::move(acceleration_structure));
+        return {std::move(acceleration_structure_buffer), std::move(acceleration_structure)};
 }
 
 TopLevelAccelerationStructure create_top_level_acceleration_structure(
@@ -389,8 +388,11 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                 std::max<std::size_t>(MIN_BUFFER_SIZE, build_sizes.updateScratchSize));
 
-        return TopLevelAccelerationStructure(
-                std::move(acceleration_structure_buffer), std::move(acceleration_structure), geometry,
-                geometry_primitive_count, std::move(instance_buffer), std::move(scratch_buffer_update));
+        return {std::move(acceleration_structure_buffer),
+                std::move(acceleration_structure),
+                geometry,
+                geometry_primitive_count,
+                std::move(instance_buffer),
+                std::move(scratch_buffer_update)};
 }
 }

@@ -42,6 +42,6 @@ vulkan::handle::Sampler create_sampler(const VkDevice device)
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return {device, create_info};
 }
 }

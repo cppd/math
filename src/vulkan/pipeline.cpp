@@ -253,7 +253,7 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return handle::Pipeline(info.device->handle(), create_info);
+        return {info.device->handle(), create_info};
 }
 
 handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
@@ -298,7 +298,7 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         create_info.stage = stage_info;
         create_info.layout = info.pipeline_layout;
 
-        return handle::Pipeline(info.device, create_info);
+        return {info.device, create_info};
 }
 
 handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info)
@@ -333,6 +333,6 @@ handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo&
         create_info.maxPipelineRayRecursionDepth = 1;
         create_info.layout = info.pipeline_layout;
 
-        return handle::Pipeline(info.device, create_info);
+        return {info.device, create_info};
 }
 }

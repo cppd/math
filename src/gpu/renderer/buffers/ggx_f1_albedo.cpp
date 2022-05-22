@@ -47,7 +47,7 @@ vulkan::handle::Sampler create_sampler(const VkDevice device)
         create_info.minLod = 0;
         create_info.maxLod = 0;
 
-        return vulkan::handle::Sampler(device, create_info);
+        return {device, create_info};
 }
 
 vulkan::ImageWithMemory create_cosine_roughness_image(

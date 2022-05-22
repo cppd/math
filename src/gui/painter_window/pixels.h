@@ -294,7 +294,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 check_slice_number(slice_number);
 
-                return std::span(&pixels_r8g8b8a8_[slice_number * slice_size_], slice_size_);
+                return {&pixels_r8g8b8a8_[slice_number * slice_size_], slice_size_};
         }
 
         [[nodiscard]] std::optional<Images> slice(const long long slice_number) const override

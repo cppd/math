@@ -107,6 +107,6 @@ handle::DebugUtilsMessengerEXT create_debug_utils_messenger(const VkInstance ins
 
         create_info.pfnUserCallback = user_callback;
 
-        return handle::DebugUtilsMessengerEXT(instance, create_info);
+        return {instance, create_info};
 }
 }

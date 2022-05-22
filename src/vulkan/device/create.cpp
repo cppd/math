@@ -130,6 +130,6 @@ handle::Device create_device(
 
         LOG(info);
 
-        return handle::Device(physical_device->device(), create_info);
+        return {physical_device->device(), create_info};
 }
 }

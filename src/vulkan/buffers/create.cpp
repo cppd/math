@@ -121,7 +121,7 @@ Buffer create_buffer(
                 create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return Buffer(device, create_info);
+        return {device, create_info};
 }
 
 Image create_image(
@@ -169,7 +169,7 @@ Image create_image(
                 create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return Image(device, create_info);
+        return {device, create_info};
 }
 
 ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_flags)
@@ -210,6 +210,6 @@ ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_
         create_info.subresourceRange.baseArrayLayer = 0;
         create_info.subresourceRange.layerCount = 1;
 
-        return ImageView(image, create_info);
+        return {image, create_info};
 }
 }
