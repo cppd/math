@@ -46,19 +46,21 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
         {
                 if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
                 {
-                        if (Limits<long long>::lowest() <= value && value <= Limits<long long>::max())
+                        const long long ll_value = value;
+                        if (ll_value == value)
                         {
-                                make_string<DIGIT_GROUP_SIZE, long long>(value, index, separator, str);
-                                break;
+                                make_string<DIGIT_GROUP_SIZE>(ll_value, index, separator, str);
+                                return;
                         }
                 }
 
                 if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
                 {
-                        if (value <= Limits<unsigned long long>::max())
+                        const unsigned long long ull_value = value;
+                        if (ull_value == value)
                         {
-                                make_string<DIGIT_GROUP_SIZE, unsigned long long>(value, index, separator, str);
-                                break;
+                                make_string<DIGIT_GROUP_SIZE>(ull_value, index, separator, str);
+                                return;
                         }
                 }
 
@@ -88,7 +90,7 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
         requires Integral<T>
-[[nodiscard]] std::string to_string_digit_groups(const T& value, const char separator)
+[[nodiscard]] std::string to_string_digit_groups(const T value, const char separator)
 {
         static_assert(!std::is_class_v<T>);
         static_assert(Signed<T> != Unsigned<T>);
@@ -192,10 +194,14 @@ template <typename T>
 
 template <typename T>
         requires std::is_unsigned_v<T>
-[[nodiscard]] std::string to_string_binary(T value, const std::string_view& prefix = "")
+[[nodiscard]] std::string to_string_binary(T value, const std::string_view prefix = {})
 {
         if (value == 0)
         {
+                if (prefix.empty())
+                {
+                        return "0";
+                }
                 return std::string(prefix) + '0';
         }
 
