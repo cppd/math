@@ -149,6 +149,42 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
 }
 
 template <std::size_t N, typename T>
+void compare(
+        const std::vector<std::array<Vector<N, T>, N>> matrices,
+        const std::vector<T>& cofactor_expansion,
+        const std::vector<T>& row_reduction,
+        const std::vector<T>& determinants,
+        const std::type_identity_t<T>& precision)
+{
+        ASSERT(matrices.size() == cofactor_expansion.size());
+        ASSERT(matrices.size() == row_reduction.size());
+        ASSERT(matrices.size() == determinants.size());
+
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                if (!are_equal(cofactor_expansion[i], row_reduction[i], precision))
+                {
+                        std::string s;
+                        s += "Determinants are not equal:\n";
+                        s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                        s += "row_reduction = " + to_string(row_reduction[i]) + "\n";
+                        s += to_string(matrices[i]);
+                        error(s);
+                }
+
+                if (!(determinants[i] == cofactor_expansion[i] || determinants[i] == row_reduction[i]))
+                {
+                        std::string s;
+                        s += "Determinant error:\n";
+                        s += "determinant = " + to_string(determinants[i]) + "\n";
+                        s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                        s += "row_reduction = " + to_string(row_reduction[i]);
+                        error(s);
+                }
+        }
+}
+
+template <std::size_t N, typename T>
 void test_determinant(const int count, const std::type_identity_t<T>& precision)
 {
         namespace impl = determinant_implementation;
@@ -194,18 +230,45 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 return res;
         }();
 
-        for (int i = 0; i < count; ++i)
+        compare(matrices, cofactor_expansion, row_reduction, determinants, precision);
+}
+
+template <std::size_t N, typename T>
+void compare(
+        const std::vector<std::array<Vector<N, T>, N - 1>>& matrices,
+        const std::vector<Vector<N, T>>& cofactor_expansion,
+        const std::vector<Vector<N, T>>& row_reduction,
+        const std::vector<Vector<N, T>>& determinants,
+        const std::type_identity_t<T>& precision)
+{
+        ASSERT(matrices.size() == cofactor_expansion.size());
+        ASSERT(matrices.size() == row_reduction.size());
+        ASSERT(matrices.size() == determinants.size());
+
+        for (std::size_t i = 0; i < matrices.size(); ++i)
         {
-                if (!are_equal(cofactor_expansion[i], row_reduction[i], precision))
+                for (std::size_t c = 0; c < N; ++c)
                 {
-                        error("Determinants are not equal:\ncofactor_expansion = " + to_string(cofactor_expansion[i])
-                              + "\nrow_reduction = " + to_string(row_reduction[i]) + "\n" + to_string(matrices[i]));
-                }
-                if (!(determinants[i] == cofactor_expansion[i] || determinants[i] == row_reduction[i]))
-                {
-                        error("Determinant error:\ndeterminant = " + to_string(determinants[i])
-                              + "\ncofactor_expansion = " + to_string(cofactor_expansion[i])
-                              + "\nrow_reduction = " + to_string(row_reduction[i]));
+                        if (!are_equal(cofactor_expansion[i][c], row_reduction[i][c], precision))
+                        {
+                                std::string s;
+                                s += "Determinants are not equal:\n";
+                                s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                                s += "row_reduction = " + to_string(row_reduction[i]) + "\n";
+                                s += to_string(matrices[i]);
+                                error(s);
+                        }
+
+                        if (!(determinants[i][c] == cofactor_expansion[i][c]
+                              || determinants[i][c] == row_reduction[i][c]))
+                        {
+                                std::string s;
+                                s += "Determinant error:\n";
+                                s += "determinant = " + to_string(determinants[i]) + "\n";
+                                s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                                s += "row_reduction = " + to_string(row_reduction[i]);
+                                error(s);
+                        }
                 }
         }
 }
@@ -265,25 +328,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
                 return res;
         }();
 
-        for (int i = 0; i < count; ++i)
-        {
-                for (std::size_t c = 0; c < N; ++c)
-                {
-                        if (!are_equal(cofactor_expansion[i][c], row_reduction[i][c], precision))
-                        {
-                                error("Determinants are not equal:\ncofactor_expansion = "
-                                      + to_string(cofactor_expansion[i]) + "\nrow_reduction = "
-                                      + to_string(row_reduction[i]) + "\n" + to_string(matrices[i]));
-                        }
-                        if (!(determinants[i][c] == cofactor_expansion[i][c]
-                              || determinants[i][c] == row_reduction[i][c]))
-                        {
-                                error("Determinant error:\ndeterminant = " + to_string(determinants[i])
-                                      + "\ncofactor_expansion = " + to_string(cofactor_expansion[i])
-                                      + "\nrow_reduction = " + to_string(row_reduction[i]));
-                        }
-                }
-        }
+        compare(matrices, cofactor_expansion, row_reduction, determinants, precision);
 }
 
 template <typename T>

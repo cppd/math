@@ -191,6 +191,62 @@ bool minimum_properties_supported(const PhysicalDevice& physical_device)
         return limits.maxStorageBufferRange >= MIN_STORAGE_BUFFER_RANGE;
 }
 
+bool suitable_physical_device(
+        const PhysicalDevice& physical_device,
+        const VkSurfaceKHR surface,
+        const DeviceFunctionality& device_functionality,
+        const bool optional_as_required)
+{
+        if (!check_features(device_functionality.required_features, physical_device.features()))
+        {
+                return false;
+        }
+
+        if (optional_as_required && !check_features(device_functionality.optional_features, physical_device.features()))
+        {
+                return false;
+        }
+
+        if (!extensions_supported(physical_device, device_functionality.required_extensions))
+        {
+                return false;
+        }
+
+        if (optional_as_required && !extensions_supported(physical_device, device_functionality.optional_extensions))
+        {
+                return false;
+        }
+
+        if (!minimum_properties_supported(physical_device))
+        {
+                return false;
+        }
+
+        if (!physical_device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+        {
+                return false;
+        }
+
+        if (surface != VK_NULL_HANDLE)
+        {
+                try
+                {
+                        static_cast<void>(physical_device.presentation_family_index());
+                }
+                catch (...)
+                {
+                        return false;
+                }
+
+                if (!surface_suitable(physical_device.device(), surface))
+                {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
 std::vector<std::size_t> suitable_physical_devices(
         const std::vector<PhysicalDevice>& physical_devices,
         const VkSurfaceKHR surface,
@@ -198,63 +254,13 @@ std::vector<std::size_t> suitable_physical_devices(
         const bool optional_as_required)
 {
         std::vector<std::size_t> res;
-
         for (std::size_t i = 0; i < physical_devices.size(); ++i)
         {
-                const PhysicalDevice& physical_device = physical_devices[i];
-
-                if (!check_features(device_functionality.required_features, physical_device.features()))
+                if (suitable_physical_device(physical_devices[i], surface, device_functionality, optional_as_required))
                 {
-                        continue;
+                        res.push_back(i);
                 }
-
-                if (optional_as_required
-                    && !check_features(device_functionality.optional_features, physical_device.features()))
-                {
-                        continue;
-                }
-
-                if (!extensions_supported(physical_device, device_functionality.required_extensions))
-                {
-                        continue;
-                }
-
-                if (optional_as_required
-                    && !extensions_supported(physical_device, device_functionality.optional_extensions))
-                {
-                        continue;
-                }
-
-                if (!minimum_properties_supported(physical_device))
-                {
-                        continue;
-                }
-
-                if (!physical_device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
-                {
-                        continue;
-                }
-
-                if (surface != VK_NULL_HANDLE)
-                {
-                        try
-                        {
-                                static_cast<void>(physical_device.presentation_family_index());
-                        }
-                        catch (...)
-                        {
-                                continue;
-                        }
-
-                        if (!surface_suitable(physical_device.device(), surface))
-                        {
-                                continue;
-                        }
-                }
-
-                res.push_back(i);
         }
-
         return res;
 }
 }

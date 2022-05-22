@@ -33,18 +33,34 @@ namespace ns
 {
 namespace print_implementation
 {
+template <typename T>
+char digit(const T value)
+{
+        const int remainder = [&]()
+        {
+                const int res = value % 10;
+                if constexpr (Signed<T>)
+                {
+                        return std::abs(res);
+                }
+                return res;
+        }();
+        return remainder + '0';
+}
+
 template <unsigned DIGIT_GROUP_SIZE, typename T>
 void make_string(T value, int index, [[maybe_unused]] const char separator, std::string& str)
 {
-        constexpr bool LONGLONG_LESS_I128 =
-                Limits<long long>::max() < Limits<__int128>::max()
-                && Limits<long long>::lowest() > Limits<__int128>::lowest();
+        constexpr bool USE_LONG_LONG =
+                (std::is_same_v<__int128, std::remove_cv_t<T>>)&&(Limits<long long>::max() < Limits<__int128>::max())
+                && (Limits<long long>::lowest() > Limits<__int128>::lowest());
 
-        constexpr bool ULONGLONG_LESS_UI128 = Limits<unsigned long long>::max() < Limits<unsigned __int128>::max();
+        constexpr bool USE_UNSIGNED_LONG_LONG = (std::is_same_v<unsigned __int128, std::remove_cv_t<T>>)&&(
+                Limits<unsigned long long>::max() < Limits<unsigned __int128>::max());
 
         do
         {
-                if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
+                if constexpr (USE_LONG_LONG)
                 {
                         const long long ll_value = value;
                         if (ll_value == value)
@@ -54,7 +70,7 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
                         }
                 }
 
-                if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
+                if constexpr (USE_UNSIGNED_LONG_LONG)
                 {
                         const unsigned long long ull_value = value;
                         if (ull_value == value)
@@ -73,17 +89,7 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
                         }
                 }
 
-                const int remainder = [&]()
-                {
-                        const int res = value % 10;
-                        if constexpr (Signed<T>)
-                        {
-                                return std::abs(res);
-                        }
-                        return res;
-                }();
-
-                str += static_cast<char>(remainder + '0');
+                str += digit(value);
 
         } while ((value /= 10) != 0);
 }
@@ -96,7 +102,7 @@ template <unsigned DIGIT_GROUP_SIZE, typename T>
         static_assert(Signed<T> != Unsigned<T>);
 
         std::string res;
-        res.reserve(Limits<T>::digits10() * 1.5);
+        res.reserve(Limits<T>::digits10() * 2);
 
         make_string<DIGIT_GROUP_SIZE, T>(value, -1, separator, res);
 

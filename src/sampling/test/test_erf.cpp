@@ -94,85 +94,92 @@ constexpr std::array INVERSE_ERF = std::to_array<std::array<T, 2>>({
 });
 
 template <typename T>
-std::string make_string(const T& arg, const T& inverse, const T& erf)
+void test_erf_inv(const T arg, const T erf, const T erf_inverse, const T precision)
 {
-        static_assert(std::is_floating_point_v<T>);
+        if (erf == 1)
+        {
+                if (!(erf_inverse == Limits<T>::infinity()))
+                {
+                        error("erf inverse is not inf for erf 1");
+                }
+                return;
+        }
 
-        std::ostringstream oss;
-        oss << std::scientific;
-        oss << std::setprecision(Limits<T>::max_digits10());
-        oss << "arg = " << arg << ", erf_inv = " << inverse << ", erf = " << erf;
-        return oss.str();
+        if (erf == -1)
+        {
+                if (!(erf_inverse == -Limits<T>::infinity()))
+                {
+                        error("erf inverse is not inf for erf 1");
+                }
+                return;
+        }
+
+        if (erf == 0)
+        {
+                if (!(erf_inverse == 0))
+                {
+                        error("erf inverse is not 0 for erf 0");
+                }
+                return;
+        }
+
+        if (arg == erf_inverse)
+        {
+                return;
+        }
+
+        if (arg == 0 || erf_inverse == 0)
+        {
+                if (!(std::abs(arg - erf_inverse) < precision))
+                {
+                        error("Absolute erf_inv error is greater than " + to_string(precision));
+                }
+                return;
+        }
+
+        const T p = [&]
+        {
+                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
+                {
+                        return precision * 10;
+                }
+                return precision;
+        }();
+
+        const T e = std::abs((arg - erf_inverse) / arg);
+        if (!(e < p))
+        {
+                error("Relative erf_inv error " + to_string(e) + " is greater than " + to_string(p));
+        }
 }
 
 template <typename T>
-void test_erf_inv(const std::type_identity_t<T>& arg, const std::type_identity_t<T>& precision)
+void test_erf_inv(const std::type_identity_t<T> arg, const std::type_identity_t<T> precision)
 {
         static_assert(std::is_floating_point_v<T>);
 
         const T erf = std::erf(arg);
-        const T inverse = erf_inv(erf);
+        const T erf_inverse = erf_inv(erf);
 
         try
         {
-                if (erf == 1)
-                {
-                        if (!(inverse == Limits<T>::infinity()))
-                        {
-                                error("erf inverse is not inf for erf 1");
-                        }
-                }
-                else if (erf == -1)
-                {
-                        if (!(inverse == -Limits<T>::infinity()))
-                        {
-                                error("erf inverse is not inf for erf 1");
-                        }
-                }
-                else if (erf == 0)
-                {
-                        if (!(inverse == 0))
-                        {
-                                error("erf inverse is not 0 for erf 0");
-                        }
-                }
-                else if (arg == inverse)
-                {
-                        return;
-                }
-                else if (arg == 0 || inverse == 0)
-                {
-                        if (!(std::abs(arg - inverse) < precision))
-                        {
-                                error("Absolute erf_inv error is greater than " + to_string(precision));
-                        }
-                }
-                else
-                {
-                        const T p = [&]
-                        {
-                                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
-                                {
-                                        return precision * 10;
-                                }
-                                return precision;
-                        }();
-
-                        const T e = std::abs((arg - inverse) / arg);
-                        if (!(e < p))
-                        {
-                                error("Relative erf_inv error " + to_string(e) + " is greater than " + to_string(p));
-                        }
-                }
+                test_erf_inv(arg, erf, erf_inverse, precision);
         }
         catch (const std::exception& e)
         {
-                error(std::string(e.what()) + "\n" + make_string(arg, inverse, erf));
+                std::ostringstream oss;
+                oss << e.what() << '\n';
+                oss << std::scientific;
+                oss << std::setprecision(Limits<T>::max_digits10());
+                oss << "arg = " << arg << '\n';
+                oss << "erf_inv = " << erf_inverse << '\n';
+                oss << "erf = " << erf;
+                error(oss.str());
         }
 }
 
 template <typename T>
-void test_erf_inv(const std::type_identity_t<T>& precision, const int divisions)
+void test_erf_inv(const std::type_identity_t<T> precision, const int divisions)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -186,7 +193,7 @@ void test_erf_inv(const std::type_identity_t<T>& precision, const int divisions)
 }
 
 template <typename T>
-void test_erf_inv_array(const std::type_identity_t<T>& precision)
+void test_erf_inv_array(const std::type_identity_t<T> precision)
 {
         static_assert(std::is_floating_point_v<T>);
 

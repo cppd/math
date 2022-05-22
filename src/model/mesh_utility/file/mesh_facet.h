@@ -28,49 +28,47 @@ namespace mesh_check_implementation
 {
 template <std::size_t N>
 void check_facet_indices(
+        const unsigned index,
         const int vertex_count,
         const int texcoord_count,
         const int normal_count,
         const typename Mesh<N>::Facet& facet)
 {
-        for (unsigned i = 0; i < N; ++i)
+        if (facet.vertices[index] < 0 || facet.vertices[index] >= vertex_count)
         {
-                if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
-                {
-                        error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, "
-                              + to_string(vertex_count) + ")");
-                }
+                error("Vertex index " + to_string(facet.vertices[index]) + " is out of bounds [0, "
+                      + to_string(vertex_count) + ")");
+        }
 
-                if (facet.has_texcoord)
+        if (facet.has_texcoord)
+        {
+                if (facet.texcoords[index] < 0 || facet.texcoords[index] >= texcoord_count)
                 {
-                        if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
-                        {
-                                error("Texture coordinate index " + to_string(facet.texcoords[i])
-                                      + " is out of bounds [0, " + to_string(texcoord_count) + ")");
-                        }
+                        error("Texture coordinate index " + to_string(facet.texcoords[index]) + " is out of bounds [0, "
+                              + to_string(texcoord_count) + ")");
                 }
-                else
+        }
+        else
+        {
+                if (facet.texcoords[index] != -1)
                 {
-                        if (facet.texcoords[i] != -1)
-                        {
-                                error("No texture but texture coordinate index is not set to -1");
-                        }
+                        error("No texture but texture coordinate index is not set to -1");
                 }
+        }
 
-                if (facet.has_normal)
+        if (facet.has_normal)
+        {
+                if (facet.normals[index] < 0 || facet.normals[index] >= normal_count)
                 {
-                        if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
-                        {
-                                error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, "
-                                      + to_string(normal_count) + ")");
-                        }
+                        error("Normal index " + to_string(facet.normals[index]) + " is out of bounds [0, "
+                              + to_string(normal_count) + ")");
                 }
-                else
+        }
+        else
+        {
+                if (facet.normals[index] != -1)
                 {
-                        if (facet.normals[i] != -1)
-                        {
-                                error("No normals but normal coordinate index is not set to -1");
-                        }
+                        error("No normals but normal coordinate index is not set to -1");
                 }
         }
 }
@@ -84,7 +82,10 @@ void check_facet_indices(const Mesh<N>& mesh)
 
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
-                check_facet_indices<N>(vertex_count, texcoord_count, normal_count, facet);
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        check_facet_indices<N>(i, vertex_count, texcoord_count, normal_count, facet);
+                }
         }
 }
 
