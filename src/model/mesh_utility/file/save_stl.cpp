@@ -109,6 +109,67 @@ void write_end_binary(std::ostream& file)
         write(file, End());
 }
 
+template <std::size_t N>
+void write_ascii_facet(
+        std::ostream& file,
+        const Vector<N, float>& n,
+        const std::array<int, N>& indices,
+        const std::vector<Vector<N, float>>& vertices)
+{
+        // clang-format off
+        static constexpr std::string_view FACET_NORMAL = "facet normal";
+        static constexpr std::string_view OUTER_LOOP   = "  outer loop";
+        static constexpr std::string_view VERTEX       = "    vertex";
+        static constexpr std::string_view END_LOOP     = "  endloop";
+        static constexpr std::string_view END_FACET    = "endfacet";
+        // clang-format on
+
+        file << FACET_NORMAL;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                file << ' ' << n[i];
+        }
+        file << '\n';
+
+        file << OUTER_LOOP << '\n';
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                file << VERTEX;
+                for (std::size_t j = 0; j < N; ++j)
+                {
+                        file << ' ' << vertices[indices[i]][j];
+                }
+                file << '\n';
+        }
+        file << END_LOOP << '\n';
+        file << END_FACET << '\n';
+}
+
+template <bool BYTE_SWAP, std::size_t N>
+void write_binary_facet(
+        std::ostream& file,
+        const Vector<N, float>& n,
+        const std::array<int, N>& indices,
+        const std::vector<Vector<N, float>>& vertices)
+{
+        if constexpr (!BYTE_SWAP)
+        {
+                write(file, n);
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        write(file, vertices[indices[i]]);
+                }
+        }
+        else
+        {
+                write(file, stl::byte_swap(n));
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        write(file, stl::byte_swap(vertices[indices[i]]));
+                }
+        }
+}
+
 template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facet(
         std::ostream& file,
@@ -130,52 +191,11 @@ void write_facet(
 
         if constexpr (ASCII)
         {
-                // clang-format off
-                static constexpr std::string_view FACET_NORMAL = "facet normal";
-                static constexpr std::string_view OUTER_LOOP   = "  outer loop";
-                static constexpr std::string_view VERTEX       = "    vertex";
-                static constexpr std::string_view END_LOOP     = "  endloop";
-                static constexpr std::string_view END_FACET    = "endfacet";
-                // clang-format on
-
-                file << FACET_NORMAL;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        file << ' ' << n[i];
-                }
-                file << '\n';
-
-                file << OUTER_LOOP << '\n';
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        file << VERTEX;
-                        for (std::size_t j = 0; j < N; ++j)
-                        {
-                                file << ' ' << vertices[indices[i]][j];
-                        }
-                        file << '\n';
-                }
-                file << END_LOOP << '\n';
-                file << END_FACET << '\n';
+                write_ascii_facet(file, n, indices, vertices);
         }
         else
         {
-                if constexpr (!BYTE_SWAP)
-                {
-                        write(file, n);
-                        for (std::size_t i = 0; i < N; ++i)
-                        {
-                                write(file, vertices[indices[i]]);
-                        }
-                }
-                else
-                {
-                        write(file, stl::byte_swap(n));
-                        for (std::size_t i = 0; i < N; ++i)
-                        {
-                                write(file, stl::byte_swap(vertices[indices[i]]));
-                        }
-                }
+                write_binary_facet<BYTE_SWAP>(file, n, indices, vertices);
         }
 }
 

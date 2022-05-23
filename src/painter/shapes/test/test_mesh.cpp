@@ -70,7 +70,7 @@ void test_intersections(
         progress->set(0);
         progress->set_text(std::string("Ray intersections, ") + type_name<T>());
 
-        int error_count = 0;
+        int miss_count = 0;
 
         for (std::size_t i = 0; i < rays.size();)
         {
@@ -82,16 +82,16 @@ void test_intersections(
                 {
                         if (!intersections(*mesh.scene, rays[i]))
                         {
-                                ++error_count;
+                                ++miss_count;
                         }
                 }
                 progress->set(i * rays_size_reciprocal);
         }
 
         std::string s;
-        s += "error count = " + to_string_digit_groups(error_count);
+        s += "miss count = " + to_string_digit_groups(miss_count);
         s += ", ray count = " + to_string_digit_groups(rays.size());
-        if (!(error_count <= std::lround(rays.size() * 4e-5)))
+        if (!(miss_count <= std::lround(rays.size() * 4e-5)))
         {
                 error("Too many intersection errors, " + s);
         }

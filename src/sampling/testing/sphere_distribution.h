@@ -214,6 +214,78 @@ class SphereDistribution final
                 return compute_buckets_threads(thread_count, f);
         }
 
+        void check_bucket_distribution(
+                const long long sample_count,
+                const long long uniform_count,
+                const std::vector<SphereBucket<N, T>> buckets,
+                const unsigned facet_index,
+                long double* const sum_sampled,
+                long double* const sum_expected,
+                long double* const sum_error) const
+        {
+                static constexpr T UNIFORM_DENSITY = 1 / geometry::SPHERE_AREA<N, long double>;
+
+                const SphereBucket<N, T>& bucket = buckets[facet_index];
+
+                const T bucket_area = sphere_facet_area(facet_index, bucket.uniform_count(), uniform_count);
+                const T sampled_distribution = static_cast<T>(bucket.sample_count()) / sample_count;
+                const T sampled_density = sampled_distribution / bucket_area;
+                const T expected_density = bucket.pdf();
+                const T expected_distribution = expected_density * bucket_area;
+
+                ASSERT(sampled_density >= 0);
+                ASSERT(sampled_distribution >= 0);
+                if (!(expected_density >= 0))
+                {
+                        error("PDF " + to_string(expected_density) + " is not positive and not zero");
+                }
+                ASSERT(expected_distribution >= 0);
+
+                *sum_sampled += sampled_distribution;
+                *sum_expected += expected_distribution;
+                *sum_error += std::abs(sampled_distribution - expected_distribution);
+
+                if (expected_density == sampled_density)
+                {
+                        return;
+                }
+
+                if (expected_density < UNIFORM_DENSITY / 2)
+                {
+                        return;
+                }
+
+                const T max_relative_error = expected_density < UNIFORM_DENSITY ? 0.2 : 0.1;
+
+                const T relative_error =
+                        std::abs(sampled_density - expected_density) / std::max(sampled_density, expected_density);
+
+                if (relative_error <= max_relative_error)
+                {
+                        return;
+                }
+
+                const T uniform_distribution = static_cast<T>(bucket.uniform_count()) / uniform_count;
+                const T uniform_density = uniform_distribution / bucket_area;
+                const T bucket_relative_area = bucket_area / geometry::SPHERE_AREA<N, T>;
+
+                std::ostringstream oss;
+                oss << "sampled distribution = " << sampled_distribution << '\n';
+                oss << "expected distribution = " << expected_distribution << '\n';
+                oss << "uniform distribution = " << uniform_distribution << '\n';
+                oss << "sampled density = " << sampled_density << '\n';
+                oss << "expected density = " << expected_density << '\n';
+                oss << "uniform density = " << UNIFORM_DENSITY << '\n';
+                oss << "uniform computed density = " << uniform_density << '\n';
+                oss << "bucket area = " << bucket_area << '\n';
+                oss << "bucket relative area = 1 / " << 1 / bucket_relative_area << '\n';
+                oss << "bucket sample count = " << bucket.sample_count() << '\n';
+                oss << "sample count = " << sample_count << '\n';
+                oss << "bucket uniform count = " << bucket.uniform_count() << '\n';
+                oss << "uniform count = " << uniform_count;
+                error(oss.str());
+        }
+
 public:
         explicit SphereDistribution(ProgressRatio* const progress) : sphere_mesh_(BUCKET_MIN_COUNT, progress)
         {
@@ -242,8 +314,6 @@ public:
 
                 check_bucket_sizes(buckets);
 
-                static constexpr T UNIFORM_DENSITY = 1 / geometry::SPHERE_AREA<N, long double>;
-
                 const long long sample_count = buckets_sample_count(buckets);
                 const long long uniform_count = buckets_uniform_count(buckets);
 
@@ -254,65 +324,8 @@ public:
                 ASSERT(buckets.size() == sphere_mesh_.facet_count());
                 for (std::size_t i = 0; i < buckets.size(); ++i)
                 {
-                        const SphereBucket<N, T>& bucket = buckets[i];
-
-                        const T bucket_area = sphere_facet_area(i, bucket.uniform_count(), uniform_count);
-                        const T sampled_distribution = static_cast<T>(bucket.sample_count()) / sample_count;
-                        const T sampled_density = sampled_distribution / bucket_area;
-                        const T expected_density = bucket.pdf();
-                        const T expected_distribution = expected_density * bucket_area;
-
-                        ASSERT(sampled_density >= 0);
-                        ASSERT(sampled_distribution >= 0);
-                        if (!(expected_density >= 0))
-                        {
-                                error("PDF " + to_string(expected_density) + " is not positive and not zero");
-                        }
-                        ASSERT(expected_distribution >= 0);
-
-                        sum_sampled += sampled_distribution;
-                        sum_expected += expected_distribution;
-                        sum_error += std::abs(sampled_distribution - expected_distribution);
-
-                        if (expected_density == sampled_density)
-                        {
-                                continue;
-                        }
-
-                        if (expected_density < UNIFORM_DENSITY / 2)
-                        {
-                                continue;
-                        }
-
-                        const T max_relative_error = expected_density < UNIFORM_DENSITY ? 0.2 : 0.1;
-
-                        const T relative_error = std::abs(sampled_density - expected_density)
-                                                 / std::max(sampled_density, expected_density);
-
-                        if (relative_error <= max_relative_error)
-                        {
-                                continue;
-                        }
-
-                        const T uniform_distribution = static_cast<T>(bucket.uniform_count()) / uniform_count;
-                        const T uniform_density = uniform_distribution / bucket_area;
-                        const T bucket_relative_area = bucket_area / geometry::SPHERE_AREA<N, T>;
-
-                        std::ostringstream oss;
-                        oss << "sampled distribution = " << sampled_distribution << '\n';
-                        oss << "expected distribution = " << expected_distribution << '\n';
-                        oss << "uniform distribution = " << uniform_distribution << '\n';
-                        oss << "sampled density = " << sampled_density << '\n';
-                        oss << "expected density = " << expected_density << '\n';
-                        oss << "uniform density = " << UNIFORM_DENSITY << '\n';
-                        oss << "uniform computed density = " << uniform_density << '\n';
-                        oss << "bucket area = " << bucket_area << '\n';
-                        oss << "bucket relative area = 1 / " << 1 / bucket_relative_area << '\n';
-                        oss << "bucket sample count = " << bucket.sample_count() << '\n';
-                        oss << "sample count = " << sample_count << '\n';
-                        oss << "bucket uniform count = " << bucket.uniform_count() << '\n';
-                        oss << "uniform count = " << uniform_count;
-                        error(oss.str());
+                        check_bucket_distribution(
+                                sample_count, uniform_count, buckets, i, &sum_sampled, &sum_expected, &sum_error);
                 }
 
                 ASSERT(std::abs(sum_sampled - 1) < 0.01);
