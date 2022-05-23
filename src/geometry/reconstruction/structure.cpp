@@ -339,6 +339,33 @@ template <std::size_t N>
 void cocone_neighbors(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
+        const int vertex_index,
+        const VertexConnections::Facet& vertex_facet,
+        std::vector<ManifoldVertex<N>>* const vertex_data)
+{
+        const int facet_index = vertex_facet.facet_index;
+        const unsigned skip_index = vertex_facet.facet_vertex_index;
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (i == skip_index)
+                {
+                        ASSERT(delaunay_facets[facet_index].vertices()[i] == vertex_index);
+                        continue;
+                }
+
+                if (facet_data[facet_index].cocone_vertex[i])
+                {
+                        (*vertex_data)[vertex_index].cocone_neighbors.push_back(
+                                delaunay_facets[facet_index].vertices()[i]);
+                }
+        }
+}
+
+template <std::size_t N>
+void cocone_neighbors(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<ManifoldFacet<N>>& facet_data,
         const std::vector<VertexConnections>& vertex_connections,
         std::vector<ManifoldVertex<N>>* const vertex_data)
 {
@@ -346,30 +373,12 @@ void cocone_neighbors(
         ASSERT(vertex_connections.size() == vertex_data->size());
 
         const int vertex_count = vertex_connections.size();
-
         for (int vertex_index = 0; vertex_index < vertex_count; ++vertex_index)
         {
                 for (const VertexConnections::Facet& vertex_facet : vertex_connections[vertex_index].facets)
                 {
-                        const int facet_index = vertex_facet.facet_index;
-                        const unsigned skip_v = vertex_facet.facet_vertex_index;
-
-                        for (unsigned v = 0; v < N; ++v)
-                        {
-                                if (v == skip_v)
-                                {
-                                        ASSERT(delaunay_facets[facet_index].vertices()[v] == vertex_index);
-                                        continue;
-                                }
-
-                                if (facet_data[facet_index].cocone_vertex[v])
-                                {
-                                        (*vertex_data)[vertex_index].cocone_neighbors.push_back(
-                                                delaunay_facets[facet_index].vertices()[v]);
-                                }
-                        }
+                        cocone_neighbors(delaunay_facets, facet_data, vertex_index, vertex_facet, vertex_data);
                 }
-
                 sort_and_unique(&(*vertex_data)[vertex_index].cocone_neighbors);
         }
 }

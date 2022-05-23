@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <numeric>
+#include <optional>
 
 namespace ns::geometry
 {
@@ -56,24 +57,23 @@ sqrt(π) ⋅  ------- ⋅ -----------------------
 ----------------
  (n-2) (n-4) ...
 */
-template <unsigned N, typename T>
-inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
+
+namespace sphere_integral_implementation
+{
+template <unsigned N>
+constexpr std::optional<long double> integer_computation()
 {
         static_assert(N >= 2);
-        static_assert(std::is_floating_point_v<T>);
 
         unsigned long long divident = 1;
         unsigned long long divisor = (N & 1) == 0 ? 2 : 1;
-
-        bool overflow = false;
 
         for (int i = N - 1; i > 1; i -= 2)
         {
                 unsigned long long new_divident = divident * i;
                 if (new_divident <= divident)
                 {
-                        overflow = true;
-                        break;
+                        return std::nullopt;
                 }
 
                 divident = new_divident;
@@ -83,8 +83,7 @@ inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
                         unsigned long long new_divisor = divisor * (i - 1);
                         if (new_divisor <= divisor)
                         {
-                                overflow = true;
-                                break;
+                                return std::nullopt;
                         }
 
                         divisor = new_divisor;
@@ -98,23 +97,44 @@ inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
                 }
         }
 
+        return static_cast<long double>(divident) / static_cast<long double>(divisor);
+}
+
+template <unsigned N>
+constexpr long double floating_point_computation()
+{
+        static_assert(N >= 2);
+
+        long double p = (N & 1) == 0 ? 0.5 : 1;
+        for (int i = N - 1; i > 1; i -= 2)
+        {
+                p *= i;
+                if (i > 2)
+                {
+                        p /= (i - 1);
+                }
+        }
+        return p;
+}
+}
+
+template <unsigned N, typename T>
+inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        namespace impl = sphere_integral_implementation;
+
         long double p = 0;
 
-        if (!overflow)
+        if (const auto value = impl::integer_computation<N>())
         {
-                p = static_cast<long double>(divident) / static_cast<long double>(divisor);
+                p = *value;
         }
         else
         {
-                p = (N & 1) == 0 ? 0.5 : 1;
-                for (int i = N - 1; i > 1; i -= 2)
-                {
-                        p *= i;
-                        if (i > 2)
-                        {
-                                p /= (i - 1);
-                        }
-                }
+                p = impl::floating_point_computation<N>();
         }
 
         if ((N & 1) == 0)
