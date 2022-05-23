@@ -267,23 +267,27 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
         const VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info = create_depth_stencil_state_info(info);
 
-        VkGraphicsPipelineCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        create_info.stageCount = shader_stage_info.size();
-        create_info.pStages = shader_stage_info.data();
-        create_info.pVertexInputState = &vertex_input_state_info;
-        create_info.pInputAssemblyState = &input_assembly_state_info;
-        create_info.pViewportState = &viewport_state_info;
-        create_info.pRasterizationState = &rasterization_state_info;
-        create_info.pMultisampleState = &multisampling_state_info;
-        create_info.pDepthStencilState = &depth_stencil_state_info;
-        create_info.pColorBlendState = &color_blend_state_info;
-        create_info.pDynamicState = dynamic_states.ptr();
-        create_info.layout = info.pipeline_layout.value();
-        create_info.renderPass = info.render_pass->handle();
-        create_info.subpass = info.sub_pass.value();
-        // create_info.basePipelineHandle = VK_NULL_HANDLE;
-        // create_info.basePipelineIndex = -1;
+        const VkGraphicsPipelineCreateInfo create_info = [&]
+        {
+                VkGraphicsPipelineCreateInfo res = {};
+                res.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+                res.stageCount = shader_stage_info.size();
+                res.pStages = shader_stage_info.data();
+                res.pVertexInputState = &vertex_input_state_info;
+                res.pInputAssemblyState = &input_assembly_state_info;
+                res.pViewportState = &viewport_state_info;
+                res.pRasterizationState = &rasterization_state_info;
+                res.pMultisampleState = &multisampling_state_info;
+                res.pDepthStencilState = &depth_stencil_state_info;
+                res.pColorBlendState = &color_blend_state_info;
+                res.pDynamicState = dynamic_states.ptr();
+                res.layout = info.pipeline_layout.value();
+                res.renderPass = info.render_pass->handle();
+                res.subpass = info.sub_pass.value();
+                // create_info.basePipelineHandle = VK_NULL_HANDLE;
+                // create_info.basePipelineIndex = -1;
+                return res;
+        }();
 
         return {info.device->handle(), create_info};
 }
@@ -311,10 +315,14 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 
         const PipelineShaderStageCreateInfo shader_stage_create_info({info.shader}, {info.constants});
 
-        VkComputePipelineCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        create_info.stage = *shader_stage_create_info.data();
-        create_info.layout = info.pipeline_layout;
+        const VkComputePipelineCreateInfo create_info = [&]
+        {
+                VkComputePipelineCreateInfo res = {};
+                res.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+                res.stage = *shader_stage_create_info.data();
+                res.layout = info.pipeline_layout;
+                return res;
+        }();
 
         return {info.device, create_info};
 }
@@ -346,14 +354,18 @@ handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo&
                 return res;
         }();
 
-        VkRayTracingPipelineCreateInfoKHR create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-        create_info.stageCount = shader_stage_create_info.size();
-        create_info.pStages = shader_stage_create_info.data();
-        create_info.groupCount = group_info.size();
-        create_info.pGroups = group_info.data();
-        create_info.maxPipelineRayRecursionDepth = 1;
-        create_info.layout = info.pipeline_layout;
+        const VkRayTracingPipelineCreateInfoKHR create_info = [&]
+        {
+                VkRayTracingPipelineCreateInfoKHR res = {};
+                res.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
+                res.stageCount = shader_stage_create_info.size();
+                res.pStages = shader_stage_create_info.data();
+                res.groupCount = group_info.size();
+                res.pGroups = group_info.data();
+                res.maxPipelineRayRecursionDepth = 1;
+                res.layout = info.pipeline_layout;
+                return res;
+        }();
 
         return {info.device, create_info};
 }

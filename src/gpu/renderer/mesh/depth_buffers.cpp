@@ -45,55 +45,77 @@ constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 vulkan::RenderPass create_render_pass_depth(const VkDevice device, const VkFormat depth_format)
 {
-        std::array<VkAttachmentDescription, 1> attachments = {};
+        const std::array<VkAttachmentDescription, 1> attachments = [&]
+        {
+                std::array<VkAttachmentDescription, 1> res = {};
 
-        // Depth
-        attachments[0].format = depth_format;
-        attachments[0].samples = SAMPLE_COUNT;
-        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[0].finalLayout = IMAGE_LAYOUT;
+                // Depth
+                res[0].format = depth_format;
+                res[0].samples = SAMPLE_COUNT;
+                res[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                res[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                res[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                res[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                res[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                res[0].finalLayout = IMAGE_LAYOUT;
 
-        VkAttachmentReference depth_reference = {};
-        depth_reference.attachment = 0;
-        depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                return res;
+        }();
 
-        VkSubpassDescription subpass_description = {};
-        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.colorAttachmentCount = 0;
-        subpass_description.pDepthStencilAttachment = &depth_reference;
+        const VkAttachmentReference depth_reference = [&]
+        {
+                VkAttachmentReference res = {};
+                res.attachment = 0;
+                res.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                return res;
+        }();
 
-        std::array<VkSubpassDependency, 2> subpass_dependencies = {};
+        const VkSubpassDescription subpass_description = [&]
+        {
+                VkSubpassDescription res = {};
+                res.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+                res.colorAttachmentCount = 0;
+                res.pDepthStencilAttachment = &depth_reference;
+                return res;
+        }();
 
-        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependencies[0].dstSubpass = 0;
-        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        subpass_dependencies[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
-        subpass_dependencies[0].dstAccessMask =
-                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        subpass_dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        const std::array<VkSubpassDependency, 2> subpass_dependencies = [&]
+        {
+                std::array<VkSubpassDependency, 2> res = {};
 
-        subpass_dependencies[1].srcSubpass = 0;
-        subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        subpass_dependencies[1].srcAccessMask =
-                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        subpass_dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT; // VK_ACCESS_MEMORY_READ_BIT;
-        subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+                res[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+                res[0].dstSubpass = 0;
+                res[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+                res[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+                res[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+                res[0].dstAccessMask =
+                        VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                res[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        VkRenderPassCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        create_info.attachmentCount = attachments.size();
-        create_info.pAttachments = attachments.data();
-        create_info.subpassCount = 1;
-        create_info.pSubpasses = &subpass_description;
-        create_info.dependencyCount = subpass_dependencies.size();
-        create_info.pDependencies = subpass_dependencies.data();
+                res[1].srcSubpass = 0;
+                res[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+                res[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+                res[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                res[1].srcAccessMask =
+                        VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                res[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT; // VK_ACCESS_MEMORY_READ_BIT;
+                res[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+                return res;
+        }();
+
+        const VkRenderPassCreateInfo create_info = [&]
+        {
+                VkRenderPassCreateInfo res = {};
+                res.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+                res.attachmentCount = attachments.size();
+                res.pAttachments = attachments.data();
+                res.subpassCount = 1;
+                res.pSubpasses = &subpass_description;
+                res.dependencyCount = subpass_dependencies.size();
+                res.pDependencies = subpass_dependencies.data();
+                return res;
+        }();
 
         return {device, create_info};
 }

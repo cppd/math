@@ -31,74 +31,90 @@ vulkan::RenderPass create_render_pass(
         const VkSampleCountFlagBits sample_count,
         const std::vector<vulkan::ImageWithMemory>& images)
 {
-        std::vector<VkAttachmentDescription> attachments(images.size() + 1);
-
-        // Color
-
-        for (std::size_t i = 0; i < images.size(); ++i)
+        const std::vector<VkAttachmentDescription> attachments = [&]
         {
-                ASSERT(images[i].image_view().sample_count() == sample_count);
-                attachments[i] = {};
-                attachments[i].format = images[i].image_view().format();
-                attachments[i].samples = sample_count;
-                attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-                attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachments[i].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
-        }
+                std::vector<VkAttachmentDescription> res(images.size() + 1);
 
-        // Depth
+                // Color
+                for (std::size_t i = 0; i < images.size(); ++i)
+                {
+                        ASSERT(images[i].image_view().sample_count() == sample_count);
+                        res[i].format = images[i].image_view().format();
+                        res[i].samples = sample_count;
+                        res[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                        res[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                        res[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                        res[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                        res[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                        res[i].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+                }
 
-        attachments.back() = {};
-        attachments.back().format = depth_format;
-        attachments.back().samples = sample_count;
-        attachments.back().loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        attachments.back().storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments.back().stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments.back().stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments.back().initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        attachments.back().finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                // Depth
+                res.back().format = depth_format;
+                res.back().samples = sample_count;
+                res.back().loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                res.back().storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                res.back().stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                res.back().stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                res.back().initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                res.back().finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        //
+                return res;
+        }();
 
-        std::vector<VkAttachmentReference> color_references(images.size());
-
-        for (std::size_t i = 0; i < images.size(); ++i)
+        const std::vector<VkAttachmentReference> color_references = [&]
         {
-                color_references[i] = {};
-                color_references[i].attachment = i;
-                color_references[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        }
+                std::vector<VkAttachmentReference> res(images.size());
+                for (std::size_t i = 0; i < images.size(); ++i)
+                {
+                        res[i].attachment = i;
+                        res[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                }
+                return res;
+        }();
 
-        VkAttachmentReference depth_reference = {};
-        depth_reference.attachment = images.size();
-        depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        const VkAttachmentReference depth_reference = [&]
+        {
+                VkAttachmentReference res = {};
+                res.attachment = images.size();
+                res.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                return res;
+        }();
 
-        VkSubpassDescription subpass_description = {};
-        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.colorAttachmentCount = color_references.size();
-        subpass_description.pColorAttachments = color_references.data();
-        subpass_description.pDepthStencilAttachment = &depth_reference;
+        const VkSubpassDescription subpass_description = [&]
+        {
+                VkSubpassDescription res = {};
+                res.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+                res.colorAttachmentCount = color_references.size();
+                res.pColorAttachments = color_references.data();
+                res.pDepthStencilAttachment = &depth_reference;
+                return res;
+        }();
 
-        std::array<VkSubpassDependency, 1> subpass_dependencies = {};
-        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependencies[0].dstSubpass = 0;
-        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependencies[0].srcAccessMask = 0;
-        subpass_dependencies[0].dstAccessMask =
-                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        const std::array<VkSubpassDependency, 1> subpass_dependencies = [&]
+        {
+                std::array<VkSubpassDependency, 1> res = {};
+                res[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+                res[0].dstSubpass = 0;
+                res[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                res[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                res[0].srcAccessMask = 0;
+                res[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                return res;
+        }();
 
-        VkRenderPassCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        create_info.attachmentCount = attachments.size();
-        create_info.pAttachments = attachments.data();
-        create_info.subpassCount = 1;
-        create_info.pSubpasses = &subpass_description;
-        create_info.dependencyCount = subpass_dependencies.size();
-        create_info.pDependencies = subpass_dependencies.data();
+        const VkRenderPassCreateInfo create_info = [&]
+        {
+                VkRenderPassCreateInfo res = {};
+                res.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+                res.attachmentCount = attachments.size();
+                res.pAttachments = attachments.data();
+                res.subpassCount = 1;
+                res.pSubpasses = &subpass_description;
+                res.dependencyCount = subpass_dependencies.size();
+                res.pDependencies = subpass_dependencies.data();
+                return res;
+        }();
 
         return {device, create_info};
 }
