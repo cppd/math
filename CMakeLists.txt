@@ -25,7 +25,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/add_include_files.cmake")
 ##################################################
 
 set(compilers "GNU;Clang")
-set(gcc_minimal_version "11")
+set(gcc_minimal_version "12")
 set(clang_minimal_version "14")
 
 set(shader_environment "vulkan1.2")
