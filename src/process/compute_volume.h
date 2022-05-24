@@ -58,7 +58,7 @@ void compute_slice(
                 }
                 slices[slice].dimension = dimension;
                 slices[slice].coordinate = *slice_coordinates[dimension];
-                object_name += "(" + to_string(dimension) + "," + to_string(*slice_coordinates[dimension]) + ")";
+                object_name += '(' + to_string(dimension) + ',' + to_string(*slice_coordinates[dimension]) + ')';
                 ++slice;
         }
         if (slice != slices.size())

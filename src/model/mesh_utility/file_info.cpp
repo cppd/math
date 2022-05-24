@@ -58,8 +58,8 @@ std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimension
 
 bool file_has_obj_extension(const std::size_t n, const std::filesystem::path& file_name)
 {
-        return (file_name.extension() == "." + obj_file_extension(n))
-               || (file_name.extension() == ".obj" + to_string(n));
+        const std::string extension = generic_utf8_filename(file_name.extension());
+        return (extension == '.' + obj_file_extension(n)) || (extension == ".obj" + to_string(n));
 }
 
 //
@@ -90,8 +90,8 @@ std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimension
 
 bool file_has_stl_extension(const std::size_t n, const std::filesystem::path& file_name)
 {
-        return (file_name.extension() == "." + stl_file_extension(n))
-               || (file_name.extension() == ".stl" + to_string(n));
+        const std::string extension = generic_utf8_filename(file_name.extension());
+        return (extension == '.' + stl_file_extension(n)) || (extension == ".stl" + to_string(n));
 }
 
 //

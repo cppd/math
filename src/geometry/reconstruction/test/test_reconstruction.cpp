@@ -170,7 +170,7 @@ std::string min_max_to_string(const T min, const T max)
         {
                 return to_string(min);
         }
-        return "[" + to_string(min) + ", " + to_string(max) + "]";
+        return '[' + to_string(min) + ", " + to_string(max) + ']';
 }
 
 template <std::size_t N>

@@ -70,7 +70,7 @@ void check_write_format_support(const std::string_view& format)
 
 std::filesystem::path file_name_with_extension(std::filesystem::path path)
 {
-        std::string extension = generic_utf8_filename(path.extension());
+        const std::string extension = generic_utf8_filename(path.extension());
         if (!extension.empty() && extension[0] == '.')
         {
                 check_write_format_support(extension.substr(1));

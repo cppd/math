@@ -72,8 +72,8 @@ void load_image_alpha(QImage* const image, const ColorFormat color_format, const
         const std::size_t image_pixel_size = pixel_size + sizeof(std::uint16_t);
         ASSERT(image_pixel_size * image->width() <= static_cast<std::size_t>(image->bytesPerLine()));
 
-        int width = image->width();
-        int height = image->height();
+        const int width = image->width();
+        const int height = image->height();
 
         std::byte* ptr = bytes.data();
         for (int row = 0; row < height; ++row)
@@ -286,8 +286,8 @@ void load(
 
         if (image.width() != size[0] || image.height() != size[1])
         {
-                std::string expected = "(" + to_string(size[0]) + ", " + to_string(size[1]) + ")";
-                std::string found = "(" + to_string(image.width()) + ", " + to_string(image.height()) + ")";
+                const std::string expected = '(' + to_string(size[0]) + ", " + to_string(size[1]) + ')';
+                const std::string found = '(' + to_string(image.width()) + ", " + to_string(image.height()) + ')';
                 error("Expected image size " + expected + ", found size " + found + " in the file "
                       + generic_utf8_filename(path));
         }
