@@ -74,6 +74,8 @@ CheckOptions:
   value: '0'
 - key:   modernize-use-auto.MinTypeNameLength
   value: '0'
+- key:   readability-function-cognitive-complexity.Threshold
+  value: '20'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
 - key:   readability-implicit-bool-conversion.AllowPointerConditions
