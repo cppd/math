@@ -27,12 +27,16 @@ namespace ns::color
 {
 namespace
 {
+
+template <typename T>
+constexpr T DEFAULT_VALUE = 0;
+
 template <typename T>
 void check_parameters(
-        const std::span<const T>& waves,
-        const std::span<const T>& samples,
-        const T& from,
-        const T& to,
+        const std::span<const T> waves,
+        const std::span<const T> samples,
+        const T from,
+        const T to,
         const std::size_t count)
 {
         if (!(waves.size() == samples.size()))
@@ -65,10 +69,10 @@ void check_parameters(
 
 template <typename T>
 T compute_area(
-        const std::span<const T>& waves,
-        const std::span<const T>& samples,
-        const T& a,
-        const T& b,
+        const std::span<const T> waves,
+        const std::span<const T> samples,
+        const T a,
+        const T b,
         const std::size_t i)
 {
         ASSERT(i > 0 && i < waves.size());
@@ -82,7 +86,7 @@ T compute_area(
 }
 
 template <typename T>
-void move_dst(const T& from, const T& to, const std::size_t count, std::size_t& dst_i, T& dst_prev, T& dst_next)
+void move_dst(const T from, const T to, const std::size_t count, std::size_t& dst_i, T& dst_prev, T& dst_next)
 {
         ASSERT(dst_i <= count);
         ++dst_i;
@@ -94,49 +98,66 @@ void move_dst(const T& from, const T& to, const std::size_t count, std::size_t& 
                 dst_next = w;
         }
 }
-}
 
-template <typename ResultType, typename T>
-std::vector<ResultType> average(
-        const std::span<const T>& waves,
-        const std::span<const T>& samples,
-        const std::type_identity_t<T>& from,
-        const std::type_identity_t<T>& to,
-        const std::size_t count)
+template <typename T, typename ResultType>
+void init(
+        const std::span<const T> waves,
+        const T from,
+        const T to,
+        const std::size_t count,
+        std::size_t& dst_i,
+        T& dst_prev,
+        T& dst_next,
+        std::size_t& src_i,
+        std::vector<ResultType>& result)
 {
-        static_assert(std::is_floating_point_v<ResultType>);
-        static_assert(std::is_floating_point_v<T>);
-
-        static constexpr ResultType DEFAULT_VALUE = 0;
-
-        check_parameters(waves, samples, from, to, count);
-
-        if (to <= waves.front() || from >= waves.back())
-        {
-                return std::vector<ResultType>(count, DEFAULT_VALUE);
-        }
-
-        std::vector<ResultType> result;
-        result.reserve(count);
-
-        std::size_t dst_i = 0;
-        T dst_prev;
-        T dst_next = from;
+        dst_i = 0;
+        dst_next = from;
         move_dst(from, to, count, dst_i, dst_prev, dst_next);
 
         while (dst_next <= waves.front())
         {
-                result.push_back(DEFAULT_VALUE);
+                result.push_back(DEFAULT_VALUE<ResultType>);
                 move_dst(from, to, count, dst_i, dst_prev, dst_next);
         }
         ASSERT(dst_i <= count);
 
-        std::size_t src_i = 1;
+        src_i = 1;
         while (waves[src_i] <= dst_prev)
         {
                 ++src_i;
                 ASSERT(src_i < waves.size());
         }
+}
+}
+
+template <typename ResultType, typename T>
+std::vector<ResultType> average(
+        const std::span<const T> waves,
+        const std::span<const T> samples,
+        const std::type_identity_t<T> from,
+        const std::type_identity_t<T> to,
+        const std::size_t count)
+{
+        static_assert(std::is_floating_point_v<ResultType>);
+        static_assert(std::is_floating_point_v<T>);
+
+        check_parameters(waves, samples, from, to, count);
+
+        if (to <= waves.front() || from >= waves.back())
+        {
+                return std::vector<ResultType>(count, DEFAULT_VALUE<ResultType>);
+        }
+
+        std::vector<ResultType> result;
+        result.reserve(count);
+
+        std::size_t dst_i;
+        T dst_prev;
+        T dst_next;
+        std::size_t src_i;
+
+        init(waves, from, to, count, dst_i, dst_prev, dst_next, src_i, result);
 
         T prev_wave = std::max(waves[src_i - 1], dst_prev);
         T sum = 0;
@@ -148,16 +169,15 @@ std::vector<ResultType> average(
                         sum += compute_area(waves, samples, prev_wave, waves[src_i], src_i);
                         prev_wave = waves[src_i];
                         ++src_i;
+                        continue;
                 }
-                else
-                {
-                        sum += compute_area(waves, samples, prev_wave, dst_next, src_i);
-                        ASSERT(dst_next - dst_prev > 0);
-                        result.push_back(sum / (dst_next - dst_prev));
-                        sum = 0;
-                        prev_wave = dst_next;
-                        move_dst(from, to, count, dst_i, dst_prev, dst_next);
-                }
+
+                sum += compute_area(waves, samples, prev_wave, dst_next, src_i);
+                ASSERT(dst_next - dst_prev > 0);
+                result.push_back(sum / (dst_next - dst_prev));
+                sum = 0;
+                prev_wave = dst_next;
+                move_dst(from, to, count, dst_i, dst_prev, dst_next);
         }
 
         if (dst_i <= count)
@@ -166,7 +186,7 @@ std::vector<ResultType> average(
                 result.push_back(sum / (dst_next - dst_prev));
                 while (result.size() < count)
                 {
-                        result.push_back(DEFAULT_VALUE);
+                        result.push_back(DEFAULT_VALUE<ResultType>);
                 }
         }
 
@@ -175,10 +195,10 @@ std::vector<ResultType> average(
         return result;
 }
 
-#define AVERAGE_INSTANTIATION(T1, T2)                                                                    \
-        template std::vector<T1> average(                                                                \
-                const std::span<const T2>&, const std::span<const T2>&, const std::type_identity_t<T2>&, \
-                const std::type_identity_t<T2>&, const std::size_t);
+#define AVERAGE_INSTANTIATION(T1, T2)                                                                         \
+        template std::vector<T1> average(                                                                     \
+                std::span<const T2>, std::span<const T2>, std::type_identity_t<T2>, std::type_identity_t<T2>, \
+                std::size_t);
 
 AVERAGE_INSTANTIATION(float, float)
 AVERAGE_INSTANTIATION(float, double)

@@ -25,18 +25,18 @@ namespace ns::color
 {
 template <typename ResultType, typename T>
 std::vector<ResultType> average(
-        const std::span<const T>& waves,
-        const std::span<const T>& samples,
-        const std::type_identity_t<T>& from,
-        const std::type_identity_t<T>& to,
+        std::span<const T> waves,
+        std::span<const T> samples,
+        std::type_identity_t<T> from,
+        std::type_identity_t<T> to,
         std::size_t count);
 
 template <typename ResultType, typename T, std::size_t N>
 std::vector<ResultType> average(
         const std::array<T, N>& waves,
         const std::array<T, N>& samples,
-        const std::type_identity_t<T>& from,
-        const std::type_identity_t<T>& to,
+        const std::type_identity_t<T> from,
+        const std::type_identity_t<T> to,
         const std::size_t count)
 {
         return average<ResultType>(std::span<const T>(waves), std::span<const T>(samples), from, to, count);
@@ -46,8 +46,8 @@ template <typename ResultType, typename T>
 std::vector<ResultType> average(
         const std::vector<T>& waves,
         const std::vector<T>& samples,
-        const std::type_identity_t<T>& from,
-        const std::type_identity_t<T>& to,
+        const std::type_identity_t<T> from,
+        const std::type_identity_t<T> to,
         const std::size_t count)
 {
         return average<ResultType>(std::span<const T>(waves), std::span<const T>(samples), from, to, count);

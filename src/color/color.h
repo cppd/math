@@ -206,11 +206,70 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return functions;
         }
 
-        //
-
         // Brian Smits.
         // An RGB-to-Spectrum Conversion for Reflectances.
         // Journal of Graphics Tools, 1999.
+
+        static void rgb_to_spectrum_red(
+                const T red,
+                const T green,
+                const T blue,
+                const Colors& c,
+                Vector<N, T>* const spectrum)
+        {
+                spectrum->multiply_add(red, c.white);
+                if (green <= blue)
+                {
+                        spectrum->multiply_add(green - red, c.cyan);
+                        spectrum->multiply_add(blue - green, c.blue);
+                }
+                else
+                {
+                        spectrum->multiply_add(blue - red, c.cyan);
+                        spectrum->multiply_add(green - blue, c.green);
+                }
+        }
+
+        static void rgb_to_spectrum_green(
+                const T red,
+                const T green,
+                const T blue,
+                const Colors& c,
+                Vector<N, T>* const spectrum)
+        {
+                spectrum->multiply_add(green, c.white);
+                if (red <= blue)
+                {
+                        spectrum->multiply_add(red - green, c.magenta);
+                        spectrum->multiply_add(blue - red, c.blue);
+                }
+                else
+                {
+                        spectrum->multiply_add(blue - green, c.magenta);
+                        spectrum->multiply_add(red - blue, c.red);
+                }
+        }
+
+        static void rgb_to_spectrum_blue(
+                const T red,
+                const T green,
+                const T blue,
+                const Colors& c,
+                Vector<N, T>* const spectrum)
+        {
+                spectrum->multiply_add(blue, c.white);
+                if (red <= green)
+                {
+                        spectrum->multiply_add(red - blue, c.yellow);
+                        spectrum->multiply_add(green - red, c.green);
+                }
+                else
+                {
+                        spectrum->multiply_add(green - blue, c.yellow);
+                        spectrum->multiply_add(red - green, c.red);
+                }
+        }
+
         static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
         {
                 ASSERT(std::isfinite(red));
@@ -225,45 +284,15 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
                 if (red <= green && red <= blue)
                 {
-                        spectrum.multiply_add(red, c.white);
-                        if (green <= blue)
-                        {
-                                spectrum.multiply_add(green - red, c.cyan);
-                                spectrum.multiply_add(blue - green, c.blue);
-                        }
-                        else
-                        {
-                                spectrum.multiply_add(blue - red, c.cyan);
-                                spectrum.multiply_add(green - blue, c.green);
-                        }
+                        rgb_to_spectrum_red(red, green, blue, c, &spectrum);
                 }
                 else if (green <= red && green <= blue)
                 {
-                        spectrum.multiply_add(green, c.white);
-                        if (red <= blue)
-                        {
-                                spectrum.multiply_add(red - green, c.magenta);
-                                spectrum.multiply_add(blue - red, c.blue);
-                        }
-                        else
-                        {
-                                spectrum.multiply_add(blue - green, c.magenta);
-                                spectrum.multiply_add(red - blue, c.red);
-                        }
+                        rgb_to_spectrum_green(red, green, blue, c, &spectrum);
                 }
                 else if (blue <= red && blue <= green)
                 {
-                        spectrum.multiply_add(blue, c.white);
-                        if (red <= green)
-                        {
-                                spectrum.multiply_add(red - blue, c.yellow);
-                                spectrum.multiply_add(green - red, c.green);
-                        }
-                        else
-                        {
-                                spectrum.multiply_add(green - blue, c.yellow);
-                                spectrum.multiply_add(red - green, c.red);
-                        }
+                        rgb_to_spectrum_blue(red, green, blue, c, &spectrum);
                 }
                 else
                 {
