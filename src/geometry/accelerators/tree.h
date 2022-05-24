@@ -86,6 +86,38 @@ class SpatialSubdivisionTree final
                 return find_box_for_point(boxes_[ROOT_BOX], p);
         }
 
+        [[nodiscard]] bool find_next_box(const Ray<N, T>& ray, const Box** const box, Vector<N, T>* const point) const
+        {
+                T offset = ray_offset_;
+                T k = 1;
+
+                while (true)
+                {
+                        const Vector<N, T> p = ray.point(offset);
+                        const Box* const next_box = find_box_for_point(p);
+
+                        if (!next_box)
+                        {
+                                return false;
+                        }
+
+                        if (next_box != *box)
+                        {
+                                *box = next_box;
+                                *point = p;
+                                return true;
+                        }
+
+                        if (k >= T(1e10))
+                        {
+                                return false;
+                        }
+
+                        k *= 2;
+                        offset = k * ray_offset_;
+                }
+        }
+
 public:
         class Objects
         {
@@ -154,30 +186,12 @@ public:
 
                         local_ray.set_org(local_ray.point(next));
 
-                        T offset = ray_offset_;
-                        T k = 1;
-                        while (true)
+                        if (!find_next_box(local_ray, &box, &point))
                         {
-                                point = local_ray.point(offset);
-                                const Box* const next_box = find_box_for_point(point);
-                                if (!next_box)
-                                {
-                                        return std::nullopt;
-                                }
-                                if (next_box != box)
-                                {
-                                        box = next_box;
-                                        local_ray.set_org(point);
-                                        break;
-                                }
-
-                                if (k >= T(1e10))
-                                {
-                                        return std::nullopt;
-                                }
-                                k *= 2;
-                                offset = k * ray_offset_;
+                                return std::nullopt;
                         }
+
+                        local_ray->set_org(point);
                 }
         }
 };
