@@ -22,6 +22,12 @@ George Em Karniadakis, Robert M. Kirby II.
 Cambridge University Press.
 */
 
+/*
+Replace Ax = b by LUx = b -> Ly = b, where Ux = y
+1) solve for y: A = LU, Ly = b
+2) solve for x: Ux = y
+*/
+
 #pragma once
 
 #include "vector.h"
@@ -88,19 +94,16 @@ public:
         }
 };
 
-template <std::size_t SIZE, typename T>
-constexpr T determinant(RowMatrix<SIZE, SIZE, T>&& m)
+template <std::size_t UN, typename T>
+constexpr bool solve_u(RowMatrix<UN, UN, T>& m)
 {
-        static_assert(FloatingPoint<T>);
-        static_assert(SIZE >= 1);
-
-        constexpr int N = SIZE;
+        constexpr int N = UN;
 
         bool sign = false;
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = find_pivot(m, k, k);
+                const int pivot = find_pivot(m, k, k);
                 if (pivot != k)
                 {
                         m.swap(pivot, k);
@@ -117,25 +120,17 @@ constexpr T determinant(RowMatrix<SIZE, SIZE, T>&& m)
                 }
         }
 
-        T d = m(0, 0);
-        for (int i = 1; i < N; ++i)
-        {
-                d *= m(i, i);
-        }
-
-        return sign ? -d : d;
+        return sign;
 }
 
-template <std::size_t SIZE, typename T>
-constexpr Vector<SIZE, T> solve_gauss(RowMatrix<SIZE, SIZE, T>&& a, Vector<SIZE, T> b)
+template <std::size_t UN, typename T>
+constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, Vector<UN, T>& b)
 {
-        static_assert(FloatingPoint<T>);
-
-        constexpr int N = SIZE;
+        constexpr int N = UN;
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = find_pivot(a, k, k);
+                const int pivot = find_pivot(a, k, k);
                 if (pivot != k)
                 {
                         a.swap(pivot, k);
@@ -152,33 +147,17 @@ constexpr Vector<SIZE, T> solve_gauss(RowMatrix<SIZE, SIZE, T>&& a, Vector<SIZE,
                         b[i] -= l_ik * b[k];
                 }
         }
-
-        b[N - 1] = b[N - 1] / a(N - 1, N - 1);
-        for (int k = N - 2; k >= 0; --k)
-        {
-                for (int j = k + 1; j < N; ++j)
-                {
-                        b[k] -= a(k, j) * b[j];
-                }
-                b[k] = b[k] / a(k, k);
-        }
-
-        return b;
 }
 
-template <std::size_t SIZE_A, std::size_t SIZE_B, typename T>
-constexpr std::array<Vector<SIZE_B, T>, SIZE_A> solve_gauss(
-        RowMatrix<SIZE_A, SIZE_A, T>&& a,
-        RowMatrix<SIZE_A, SIZE_B, T>&& b)
+template <std::size_t UN, std::size_t UM, typename T>
+constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 {
-        static_assert(FloatingPoint<T>);
-
-        constexpr int N = SIZE_A;
-        constexpr int M = SIZE_B;
+        constexpr int N = UN;
+        constexpr int M = UM;
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = find_pivot(a, k, k);
+                const int pivot = find_pivot(a, k, k);
                 if (pivot != k)
                 {
                         a.swap(pivot, k);
@@ -198,29 +177,92 @@ constexpr std::array<Vector<SIZE_B, T>, SIZE_A> solve_gauss(
                         }
                 }
         }
+}
+
+template <std::size_t UN, typename T>
+constexpr void solve_x(RowMatrix<UN, UN, T>& u, Vector<UN, T>& y)
+{
+        constexpr int N = UN;
+
+        y[N - 1] = y[N - 1] / u(N - 1, N - 1);
+        for (int k = N - 2; k >= 0; --k)
+        {
+                for (int j = k + 1; j < N; ++j)
+                {
+                        y[k] -= u(k, j) * y[j];
+                }
+                y[k] = y[k] / u(k, k);
+        }
+}
+
+template <std::size_t UN, std::size_t UM, typename T>
+constexpr void solve_x(RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
+{
+        constexpr int N = UN;
+        constexpr int M = UM;
 
         for (int m = 0; m < M; ++m)
         {
-                b(N - 1, m) = b(N - 1, m) / a(N - 1, N - 1);
+                y(N - 1, m) = y(N - 1, m) / u(N - 1, N - 1);
         }
-
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
                         for (int m = 0; m < M; ++m)
                         {
-                                b(k, m) -= a(k, j) * b(j, m);
+                                y(k, m) -= u(k, j) * y(j, m);
                         }
                 }
                 for (int m = 0; m < M; ++m)
                 {
-                        b(k, m) = b(k, m) / a(k, k);
+                        y(k, m) = y(k, m) / u(k, k);
                 }
         }
+}
+
+template <std::size_t N, typename T>
+constexpr T determinant(RowMatrix<N, N, T>&& m)
+{
+        static_assert(FloatingPoint<T>);
+        static_assert(N >= 1);
+
+        const bool sign = solve_u(m);
+
+        T d = m(0, 0);
+        for (unsigned i = 1; i < N; ++i)
+        {
+                d *= m(i, i);
+        }
+
+        return sign ? -d : d;
+}
+
+template <std::size_t N, typename T>
+constexpr Vector<N, T> solve_gauss(RowMatrix<N, N, T>&& a, Vector<N, T>&& b)
+{
+        static_assert(FloatingPoint<T>);
+        static_assert(N >= 1);
+
+        solve_u_and_y(a, b);
+
+        solve_x(a, b);
+
+        return b;
+}
+
+template <std::size_t N, std::size_t M, typename T>
+constexpr std::array<Vector<M, T>, N> solve_gauss(RowMatrix<N, N, T>&& a, RowMatrix<N, M, T>&& b)
+{
+        static_assert(FloatingPoint<T>);
+        static_assert(N >= 1 && M >= 1);
+
+        solve_u_and_y(a, b);
+
+        solve_x(a, b);
 
         std::array<Vector<M, T>, N> res;
-        for (int i = 0; i < N; ++i)
+        for (unsigned i = 0; i < N; ++i)
         {
                 res[i] = std::move(b.row(i));
         }
@@ -229,7 +271,7 @@ constexpr std::array<Vector<SIZE_B, T>, SIZE_A> solve_gauss(
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
+[[nodiscard]] constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
 {
         namespace impl = gauss_implementation;
 
@@ -238,7 +280,9 @@ constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant_gauss(const std::array<Vector<N + 1, T>, N>& rows, const std::size_t excluded_column)
+[[nodiscard]] constexpr T determinant_gauss(
+        const std::array<Vector<N + 1, T>, N>& rows,
+        const std::size_t excluded_column)
 {
         namespace impl = gauss_implementation;
 
@@ -258,23 +302,20 @@ constexpr T determinant_gauss(const std::array<Vector<N + 1, T>, N>& rows, const
 }
 
 template <std::size_t N, typename T>
-constexpr Vector<N, T> solve_gauss(const std::array<Vector<N, T>, N>& a, const Vector<N, T>& b)
+[[nodiscard]] constexpr Vector<N, T> solve_gauss(std::array<Vector<N, T>, N> a, Vector<N, T> b)
 {
         namespace impl = gauss_implementation;
 
-        std::array<Vector<N, T>, N> a_copy{a};
-        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a_copy), b);
+        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a), std::move(b));
 }
 
 template <std::size_t N, std::size_t M, typename T>
-constexpr std::array<Vector<M, T>, N> solve_gauss(
-        const std::array<Vector<N, T>, N>& a,
-        const std::array<Vector<M, T>, N>& b)
+[[nodiscard]] constexpr std::array<Vector<M, T>, N> solve_gauss(
+        std::array<Vector<N, T>, N> a,
+        std::array<Vector<M, T>, N> b)
 {
         namespace impl = gauss_implementation;
 
-        std::array<Vector<N, T>, N> a_copy{a};
-        std::array<Vector<M, T>, N> b_copy{b};
-        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a_copy), impl::RowMatrix<N, M, T>(&b_copy));
+        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a), impl::RowMatrix<N, M, T>(&b));
 }
 }
