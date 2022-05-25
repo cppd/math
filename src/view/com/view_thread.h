@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-namespace implementation
+namespace view_thread_implementation
 {
 template <typename T>
 class ThreadQueue final
@@ -147,7 +147,7 @@ template <typename T>
 class ViewThread final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        implementation::EventQueues<T> event_queues_;
+        view_thread_implementation::EventQueues<T> event_queues_;
         std::thread thread_;
         std::atomic_bool stop_{false};
         std::atomic_bool started_{false};

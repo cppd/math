@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::spatial::testing::hyperplane_ball
 {
-namespace implementation
+namespace intersection_implementation
 {
 inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
@@ -175,12 +175,12 @@ double compute_intersections_per_second()
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        implementation::test_intersection<N, T>();
+        intersection_implementation::test_intersection<N, T>();
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_per_second()
 {
-        return implementation::compute_intersections_per_second<N, T>();
+        return intersection_implementation::compute_intersections_per_second<N, T>();
 }
 }

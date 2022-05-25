@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-namespace implementation
+namespace dimension_implementation
 {
 [[noreturn]] void dimension_not_supported_error(unsigned dimension);
 }
@@ -56,7 +56,7 @@ auto apply_for_dimension(const std::size_t dimension, const T& f)
                         }
                 }
 
-                implementation::dimension_not_supported_error(dimension);
+                dimension_implementation::dimension_not_supported_error(dimension);
         }
         (settings::Dimensions());
 }
