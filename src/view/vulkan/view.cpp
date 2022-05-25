@@ -159,6 +159,8 @@ class Impl final
         std::optional<ImageResolve> image_resolve_;
         std::optional<Swapchain> swapchain_resolve_;
 
+        FrameClock::time_point last_frame_time_ = FrameClock::now();
+
         //
 
         void command(const ViewCommand& view_command)
@@ -205,7 +207,7 @@ class Impl final
                 delete_swapchain_buffers();
                 create_buffers(SAVE_FORMAT, width, height);
 
-                const VkSemaphore semaphore = render();
+                const VkSemaphore semaphore = draw();
 
                 image_info->image = resolve_to_image(
                         device_graphics_.device(), graphics_compute_command_pool_,
@@ -289,7 +291,7 @@ class Impl final
                 camera_.resize(window_1.width(), window_1.height());
         }
 
-        [[nodiscard]] VkSemaphore render() const
+        [[nodiscard]] VkSemaphore draw() const
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
 
@@ -373,7 +375,7 @@ class Impl final
 
                 const vulkan::Queue& queue = device_graphics_.graphics_compute_queues()[0];
 
-                VkSemaphore semaphore = render();
+                VkSemaphore semaphore = draw();
 
                 semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
@@ -482,31 +484,25 @@ public:
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 
-        void loop(const std::function<void()>& dispatch_events, std::atomic_bool* const stop)
+        void render()
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                FrameClock::time_point last_frame_time = FrameClock::now();
-                while (!(*stop))
+                if (view_process_.text_active())
                 {
-                        dispatch_events();
+                        frame_rate_.calculate();
+                }
 
-                        if (view_process_.text_active())
-                        {
-                                frame_rate_.calculate();
-                        }
+                if (!render_swapchain())
+                {
+                        create_swapchain();
+                        return;
+                }
 
-                        if (!render_swapchain())
-                        {
-                                create_swapchain();
-                                continue;
-                        }
-
-                        if (renderer_->empty())
-                        {
-                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-                                last_frame_time = FrameClock::now();
-                        }
+                if (renderer_->empty())
+                {
+                        std::this_thread::sleep_until(last_frame_time_ + IDLE_MODE_FRAME_DURATION);
+                        last_frame_time_ = FrameClock::now();
                 }
         }
 

@@ -64,20 +64,50 @@ public:
         }
 };
 
+class QueueEvent final
+{
+        const std::vector<Info>* info_;
+
+        std::mutex mutex_;
+        std::condition_variable cv_;
+        bool received_ = false;
+
+public:
+        explicit QueueEvent(const std::vector<Info>* const info) : info_(info)
+        {
+        }
+
+        [[nodiscard]] const std::vector<Info>& info() const
+        {
+                return *info_;
+        }
+
+        void wait()
+        {
+                std::unique_lock lock(mutex_);
+                cv_.wait(
+                        lock,
+                        [&]
+                        {
+                                return received_;
+                        });
+        }
+
+        void notify()
+        {
+                {
+                        std::lock_guard<std::mutex> lock(mutex_);
+                        received_ = true;
+                }
+                cv_.notify_all();
+        }
+};
+
 template <typename T>
 class EventQueues final
 {
-        struct ViewInfoExt final
-        {
-                const std::vector<Info>* info;
-
-                std::mutex mutex;
-                std::condition_variable cv;
-                bool received;
-        };
-
         ThreadQueue<Command> send_queue_;
-        ThreadQueue<ViewInfoExt*> receive_queue_;
+        ThreadQueue<QueueEvent*> receive_queue_;
 
 public:
         explicit EventQueues(std::vector<Command>&& initial_events)
@@ -95,32 +125,19 @@ public:
 
         void receive(const std::vector<Info>& info)
         {
-                ViewInfoExt v;
-                v.info = &info;
-                v.received = false;
+                QueueEvent v(&info);
                 receive_queue_.push(&v);
-
-                std::unique_lock lock(v.mutex);
-                v.cv.wait(
-                        lock,
-                        [&]
-                        {
-                                return v.received;
-                        });
+                v.wait();
         }
 
         void dispatch_events(T* const view)
         {
                 view->send(send_queue_.pop());
 
-                for (ViewInfoExt* event : receive_queue_.pop())
+                for (QueueEvent* const event : receive_queue_.pop())
                 {
-                        view->receive(*(event->info));
-                        {
-                                std::lock_guard<std::mutex> lock(event->mutex);
-                                event->received = true;
-                        }
-                        event->cv.notify_all();
+                        view->receive(event->info());
+                        event->notify();
                 }
         }
 };
@@ -150,25 +167,16 @@ class ViewThread final : public View
         {
                 try
                 {
-                        [[maybe_unused]] const std::thread::id thread_id = std::this_thread::get_id();
-
                         T view(std::forward<Args>(args)...);
 
                         started_ = true;
 
                         try
                         {
-                                view.loop(
-                                        [&]()
-                                        {
-                                                ASSERT(std::this_thread::get_id() == thread_id);
-                                                event_queues_.dispatch_events(&view);
-                                        },
-                                        &stop_);
-
-                                if (!stop_)
+                                while (!stop_)
                                 {
-                                        error("Thread ended without stop.");
+                                        event_queues_.dispatch_events(&view);
+                                        view.render();
                                 }
                         }
                         catch (const std::exception& e)
