@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/window/handle.h>
 
+#include <optional>
 #include <variant>
 
 namespace ns::view
@@ -427,5 +428,9 @@ struct Description final
 };
 }
 
-using Info = std::variant<info::Camera*, info::Image*, info::Functionality*, info::Description*>;
+using Info = std::variant<
+        std::optional<info::Camera>*,
+        std::optional<info::Image>*,
+        std::optional<info::Functionality>*,
+        std::optional<info::Description>*>;
 }

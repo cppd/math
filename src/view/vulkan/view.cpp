@@ -188,12 +188,12 @@ class Impl final
                 clip_plane_.command(clip_plane_command);
         }
 
-        void info(info::Camera* const camera_info) const
+        void info(std::optional<info::Camera>* const camera_info) const
         {
                 *camera_info = camera_.view_info();
         }
 
-        void info(info::Image* const image_info)
+        void info(std::optional<info::Image>* const image_info)
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
 
@@ -209,26 +209,28 @@ class Impl final
 
                 const VkSemaphore semaphore = draw();
 
-                image_info->image = resolve_to_image(
-                        device_graphics_.device(), graphics_compute_command_pool_,
-                        device_graphics_.graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
+                *image_info = info::Image{
+                        .image = resolve_to_image(
+                                device_graphics_.device(), graphics_compute_command_pool_,
+                                device_graphics_.graphics_compute_queues()[0], *render_buffers_, semaphore,
+                                IMAGE_INDEX)};
 
                 delete_buffers();
                 create_swapchain_buffers();
         }
 
-        void info(info::Functionality* const functionality) const
+        void info(std::optional<info::Functionality>* const functionality) const
         {
                 gpu::renderer::info::Functionality info;
                 renderer_->info(&info);
-                functionality->shadow_zoom = info.shadow_zoom;
+                *functionality = info::Functionality{.shadow_zoom = info.shadow_zoom};
         }
 
-        void info(info::Description* const description) const
+        void info(std::optional<info::Description>* const description) const
         {
                 gpu::renderer::info::Description info;
                 renderer_->info(&info);
-                description->ray_tracing = info.ray_tracing;
+                *description = info::Description{.ray_tracing = info.ray_tracing};
         }
 
         //

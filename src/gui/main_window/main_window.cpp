@@ -136,9 +136,16 @@ void MainWindow::constructor_objects()
                         bool ray_tracing = false;
                         if (view_)
                         {
-                                view::info::Description description;
+                                std::optional<view::info::Description> description;
                                 view_->receive({&description});
-                                ray_tracing = description.ray_tracing;
+                                if (description)
+                                {
+                                        ray_tracing = description->ray_tracing;
+                                }
+                                else
+                                {
+                                        message_error("Failed to receive view description");
+                                }
                         }
                         dialog::application_about(ray_tracing);
                 });

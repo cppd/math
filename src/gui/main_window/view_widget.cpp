@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 
 #include "../com/support.h"
+#include "src/com/message.h"
 
 #include <src/com/error.h>
 
@@ -88,11 +89,15 @@ void ViewWidget::set_view(view::View* const view)
 {
         view_ = view;
 
-        view::info::Functionality functionality;
+        std::optional<view::info::Functionality> functionality;
         view_->receive({&functionality});
+        if (!functionality)
+        {
+                message_error_fatal("Failed to receive view functionality");
+        }
 
-        ui_.label_shadow_quality->setVisible(functionality.shadow_zoom);
-        ui_.slider_shadow_quality->setVisible(functionality.shadow_zoom);
+        ui_.label_shadow_quality->setVisible(functionality->shadow_zoom);
+        ui_.slider_shadow_quality->setVisible(functionality->shadow_zoom);
 }
 
 void ViewWidget::on_clip_plane_clicked()

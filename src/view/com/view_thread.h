@@ -140,6 +140,14 @@ public:
                         event->notify();
                 }
         }
+
+        void dispatch_events()
+        {
+                for (QueueEvent* const event : receive_queue_.pop())
+                {
+                        event->notify();
+                }
+        }
 };
 }
 
@@ -197,6 +205,22 @@ class ViewThread final : public View
                 {
                         started_ = true;
                         message_error_fatal("Unknown error from view");
+                }
+
+                try
+                {
+                        while (!stop_)
+                        {
+                                event_queues_.dispatch_events();
+                        }
+                }
+                catch (const std::exception& e)
+                {
+                        message_error_fatal(std::string("Error while dispatching events\n") + e.what());
+                }
+                catch (...)
+                {
+                        message_error_fatal("Unknown error while dispatching events");
                 }
         }
 

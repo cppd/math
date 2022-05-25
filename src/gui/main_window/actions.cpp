@@ -101,9 +101,15 @@ void save_view_image(WorkerThreads* const threads, view::View* const view, const
                 SAVE_THREAD_ID, action,
                 [&]()
                 {
-                        view::info::Image image;
+                        std::optional<view::info::Image> image;
                         view->receive({&image});
-                        return process::action_save(std::chrono::system_clock::now(), std::move(image.image));
+                        if (!image)
+                        {
+                                message_error("Failed to receive view image");
+                                return WorkerThreads::Function();
+                        }
+
+                        return process::action_save(std::chrono::system_clock::now(), std::move(image->image));
                 });
 }
 
@@ -125,9 +131,16 @@ void painter(
                                 message_warning("No objects to paint");
                                 return WorkerThreads::Function();
                         }
-                        view::info::Camera camera;
+
+                        std::optional<view::info::Camera> camera;
                         view->receive({&camera});
-                        return process::action_painter(objects, camera, lighting->color(), colors->background_color());
+                        if (!camera)
+                        {
+                                message_error("Failed to receive view camera");
+                                return WorkerThreads::Function();
+                        }
+
+                        return process::action_painter(objects, *camera, lighting->color(), colors->background_color());
                 });
 }
 
