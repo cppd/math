@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "glyphs.h"
 
-#include "src/text/glyphs.h"
-
 #include <src/com/error.h>
 #include <src/image/image.h>
 #include <src/text/fonts.h>
+#include <src/text/glyphs.h>
 
 namespace ns::gpu::text_writer
 {
@@ -65,7 +64,7 @@ Glyphs::Glyphs(
 
         const auto max_image_dimension = device.properties().properties_10.limits.maxImageDimension2D;
 
-        text::FontGlyphs font_glyphs = create_font_glyphs(*font, max_image_dimension, max_image_dimension);
+        text::FontGlyphs font_glyphs = text::create_font_glyphs(*font, max_image_dimension, max_image_dimension);
 
         glyphs_ = std::move(font_glyphs.glyphs);
 
