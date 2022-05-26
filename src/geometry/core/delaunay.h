@@ -46,7 +46,7 @@ public:
                 const std::array<int, N>& vertices,
                 const Vector<N, double>& ortho,
                 const int delaunay_0,
-                const int delaunay_1)
+                const int delaunay_1 = -1)
                 : vertices_(vertices),
                   ortho_(ortho),
                   delaunay_{delaunay_0, delaunay_1}
@@ -100,68 +100,75 @@ public:
 };
 
 template <std::size_t N>
-void create_delaunay_objects_and_facets(
+std::vector<DelaunayObject<N>> create_delaunay_objects(
         const std::vector<Vector<N, double>>& points,
-        const std::vector<DelaunaySimplex<N>>& simplices,
-        std::vector<DelaunayObject<N>>* const delaunay_objects,
-        std::vector<DelaunayFacet<N>>* const delaunay_facets)
+        const std::vector<DelaunaySimplex<N>>& simplices)
 {
-        static constexpr int NULL_INDEX = -1;
-
-        std::unordered_map<const DelaunaySimplex<N>*, int> simplex_to_delaunay(simplices.size());
-
-        delaunay_objects->clear();
-        delaunay_objects->reserve(simplices.size());
-        simplex_to_delaunay.reserve(simplices.size());
-        for (int i = 0; const DelaunaySimplex<N>& simplex : simplices)
+        std::vector<DelaunayObject<N>> res;
+        res.reserve(simplices.size());
+        for (const DelaunaySimplex<N>& simplex : simplices)
         {
-                delaunay_objects->emplace_back(
+                res.emplace_back(
                         simplex.vertices(), compute_voronoi_vertex_for_delaunay_object(points, simplex.vertices()));
-                simplex_to_delaunay.emplace(&simplex, i++);
         }
+        return res;
+}
 
-        const auto delaunay_index_for_simplex = [&simplex_to_delaunay](const DelaunaySimplex<N>* const simplex)
+template <std::size_t N>
+std::vector<DelaunayFacet<N>> create_delaunay_facets(const std::vector<DelaunaySimplex<N>>& simplices)
+{
+        const std::unordered_map<const DelaunaySimplex<N>*, int> simplex_to_delaunay_map = [&]
         {
-                const auto iter = simplex_to_delaunay.find(simplex);
-                ASSERT(iter != simplex_to_delaunay.cend());
+                std::unordered_map<const DelaunaySimplex<N>*, int> res(simplices.size());
+                for (int i = 0; const DelaunaySimplex<N>& simplex : simplices)
+                {
+                        res.emplace(&simplex, i++);
+                }
+                return res;
+        }();
+
+        const auto simplex_to_delaunay = [&simplex_to_delaunay_map](const DelaunaySimplex<N>* const simplex)
+        {
+                const auto iter = simplex_to_delaunay_map.find(simplex);
+                ASSERT(iter != simplex_to_delaunay_map.cend());
                 return iter->second;
         };
 
-        std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> facets(simplices.size());
-        for (const DelaunaySimplex<N>& simplex : simplices)
+        const std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> ridges = [&]
         {
-                add_to_ridges(&simplex, &facets);
-        }
+                std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> res(simplices.size());
+                for (const DelaunaySimplex<N>& simplex : simplices)
+                {
+                        add_to_ridges(&simplex, &res);
+                }
+                return res;
+        }();
 
-        delaunay_facets->clear();
-        delaunay_facets->reserve(facets.size());
-        for (const auto& f : facets)
+        std::vector<DelaunayFacet<N>> res;
+        res.reserve(ridges.size());
+
+        for (const auto& [ridge, ridge_facets] : ridges)
         {
-                const Ridge<N + 1>& facet = f.first;
-                const RidgeFacets2<DelaunaySimplex<N>>& ridge_facets = f.second;
-
                 ASSERT(ridge_facets.f0().facet());
+
+                const DelaunaySimplex<N>* const simplex_0 = ridge_facets.f0().facet();
+                const Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
+                const int delaunay_0 = simplex_to_delaunay(simplex_0);
 
                 if (!ridge_facets.f1().facet())
                 {
-                        const DelaunaySimplex<N>* const simplex = ridge_facets.f0().facet();
-                        const Vector<N, double> ortho = simplex->ortho(ridge_facets.f0().vertex_index());
-
-                        delaunay_facets->emplace_back(
-                                facet.vertices(), ortho, delaunay_index_for_simplex(simplex), NULL_INDEX);
+                        res.emplace_back(ridge.vertices(), ortho, delaunay_0);
                 }
                 else
                 {
-                        const DelaunaySimplex<N>* const simplex_0 = ridge_facets.f0().facet();
                         const DelaunaySimplex<N>* const simplex_1 = ridge_facets.f1().facet();
-
-                        const Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
                         ASSERT(ortho == -simplex_1->ortho(ridge_facets.f1().vertex_index()));
 
-                        delaunay_facets->emplace_back(
-                                facet.vertices(), ortho, delaunay_index_for_simplex(simplex_0),
-                                delaunay_index_for_simplex(simplex_1));
+                        const int delaunay_1 = simplex_to_delaunay(simplex_1);
+                        res.emplace_back(ridge.vertices(), ortho, delaunay_0, delaunay_1);
                 }
         }
+
+        return res;
 }
 }

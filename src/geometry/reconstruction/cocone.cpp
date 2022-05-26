@@ -104,11 +104,14 @@ void create_voronoi_delaunay(
 {
         std::vector<DelaunaySimplex<N>> delaunay_simplices;
 
-        LOG("compute delaunay...");
+        LOG("computing delaunay...");
         compute_delaunay(source_points, points, &delaunay_simplices, progress, true);
 
-        LOG("creating delaunay objects and facets and voronoi vertices...");
-        create_delaunay_objects_and_facets(*points, delaunay_simplices, delaunay_objects, delaunay_facets);
+        LOG("creating delaunay objects...");
+        *delaunay_objects = create_delaunay_objects(*points, delaunay_simplices);
+
+        LOG("creating delaunay facets...");
+        *delaunay_facets = create_delaunay_facets(delaunay_simplices);
 }
 
 void check_rho_and_aplha(const double rho, const double alpha)

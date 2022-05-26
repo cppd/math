@@ -84,10 +84,9 @@ std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std
 }
 
 template <std::size_t N, typename SourceType>
-void compute_delaunay(
+std::vector<DelaunaySimplex<N>> compute_delaunay(
         const std::vector<Vector<N, SourceType>>& points,
         const std::vector<int>& points_map,
-        std::vector<DelaunaySimplex<N>>* const simplices,
         ProgressRatio* const progress)
 {
         using FacetCH =
@@ -104,8 +103,8 @@ void compute_delaunay(
 
         std::vector<PointDelaunay> data = create_points<PointDelaunay>(points);
 
-        simplices->clear();
-        simplices->reserve(convex_hull_facets.size());
+        std::vector<DelaunaySimplex<N>> simplices;
+        simplices.reserve(convex_hull_facets.size());
         for (const FacetCH& facet : convex_hull_facets)
         {
                 if (!facet.last_ortho_coord_is_negative())
@@ -123,15 +122,15 @@ void compute_delaunay(
                         orthos[r] = FacetDelaunay(data, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
                 }
 
-                simplices->emplace_back(restore_indices(vertices, points_map), orthos);
+                simplices.emplace_back(restore_indices(vertices, points_map), orthos);
         }
+        return simplices;
 }
 
 template <std::size_t N, typename SourceType>
-void compute_convex_hull(
+std::vector<ConvexHullFacet<N>> compute_convex_hull(
         const std::vector<Vector<N, SourceType>>& points,
         const std::vector<int>& points_map,
-        std::vector<ConvexHullFacet<N>>* const facets,
         ProgressRatio* const progress)
 {
         using Facet = ch::Facet<N, ch::ConvexHullDataType<N>, ch::ConvexHullComputeType<N>>;
@@ -141,12 +140,13 @@ void compute_convex_hull(
 
         ch::compute_convex_hull(create_points<Point>(points), &convex_hull_facets, progress);
 
-        facets->clear();
-        facets->reserve(convex_hull_facets.size());
+        std::vector<ConvexHullFacet<N>> facets;
+        facets.reserve(convex_hull_facets.size());
         for (const Facet& facet : convex_hull_facets)
         {
-                facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
+                facets.emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
         }
+        return facets;
 }
 }
 
@@ -180,7 +180,7 @@ void compute_delaunay(
                 LOG(ch::delaunay_type_description<N>());
         }
 
-        compute_delaunay(convex_hull_points, points_map, simplices, progress);
+        *simplices = compute_delaunay(convex_hull_points, points_map, progress);
 
         points->clear();
         points->resize(source_points.size(), Vector<N, double>(0));
@@ -224,7 +224,7 @@ void compute_convex_hull(
                 LOG(ch::convex_hull_type_description<N>());
         }
 
-        compute_convex_hull(convex_hull_points, points_map, facets, progress);
+        *facets = compute_convex_hull(convex_hull_points, points_map, progress);
 
         if (write_log)
         {
