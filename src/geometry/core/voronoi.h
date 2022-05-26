@@ -51,15 +51,15 @@ x ⋅ (2 * (v(n) - v(0))) = v(n) ⋅ v(n) - v(0) ⋅ v(0)
 namespace ns::geometry
 {
 template <std::size_t N, typename T>
-Vector<N, T> compute_voronoi_vertex_for_delaunay_object(
+[[nodiscard]] Vector<N, T> compute_voronoi_vertex_for_delaunay_object(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N + 1>& vertices)
 {
-        Matrix<N, N, T> a;
-        Vector<N, T> b;
-
         const Vector<N, T>& p0 = points[vertices[0]];
         const T dot0 = dot(p0, p0);
+
+        Matrix<N, N, T> a;
+        Vector<N, T> b;
 
         for (std::size_t row = 0; row < N; ++row)
         {

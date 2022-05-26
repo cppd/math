@@ -50,17 +50,17 @@ constexpr std::array MATRIX = std::to_array<Vector<4, T>>({
 
 template <typename T>
 constexpr std::array INVERSE = std::to_array<Vector<4, T>>({
-        {   T(99) / 10,    T(1) / 10,  T(-7) / 10,     T(-1)},
-        {  T(-61) / 50,    T(3) / 25,   T(3) / 50, T(1) / 10},
-        { T(-107) / 50,   T(-3) / 50,  T(11) / 50,  T(1) / 5},
-        {T(-497) / 200, T(-13) / 200, T(31) / 200, T(3) / 10}
+        {   T{99} / 10,    T{1} / 10,  T{-7} / 10,     T{-1}},
+        {  T{-61} / 50,    T{3} / 25,   T{3} / 50, T{1} / 10},
+        { T{-107} / 50,   T{-3} / 50,  T{11} / 50,  T{1} / 5},
+        {T{-497} / 200, T{-13} / 200, T{31} / 200, T{3} / 10}
 });
 
 template <typename T>
 constexpr Vector<4, T> VECTOR{1, 2, 3, 4};
 
 template <typename T>
-constexpr Vector<4, T> SOLVED{T(4), T(-2) / 5, T(-4) / 5, T(-19) / 20};
+constexpr Vector<4, T> SOLVED{T{4}, T{-2} / 5, T{-4} / 5, T{-19} / 20};
 
 template <typename T>
 constexpr bool are_equal(const T& a, const T& b, const T& abs_precision, const T& rel_precision)

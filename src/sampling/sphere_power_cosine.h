@@ -103,9 +103,9 @@ class PowerCosineOnHemisphere
                 n_ = power;
                 p_ = N - 2;
                 mean_ = std::atan(std::sqrt(p_ / n_));
-                const T deviation = T(1) / std::sqrt((n_ + p_) * std::sqrt(T(2)));
+                const T deviation = T{1} / std::sqrt((n_ + p_) * std::sqrt(T{2}));
                 normal_distribution_ = std::normal_distribution<T>(mean_, deviation);
-                normal_distribution_coef_ = T(-1) / (T(2) * square(deviation));
+                normal_distribution_coef_ = T{-1} / (2 * square(deviation));
                 const T max = std::pow(std::cos(mean_), n_) * std::pow(std::sin(mean_), p_);
                 urd_ = std::uniform_real_distribution<T>(0, max);
         }

@@ -90,7 +90,7 @@ public:
                         error("Ball light distance " + to_string(distance) + " must be positive");
                 }
 
-                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, distance);
+                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
         }
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override

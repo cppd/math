@@ -108,7 +108,7 @@ class SpatialSubdivisionTree final
                                 return true;
                         }
 
-                        if (k >= T(1e10))
+                        if (k >= T{1e10})
                         {
                                 return false;
                         }

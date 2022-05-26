@@ -153,9 +153,9 @@ public:
                 const Vector<N, T>& org,
                 const V&... e)
                 : parallelotope_(org, e...),
-                  roughness_(std::clamp(roughness, T(0), T(1))),
-                  colors_(shading::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T(0), T(1)))),
-                  alpha_(std::clamp(alpha, T(0), T(1)))
+                  roughness_(std::clamp(roughness, T{0}, T{1})),
+                  colors_(shading::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T{0}, T{1}))),
+                  alpha_(std::clamp(alpha, T{0}, T{1}))
         {
         }
 

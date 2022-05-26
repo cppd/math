@@ -81,18 +81,18 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
-        T s = T(0.5) * (T(1) + vh[2]);
+        T s = T{0.5} * (1 + vh[2]);
         t[1] = interpolation(std::sqrt(1 - square(t[0])), t[1], s);
 
         // Section 4.3: reprojection onto hemisphere
         Vector<3, T> nh = [&]
         {
-                T z = std::sqrt(std::max(T(0), 1 - dot(t, t)));
+                T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 return t[0] * t0 + t[1] * t1 + z * vh;
         }();
 
         // Section 3.4: transforming the normal back to the ellipsoid configuration
-        Vector<3, T> ne = Vector<3, T>(alpha * nh[0], alpha * nh[1], std::max(T(0), nh[2])).normalized();
+        Vector<3, T> ne = Vector<3, T>(alpha * nh[0], alpha * nh[1], std::max(T{0}, nh[2])).normalized();
 
         return ne;
 }
@@ -164,7 +164,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
-        const T s = T{0.5} * (T{1} + vh[N - 1]);
+        const T s = T{0.5} * (1 + vh[N - 1]);
         const T a = [&]
         {
                 T sum = 0;

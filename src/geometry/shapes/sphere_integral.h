@@ -175,12 +175,12 @@ T sphere_cosine_weighted_average_by_angle(const F& f, const int count)
 
         const auto function = [&](const T v)
         {
-                const T cosine = std::max(T(0), std::cos(v));
+                const T cosine = std::max(T{0}, std::cos(v));
                 const T sine = std::sin(v);
                 return power<N - 2>(sine) * cosine * f(v);
         };
 
-        return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
+        return (N - 1) * numerical::integrate(function, T{0}, PI<T> / 2, count);
 }
 
 template <unsigned N, typename T, typename F>

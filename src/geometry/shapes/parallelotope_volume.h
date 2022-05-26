@@ -41,7 +41,7 @@ T parallelotope_volume(const std::array<Vector<N, T>, M>& vectors)
         }
         else
         {
-                return std::sqrt(std::max(T(0), numerical::gram_matrix(vectors).determinant()));
+                return std::sqrt(std::max(T{0}, numerical::gram_matrix(vectors).determinant()));
         }
 }
 }

@@ -95,7 +95,7 @@ constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::arra
 
         if constexpr (N == 1)
         {
-                return {Vector<1, T>(T(1) / a[0][0])};
+                return {Vector<1, T>(T{1} / a[0][0])};
         }
 
         if constexpr (N == 2)
