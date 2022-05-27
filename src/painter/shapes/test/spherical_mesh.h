@@ -60,23 +60,31 @@ std::unique_ptr<const model::mesh::Mesh<N>> create_spherical_mesh(
 {
         const Vector<N, float> center = random_center<N>(radius, engine);
 
-        std::vector<Vector<N, float>> points;
-        points.resize(point_count);
-        for (Vector<N, float>& p : points)
+        const std::vector<Vector<N, float>> points = [&]
         {
-                p = radius * sampling::uniform_on_sphere<N, float>(engine) + center;
-        }
+                std::vector<Vector<N, float>> res(point_count);
+                for (Vector<N, float>& p : res)
+                {
+                        p = radius * sampling::uniform_on_sphere<N, float>(engine) + center;
+                }
+                return res;
+        }();
 
-        progress->set_text("Data: %v of %m");
-        std::vector<geometry::ConvexHullFacet<N>> ch_facets;
-        geometry::compute_convex_hull(points, &ch_facets, progress, WRITE_LOG);
-
-        std::vector<std::array<int, N>> facets;
-        facets.reserve(ch_facets.size());
-        for (const geometry::ConvexHullFacet<N>& ch_facet : ch_facets)
+        const std::vector<std::array<int, N>> facets = [&]
         {
-                facets.push_back(ch_facet.vertices());
-        }
+                progress->set_text("Data: %v of %m");
+
+                const std::vector<geometry::ConvexHullSimplex<N>> ch_facets =
+                        geometry::compute_convex_hull(points, progress, WRITE_LOG);
+
+                std::vector<std::array<int, N>> res;
+                res.reserve(ch_facets.size());
+                for (const geometry::ConvexHullSimplex<N>& ch_facet : ch_facets)
+                {
+                        res.push_back(ch_facet.vertices());
+                }
+                return res;
+        }();
 
         progress->set_text("Mesh");
         progress->set(0);

@@ -102,16 +102,18 @@ void create_voronoi_delaunay(
         std::vector<DelaunayFacet<N>>* const delaunay_facets,
         ProgressRatio* const progress)
 {
-        std::vector<DelaunaySimplex<N>> delaunay_simplices;
+        constexpr bool WRITE_LOG = true;
 
         LOG("computing delaunay...");
-        compute_delaunay(source_points, points, &delaunay_simplices, progress, true);
+        DelaunayData<N> delaunay = compute_delaunay(source_points, progress, WRITE_LOG);
+
+        *points = std::move(delaunay.points);
 
         LOG("creating delaunay objects...");
-        *delaunay_objects = create_delaunay_objects(*points, delaunay_simplices);
+        *delaunay_objects = create_delaunay_objects(*points, delaunay.simplices);
 
         LOG("creating delaunay facets...");
-        *delaunay_facets = create_delaunay_facets(delaunay_simplices);
+        *delaunay_facets = create_delaunay_facets(delaunay.simplices);
 }
 
 void check_rho_and_aplha(const double rho, const double alpha)

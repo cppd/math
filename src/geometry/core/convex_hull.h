@@ -27,13 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-class ConvexHullFacet final
+class ConvexHullSimplex final
 {
         std::array<int, N> indices_;
         Vector<N, double> ortho_;
 
 public:
-        ConvexHullFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho)
+        ConvexHullSimplex(const std::array<int, N>& indices, const Vector<N, double>& ortho)
                 : indices_(indices),
                   ortho_(ortho)
         {
@@ -76,17 +76,18 @@ public:
 };
 
 template <std::size_t N>
-void compute_delaunay(
-        const std::vector<Vector<N, float>>& source_points,
-        std::vector<Vector<N, double>>* points,
-        std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress,
-        bool write_log);
+struct DelaunayData final
+{
+        std::vector<Vector<N, double>> points;
+        std::vector<DelaunaySimplex<N>> simplices;
+};
 
 template <std::size_t N>
-void compute_convex_hull(
-        const std::vector<Vector<N, float>>& source_points,
-        std::vector<ConvexHullFacet<N>>* facets,
+DelaunayData<N> compute_delaunay(const std::vector<Vector<N, float>>& points, ProgressRatio* progress, bool write_log);
+
+template <std::size_t N>
+std::vector<ConvexHullSimplex<N>> compute_convex_hull(
+        const std::vector<Vector<N, float>>& points,
         ProgressRatio* progress,
         bool write_log);
 }

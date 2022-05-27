@@ -192,12 +192,12 @@ namespace
 //
 //                 ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
 //
-//                 std::vector<ConvexHullFacet<N>> facets;
 //                 ProgressRatio progress(nullptr);
 //
-//                 compute_convex_hull(vertices, &facets, &progress, false);
+//                 const std::vector<ConvexHullSimplex<N>> facets =
+//                         compute_convex_hull(vertices, &facets, &progress, false);
 //
-//                 for (const ConvexHullFacet<N>& facet : facets)
+//                 for (const ConvexHullSimplex<N>& facet : facets)
 //                 {
 //                         if (!on_plane(facet.vertices(), vertices))
 //                         {
@@ -311,13 +311,13 @@ std::unordered_set<Vector<N, float>> create_initial_vertex_set(const std::vector
 
 template <std::size_t N>
 void add_vertices(
-        const std::vector<ConvexHullFacet<N>>& facets,
+        const std::vector<ConvexHullSimplex<N>>& facets,
         std::vector<Vector<N, float>>* const vertices,
         std::unordered_set<Vector<N, float>>* const vertex_set)
 {
         static_assert(N >= 4);
 
-        for (const ConvexHullFacet<N>& facet : facets)
+        for (const ConvexHullSimplex<N>& facet : facets)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -351,13 +351,13 @@ void divide_facets(
 
         std::unordered_set<Vector<N, float>> vertex_set = create_initial_vertex_set(facets);
         std::vector<Vector<N, float>> ch_vertices(vertex_set.cbegin(), vertex_set.cend());
-        std::vector<ConvexHullFacet<N>> ch_facets;
+        std::vector<ConvexHullSimplex<N>> ch_facets;
 
         while (true)
         {
                 ProgressRatio progress(nullptr);
 
-                compute_convex_hull(ch_vertices, &ch_facets, &progress, false);
+                ch_facets = compute_convex_hull(ch_vertices, &progress, false);
 
                 if (ch_facets.size() >= min_facet_count)
                 {
@@ -376,7 +376,7 @@ void divide_facets(
 
         mesh_facets->clear();
         mesh_facets->reserve(ch_facets.size());
-        for (const ConvexHullFacet<N>& ch_facet : ch_facets)
+        for (const ConvexHullSimplex<N>& ch_facet : ch_facets)
         {
                 mesh_facets->push_back(ch_facet.vertices());
         }

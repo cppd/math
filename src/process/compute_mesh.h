@@ -57,35 +57,39 @@ std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
         const model::mesh::Mesh<N>& mesh,
         ProgressRatio* const progress)
 {
-        std::vector<Vector<N, float>> points;
-        if (!mesh.facets.empty())
+        const std::vector<Vector<N, float>> points = [&]
         {
-                points = unique_facet_vertices(mesh);
-        }
-        else if (!mesh.points.empty())
+                if (!mesh.facets.empty())
+                {
+                        return unique_facet_vertices(mesh);
+                }
+                else if (!mesh.points.empty())
+                {
+                        return unique_point_vertices(mesh);
+                }
+                else
+                {
+                        error("Faces or points not found for computing convex hull object");
+                }
+        }();
+
+        const std::vector<std::array<int, N>> facets = [&]
         {
-                points = unique_point_vertices(mesh);
-        }
-        else
-        {
-                error("Faces or points not found for computing convex hull object");
-        }
+                const Clock::time_point start_time = Clock::now();
 
-        std::vector<geometry::ConvexHullFacet<N>> convex_hull_facets;
+                const std::vector<geometry::ConvexHullSimplex<N>> ch_facets =
+                        geometry::compute_convex_hull(points, progress, true);
 
-        const Clock::time_point start_time = Clock::now();
+                LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
-        geometry::compute_convex_hull(points, &convex_hull_facets, progress, true);
-
-        LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
-
-        std::vector<std::array<int, N>> facets;
-        facets.clear();
-        facets.reserve(convex_hull_facets.size());
-        for (const geometry::ConvexHullFacet<N>& f : convex_hull_facets)
-        {
-                facets.push_back(f.vertices());
-        }
+                std::vector<std::array<int, N>> res;
+                res.reserve(ch_facets.size());
+                for (const geometry::ConvexHullSimplex<N>& f : ch_facets)
+                {
+                        res.push_back(f.vertices());
+                }
+                return res;
+        }();
 
         return model::mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
