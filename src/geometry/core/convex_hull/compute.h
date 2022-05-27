@@ -372,11 +372,8 @@ void add_point_to_convex_hull(
         }
 }
 
-template <std::size_t N, typename S, typename C>
-void compute_convex_hull(
-        const std::vector<Vector<N, S>>& points,
-        FacetList<Facet<N, S, C>>* const facets,
-        ProgressRatio* const progress)
+template <typename C, std::size_t N, typename S>
+FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, ProgressRatio* const progress)
 {
         static_assert(N > 1);
 
@@ -385,11 +382,11 @@ void compute_convex_hull(
                 error("Error point count " + to_string(points.size()) + " for convex hull in " + space_name(N));
         }
 
-        facets->clear();
+        FacetList<Facet<N, S, C>> facets;
 
         std::array<int, N + 1> initial_vertices;
 
-        create_initial_convex_hull(points, &initial_vertices, facets);
+        create_initial_convex_hull(points, &initial_vertices, &facets);
 
         std::vector<unsigned char> point_enabled(points.size(), true);
         for (const int v : initial_vertices)
@@ -399,7 +396,7 @@ void compute_convex_hull(
 
         std::vector<FacetStorage<Facet<N, S, C>>> point_conflicts(points.size());
 
-        create_initial_conflict_lists(points, point_enabled, facets, &point_conflicts);
+        create_initial_conflict_lists(points, point_enabled, &facets, &point_conflicts);
 
         ThreadPool thread_pool(thread_count_for_horizon<S, C>());
         std::barrier<> barrier(thread_pool.thread_count());
@@ -424,24 +421,23 @@ void compute_convex_hull(
                 }
 
                 add_point_to_convex_hull(
-                        points, i, facets, &point_conflicts, &thread_pool, &barrier, &unique_points_work);
+                        points, i, &facets, &point_conflicts, &thread_pool, &barrier, &unique_points_work);
         }
 
         ASSERT(std::all_of(
-                facets->cbegin(), facets->cend(),
+                facets.cbegin(), facets.cend(),
                 [](const Facet<N, S, C>& facet)
                 {
                         return facet.conflict_points().empty();
                 }));
+
+        return facets;
 }
 }
 
-template <std::size_t N, typename S, typename C>
-void compute_convex_hull(
-        const std::vector<Vector<N, S>>& points,
-        FacetList<Facet<N, S, C>>* const facets,
-        ProgressRatio* const progress)
+template <typename C, std::size_t N, typename S>
+FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, ProgressRatio* const progress)
 {
-        compute_implementation::compute_convex_hull(points, facets, progress);
+        return compute_implementation::compute_convex_hull<C>(points, progress);
 }
 }

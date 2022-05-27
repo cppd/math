@@ -36,7 +36,7 @@ namespace
 namespace ch = convex_hull;
 
 template <typename PointType, std::size_t N, typename SourceType>
-std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, SourceType>>& points)
+std::vector<PointType> create_source_points_paraboloid(const std::vector<Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N + 1);
 
@@ -55,7 +55,7 @@ std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, Sour
 }
 
 template <typename PointType, std::size_t N, typename SourceType>
-std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& points)
+std::vector<PointType> create_source_points(const std::vector<Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N);
 
@@ -70,25 +70,20 @@ std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& p
         return data;
 }
 
-template <std::size_t N>
-std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& points, ProgressRatio* const progress)
+template <std::size_t N, typename Data, typename Compute>
+std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
+        const ch::DelaunayPoints<N>& points,
+        const ch::FacetList<ch::Facet<N + 1, Data, Compute>>& convex_hull_facets)
 {
-        using FacetCH =
-                ch::Facet<N + 1, ch::DelaunayParaboloidDataType<N + 1>, ch::DelaunayParaboloidComputeType<N + 1>>;
-        using PointCH = Vector<N + 1, ch::DelaunayParaboloidDataType<N + 1>>;
-        using FacetDelaunay = ch::Facet<N, ch::DelaunayDataType<N>, ch::DelaunayComputeType<N>>;
         using PointDelaunay = Vector<N, ch::DelaunayDataType<N>>;
+        using FacetDelaunay = ch::Facet<N, ch::DelaunayDataType<N>, ch::DelaunayComputeType<N>>;
 
-        ch::FacetList<FacetCH> convex_hull_facets;
-        ch::compute_convex_hull(create_points_paraboloid<PointCH>(points.points()), &convex_hull_facets, progress);
-
-        // compute ortho in n-space and create facets
-
-        const std::vector<PointDelaunay> data = create_points<PointDelaunay>(points.points());
+        const std::vector<PointDelaunay> data = create_source_points<PointDelaunay>(points.points());
 
         std::vector<DelaunaySimplex<N>> simplices;
         simplices.reserve(convex_hull_facets.size());
-        for (const FacetCH& facet : convex_hull_facets)
+
+        for (const auto& facet : convex_hull_facets)
         {
                 if (!facet.last_ortho_coord_is_negative())
                 {
@@ -107,7 +102,34 @@ std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& po
 
                 simplices.emplace_back(points.restore_indices(vertices), orthos);
         }
+
         return simplices;
+}
+
+template <std::size_t N, typename Data, typename Compute>
+std::vector<ConvexHullFacet<N>> convex_hull_simplices(
+        const ch::ConvexHullPoints<N>& points,
+        const ch::FacetList<ch::Facet<N, Data, Compute>>& convex_hull_facets)
+{
+        std::vector<ConvexHullFacet<N>> facets;
+        facets.reserve(convex_hull_facets.size());
+        for (const auto& facet : convex_hull_facets)
+        {
+                facets.emplace_back(points.restore_indices(facet.vertices()), facet.double_ortho());
+        }
+        return facets;
+}
+
+template <std::size_t N>
+std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& points, ProgressRatio* const progress)
+{
+        using S = ch::DelaunayParaboloidDataType<N + 1>;
+        using C = ch::DelaunayParaboloidComputeType<N + 1>;
+
+        const ch::FacetList<ch::Facet<N + 1, S, C>> facets = ch::compute_convex_hull<C>(
+                create_source_points_paraboloid<Vector<N + 1, S>>(points.points()), progress);
+
+        return lower_convex_hull_simplices(points, facets);
 }
 
 template <std::size_t N>
@@ -115,19 +137,13 @@ std::vector<ConvexHullFacet<N>> compute_convex_hull(
         const ch::ConvexHullPoints<N>& points,
         ProgressRatio* const progress)
 {
-        using Facet = ch::Facet<N, ch::ConvexHullDataType<N>, ch::ConvexHullComputeType<N>>;
-        using Point = Vector<N, ch::ConvexHullDataType<N>>;
+        using S = ch::ConvexHullDataType<N>;
+        using C = ch::ConvexHullComputeType<N>;
 
-        ch::FacetList<Facet> convex_hull_facets;
-        ch::compute_convex_hull(create_points<Point>(points.points()), &convex_hull_facets, progress);
+        const ch::FacetList<ch::Facet<N, S, C>> facets =
+                ch::compute_convex_hull<C>(create_source_points<Vector<N, S>>(points.points()), progress);
 
-        std::vector<ConvexHullFacet<N>> facets;
-        facets.reserve(convex_hull_facets.size());
-        for (const Facet& facet : convex_hull_facets)
-        {
-                facets.emplace_back(points.restore_indices(facet.vertices()), facet.double_ortho());
-        }
-        return facets;
+        return convex_hull_simplices(points, facets);
 }
 }
 
