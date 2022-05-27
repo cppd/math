@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define VOLUME_SHADE_GLSL
 
 #include "mesh_fragment.glsl"
-#include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
+#include "visibility.glsl"
 #include "volume_in.glsl"
 
 #if defined(IMAGE)
@@ -34,13 +34,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 float mesh_shadow_transparency(const vec3 world_position)
 {
-        const vec3 org = world_position;
-        const vec3 dir = drawing.direction_to_light;
-        const bool intersection =
-                !drawing.clip_plane_enabled
-                        ? ray_tracing_intersection(org, dir, acceleration_structure)
-                        : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
-        return intersection ? 0 : 1;
+        if (!drawing.clip_plane_enabled)
+        {
+                return shadow_transparency(world_position, drawing.direction_to_light, acceleration_structure);
+        }
+        return shadow_transparency(
+                world_position, drawing.direction_to_light, drawing.clip_plane_equation, acceleration_structure);
 }
 
 #if defined(IMAGE)
@@ -63,8 +62,7 @@ float mesh_shadow_transparency_device(const vec3 device_position)
 
 float mesh_shadow_transparency(const vec3 shadow_position)
 {
-        const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
-        return d <= shadow_position.z ? 0 : 1;
+        return shadow_transparency(shadow_position, shadow_mapping_texture);
 }
 
 #if defined(IMAGE)
