@@ -58,19 +58,19 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
           vertex_shader_(device_->handle(), code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_fragments_(device_->handle(), code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_fragments_(device_->handle(), code.volume_transparency_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_fragments_opacity_(
                   device_->handle(),
-                  code.volume_fragments_opacity_frag(),
+                  code.volume_opacity_transparency_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_(device_->handle(), code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_fragments_(
                   device_->handle(),
-                  code.volume_image_fragments_frag(),
+                  code.volume_image_transparency_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_fragments_opacity_(
                   device_->handle(),
-                  code.volume_image_fragments_opacity_frag(),
+                  code.volume_image_opacity_transparency_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_opacity_(
                   device_->handle(),

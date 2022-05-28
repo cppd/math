@@ -19,339 +19,339 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> Code::mesh_triangles_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangles.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangles.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_triangles_geom() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangles.geom.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangles.geom.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_triangles_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangles.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangles.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_shadow_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_shadow.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_shadow.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_triangle_lines_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangle_lines.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangle_lines.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_triangle_lines_geom() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangle_lines.geom.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangle_lines.geom.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_triangle_lines_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_triangle_lines.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_triangle_lines.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_points_0d_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_points_0d.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_points_0d.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_points_1d_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_points_1d.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_points_1d.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_points_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_points.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_points.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_normals_vert() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_normals.vert.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_normals.vert.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_normals_geom() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_mesh_normals.geom.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_mesh_normals.geom.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::mesh_normals_frag() const
+std::span<const std::uint32_t> Code::mesh_normals_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
 #include "ray_tracing/renderer_mesh_normals.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_normals.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_vert() const
+std::span<const std::uint32_t> Code::mesh_normals_geom() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_volume.vert.spr"
+#include "ray_tracing/renderer_mesh_normals.geom.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_volume.vert.spr"
+#include "renderer_mesh_normals.geom.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_image_frag() const
+std::span<const std::uint32_t> Code::mesh_normals_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_normals.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_normals.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_points_0d_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_points_0d.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_points_0d.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_points_1d_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_points_1d.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_points_1d.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_points_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_points.frag.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_points.frag.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_shadow_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_shadow.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_shadow.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangle_lines_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangle_lines.frag.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangle_lines.frag.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangle_lines_geom() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangle_lines.geom.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangle_lines.geom.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangle_lines_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangle_lines.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangle_lines.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangles_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangles.frag.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangles.frag.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangles_geom() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangles.geom.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangles.geom.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::mesh_triangles_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_mesh_triangles.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_mesh_triangles.vert.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::volume_image_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
 #include "ray_tracing/renderer_volume_image.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_image.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_image_fragments_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_volume_image_fragments.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_volume_image_fragments.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::volume_fragments_frag() const
-{
-        if (ray_tracing_)
-        {
-                static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_volume_fragments.frag.spr"
-                };
-                return {std::cbegin(CODE), std::cend(CODE)};
-        }
-
-        static constexpr std::uint32_t CODE[] = {
-#include "renderer_volume_fragments.frag.spr"
-        };
-        return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-std::vector<std::uint32_t> Code::volume_image_opacity_frag() const
+std::span<const std::uint32_t> Code::volume_image_opacity_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
 #include "ray_tracing/renderer_volume_image_opacity.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_image_opacity.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_image_fragments_opacity_frag() const
+std::span<const std::uint32_t> Code::volume_image_opacity_transparency_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_volume_image_fragments_opacity.frag.spr"
+#include "ray_tracing/renderer_volume_image_opacity_transparency.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_volume_image_fragments_opacity.frag.spr"
+#include "renderer_volume_image_opacity_transparency.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_fragments_opacity_frag() const
+std::span<const std::uint32_t> Code::volume_image_transparency_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
-#include "ray_tracing/renderer_volume_fragments_opacity.frag.spr"
+#include "ray_tracing/renderer_volume_image_transparency.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_volume_fragments_opacity.frag.spr"
+#include "renderer_volume_image_transparency.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
 }
 
-std::vector<std::uint32_t> Code::volume_opacity_frag() const
+std::span<const std::uint32_t> Code::volume_opacity_frag() const
 {
         if (ray_tracing_)
         {
                 static constexpr std::uint32_t CODE[] = {
 #include "ray_tracing/renderer_volume_opacity.frag.spr"
                 };
-                return {std::cbegin(CODE), std::cend(CODE)};
+                return CODE;
         }
 
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_opacity.frag.spr"
         };
-        return {std::cbegin(CODE), std::cend(CODE)};
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::volume_opacity_transparency_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume_opacity_transparency.frag.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume_opacity_transparency.frag.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::volume_transparency_frag() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume_transparency.frag.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume_transparency.frag.spr"
+        };
+        return CODE;
+}
+
+std::span<const std::uint32_t> Code::volume_vert() const
+{
+        if (ray_tracing_)
+        {
+                static constexpr std::uint32_t CODE[] = {
+#include "ray_tracing/renderer_volume.vert.spr"
+                };
+                return CODE;
+        }
+
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_volume.vert.spr"
+        };
+        return CODE;
 }
 }

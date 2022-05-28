@@ -37,13 +37,13 @@ A K Peters, Ltd, 2006.
 #ifndef VOLUME_GLSL
 #define VOLUME_GLSL
 
-#include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
 #include "volume_opacity.glsl"
 #include "volume_out.glsl"
 #include "volume_shade.glsl"
+#include "volume_transparency.glsl"
 
 #define COLOR_ADD(c)                \
         do                          \
