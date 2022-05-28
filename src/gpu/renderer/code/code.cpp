@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader_code.h"
+#include "code.h"
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> ShaderCode::mesh_triangles_vert() const
+std::vector<std::uint32_t> Code::mesh_triangles_vert() const
 {
         if (ray_tracing_)
         {
@@ -35,7 +35,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangles_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangles_geom() const
+std::vector<std::uint32_t> Code::mesh_triangles_geom() const
 {
         if (ray_tracing_)
         {
@@ -51,7 +51,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangles_geom() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangles_frag() const
+std::vector<std::uint32_t> Code::mesh_triangles_frag() const
 {
         if (ray_tracing_)
         {
@@ -67,7 +67,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangles_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_shadow_vert() const
+std::vector<std::uint32_t> Code::mesh_shadow_vert() const
 {
         if (ray_tracing_)
         {
@@ -83,7 +83,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_shadow_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_vert() const
+std::vector<std::uint32_t> Code::mesh_triangle_lines_vert() const
 {
         if (ray_tracing_)
         {
@@ -99,7 +99,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_geom() const
+std::vector<std::uint32_t> Code::mesh_triangle_lines_geom() const
 {
         if (ray_tracing_)
         {
@@ -115,7 +115,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_geom() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_frag() const
+std::vector<std::uint32_t> Code::mesh_triangle_lines_frag() const
 {
         if (ray_tracing_)
         {
@@ -131,7 +131,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_points_0d_vert() const
+std::vector<std::uint32_t> Code::mesh_points_0d_vert() const
 {
         if (ray_tracing_)
         {
@@ -147,7 +147,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_points_0d_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_points_1d_vert() const
+std::vector<std::uint32_t> Code::mesh_points_1d_vert() const
 {
         if (ray_tracing_)
         {
@@ -163,7 +163,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_points_1d_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_points_frag() const
+std::vector<std::uint32_t> Code::mesh_points_frag() const
 {
         if (ray_tracing_)
         {
@@ -179,7 +179,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_points_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_normals_vert() const
+std::vector<std::uint32_t> Code::mesh_normals_vert() const
 {
         if (ray_tracing_)
         {
@@ -195,7 +195,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_normals_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_normals_geom() const
+std::vector<std::uint32_t> Code::mesh_normals_geom() const
 {
         if (ray_tracing_)
         {
@@ -211,7 +211,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_normals_geom() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::mesh_normals_frag() const
+std::vector<std::uint32_t> Code::mesh_normals_frag() const
 {
         if (ray_tracing_)
         {
@@ -227,7 +227,7 @@ std::vector<std::uint32_t> ShaderCode::mesh_normals_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_vert() const
+std::vector<std::uint32_t> Code::volume_vert() const
 {
         if (ray_tracing_)
         {
@@ -243,7 +243,7 @@ std::vector<std::uint32_t> ShaderCode::volume_vert() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_image_frag() const
+std::vector<std::uint32_t> Code::volume_image_frag() const
 {
         if (ray_tracing_)
         {
@@ -259,7 +259,7 @@ std::vector<std::uint32_t> ShaderCode::volume_image_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_image_fragments_frag() const
+std::vector<std::uint32_t> Code::volume_image_fragments_frag() const
 {
         if (ray_tracing_)
         {
@@ -275,7 +275,7 @@ std::vector<std::uint32_t> ShaderCode::volume_image_fragments_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_fragments_frag() const
+std::vector<std::uint32_t> Code::volume_fragments_frag() const
 {
         if (ray_tracing_)
         {
@@ -291,7 +291,7 @@ std::vector<std::uint32_t> ShaderCode::volume_fragments_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_image_opacity_frag() const
+std::vector<std::uint32_t> Code::volume_image_opacity_frag() const
 {
         if (ray_tracing_)
         {
@@ -307,7 +307,7 @@ std::vector<std::uint32_t> ShaderCode::volume_image_opacity_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_image_fragments_opacity_frag() const
+std::vector<std::uint32_t> Code::volume_image_fragments_opacity_frag() const
 {
         if (ray_tracing_)
         {
@@ -323,7 +323,7 @@ std::vector<std::uint32_t> ShaderCode::volume_image_fragments_opacity_frag() con
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_fragments_opacity_frag() const
+std::vector<std::uint32_t> Code::volume_fragments_opacity_frag() const
 {
         if (ray_tracing_)
         {
@@ -339,7 +339,7 @@ std::vector<std::uint32_t> ShaderCode::volume_fragments_opacity_frag() const
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> ShaderCode::volume_opacity_frag() const
+std::vector<std::uint32_t> Code::volume_opacity_frag() const
 {
         if (ray_tracing_)
         {
@@ -353,9 +353,5 @@ std::vector<std::uint32_t> ShaderCode::volume_opacity_frag() const
 #include "renderer_volume_opacity.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
-}
-
-ShaderCode::ShaderCode(const bool ray_tracing) : ray_tracing_(ray_tracing)
-{
 }
 }

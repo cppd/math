@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/ggx_f1_albedo.h"
 #include "buffers/opacity.h"
 #include "buffers/transparency.h"
-#include "code/shader_code.h"
+#include "code/code.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
 #include "test/ray_tracing/test_ray_tracing.h"
@@ -583,10 +583,10 @@ std::unique_ptr<Renderer> create_renderer(
                 test::test_ray_tracing(*device, *compute_queue);
         }
 
-        const ShaderCode shader_code(ray_tracing);
+        const Code code(ray_tracing);
 
         return std::make_unique<Impl>(
-                device, shader_code, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                device, code, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                 compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
 }
 }
