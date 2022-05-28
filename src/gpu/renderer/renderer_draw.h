@@ -44,8 +44,8 @@ class RendererDraw
         struct DrawInfo final
         {
                 VkSemaphore semaphore;
-                bool transparency;
                 bool opacity;
+                bool transparency;
         };
 
         DrawInfo draw_meshes(

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
-#define FRAGMENTS
+#define TRANSPARENCY
 
 #extension GL_GOOGLE_include_directive : enable
 #include "volume.glsl"

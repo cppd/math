@@ -50,7 +50,7 @@ float mesh_shadow_transparency_texture(const vec3 texture_position)
 }
 #endif
 
-#if defined(FRAGMENTS) || defined(OPACITY)
+#if defined(OPACITY) || defined(TRANSPARENCY)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 world_position = coordinates.device_to_world * vec4(device_position, 1);
@@ -73,7 +73,7 @@ float mesh_shadow_transparency_texture(const vec3 texture_position)
 }
 #endif
 
-#if defined(FRAGMENTS) || defined(OPACITY)
+#if defined(OPACITY) || defined(TRANSPARENCY)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 shadow_position = coordinates.device_to_shadow * vec4(device_position, 1);
@@ -94,7 +94,7 @@ float isosurface_shadow_transparency_texture(const vec3 texture_position)
         return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
 }
 
-#if defined(FRAGMENTS) || defined(OPACITY)
+#if defined(OPACITY) || defined(TRANSPARENCY)
 float isosurface_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 texture_position = volume_coordinates.device_to_texture_matrix * vec4(device_position, 1);
@@ -114,7 +114,7 @@ float shadow_transparency_texture(const vec3 texture_position)
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
-#if defined(FRAGMENTS) || defined(OPACITY)
+#if defined(OPACITY) || defined(TRANSPARENCY)
 float shadow_transparency_device(const vec3 device_position)
 {
         const float mesh_shadow = mesh_shadow_transparency_device(device_position);
@@ -127,7 +127,7 @@ float shadow_transparency_device(const vec3 device_position)
 }
 #endif
 
-#elif defined(FRAGMENTS) || defined(OPACITY)
+#elif defined(OPACITY) || defined(TRANSPARENCY)
 
 float shadow_transparency_device(const vec3 device_position)
 {
@@ -175,7 +175,7 @@ vec4 isosurface_color(const vec3 texture_position)
 
 //
 
-#if !(defined(FRAGMENTS) || defined(OPACITY))
+#if !(defined(OPACITY) || defined(TRANSPARENCY))
 
 vec4 fragment_color(const TransparencyFragment fragment)
 {

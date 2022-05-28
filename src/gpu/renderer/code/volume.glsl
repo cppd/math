@@ -54,7 +54,7 @@ A K Peters, Ltd, 2006.
                 }                   \
         } while (false)
 
-#if !defined(FRAGMENTS)
+#if !defined(TRANSPARENCY)
 void draw_fragments()
 {
 }
@@ -338,7 +338,7 @@ void main()
         draw_volume(image_dir, image_org, depth_dir, depth_org);
 }
 
-#elif defined(FRAGMENTS) || defined(OPACITY)
+#elif defined(OPACITY) || defined(TRANSPARENCY)
 
 void main()
 {
@@ -352,7 +352,7 @@ void main()
 }
 
 #else
-#error IMAGE or FRAGMENTS or OPACITY not defined
+#error IMAGE or OPACITY or TRANSPARENCY not defined
 #endif
 
 #endif

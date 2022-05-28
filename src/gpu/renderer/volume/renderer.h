@@ -38,17 +38,17 @@ class VolumeRenderer
 {
         struct CommandsFragments final
         {
-                vulkan::handle::CommandBuffers fragments;
-                vulkan::handle::CommandBuffers fragments_opacity;
                 vulkan::handle::CommandBuffers opacity;
+                vulkan::handle::CommandBuffers opacity_transparency;
+                vulkan::handle::CommandBuffers transparency;
         };
 
         struct CommandsImage final
         {
                 vulkan::handle::CommandBuffers image;
-                vulkan::handle::CommandBuffers image_fragments;
-                vulkan::handle::CommandBuffers image_fragments_opacity;
                 vulkan::handle::CommandBuffers image_opacity;
+                vulkan::handle::CommandBuffers image_opacity_transparency;
+                vulkan::handle::CommandBuffers image_transparency;
         };
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -114,7 +114,8 @@ public:
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         [[nodiscard]] bool has_volume() const;
-        [[nodiscard]] std::optional<VkCommandBuffer> command_buffer(unsigned index, bool fragments, bool opacity) const;
+        [[nodiscard]] std::optional<VkCommandBuffer> command_buffer(unsigned index, bool opacity, bool transparency)
+                const;
 
         void set_matrix(const Matrix4d& vp_matrix);
         void set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix);

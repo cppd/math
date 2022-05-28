@@ -79,13 +79,13 @@ void VolumeRenderer::create_buffers(
                         render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport, type);
         };
 
-        create_pipeline(VolumeProgramPipelineType::FRAGMENTS);
-        create_pipeline(VolumeProgramPipelineType::FRAGMENTS_OPACITY);
         create_pipeline(VolumeProgramPipelineType::IMAGE);
-        create_pipeline(VolumeProgramPipelineType::IMAGE_FRAGMENTS);
-        create_pipeline(VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY);
         create_pipeline(VolumeProgramPipelineType::IMAGE_OPACITY);
+        create_pipeline(VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY);
+        create_pipeline(VolumeProgramPipelineType::IMAGE_TRANSPARENCY);
         create_pipeline(VolumeProgramPipelineType::OPACITY);
+        create_pipeline(VolumeProgramPipelineType::OPACITY_TRANSPARENCY);
+        create_pipeline(VolumeProgramPipelineType::TRANSPARENCY);
 }
 
 void VolumeRenderer::delete_buffers()
@@ -122,8 +122,8 @@ void VolumeRenderer::draw_commands_fragments(const VolumeProgramPipelineType typ
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        ASSERT(type == VolumeProgramPipelineType::FRAGMENTS || type == VolumeProgramPipelineType::FRAGMENTS_OPACITY
-               || type == VolumeProgramPipelineType::OPACITY);
+        ASSERT(type == VolumeProgramPipelineType::OPACITY || type == VolumeProgramPipelineType::OPACITY_TRANSPARENCY
+               || type == VolumeProgramPipelineType::TRANSPARENCY);
 
         const auto pipeline_iter = pipelines_.find(type);
         ASSERT(pipeline_iter != pipelines_.cend());
@@ -144,9 +144,9 @@ void VolumeRenderer::draw_commands_image(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        ASSERT(type == VolumeProgramPipelineType::IMAGE || type == VolumeProgramPipelineType::IMAGE_FRAGMENTS
-               || type == VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY
-               || type == VolumeProgramPipelineType::IMAGE_OPACITY);
+        ASSERT(type == VolumeProgramPipelineType::IMAGE || type == VolumeProgramPipelineType::IMAGE_OPACITY
+               || type == VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY
+               || type == VolumeProgramPipelineType::IMAGE_TRANSPARENCY);
 
         const auto pipeline_iter = pipelines_.find(type);
         ASSERT(pipeline_iter != pipelines_.cend());
@@ -197,9 +197,9 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         };
 
         commands_fragments_.emplace();
-        create_buffers(VolumeProgramPipelineType::FRAGMENTS, &commands_fragments_->fragments);
-        create_buffers(VolumeProgramPipelineType::FRAGMENTS_OPACITY, &commands_fragments_->fragments_opacity);
         create_buffers(VolumeProgramPipelineType::OPACITY, &commands_fragments_->opacity);
+        create_buffers(VolumeProgramPipelineType::OPACITY_TRANSPARENCY, &commands_fragments_->opacity_transparency);
+        create_buffers(VolumeProgramPipelineType::TRANSPARENCY, &commands_fragments_->transparency);
 }
 
 void VolumeRenderer::create_command_buffers(const VkCommandPool graphics_command_pool)
@@ -254,9 +254,10 @@ void VolumeRenderer::create_command_buffers(
 
         commands_image_.emplace();
         create_buffers(VolumeProgramPipelineType::IMAGE, &commands_image_->image);
-        create_buffers(VolumeProgramPipelineType::IMAGE_FRAGMENTS, &commands_image_->image_fragments);
-        create_buffers(VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY, &commands_image_->image_fragments_opacity);
         create_buffers(VolumeProgramPipelineType::IMAGE_OPACITY, &commands_image_->image_opacity);
+        create_buffers(
+                VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY, &commands_image_->image_opacity_transparency);
+        create_buffers(VolumeProgramPipelineType::IMAGE_TRANSPARENCY, &commands_image_->image_transparency);
 }
 
 void VolumeRenderer::delete_command_buffers()
@@ -284,39 +285,39 @@ bool VolumeRenderer::has_volume() const
 
 std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(
         const unsigned index,
-        const bool fragments,
-        const bool opacity) const
+        const bool opacity,
+        const bool transparency) const
 {
         if (has_volume())
         {
                 ASSERT(commands_image_);
-                if (fragments)
-                {
-                        if (opacity)
-                        {
-                                return commands_image_->image_fragments_opacity[index];
-                        }
-                        return commands_image_->image_fragments[index];
-                }
                 if (opacity)
                 {
+                        if (transparency)
+                        {
+                                return commands_image_->image_opacity_transparency[index];
+                        }
                         return commands_image_->image_opacity[index];
                 }
-                return commands_image_->image[index];
-        }
-        if (fragments)
-        {
-                ASSERT(commands_fragments_);
-                if (opacity)
+                if (transparency)
                 {
-                        return commands_fragments_->fragments_opacity[index];
+                        return commands_image_->image_transparency[index];
                 }
-                return commands_fragments_->fragments[index];
+                return commands_image_->image[index];
         }
         if (opacity)
         {
                 ASSERT(commands_fragments_);
+                if (transparency)
+                {
+                        return commands_fragments_->opacity_transparency[index];
+                }
                 return commands_fragments_->opacity[index];
+        }
+        if (transparency)
+        {
+                ASSERT(commands_fragments_);
+                return commands_fragments_->transparency[index];
         }
         return std::nullopt;
 }

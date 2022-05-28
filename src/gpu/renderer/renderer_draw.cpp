@@ -74,7 +74,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         if (!mesh_renderer_->has_transparent_meshes())
         {
                 transparency_message_.process({});
-                return {.semaphore = semaphore, .transparency = false, .opacity = true};
+                return {.semaphore = semaphore, .opacity = true, .transparency = false};
         }
 
         VULKAN_CHECK(vkQueueWaitIdle(graphics_queue));
@@ -87,7 +87,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         {
                 transparency_message_.process({});
 
-                return {.semaphore = semaphore, .transparency = true, .opacity = mesh_renderer_->has_opaque_meshes()};
+                return {.semaphore = semaphore, .opacity = mesh_renderer_->has_opaque_meshes(), .transparency = true};
         }
 
         const auto command_buffer = mesh_renderer_->render_command_buffer_transparent_as_opaque(index);
@@ -111,7 +111,7 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
                         return data;
                 }());
 
-        return {.semaphore = transparent_as_opaque_semaphore_, .transparency = false, .opacity = true};
+        return {.semaphore = transparent_as_opaque_semaphore_, .opacity = true, .transparency = false};
 }
 
 VkSemaphore RendererDraw::draw(
@@ -135,17 +135,17 @@ VkSemaphore RendererDraw::draw(
                         mesh_renderer_->shadow_mapping_command_buffer(index), shadow_mapping_semaphore_,
                         graphics_queue_2);
 
-                draw_info = {.semaphore = shadow_mapping_semaphore_, .transparency = false, .opacity = false};
+                draw_info = {.semaphore = shadow_mapping_semaphore_, .opacity = false, .transparency = false};
         }
         else
         {
-                draw_info = {.semaphore = semaphore, .transparency = false, .opacity = false};
+                draw_info = {.semaphore = semaphore, .opacity = false, .transparency = false};
         }
 
         if (volume_renderer_->has_volume() || draw_info.transparency || draw_info.opacity)
         {
                 const auto command_buffer =
-                        volume_renderer_->command_buffer(index, draw_info.transparency, draw_info.opacity);
+                        volume_renderer_->command_buffer(index, draw_info.opacity, draw_info.transparency);
                 ASSERT(command_buffer);
 
                 vulkan::queue_submit(

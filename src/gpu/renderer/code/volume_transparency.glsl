@@ -22,13 +22,13 @@ The MIT Press, 2009.
 6. Heapsort
 */
 
-#ifndef VOLUME_FRAGMENTS_GLSL
-#define VOLUME_FRAGMENTS_GLSL
+#ifndef VOLUME_TRANSPARENCY_GLSL
+#define VOLUME_TRANSPARENCY_GLSL
 
 #include "mesh_fragment.glsl"
 #include "volume_in.glsl"
 
-#if !defined(FRAGMENTS)
+#if !defined(TRANSPARENCY)
 
 void fragments_build()
 {

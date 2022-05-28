@@ -30,13 +30,13 @@ namespace ns::gpu::renderer
 {
 enum class VolumeProgramPipelineType
 {
-        FRAGMENTS,
-        FRAGMENTS_OPACITY,
         IMAGE,
-        IMAGE_FRAGMENTS,
-        IMAGE_FRAGMENTS_OPACITY,
         IMAGE_OPACITY,
-        OPACITY
+        IMAGE_OPACITY_TRANSPARENCY,
+        IMAGE_TRANSPARENCY,
+        OPACITY,
+        OPACITY_TRANSPARENCY,
+        TRANSPARENCY
 };
 
 class VolumeProgram final
@@ -49,13 +49,13 @@ class VolumeProgram final
         vulkan::handle::PipelineLayout pipeline_layout_shared_image_;
         vulkan::handle::PipelineLayout pipeline_layout_shared_;
         vulkan::Shader vertex_shader_;
-        vulkan::Shader fragment_shader_fragments_;
-        vulkan::Shader fragment_shader_fragments_opacity_;
         vulkan::Shader fragment_shader_image_;
-        vulkan::Shader fragment_shader_image_fragments_;
-        vulkan::Shader fragment_shader_image_fragments_opacity_;
         vulkan::Shader fragment_shader_image_opacity_;
+        vulkan::Shader fragment_shader_image_opacity_transparency_;
+        vulkan::Shader fragment_shader_image_transparency_;
         vulkan::Shader fragment_shader_opacity_;
+        vulkan::Shader fragment_shader_opacity_transparency_;
+        vulkan::Shader fragment_shader_transparency_;
 
         [[nodiscard]] VkPipelineLayout pipeline_layout(VolumeProgramPipelineType type) const;
         [[nodiscard]] const vulkan::Shader* fragment_shader(VolumeProgramPipelineType type) const;

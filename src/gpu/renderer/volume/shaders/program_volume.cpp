@@ -58,25 +58,28 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
           vertex_shader_(device_->handle(), code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_fragments_(device_->handle(), code.volume_transparency_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_fragments_opacity_(
-                  device_->handle(),
-                  code.volume_opacity_transparency_frag(),
-                  VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_(device_->handle(), code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_fragments_(
-                  device_->handle(),
-                  code.volume_image_transparency_frag(),
-                  VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_fragments_opacity_(
-                  device_->handle(),
-                  code.volume_image_opacity_transparency_frag(),
-                  VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_opacity_(
                   device_->handle(),
                   code.volume_image_opacity_frag(),
                   VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_opacity_(device_->handle(), code.volume_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_image_opacity_transparency_(
+                  device_->handle(),
+                  code.volume_image_opacity_transparency_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_transparency_(
+                  device_->handle(),
+                  code.volume_image_transparency_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_opacity_(device_->handle(), code.volume_opacity_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_opacity_transparency_(
+                  device_->handle(),
+                  code.volume_opacity_transparency_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_transparency_(
+                  device_->handle(),
+                  code.volume_transparency_frag(),
+                  VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -104,13 +107,13 @@ VkPipelineLayout VolumeProgram::pipeline_layout(const VolumeProgramPipelineType 
 {
         switch (type)
         {
-        case VolumeProgramPipelineType::FRAGMENTS:
-        case VolumeProgramPipelineType::FRAGMENTS_OPACITY:
+        case VolumeProgramPipelineType::TRANSPARENCY:
+        case VolumeProgramPipelineType::OPACITY_TRANSPARENCY:
         case VolumeProgramPipelineType::OPACITY:
                 return pipeline_layout_shared_;
         case VolumeProgramPipelineType::IMAGE:
-        case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
-        case VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY:
+        case VolumeProgramPipelineType::IMAGE_TRANSPARENCY:
+        case VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY:
         case VolumeProgramPipelineType::IMAGE_OPACITY:
                 return pipeline_layout_shared_image_;
         }
@@ -121,16 +124,16 @@ const vulkan::Shader* VolumeProgram::fragment_shader(const VolumeProgramPipeline
 {
         switch (type)
         {
-        case VolumeProgramPipelineType::FRAGMENTS:
-                return &fragment_shader_fragments_;
-        case VolumeProgramPipelineType::FRAGMENTS_OPACITY:
-                return &fragment_shader_fragments_opacity_;
+        case VolumeProgramPipelineType::TRANSPARENCY:
+                return &fragment_shader_transparency_;
+        case VolumeProgramPipelineType::OPACITY_TRANSPARENCY:
+                return &fragment_shader_opacity_transparency_;
         case VolumeProgramPipelineType::IMAGE:
                 return &fragment_shader_image_;
-        case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
-                return &fragment_shader_image_fragments_;
-        case VolumeProgramPipelineType::IMAGE_FRAGMENTS_OPACITY:
-                return &fragment_shader_image_fragments_opacity_;
+        case VolumeProgramPipelineType::IMAGE_TRANSPARENCY:
+                return &fragment_shader_image_transparency_;
+        case VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY:
+                return &fragment_shader_image_opacity_transparency_;
         case VolumeProgramPipelineType::IMAGE_OPACITY:
                 return &fragment_shader_image_opacity_;
         case VolumeProgramPipelineType::OPACITY:

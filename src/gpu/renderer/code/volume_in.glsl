@@ -32,7 +32,7 @@ layout(set = 0, binding = 1, rgba32f) uniform restrict readonly image2DMS opacit
 
 #endif
 
-#if defined(FRAGMENTS)
+#if defined(TRANSPARENCY)
 
 layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
 layout(set = 0, binding = 3, std430) buffer restrict readonly TransparencyNodes
@@ -42,7 +42,7 @@ layout(set = 0, binding = 3, std430) buffer restrict readonly TransparencyNodes
 
 #endif
 
-#if defined(FRAGMENTS) || defined(OPACITY)
+#if defined(OPACITY) || defined(TRANSPARENCY)
 
 layout(set = 0, binding = 4, std140) uniform restrict Coordinates
 {
