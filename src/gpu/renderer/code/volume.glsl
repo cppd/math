@@ -55,15 +55,15 @@ A K Peters, Ltd, 2006.
         } while (false)
 
 #if !defined(TRANSPARENCY)
-void draw_fragments()
+void draw_transparency()
 {
 }
 #else
-void draw_fragments()
+void draw_transparency()
 {
-        for (; !fragments_empty(); fragments_pop())
+        for (; !transparency_empty(); transparency_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(transparency_top()));
         }
 }
 #endif
@@ -94,9 +94,9 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
         float s = 0.5;
 
-        if (!fragments_empty() && s < sample_end)
+        if (!transparency_empty() && s < sample_end)
         {
-                TransparencyFragment fragment = fragments_top();
+                TransparencyFragment fragment = transparency_top();
                 float volume_depth = depth_org + s * depth_dir;
 
                 while (true)
@@ -120,14 +120,14 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
                         while (fragment.depth <= volume_depth)
                         {
                                 COLOR_ADD(fragment_color(fragment));
-                                if (fragments_pop(), fragments_empty())
+                                if (transparency_pop(), transparency_empty())
                                 {
                                         break;
                                 }
-                                fragment = fragments_top();
+                                fragment = transparency_top();
                         }
 
-                        if (fragments_empty())
+                        if (transparency_empty())
                         {
                                 break;
                         }
@@ -140,9 +140,9 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
                 COLOR_ADD(volume_color(p));
         }
 
-        for (; !fragments_empty(); fragments_pop())
+        for (; !transparency_empty(); transparency_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(transparency_top()));
         }
 }
 
@@ -156,26 +156,26 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
         float s = 1;
 
-        if (!fragments_empty() && s < sample_end)
+        if (!transparency_empty() && s < sample_end)
         {
-                TransparencyFragment fragment = fragments_top();
+                TransparencyFragment fragment = transparency_top();
 
                 while (fragment.depth <= depth_org)
                 {
                         COLOR_ADD(fragment_color(fragment));
-                        if (fragments_pop(), fragments_empty())
+                        if (transparency_pop(), transparency_empty())
                         {
                                 break;
                         }
-                        fragment = fragments_top();
+                        fragment = transparency_top();
                 }
         }
 
         float prev_sign = s < sample_end ? isosurface_sign(image_org) : 0;
 
-        if (!fragments_empty() && s < sample_end)
+        if (!transparency_empty() && s < sample_end)
         {
-                TransparencyFragment fragment = fragments_top();
+                TransparencyFragment fragment = transparency_top();
 
                 float volume_depth = depth_org + s * depth_dir;
 
@@ -218,26 +218,26 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                 while (fragment.depth <= v.w)
                                 {
                                         COLOR_ADD(fragment_color(fragment));
-                                        if (fragments_pop(), fragments_empty())
+                                        if (transparency_pop(), transparency_empty())
                                         {
                                                 break;
                                         }
-                                        fragment = fragments_top();
+                                        fragment = transparency_top();
                                 };
 
                                 COLOR_ADD(isosurface_color(v.xyz));
                         }
 
-                        if (!fragments_empty())
+                        if (!transparency_empty())
                         {
                                 while (fragment.depth <= volume_depth)
                                 {
                                         COLOR_ADD(fragment_color(fragment));
-                                        if (fragments_pop(), fragments_empty())
+                                        if (transparency_pop(), transparency_empty())
                                         {
                                                 break;
                                         }
-                                        fragment = fragments_top();
+                                        fragment = transparency_top();
                                 }
                         }
 
@@ -246,7 +246,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                 break;
                         }
 
-                        if (fragments_empty())
+                        if (transparency_empty())
                         {
                                 break;
                         }
@@ -255,9 +255,9 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                 }
         }
 
-        for (; !fragments_empty(); fragments_pop())
+        for (; !transparency_empty(); transparency_pop())
         {
-                COLOR_ADD(fragment_color(fragments_top()));
+                COLOR_ADD(fragment_color(transparency_top()));
         }
 
         for (; s < sample_end; ++s)
@@ -295,14 +295,14 @@ void draw_volume(const vec3 image_dir, const vec3 image_org, const float depth_d
 void draw_without_volume()
 {
         color_init();
-        draw_fragments();
+        draw_transparency();
         draw_opacity();
         color_set();
 }
 
 void main()
 {
-        fragments_build();
+        transparency_build();
         opacity_build();
 
         const vec3 ray_org = (volume_coordinates.device_to_texture_matrix * vec4(device_coordinates, 0, 1)).xyz;
@@ -342,11 +342,11 @@ void main()
 
 void main()
 {
-        fragments_build();
+        transparency_build();
         opacity_build();
 
         color_init();
-        draw_fragments();
+        draw_transparency();
         draw_opacity();
         color_set();
 }

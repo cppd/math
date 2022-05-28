@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define VOLUME_IN_GLSL
 
 #include "drawing_buffer.glsl"
-#include "mesh_fragment.glsl"
+#include "fragments.glsl"
 
 #ifdef RAY_TRACING
 #extension GL_EXT_ray_query : require

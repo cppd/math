@@ -25,25 +25,25 @@ The MIT Press, 2009.
 #ifndef VOLUME_TRANSPARENCY_GLSL
 #define VOLUME_TRANSPARENCY_GLSL
 
-#include "mesh_fragment.glsl"
+#include "fragments.glsl"
 #include "volume_in.glsl"
 
 #if !defined(TRANSPARENCY)
 
-void fragments_build()
+void transparency_build()
 {
 }
 
-bool fragments_empty()
+bool transparency_empty()
 {
         return true;
 }
 
-void fragments_pop()
+void transparency_pop()
 {
 }
 
-TransparencyFragment fragments_top()
+TransparencyFragment transparency_top()
 {
         TransparencyFragment f;
         return f;
@@ -51,67 +51,73 @@ TransparencyFragment fragments_top()
 
 #else
 
-TransparencyFragment g_fragments[TRANSPARENCY_MAX_NODES];
-int g_fragments_count;
+TransparencyFragment g_transparency_fragments[TRANSPARENCY_MAX_FRAGMENT_COUNT];
+int g_transparency_fragment_count;
 
-int fragments_min_heapify_impl(const int i)
+int transparency_min_heapify_impl(const int i)
 {
         const int left = 2 * i + 1;
         const int right = left + 1;
         int m;
-        m = (left < g_fragments_count && g_fragments[left].depth < g_fragments[i].depth) ? left : i;
-        m = (right < g_fragments_count && g_fragments[right].depth < g_fragments[m].depth) ? right : m;
+        m = (left < g_transparency_fragment_count
+             && g_transparency_fragments[left].depth < g_transparency_fragments[i].depth)
+                    ? left
+                    : i;
+        m = (right < g_transparency_fragment_count
+             && g_transparency_fragments[right].depth < g_transparency_fragments[m].depth)
+                    ? right
+                    : m;
         if (m != i)
         {
-                const TransparencyFragment t = g_fragments[i];
-                g_fragments[i] = g_fragments[m];
-                g_fragments[m] = t;
+                const TransparencyFragment t = g_transparency_fragments[i];
+                g_transparency_fragments[i] = g_transparency_fragments[m];
+                g_transparency_fragments[m] = t;
                 return m;
         }
         return -1;
 }
 
-void fragments_min_heapify(int i)
+void transparency_min_heapify(int i)
 {
         do
         {
-                i = fragments_min_heapify_impl(i);
+                i = transparency_min_heapify_impl(i);
         } while (i >= 0);
 }
 
-void fragments_build_min_heap()
+void transparency_build_min_heap()
 {
-        for (int i = g_fragments_count / 2 - 1; i >= 0; --i)
+        for (int i = g_transparency_fragment_count / 2 - 1; i >= 0; --i)
         {
-                fragments_min_heapify(i);
+                transparency_min_heapify(i);
         }
 }
 
-void fragments_pop()
+void transparency_pop()
 {
-        if (g_fragments_count > 1)
+        if (g_transparency_fragment_count > 1)
         {
-                --g_fragments_count;
-                g_fragments[0] = g_fragments[g_fragments_count];
-                fragments_min_heapify(0);
+                --g_transparency_fragment_count;
+                g_transparency_fragments[0] = g_transparency_fragments[g_transparency_fragment_count];
+                transparency_min_heapify(0);
                 return;
         }
-        g_fragments_count = 0;
+        g_transparency_fragment_count = 0;
 }
 
-bool fragments_empty()
+bool transparency_empty()
 {
-        return g_fragments_count <= 0;
+        return g_transparency_fragment_count <= 0;
 }
 
-TransparencyFragment fragments_top()
+TransparencyFragment transparency_top()
 {
-        return g_fragments[0];
+        return g_transparency_fragments[0];
 }
 
-void fragments_build()
+void transparency_build()
 {
-        g_fragments_count = 0;
+        g_transparency_fragment_count = 0;
 
         uint node_index = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
@@ -120,14 +126,14 @@ void fragments_build()
                 return;
         }
 
-        while (node_index != TRANSPARENCY_NULL_INDEX && g_fragments_count < TRANSPARENCY_MAX_NODES)
+        while (node_index != TRANSPARENCY_NULL_INDEX && g_transparency_fragment_count < TRANSPARENCY_MAX_FRAGMENT_COUNT)
         {
-                g_fragments[g_fragments_count] = transparency_nodes[node_index].fragment;
+                g_transparency_fragments[g_transparency_fragment_count] = transparency_nodes[node_index].fragment;
                 node_index = transparency_nodes[node_index].next;
-                ++g_fragments_count;
+                ++g_transparency_fragment_count;
         }
 
-        fragments_build_min_heap();
+        transparency_build_min_heap();
 }
 
 #endif

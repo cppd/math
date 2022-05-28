@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VOLUME_SHADE_GLSL
 #define VOLUME_SHADE_GLSL
 
-#include "mesh_fragment.glsl"
+#include "fragments.glsl"
 #include "shade.glsl"
 #include "visibility.glsl"
 #include "volume_in.glsl"
@@ -189,7 +189,7 @@ vec4 fragment_color(const OpacityFragment fragment)
 
 #else
 
-vec4 fragment_color(const FragmentData fragment)
+vec4 fragment_color(const Fragment fragment)
 {
         if (fragment.n == vec3(0))
         {
@@ -232,12 +232,12 @@ vec4 fragment_color(const FragmentData fragment)
 
 vec4 fragment_color(const TransparencyFragment fragment)
 {
-        return fragment_color(fragment_data(fragment));
+        return fragment_color(to_fragment(fragment));
 }
 
 vec4 fragment_color(const OpacityFragment fragment)
 {
-        return fragment_color(fragment_data(fragment));
+        return fragment_color(to_fragment(fragment));
 }
 
 #endif

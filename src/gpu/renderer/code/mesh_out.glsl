@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef MESH_OUT_GLSL
 #define MESH_OUT_GLSL
 
-#include "mesh_fragment.glsl"
+#include "fragments.glsl"
 #include "mesh_in.glsl"
 
 layout(early_fragment_tests) in;
@@ -55,7 +55,7 @@ void write_transparency(
         const ivec2 coord = ivec2(gl_FragCoord.xy);
         const uint heads_size = imageAtomicAdd(transparency_heads_size, coord, gl_SampleID, 1);
 
-        if (heads_size < TRANSPARENCY_MAX_NODES)
+        if (heads_size < TRANSPARENCY_MAX_FRAGMENT_COUNT)
         {
                 const uint node = atomicAdd(transparency_node_counter, 1);
 
@@ -66,7 +66,7 @@ void write_transparency(
                                 color, alpha, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z, next_node);
                 }
         }
-        else if (heads_size == TRANSPARENCY_MAX_NODES)
+        else if (heads_size == TRANSPARENCY_MAX_FRAGMENT_COUNT)
         {
                 atomicAdd(transparency_overload_counter, 1);
         }

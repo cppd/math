@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MESH_FRAGMENT_GLSL
-#define MESH_FRAGMENT_GLSL
+#ifndef FRAGMENTS_GLSL
+#define FRAGMENTS_GLSL
 
-const uint TRANSPARENCY_MAX_NODES = 32;
+const uint TRANSPARENCY_MAX_FRAGMENT_COUNT = 32;
 const uint TRANSPARENCY_NULL_INDEX = 0xffffffff;
 
 const vec4 OPACITY_V_1_NULL_VALUE = vec4(-1);
@@ -101,9 +101,19 @@ OpacityFragment create_opacity_fragment(
         return fragment;
 }
 
+bool opacity_empty(const vec4 v_1)
+{
+        return v_1 == OPACITY_V_1_NULL_VALUE;
+}
+
+float opacity_depth(const vec4 v_1)
+{
+        return v_1.w;
+}
+
 //
 
-struct FragmentData
+struct Fragment
 {
         vec4 color;
         float metalness;
@@ -114,9 +124,9 @@ struct FragmentData
         float depth;
 };
 
-FragmentData fragment_data(const TransparencyFragment fragment)
+Fragment to_fragment(const TransparencyFragment fragment)
 {
-        FragmentData data;
+        Fragment data;
 
         data.color.rg = unpackUnorm2x16(fragment.color_rg);
         data.color.ba = unpackUnorm2x16(fragment.color_ba);
@@ -133,14 +143,9 @@ FragmentData fragment_data(const TransparencyFragment fragment)
         return data;
 }
 
-float fragment_opacity_depth(const vec4 v_1)
+Fragment to_fragment(const OpacityFragment fragment)
 {
-        return v_1.w;
-}
-
-FragmentData fragment_data(const OpacityFragment fragment)
-{
-        FragmentData data;
+        Fragment data;
 
         data.color.rg = unpackUnorm2x16(fragment.v_0[0]);
         data.color.ba = unpackUnorm2x16(fragment.v_0[1]);

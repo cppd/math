@@ -25,7 +25,7 @@ The MIT Press, 2009.
 #ifndef VOLUME_OPACITY_GLSL
 #define VOLUME_OPACITY_GLSL
 
-#include "mesh_fragment.glsl"
+#include "fragments.glsl"
 #include "volume_in.glsl"
 
 #if !defined(OPACITY)
@@ -52,7 +52,7 @@ bool g_opacity_empty;
 void opacity_build()
 {
         g_opacity_fragment_v_1 = imageLoad(opacity_1, ivec2(gl_FragCoord.xy), gl_SampleID);
-        g_opacity_empty = (g_opacity_fragment_v_1 == OPACITY_V_1_NULL_VALUE);
+        g_opacity_empty = opacity_empty(g_opacity_fragment_v_1);
 }
 
 bool opacity_empty()
@@ -62,7 +62,7 @@ bool opacity_empty()
 
 float opacity_depth()
 {
-        return fragment_opacity_depth(g_opacity_fragment_v_1);
+        return opacity_depth(g_opacity_fragment_v_1);
 }
 
 OpacityFragment opacity_fragment()
