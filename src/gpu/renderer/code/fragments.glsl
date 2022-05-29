@@ -27,9 +27,9 @@ const vec4 OPACITY_V_1_NULL_VALUE = vec4(-1);
 
 struct TransparencyFragment
 {
-        uint color_rg;
-        uint color_ba;
+        uint color_rgba;
         uint metalness_roughness_ambient_edge_factor;
+        uint normal_directed_to_light;
         float n_x;
         float n_y;
         float n_z;
@@ -51,14 +51,15 @@ TransparencyNode create_transparency_node(
         const float ambient,
         const float edge_factor,
         const float depth,
+        const uint normal_directed_to_light,
         const uint next)
 {
         TransparencyNode node;
 
-        node.fragment.color_rg = packUnorm2x16(color.rg);
-        node.fragment.color_ba = packUnorm2x16(vec2(color.b, alpha));
+        node.fragment.color_rgba = packUnorm4x8(vec4(color, alpha));
         node.fragment.metalness_roughness_ambient_edge_factor =
                 packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
+        node.fragment.normal_directed_to_light = normal_directed_to_light;
         node.fragment.n_x = n.x;
         node.fragment.n_y = n.y;
         node.fragment.n_z = n.z;
@@ -84,14 +85,15 @@ OpacityFragment create_opacity_fragment(
         const float roughness,
         const float ambient,
         const float edge_factor,
-        const float depth)
+        const float depth,
+        const uint normal_directed_to_light)
 {
         OpacityFragment fragment;
 
         fragment.v_0[0] = packUnorm2x16(color.rg);
         fragment.v_0[1] = packUnorm2x16(vec2(color.b, alpha));
-        fragment.v_0[2] = packUnorm2x16(vec2(metalness, roughness));
-        fragment.v_0[3] = packUnorm2x16(vec2(ambient, edge_factor));
+        fragment.v_0[2] = packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
+        fragment.v_0[3] = normal_directed_to_light;
 
         fragment.v_1[0] = n.x;
         fragment.v_1[1] = n.y;
@@ -120,6 +122,7 @@ struct Fragment
         float roughness;
         float ambient;
         float edge_factor;
+        bool normal_directed_to_light;
         vec3 n;
         float depth;
 };
@@ -128,8 +131,7 @@ Fragment to_fragment(const TransparencyFragment fragment)
 {
         Fragment data;
 
-        data.color.rg = unpackUnorm2x16(fragment.color_rg);
-        data.color.ba = unpackUnorm2x16(fragment.color_ba);
+        data.color = unpackUnorm4x8(fragment.color_rgba);
         {
                 const vec4 v = unpackUnorm4x8(fragment.metalness_roughness_ambient_edge_factor);
                 data.metalness = v[0];
@@ -137,6 +139,7 @@ Fragment to_fragment(const TransparencyFragment fragment)
                 data.ambient = v[2];
                 data.edge_factor = v[3];
         }
+        data.normal_directed_to_light = fragment.normal_directed_to_light != 0;
         data.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
         data.depth = fragment.depth;
 
@@ -150,15 +153,13 @@ Fragment to_fragment(const OpacityFragment fragment)
         data.color.rg = unpackUnorm2x16(fragment.v_0[0]);
         data.color.ba = unpackUnorm2x16(fragment.v_0[1]);
         {
-                const vec2 v = unpackUnorm2x16(fragment.v_0[2]);
+                const vec4 v = unpackUnorm4x8(fragment.v_0[2]);
                 data.metalness = v[0];
                 data.roughness = v[1];
+                data.ambient = v[2];
+                data.edge_factor = v[3];
         }
-        {
-                const vec2 v = unpackUnorm2x16(fragment.v_0[3]);
-                data.ambient = v[0];
-                data.edge_factor = v[1];
-        }
+        data.normal_directed_to_light = fragment.v_0[3] != 0;
         data.n = fragment.v_1.xyz;
         data.depth = fragment.v_1.w;
 

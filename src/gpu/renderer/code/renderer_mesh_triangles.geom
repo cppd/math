@@ -50,8 +50,9 @@ layout(location = 0) out GS
 {
         vec3 world_normal;
         vec3 world_position;
-        vec2 texture_coordinates;
         vec3 baricentric;
+        vec2 texture_coordinates;
+        flat uint normal_directed_to_light;
 }
 gs;
 
@@ -59,33 +60,31 @@ gs;
 
 const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
-vec3[3] compute_normals()
+vec3 compute_geometric_normal()
 {
-        vec3 geometric_world_normal =
-                cross(vs[1].world_position - vs[0].world_position, vs[2].world_position - vs[0].world_position);
+        const vec3 e0 = vs[1].world_position - vs[0].world_position;
+        const vec3 e1 = vs[2].world_position - vs[0].world_position;
+        const vec3 n = cross(e0, e1);
+        // to camera
+        return faceforward(n, -drawing.direction_to_camera, n);
+}
 
+vec3[3] compute_normals(const vec3 n)
+{
         vec3 normals[3];
 
         if (drawing.show_smooth)
         {
-                // from camera
-                geometric_world_normal =
-                        faceforward(geometric_world_normal, drawing.direction_to_camera, geometric_world_normal);
-
-                // in the opposite direction to geometric_world_normal
-                normals[0] = faceforward(vs[0].world_normal, geometric_world_normal, vs[0].world_normal);
-                normals[1] = faceforward(vs[1].world_normal, geometric_world_normal, vs[1].world_normal);
-                normals[2] = faceforward(vs[2].world_normal, geometric_world_normal, vs[2].world_normal);
+                const vec3 n_r = -n;
+                normals[0] = faceforward(vs[0].world_normal, n_r, vs[0].world_normal);
+                normals[1] = faceforward(vs[1].world_normal, n_r, vs[1].world_normal);
+                normals[2] = faceforward(vs[2].world_normal, n_r, vs[2].world_normal);
         }
         else
         {
-                // to camera
-                geometric_world_normal =
-                        faceforward(geometric_world_normal, -drawing.direction_to_camera, geometric_world_normal);
-
-                normals[0] = geometric_world_normal;
-                normals[1] = geometric_world_normal;
-                normals[2] = geometric_world_normal;
+                normals[0] = n;
+                normals[1] = n;
+                normals[2] = n;
         }
 
         return normals;
@@ -93,7 +92,9 @@ vec3[3] compute_normals()
 
 void main()
 {
-        const vec3 normals[3] = compute_normals();
+        const vec3 geometric_normal = compute_geometric_normal();
+        const vec3 normals[3] = compute_normals(geometric_normal);
+        const uint normal_directed_to_light = dot(geometric_normal, drawing.direction_to_light) >= 0 ? 1 : 0;
 
         for (int i = 0; i < 3; ++i)
         {
@@ -102,8 +103,9 @@ void main()
 
                 gs.world_normal = normals[i];
                 gs.world_position = vs[i].world_position;
-                gs.texture_coordinates = vs[i].texture_coordinates;
                 gs.baricentric = baricentric[i];
+                gs.texture_coordinates = vs[i].texture_coordinates;
+                gs.normal_directed_to_light = normal_directed_to_light;
 
                 EmitVertex();
         }

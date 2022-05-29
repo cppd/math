@@ -25,8 +25,9 @@ layout(location = 0) in GS
 {
         vec3 world_normal;
         vec3 world_position;
-        vec2 texture_coordinates;
         vec3 baricentric;
+        vec2 texture_coordinates;
+        uint normal_directed_to_light;
 }
 gs;
 
@@ -66,5 +67,7 @@ float edge_factor()
 
 void main()
 {
-        set_fragment_color(surface_color(), normalize(gs.world_normal), gs.world_position, edge_factor());
+        set_fragment_color(
+                surface_color(), normalize(gs.world_normal), gs.world_position, edge_factor(),
+                gs.normal_directed_to_light);
 }

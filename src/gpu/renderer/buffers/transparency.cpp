@@ -27,9 +27,9 @@ constexpr std::uint32_t HEADS_NULL_INDEX = 0xffff'ffff;
 
 constexpr unsigned long long BUFFER_SIZE = 1ull << 31;
 
-// uint color_rg
-// uint color_ba
+// uint color_rgba
 // uint metalness_roughness_ambient_edge_factor
+// uint normal_directed_to_light
 // float n_x
 // float n_y
 // float n_z
