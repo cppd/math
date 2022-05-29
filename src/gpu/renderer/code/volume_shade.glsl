@@ -67,7 +67,8 @@ float mesh_shadow_transparency_device(const vec3 device_position, const bool sel
 
 float mesh_shadow_transparency(const vec3 shadow_position)
 {
-        return occluded(shadow_position, shadow_mapping_texture) ? 0 : 1;
+        const float d = texture(shadow_mapping_texture, shadow_position.xy).x;
+        return d <= shadow_position.z ? 0 : 1;
 }
 
 #if defined(IMAGE)
