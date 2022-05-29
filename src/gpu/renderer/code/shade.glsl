@@ -30,8 +30,7 @@ vec3 shade(
         const vec3 l,
         const sampler2D ggx_f1_albedo_cosine_roughness,
         const sampler1D ggx_f1_albedo_cosine_weighted_average,
-        const vec3 lighting_color,
-        const float ambient)
+        const vec3 lighting_color)
 {
         const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
@@ -39,16 +38,10 @@ vec3 shade(
         const vec3 shade_color = shading_ggx_diffuse(
                 roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average);
 
-        return lighting_color * shade_color + ambient * surface_color;
+        return lighting_color * shade_color;
 }
 
-struct Lighting
-{
-        vec3 front;
-        vec3 side;
-};
-
-Lighting shade(
+vec3 shade(
         const vec3 surface_color,
         const float metalness,
         const float roughness,
@@ -58,40 +51,26 @@ Lighting shade(
         const sampler2D ggx_f1_albedo_cosine_roughness,
         const sampler1D ggx_f1_albedo_cosine_weighted_average,
         const vec3 lighting_color,
-        const float ambient,
         const float shadow_transparency)
 {
         const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
 
-        Lighting res;
+        const vec3 front_shade = shading_ggx_diffuse(
+                roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average);
 
-        {
-                const vec3 front_lighting =
-                        lighting_color
-                        * shading_ggx_diffuse(
-                                roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
-                                ggx_f1_albedo_cosine_weighted_average);
-
-                res.front = 0.2 * front_lighting + ambient * surface_color;
-        }
+        vec3 color = 0.2 * lighting_color * front_shade;
 
         if (shadow_transparency > 0)
         {
-                const vec3 side_lighting =
-                        lighting_color
-                        * shading_ggx_diffuse(
-                                roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
-                                ggx_f1_albedo_cosine_weighted_average);
+                const vec3 side_shade = shading_ggx_diffuse(
+                        roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
+                        ggx_f1_albedo_cosine_weighted_average);
 
-                res.side = (shadow_transparency * 0.8) * side_lighting;
-        }
-        else
-        {
-                res.side = vec3(0);
+                color += (shadow_transparency * 0.8) * lighting_color * side_shade;
         }
 
-        return res;
+        return color;
 }
 
 #endif

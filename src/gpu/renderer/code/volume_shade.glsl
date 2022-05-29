@@ -149,23 +149,21 @@ vec4 isosurface_color(const vec3 texture_position)
                 normalize(volume_coordinates.gradient_to_world_matrix * volume_gradient(texture_position));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
-        vec3 color;
+        vec3 color = volume.ambient * volume.color;
 
         if (drawing.show_shadow)
         {
-                const float transparency = shadow_transparency_texture(texture_position);
+                const float shadow_transparency = dot(n, l) > 0 ? shadow_transparency_texture(texture_position) : 0;
 
-                const Lighting lighting = shade(
-                        volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                        ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, volume.ambient, transparency);
-
-                color = lighting.front + lighting.side;
+                color +=
+                        shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, shadow_transparency);
         }
         else
         {
-                color =
+                color +=
                         shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, volume.ambient);
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color);
         }
 
         return vec4(color, volume.isosurface_alpha);
@@ -200,26 +198,23 @@ vec4 fragment_color(const Fragment fragment)
         const vec3 v = drawing.direction_to_camera;
         const vec3 l = drawing.direction_to_light;
 
-        vec3 color;
+        vec3 color = fragment.color.rgb * fragment.ambient;
 
         if (drawing.show_shadow)
         {
-                const vec3 device_position = vec3(device_coordinates, fragment.depth);
-                const float transparency = shadow_transparency_device(device_position);
+                const float shadow_transparency =
+                        dot(n, l) > 0 ? shadow_transparency_device(vec3(device_coordinates, fragment.depth)) : 0;
 
-                const Lighting lighting =
+                color +=
                         shade(fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,
                               ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
-                              drawing.lighting_color, fragment.ambient, transparency);
-
-                color = lighting.front + lighting.side;
+                              drawing.lighting_color, shadow_transparency);
         }
         else
         {
-                color =
-                        shade(fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,
-                              ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
-                              drawing.lighting_color, fragment.ambient);
+                color += shade(
+                        fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,
+                        ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color);
         }
 
         if (fragment.edge_factor > 0)
