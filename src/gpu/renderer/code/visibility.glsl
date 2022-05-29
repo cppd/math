@@ -24,35 +24,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #extension GL_EXT_ray_query : require
 
-float shadow_transparency(
+bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
+        const bool /*self_intersection*/,
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 org = world_position;
         const vec3 dir = direction_to_light;
         const bool intersection = ray_tracing_intersection(org, dir, acceleration_structure);
-        return intersection ? 0 : 1;
+        return intersection;
 }
 
-float shadow_transparency(
+bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
+        const bool /*self_intersection*/,
         const vec4 clip_plane_equation,
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 org = world_position;
         const vec3 dir = direction_to_light;
         const bool intersection = ray_tracing_intersection(org, dir, acceleration_structure, clip_plane_equation);
-        return intersection ? 0 : 1;
+        return intersection;
 }
 
 #else
 
-float shadow_transparency(const vec3 shadow_position, const sampler2D shadow_mapping_texture)
+bool occluded(const vec3 shadow_position, const sampler2D shadow_mapping_texture)
 {
         const float d = texture(shadow_mapping_texture, shadow_position.xy).x;
-        return d <= shadow_position.z ? 0 : 1;
+        return d <= shadow_position.z;
 }
 
 #endif
