@@ -123,7 +123,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static void write_r8g8b8a8(std::byte* const ptr, const Vector<3, float>& rgb)
         {
-                const RGB8 rgb8 = make_rgb8(rgb);
+                const color::RGB8 rgb8 = color::make_rgb8(rgb);
                 const std::array<std::uint8_t, 4> rgba8{rgb8.red(), rgb8.green(), rgb8.blue(), ALPHA};
 
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);

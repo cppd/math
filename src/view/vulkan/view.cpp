@@ -77,7 +77,7 @@ constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
-constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
+constexpr color::Color DEFAULT_TEXT_COLOR{color::RGB8(255, 255, 255)};
 
 constexpr double TEXT_SIZE_IN_POINTS = 9;
 

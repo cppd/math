@@ -27,7 +27,7 @@ namespace ns::gui::main_window
 {
 namespace
 {
-RGB8 event_color(const LogType type)
+color::RGB8 event_color(const LogType type)
 {
         switch (type)
         {
@@ -81,7 +81,7 @@ Log::Log(QPlainTextEdit* const text_edit)
           observer_(
                   [this](const LogEvent& event)
                   {
-                          RGB8 color = event_color(event.type);
+                          const color::RGB8 color = event_color(event.type);
                           if (!(*messages_ptr_).empty() && (*messages_ptr_).back().color == color)
                           {
                                   (*messages_ptr_).back().text += '\n';

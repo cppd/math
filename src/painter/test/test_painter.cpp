@@ -43,7 +43,7 @@ namespace ns::painter
 {
 namespace
 {
-constexpr RGB8 BACKGROUND_LIGHT(50, 100, 150);
+constexpr color::RGB8 BACKGROUND_LIGHT(50, 100, 150);
 constexpr float LIGHTING_INTENSITY = 1;
 
 constexpr std::string_view DIRECTORY_NAME = "painter_test";

@@ -33,7 +33,7 @@ class Log final
         struct Message final
         {
                 std::string text;
-                RGB8 color;
+                color::RGB8 color;
 
                 template <typename T, typename C>
                 Message(T&& text, C&& color)

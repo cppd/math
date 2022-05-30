@@ -122,7 +122,7 @@ image::Image<1> volume_transfer_function()
 {
         constexpr int SIZE = 256;
 
-        constexpr RGB8 COLOR = RGB8(230, 255, 230);
+        constexpr color::RGB8 COLOR{230, 255, 230};
         constexpr float RED = COLOR.linear_red();
         constexpr float GREEN = COLOR.linear_green();
         constexpr float BLUE = COLOR.linear_blue();
