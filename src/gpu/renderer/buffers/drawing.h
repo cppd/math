@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/layout.h>
 
 #include <vector>
 
@@ -29,7 +30,7 @@ class DrawingBuffer final
 {
         struct Drawing final
         {
-                alignas(sizeof(Vector4f)) Matrix4f vp_matrix;
+                vulkan::std140::Matrix4f vp_matrix;
                 alignas(sizeof(Vector4f)) Vector3f lighting_color;
                 alignas(sizeof(Vector4f)) Vector3f background_color;
                 alignas(sizeof(Vector4f)) Vector3f wireframe_color;

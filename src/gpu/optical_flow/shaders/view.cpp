@@ -41,8 +41,7 @@ const vulkan::Buffer& ViewDataBuffer::buffer() const
 
 void ViewDataBuffer::set_matrix(const Matrix4d& matrix) const
 {
-        Data data;
-        data.matrix = to_matrix<float>(matrix).transpose();
+        const Data data{.matrix = vulkan::to_std140<float>(matrix)};
         vulkan::map_and_write_to_buffer(buffer_, 0, data);
 }
 

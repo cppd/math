@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/matrix.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/layout.h>
 
 #include <vector>
 
@@ -28,8 +29,8 @@ class VolumeCoordinatesBuffer final
 {
         struct Coordinates final
         {
-                alignas(sizeof(Vector4f)) Matrix4f device_to_world;
-                alignas(sizeof(Vector4f)) Matrix4f device_to_shadow;
+                vulkan::std140::Matrix4f device_to_world;
+                vulkan::std140::Matrix4f device_to_shadow;
         };
 
         vulkan::BufferWithMemory buffer_;

@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/gpu/com/matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/layout.h>
 
 #include <vector>
 
@@ -30,8 +30,8 @@ class MeshBuffer final
 {
         struct Mesh final
         {
-                alignas(sizeof(Vector4f)) Matrix4f model_matrix;
-                alignas(sizeof(Vector4f)) std140::Matrix3f normal_matrix;
+                vulkan::std140::Matrix4f model_matrix;
+                vulkan::std140::Matrix3f normal_matrix;
                 alignas(sizeof(Vector4f)) Vector3f color;
                 float alpha;
                 float ambient;

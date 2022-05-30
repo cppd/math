@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include <src/gpu/com/matrix.h>
-
 namespace ns::gpu::renderer
 {
 MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
@@ -45,8 +43,8 @@ void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& n
 
         vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
-        decltype(Mesh().model_matrix) model = to_std140<float>(model_matrix);
-        decltype(Mesh().normal_matrix) normal = to_std140<float>(normal_matrix);
+        decltype(Mesh().model_matrix) model = vulkan::to_std140<float>(model_matrix);
+        decltype(Mesh().normal_matrix) normal = vulkan::to_std140<float>(normal_matrix);
 
         map.write(offsetof(Mesh, model_matrix) - OFFSET, model);
         map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);

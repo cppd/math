@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "drawing.h"
 
-#include "../../com/matrix.h"
-
 namespace ns::gpu::renderer
 {
 DrawingBuffer::DrawingBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
@@ -44,7 +42,7 @@ void DrawingBuffer::copy_to_buffer(const VkDeviceSize offset, const T& data) con
 
 void DrawingBuffer::set_matrix(const Matrix4d& vp_matrix) const
 {
-        decltype(Drawing().vp_matrix) m = to_std140<float>(vp_matrix);
+        decltype(Drawing().vp_matrix) m = vulkan::to_std140<float>(vp_matrix);
         copy_to_buffer(offsetof(Drawing, vp_matrix), m);
 }
 

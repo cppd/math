@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/layout.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -33,7 +34,7 @@ class Buffer final
 {
         struct Data final
         {
-                alignas(sizeof(Vector4f)) Matrix4f matrix;
+                vulkan::std140::Matrix4f matrix;
                 alignas(sizeof(Vector4f)) Vector3f color;
         };
 

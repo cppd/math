@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/gpu/com/matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/layout.h>
 
 #include <vector>
 
@@ -30,14 +30,14 @@ class VolumeBuffer final
 {
         struct VolumeCoordinates final
         {
-                alignas(sizeof(Vector4f)) Matrix4f device_to_texture_matrix;
-                alignas(sizeof(Vector4f)) Matrix4f texture_to_world_matrix;
-                alignas(sizeof(Vector4f)) Matrix4f texture_to_shadow_matrix;
+                vulkan::std140::Matrix4f device_to_texture_matrix;
+                vulkan::std140::Matrix4f texture_to_world_matrix;
+                vulkan::std140::Matrix4f texture_to_shadow_matrix;
                 alignas(sizeof(Vector4f)) Vector4f third_row_of_texture_to_device;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
-                alignas(sizeof(Vector4f)) std140::Matrix3f gradient_to_world_matrix;
-                alignas(sizeof(Vector4f)) std140::Matrix3f world_to_texture_matrix;
+                vulkan::std140::Matrix3f gradient_to_world_matrix;
+                vulkan::std140::Matrix3f world_to_texture_matrix;
         };
 
         struct Volume final

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shadow_matrices.h"
 
-#include "../../../com/matrix.h"
-
 namespace ns::gpu::renderer
 {
 ShadowMatricesBuffer::ShadowMatricesBuffer(
@@ -41,8 +39,8 @@ const vulkan::Buffer& ShadowMatricesBuffer::buffer() const
 void ShadowMatricesBuffer::set(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const
 {
         ShadowMatrices shadow_matrices;
-        shadow_matrices.vp_matrix = to_std140<float>(vp_matrix);
-        shadow_matrices.world_to_shadow = to_std140<float>(world_to_shadow);
+        shadow_matrices.vp_matrix = vulkan::to_std140<float>(vp_matrix);
+        shadow_matrices.world_to_shadow = vulkan::to_std140<float>(world_to_shadow);
         vulkan::map_and_write_to_buffer(buffer_, shadow_matrices);
 }
 }

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume.h"
 
 #include <src/com/merge.h>
-#include <src/gpu/com/matrix.h>
 
 namespace ns::gpu::renderer
 {
@@ -61,19 +60,19 @@ void VolumeBuffer::set_coordinates(
         const Matrix3d& world_to_texture_matrix) const
 {
         VolumeCoordinates coordinates;
-        coordinates.device_to_texture_matrix = to_std140<float>(device_to_texture_matrix);
-        coordinates.texture_to_world_matrix = to_std140<float>(texture_to_world_matrix);
+        coordinates.device_to_texture_matrix = vulkan::to_std140<float>(device_to_texture_matrix);
+        coordinates.texture_to_world_matrix = vulkan::to_std140<float>(texture_to_world_matrix);
         coordinates.third_row_of_texture_to_device = to_vector<float>(third_row_of_texture_to_device);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
-        coordinates.gradient_to_world_matrix = to_std140<float>(gradient_to_world_matrix);
-        coordinates.world_to_texture_matrix = to_std140<float>(world_to_texture_matrix);
+        coordinates.gradient_to_world_matrix = vulkan::to_std140<float>(gradient_to_world_matrix);
+        coordinates.world_to_texture_matrix = vulkan::to_std140<float>(world_to_texture_matrix);
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
 void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const
 {
-        decltype(VolumeCoordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
+        decltype(VolumeCoordinates().texture_to_shadow_matrix) m = vulkan::to_std140<float>(texture_to_shadow_matrix);
         vulkan::map_and_write_to_buffer(
                 uniform_buffer_coordinates_, offsetof(VolumeCoordinates, texture_to_shadow_matrix), m);
 }
