@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 0
 
-namespace ns
+namespace ns::window
 {
 class WindowEvent
 {

@@ -273,14 +273,10 @@ public:
                 res.bounds_[1] = ::ns::max(bounds_[1], v);
                 return res;
         }
-};
-}
 
-namespace ns
-{
-template <std::size_t N, typename T>
-std::string to_string(const geometry::BoundingBox<N, T>& box)
-{
-        return "(min " + to_string(box.min()) + ", max = " + to_string(box.max()) + ")";
-}
+        [[nodiscard]] friend std::string to_string(const BoundingBox<N, T>& box)
+        {
+                return "(min " + to_string(box.min()) + ", max = " + to_string(box.max()) + ")";
+        }
+};
 }

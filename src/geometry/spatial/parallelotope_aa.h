@@ -120,6 +120,17 @@ public:
         {
                 return parallelotope_vertices(min(), max());
         }
+
+        [[nodiscard]] friend std::string to_string(const geometry::ParallelotopeAA<N, T>& p)
+        {
+                std::string s = "org = " + to_string(p.org()) + "\n";
+                const std::array<Vector<N, T>, N> vectors = p.vectors();
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        s += "vector[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
+                }
+                return s;
+        }
 };
 
 template <std::size_t N, typename T>
@@ -421,22 +432,5 @@ auto ParallelotopeAA<N, T>::overlap_function() const
         {
                 return shapes_overlap(s, p);
         };
-}
-}
-
-namespace ns
-{
-template <std::size_t N, typename T>
-std::string to_string(const geometry::ParallelotopeAA<N, T>& p)
-{
-        std::string s;
-        s += "org = " + to_string(p.org()) + "\n";
-
-        const std::array<Vector<N, T>, N> vectors = p.vectors();
-        for (unsigned i = 0; i < N; ++i)
-        {
-                s += "edge[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
-        }
-        return s;
 }
 }
