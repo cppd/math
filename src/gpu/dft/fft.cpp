@@ -256,13 +256,13 @@ public:
                 bit_reverse_program_.emplace(device.handle());
                 bit_reverse_program_->create_pipeline(GROUP_SIZE_1D, data_size_, n_mask, n_bits);
                 bit_reverse_memory_.emplace(device.handle(), bit_reverse_program_->descriptor_set_layout());
-                bit_reverse_groups_ = group_count(data_size_, GROUP_SIZE_1D);
+                bit_reverse_groups_ = group_count<unsigned>(data_size_, GROUP_SIZE_1D);
 
                 //
 
                 fft_g_program_.emplace(device.handle());
                 fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
-                fft_g_groups_ = group_count(data_size_ / 2, GROUP_SIZE_1D);
+                fft_g_groups_ = group_count<unsigned>(data_size_ / 2, GROUP_SIZE_1D);
 
                 unsigned m_div_2 = n_shared_; // half the size of DFT
                 float two_pi_div_m = PI<float> / m_div_2;

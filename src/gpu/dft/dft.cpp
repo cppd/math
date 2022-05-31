@@ -242,18 +242,18 @@ class Impl final : public Dft
 
                 mul_memory_.set(x_d_->buffer(), buffer_->buffer());
                 mul_program_.create_pipelines(n1_, n2_, m1_, m2_, group_size_[0], group_size_[1]);
-                mul_rows_to_buffer_groups_ = group_count(m1_, n2_, group_size_);
-                mul_rows_from_buffer_groups_ = group_count(n1_, n2_, group_size_);
-                mul_columns_to_buffer_groups_ = group_count(n1_, m2_, group_size_);
-                mul_columns_from_buffer_groups_ = group_count(n1_, n2_, group_size_);
+                mul_rows_to_buffer_groups_ = group_count({m1_, n2_}, group_size_);
+                mul_rows_from_buffer_groups_ = group_count({n1_, n2_}, group_size_);
+                mul_columns_to_buffer_groups_ = group_count({n1_, m2_}, group_size_);
+                mul_columns_from_buffer_groups_ = group_count({n1_, n2_}, group_size_);
 
                 mul_d_d1_fwd_.set(d1_fwd_->buffer(), buffer_->buffer());
                 mul_d_d1_inv_.set(d1_inv_->buffer(), buffer_->buffer());
                 mul_d_d2_fwd_.set(d2_fwd_->buffer(), buffer_->buffer());
                 mul_d_d2_inv_.set(d2_inv_->buffer(), buffer_->buffer());
                 mul_d_program_.create_pipelines(n1_, n2_, m1_, m2_, group_size_[0], group_size_[1]);
-                mul_d_row_groups_ = group_count(m1_, n2_, group_size_);
-                mul_d_column_groups_ = group_count(m2_, n1_, group_size_);
+                mul_d_row_groups_ = group_count({m1_, n2_}, group_size_);
+                mul_d_column_groups_ = group_count({m2_, n1_}, group_size_);
         }
 
         void delete_buffers() override

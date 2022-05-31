@@ -162,8 +162,8 @@ class Impl final : public Compute
 
                 program_.create_pipeline(GROUP_SIZE, rectangle);
 
-                groups_x_ = group_count(rectangle.width(), GROUP_SIZE);
-                groups_y_ = group_count(rectangle.height(), GROUP_SIZE);
+                groups_x_ = group_count<unsigned>(rectangle.width(), GROUP_SIZE);
+                groups_y_ = group_count<unsigned>(rectangle.height(), GROUP_SIZE);
         }
 
         void delete_buffers() override

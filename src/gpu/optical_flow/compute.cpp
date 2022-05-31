@@ -352,7 +352,7 @@ class Impl final : public Compute
                 sobel_memory_ = create_sobel_memory(
                         device_->handle(), sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
 
-                flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
+                flow_groups_ = flow_groups(GROUPS, sizes, {top_point_count_x, top_point_count_y});
                 flow_program_.create_pipeline(
                         GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
 

@@ -68,7 +68,7 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
 
 Vector2i grayscale_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
 {
-        return group_count(sizes[0][0], sizes[0][1], group_size);
+        return group_count(sizes[0], group_size);
 }
 
 std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
@@ -83,7 +83,7 @@ std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::v
 
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                groups.push_back(group_count(sizes[i][0], sizes[i][1], group_size));
+                groups.push_back(group_count(sizes[i], group_size));
         }
 
         return groups;
@@ -96,7 +96,7 @@ std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector
 
         for (const Vector2i& size : sizes)
         {
-                groups.push_back(group_count(size[0], size[1], group_size));
+                groups.push_back(group_count(size, group_size));
         }
 
         return groups;
@@ -105,17 +105,16 @@ std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector
 std::vector<Vector2i> flow_groups(
         const Vector2i& group_size,
         const std::vector<Vector2i>& sizes,
-        const int top_point_count_x,
-        const int top_point_count_y)
+        const Vector2i& top_point_count)
 {
         std::vector<Vector2i> groups;
         groups.reserve(sizes.size());
 
-        groups.push_back(group_count(top_point_count_x, top_point_count_y, group_size));
+        groups.push_back(group_count(top_point_count, group_size));
 
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                groups.push_back(group_count(sizes[i][0], sizes[i][1], group_size));
+                groups.push_back(group_count(sizes[i], group_size));
         }
 
         return groups;

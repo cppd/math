@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "groups.h"
 
+#include <array>
+
 namespace ns::gpu
 {
 static_assert(group_count(11, 4) == 3);
@@ -25,6 +27,10 @@ static_assert(group_count(13, 4) == 4);
 static_assert(group_count(14, 4) == 4);
 static_assert(group_count(1, 100) == 1);
 static_assert(group_count(100, 1) == 100);
-static_assert(group_count(11, 17, Vector2i(4, 5)) == Vector2i(3, 4));
-static_assert(group_count(11, 17, 19, Vector3i(4, 5, 3)) == Vector3i(3, 4, 7));
+static_assert(
+        group_count(std::to_array<unsigned>({11, 17}), std::to_array<unsigned>({4, 5}))
+        == std::to_array<unsigned>({3, 4}));
+static_assert(
+        group_count(std::to_array<unsigned>({11, 17, 19}), std::to_array<unsigned>({4, 5, 3}))
+        == std::to_array<unsigned>({3, 4, 7}));
 }
