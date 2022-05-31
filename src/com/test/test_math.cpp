@@ -53,5 +53,24 @@ template struct Test<int, long double>;
 template struct Test<long long, float>;
 template struct Test<long long, double>;
 template struct Test<long long, long double>;
+
+//
+
+template <typename T>
+struct TestRoundUp final
+{
+        static_assert(round_up<T>(1, 1) == 1);
+        static_assert(round_up<T>(1, 4) == 4);
+        static_assert(round_up<T>(1, 11) == 11);
+        static_assert(round_up<T>(10, 1) == 10);
+        static_assert(round_up<T>(10, 4) == 12);
+        static_assert(round_up<T>(10, 11) == 11);
+        static_assert(round_up<T>(111, 1) == 111);
+        static_assert(round_up<T>(111, 4) == 112);
+        static_assert(round_up<T>(111, 11) == 121);
+};
+
+template struct TestRoundUp<unsigned>;
+template struct TestRoundUp<unsigned long long>;
 }
 }

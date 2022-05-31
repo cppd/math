@@ -69,4 +69,11 @@ template <typename I, typename T>
         const I i = v;
         return v > i ? i + 1 : i;
 }
+
+template <typename T>
+[[nodiscard]] constexpr T round_up(const T v, const T to)
+{
+        static_assert(std::is_unsigned_v<T>);
+        return ((v + to - 1) / to) * to;
+}
 }
