@@ -27,11 +27,11 @@ CRC Press LLC, 2000.
 #include "buffer.h"
 #include "fft.h"
 
-#include "../com/groups.h"
 #include "shaders/mul.h"
 #include "shaders/mul_d.h"
 
 #include <src/com/error.h>
+#include <src/com/group_count.h>
 
 #include <thread>
 

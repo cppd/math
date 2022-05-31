@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fft.h"
 
-#include "../com/groups.h"
 #include "shaders/bit_reverse.h"
 #include "shaders/fft_global.h"
 #include "shaders/fft_shared.h"
 
 #include <src/com/constant.h>
+#include <src/com/group_count.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 

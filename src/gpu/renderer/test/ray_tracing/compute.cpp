@@ -21,10 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "program_ray_query.h"
 #include "program_ray_tracing.h"
 
-#include "../../../com/groups.h"
-
 #include <src/com/error.h>
 #include <src/com/file/path.h>
+#include <src/com/group_count.h>
 #include <src/image/file_save.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>

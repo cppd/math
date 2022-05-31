@@ -48,11 +48,11 @@ There are errors in chapter 13 when calculating H2
 #include "dft.h"
 #include "function.h"
 
-#include "../com/groups.h"
 #include "shaders/copy_input.h"
 #include "shaders/copy_output.h"
 
 #include <src/com/error.h>
+#include <src/com/group_count.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device_compute.h>
 #include <src/vulkan/error.h>

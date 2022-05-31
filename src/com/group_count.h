@@ -15,22 +15,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "groups.h"
+#pragma once
 
 #include <array>
 
-namespace ns::gpu
+namespace ns
 {
-static_assert(group_count(11, 4) == 3);
-static_assert(group_count(12, 4) == 3);
-static_assert(group_count(13, 4) == 4);
-static_assert(group_count(14, 4) == 4);
-static_assert(group_count(1, 100) == 1);
-static_assert(group_count(100, 1) == 100);
-static_assert(
-        group_count(std::to_array<unsigned>({11, 17}), std::to_array<unsigned>({4, 5}))
-        == std::to_array<unsigned>({3, 4}));
-static_assert(
-        group_count(std::to_array<unsigned>({11, 17, 19}), std::to_array<unsigned>({4, 5, 3}))
-        == std::to_array<unsigned>({3, 4, 7}));
+template <typename T>
+[[nodiscard]] constexpr T group_count(const T& size, const T& group_size)
+{
+        return (size + group_size - T{1}) / group_size;
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr std::array<T, N> group_count(const std::array<T, N>& sizes, const std::array<T, N>& group_sizes)
+{
+        std::array<T, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = group_count(sizes[i], group_sizes[i]);
+        }
+        return res;
+}
 }

@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
-#include "../com/groups.h"
 #include "shaders/compute.h"
 
 #include <src/com/error.h>
+#include <src/com/group_count.h>
 
 #include <optional>
 #include <thread>
