@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/math.h>
 #include <src/numerical/matrix.h>
 
 #include <array>
@@ -27,30 +28,31 @@ namespace std140
 {
 namespace implementation
 {
-inline constexpr std::size_t VEC4_ALIGNMENT = 4 * sizeof(float);
+template <std::size_t N, typename T>
+inline constexpr std::size_t VECTOR_ALIGNMENT = (N != 3 ? N : 4) * sizeof(T);
 
 template <std::size_t N, typename T>
-inline constexpr std::size_t VECTOR_ALIGNMENT = sizeof(T) * (N != 3 ? N : 4);
-
-constexpr std::size_t round_up_to_vec4(const std::size_t n)
-{
-        return ((n + VEC4_ALIGNMENT - 1) / VEC4_ALIGNMENT) * VEC4_ALIGNMENT;
-}
+inline constexpr std::size_t BASE_ALIGNMENT = round_up(VECTOR_ALIGNMENT<N, T>, VECTOR_ALIGNMENT<4, float>);
 }
 
 template <std::size_t N, typename T>
         requires(N >= 2 && N <= 4 && (std::is_same_v<T, float> || std::is_same_v<T, double>))
-struct alignas(implementation::VEC4_ALIGNMENT) Matrix final
+struct alignas(implementation::BASE_ALIGNMENT<N, T>) Matrix final
 {
-        struct alignas(implementation::round_up_to_vec4(implementation::VECTOR_ALIGNMENT<N, T>)) Column final
+        struct alignas(implementation::BASE_ALIGNMENT<N, T>) Column final
         {
                 std::array<T, N> data;
         };
         std::array<Column, N> columns;
 };
 
+using Matrix2f = Matrix<2, float>;
 using Matrix3f = Matrix<3, float>;
 using Matrix4f = Matrix<4, float>;
+
+using Matrix2d = Matrix<2, double>;
+using Matrix3d = Matrix<3, double>;
+using Matrix4d = Matrix<4, double>;
 }
 
 template <typename Dst, std::size_t N, typename Src>
