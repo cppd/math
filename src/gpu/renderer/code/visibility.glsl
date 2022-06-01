@@ -28,14 +28,14 @@ const float RAY_TRACING_T_MAX = 10;
 bool ray_tracing_intersection(
         const vec3 org,
         const vec3 dir,
+        const bool /*self_intersection*/,
         const accelerationStructureEXT acceleration_structure,
-        const float t_min,
         const float t_max)
 {
         const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
 
         rayQueryEXT ray_query;
-        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, RAY_TRACING_T_MIN, dir, t_max);
         rayQueryProceedEXT(ray_query);
 
         return rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
@@ -44,19 +44,19 @@ bool ray_tracing_intersection(
 bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
-        const bool /*self_intersection*/,
+        const bool self_intersection,
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 org = world_position;
         const vec3 dir = direction_to_light;
 
-        return ray_tracing_intersection(org, dir, acceleration_structure, RAY_TRACING_T_MIN, RAY_TRACING_T_MAX);
+        return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, RAY_TRACING_T_MAX);
 }
 
 bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
-        const bool /*self_intersection*/,
+        const bool self_intersection,
         const vec4 clip_plane_equation,
         const accelerationStructureEXT acceleration_structure)
 {
@@ -68,14 +68,14 @@ bool occluded(
         const float n_dot_dir = dot(clip_plane_equation.xyz, dir);
         if (n_dot_dir >= 0)
         {
-                return ray_tracing_intersection(org, dir, acceleration_structure, RAY_TRACING_T_MIN, RAY_TRACING_T_MAX);
+                return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, RAY_TRACING_T_MAX);
         }
 
         const float t_clip_plane = dot(clip_plane_equation, vec4(org, 1)) / -n_dot_dir;
         if (t_clip_plane > RAY_TRACING_T_MIN)
         {
                 const float t_max = min(RAY_TRACING_T_MAX, t_clip_plane);
-                return ray_tracing_intersection(org, dir, acceleration_structure, RAY_TRACING_T_MIN, t_max);
+                return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, t_max);
         }
 
         return false;

@@ -27,7 +27,7 @@ layout(location = 0) in GS
         vec3 world_position;
         vec3 baricentric;
         vec2 texture_coordinates;
-        uint normal_directed_to_light;
+        flat uint normal_directed_to_light;
 }
 gs;
 
