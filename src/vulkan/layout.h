@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/math.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 
@@ -37,7 +38,7 @@ inline constexpr std::size_t BASE_ALIGNMENT = round_up(VECTOR_ALIGNMENT<N, T>, V
 
 template <std::size_t N, typename T>
         requires(N >= 2 && N <= 4 && (std::is_same_v<T, float> || std::is_same_v<T, double>))
-struct alignas(implementation::BASE_ALIGNMENT<N, T>) Matrix final
+struct Matrix final
 {
         struct alignas(implementation::BASE_ALIGNMENT<N, T>) Column final
         {
@@ -53,6 +54,14 @@ using Matrix4f = Matrix<4, float>;
 using Matrix2d = Matrix<2, double>;
 using Matrix3d = Matrix<3, double>;
 using Matrix4d = Matrix<4, double>;
+
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, float>))) Vector2f Vector2f;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, float>))) Vector3f Vector3f;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, float>))) Vector4f Vector4f;
+
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, double>))) Vector2d Vector2d;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, double>))) Vector3d Vector3d;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, double>))) Vector4d Vector4d;
 }
 
 template <typename Dst, std::size_t N, typename Src>

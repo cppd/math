@@ -41,5 +41,37 @@ template struct Test<std140::Matrix4f>;
 template struct Test<std140::Matrix2d>;
 template struct Test<std140::Matrix3d>;
 template struct Test<std140::Matrix4d>;
+
+//
+
+static_assert(sizeof(std140::Vector2f) == 2 * sizeof(float));
+static_assert(alignof(std140::Vector2f) == 2 * sizeof(float));
+static_assert(sizeof(std140::Vector3f) == 3 * sizeof(float));
+static_assert(alignof(std140::Vector3f) == 4 * sizeof(float));
+static_assert(sizeof(std140::Vector4f) == 4 * sizeof(float));
+static_assert(alignof(std140::Vector4f) == 4 * sizeof(float));
+
+static_assert(sizeof(std140::Vector2d) == 2 * sizeof(double));
+static_assert(alignof(std140::Vector2d) == 2 * sizeof(double));
+static_assert(sizeof(std140::Vector3d) == 3 * sizeof(double));
+static_assert(alignof(std140::Vector3d) == 4 * sizeof(double));
+static_assert(sizeof(std140::Vector4d) == 4 * sizeof(double));
+static_assert(alignof(std140::Vector4d) == 4 * sizeof(double));
+
+struct TestFloat final
+{
+        std140::Vector3f v;
+        float f;
+};
+static_assert(sizeof(TestFloat) == 4 * sizeof(float));
+static_assert(alignof(TestFloat) == 4 * sizeof(float));
+
+struct TestDouble final
+{
+        std140::Vector3d v;
+        double d;
+};
+static_assert(sizeof(TestDouble) == 4 * sizeof(double));
+static_assert(alignof(TestDouble) == 4 * sizeof(double));
 }
 }
