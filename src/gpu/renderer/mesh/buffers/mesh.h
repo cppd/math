@@ -32,7 +32,7 @@ class MeshBuffer final
         {
                 vulkan::std140::Matrix4f model_matrix;
                 vulkan::std140::Matrix3f normal_matrix;
-                alignas(sizeof(Vector4f)) Vector3f color;
+                vulkan::std140::Vector3f color;
                 float alpha;
                 float ambient;
                 float metalness;

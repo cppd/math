@@ -31,25 +31,25 @@ class DrawingBuffer final
         struct Drawing final
         {
                 vulkan::std140::Matrix4f vp_matrix;
-                alignas(sizeof(Vector4f)) Vector3f lighting_color;
-                alignas(sizeof(Vector4f)) Vector3f background_color;
-                alignas(sizeof(Vector4f)) Vector3f wireframe_color;
+                vulkan::std140::Vector3f lighting_color;
+                vulkan::std140::Vector3f background_color;
+                vulkan::std140::Vector3f wireframe_color;
                 std::uint32_t show_wireframe;
-                alignas(sizeof(Vector4f)) Vector3f normal_color_positive;
+                vulkan::std140::Vector3f normal_color_positive;
                 float normal_length;
-                alignas(sizeof(Vector4f)) Vector3f normal_color_negative;
+                vulkan::std140::Vector3f normal_color_negative;
                 std::uint32_t show_materials;
                 std::uint32_t show_shadow;
                 std::uint32_t show_fog;
                 std::uint32_t show_smooth;
                 std::uint32_t transparency_max_node_count;
-                alignas(sizeof(Vector4f)) Vector3f clip_plane_color;
+                vulkan::std140::Vector3f clip_plane_color;
                 std::uint32_t clip_plane_enabled;
-                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
-                alignas(sizeof(Vector4f)) Vector3f direction_to_light;
-                alignas(sizeof(Vector4f)) Vector3f direction_to_camera;
-                alignas(sizeof(Vector2f)) Vector2f viewport_center;
-                alignas(sizeof(Vector2f)) Vector2f viewport_factor;
+                vulkan::std140::Vector4f clip_plane_equation;
+                vulkan::std140::Vector3f direction_to_light;
+                vulkan::std140::Vector3f direction_to_camera;
+                vulkan::std140::Vector2f viewport_center;
+                vulkan::std140::Vector2f viewport_factor;
         };
 
         vulkan::BufferWithMemory buffer_;

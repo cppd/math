@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/layout.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -33,8 +34,8 @@ class ViewDataBuffer final
 {
         struct Data final
         {
-                alignas(sizeof(Vector4f)) Vector3f background_color;
-                alignas(sizeof(Vector4f)) Vector3f foreground_color;
+                vulkan::std140::Vector3f background_color;
+                vulkan::std140::Vector3f foreground_color;
                 float brightness;
         };
 

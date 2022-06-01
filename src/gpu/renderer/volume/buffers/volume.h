@@ -33,9 +33,9 @@ class VolumeBuffer final
                 vulkan::std140::Matrix4f device_to_texture_matrix;
                 vulkan::std140::Matrix4f texture_to_world_matrix;
                 vulkan::std140::Matrix4f texture_to_shadow_matrix;
-                alignas(sizeof(Vector4f)) Vector4f third_row_of_texture_to_device;
-                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
-                alignas(sizeof(Vector4f)) Vector3f gradient_h;
+                vulkan::std140::Vector4f third_row_of_texture_to_device;
+                vulkan::std140::Vector4f clip_plane_equation;
+                vulkan::std140::Vector3f gradient_h;
                 vulkan::std140::Matrix3f gradient_to_world_matrix;
                 vulkan::std140::Matrix3f world_to_texture_matrix;
         };
@@ -48,7 +48,7 @@ class VolumeBuffer final
                 float isosurface_alpha;
                 std::uint32_t isosurface;
                 float isovalue;
-                alignas(sizeof(Vector4f)) Vector3f color;
+                vulkan::std140::Vector3f color;
                 std::uint32_t color_volume;
                 float ambient;
                 float metalness;

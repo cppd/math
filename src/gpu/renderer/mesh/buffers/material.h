@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/layout.h>
 
 #include <vector>
 
@@ -28,7 +29,7 @@ class MaterialBuffer final
 {
         struct Material final
         {
-                alignas(sizeof(Vector4f)) Vector3f color;
+                vulkan::std140::Vector3f color;
                 std::uint32_t use_texture;
                 std::uint32_t use_material;
         };

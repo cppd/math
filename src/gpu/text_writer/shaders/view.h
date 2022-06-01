@@ -35,7 +35,7 @@ class Buffer final
         struct Data final
         {
                 vulkan::std140::Matrix4f matrix;
-                alignas(sizeof(Vector4f)) Vector3f color;
+                vulkan::std140::Vector3f color;
         };
 
         vulkan::BufferWithMemory buffer_;
