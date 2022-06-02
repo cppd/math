@@ -20,129 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fragments.glsl"
 #include "shade.glsl"
-#include "visibility.glsl"
-#include "volume_in.glsl"
-
-#if defined(IMAGE)
 #include "volume_image.glsl"
-#include "volume_intersect.glsl"
-#endif
-
-//
-
-#ifdef RAY_TRACING
-
-float mesh_shadow_transparency(const vec3 world_position, const bool self_intersection)
-{
-        if (!drawing.clip_plane_enabled)
-        {
-                return occluded(world_position, drawing.direction_to_light, self_intersection, acceleration_structure)
-                               ? 0
-                               : 1;
-        }
-        return occluded(
-                       world_position, drawing.direction_to_light, self_intersection, drawing.clip_plane_equation,
-                       acceleration_structure)
-                       ? 0
-                       : 1;
-}
-
-#if defined(IMAGE)
-float mesh_shadow_transparency_texture(const vec3 texture_position, const bool self_intersection)
-{
-        const vec4 world_position = volume_coordinates.texture_to_world_matrix * vec4(texture_position, 1);
-        return mesh_shadow_transparency(world_position.xyz, self_intersection);
-}
-#endif
-
-#if defined(OPACITY) || defined(TRANSPARENCY)
-float mesh_shadow_transparency_device(const vec3 device_position, const bool self_intersection)
-{
-        const vec4 world_position = coordinates.device_to_world * vec4(device_position, 1);
-        return mesh_shadow_transparency(world_position.xyz, self_intersection);
-}
-#endif
-
-#else
-
-float mesh_shadow_transparency(const vec3 shadow_position)
-{
-        const float d = texture(shadow_mapping_texture, shadow_position.xy).x;
-        return d <= shadow_position.z ? 0 : 1;
-}
-
-#if defined(IMAGE)
-float mesh_shadow_transparency_texture(const vec3 texture_position, const bool /*self_intersection*/)
-{
-        const vec4 shadow_position = volume_coordinates.texture_to_shadow_matrix * vec4(texture_position, 1);
-        return mesh_shadow_transparency(shadow_position.xyz);
-}
-#endif
-
-#if defined(OPACITY) || defined(TRANSPARENCY)
-float mesh_shadow_transparency_device(const vec3 device_position, const bool /*self_intersection*/)
-{
-        const vec4 shadow_position = coordinates.device_to_shadow * vec4(device_position, 1);
-        return mesh_shadow_transparency(shadow_position.xyz);
-}
-#endif
-
-#endif
-
-//
-
-#if defined(IMAGE)
-
-float isosurface_shadow_transparency_texture(const vec3 texture_position)
-{
-        const vec3 direction_to_light =
-                normalize(volume_coordinates.world_to_texture_matrix * drawing.direction_to_light);
-        return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
-}
-
-#if defined(OPACITY) || defined(TRANSPARENCY)
-float isosurface_shadow_transparency_device(const vec3 device_position)
-{
-        const vec4 texture_position = volume_coordinates.device_to_texture_matrix * vec4(device_position, 1);
-        return isosurface_shadow_transparency_texture(texture_position.xyz);
-}
-#endif
-
-float shadow_transparency(const float mesh_shadow, const float isosurface_shadow)
-{
-        return mesh_shadow * isosurface_shadow;
-}
-
-float shadow_transparency_texture(const vec3 texture_position, const bool mesh_self_intersection)
-{
-        const float mesh_shadow = mesh_shadow_transparency_texture(texture_position, mesh_self_intersection);
-        const float isosurface_shadow = isosurface_shadow_transparency_texture(texture_position);
-        return shadow_transparency(mesh_shadow, isosurface_shadow);
-}
-
-#if defined(OPACITY) || defined(TRANSPARENCY)
-float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
-{
-        const float mesh_shadow = mesh_shadow_transparency_device(device_position, mesh_self_intersection);
-        if (is_volume())
-        {
-                return mesh_shadow;
-        }
-        const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
-        return shadow_transparency(mesh_shadow, isosurface_shadow);
-}
-#endif
-
-#elif defined(OPACITY) || defined(TRANSPARENCY)
-
-float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
-{
-        return mesh_shadow_transparency_device(device_position, mesh_self_intersection);
-}
-
-#endif
-
-//
+#include "volume_in.glsl"
+#include "volume_shadow.glsl"
 
 #if defined(IMAGE)
 
@@ -179,21 +59,7 @@ vec4 isosurface_color(const vec3 texture_position)
 
 #endif
 
-//
-
-#if !(defined(OPACITY) || defined(TRANSPARENCY))
-
-vec4 fragment_color(const TransparencyFragment fragment)
-{
-        return vec4(0);
-}
-
-vec4 fragment_color(const OpacityFragment fragment)
-{
-        return vec4(0);
-}
-
-#else
+#if defined(OPACITY) || defined(TRANSPARENCY)
 
 vec4 fragment_color(const Fragment fragment)
 {
@@ -246,8 +112,18 @@ vec4 fragment_color(const OpacityFragment fragment)
         return fragment_color(to_fragment(fragment));
 }
 
-#endif
+#else
 
-//
+vec4 fragment_color(const TransparencyFragment fragment)
+{
+        return vec4(0);
+}
+
+vec4 fragment_color(const OpacityFragment fragment)
+{
+        return vec4(0);
+}
+
+#endif
 
 #endif
