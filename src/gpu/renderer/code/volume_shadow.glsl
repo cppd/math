@@ -48,6 +48,17 @@ float shadow_transparency_device(const vec3 device_position, const bool mesh_sel
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
+float shadow_transparency_world(const vec3 world_position, const bool mesh_self_intersection)
+{
+        const float mesh_shadow = mesh_shadow_transparency_world(world_position, mesh_self_intersection);
+        if (is_volume())
+        {
+                return mesh_shadow;
+        }
+        const float isosurface_shadow = isosurface_shadow_transparency_world(world_position);
+        return shadow_transparency(mesh_shadow, isosurface_shadow);
+}
+
 #endif
 
 #elif defined(OPACITY) || defined(TRANSPARENCY)
@@ -55,6 +66,11 @@ float shadow_transparency_device(const vec3 device_position, const bool mesh_sel
 float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
 {
         return mesh_shadow_transparency_device(device_position, mesh_self_intersection);
+}
+
+float shadow_transparency_world(const vec3 world_position, const bool mesh_self_intersection)
+{
+        return mesh_shadow_transparency_world(world_position, mesh_self_intersection);
 }
 
 #endif

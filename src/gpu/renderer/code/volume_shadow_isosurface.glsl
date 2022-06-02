@@ -26,13 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 float isosurface_shadow_transparency_texture(const vec3 texture_position)
 {
         const vec3 direction_to_light =
-                normalize(volume_coordinates.world_to_texture_matrix * drawing.direction_to_light);
+                normalize(mat3(volume_coordinates.world_to_texture_matrix) * drawing.direction_to_light);
         return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
 }
 
 float isosurface_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 texture_position = volume_coordinates.device_to_texture_matrix * vec4(device_position, 1);
+        return isosurface_shadow_transparency_texture(texture_position.xyz);
+}
+
+float isosurface_shadow_transparency_world(const vec3 world_position)
+{
+        const vec4 texture_position = volume_coordinates.world_to_texture_matrix * vec4(world_position, 1);
         return isosurface_shadow_transparency_texture(texture_position.xyz);
 }
 

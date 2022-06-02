@@ -37,7 +37,7 @@ class VolumeBuffer final
                 vulkan::std140::Vector4f clip_plane_equation;
                 vulkan::std140::Vector3f gradient_h;
                 vulkan::std140::Matrix3f gradient_to_world_matrix;
-                vulkan::std140::Matrix3f world_to_texture_matrix;
+                vulkan::std140::Matrix4f world_to_texture_matrix;
         };
 
         struct Volume final
@@ -74,7 +74,7 @@ public:
                 const Vector4d& clip_plane_equation,
                 const Vector3d& gradient_h,
                 const Matrix3d& gradient_to_world_matrix,
-                const Matrix3d& world_to_texture_matrix) const;
+                const Matrix4d& world_to_texture_matrix) const;
 
         void set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const;
 

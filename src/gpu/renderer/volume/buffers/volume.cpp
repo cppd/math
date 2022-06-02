@@ -57,7 +57,7 @@ void VolumeBuffer::set_coordinates(
         const Vector4d& clip_plane_equation,
         const Vector3d& gradient_h,
         const Matrix3d& gradient_to_world_matrix,
-        const Matrix3d& world_to_texture_matrix) const
+        const Matrix4d& world_to_texture_matrix) const
 {
         VolumeCoordinates coordinates;
         coordinates.device_to_texture_matrix = vulkan::to_std140<float>(device_to_texture_matrix);
