@@ -42,11 +42,15 @@ void VolumeCoordinatesBuffer::set(const Matrix4d& device_to_world) const
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Coordinates, device_to_world), m);
 }
 
-void VolumeCoordinatesBuffer::set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const
+void VolumeCoordinatesBuffer::set(
+        const Matrix4d& device_to_world,
+        const Matrix4d& device_to_shadow,
+        const Matrix4d& world_to_shadow) const
 {
         Coordinates m;
         m.device_to_world = vulkan::to_std140<float>(device_to_world);
         m.device_to_shadow = vulkan::to_std140<float>(device_to_shadow);
+        m.world_to_shadow = vulkan::to_std140<float>(world_to_shadow);
         vulkan::map_and_write_to_buffer(buffer_, m);
 }
 }

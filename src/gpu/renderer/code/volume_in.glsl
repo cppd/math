@@ -48,6 +48,7 @@ layout(set = 0, binding = 4, std140) uniform restrict Coordinates
 {
         mat4 device_to_world;
         mat4 device_to_shadow;
+        mat4 world_to_shadow;
 }
 coordinates;
 

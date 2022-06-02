@@ -332,6 +332,6 @@ void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world
 {
         const Matrix4d device_to_world = vp_matrix.inverse();
         const Matrix4d device_to_shadow = world_to_shadow_matrix * device_to_world;
-        coordinates_buffer_.set(device_to_world, device_to_shadow);
+        coordinates_buffer_.set(device_to_world, device_to_shadow, world_to_shadow_matrix);
 }
 }
