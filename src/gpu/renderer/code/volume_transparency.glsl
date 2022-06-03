@@ -28,28 +28,7 @@ The MIT Press, 2009.
 #include "fragments.glsl"
 #include "volume_in.glsl"
 
-#if !defined(TRANSPARENCY)
-
-void transparency_build()
-{
-}
-
-bool transparency_empty()
-{
-        return true;
-}
-
-void transparency_pop()
-{
-}
-
-TransparencyFragment transparency_top()
-{
-        TransparencyFragment f;
-        return f;
-}
-
-#else
+#if defined(TRANSPARENCY)
 
 TransparencyFragment g_transparency_fragments[TRANSPARENCY_MAX_FRAGMENT_COUNT];
 int g_transparency_fragment_count;
@@ -134,6 +113,27 @@ void transparency_build()
         }
 
         transparency_build_min_heap();
+}
+
+#else
+
+void transparency_build()
+{
+}
+
+bool transparency_empty()
+{
+        return true;
+}
+
+void transparency_pop()
+{
+}
+
+TransparencyFragment transparency_top()
+{
+        TransparencyFragment f;
+        return f;
 }
 
 #endif

@@ -28,23 +28,7 @@ The MIT Press, 2009.
 #include "fragments.glsl"
 #include "volume_in.glsl"
 
-#if !defined(OPACITY)
-
-void opacity_build()
-{
-}
-
-bool opacity_empty()
-{
-        return true;
-}
-
-float opacity_depth()
-{
-        return 0;
-}
-
-#else
+#if defined(OPACITY)
 
 vec4 g_opacity_fragment_v_1;
 bool g_opacity_empty;
@@ -71,6 +55,22 @@ OpacityFragment opacity_fragment()
         f.v_0 = imageLoad(opacity_0, ivec2(gl_FragCoord.xy), gl_SampleID);
         f.v_1 = g_opacity_fragment_v_1;
         return f;
+}
+
+#else
+
+void opacity_build()
+{
+}
+
+bool opacity_empty()
+{
+        return true;
+}
+
+float opacity_depth()
+{
+        return 0;
 }
 
 #endif

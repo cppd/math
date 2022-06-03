@@ -102,28 +102,30 @@ vec4 fragment_color(const Fragment fragment)
         return vec4(color, fragment.color.a);
 }
 
+#endif
+
+#if defined(TRANSPARENCY)
 vec4 fragment_color(const TransparencyFragment fragment)
 {
         return fragment_color(to_fragment(fragment));
 }
-
-vec4 fragment_color(const OpacityFragment fragment)
-{
-        return fragment_color(to_fragment(fragment));
-}
-
 #else
-
 vec4 fragment_color(const TransparencyFragment fragment)
 {
         return vec4(0);
 }
+#endif
 
+#if defined(OPACITY)
+vec4 fragment_color(const OpacityFragment fragment)
+{
+        return fragment_color(to_fragment(fragment));
+}
+#else
 vec4 fragment_color(const OpacityFragment fragment)
 {
         return vec4(0);
 }
-
 #endif
 
 #endif

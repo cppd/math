@@ -23,6 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(IMAGE)
 
+#if !(defined(OPACITY) || defined(TRANSPARENCY))
+
+float shadow_transparency_texture(const vec3 texture_position, const bool mesh_self_intersection)
+{
+        return isosurface_shadow_transparency_texture(texture_position);
+}
+
+#else
+
 float shadow_transparency(const float mesh_shadow, const float isosurface_shadow)
 {
         return mesh_shadow * isosurface_shadow;
@@ -34,8 +43,6 @@ float shadow_transparency_texture(const vec3 texture_position, const bool mesh_s
         const float isosurface_shadow = isosurface_shadow_transparency_texture(texture_position);
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
-
-#if defined(OPACITY) || defined(TRANSPARENCY)
 
 float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
 {
