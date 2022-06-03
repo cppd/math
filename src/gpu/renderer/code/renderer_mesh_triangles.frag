@@ -21,17 +21,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_in.glsl"
 #include "mesh_out.glsl"
 
+#ifdef RAY_TRACING
+const float FLOAT_EPSILON = 1.0 / (1 << 23);
+const float RAY_OFFSET = 64 * FLOAT_EPSILON;
+#endif
+
 layout(location = 0) in GS
 {
         vec3 world_normal;
+        flat vec3 world_geometric_normal;
         vec3 world_position;
         vec3 baricentric;
         vec2 texture_coordinates;
-        flat uint normal_directed_to_light;
+        flat bool geometric_normal_directed_to_light;
 }
 gs;
 
 //
+
+#ifdef RAY_TRACING
+vec3 ray_org_to_light()
+{
+        const float ray_offset = gs.geometric_normal_directed_to_light ? RAY_OFFSET : -RAY_OFFSET;
+        vec3 org;
+        for (int i = 0; i < 3; ++i)
+        {
+                org[i] = gs.world_position[i] + (abs(gs.world_position[i]) * ray_offset) * gs.world_geometric_normal[i];
+        }
+        return org;
+}
+#else
+vec3 ray_org_to_light()
+{
+        return vec3(0);
+}
+#endif
 
 bool has_texture_coordinates()
 {
@@ -68,6 +92,6 @@ float edge_factor()
 void main()
 {
         set_fragment_color(
-                surface_color(), normalize(gs.world_normal), gs.world_position, edge_factor(),
-                gs.normal_directed_to_light);
+                surface_color(), normalize(gs.world_normal), edge_factor(), ray_org_to_light(),
+                gs.geometric_normal_directed_to_light);
 }

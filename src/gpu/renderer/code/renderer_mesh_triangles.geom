@@ -49,16 +49,17 @@ out gl_PerVertex
 layout(location = 0) out GS
 {
         vec3 world_normal;
+        flat vec3 world_geometric_normal;
         vec3 world_position;
         vec3 baricentric;
         vec2 texture_coordinates;
-        flat uint normal_directed_to_light;
+        flat bool geometric_normal_directed_to_light;
 }
 gs;
 
 //
 
-const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+const vec3 BARICENTRIC[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
 vec3 compute_geometric_normal()
 {
@@ -94,7 +95,7 @@ void main()
 {
         const vec3 geometric_normal = compute_geometric_normal();
         const vec3 normals[3] = compute_normals(geometric_normal);
-        const uint normal_directed_to_light = dot(geometric_normal, drawing.direction_to_light) >= 0 ? 1 : 0;
+        const bool geometric_normal_directed_to_light = dot(geometric_normal, drawing.direction_to_light) >= 0;
 
         for (int i = 0; i < 3; ++i)
         {
@@ -102,10 +103,11 @@ void main()
                 gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
 
                 gs.world_normal = normals[i];
+                gs.world_geometric_normal = geometric_normal;
                 gs.world_position = vs[i].world_position;
-                gs.baricentric = baricentric[i];
+                gs.baricentric = BARICENTRIC[i];
                 gs.texture_coordinates = vs[i].texture_coordinates;
-                gs.normal_directed_to_light = normal_directed_to_light;
+                gs.geometric_normal_directed_to_light = geometric_normal_directed_to_light;
 
                 EmitVertex();
         }

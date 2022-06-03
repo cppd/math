@@ -79,7 +79,7 @@ vec4 fragment_color(const Fragment fragment)
                 const float shadow_transparency =
                         dot(n, l) > 0 ? shadow_transparency_device(
                                 vec3(device_coordinates, fragment.depth),
-                                /*mesh_self_intersection*/ !fragment.normal_directed_to_light)
+                                /*mesh_self_intersection*/ !fragment.geometric_normal_directed_to_light)
                                       : 0;
 
                 color +=

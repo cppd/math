@@ -33,12 +33,13 @@ void write_opacity(
         const float roughness,
         const float ambient,
         const float edge_factor,
-        const uint normal_directed_to_light)
+        const bool geometric_normal_directed_to_light)
 {
         const float ALPHA = 1;
 
         const OpacityFragment fragment = create_opacity_fragment(
-                color, ALPHA, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z, normal_directed_to_light);
+                color, ALPHA, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z,
+                geometric_normal_directed_to_light);
 
         out_color_0 = fragment.v_0;
         out_color_1 = fragment.v_1;
@@ -52,7 +53,7 @@ void write_transparency(
         const float roughness,
         const float ambient,
         const float edge_factor,
-        const uint normal_directed_to_light)
+        const bool geometric_normal_directed_to_light)
 {
         const ivec2 coord = ivec2(gl_FragCoord.xy);
         const uint heads_size = imageAtomicAdd(transparency_heads_size, coord, gl_SampleID, 1);
@@ -66,7 +67,7 @@ void write_transparency(
                         const uint next_node = imageAtomicExchange(transparency_heads, coord, gl_SampleID, node);
                         transparency_nodes[node] = create_transparency_node(
                                 color, alpha, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z,
-                                normal_directed_to_light, next_node);
+                                geometric_normal_directed_to_light, next_node);
                 }
         }
         else if (heads_size == TRANSPARENCY_MAX_FRAGMENT_COUNT)
@@ -86,25 +87,26 @@ void set_fragment_color(const vec3 color)
         const float ROUGHNESS = 0;
         const float AMBIENT = 0;
         const float EDGE_FACTOR = 0;
-        const uint NORMAL_DIRECTED_TO_LIGHT = 0;
+        const bool GEOMETRIC_NORMAL_DIRECTED_TO_LIGHT = false;
 
         if (!transparency_drawing)
         {
-                write_opacity(color, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR, NORMAL_DIRECTED_TO_LIGHT);
+                write_opacity(color, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR, GEOMETRIC_NORMAL_DIRECTED_TO_LIGHT);
         }
         else
         {
                 write_transparency(
-                        color, mesh.alpha, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR, NORMAL_DIRECTED_TO_LIGHT);
+                        color, mesh.alpha, N, METALNESS, ROUGHNESS, AMBIENT, EDGE_FACTOR,
+                        GEOMETRIC_NORMAL_DIRECTED_TO_LIGHT);
         }
 }
 
 void set_fragment_color(
         const vec3 surface_color,
         const vec3 n,
-        const vec3 world_position,
         const float edge_factor,
-        const uint normal_directed_to_light)
+        const vec3 /*ray_org_to_light*/,
+        const bool geometric_normal_directed_to_light)
 {
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
@@ -112,13 +114,13 @@ void set_fragment_color(
         {
                 write_opacity(
                         surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor,
-                        normal_directed_to_light);
+                        geometric_normal_directed_to_light);
         }
         else
         {
                 write_transparency(
                         surface_color, mesh.alpha, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor,
-                        normal_directed_to_light);
+                        geometric_normal_directed_to_light);
         }
 }
 
