@@ -53,7 +53,7 @@ layout(location = 0) out GS
         vec3 world_position;
         vec3 baricentric;
         vec2 texture_coordinates;
-        flat bool geometric_normal_directed_to_light;
+        flat uint geometric_normal_directed_to_light;
 }
 gs;
 
@@ -95,7 +95,7 @@ void main()
 {
         const vec3 geometric_normal = compute_geometric_normal();
         const vec3 normals[3] = compute_normals(geometric_normal);
-        const bool geometric_normal_directed_to_light = dot(geometric_normal, drawing.direction_to_light) >= 0;
+        const uint geometric_normal_directed_to_light = dot(geometric_normal, drawing.direction_to_light) >= 0 ? 1 : 0;
 
         for (int i = 0; i < 3; ++i)
         {

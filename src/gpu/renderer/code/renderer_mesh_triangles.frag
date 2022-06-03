@@ -33,7 +33,7 @@ layout(location = 0) in GS
         vec3 world_position;
         vec3 baricentric;
         vec2 texture_coordinates;
-        flat bool geometric_normal_directed_to_light;
+        flat uint geometric_normal_directed_to_light;
 }
 gs;
 
@@ -42,7 +42,7 @@ gs;
 #ifdef RAY_TRACING
 vec3 ray_org_to_light()
 {
-        const float ray_offset = gs.geometric_normal_directed_to_light ? RAY_OFFSET : -RAY_OFFSET;
+        const float ray_offset = gs.geometric_normal_directed_to_light != 0 ? RAY_OFFSET : -RAY_OFFSET;
         vec3 org;
         for (int i = 0; i < 3; ++i)
         {
@@ -93,5 +93,5 @@ void main()
 {
         set_fragment_color(
                 surface_color(), normalize(gs.world_normal), edge_factor(), ray_org_to_light(),
-                gs.geometric_normal_directed_to_light);
+                gs.geometric_normal_directed_to_light != 0);
 }
