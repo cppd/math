@@ -171,7 +171,7 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
 {
         const Clock::time_point start_time = Clock::now();
 
-        const std::vector<ConvexHullSimplex<N>> facets = compute_convex_hull(points, progress, write_log);
+        std::vector<ConvexHullSimplex<N>> facets = compute_convex_hull(points, progress, write_log);
 
         const double time = duration_from(start_time);
 

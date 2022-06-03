@@ -63,14 +63,11 @@ std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
                 {
                         return unique_facet_vertices(mesh);
                 }
-                else if (!mesh.points.empty())
+                if (!mesh.points.empty())
                 {
                         return unique_point_vertices(mesh);
                 }
-                else
-                {
-                        error("Faces or points not found for computing convex hull object");
-                }
+                error("Faces or points not found for computing convex hull object");
         }();
 
         const std::vector<std::array<int, N>> facets = [&]
