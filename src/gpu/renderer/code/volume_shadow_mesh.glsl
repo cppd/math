@@ -27,12 +27,12 @@ float mesh_shadow_transparency_world(const vec3 world_position, const vec3 geome
 {
         if (!drawing.clip_plane_enabled)
         {
-                return occluded(world_position, geometric_normal, drawing.direction_to_light, acceleration_structure)
+                return occluded(world_position, drawing.direction_to_light, geometric_normal, acceleration_structure)
                                ? 0
                                : 1;
         }
         return occluded(
-                       world_position, geometric_normal, drawing.direction_to_light, drawing.clip_plane_equation,
+                       world_position, drawing.direction_to_light, geometric_normal, drawing.clip_plane_equation,
                        acceleration_structure)
                        ? 0
                        : 1;
