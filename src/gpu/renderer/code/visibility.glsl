@@ -33,19 +33,69 @@ vec3 ray_tracing_move_ray_org(const vec3 geometric_normal, const vec3 ray_org, c
         return ray_org + ray_offset * geometric_normal * abs(ray_org);
 }
 
-bool ray_tracing_intersection(
+bool ray_tracing_any_intersection(
         const vec3 org,
         const vec3 dir,
         const accelerationStructureEXT acceleration_structure,
+        const float t_min,
         const float t_max)
 {
         const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
 
         rayQueryEXT ray_query;
-        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask*/ 0xFF, org, /*tMin*/ 0, dir, t_max);
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask*/ 0xFF, org, t_min, dir, t_max);
         rayQueryProceedEXT(ray_query);
 
         return rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
+}
+
+bool ray_tracing_intersection(
+        const vec3 org,
+        const vec3 dir,
+        const accelerationStructureEXT acceleration_structure,
+        const float t_min,
+        const float t_max,
+        out float t)
+{
+        const uint flags = gl_RayFlagsOpaqueEXT;
+
+        rayQueryEXT ray_query;
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask*/ 0xFF, org, t_min, dir, t_max);
+        rayQueryProceedEXT(ray_query);
+
+        if (rayQueryGetIntersectionTypeEXT(ray_query, true) != gl_RayQueryCommittedIntersectionTriangleEXT)
+        {
+                return false;
+        }
+
+        t = rayQueryGetIntersectionTEXT(ray_query, true);
+        return true;
+}
+
+bool occluded_impl(
+        const vec3 org,
+        const vec3 dir,
+        const vec3 geometric_normal,
+        const accelerationStructureEXT acceleration_structure,
+        const float t_max)
+{
+        if (dot(dir, geometric_normal) >= 0)
+        {
+                return ray_tracing_any_intersection(org, dir, acceleration_structure, /*t_min*/ 0, t_max);
+        }
+
+        float t;
+        if (!ray_tracing_intersection(org, dir, acceleration_structure, /*t_min*/ 0, t_max, t))
+        {
+                return true;
+        }
+
+        t += t * RAY_TRACING_FLOAT_EPSILON;
+        if (t <= t_max)
+        {
+                return ray_tracing_any_intersection(org, dir, acceleration_structure, t, t_max);
+        }
+        return false;
 }
 
 bool occluded(
@@ -55,8 +105,7 @@ bool occluded(
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 moved_org = ray_tracing_move_ray_org(geometric_normal, org, dir);
-
-        return ray_tracing_intersection(moved_org, dir, acceleration_structure, RAY_TRACING_T_MAX);
+        return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
 }
 
 bool occluded(
@@ -73,14 +122,14 @@ bool occluded(
         const float n_dot_dir = dot(clip_plane_equation.xyz, dir);
         if (n_dot_dir >= 0)
         {
-                return ray_tracing_intersection(moved_org, dir, acceleration_structure, RAY_TRACING_T_MAX);
+                return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
         }
 
         const float t_clip_plane = dot(clip_plane_equation, vec4(moved_org, 1)) / -n_dot_dir;
         if (t_clip_plane > 0)
         {
                 const float t_max = min(RAY_TRACING_T_MAX, t_clip_plane);
-                return ray_tracing_intersection(moved_org, dir, acceleration_structure, t_max);
+                return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, t_max);
         }
 
         return false;
