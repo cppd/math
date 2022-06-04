@@ -37,12 +37,15 @@ public:
 
 class OpacityBuffers final : public Opacity
 {
+        unsigned image_count_;
         std::vector<vulkan::ImageWithMemory> images_;
 
         [[nodiscard]] const std::vector<vulkan::ImageWithMemory>& images() const override;
         [[nodiscard]] std::vector<VkClearValue> clear_values() const override;
 
 public:
+        explicit OpacityBuffers(bool ray_tracing);
+
         void create_buffers(
                 const vulkan::Device& device,
                 const std::vector<std::uint32_t>& family_indices,

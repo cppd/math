@@ -29,13 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(set = 0, binding = 0, rgba32ui) uniform restrict readonly uimage2DMS opacity_0;
 layout(set = 0, binding = 1, rgba32f) uniform restrict readonly image2DMS opacity_1;
+#ifdef RAY_TRACING
+layout(set = 0, binding = 2, rgba32f) uniform restrict readonly image2DMS opacity_2;
+#endif
 
 #endif
 
 #if defined(TRANSPARENCY)
 
-layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 3, std430) buffer restrict readonly TransparencyNodes
+layout(set = 0, binding = 3, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
+layout(set = 0, binding = 4, std430) buffer restrict readonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
@@ -44,7 +47,7 @@ layout(set = 0, binding = 3, std430) buffer restrict readonly TransparencyNodes
 
 #if defined(OPACITY) || defined(TRANSPARENCY)
 
-layout(set = 0, binding = 4, std140) uniform restrict Coordinates
+layout(set = 0, binding = 5, std140) uniform restrict Coordinates
 {
         mat4 device_to_world;
         mat4 device_to_shadow;
@@ -56,19 +59,19 @@ coordinates;
 
 #if defined(IMAGE)
 
-layout(set = 0, binding = 5) uniform sampler2DMS depth_image;
+layout(set = 0, binding = 6) uniform sampler2DMS depth_image;
 
 #endif
 
-DRAWING_BUFFER(0, 6)
+DRAWING_BUFFER(0, 7)
 
-layout(set = 0, binding = 7) uniform sampler2D ggx_f1_albedo_cosine_roughness;
-layout(set = 0, binding = 8) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
+layout(set = 0, binding = 8) uniform sampler2D ggx_f1_albedo_cosine_roughness;
+layout(set = 0, binding = 9) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
 
 #ifdef RAY_TRACING
-layout(set = 0, binding = 9) uniform accelerationStructureEXT acceleration_structure;
+layout(set = 0, binding = 10) uniform accelerationStructureEXT acceleration_structure;
 #else
-layout(set = 0, binding = 9) uniform sampler2D shadow_mapping_texture;
+layout(set = 0, binding = 10) uniform sampler2D shadow_mapping_texture;
 #endif
 
 #if defined(IMAGE)

@@ -506,6 +506,7 @@ public:
                           *transfer_command_pool_,
                           *transfer_queue_),
                   transparency_buffers_(*device_, std::vector<std::uint32_t>({graphics_queue_->family_index()})),
+                  opacity_buffers_(ray_tracing_),
                   mesh_renderer_(
                           device_,
                           code,

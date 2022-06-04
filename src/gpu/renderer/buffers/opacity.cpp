@@ -23,19 +23,27 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-constexpr std::array<std::uint32_t, 4> V_0_NULL_VALUE{0, 0, 0, 0};
-constexpr std::array<float, 4> V_1_NULL_VALUE{-1, -1, -1, -1};
-
-constexpr VkFormat FORMAT_0 = VK_FORMAT_R32G32B32A32_UINT;
-constexpr VkFormat FORMAT_1 = VK_FORMAT_R32G32B32A32_SFLOAT;
+// clang-format off
+constexpr std::array FORMATS = std::to_array<VkFormat>
+({
+        VK_FORMAT_R32G32B32A32_UINT,
+        VK_FORMAT_R32G32B32A32_SFLOAT,
+        VK_FORMAT_R32G32B32A32_SFLOAT
+});
+constexpr std::array CLEAR_VALUES = std::to_array<VkClearValue>
+({
+        {.color{.uint32{0, 0, 0, 0}}},
+        {.color{.float32{0, 0, 0, 0}}},
+        {.color{.float32{0, 0, 0, 0}}}
+});
+// clang-format on
 
 constexpr VkImageUsageFlags USAGE_FLAGS = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 constexpr VkImageType IMAGE_TYPE = VK_IMAGE_TYPE_2D;
+}
 
-constexpr VkClearValue CLEAR_VALUE_0 = {
-        .color{.uint32{V_0_NULL_VALUE[0], V_0_NULL_VALUE[1], V_0_NULL_VALUE[2], V_0_NULL_VALUE[3]}}};
-constexpr VkClearValue CLEAR_VALUE_1 = {
-        .color{.float32{V_1_NULL_VALUE[0], V_1_NULL_VALUE[1], V_1_NULL_VALUE[2], V_1_NULL_VALUE[3]}}};
+OpacityBuffers::OpacityBuffers(const bool ray_tracing) : image_count_(ray_tracing ? 3 : 2)
+{
 }
 
 void OpacityBuffers::create_buffers(
@@ -49,13 +57,13 @@ void OpacityBuffers::create_buffers(
 
         const VkExtent3D extent = vulkan::make_extent(width, height);
 
-        images_.reserve(2);
-
-        images_.emplace_back(
-                device, family_indices, std::vector({FORMAT_0}), sample_count, IMAGE_TYPE, extent, USAGE_FLAGS);
-
-        images_.emplace_back(
-                device, family_indices, std::vector({FORMAT_1}), sample_count, IMAGE_TYPE, extent, USAGE_FLAGS);
+        images_.reserve(image_count_);
+        for (std::size_t i = 0; i < image_count_; ++i)
+        {
+                images_.emplace_back(
+                        device, family_indices, std::vector({FORMATS[i]}), sample_count, IMAGE_TYPE, extent,
+                        USAGE_FLAGS);
+        }
 }
 
 void OpacityBuffers::delete_buffers()
@@ -65,13 +73,19 @@ void OpacityBuffers::delete_buffers()
 
 const std::vector<vulkan::ImageWithMemory>& OpacityBuffers::images() const
 {
-        ASSERT(images_.size() == 2);
+        ASSERT(images_.size() == image_count_);
         return images_;
 }
 
 std::vector<VkClearValue> OpacityBuffers::clear_values() const
 {
-        ASSERT(images_.size() == 2);
-        return {CLEAR_VALUE_0, CLEAR_VALUE_1};
+        ASSERT(images_.size() == image_count_);
+        std::vector<VkClearValue> res;
+        res.reserve(image_count_);
+        for (std::size_t i = 0; i < image_count_; ++i)
+        {
+                res.push_back(CLEAR_VALUES[i]);
+        }
+        return res;
 }
 }

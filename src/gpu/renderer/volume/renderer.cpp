@@ -24,6 +24,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+std::vector<const vulkan::ImageView*> opacity_images(const Opacity& opacity)
+{
+        std::vector<const vulkan::ImageView*> res(opacity.images().size());
+        for (std::size_t i = 0; i < res.size(); ++i)
+        {
+                res[i] = &opacity.images()[i].image_view();
+        }
+        return res;
+}
+}
+
 VolumeRenderer::VolumeRenderer(
         const vulkan::Device* const device,
         const Code& code,
@@ -69,9 +82,7 @@ void VolumeRenderer::create_buffers(
 
         shared_memory_.set_depth_image(depth_image, depth_sampler_);
         shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
-
-        ASSERT(opacity.images().size() == 2);
-        shared_memory_.set_opacity(opacity.images()[0].image_view(), opacity.images()[1].image_view());
+        shared_memory_.set_opacity(opacity_images(opacity));
 
         const auto create_pipeline = [&](const VolumeProgramPipelineType type)
         {

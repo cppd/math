@@ -25,6 +25,9 @@ layout(early_fragment_tests) in;
 
 layout(location = 0) out uvec4 out_color_0;
 layout(location = 1) out vec4 out_color_1;
+#ifdef RAY_TRACING
+layout(location = 2) out vec4 out_color_2;
+#endif
 
 void write_opacity(
         const vec3 color,

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint TRANSPARENCY_MAX_FRAGMENT_COUNT = 32;
 const uint TRANSPARENCY_NULL_INDEX = 0xffffffff;
 
-const vec4 OPACITY_V_1_NULL_VALUE = vec4(-1);
+const vec4 OPACITY_V_1_NULL_VALUE = vec4(0);
 
 //
 
