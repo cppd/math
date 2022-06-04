@@ -32,6 +32,7 @@ class TransparencyBuffers final
                 std::uint32_t transparency_overload_counter;
         };
 
+        const unsigned long long node_size_;
         const unsigned long long buffer_size_;
         const unsigned node_count_;
 
@@ -45,7 +46,10 @@ class TransparencyBuffers final
         std::optional<vulkan::ImageWithMemory> heads_size_;
 
 public:
-        TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+        TransparencyBuffers(
+                bool ray_tracing,
+                const vulkan::Device& device,
+                const std::vector<std::uint32_t>& family_indices);
 
         [[nodiscard]] unsigned long long buffer_size() const;
 

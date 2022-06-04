@@ -39,9 +39,7 @@ vec4 isosurface_color(const vec3 texture_position)
 
         if (drawing.show_shadow)
         {
-                const float shadow_transparency =
-                        dot(n, l) > 0 ? shadow_transparency_texture(texture_position, /*mesh_self_intersection*/ false)
-                                      : 0;
+                const float shadow_transparency = dot(n, l) > 0 ? shadow_transparency_texture(texture_position) : 0;
 
                 color +=
                         shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
@@ -79,7 +77,8 @@ vec4 fragment_color(const Fragment fragment)
                 const float shadow_transparency =
                         dot(n, l) > 0 ? shadow_transparency_device(
                                 vec3(device_coordinates, fragment.depth),
-                                /*mesh_self_intersection*/ !fragment.geometric_normal_directed_to_light)
+                                /*mesh_self_intersection*/ !fragment.geometric_normal_directed_to_light,
+                                fragment.ray_org_to_light)
                                       : 0;
 
                 color +=

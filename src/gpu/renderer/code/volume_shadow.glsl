@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !(defined(OPACITY) || defined(TRANSPARENCY))
 
-float shadow_transparency_texture(const vec3 texture_position, const bool mesh_self_intersection)
+float shadow_transparency_texture(const vec3 texture_position)
 {
         return isosurface_shadow_transparency_texture(texture_position);
 }
@@ -37,16 +37,20 @@ float shadow_transparency(const float mesh_shadow, const float isosurface_shadow
         return mesh_shadow * isosurface_shadow;
 }
 
-float shadow_transparency_texture(const vec3 texture_position, const bool mesh_self_intersection)
+float shadow_transparency_texture(const vec3 texture_position)
 {
-        const float mesh_shadow = mesh_shadow_transparency_texture(texture_position, mesh_self_intersection);
+        const float mesh_shadow = mesh_shadow_transparency_texture(texture_position);
         const float isosurface_shadow = isosurface_shadow_transparency_texture(texture_position);
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
-float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
+float shadow_transparency_device(
+        const vec3 device_position,
+        const bool mesh_self_intersection,
+        const vec3 ray_org_to_light)
 {
-        const float mesh_shadow = mesh_shadow_transparency_device(device_position, mesh_self_intersection);
+        const float mesh_shadow =
+                mesh_shadow_transparency_device(device_position, mesh_self_intersection, ray_org_to_light);
         if (is_volume())
         {
                 return mesh_shadow;
@@ -55,9 +59,13 @@ float shadow_transparency_device(const vec3 device_position, const bool mesh_sel
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
-float shadow_transparency_world(const vec3 world_position, const bool mesh_self_intersection)
+float shadow_transparency_world(
+        const vec3 world_position,
+        const bool mesh_self_intersection,
+        const vec3 ray_org_to_light)
 {
-        const float mesh_shadow = mesh_shadow_transparency_world(world_position, mesh_self_intersection);
+        const float mesh_shadow =
+                mesh_shadow_transparency_world(world_position, mesh_self_intersection, ray_org_to_light);
         if (is_volume())
         {
                 return mesh_shadow;
@@ -70,14 +78,20 @@ float shadow_transparency_world(const vec3 world_position, const bool mesh_self_
 
 #elif defined(OPACITY) || defined(TRANSPARENCY)
 
-float shadow_transparency_device(const vec3 device_position, const bool mesh_self_intersection)
+float shadow_transparency_device(
+        const vec3 device_position,
+        const bool mesh_self_intersection,
+        const vec3 ray_org_to_light)
 {
-        return mesh_shadow_transparency_device(device_position, mesh_self_intersection);
+        return mesh_shadow_transparency_device(device_position, mesh_self_intersection, ray_org_to_light);
 }
 
-float shadow_transparency_world(const vec3 world_position, const bool mesh_self_intersection)
+float shadow_transparency_world(
+        const vec3 world_position,
+        const bool mesh_self_intersection,
+        const vec3 ray_org_to_light)
 {
-        return mesh_shadow_transparency_world(world_position, mesh_self_intersection);
+        return mesh_shadow_transparency_world(world_position, mesh_self_intersection, ray_org_to_light);
 }
 
 #endif

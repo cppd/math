@@ -29,10 +29,15 @@ struct TransparencyFragment
 {
         uint color_rgba;
         uint metalness_roughness_ambient_edge_factor;
-        uint geometric_normal_directed_to_light;
         float n_x;
         float n_y;
         float n_z;
+#ifdef RAY_TRACING
+        uint geometric_normal_directed_to_light;
+        float ray_org_to_light_x;
+        float ray_org_to_light_y;
+        float ray_org_to_light_z;
+#endif
         float depth;
 };
 
@@ -43,6 +48,7 @@ struct TransparencyNode
 };
 
 TransparencyNode create_transparency_node(
+        const uint next,
         const vec3 color,
         const float alpha,
         const vec3 n,
@@ -52,18 +58,26 @@ TransparencyNode create_transparency_node(
         const float edge_factor,
         const float depth,
         const bool geometric_normal_directed_to_light,
-        const uint next)
+        const vec3 ray_org_to_light)
 {
         TransparencyNode node;
 
         node.fragment.color_rgba = packUnorm4x8(vec4(color, alpha));
         node.fragment.metalness_roughness_ambient_edge_factor =
                 packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
-        node.fragment.geometric_normal_directed_to_light = geometric_normal_directed_to_light ? 1 : 0;
         node.fragment.n_x = n.x;
         node.fragment.n_y = n.y;
         node.fragment.n_z = n.z;
+
+#ifdef RAY_TRACING
+        node.fragment.geometric_normal_directed_to_light = geometric_normal_directed_to_light ? 1 : 0;
+        node.fragment.ray_org_to_light_x = ray_org_to_light.x;
+        node.fragment.ray_org_to_light_y = ray_org_to_light.y;
+        node.fragment.ray_org_to_light_z = ray_org_to_light.z;
+#endif
+
         node.fragment.depth = depth;
+
         node.next = next;
 
         return node;
@@ -75,6 +89,9 @@ struct OpacityFragment
 {
         uvec4 v_0;
         vec4 v_1;
+#ifdef RAY_TRACING
+        vec4 v_2;
+#endif
 };
 
 OpacityFragment create_opacity_fragment(
@@ -86,19 +103,22 @@ OpacityFragment create_opacity_fragment(
         const float ambient,
         const float edge_factor,
         const float depth,
-        const bool geometric_normal_directed_to_light)
+        const bool geometric_normal_directed_to_light,
+        const vec3 ray_org_to_light)
 {
         OpacityFragment fragment;
 
         fragment.v_0[0] = packUnorm2x16(color.rg);
         fragment.v_0[1] = packUnorm2x16(vec2(color.b, alpha));
         fragment.v_0[2] = packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
-        fragment.v_0[3] = geometric_normal_directed_to_light ? 1 : 0;
 
-        fragment.v_1[0] = n.x;
-        fragment.v_1[1] = n.y;
-        fragment.v_1[2] = n.z;
-        fragment.v_1[3] = depth;
+        fragment.v_1.xyz = n;
+        fragment.v_1.w = depth;
+
+#ifdef RAY_TRACING
+        fragment.v_0[3] = geometric_normal_directed_to_light ? 1 : 0;
+        fragment.v_2.xyz = ray_org_to_light;
+#endif
 
         return fragment;
 }
@@ -122,9 +142,10 @@ struct Fragment
         float roughness;
         float ambient;
         float edge_factor;
-        bool geometric_normal_directed_to_light;
         vec3 n;
         float depth;
+        bool geometric_normal_directed_to_light;
+        vec3 ray_org_to_light;
 };
 
 Fragment to_fragment(const TransparencyFragment fragment)
@@ -139,9 +160,14 @@ Fragment to_fragment(const TransparencyFragment fragment)
                 data.ambient = v[2];
                 data.edge_factor = v[3];
         }
-        data.geometric_normal_directed_to_light = fragment.geometric_normal_directed_to_light != 0;
         data.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
         data.depth = fragment.depth;
+
+#ifdef RAY_TRACING
+        data.geometric_normal_directed_to_light = fragment.geometric_normal_directed_to_light != 0;
+        data.ray_org_to_light =
+                vec3(fragment.ray_org_to_light_x, fragment.ray_org_to_light_y, fragment.ray_org_to_light_z);
+#endif
 
         return data;
 }
@@ -159,9 +185,13 @@ Fragment to_fragment(const OpacityFragment fragment)
                 data.ambient = v[2];
                 data.edge_factor = v[3];
         }
-        data.geometric_normal_directed_to_light = fragment.v_0[3] != 0;
         data.n = fragment.v_1.xyz;
         data.depth = fragment.v_1.w;
+
+#ifdef RAY_TRACING
+        data.geometric_normal_directed_to_light = fragment.v_0[3] != 0;
+        data.ray_org_to_light = fragment.v_2.xyz;
+#endif
 
         return data;
 }

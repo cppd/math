@@ -54,6 +54,9 @@ OpacityFragment opacity_fragment()
         OpacityFragment f;
         f.v_0 = imageLoad(opacity_0, ivec2(gl_FragCoord.xy), gl_SampleID);
         f.v_1 = g_opacity_fragment_v_1;
+#ifdef RAY_TRACING
+        f.v_2 = imageLoad(opacity_2, ivec2(gl_FragCoord.xy), gl_SampleID);
+#endif
         return f;
 }
 

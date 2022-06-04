@@ -29,6 +29,7 @@ bool ray_tracing_intersection(
         const vec3 org,
         const vec3 dir,
         const bool /*self_intersection*/,
+        const vec3 /*ray_org_to_light*/,
         const accelerationStructureEXT acceleration_structure,
         const float t_max)
 {
@@ -45,18 +46,21 @@ bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
         const bool self_intersection,
+        const vec3 ray_org_to_light,
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 org = world_position;
         const vec3 dir = direction_to_light;
 
-        return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, RAY_TRACING_T_MAX);
+        return ray_tracing_intersection(
+                org, dir, self_intersection, ray_org_to_light, acceleration_structure, RAY_TRACING_T_MAX);
 }
 
 bool occluded(
         const vec3 world_position,
         const vec3 direction_to_light,
         const bool self_intersection,
+        const vec3 ray_org_to_light,
         const vec4 clip_plane_equation,
         const accelerationStructureEXT acceleration_structure)
 {
@@ -68,14 +72,16 @@ bool occluded(
         const float n_dot_dir = dot(clip_plane_equation.xyz, dir);
         if (n_dot_dir >= 0)
         {
-                return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, RAY_TRACING_T_MAX);
+                return ray_tracing_intersection(
+                        org, dir, self_intersection, ray_org_to_light, acceleration_structure, RAY_TRACING_T_MAX);
         }
 
         const float t_clip_plane = dot(clip_plane_equation, vec4(org, 1)) / -n_dot_dir;
         if (t_clip_plane > RAY_TRACING_T_MIN)
         {
                 const float t_max = min(RAY_TRACING_T_MAX, t_clip_plane);
-                return ray_tracing_intersection(org, dir, self_intersection, acceleration_structure, t_max);
+                return ray_tracing_intersection(
+                        org, dir, self_intersection, ray_org_to_light, acceleration_structure, t_max);
         }
 
         return false;

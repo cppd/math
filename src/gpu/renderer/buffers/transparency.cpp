@@ -33,22 +33,38 @@ constexpr unsigned long long BUFFER_SIZE = 1ull << 31;
 // float n_x
 // float n_y
 // float n_z
+//#ifdef RAY_TRACING
+// float ray_org_to_light_x;
+// float ray_org_to_light_y;
+// float ray_org_to_light_z;
+//#endif
 // float depth
 // uint next
-constexpr unsigned long long NODE_SIZE = 32;
+unsigned long long node_size(const bool ray_tracing)
+{
+        if (ray_tracing)
+        {
+                return 44;
+        }
+        return 32;
+}
 }
 
-TransparencyBuffers::TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
-        : buffer_size_(std::min<unsigned long long>(
-                BUFFER_SIZE,
-                device.properties().properties_10.limits.maxStorageBufferRange)),
-          node_count_(buffer_size_ / NODE_SIZE),
+TransparencyBuffers::TransparencyBuffers(
+        const bool ray_tracing,
+        const vulkan::Device& device,
+        const std::vector<std::uint32_t>& family_indices)
+        : node_size_(node_size(ray_tracing)),
+          buffer_size_(std::min<unsigned long long>(
+                  BUFFER_SIZE,
+                  device.properties().properties_10.limits.maxStorageBufferRange)),
+          node_count_(buffer_size_ / node_size_),
           node_buffer_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                  node_count_ * NODE_SIZE),
+                  node_count_ * node_size_),
           init_buffer_(
                   vulkan::BufferMemoryType::HOST_VISIBLE,
                   device,
@@ -155,7 +171,7 @@ TransparencyBuffers::Info TransparencyBuffers::read() const
         vulkan::BufferMapper mapper(read_buffer_);
         Counters counters;
         mapper.read(&counters);
-        return {.required_node_memory = counters.transparency_node_counter * NODE_SIZE,
+        return {.required_node_memory = counters.transparency_node_counter * node_size_,
                 .overload_counter = counters.transparency_overload_counter};
 }
 }

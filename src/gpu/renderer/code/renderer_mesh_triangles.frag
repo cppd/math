@@ -92,6 +92,6 @@ float edge_factor()
 void main()
 {
         set_fragment_color(
-                surface_color(), normalize(gs.world_normal), edge_factor(), ray_org_to_light(),
-                gs.geometric_normal_directed_to_light != 0);
+                surface_color(), normalize(gs.world_normal), edge_factor(), gs.geometric_normal_directed_to_light != 0,
+                ray_org_to_light());
 }
