@@ -31,21 +31,22 @@ class VolumeSharedMemory final
         static constexpr int OPACITY_0_BINDING = 0;
         static constexpr int OPACITY_1_BINDING = 1;
         static constexpr int OPACITY_2_BINDING = 2;
+        static constexpr int OPACITY_3_BINDING = 3;
 
-        static constexpr int TRANSPARENCY_HEADS_BINDING = 3;
-        static constexpr int TRANSPARENCY_NODES_BINDING = 4;
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 5;
 
-        static constexpr int COORDINATES_BINDING = 5;
+        static constexpr int COORDINATES_BINDING = 6;
 
-        static constexpr int DEPTH_IMAGE_BINDING = 6;
+        static constexpr int DEPTH_IMAGE_BINDING = 7;
 
-        static constexpr int DRAWING_BINDING = 7;
+        static constexpr int DRAWING_BINDING = 8;
 
-        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 8;
-        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 9;
+        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 9;
+        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 10;
 
-        static constexpr int ACCELERATION_STRUCTURE_BINDING = 10;
-        static constexpr int SHADOW_MAP_BINDING = 10;
+        static constexpr int ACCELERATION_STRUCTURE_BINDING = 11;
+        static constexpr int SHADOW_MAP_BINDING = 11;
 
         vulkan::Descriptors descriptors_;
 

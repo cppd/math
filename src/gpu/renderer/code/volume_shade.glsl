@@ -59,6 +59,18 @@ vec4 isosurface_color(const vec3 texture_position)
 
 #if defined(OPACITY) || defined(TRANSPARENCY)
 
+#ifdef RAY_TRACING
+float compute_shadow_transparency(const Fragment fragment)
+{
+        return shadow_transparency_world(fragment.world_position, fragment.geometric_normal);
+}
+#else
+float compute_shadow_transparency(const Fragment fragment)
+{
+        return shadow_transparency_device(vec3(device_coordinates, fragment.depth));
+}
+#endif
+
 vec4 fragment_color(const Fragment fragment)
 {
         if (fragment.n == vec3(0))
@@ -74,12 +86,7 @@ vec4 fragment_color(const Fragment fragment)
 
         if (drawing.show_shadow)
         {
-                const float shadow_transparency =
-                        dot(n, l) > 0 ? shadow_transparency_device(
-                                vec3(device_coordinates, fragment.depth),
-                                /*mesh_self_intersection*/ !fragment.geometric_normal_directed_to_light,
-                                fragment.ray_org_to_light)
-                                      : 0;
+                const float shadow_transparency = dot(n, l) > 0 ? compute_shadow_transparency(fragment) : 0;
 
                 color +=
                         shade(fragment.color.rgb, fragment.metalness, fragment.roughness, n, v, l,

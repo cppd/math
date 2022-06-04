@@ -26,13 +26,15 @@ namespace
 // clang-format off
 constexpr std::array FORMATS = std::to_array<VkFormat>
 ({
-        VK_FORMAT_R32G32B32A32_UINT,
+        VK_FORMAT_R32G32_UINT,
         VK_FORMAT_R32G32B32A32_SFLOAT,
-        VK_FORMAT_R32G32B32A32_SFLOAT
+        VK_FORMAT_R32G32B32A32_SFLOAT,
+        VK_FORMAT_R32G32_SFLOAT
 });
 constexpr std::array CLEAR_VALUES = std::to_array<VkClearValue>
 ({
         {.color{.uint32{0, 0, 0, 0}}},
+        {.color{.float32{0, 0, 0, 0}}},
         {.color{.float32{0, 0, 0, 0}}},
         {.color{.float32{0, 0, 0, 0}}}
 });
@@ -42,7 +44,7 @@ constexpr VkImageUsageFlags USAGE_FLAGS = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
 constexpr VkImageType IMAGE_TYPE = VK_IMAGE_TYPE_2D;
 }
 
-OpacityBuffers::OpacityBuffers(const bool ray_tracing) : image_count_(ray_tracing ? 3 : 2)
+OpacityBuffers::OpacityBuffers(const bool ray_tracing) : image_count_(ray_tracing ? 4 : 2)
 {
 }
 

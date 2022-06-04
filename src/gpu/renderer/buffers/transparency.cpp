@@ -27,26 +27,28 @@ constexpr std::uint32_t HEADS_NULL_INDEX = 0xffff'ffff;
 
 constexpr unsigned long long BUFFER_SIZE = 1ull << 31;
 
-// uint color_rgba
-// uint metalness_roughness_ambient_edge_factor
-// uint normal_directed_to_light
-// float n_x
-// float n_y
-// float n_z
-//#ifdef RAY_TRACING
-// float ray_org_to_light_x;
-// float ray_org_to_light_y;
-// float ray_org_to_light_z;
-//#endif
-// float depth
-// uint next
-unsigned long long node_size(const bool ray_tracing)
+// uint color_rgba;
+// uint metalness_roughness_ambient_edge_factor;
+// float n_x;
+// float n_y;
+// float n_z;
+// float depth;
+// #ifdef RAY_TRACING
+//  float world_position_x;
+//  float world_position_y;
+//  float world_position_z;
+//  float geometric_normal_x;
+//  float geometric_normal_y;
+//  float geometric_normal_z;
+// #endif
+// uint next;
+unsigned node_size(const bool ray_tracing)
 {
         if (ray_tracing)
         {
-                return 44;
+                return 13 * 4;
         }
-        return 32;
+        return 7 * 4;
 }
 }
 

@@ -44,28 +44,10 @@ float shadow_transparency_texture(const vec3 texture_position)
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
-float shadow_transparency_device(
-        const vec3 device_position,
-        const bool mesh_self_intersection,
-        const vec3 ray_org_to_light)
+#ifdef RAY_TRACING
+float shadow_transparency_world(const vec3 world_position, const vec3 geometric_normal)
 {
-        const float mesh_shadow =
-                mesh_shadow_transparency_device(device_position, mesh_self_intersection, ray_org_to_light);
-        if (is_volume())
-        {
-                return mesh_shadow;
-        }
-        const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
-        return shadow_transparency(mesh_shadow, isosurface_shadow);
-}
-
-float shadow_transparency_world(
-        const vec3 world_position,
-        const bool mesh_self_intersection,
-        const vec3 ray_org_to_light)
-{
-        const float mesh_shadow =
-                mesh_shadow_transparency_world(world_position, mesh_self_intersection, ray_org_to_light);
+        const float mesh_shadow = mesh_shadow_transparency_world(world_position, geometric_normal);
         if (is_volume())
         {
                 return mesh_shadow;
@@ -73,26 +55,34 @@ float shadow_transparency_world(
         const float isosurface_shadow = isosurface_shadow_transparency_world(world_position);
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
+#else
+float shadow_transparency_device(const vec3 device_position)
+{
+        const float mesh_shadow = mesh_shadow_transparency_device(device_position);
+        if (is_volume())
+        {
+                return mesh_shadow;
+        }
+        const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
+        return shadow_transparency(mesh_shadow, isosurface_shadow);
+}
+#endif
 
 #endif
 
 #elif defined(OPACITY) || defined(TRANSPARENCY)
 
-float shadow_transparency_device(
-        const vec3 device_position,
-        const bool mesh_self_intersection,
-        const vec3 ray_org_to_light)
+#ifdef RAY_TRACING
+float shadow_transparency_world(const vec3 world_position, const vec3 geometric_normal)
 {
-        return mesh_shadow_transparency_device(device_position, mesh_self_intersection, ray_org_to_light);
+        return mesh_shadow_transparency_world(world_position, geometric_normal);
 }
-
-float shadow_transparency_world(
-        const vec3 world_position,
-        const bool mesh_self_intersection,
-        const vec3 ray_org_to_light)
+#else
+float shadow_transparency_device(const vec3 device_position)
 {
-        return mesh_shadow_transparency_world(world_position, mesh_self_intersection, ray_org_to_light);
+        return mesh_shadow_transparency_device(device_position);
 }
+#endif
 
 #endif
 

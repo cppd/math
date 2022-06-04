@@ -32,13 +32,15 @@ struct TransparencyFragment
         float n_x;
         float n_y;
         float n_z;
-#ifdef RAY_TRACING
-        uint geometric_normal_directed_to_light;
-        float ray_org_to_light_x;
-        float ray_org_to_light_y;
-        float ray_org_to_light_z;
-#endif
         float depth;
+#ifdef RAY_TRACING
+        float world_position_x;
+        float world_position_y;
+        float world_position_z;
+        float geometric_normal_x;
+        float geometric_normal_y;
+        float geometric_normal_z;
+#endif
 };
 
 struct TransparencyNode
@@ -57,26 +59,28 @@ TransparencyNode create_transparency_node(
         const float ambient,
         const float edge_factor,
         const float depth,
-        const bool geometric_normal_directed_to_light,
-        const vec3 ray_org_to_light)
+        const vec3 world_position,
+        const vec3 geometric_normal)
 {
         TransparencyNode node;
 
         node.fragment.color_rgba = packUnorm4x8(vec4(color, alpha));
         node.fragment.metalness_roughness_ambient_edge_factor =
                 packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
+
         node.fragment.n_x = n.x;
         node.fragment.n_y = n.y;
         node.fragment.n_z = n.z;
+        node.fragment.depth = depth;
 
 #ifdef RAY_TRACING
-        node.fragment.geometric_normal_directed_to_light = geometric_normal_directed_to_light ? 1 : 0;
-        node.fragment.ray_org_to_light_x = ray_org_to_light.x;
-        node.fragment.ray_org_to_light_y = ray_org_to_light.y;
-        node.fragment.ray_org_to_light_z = ray_org_to_light.z;
+        node.fragment.world_position_x = world_position.x;
+        node.fragment.world_position_y = world_position.y;
+        node.fragment.world_position_z = world_position.z;
+        node.fragment.geometric_normal_x = geometric_normal.x;
+        node.fragment.geometric_normal_y = geometric_normal.y;
+        node.fragment.geometric_normal_z = geometric_normal.z;
 #endif
-
-        node.fragment.depth = depth;
 
         node.next = next;
 
@@ -87,10 +91,11 @@ TransparencyNode create_transparency_node(
 
 struct OpacityFragment
 {
-        uvec4 v_0;
+        uvec2 v_0;
         vec4 v_1;
 #ifdef RAY_TRACING
         vec4 v_2;
+        vec2 v_3;
 #endif
 };
 
@@ -103,21 +108,21 @@ OpacityFragment create_opacity_fragment(
         const float ambient,
         const float edge_factor,
         const float depth,
-        const bool geometric_normal_directed_to_light,
-        const vec3 ray_org_to_light)
+        const vec3 world_position,
+        const vec3 geometric_normal)
 {
         OpacityFragment fragment;
 
-        fragment.v_0[0] = packUnorm2x16(color.rg);
-        fragment.v_0[1] = packUnorm2x16(vec2(color.b, alpha));
-        fragment.v_0[2] = packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
+        fragment.v_0[0] = packUnorm4x8(vec4(color.rgb, alpha));
+        fragment.v_0[1] = packUnorm4x8(vec4(metalness, roughness, ambient, edge_factor));
 
         fragment.v_1.xyz = n;
         fragment.v_1.w = depth;
 
 #ifdef RAY_TRACING
-        fragment.v_0[3] = geometric_normal_directed_to_light ? 1 : 0;
-        fragment.v_2.xyz = ray_org_to_light;
+        fragment.v_2.xyz = world_position;
+        fragment.v_2.w = geometric_normal.x;
+        fragment.v_3 = geometric_normal.yz;
 #endif
 
         return fragment;
@@ -144,8 +149,10 @@ struct Fragment
         float edge_factor;
         vec3 n;
         float depth;
-        bool geometric_normal_directed_to_light;
-        vec3 ray_org_to_light;
+#ifdef RAY_TRACING
+        vec3 world_position;
+        vec3 geometric_normal;
+#endif
 };
 
 Fragment to_fragment(const TransparencyFragment fragment)
@@ -164,9 +171,9 @@ Fragment to_fragment(const TransparencyFragment fragment)
         data.depth = fragment.depth;
 
 #ifdef RAY_TRACING
-        data.geometric_normal_directed_to_light = fragment.geometric_normal_directed_to_light != 0;
-        data.ray_org_to_light =
-                vec3(fragment.ray_org_to_light_x, fragment.ray_org_to_light_y, fragment.ray_org_to_light_z);
+        data.world_position = vec3(fragment.world_position_x, fragment.world_position_y, fragment.world_position_z);
+        data.geometric_normal =
+                vec3(fragment.geometric_normal_x, fragment.geometric_normal_y, fragment.geometric_normal_z);
 #endif
 
         return data;
@@ -176,10 +183,9 @@ Fragment to_fragment(const OpacityFragment fragment)
 {
         Fragment data;
 
-        data.color.rg = unpackUnorm2x16(fragment.v_0[0]);
-        data.color.ba = unpackUnorm2x16(fragment.v_0[1]);
+        data.color = unpackUnorm4x8(fragment.v_0[0]);
         {
-                const vec4 v = unpackUnorm4x8(fragment.v_0[2]);
+                const vec4 v = unpackUnorm4x8(fragment.v_0[1]);
                 data.metalness = v[0];
                 data.roughness = v[1];
                 data.ambient = v[2];
@@ -189,8 +195,9 @@ Fragment to_fragment(const OpacityFragment fragment)
         data.depth = fragment.v_1.w;
 
 #ifdef RAY_TRACING
-        data.geometric_normal_directed_to_light = fragment.v_0[3] != 0;
-        data.ray_org_to_light = fragment.v_2.xyz;
+        data.world_position = fragment.v_2.xyz;
+        data.geometric_normal.x = fragment.v_2.w;
+        data.geometric_normal.yz = fragment.v_3;
 #endif
 
         return data;

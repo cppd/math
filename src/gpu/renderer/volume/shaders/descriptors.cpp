@@ -55,6 +55,16 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
+                b.binding = OPACITY_3_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
@@ -224,18 +234,19 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
 
 void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>& images) const
 {
-        ASSERT(images.size() == 2 || images.size() == 3);
+        ASSERT(images.size() == 2 || images.size() == 4);
         ASSERT(std::all_of(
                 images.cbegin(), images.cend(),
                 [](const vulkan::ImageView* const image)
                 {
                         return image->has_usage(VK_IMAGE_USAGE_STORAGE_BIT);
                 }));
-        ASSERT(images[0]->format() == VK_FORMAT_R32G32B32A32_UINT);
+        ASSERT(images[0]->format() == VK_FORMAT_R32G32_UINT);
         ASSERT(images[1]->format() == VK_FORMAT_R32G32B32A32_SFLOAT);
-        if (images.size() == 3)
+        if (images.size() == 4)
         {
                 ASSERT(images[2]->format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+                ASSERT(images[3]->format() == VK_FORMAT_R32G32_SFLOAT);
         }
 
         std::vector<vulkan::Descriptors::Info> infos;
@@ -257,7 +268,7 @@ void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>
                 infos.emplace_back(image_info);
                 bindings.push_back(OPACITY_1_BINDING);
         }
-        if (images.size() == 3)
+        if (images.size() == 4)
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -265,6 +276,15 @@ void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>
 
                 infos.emplace_back(image_info);
                 bindings.push_back(OPACITY_2_BINDING);
+        }
+        if (images.size() == 4)
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = images[3]->handle();
+
+                infos.emplace_back(image_info);
+                bindings.push_back(OPACITY_3_BINDING);
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
