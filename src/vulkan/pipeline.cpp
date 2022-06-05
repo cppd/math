@@ -107,9 +107,9 @@ VkPipelineRasterizationStateCreateInfo create_rasterization_state_info(const Gra
         create_info.cullMode = VK_CULL_MODE_NONE;
         create_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
         create_info.depthBiasEnable = info.depth_bias ? VK_TRUE : VK_FALSE;
-        // rasterization_state_info.depthBiasConstantFactor = 0.0f;
-        // rasterization_state_info.depthBiasClamp = 0.0f;
-        // rasterization_state_info.depthBiasSlopeFactor = 0.0f;
+        // create_info.depthBiasConstantFactor = 0.0f;
+        // create_info.depthBiasClamp = 0.0f;
+        // create_info.depthBiasSlopeFactor = 0.0f;
         return create_info;
 }
 
@@ -132,9 +132,9 @@ VkPipelineMultisampleStateCreateInfo create_multisample_state_info(const Graphic
         {
                 create_info.sampleShadingEnable = VK_FALSE;
         }
-        // multisampling_state_info.pSampleMask = nullptr;
-        // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
-        // multisampling_state_info.alphaToOneEnable = VK_FALSE;
+        // create_info.pSampleMask = nullptr;
+        // create_info.alphaToCoverageEnable = VK_FALSE;
+        // create_info.alphaToOneEnable = VK_FALSE;
         return create_info;
 }
 
@@ -176,13 +176,13 @@ VkPipelineColorBlendStateCreateInfo create_color_blend_state_info(
         VkPipelineColorBlendStateCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         create_info.logicOpEnable = VK_FALSE;
-        // color_blending_state_info.logicOp = VK_LOGIC_OP_COPY;
+        // create_info.logicOp = VK_LOGIC_OP_COPY;
         create_info.attachmentCount = attachment_count;
         create_info.pAttachments = attachments;
-        // color_blending_state_info.blendConstants[0] = 0.0f;
-        // color_blending_state_info.blendConstants[1] = 0.0f;
-        // color_blending_state_info.blendConstants[2] = 0.0f;
-        // color_blending_state_info.blendConstants[3] = 0.0f;
+        // create_info.blendConstants[0] = 0.0f;
+        // create_info.blendConstants[1] = 0.0f;
+        // create_info.blendConstants[2] = 0.0f;
+        // create_info.blendConstants[3] = 0.0f;
         return create_info;
 }
 
@@ -224,11 +224,11 @@ VkPipelineDepthStencilStateCreateInfo create_depth_stencil_state_info(const Grap
         create_info.depthWriteEnable = info.depth_write ? VK_TRUE : VK_FALSE;
         create_info.depthCompareOp = VK_COMPARE_OP_LESS;
         create_info.depthBoundsTestEnable = VK_FALSE;
-        // depth_stencil_state_info.minDepthBounds = 0.0f;
-        // depth_stencil_state_info.maxDepthBounds = 1.0f;
+        // create_info.minDepthBounds = 0.0f;
+        // create_info.maxDepthBounds = 1.0f;
         create_info.stencilTestEnable = VK_FALSE;
-        // depth_stencil_state_info.front = {};
-        // depth_stencil_state_info.back = {};
+        // create_info.front = {};
+        // create_info.back = {};
         return create_info;
 }
 }
@@ -284,8 +284,8 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
                 res.layout = info.pipeline_layout.value();
                 res.renderPass = info.render_pass->handle();
                 res.subpass = info.sub_pass.value();
-                // create_info.basePipelineHandle = VK_NULL_HANDLE;
-                // create_info.basePipelineIndex = -1;
+                // res.basePipelineHandle = VK_NULL_HANDLE;
+                // res.basePipelineIndex = -1;
                 return res;
         }();
 

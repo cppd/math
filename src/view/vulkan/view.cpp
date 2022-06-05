@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image_resolve.h"
 #include "render_buffers.h"
 #include "swapchain.h"
+#include "view_info.h"
 #include "view_process.h"
 
 #include "../com/camera.h"
@@ -31,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/view_thread.h"
 #include "../com/window.h"
 
-#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/gpu/renderer/renderer.h>
@@ -45,10 +45,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sample.h>
 #include <src/window/surface.h>
 
-#include <algorithm>
 #include <chrono>
 #include <optional>
 
@@ -60,6 +58,7 @@ using FrameClock = std::chrono::steady_clock;
 constexpr FrameClock::duration IDLE_MODE_FRAME_DURATION = std::chrono::milliseconds(100);
 
 constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
+constexpr double TEXT_SIZE_IN_POINTS = 9;
 
 constexpr int RENDER_BUFFER_COUNT = 1;
 
@@ -72,15 +71,15 @@ constexpr bool SWAPCHAIN_INITIAL_VERTICAL_SYNC = false;
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
 
+constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
+
+constexpr bool MULTISAMPLING = true;
 constexpr int PREFERRED_SAMPLE_COUNT = 4;
+
 constexpr bool SAMPLE_RATE_SHADING = true; // supersampling
 constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
-constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
-
 constexpr color::Color DEFAULT_TEXT_COLOR{color::RGB8(255, 255, 255)};
-
-constexpr double TEXT_SIZE_IN_POINTS = 9;
 
 vulkan::DeviceFunctionality device_functionality()
 {
@@ -105,51 +104,6 @@ vulkan::DeviceFunctionality device_functionality()
         return res;
 }
 
-struct PixelSizes final
-{
-        double ppi;
-        unsigned frame;
-        unsigned text;
-};
-
-PixelSizes calculate_pixel_sizes(const std::array<double, 2>& window_size_in_mm, const vulkan::Swapchain& swapchain)
-{
-        const double ppi_x = size_to_ppi(window_size_in_mm[0], swapchain.width());
-        const double ppi_y = size_to_ppi(window_size_in_mm[1], swapchain.height());
-        const double ppi = 0.5 * (ppi_x + ppi_y);
-
-        if (!(ppi > 0))
-        {
-                error("PPI " + to_string(ppi) + "is not positive");
-        }
-
-        PixelSizes res;
-        res.ppi = ppi;
-        res.frame = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, ppi));
-        res.text = std::max(1, points_to_pixels(TEXT_SIZE_IN_POINTS, ppi));
-        return res;
-}
-
-VkSampleCountFlagBits sample_count_flag(const vulkan::PhysicalDeviceProperties& properties)
-{
-        const int sample_count = [&]
-        {
-                const std::set<int> sample_counts = vulkan::supported_sample_counts(properties.properties_10.limits);
-                const auto iter = sample_counts.lower_bound(PREFERRED_SAMPLE_COUNT);
-                if (iter == sample_counts.cend())
-                {
-                        ASSERT(!sample_counts.empty());
-                        return *std::prev(iter);
-                }
-                return *iter;
-        }();
-        if (sample_count < 2)
-        {
-                error("At least 2 samples per pixel are required");
-        }
-        return vulkan::sample_count_to_sample_count_flag(sample_count);
-}
-
 class Impl final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -161,7 +115,8 @@ class Impl final
         const vulkan::CommandPool transfer_command_pool_;
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device().handle()};
 
-        const VkSampleCountFlagBits sample_count_flag_{sample_count_flag(device_graphics_.device().properties())};
+        const VkSampleCountFlagBits sample_count_flag_{
+                sample_count_flag(MULTISAMPLING, PREFERRED_SAMPLE_COUNT, device_graphics_.device().properties())};
 
         std::optional<PixelSizes> pixel_sizes_;
         FrameRate frame_rate_;
@@ -382,7 +337,8 @@ class Impl final
 
                 if (window_size_in_mm)
                 {
-                        pixel_sizes_ = calculate_pixel_sizes(*window_size_in_mm, *swapchain_);
+                        pixel_sizes_ = pixel_sizes(
+                                TEXT_SIZE_IN_POINTS, FRAME_SIZE_IN_MILLIMETERS, *window_size_in_mm, *swapchain_);
                 }
 
                 create_swapchain_buffers();
