@@ -357,11 +357,11 @@ struct PencilSketchShow final
         }
 };
 
-struct SampleCount final
+struct SetSampleCount final
 {
         int sample_count;
 
-        explicit SampleCount(const int sample_count) : sample_count(sample_count)
+        explicit SetSampleCount(const int sample_count) : sample_count(sample_count)
         {
         }
 };
@@ -388,12 +388,12 @@ using ViewCommand = std::variant<
         command::DeleteAllObjects,
         command::DeleteObject,
         command::ResetView,
-        command::SampleCount,
         command::SetBackgroundColor,
         command::SetLightingColor,
         command::SetNormalColorNegative,
         command::SetNormalColorPositive,
         command::SetNormalLength,
+        command::SetSampleCount,
         command::SetShadowZoom,
         command::SetVerticalSync,
         command::SetWireframeColor,

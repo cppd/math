@@ -73,7 +73,7 @@ class ViewProcess final
                 camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
         }
 
-        void command(const command::SampleCount& v)
+        void command(const command::SetSampleCount& v)
         {
                 set_sample_count_(v.sample_count);
         }

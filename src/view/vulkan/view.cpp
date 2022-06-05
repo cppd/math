@@ -390,6 +390,7 @@ class Impl final
                 if (!flag)
                 {
                         message_warning("Unsupported sample count " + to_string(sample_count));
+                        return;
                 }
                 delete_swapchain_buffers();
                 sample_count_flag_ = *flag;

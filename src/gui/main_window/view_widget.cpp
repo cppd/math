@@ -129,7 +129,7 @@ void ViewWidget::set_sample_count(const view::info::SampleCount& sample_count)
                         {
                                 if (checked)
                                 {
-                                        view_->send(view::command::SampleCount(count));
+                                        view_->send(view::command::SetSampleCount(count));
                                 }
                         });
         }
