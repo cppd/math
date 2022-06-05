@@ -130,7 +130,7 @@ std::string render_buffer_info(
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
-            << vulkan::sample_count_flag_to_integer(
+            << vulkan::sample_count_flag_to_sample_count(
                        !color.empty() ? color[0].image().sample_count() : depth[0].image().sample_count());
 
         oss << '\n';

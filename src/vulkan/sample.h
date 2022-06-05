@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <set>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
-        VkPhysicalDevice physical_device,
-        int required_minimum_sample_count);
+std::set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits);
 
-int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count);
+VkSampleCountFlagBits sample_count_to_sample_count_flag(int sample_count);
+int sample_count_flag_to_sample_count(VkSampleCountFlagBits sample_count);
 }

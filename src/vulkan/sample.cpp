@@ -31,70 +31,81 @@ bool set(const VkSampleCountFlags flags, const VkSampleCountFlagBits bits)
 }
 }
 
-VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
-        const VkPhysicalDevice physical_device,
-        const int required_minimum_sample_count)
+std::set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits)
 {
-        constexpr int MIN_SAMPLE_COUNT = 1;
-        constexpr int MAX_SAMPLE_COUNT = 64;
+        const VkSampleCountFlags flags =
+                limits.framebufferColorSampleCounts & limits.framebufferDepthSampleCounts
+                & limits.storageImageSampleCounts;
 
-        if (required_minimum_sample_count < MIN_SAMPLE_COUNT)
+        std::set<int> res;
+
+        if (set(flags, VK_SAMPLE_COUNT_1_BIT))
         {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is less than "
-                      + to_string(MIN_SAMPLE_COUNT));
-        }
-        if (required_minimum_sample_count > MAX_SAMPLE_COUNT)
-        {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count)
-                      + " is greater than " + to_string(MAX_SAMPLE_COUNT));
+                res.insert(1);
         }
 
-        const VkSampleCountFlags flags = [&]
+        if (set(flags, VK_SAMPLE_COUNT_2_BIT))
         {
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(physical_device, &properties);
-                return properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
-        }();
-
-        if ((required_minimum_sample_count <= 1) && set(flags, VK_SAMPLE_COUNT_1_BIT))
-        {
-                return VK_SAMPLE_COUNT_1_BIT;
+                res.insert(2);
         }
 
-        if ((required_minimum_sample_count <= 2) && set(flags, VK_SAMPLE_COUNT_2_BIT))
+        if (set(flags, VK_SAMPLE_COUNT_4_BIT))
         {
-                return VK_SAMPLE_COUNT_2_BIT;
+                res.insert(4);
         }
 
-        if ((required_minimum_sample_count <= 4) && set(flags, VK_SAMPLE_COUNT_4_BIT))
+        if (set(flags, VK_SAMPLE_COUNT_8_BIT))
         {
-                return VK_SAMPLE_COUNT_4_BIT;
+                res.insert(8);
         }
 
-        if ((required_minimum_sample_count <= 8) && set(flags, VK_SAMPLE_COUNT_8_BIT))
+        if (set(flags, VK_SAMPLE_COUNT_16_BIT))
         {
-                return VK_SAMPLE_COUNT_8_BIT;
+                res.insert(16);
         }
 
-        if ((required_minimum_sample_count <= 16) && set(flags, VK_SAMPLE_COUNT_16_BIT))
+        if (set(flags, VK_SAMPLE_COUNT_32_BIT))
         {
-                return VK_SAMPLE_COUNT_16_BIT;
+                res.insert(32);
         }
 
-        if ((required_minimum_sample_count <= 32) && set(flags, VK_SAMPLE_COUNT_32_BIT))
+        if (set(flags, VK_SAMPLE_COUNT_64_BIT))
         {
-                return VK_SAMPLE_COUNT_32_BIT;
+                res.insert(64);
         }
 
-        if ((required_minimum_sample_count <= 64) && set(flags, VK_SAMPLE_COUNT_64_BIT))
+        if (res.empty())
         {
-                return VK_SAMPLE_COUNT_64_BIT;
+                error("Sample counts not found");
         }
 
-        error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is not available");
+        return res;
 }
 
-int sample_count_flag_to_integer(const VkSampleCountFlagBits sample_count)
+VkSampleCountFlagBits sample_count_to_sample_count_flag(const int sample_count)
+{
+        switch (sample_count)
+        {
+        case 1:
+                return VK_SAMPLE_COUNT_1_BIT;
+        case 2:
+                return VK_SAMPLE_COUNT_2_BIT;
+        case 4:
+                return VK_SAMPLE_COUNT_4_BIT;
+        case 8:
+                return VK_SAMPLE_COUNT_8_BIT;
+        case 16:
+                return VK_SAMPLE_COUNT_16_BIT;
+        case 32:
+                return VK_SAMPLE_COUNT_32_BIT;
+        case 64:
+                return VK_SAMPLE_COUNT_64_BIT;
+        default:
+                error("Unsupported sample count " + to_string(sample_count));
+        }
+}
+
+int sample_count_flag_to_sample_count(const VkSampleCountFlagBits sample_count)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"

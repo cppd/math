@@ -62,5 +62,5 @@ std::unique_ptr<RenderBuffers> create_render_buffers(
         unsigned height,
         const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
-        int required_minimum_sample_count);
+        VkSampleCountFlagBits sample_count);
 }

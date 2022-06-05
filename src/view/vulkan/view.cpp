@@ -45,6 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
+#include <src/vulkan/sample.h>
 #include <src/window/surface.h>
 
 #include <algorithm>
@@ -71,7 +72,7 @@ constexpr bool SWAPCHAIN_INITIAL_VERTICAL_SYNC = false;
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
 
-constexpr int MINIMUM_SAMPLE_COUNT = 4;
+constexpr int PREFERRED_SAMPLE_COUNT = 4;
 constexpr bool SAMPLE_RATE_SHADING = true; // supersampling
 constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
@@ -85,7 +86,7 @@ vulkan::DeviceFunctionality device_functionality()
 {
         vulkan::DeviceFunctionality res;
 
-        if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
+        if (SAMPLE_RATE_SHADING)
         {
                 res.required_features.features_10.sampleRateShading = VK_TRUE;
         }
@@ -129,6 +130,26 @@ PixelSizes calculate_pixel_sizes(const std::array<double, 2>& window_size_in_mm,
         return res;
 }
 
+VkSampleCountFlagBits sample_count_flag(const vulkan::PhysicalDeviceProperties& properties)
+{
+        const int sample_count = [&]
+        {
+                const std::set<int> sample_counts = vulkan::supported_sample_counts(properties.properties_10.limits);
+                const auto iter = sample_counts.lower_bound(PREFERRED_SAMPLE_COUNT);
+                if (iter == sample_counts.cend())
+                {
+                        ASSERT(!sample_counts.empty());
+                        return *std::prev(iter);
+                }
+                return *iter;
+        }();
+        if (sample_count < 2)
+        {
+                error("At least 2 samples per pixel are required");
+        }
+        return vulkan::sample_count_to_sample_count_flag(sample_count);
+}
+
 class Impl final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -139,6 +160,8 @@ class Impl final
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device().handle()};
+
+        const VkSampleCountFlagBits sample_count_flag_{sample_count_flag(device_graphics_.device().properties())};
 
         std::optional<PixelSizes> pixel_sizes_;
         FrameRate frame_rate_;
@@ -257,7 +280,7 @@ class Impl final
                 render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
                         {device_graphics_.graphics_compute_queues()[0].family_index()}, device_graphics_.device(),
-                        MINIMUM_SAMPLE_COUNT);
+                        sample_count_flag_);
 
                 object_image_.emplace(
                         device_graphics_.device(),

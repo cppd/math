@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/sample.h>
 
 namespace ns::view
 {
@@ -155,7 +154,7 @@ public:
              unsigned height,
              const std::vector<std::uint32_t>& family_indices,
              const vulkan::Device& device,
-             int required_minimum_sample_count);
+             VkSampleCountFlagBits sample_count);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -171,7 +170,7 @@ Impl::Impl(
         const unsigned height,
         const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
-        const int required_minimum_sample_count)
+        const VkSampleCountFlagBits sample_count)
         : format_(color_format),
           width_(width),
           height_(height)
@@ -186,11 +185,7 @@ Impl::Impl(
                 error("Width " + std::to_string(width) + " and height " + std::to_string(height) + " must be positive");
         }
 
-        create_buffers(
-                device, depth_formats, buffer_count,
-                vulkan::supported_color_depth_framebuffer_sample_count_flag(
-                        device.physical_device(), required_minimum_sample_count),
-                family_indices);
+        create_buffers(device, depth_formats, buffer_count, sample_count, family_indices);
 
         render_buffer_check(color_attachments_, depth_attachments_);
 
@@ -397,10 +392,9 @@ std::unique_ptr<RenderBuffers> create_render_buffers(
         const unsigned height,
         const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
-        const int required_minimum_sample_count)
+        const VkSampleCountFlagBits sample_count)
 {
         return std::make_unique<Impl>(
-                buffer_count, color_format, depth_formats, width, height, family_indices, device,
-                required_minimum_sample_count);
+                buffer_count, color_format, depth_formats, width, height, family_indices, device, sample_count);
 }
 }
