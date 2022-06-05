@@ -32,6 +32,9 @@ private:
 
         view::View* view_ = nullptr;
 
+        void set_functionality(const view::info::Functionality& functionality);
+        void set_sample_count(const view::info::SampleCount& sample_count);
+
         void on_clip_plane_clicked();
         void on_convex_hull_2d_clicked();
         void on_dft_clicked();

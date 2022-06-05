@@ -90,14 +90,49 @@ void ViewWidget::set_view(view::View* const view)
         view_ = view;
 
         std::optional<view::info::Functionality> functionality;
-        view_->receive({&functionality});
-        if (!functionality)
+        std::optional<view::info::SampleCount> sample_count;
+        view_->receive({&functionality, &sample_count});
+        if (!functionality || !sample_count)
         {
-                message_error_fatal("Failed to receive view functionality");
+                message_error_fatal("Failed to receive view information");
         }
 
-        ui_.label_shadow_quality->setVisible(functionality->shadow_zoom);
-        ui_.slider_shadow_quality->setVisible(functionality->shadow_zoom);
+        set_functionality(*functionality);
+        set_sample_count(*sample_count);
+}
+
+void ViewWidget::set_functionality(const view::info::Functionality& functionality)
+{
+        ui_.label_shadow_quality->setVisible(functionality.shadow_zoom);
+        ui_.slider_shadow_quality->setVisible(functionality.shadow_zoom);
+}
+
+void ViewWidget::set_sample_count(const view::info::SampleCount& sample_count)
+{
+        const auto name = [](const int count)
+        {
+                if (count != 1)
+                {
+                        return QString("%1 samples").arg(count);
+                }
+                return QString("1 sample");
+        };
+
+        for (const int count : sample_count.sample_counts)
+        {
+                auto* const button = new QRadioButton(this);
+                button->setText(name(count));
+                button->setChecked(count == sample_count.sample_count);
+                ui_.verticalLayout_sample_counts->addWidget(button);
+                connect(button, &QRadioButton::toggled, this,
+                        [this, count](const bool checked)
+                        {
+                                if (checked)
+                                {
+                                        view_->send(view::command::SampleCount(count));
+                                }
+                        });
+        }
 }
 
 void ViewWidget::on_clip_plane_clicked()
