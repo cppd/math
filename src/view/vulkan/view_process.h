@@ -36,6 +36,7 @@ class ViewProcess final
         gpu::text_writer::View* text_;
         Camera* camera_;
         std::function<void()> create_swapchain_;
+        std::function<void(int)> set_sample_count_;
         bool vertical_sync_;
         bool text_active_ = true;
         Vector3f clear_color_rgb32_ = Vector3f(0);
@@ -70,6 +71,11 @@ class ViewProcess final
         void command(const command::ResetView&)
         {
                 camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
+        }
+
+        void command(const command::SampleCount& v)
+        {
+                set_sample_count_(v.sample_count);
         }
 
         void command(const command::SetLightingColor& v)
@@ -175,12 +181,14 @@ public:
                 gpu::text_writer::View* const text,
                 Camera* const camera,
                 const bool vertical_sync,
-                std::function<void()> create_swapchain)
+                std::function<void()> create_swapchain,
+                std::function<void(int)> set_sample_count)
                 : clear_buffer_(clear_buffer),
                   renderer_(renderer),
                   text_(text),
                   camera_(camera),
                   create_swapchain_(std::move(create_swapchain)),
+                  set_sample_count_(std::move(set_sample_count)),
                   vertical_sync_(vertical_sync)
         {
         }

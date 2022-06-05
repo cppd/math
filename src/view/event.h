@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/handle.h>
 
 #include <optional>
+#include <set>
 #include <variant>
 
 namespace ns::view
@@ -355,6 +356,15 @@ struct PencilSketchShow final
         {
         }
 };
+
+struct SampleCount final
+{
+        int sample_count;
+
+        explicit SampleCount(const int sample_count) : sample_count(sample_count)
+        {
+        }
+};
 }
 
 using ClipPlaneCommand = std::variant<
@@ -378,6 +388,7 @@ using ViewCommand = std::variant<
         command::DeleteAllObjects,
         command::DeleteObject,
         command::ResetView,
+        command::SampleCount,
         command::SetBackgroundColor,
         command::SetLightingColor,
         command::SetNormalColorNegative,
@@ -426,11 +437,18 @@ struct Description final
 {
         bool ray_tracing;
 };
+
+struct SampleCount final
+{
+        std::set<int> sample_counts;
+        int sample_count;
+};
 }
 
 using Info = std::variant<
         std::optional<info::Camera>*,
-        std::optional<info::Image>*,
+        std::optional<info::Description>*,
         std::optional<info::Functionality>*,
-        std::optional<info::Description>*>;
+        std::optional<info::Image>*,
+        std::optional<info::SampleCount>*>;
 }

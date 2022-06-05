@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/window.h"
 
 #include <src/com/error.h>
+#include <src/com/message.h>
 #include <src/com/print.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
@@ -45,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
+#include <src/vulkan/sample.h>
 #include <src/window/surface.h>
 
 #include <chrono>
@@ -115,8 +117,10 @@ class Impl final
         const vulkan::CommandPool transfer_command_pool_;
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device().handle()};
 
-        const VkSampleCountFlagBits sample_count_flag_{
-                sample_count_flag(MULTISAMPLING, PREFERRED_SAMPLE_COUNT, device_graphics_.device().properties())};
+        VkSampleCountFlagBits sample_count_flag_{sample_count_flag_preferred(
+                MULTISAMPLING,
+                PREFERRED_SAMPLE_COUNT,
+                device_graphics_.device().properties())};
 
         std::optional<PixelSizes> pixel_sizes_;
         FrameRate frame_rate_;
@@ -209,6 +213,13 @@ class Impl final
                 gpu::renderer::info::Description info;
                 renderer_->info(&info);
                 *description = info::Description{.ray_tracing = info.ray_tracing};
+        }
+
+        void info(std::optional<info::SampleCount>* const sample_count) const
+        {
+                *sample_count = info::SampleCount{
+                        .sample_counts = sample_counts(MULTISAMPLING, device_graphics_.device().properties()),
+                        .sample_count = vulkan::sample_count_flag_to_sample_count(sample_count_flag_)};
         }
 
         //
@@ -372,6 +383,19 @@ class Impl final
                 return true;
         }
 
+        void set_sample_count(const int sample_count)
+        {
+                const auto flag =
+                        sample_count_flag(MULTISAMPLING, sample_count, device_graphics_.device().properties());
+                if (!flag)
+                {
+                        message_warning("Unsupported sample count " + to_string(sample_count));
+                }
+                delete_swapchain_buffers();
+                sample_count_flag_ = *flag;
+                create_swapchain_buffers();
+        }
+
 public:
         Impl(const window::WindowID window, const std::array<double, 2>& window_size_in_mm)
                 : surface_(
@@ -444,6 +468,10 @@ public:
                           [this]
                           {
                                   create_swapchain();
+                          },
+                          [this](const int sample_count)
+                          {
+                                  set_sample_count(sample_count);
                           })
         {
                 ASSERT(device_graphics_.graphics_compute_queues().size() >= 2);

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/swapchain.h>
 
 #include <array>
+#include <set>
 
 namespace ns::view
 {
@@ -37,8 +38,15 @@ PixelSizes pixel_sizes(
         const std::array<double, 2>& window_size_in_mm,
         const vulkan::Swapchain& swapchain);
 
-VkSampleCountFlagBits sample_count_flag(
+VkSampleCountFlagBits sample_count_flag_preferred(
         bool multisampling,
         int preferred_sample_count,
         const vulkan::PhysicalDeviceProperties& properties);
+
+std::optional<VkSampleCountFlagBits> sample_count_flag(
+        bool multisampling,
+        int sample_count,
+        const vulkan::PhysicalDeviceProperties& properties);
+
+std::set<int> sample_counts(bool multisampling, const vulkan::PhysicalDeviceProperties& properties);
 }

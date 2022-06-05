@@ -48,7 +48,7 @@ PixelSizes pixel_sizes(
         return res;
 }
 
-VkSampleCountFlagBits sample_count_flag(
+VkSampleCountFlagBits sample_count_flag_preferred(
         const bool multisampling,
         const int preferred_sample_count,
         const vulkan::PhysicalDeviceProperties& properties)
@@ -71,5 +71,28 @@ VkSampleCountFlagBits sample_count_flag(
         }
 
         return vulkan::sample_count_to_sample_count_flag(sample_count);
+}
+
+std::optional<VkSampleCountFlagBits> sample_count_flag(
+        const bool multisampling,
+        const int sample_count,
+        const vulkan::PhysicalDeviceProperties& properties)
+{
+        if ((multisampling && sample_count < 2)
+            || !vulkan::supported_sample_counts(properties.properties_10.limits).contains(sample_count))
+        {
+                return std::nullopt;
+        }
+        return vulkan::sample_count_to_sample_count_flag(sample_count);
+}
+
+std::set<int> sample_counts(const bool multisampling, const vulkan::PhysicalDeviceProperties& properties)
+{
+        std::set<int> counts = vulkan::supported_sample_counts(properties.properties_10.limits);
+        if (multisampling)
+        {
+                counts.erase(counts.cbegin(), counts.lower_bound(2));
+        }
+        return counts;
 }
 }
