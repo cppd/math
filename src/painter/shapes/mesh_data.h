@@ -272,7 +272,7 @@ public:
 
                 std::vector<model::mesh::Reading<N>> reading;
                 reading.reserve(mesh_objects.size());
-                for (const model::mesh::MeshObject<N>* mesh_object : mesh_objects)
+                for (const model::mesh::MeshObject<N>* const mesh_object : mesh_objects)
                 {
                         reading.emplace_back(*mesh_object);
                 }

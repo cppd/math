@@ -105,7 +105,7 @@ std::string to_upper_first_letters(const std::string_view& s)
         bool first_letter = true;
         std::string result;
         result.reserve(s.size());
-        for (char c : s)
+        for (const char c : s)
         {
                 if (is_alpha(c))
                 {

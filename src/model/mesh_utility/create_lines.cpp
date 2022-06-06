@@ -45,7 +45,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         int idx = 0;
         for (const std::array<int, 2>& line : lines)
         {
-                for (int vertex_index : line)
+                for (const int vertex_index : line)
                 {
                         const auto [iter, inserted] = vertices.try_emplace(vertex_index);
                         if (inserted)

@@ -69,7 +69,7 @@ namespace
 //         static bool on_plane(const std::array<int, M>& object_indices, const std::vector<Vector<N, float>>& vertices)
 //         {
 //                 Vector<N, float> sum(0);
-//                 for (unsigned i : object_indices)
+//                 for (const unsigned i : object_indices)
 //                 {
 //                         ASSERT(i < vertices.size());
 //                         sum += vertices[i];
@@ -91,7 +91,7 @@ namespace
 //         {
 //                 std::sort(vertex_indices.begin(), vertex_indices.end());
 //                 std::string s;
-//                 for (unsigned v : vertex_indices)
+//                 for (const unsigned v : vertex_indices)
 //                 {
 //                         if (!s.empty())
 //                         {

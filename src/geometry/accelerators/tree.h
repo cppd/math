@@ -70,7 +70,7 @@ class SpatialSubdivisionTree final
                 {
                         return &box;
                 }
-                for (int child_box : box.childs)
+                for (const int child_box : box.childs)
                 {
                         const Box* const b = find_box_for_point(boxes_[child_box], p);
                         if (b)

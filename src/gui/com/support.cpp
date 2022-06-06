@@ -91,9 +91,9 @@ QWidget* parent_for_dialog()
 // std::string main_window_title()
 // {
 //         QMainWindow* main_window = nullptr;
-//         for (QWidget* widget : Application::instance()->topLevelWidgets())
+//         for (QWidget* const widget : Application::instance()->topLevelWidgets())
 //         {
-//                 QMainWindow* window = qobject_cast<QMainWindow*>(widget);
+//                 QMainWindow* const window = qobject_cast<QMainWindow*>(widget);
 //                 if (window)
 //                 {
 //                         ASSERT(!main_window);
@@ -111,12 +111,12 @@ QWidget* parent_for_dialog()
 // {
 //         ASSERT(layout);
 //
-//         QWidget* parent_widget = layout->parentWidget();
+//         QWidget* const parent_widget = layout->parentWidget();
 //         if (!parent_widget)
 //         {
 //                 return;
 //         }
-//         for (QWidget* widget : parent_widget->findChildren<QWidget*>())
+//         for (QWidget* const widget : parent_widget->findChildren<QWidget*>())
 //         {
 //                 if (is_child_widget_of_any_layout(layout, widget))
 //                 {

@@ -48,7 +48,7 @@ void check_facet_dimension(
         for (const std::array<int, N>& facet : facets)
         {
                 facet_vertex_set.clear();
-                for (int vertex_index : facet)
+                for (const int vertex_index : facet)
                 {
                         facet_vertex_set.insert(vertices[vertex_index]);
                 }

@@ -439,7 +439,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
 
         for (const model::mesh::Mesh<3>::Line& line : mesh.lines)
         {
-                for (int index : line.vertices)
+                for (const int index : line.vertices)
                 {
                         vertices.emplace_back(mesh.vertices[index]);
                 }

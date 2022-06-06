@@ -52,7 +52,7 @@ inline void add_description(
 
         (*message) += separator;
 
-        for (char c : description)
+        for (const char c : description)
         {
                 (*message) += ascii::is_print(c) ? c : ' ';
         }
@@ -189,6 +189,7 @@ void test_distribution_surface(
         SphereDistribution<N, T> buckets(progress);
 
         const long long count = buckets.distribution_count(count_per_bucket);
+
         if (count <= 0)
         {
                 return;

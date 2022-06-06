@@ -103,7 +103,7 @@ void LogEvents::log_event(const std::string_view& text, const LogType type) noex
                 if (!log_observers_.empty())
                 {
                         const LogEvent event(std::move(log_text), type);
-                        for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                        for (const std::function<void(const LogEvent&)>* const observer : log_observers_)
                         {
                                 (*observer)(event);
                         }
@@ -133,7 +133,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
                 if (!log_observers_.empty())
                 {
                         const LogEvent event(std::move(log_text), log_type);
-                        for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                        for (const std::function<void(const LogEvent&)>* const observer : log_observers_)
                         {
                                 (*observer)(event);
                         }
@@ -142,7 +142,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
                 if (!msg_observers_.empty())
                 {
                         const MessageEvent event(text, type);
-                        for (const std::function<void(const MessageEvent&)>* observer : msg_observers_)
+                        for (const std::function<void(const MessageEvent&)>* const observer : msg_observers_)
                         {
                                 (*observer)(event);
                         }

@@ -43,7 +43,7 @@ constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 std::string comment_to_solid_name(const std::string_view& comment)
 {
         std::string str;
-        for (char c : comment)
+        for (const char c : comment)
         {
                 str += (c != '\n') ? c : ' ';
         }

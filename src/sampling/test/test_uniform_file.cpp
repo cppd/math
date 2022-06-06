@@ -42,7 +42,7 @@ std::string replace_space(const std::string_view& s)
 {
         std::string r;
         r.reserve(s.size());
-        for (char c : s)
+        for (const char c : s)
         {
                 r += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
         }

@@ -113,7 +113,7 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
         for (const typename Mesh<N>::Facet& face : mesh.facets)
         {
                 static_assert(0 < std::tuple_size_v<decltype(face.vertices)>);
-                for (int index : face.vertices)
+                for (const int index : face.vertices)
                 {
                         if (index < 0 || index >= vertex_count)
                         {
@@ -156,7 +156,7 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
         for (const typename Mesh<N>::Line& line : mesh.lines)
         {
                 static_assert(0 < std::tuple_size_v<decltype(line.vertices)>);
-                for (int index : line.vertices)
+                for (const int index : line.vertices)
                 {
                         if (index < 0 || index >= vertex_count)
                         {

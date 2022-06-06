@@ -76,7 +76,7 @@ void ProgressRatioList::terminate_all_quietly()
         std::lock_guard lg(mutex_);
 
         terminate_quietly_ = true;
-        for (ProgressRatioControl* ratio : ratios_)
+        for (ProgressRatioControl* const ratio : ratios_)
         {
                 ratio->terminate_quietly();
         }
@@ -90,7 +90,7 @@ void ProgressRatioList::terminate_all_with_message()
         std::lock_guard lg(mutex_);
 
         terminate_with_message_ = true;
-        for (ProgressRatioControl* ratio : ratios_)
+        for (ProgressRatioControl* const ratio : ratios_)
         {
                 ratio->terminate_with_message();
         }

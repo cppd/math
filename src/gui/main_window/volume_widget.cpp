@@ -79,7 +79,7 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
         ui_.setupUi(this);
 
         widgets_.reserve(this->findChildren<QWidget*>().size());
-        for (QWidget* widget : this->findChildren<QWidget*>())
+        for (QWidget* const widget : this->findChildren<QWidget*>())
         {
                 widgets_.emplace_back(widget);
         }

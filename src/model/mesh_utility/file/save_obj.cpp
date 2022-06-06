@@ -47,7 +47,7 @@ void write_comment(std::ostream& file, const std::string_view& comment)
         std::string str;
 
         bool first = true;
-        for (char c : comment)
+        for (const char c : comment)
         {
                 if (c != '\n')
                 {

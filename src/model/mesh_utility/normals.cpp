@@ -126,12 +126,12 @@ Vector<N, T> compute_normal(
                       + to_string(N) + " vertices");
         }
 
-        for (int vi : vicinity_int)
+        for (const int vi : vicinity_int)
         {
                 vicinity.push_back(vertices[vi]);
         }
 
-        Vector<N, T> point_normal = numerical::point_normal(vicinity);
+        const Vector<N, T> point_normal = numerical::point_normal(vicinity);
 
         return average_of_normals(point_normal, weighted_normals);
 }

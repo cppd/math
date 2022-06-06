@@ -111,7 +111,7 @@ std::string utf8_to_number_string(const std::string& s)
 
         std::ostringstream oss;
         oss << std::uppercase << std::hex << std::setfill('0');
-        for (char c : s)
+        for (const char c : s)
         {
                 if (!oss.str().empty())
                 {

@@ -243,7 +243,7 @@ void test_algorithms(const Parallelotope& p)
 
         print_separator();
         print_message("vertices");
-        for (auto v : p.vertices())
+        for (const auto& v : p.vertices())
         {
                 print_message(to_string(v));
         }
@@ -252,7 +252,7 @@ void test_algorithms(const Parallelotope& p)
         {
                 print_separator();
                 print_message("edges");
-                for (auto edge : p.edges())
+                for (const auto& edge : p.edges())
                 {
                         print_message(to_string(edge));
                 }

@@ -46,7 +46,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         int idx = 0;
         for (const std::array<int, N>& facet : facets)
         {
-                for (int vertex_index : facet)
+                for (const int vertex_index : facet)
                 {
                         const auto [iter, inserted] = vertices.try_emplace(vertex_index);
                         if (inserted)

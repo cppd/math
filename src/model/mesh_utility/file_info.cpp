@@ -132,7 +132,7 @@ std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimension
 {
         std::vector<std::string> result;
         result.emplace_back("txt");
-        for (unsigned d : dimensions)
+        for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
                 result.push_back("txt" + to_string(d));

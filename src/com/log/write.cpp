@@ -86,7 +86,7 @@ class Log final
                 else
                 {
                         line_beginning_ += "(";
-                        for (char c : description)
+                        for (const char c : description)
                         {
                                 line_beginning_ += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
                         }
@@ -96,7 +96,7 @@ class Log final
                 result_.clear();
                 result_.reserve(line_beginning_.size() + text.size() + 1);
                 result_ = line_beginning_;
-                for (char c : text)
+                for (const char c : text)
                 {
                         result_ += c;
                         if (c == '\n')

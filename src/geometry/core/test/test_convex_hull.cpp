@@ -154,7 +154,7 @@ int point_count(const std::vector<ConvexHullSimplex<N>>& facets)
         std::unordered_set<int> v;
         for (const ConvexHullSimplex<N>& f : facets)
         {
-                for (int p : f.vertices())
+                for (const int p : f.vertices())
                 {
                         v.insert(p);
                 }

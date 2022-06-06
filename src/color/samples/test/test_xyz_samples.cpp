@@ -35,7 +35,7 @@ void check_sum(const std::vector<T>& samples, const double min, const double max
         }
 
         double sum = 0;
-        for (double v : samples)
+        for (const double v : samples)
         {
                 if (!(v >= 0))
                 {
