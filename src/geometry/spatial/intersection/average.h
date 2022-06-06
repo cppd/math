@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace ns::geometry::spatial::testing
+namespace ns::geometry::spatial::intersection
 {
 template <int COUNT, typename F>
 auto average(const F& f)

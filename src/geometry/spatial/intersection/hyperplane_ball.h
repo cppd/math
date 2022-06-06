@@ -18,24 +18,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "average.h"
-#include "random_vectors.h"
 
-#include "../hyperplane_simplex.h"
+#include "../hyperplane_ball.h"
+#include "../random/vectors.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/com/type/limit.h>
-#include <src/sampling/simplex_uniform.h>
+#include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
+#include <random>
 
-namespace ns::geometry::spatial::testing::hyperplane_simplex
+namespace ns::geometry::spatial::intersection::hyperplane_ball
 {
-namespace intersection_implementation
+namespace implementation
 {
 inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
@@ -46,57 +46,37 @@ inline constexpr T ERROR_MIN = 0.998;
 template <typename T>
 inline constexpr T ERROR_MAX = 1.002;
 
-template <std::size_t N, typename T>
-struct Simplex final
-{
-        HyperplaneSimplex<N, T> simplex;
-        std::array<Vector<N, T>, N> vertices;
-
-        explicit Simplex(const std::array<Vector<N, T>, N>& vertices) : simplex(vertices), vertices(vertices)
-        {
-        }
-};
-
 template <std::size_t N, typename T, typename RandomEngine>
-Simplex<N, T> create_random_simplex(RandomEngine& engine)
+HyperplaneBall<N, T> create_random_hyperplane_ball(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
-        constexpr T MIN_LENGTH = 0.1;
-        constexpr T MAX_LENGTH = 10;
+        constexpr T MIN_RADIUS = 0.1;
+        constexpr T MAX_RADIUS = 5;
 
-        const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-        const Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
-
-        std::array<Vector<N, T>, N> vertices;
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                vertices[i] = org + vectors[i];
-        }
-        vertices[N - 1] = org;
-
-        return Simplex(vertices);
+        return HyperplaneBall<N, T>(
+                random::point<N, T>(ORG_INTERVAL, engine), sampling::uniform_on_sphere<N, T>(engine),
+                std::uniform_real_distribution<T>(MIN_RADIUS, MAX_RADIUS)(engine));
 }
 
 template <std::size_t N, typename T>
-T max_vertex_distance(const Simplex<N, T>& simplex)
+std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& ball)
 {
-        T max = Limits<T>::lowest();
-        for (std::size_t i = 0; i < N; ++i)
+        const T radius = std::sqrt(ball.radius_squared());
+        std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(ball.normal());
+        for (Vector<N, T>& v : vectors)
         {
-                for (std::size_t j = i + 1; j < N; ++j)
-                {
-                        max = std::max(max, (simplex.vertices[i] - simplex.vertices[j]).norm());
-                }
+                v *= radius;
         }
-        return max;
+        return vectors;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, RandomEngine& engine)
+std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, RandomEngine& engine)
 {
-        const Vector<N, T>& normal = simplex.simplex.normal();
+        ASSERT(ball.normal().is_unit());
 
-        const T distance = max_vertex_distance(simplex);
+        const T distance = 2 * std::sqrt(ball.radius_squared());
+        const std::array<Vector<N, T>, N - 1> vectors = ball_plane_vectors(ball);
 
         const int ray_count = 3 * point_count;
 
@@ -104,13 +84,13 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
         rays.reserve(ray_count);
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = sampling::uniform_in_simplex(simplex.vertices, engine);
+                const Vector<N, T> point = ball.center() + sampling::uniform_in_sphere(vectors, engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random_direction_for_normal(T{0}, T{0.5}, normal, engine);
-                rays.push_back(Ray(ray.org() + distance * normal, -direction));
+                const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, ball.normal(), engine);
+                rays.push_back(Ray(ray.org() + distance * ball.normal(), -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
 
@@ -118,7 +98,7 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vector<Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -130,7 +110,7 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
                 std::size_t res = 0;
                 for (const Ray<N, T>& ray : rays)
                 {
-                        if (simplex.simplex.intersect(ray))
+                        if (ball.intersect(ray))
                         {
                                 ++res;
                         }
@@ -150,17 +130,17 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
 template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
-        const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex, point_count, engine);
+        const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(ball, point_count, engine);
 
-        check_intersection_count(simplex, rays);
+        check_intersection_count(ball, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
                 {
-                        do_not_optimize(simplex.simplex.intersect(ray));
+                        do_not_optimize(ball.intersect(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
@@ -173,10 +153,10 @@ void test_intersection()
 {
         PCG engine;
 
-        const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex, POINT_COUNT, engine);
+        const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(ball, POINT_COUNT, engine);
 
-        check_intersection_count(simplex, rays);
+        check_intersection_count(ball, rays);
 }
 
 template <std::size_t N, typename T>
@@ -195,12 +175,12 @@ double compute_intersections_per_second()
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        intersection_implementation::test_intersection<N, T>();
+        implementation::test_intersection<N, T>();
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_per_second()
 {
-        return intersection_implementation::compute_intersections_per_second<N, T>();
+        return implementation::compute_intersections_per_second<N, T>();
 }
 }

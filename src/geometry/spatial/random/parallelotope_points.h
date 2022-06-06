@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
-namespace ns::geometry::spatial::testing
+namespace ns::geometry::spatial::random
 {
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_external_points(
+std::vector<Vector<N, T>> parallelotope_external_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
@@ -57,7 +57,7 @@ std::vector<Vector<N, T>> random_external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_external_points(
+std::vector<Vector<N, T>> parallelotope_external_points(
         const Vector<N, T>& org,
         const Vector<N, T>& diagonal,
         const int count,
@@ -88,7 +88,7 @@ std::vector<Vector<N, T>> random_external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_internal_points(
+std::vector<Vector<N, T>> parallelotope_internal_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
@@ -116,7 +116,7 @@ std::vector<Vector<N, T>> random_internal_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_internal_points(
+std::vector<Vector<N, T>> parallelotope_internal_points(
         const Vector<N, T>& org,
         const Vector<N, T>& diagonal,
         const int count,
@@ -144,7 +144,7 @@ std::vector<Vector<N, T>> random_internal_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_cover_points(
+std::vector<Vector<N, T>> parallelotope_cover_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,

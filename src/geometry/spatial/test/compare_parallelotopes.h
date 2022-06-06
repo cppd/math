@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../testing/random_points.h"
+#include "../random/parallelotope_points.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -170,7 +170,7 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
         const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
 
         for (Vector<N, T> point :
-             testing::random_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
+             random::parallelotope_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};
 

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../testing/bounding_box_intersection.h"
+#include "../intersection/bounding_box.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -28,13 +28,15 @@ namespace ns::geometry::spatial
 {
 namespace
 {
+namespace test = intersection::bounding_box;
+
 template <typename T>
 void test_intersection()
 {
-        testing::bounding_box::test_intersection<2, T>();
-        testing::bounding_box::test_intersection<3, T>();
-        testing::bounding_box::test_intersection<4, T>();
-        testing::bounding_box::test_intersection<5, T>();
+        test::test_intersection<2, T>();
+        test::test_intersection<3, T>();
+        test::test_intersection<4, T>();
+        test::test_intersection<5, T>();
 }
 
 void test_bounding_box_intersection()
@@ -51,8 +53,8 @@ void test_bounding_box_intersection()
 template <std::size_t N, typename T>
 void test_performance()
 {
-        const long long p_1 = std::llround(testing::bounding_box::compute_intersections_per_second<N, T>());
-        const long long p_2 = std::llround(testing::bounding_box::compute_intersections_r_per_second<N, T>());
+        const long long p_1 = std::llround(test::compute_intersections_per_second<N, T>());
+        const long long p_2 = std::llround(test::compute_intersections_r_per_second<N, T>());
 
         LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">: {" + to_string_digit_groups(p_1) + ", "
             + to_string_digit_groups(p_2) + "} o/s");

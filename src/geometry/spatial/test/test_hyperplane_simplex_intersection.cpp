@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../testing/hyperplane_simplex_intersection.h"
+#include "../intersection/hyperplane_simplex.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -28,13 +28,15 @@ namespace ns::geometry::spatial
 {
 namespace
 {
+namespace test = intersection::hyperplane_simplex;
+
 template <typename T>
 void test_intersection()
 {
-        testing::hyperplane_simplex::test_intersection<2, T>();
-        testing::hyperplane_simplex::test_intersection<3, T>();
-        testing::hyperplane_simplex::test_intersection<4, T>();
-        testing::hyperplane_simplex::test_intersection<5, T>();
+        test::test_intersection<2, T>();
+        test::test_intersection<3, T>();
+        test::test_intersection<4, T>();
+        test::test_intersection<5, T>();
 }
 
 void test_hyperplane_simplex_intersection()
@@ -51,7 +53,7 @@ void test_hyperplane_simplex_intersection()
 template <std::size_t N, typename T>
 void test_performance()
 {
-        const long long p = std::llround(testing::hyperplane_simplex::compute_intersections_per_second<N, T>());
+        const long long p = std::llround(test::compute_intersections_per_second<N, T>());
 
         LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">: " + to_string_digit_groups(p) + " o/s");
 }

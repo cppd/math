@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bounding_box.h"
 
-#include "testing/bounding_box_intersection.h"
+#include "intersection/bounding_box.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -32,7 +32,7 @@ T BoundingBox<N, T>::intersection_cost()
 {
         static const T cost = []
         {
-                const double p = spatial::testing::bounding_box::compute_intersections_per_second<N, T>();
+                const double p = spatial::intersection::bounding_box::compute_intersections_per_second<N, T>();
                 LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
                     + "> #1 intersections per second = " + to_string_digit_groups(std::llround(p)));
                 return 1 / p;
@@ -45,7 +45,7 @@ T BoundingBox<N, T>::intersection_r_cost()
 {
         static const T cost = []
         {
-                const double p = spatial::testing::bounding_box::compute_intersections_r_per_second<N, T>();
+                const double p = spatial::intersection::bounding_box::compute_intersections_r_per_second<N, T>();
                 LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
                     + "> #2 intersections per second = " + to_string_digit_groups(std::llround(p)));
                 return 1 / p;

@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
-#include "../testing/random_points.h"
-#include "../testing/random_vectors.h"
+#include "../random/parallelotope_points.h"
+#include "../random/vectors.h"
 
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -101,7 +101,8 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
-        for (const Vector<N, T>& point : testing::random_external_points(p.org(), p.vectors(), point_count, engine))
+        for (const Vector<N, T>& point :
+             random::parallelotope_external_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (p.inside(point))
                 {
@@ -113,7 +114,8 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
                 }
         }
 
-        for (const Vector<N, T>& origin : testing::random_internal_points(p.org(), p.vectors(), point_count, engine))
+        for (const Vector<N, T>& origin :
+             random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (!p.inside(origin))
                 {
@@ -134,7 +136,8 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
 
         const T length = p.length();
 
-        for (const Vector<N, T>& point : testing::random_internal_points(p.org(), p.vectors(), point_count, engine))
+        for (const Vector<N, T>& point :
+             random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 const Ray<N, T> ray(point, random_direction<N, T>(engine));
 
@@ -188,8 +191,8 @@ void test_points(const int point_count)
         LOG("ParallelotopeAA");
 
         {
-                Vector<N, T> org = testing::random_org<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = testing::random_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 ParallelotopeAA<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -202,8 +205,8 @@ void test_points(const int point_count)
         LOG("Parallelotope");
 
         {
-                Vector<N, T> org = testing::random_org<N, T>(ORG_INTERVAL, engine);
-                std::array<Vector<N, T>, N> edges = testing::random_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                std::array<Vector<N, T>, N> edges = random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -216,8 +219,8 @@ void test_points(const int point_count)
         LOG("Parallelotope comparison");
 
         {
-                Vector<N, T> org = testing::random_org<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = testing::random_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
                 ParallelotopeAA<N, T> p_aa(org, edges);
                 Parallelotope<N, T> p(org, edges);

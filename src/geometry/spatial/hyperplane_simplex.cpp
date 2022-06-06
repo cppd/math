@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "hyperplane_simplex.h"
 
-#include "testing/hyperplane_simplex_intersection.h"
+#include "intersection/hyperplane_simplex.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -32,7 +32,7 @@ T HyperplaneSimplex<N, T>::intersection_cost()
 {
         static const T cost = []
         {
-                const double p = spatial::testing::hyperplane_simplex::compute_intersections_per_second<N, T>();
+                const double p = spatial::intersection::hyperplane_simplex::compute_intersections_per_second<N, T>();
                 LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>()
                     + "> intersections per second = " + to_string_digit_groups(std::llround(p)));
                 return 1 / p;

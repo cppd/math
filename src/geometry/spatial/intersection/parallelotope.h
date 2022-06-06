@@ -18,65 +18,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "average.h"
-#include "random_vectors.h"
 
-#include "../hyperplane_parallelotope.h"
+#include "../parallelotope.h"
+#include "../random/parallelotope_points.h"
+#include "../random/vectors.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <cmath>
-#include <random>
 
-namespace ns::geometry::spatial::testing::hyperplane_parallelotope
+namespace ns::geometry::spatial::intersection::parallelotope
 {
-namespace intersection_implementation
+namespace implementation
 {
 inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
 inline constexpr int AVERAGE_COUNT = 100;
 
-template <typename T>
-inline constexpr T ERROR_MIN = 0.998;
-template <typename T>
-inline constexpr T ERROR_MAX = 1.002;
-
 template <std::size_t N, typename T, typename RandomEngine>
-HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(RandomEngine& engine)
+Parallelotope<N, T> create_random_parallelotope(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
         constexpr T MAX_LENGTH = 10;
 
-        return HyperplaneParallelotope<N, T>(
-                random_org<N, T>(ORG_INTERVAL, engine), random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
+        return Parallelotope<N, T>(
+                random::point<N, T>(ORG_INTERVAL, engine), random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const int point_count, RandomEngine& engine)
+std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, RandomEngine& engine)
 {
-        std::uniform_real_distribution<T> urd(0, 1);
-
-        const T distance = p.length();
-
+        const T move_distance = p.length();
         const int ray_count = 3 * point_count;
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (int i = 0; i < point_count; ++i)
+        for (const Vector<N, T>& point :
+             random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
-                const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(p.vectors(), engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
-                rays.push_back(ray.moved(-1));
-                rays.push_back(ray.moved(1).reversed());
-
-                const Vector<N, T> direction = random_direction_for_normal(T{0}, T{0.5}, p.normal(), engine);
-                rays.push_back(Ray(ray.org() + distance * p.normal(), -direction));
+                rays.push_back(ray);
+                rays.push_back(ray.moved(-move_distance));
+                rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
 
@@ -84,7 +74,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -106,8 +96,7 @@ void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std:
 
         const std::size_t expected_count = (rays.size() / 3) * 2;
 
-        const T v = static_cast<T>(count) / expected_count;
-        if (!(v >= ERROR_MIN<T> && v <= ERROR_MAX<T>))
+        if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
         }
@@ -116,17 +105,17 @@ void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std:
 template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
-        const HyperplaneParallelotope<N, T> p = create_random_hyperplane_parallelotope<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(p, point_count, engine);
+        const Parallelotope<N, T> parallelotope = create_random_parallelotope<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);
 
-        check_intersection_count(p, rays);
+        check_intersection_count(parallelotope, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
                 {
-                        do_not_optimize(p.intersect(ray));
+                        do_not_optimize(parallelotope.intersect(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
@@ -139,7 +128,7 @@ void test_intersection()
 {
         PCG engine;
 
-        const HyperplaneParallelotope<N, T> p = create_random_hyperplane_parallelotope<N, T>(engine);
+        const Parallelotope<N, T> p = create_random_parallelotope<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
 
         check_intersection_count(p, rays);
@@ -161,12 +150,12 @@ double compute_intersections_per_second()
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        intersection_implementation::test_intersection<N, T>();
+        implementation::test_intersection<N, T>();
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_per_second()
 {
-        return intersection_implementation::compute_intersections_per_second<N, T>();
+        return implementation::compute_intersections_per_second<N, T>();
 }
 }

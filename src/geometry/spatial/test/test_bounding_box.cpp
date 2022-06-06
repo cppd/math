@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../bounding_box.h"
-#include "../testing/random_points.h"
+#include "../random/parallelotope_points.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -277,7 +277,7 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
         const T random_direction_probability = 0.99;
 
         for (const Vector<N, T>& point :
-             testing::random_internal_points(box.min(), box.diagonal(), point_count, engine))
+             random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
 
@@ -326,7 +326,7 @@ template <std::size_t N, typename T, typename RandomEngine>
 void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEngine& engine)
 {
         for (const Vector<N, T>& point :
-             testing::random_external_points(box.min(), box.diagonal(), point_count, engine))
+             random::parallelotope_external_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));
 

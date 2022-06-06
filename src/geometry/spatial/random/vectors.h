@@ -25,12 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::geometry::spatial::testing
+namespace ns::geometry::spatial::random
 {
-namespace random_vectors_implementation
+namespace vectors_implementation
 {
 template <std::size_t M, std::size_t N, typename T>
-bool test_vectors(const T& min_length, const T& max_length, const std::array<Vector<N, T>, M>& vectors)
+bool check_vectors(const T& min_length, const T& max_length, const std::array<Vector<N, T>, M>& vectors)
 {
         constexpr T MAX_DOT_PRODUCT = 0.9;
 
@@ -60,12 +60,24 @@ bool test_vectors(const T& min_length, const T& max_length, const std::array<Vec
 }
 }
 
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> point(const T& interval, RandomEngine& engine)
+{
+        ASSERT(interval >= 0);
+
+        std::uniform_real_distribution<T> urd(-interval, interval);
+        Vector<N, T> v;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                v[i] = urd(engine);
+        }
+        return v;
+}
+
 template <std::size_t M, std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
+std::array<Vector<N, T>, M> vectors(const T& min_length, const T& max_length, RandomEngine& engine)
 {
         static_assert(M > 0 && M <= N);
-
-        namespace impl = random_vectors_implementation;
 
         ASSERT(min_length > 0 && min_length < max_length);
 
@@ -79,13 +91,13 @@ std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_len
                         v = urd(engine) * sampling::uniform_on_sphere<N, T>(engine);
                 }
 
-        } while (!impl::test_vectors(min_length, max_length, vectors));
+        } while (!vectors_implementation::check_vectors(min_length, max_length, vectors));
 
         return vectors;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
+std::array<T, N> aa_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
 {
         ASSERT(min_length > 0 && min_length < max_length);
 
@@ -99,21 +111,7 @@ std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, Ran
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_org(const T& interval, RandomEngine& engine)
-{
-        ASSERT(interval >= 0);
-
-        std::uniform_real_distribution<T> urd(-interval, interval);
-        Vector<N, T> v;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                v[i] = urd(engine);
-        }
-        return v;
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, RandomEngine& engine)
+Vector<N, T> direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, RandomEngine& engine)
 {
         while (true)
         {

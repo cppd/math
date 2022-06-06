@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "average.h"
-#include "random_points.h"
 
 #include "../bounding_box.h"
+#include "../random/parallelotope_points.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
@@ -32,9 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::geometry::spatial::testing::bounding_box
+namespace ns::geometry::spatial::intersection::bounding_box
 {
-namespace intersection_implementation
+namespace implementation
 {
 inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
@@ -66,7 +66,8 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (const Vector<N, T>& point : random_internal_points(box.min(), box.diagonal(), point_count, engine))
+        for (const Vector<N, T>& point :
+             random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray);
@@ -272,18 +273,18 @@ double compute_intersections_r_per_second()
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        intersection_implementation::test_intersection<N, T>();
+        implementation::test_intersection<N, T>();
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_per_second()
 {
-        return intersection_implementation::compute_intersections_per_second<N, T>();
+        return implementation::compute_intersections_per_second<N, T>();
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_r_per_second()
 {
-        return intersection_implementation::compute_intersections_r_per_second<N, T>();
+        return implementation::compute_intersections_r_per_second<N, T>();
 }
 }
