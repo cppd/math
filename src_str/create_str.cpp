@@ -159,12 +159,12 @@ void bin(const char* const input_name, const char* const output_name)
 
 void spr(const char* const input_name, const char* const output_name)
 {
-        const auto read = [](std::ifstream& ifs, std::uint32_t* n)
+        const auto read = [](std::ifstream& ifs, std::uint32_t* const n)
         {
                 return static_cast<bool>(ifs.read(reinterpret_cast<char*>(n), sizeof(*n)));
         };
 
-        const auto write = [](std::ofstream& ofs, bool reverse_byte_order, const std::uint32_t n)
+        const auto write = [](std::ofstream& ofs, const bool reverse_byte_order, const std::uint32_t n)
         {
                 ofs << "0x" << std::setw(8) << (!reverse_byte_order ? n : bswap32(n));
         };
@@ -173,28 +173,25 @@ void spr(const char* const input_name, const char* const output_name)
         std::ofstream ofs = create_ofstream(output_name);
         ofs << std::hex << std::setfill('0');
 
-        bool reverse_byte_order = false;
-
         std::uint32_t n;
 
-        if (read(ifs, &n))
-        {
-                if (n != SPR_MAGIC_NUMBER)
-                {
-                        if (bswap32(n) == SPR_MAGIC_NUMBER)
-                        {
-                                reverse_byte_order = true;
-                        }
-                        else
-                        {
-                                error("Error reading SPIR-V (no magic number)");
-                        }
-                }
-        }
-        else
+        if (!read(ifs, &n))
         {
                 error("Error reading SPIR-V magic number");
         }
+
+        const bool reverse_byte_order = [n]
+        {
+                if (n == SPR_MAGIC_NUMBER)
+                {
+                        return false;
+                }
+                if (bswap32(n) == SPR_MAGIC_NUMBER)
+                {
+                        return true;
+                }
+                error("Error reading SPIR-V (no magic number)");
+        }();
 
         write(ofs, reverse_byte_order, n);
         for (long long i = 1; read(ifs, &n); ++i)
@@ -219,7 +216,7 @@ void spr(const char* const input_name, const char* const output_name)
 void cat(const std::span<const char*>& input_names, const char* const output_name)
 {
         std::string s;
-        for (const char* name : input_names)
+        for (const char* const name : input_names)
         {
                 std::ifstream ifs = create_ifstream(name, std::ios_base::binary);
                 char c;
