@@ -58,9 +58,10 @@ inline void add_description(
         }
 }
 
-inline void log(const std::string& message, const bool add_indent = false)
+inline std::string add_indent(const std::string& message, const bool add_indent = false)
 {
         constexpr unsigned INDENT_SIZE = 2;
+
         const unsigned indent_size = (add_indent ? 2 : 1) * INDENT_SIZE;
         const std::string indent(indent_size, ' ');
 
@@ -75,7 +76,11 @@ inline void log(const std::string& message, const bool add_indent = false)
                         s += indent;
                 }
         }
-        LOG(s);
+        if (!message.empty() && message.back() == '\n')
+        {
+                s.resize(s.size() - indent.size());
+        }
+        return s;
 }
 }
 
@@ -94,7 +99,7 @@ void test_unit(
                 std::string s = "test unit length";
                 impl::add_description(&s, ", ", description);
                 s += ", count " + to_string_digit_groups(count);
-                impl::log(s);
+                LOG(impl::add_indent(s));
         }
 
         const int thread_count = hardware_concurrency();
@@ -166,7 +171,7 @@ void test_distribution_angle(
                 std::string s = "test angle distribution";
                 impl::add_description(&s, ", ", description);
                 s += ", count " + to_string_digit_groups(count);
-                impl::log(s);
+                LOG(impl::add_indent(s));
         }
 
         buckets.compute_distribution(count, normal, random_vector, progress);
@@ -200,7 +205,7 @@ void test_distribution_surface(
                 impl::add_description(&s, ", ", description);
                 s += ", buckets " + to_string_digit_groups(buckets.bucket_count());
                 s += ", count " + to_string_digit_groups(count);
-                impl::log(s);
+                LOG(impl::add_indent(s));
         }
 
         buckets.check_distribution(count, random_vector, pdf, progress);
@@ -230,6 +235,6 @@ void test_performance(const std::string& description, const RandomVector& random
         std::string s = to_string_digit_groups(performance) + " o/s";
         impl::add_description(&s, ", ", description);
         s += ", count " + to_string_digit_groups(COUNT);
-        impl::log(s);
+        LOG(impl::add_indent(s));
 }
 }
