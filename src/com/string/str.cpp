@@ -25,28 +25,33 @@ namespace ns
 {
 namespace
 {
-char to_upper(const char c)
+char to_upper(const unsigned char c)
 {
-        return std::toupper(static_cast<unsigned char>(c));
+        return std::toupper(c);
 }
 
-char to_lower(const char c)
+char to_lower(const unsigned char c)
 {
-        return std::tolower(static_cast<unsigned char>(c));
+        return std::tolower(c);
 }
 
-bool is_space(const char c)
+bool is_space(const unsigned char c)
 {
-        return std::isspace(static_cast<unsigned char>(c)) != 0;
+        return std::isspace(c) != 0;
 }
 
-bool is_alpha(const char c)
+bool is_alpha(const unsigned char c)
 {
-        return std::isalpha(static_cast<unsigned char>(c)) != 0;
+        return std::isalpha(c) != 0;
+}
+
+bool is_print(const unsigned char c)
+{
+        return std::isprint(c) != 0;
 }
 }
 
-std::string trim(const std::string_view& s)
+std::string trim(const std::string_view s)
 {
         if (s.empty())
         {
@@ -78,53 +83,85 @@ std::string trim(const std::string_view& s)
         return std::string(s.substr(i, ri - i + 1));
 }
 
-std::string to_upper(const std::string_view& s)
+std::string to_upper(const std::string_view s)
 {
-        std::string result;
-        result.reserve(s.size());
+        std::string res;
+        res.reserve(s.size());
         for (const char c : s)
         {
-                result += to_upper(c);
+                res += to_upper(c);
         }
-        return result;
+        return res;
 }
 
-std::string to_lower(const std::string_view& s)
+std::string to_lower(const std::string_view s)
 {
-        std::string result;
-        result.reserve(s.size());
+        std::string res;
+        res.reserve(s.size());
         for (const char c : s)
         {
-                result += to_lower(c);
+                res += to_lower(c);
         }
-        return result;
+        return res;
 }
 
-std::string to_upper_first_letters(const std::string_view& s)
+std::string to_upper_first_letters(const std::string_view s)
 {
         bool first_letter = true;
-        std::string result;
-        result.reserve(s.size());
+        std::string res;
+        res.reserve(s.size());
         for (const char c : s)
         {
                 if (is_alpha(c))
                 {
                         if (first_letter)
                         {
-                                result += to_upper(c);
+                                res += to_upper(c);
                                 first_letter = false;
                         }
                         else
                         {
-                                result += to_lower(c);
+                                res += to_lower(c);
                         }
                 }
                 else
                 {
-                        result += c;
+                        res += c;
                         first_letter = true;
                 }
         }
-        return result;
+        return res;
+}
+
+std::string add_indent(const std::string_view s, const unsigned indent_size)
+{
+        const std::string indent(indent_size, ' ');
+
+        std::string res;
+        res.reserve(indent_size + s.size());
+        res += indent;
+        for (const char c : s)
+        {
+                res += c;
+                if (c == '\n')
+                {
+                        res += indent;
+                }
+        }
+        if (!s.empty() && s.back() == '\n')
+        {
+                res.resize(res.size() - indent_size);
+        }
+        return res;
+}
+
+std::string printable_characters(const std::string_view s)
+{
+        std::string res;
+        for (const char c : s)
+        {
+                res += is_print(c) ? c : ' ';
+        }
+        return res;
 }
 }

@@ -22,8 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-std::string trim(const std::string_view& s);
-std::string to_upper(const std::string_view& s);
-std::string to_lower(const std::string_view& s);
-std::string to_upper_first_letters(const std::string_view& s);
+[[nodiscard]] std::string trim(std::string_view s);
+[[nodiscard]] std::string to_upper(std::string_view s);
+[[nodiscard]] std::string to_lower(std::string_view s);
+[[nodiscard]] std::string to_upper_first_letters(std::string_view s);
+[[nodiscard]] std::string add_indent(std::string_view s, unsigned indent_size);
+[[nodiscard]] std::string printable_characters(std::string_view s);
 }
