@@ -26,11 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/com/string/ascii.h>
+#include <src/com/string/str.h>
 #include <src/com/thread.h>
 #include <src/progress/progress.h>
 
-#include <algorithm>
 #include <cmath>
 #include <future>
 #include <thread>
@@ -38,68 +37,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling::testing
 {
-namespace test_implementation
-{
-inline void add_description(
-        std::string* const message,
-        const std::string_view& separator,
-        const std::string& description)
-{
-        if (description.empty())
-        {
-                return;
-        }
-
-        (*message) += separator;
-
-        for (const char c : description)
-        {
-                (*message) += ascii::is_print(c) ? c : ' ';
-        }
-}
-
-inline std::string add_indent(const std::string& message, const bool add_indent = false)
-{
-        constexpr unsigned INDENT_SIZE = 2;
-
-        const unsigned indent_size = (add_indent ? 2 : 1) * INDENT_SIZE;
-        const std::string indent(indent_size, ' ');
-
-        std::string s;
-        s.reserve(indent_size + message.size());
-        s += indent;
-        for (const char c : message)
-        {
-                s += c;
-                if (c == '\n')
-                {
-                        s += indent;
-                }
-        }
-        if (!message.empty() && message.back() == '\n')
-        {
-                s.resize(s.size() - indent.size());
-        }
-        return s;
-}
-}
-
 template <std::size_t N, typename T, typename RandomVector>
 void test_unit(
-        const std::string& description,
+        const std::string_view description,
         const long long count,
         const RandomVector& random_vector,
         ProgressRatio* const progress)
 {
-        namespace impl = test_implementation;
+        constexpr unsigned INDENT = 2;
 
         progress->set(0);
 
         {
                 std::string s = "test unit length";
-                impl::add_description(&s, ", ", description);
+                if (!description.empty())
+                {
+                        s += ", " + printable_characters(description);
+                }
                 s += ", count " + to_string_digit_groups(count);
-                LOG(impl::add_indent(s));
+                LOG(add_indent(s, INDENT));
         }
 
         const int thread_count = hardware_concurrency();
@@ -143,14 +99,14 @@ void test_unit(
 
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_angle(
-        const std::string& description,
+        const std::string_view description,
         const long long count_per_bucket,
         const Vector<N, T>& normal,
         const RandomVector& random_vector,
         const PDF& pdf,
         ProgressRatio* const progress)
 {
-        namespace impl = test_implementation;
+        constexpr unsigned INDENT = 2;
 
         progress->set(0);
 
@@ -169,25 +125,28 @@ void test_distribution_angle(
 
         {
                 std::string s = "test angle distribution";
-                impl::add_description(&s, ", ", description);
+                if (!description.empty())
+                {
+                        s += ", " + printable_characters(description);
+                }
                 s += ", count " + to_string_digit_groups(count);
-                LOG(impl::add_indent(s));
+                LOG(add_indent(s, INDENT));
         }
 
         buckets.compute_distribution(count, normal, random_vector, progress);
-        // impl::log(buckets.histogram(pdf), true /*add_indent*/);
+        // LOG(add_indent(buckets.histogram(pdf), 2 * INDENT));
         buckets.compare_with_pdf(pdf);
 }
 
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_surface(
-        const std::string& description,
+        const std::string_view description,
         const long long count_per_bucket,
         const RandomVector& random_vector,
         const PDF& pdf,
         ProgressRatio* const progress)
 {
-        namespace impl = test_implementation;
+        constexpr unsigned INDENT = 2;
 
         progress->set(0);
 
@@ -202,10 +161,13 @@ void test_distribution_surface(
 
         {
                 std::string s = "test surface distribution";
-                impl::add_description(&s, ", ", description);
+                if (!description.empty())
+                {
+                        s += ", " + printable_characters(description);
+                }
                 s += ", buckets " + to_string_digit_groups(buckets.bucket_count());
                 s += ", count " + to_string_digit_groups(count);
-                LOG(impl::add_indent(s));
+                LOG(add_indent(s, INDENT));
         }
 
         buckets.check_distribution(count, random_vector, pdf, progress);
@@ -224,17 +186,23 @@ long long test_performance(const RandomVector& random_vector)
 }
 
 template <long long COUNT, typename RandomVector>
-void test_performance(const std::string& description, const RandomVector& random_vector, ProgressRatio* const progress)
+void test_performance(
+        const std::string_view description,
+        const RandomVector& random_vector,
+        ProgressRatio* const progress)
 {
-        namespace impl = test_implementation;
+        constexpr unsigned INDENT = 2;
 
         progress->set(0);
 
         const long long performance = test_performance<COUNT>(random_vector);
 
         std::string s = to_string_digit_groups(performance) + " o/s";
-        impl::add_description(&s, ", ", description);
+        if (!description.empty())
+        {
+                s += ", " + printable_characters(description);
+        }
         s += ", count " + to_string_digit_groups(COUNT);
-        LOG(impl::add_indent(s));
+        LOG(add_indent(s, INDENT));
 }
 }
