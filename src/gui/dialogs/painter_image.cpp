@@ -197,6 +197,7 @@ void PainterImageDialog::on_all_toggled()
                 ui_.checkBox_8_bit->setVisible(true);
                 ui_.checkBox_with_background->setVisible(true);
         }
+        set_dialog_height(this);
 }
 
 std::optional<PainterImageParameters> PainterImageDialog::show(
