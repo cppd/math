@@ -70,4 +70,10 @@ bool occluded(
         const auto surface_2 = scene.intersect(surface_1.geometric_normal(), Ray<N, T>(ray).set_org(surface_1.point()));
         return surface_before_distance(ray.org(), surface_2, distance);
 }
+
+template <std::size_t N, typename T, typename Color>
+SurfacePoint<N, T, Color> intersect(const Scene<N, T, Color>& scene, const Normals<N, T>& normals, const Ray<N, T>& ray)
+{
+        return scene.intersect(normals.geometric, ray);
+}
 }

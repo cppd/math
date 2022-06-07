@@ -37,6 +37,7 @@ Elsevier, 2017.
 
 #include "direct_lighting.h"
 #include "normals.h"
+#include "visibility.h"
 
 #include "../objects.h"
 
@@ -197,7 +198,7 @@ std::optional<Color> trace_path(
                 }
 
                 ray = Ray<N, T>(surface.point(), std::get<1>(*sample));
-                surface = scene.intersect(normals.geometric, ray);
+                surface = intersect(scene, normals, ray);
                 if (!surface)
                 {
                         color.multiply_add(beta, scene.background_light());
