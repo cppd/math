@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vector.h>
+#include "../objects.h"
+
+#include <src/com/error.h>
 
 namespace ns::painter
 {
@@ -28,4 +30,26 @@ struct Normals final
         Vector<N, T> shading;
         bool smooth;
 };
+
+template <std::size_t N, typename T, typename Color>
+Normals<N, T> compute_normals(
+        const bool smooth_normals,
+        const SurfacePoint<N, T, Color>& surface,
+        const Vector<N, T>& ray_dir)
+{
+        const Vector<N, T> g_normal = surface.geometric_normal();
+        ASSERT(g_normal.is_unit());
+        const bool flip = dot(ray_dir, g_normal) >= 0;
+        const Vector<N, T> geometric = flip ? -g_normal : g_normal;
+        if (smooth_normals)
+        {
+                const auto s_normal = surface.shading_normal();
+                if (s_normal)
+                {
+                        ASSERT(s_normal->is_unit());
+                        return {.geometric = geometric, .shading = (flip ? -*s_normal : *s_normal), .smooth = true};
+                }
+        }
+        return {.geometric = geometric, .shading = geometric, .smooth = false};
+}
 }

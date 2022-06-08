@@ -72,8 +72,28 @@ bool occluded(
 }
 
 template <std::size_t N, typename T, typename Color>
-SurfacePoint<N, T, Color> intersect(const Scene<N, T, Color>& scene, const Normals<N, T>& normals, const Ray<N, T>& ray)
+struct Intersection final
 {
-        return scene.intersect(normals.geometric, ray);
+        SurfacePoint<N, T, Color> surface;
+        Ray<N, T> ray;
+        Normals<N, T> normals;
+};
+
+template <std::size_t N, typename T, typename Color>
+std::optional<Intersection<N, T, Color>> intersect(
+        const Scene<N, T, Color>& scene,
+        const bool smooth_normals,
+        const std::optional<Vector<N, T>>& geometric_normal,
+        const Ray<N, T>& ray)
+{
+        SurfacePoint surface = scene.intersect(geometric_normal, ray);
+        if (!surface)
+        {
+                return std::nullopt;
+        }
+
+        Normals<N, T> normals = compute_normals(smooth_normals, surface, ray.dir());
+
+        return Intersection<N, T, Color>{.surface = surface, .ray = ray, .normals = normals};
 }
 }
