@@ -19,14 +19,11 @@ cmake_minimum_required(VERSION 3.23)
 
 ##################################################
 
-include("${CMAKE_SOURCE_DIR}/cmake/add_source_files.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/add_include_files.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/add_source_files.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/check_compilers.cmake")
 
 ##################################################
-
-set(compilers "GNU;Clang")
-set(gcc_minimal_version "12")
-set(clang_minimal_version "14")
 
 set(shader_environment "vulkan1.2")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
@@ -37,33 +34,9 @@ set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_inclu
 
 enable_language(C CXX)
 
-if(NOT CMAKE_C_COMPILER_ID)
-         message(FATAL_ERROR "Empty C compiler id")
-endif()
-if(NOT CMAKE_CXX_COMPILER_ID)
-         message(FATAL_ERROR "Empty C++ compiler id")
-endif()
-
-if(NOT (${CMAKE_C_COMPILER_ID} IN_LIST compilers))
-        message(FATAL_ERROR "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
-endif()
-if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST compilers))
-        message(FATAL_ERROR "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
-endif()
-
-if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${gcc_minimal_version}))
-        message(FATAL_ERROR "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
-endif()
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${gcc_minimal_version}))
-        message(FATAL_ERROR "Not supported GCC C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
-endif()
-
-if((${CMAKE_C_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${clang_minimal_version}))
-        message(FATAL_ERROR "Not supported Clang C compiler version ${CMAKE_C_COMPILER_VERSION}")
-endif()
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${clang_minimal_version}))
-        message(FATAL_ERROR "Not supported Clang C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
-endif()
+check_compiler_versions(
+        GCC_MINIMAL_VERSION 12
+        CLANG_MINIMAL_VERSION 14)
 
 # after enable_language
 set(CMAKE_C_STANDARD 17)
@@ -77,27 +50,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # after project or enable_language
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
-include(CheckCSourceCompiles)
-include(CheckCXXSourceCompiles)
-
 set(CMAKE_C_FLAGS)
 set(CMAKE_CXX_FLAGS)
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "-stdlib=libc++")
 endif()
 
-##################################################
-
-function(check_int128)
-        check_c_source_compiles("int main(){__int128 v;}" C_HAS_INT128)
-        if(NOT C_HAS_INT128)
-                message(FATAL_ERROR "C doesn't have __int128")
-        endif()
-        check_cxx_source_compiles("int main(){__int128 v;}" CXX_HAS_INT128)
-        if(NOT CXX_HAS_INT128)
-                message(FATAL_ERROR "C++ doesn't have __int128")
-        endif()
-endfunction()
+check_compiler_int128()
 
 ##################################################
 
@@ -119,8 +78,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-check_int128()
 
 add_source_files(
         EXECUTABLE
