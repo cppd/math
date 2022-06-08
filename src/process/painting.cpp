@@ -50,13 +50,28 @@ constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 300 : ((N == 5) ? 100 
 
 using Precisions = std::tuple<double, float>;
 constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
+static_assert(DEFAULT_PRECISION_INDEX < std::tuple_size_v<Precisions>);
 
 using Colors = std::tuple<color::Spectrum, color::Color>;
 constexpr std::size_t DEFAULT_COLOR_INDEX = 0;
+static_assert(DEFAULT_COLOR_INDEX < std::tuple_size_v<Colors>);
+
+std::array<const char*, 2> precision_names()
+{
+        static_assert(2 == std::tuple_size_v<Precisions>);
+        return {type_bit_name<std::tuple_element_t<0, Precisions>>(),
+                type_bit_name<std::tuple_element_t<1, Precisions>>()};
+}
+
+std::array<const char*, 2> color_names()
+{
+        static_assert(2 == std::tuple_size_v<Colors>);
+        return {std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
+}
 
 template <typename T, typename Color, std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const Color& light,
         const Color& background_light,
@@ -67,10 +82,10 @@ void thread_function(
         std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
                 std::vector<const model::mesh::MeshObject<N>*> meshes;
-                meshes.reserve(mesh_objects.size());
-                for (const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object : mesh_objects)
+                meshes.reserve(objects.size());
+                for (const std::shared_ptr<const model::mesh::MeshObject<N>>& object : objects)
                 {
-                        meshes.push_back(mesh_object.get());
+                        meshes.push_back(object.get());
                 }
                 ProgressRatio progress(progress_list);
                 constexpr bool WRITE_LOG = true;
@@ -101,7 +116,7 @@ void thread_function(
         }
         ASSERT(scene);
 
-        std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
+        const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 
         gui::painter_window::create_painter_window(
                 name, parameters.thread_count, parameters.samples_per_pixel, !parameters.flat_facets, std::move(scene));
@@ -109,7 +124,7 @@ void thread_function(
 
 template <typename T, std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
@@ -124,7 +139,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<0, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
+                        objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
                         parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -132,7 +147,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<1, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
+                        objects, camera, std::get<Color>(lighting_color), to_illuminant<Color>(background_color),
                         parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -142,7 +157,7 @@ void thread_function(
 
 template <std::size_t N, typename Parameters>
 void thread_function(
-        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
@@ -155,13 +170,13 @@ void thread_function(
         {
         case 0:
                 thread_function<std::tuple_element_t<0, Precisions>>(
-                        mesh_objects, camera, lighting_color, background_color, parameters, dimension_parameters,
+                        objects, camera, lighting_color, background_color, parameters, dimension_parameters,
                         progress_list);
                 return;
 
         case 1:
                 thread_function<std::tuple_element_t<1, Precisions>>(
-                        mesh_objects, camera, lighting_color, background_color, parameters, dimension_parameters,
+                        objects, camera, lighting_color, background_color, parameters, dimension_parameters,
                         progress_list);
                 return;
         }
@@ -169,88 +184,109 @@ void thread_function(
 }
 
 template <std::size_t N>
-bool has_facets(const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects)
-{
-        for (const std::shared_ptr<const model::mesh::MeshObject<N>>& object : mesh_objects)
-        {
-                if (!model::mesh::Reading<N>(*object).mesh().facets.empty())
-                {
-                        return true;
-                }
-        }
-        return false;
-}
-
-template <std::size_t N>
+        requires(N == 3)
 std::function<void(ProgressRatioList*)> action_painter_function(
-        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& mesh_objects,
+        std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
-        if (!has_facets(mesh_objects))
+        static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+
+        std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParameters3d>> parameters =
+                gui::dialog::PainterParameters3dDialog::show(
+                        hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
+                        PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precision_names(),
+                        DEFAULT_PRECISION_INDEX, color_names(), DEFAULT_COLOR_INDEX);
+
+        if (!parameters)
         {
-                message_warning("No objects to paint");
                 return nullptr;
         }
 
+        std::shared_ptr shared_objects =
+                std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
+
+        return [=, shared_objects = std::move(shared_objects)](ProgressRatioList* const progress_list)
+        {
+                thread_function(
+                        *shared_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
+                        std::get<1>(*parameters), progress_list);
+        };
+}
+
+template <std::size_t N>
+        requires(N >= 4)
+std::function<void(ProgressRatioList*)> action_painter_function(
+        std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
+        const view::info::Camera& camera,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
+        const color::Color& background_color)
+{
         static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
-        static_assert(DEFAULT_PRECISION_INDEX < std::tuple_size_v<Precisions>);
-        static_assert(DEFAULT_COLOR_INDEX < std::tuple_size_v<Colors>);
+        static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> >= PAINTER_MINIMUM_SCREEN_SIZE_ND);
+        static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> <= PAINTER_MAXIMUM_SCREEN_SIZE_ND);
 
-        static_assert(2 == std::tuple_size_v<Precisions>);
-        const std::array<const char*, 2> precisions{
-                type_bit_name<std::tuple_element_t<0, Precisions>>(),
-                type_bit_name<std::tuple_element_t<1, Precisions>>()};
+        std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParametersNd>> parameters =
+                gui::dialog::PainterParametersNdDialog::show(
+                        N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>, PAINTER_MINIMUM_SCREEN_SIZE_ND,
+                        PAINTER_MAXIMUM_SCREEN_SIZE_ND, PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>,
+                        PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precision_names(), DEFAULT_PRECISION_INDEX, color_names(),
+                        DEFAULT_COLOR_INDEX);
 
-        static_assert(2 == std::tuple_size_v<Colors>);
-        const std::array<const char*, 2> colors{
-                std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
-
-        if constexpr (N == 3)
+        if (!parameters)
         {
-                std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParameters3d>> parameters =
-                        gui::dialog::PainterParameters3dDialog::show(
-                                hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                DEFAULT_PRECISION_INDEX, colors, DEFAULT_COLOR_INDEX);
-
-                if (!parameters)
-                {
-                        return nullptr;
-                }
-
-                return [=](ProgressRatioList* const progress_list)
-                {
-                        thread_function(
-                                mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
-                                std::get<1>(*parameters), progress_list);
-                };
+                return nullptr;
         }
-        else
+
+        std::shared_ptr shared_objects =
+                std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
+
+        return [=, shared_objects = std::move(shared_objects)](ProgressRatioList* const progress_list)
         {
-                static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> >= PAINTER_MINIMUM_SCREEN_SIZE_ND);
-                static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> <= PAINTER_MAXIMUM_SCREEN_SIZE_ND);
+                thread_function(
+                        *shared_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
+                        std::get<1>(*parameters), progress_list);
+        };
+}
 
-                std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParametersNd>> parameters =
-                        gui::dialog::PainterParametersNdDialog::show(
-                                N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
-                                PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
-                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                DEFAULT_PRECISION_INDEX, colors, DEFAULT_COLOR_INDEX);
+std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_objects(
+        const std::vector<storage::MeshObjectConst>& objects)
+{
+        std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> res;
 
-                if (!parameters)
+        std::set<std::size_t> dimensions;
+        for (const storage::MeshObjectConst& storage_object : objects)
+        {
+                std::visit(
+                        [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& object)
+                        {
+                                model::mesh::Reading reading(*object);
+                                if (reading.visible() && !reading.mesh().facets.empty())
+                                {
+                                        dimensions.insert(N);
+                                        std::get<0>(res).push_back(object);
+                                }
+                        },
+                        storage_object);
+
+                if (dimensions.size() > 1)
                 {
-                        return nullptr;
+                        message_warning(
+                                "Painting different dimensions is not supported, dimensions: " + to_string(dimensions));
+                        return {};
                 }
-
-                return [=](ProgressRatioList* const progress_list)
-                {
-                        thread_function(
-                                mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
-                                std::get<1>(*parameters), progress_list);
-                };
         }
+
+        if (std::get<0>(res).empty())
+        {
+                message_warning("No objects to paint");
+                return {};
+        }
+
+        std::get<1>(res) = *dimensions.cbegin();
+
+        return res;
 }
 }
 
@@ -260,52 +296,36 @@ std::function<void(ProgressRatioList*)> action_painter(
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
-        std::set<std::size_t> dimensions;
-        std::vector<storage::MeshObjectConst> visible_objects;
-        for (const storage::MeshObjectConst& storage_object : objects)
+        std::vector<storage::MeshObjectConst> paint_objects;
+        std::size_t dimension = 0;
+
+        std::tie(paint_objects, dimension) = copy_paint_objects(objects);
+
+        if (paint_objects.empty())
         {
-                std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& object)
-                        {
-                                if (model::mesh::Reading(*object).visible())
-                                {
-                                        dimensions.insert(N);
-                                        visible_objects.push_back(object);
-                                }
-                        },
-                        storage_object);
-        }
-        if (visible_objects.empty())
-        {
-                message_warning("No objects to paint");
-                return nullptr;
-        }
-        if (dimensions.size() > 1)
-        {
-                message_warning(
-                        "Painting different dimensions is not supported, " + to_string(dimensions)
-                        + " different dimensions.");
                 return nullptr;
         }
 
-        return apply_for_dimension(
-                *dimensions.cbegin(),
-                [&]<std::size_t N>(const Dimension<N>&)
+        ASSERT(dimension > 0);
+
+        const auto f = [&]<std::size_t N>(const Dimension<N>&)
+        {
+                std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>> meshes;
+                for (storage::MeshObjectConst& paint_object : paint_objects)
                 {
-                        std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>> meshes;
-                        for (storage::MeshObjectConst& visible_object : visible_objects)
-                        {
-                                std::visit(
-                                        [&]<std::size_t M>(std::shared_ptr<const model::mesh::MeshObject<M>>&& object)
+                        std::visit(
+                                [&meshes]<std::size_t M>(std::shared_ptr<const model::mesh::MeshObject<M>>&& object)
+                                {
+                                        if constexpr (N == M)
                                         {
-                                                if constexpr (N == M)
-                                                {
-                                                        meshes.push_back(std::move(object));
-                                                }
-                                        },
-                                        std::move(visible_object));
-                        }
-                        return action_painter_function(meshes, camera, lighting_color, background_color);
-                });
+                                                meshes.push_back(std::move(object));
+                                        }
+                                },
+                                std::move(paint_object));
+                }
+                return action_painter_function(std::move(meshes), camera, lighting_color, background_color);
+        };
+
+        return apply_for_dimension(dimension, f);
 }
 }
