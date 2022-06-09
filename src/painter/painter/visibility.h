@@ -51,23 +51,24 @@ bool occluded(
                 {
                         return true;
                 }
-                const auto surface = scene.intersect(normals.geometric, ray);
+                const SurfacePoint surface = scene.intersect(normals.geometric, ray);
                 return surface_before_distance(ray.org(), surface, distance);
         }
 
         if (dot(ray.dir(), normals.geometric) >= 0)
         {
-                const auto surface = scene.intersect(normals.geometric, ray);
+                const SurfacePoint surface = scene.intersect(normals.geometric, ray);
                 return surface_before_distance(ray.org(), surface, distance);
         }
 
-        const auto surface_1 = scene.intersect(normals.geometric, ray);
+        const SurfacePoint surface_1 = scene.intersect(normals.geometric, ray);
         if (!surface_before_distance(ray.org(), surface_1, distance))
         {
                 return true;
         }
 
-        const auto surface_2 = scene.intersect(surface_1.geometric_normal(), Ray<N, T>(ray).set_org(surface_1.point()));
+        const SurfacePoint surface_2 =
+                scene.intersect(surface_1.geometric_normal(), Ray<N, T>(ray).set_org(surface_1.point()));
         return surface_before_distance(ray.org(), surface_2, distance);
 }
 
