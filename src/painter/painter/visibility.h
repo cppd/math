@@ -82,11 +82,28 @@ SurfacePoint<N, T, Color> intersect(
         SurfacePoint surface = scene.intersect(geometric_normal, ray);
         if (!surface)
         {
-                return surface;
+                return {};
+        }
+
+        {
+                Normals<N, T> n = compute_normals(smooth_normals, surface, ray.dir());
+                if (!smooth_normals || dot(ray.dir(), n.shading) <= 0)
+                {
+                        *normals = std::move(n);
+                        return surface;
+                }
+        }
+
+        for (int i = 0; i < 2; ++i)
+        {
+                surface = scene.intersect(surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()));
+                if (!surface)
+                {
+                        return {};
+                }
         }
 
         *normals = compute_normals(smooth_normals, surface, ray.dir());
-
         return surface;
 }
 }
