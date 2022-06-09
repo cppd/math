@@ -45,14 +45,20 @@ Elsevier, 2017.
 
 #include <optional>
 #include <random>
-#include <tuple>
 
 namespace ns::painter
 {
 namespace trace_implementation
 {
+template <std::size_t N, typename T, typename Color>
+struct BrdfSample final
+{
+        Color beta;
+        Vector<N, T> l;
+};
+
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<std::tuple<Color, Vector<N, T>>> sample_brdf(
+std::optional<BrdfSample<N, T, Color>> sample_brdf(
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
@@ -81,9 +87,7 @@ std::optional<std::tuple<Color, Vector<N, T>>> sample_brdf(
                 return {};
         }
 
-        std::optional<std::tuple<Color, Vector<N, T>>> res;
-        res.emplace(sample.brdf * (n_l / sample.pdf), l);
-        return res;
+        return BrdfSample<N, T, Color>{.beta = sample.brdf * (n_l / sample.pdf), .l = l};
 }
 
 template <typename Color, typename RandomEngine>
@@ -115,18 +119,19 @@ template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
-        const Ray<N, T> ray,
+        Ray<N, T> ray,
         RandomEngine& engine)
 {
-        std::optional<Intersection<N, T, Color>> intersection = [&]
+        Normals<N, T> normals;
+        SurfacePoint<N, T, Color> surface = [&]
         {
                 static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-                return intersect(scene, smooth_normals, GEOMETRIC_NORMAL, ray);
+                return intersect(scene, smooth_normals, GEOMETRIC_NORMAL, ray, &normals);
         }();
 
-        if (!intersection)
+        if (!surface)
         {
-                if (const auto c = directly_visible_light_sources(scene, SurfacePoint<N, T, Color>(), ray))
+                if (const auto c = directly_visible_light_sources(scene, surface, ray))
                 {
                         return *c + scene.background_light();
                 }
@@ -135,7 +140,7 @@ std::optional<Color> trace_path(
 
         Color color(0);
 
-        if (const auto c = directly_visible_light_sources(scene, intersection->surface, intersection->ray))
+        if (const auto c = directly_visible_light_sources(scene, surface, ray))
         {
                 color = *c;
         }
@@ -144,40 +149,39 @@ std::optional<Color> trace_path(
 
         for (int depth = 0;; ++depth)
         {
-                const Vector<N, T> v = -intersection->ray.dir();
+                const Vector<N, T> v = -ray.dir();
 
-                if (dot(intersection->normals.shading, v) <= 0)
+                if (dot(normals.shading, v) <= 0)
                 {
                         break;
                 }
 
-                if (const auto& c = intersection->surface.light_source())
+                if (const auto& c = surface.light_source())
                 {
                         color.multiply_add(beta, *c);
                 }
 
-                if (const auto c = direct_lighting(scene, intersection->surface, v, intersection->normals, engine))
+                if (const auto c = direct_lighting(scene, surface, v, normals, engine))
                 {
                         color.multiply_add(beta, *c);
                 }
 
-                const auto sample = sample_brdf(intersection->surface, v, intersection->normals, engine);
+                const auto sample = sample_brdf(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;
                 }
 
-                beta *= std::get<0>(*sample);
+                beta *= sample->beta;
 
                 if (terminate(engine, depth, &beta))
                 {
                         break;
                 }
 
-                intersection = intersect<N, T>(
-                        scene, smooth_normals, intersection->normals.geometric,
-                        Ray<N, T>(intersection->surface.point(), std::get<1>(*sample)));
-                if (!intersection)
+                ray = Ray<N, T>(surface.point(), sample->l);
+                surface = intersect<N, T>(scene, smooth_normals, normals.geometric, ray, &normals);
+                if (!surface)
                 {
                         color.multiply_add(beta, scene.background_light());
                         break;
