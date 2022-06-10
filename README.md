@@ -18,6 +18,7 @@ Just for fun with mathematics and stuff
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
   * [Real-time rendering](#real-time-rendering)
   * [3D model](#3d-model)
+  * [4D polytope](#4d-polytope)
 
 
 ## File types
@@ -149,3 +150,39 @@ Spectral rendering
 <img src="https://i.imgur.com/55ZX2bE.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/VBa1A6A.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/S9YZB2N.png" alt="image" width="23%"></img>
+
+### 4D polytope
+
+4-dimensional cross-polytope
+
+```
+v -11   0   0   0
+v   0 -12   0   0
+v   0   0 -13   0
+v   0   0   0 -14
+v   0   0   0  15
+v   0   0  16   0
+v   0  17   0   0
+v  18   0   0   0
+f 1 2 3 4
+f 1 2 3 5
+f 1 2 6 4
+f 1 2 6 5
+f 1 7 3 4
+f 1 7 3 5
+f 1 7 6 4
+f 1 7 6 5
+f 8 2 3 4
+f 8 2 3 5
+f 8 2 6 4
+f 8 2 6 5
+f 8 7 3 4
+f 8 7 3 5
+f 8 7 6 4
+f 8 7 6 5
+```
+
+<img src="https://i.imgur.com/s0SHinD.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/lkC8Bgs.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/X2D1jMr.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/8MJ5Ptm.png" alt="image" width="23%"></img>
