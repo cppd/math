@@ -36,7 +36,7 @@ std::unordered_set<std::string> layers()
 {
         std::unordered_set<std::string> layers;
 
-#if !defined(RELEASE_BUILD)
+#if !defined(BUILD_RELEASE)
         layers.insert("VK_LAYER_KHRONOS_validation");
 #endif
 

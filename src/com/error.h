@@ -49,7 +49,7 @@ namespace error_implementation
 }
 }
 
-#if !defined(RELEASE_BUILD)
+#if !defined(BUILD_RELEASE)
 #define ASSERT(expr)                                    \
         (static_cast<bool>(expr) ? static_cast<void>(0) \
                                  : ::ns::error_implementation::error_assert(#expr, __FILE__, __LINE__))

@@ -36,12 +36,12 @@ QString message(const bool ray_tracing)
 
         oss << settings::APPLICATION_NAME;
 
-#if defined(DEBUG_BUILD) && defined(RELEASE_BUILD)
-#error DEBUG_BUILD and RELEASE_BUILD
-#elif defined(DEBUG_BUILD)
+#if defined(BUILD_DEBUG) && defined(BUILD_RELEASE)
+#error BUILD_DEBUG and BUILD_RELEASE
+#elif defined(BUILD_DEBUG)
         oss << "\n\n";
         oss << "Debug Build";
-#elif defined(RELEASE_BUILD)
+#elif defined(BUILD_RELEASE)
         oss << "\n\n";
         oss << "Release Build";
 #endif
@@ -60,6 +60,11 @@ QString message(const bool ray_tracing)
 #else
         oss << "\n";
         oss << "__cplusplus " << __cplusplus;
+#endif
+
+#if defined(BUILD_LIB_CPP)
+        oss << "\n";
+        oss << "libc++";
 #endif
 
         oss << "\n\n";
