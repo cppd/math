@@ -166,22 +166,26 @@ class IntegerFacet<N, DataType, mpz_class> final
 
         static constexpr bool REDUCE = false;
 
-        static void reduce(Vector<N, mpz_class>* const ortho)
+        static void reduce(Vector<N, mpz_class>* const v)
         {
+                static_assert(N >= 2);
+
                 thread_local mpz_class gcd;
 
-                mpz_gcd(gcd.get_mpz_t(), (*ortho)[0].get_mpz_t(), (*ortho)[1].get_mpz_t());
+                mpz_gcd(gcd.get_mpz_t(), (*v)[0].get_mpz_t(), (*v)[1].get_mpz_t());
                 for (unsigned n = 2; n < N && gcd != 1; ++n)
                 {
-                        mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*ortho)[n].get_mpz_t());
+                        mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*v)[n].get_mpz_t());
                 }
+
                 if (gcd <= 1)
                 {
                         return;
                 }
+
                 for (unsigned n = 0; n < N; ++n)
                 {
-                        mpz_divexact((*ortho)[n].get_mpz_t(), (*ortho)[n].get_mpz_t(), gcd.get_mpz_t());
+                        mpz_divexact((*v)[n].get_mpz_t(), (*v)[n].get_mpz_t(), gcd.get_mpz_t());
                 }
         }
 
@@ -193,36 +197,35 @@ class IntegerFacet<N, DataType, mpz_class> final
                 }
         }
 
-        static void dot(mpz_class* const d, const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+        static void length(mpf_class* const res, const Vector<N, mpz_class>& v)
         {
-                mpz_mul(d->get_mpz_t(), v1[0].get_mpz_t(), v2[0].get_mpz_t());
+                thread_local mpz_class d;
+                mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), v[0].get_mpz_t());
                 for (unsigned n = 1; n < N; ++n)
                 {
-                        mpz_addmul(d->get_mpz_t(), v1[n].get_mpz_t(), v2[n].get_mpz_t());
+                        mpz_addmul(d.get_mpz_t(), v[n].get_mpz_t(), v[n].get_mpz_t());
                 }
+                *res = d;
+                mpf_sqrt(res->get_mpf_t(), res->get_mpf_t());
         }
 
-        [[nodiscard]] static Vector<N, double> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
+        template <typename T>
+        [[nodiscard]] static Vector<N, T> normalize(const Vector<N, mpz_class>& v)
         {
                 static constexpr int FLOAT_BIT_PRECISION = 128;
 
-                thread_local mpz_class dot_product;
-                thread_local mpf_class length(0, FLOAT_BIT_PRECISION);
-                thread_local mpf_class ortho_coord(0, FLOAT_BIT_PRECISION);
+                thread_local mpf_class l(0, FLOAT_BIT_PRECISION);
+                thread_local mpf_class v_float(0, FLOAT_BIT_PRECISION);
 
-                dot(&dot_product, mpz_vec, mpz_vec);
+                length(&l, v);
 
-                length = dot_product;
-                mpf_sqrt(length.get_mpf_t(), length.get_mpf_t());
-
-                Vector<N, double> res;
+                Vector<N, T> res;
                 for (unsigned n = 0; n < N; ++n)
                 {
-                        ortho_coord = mpz_vec[n];
-                        ortho_coord /= length;
-                        res[n] = ortho_coord.get_d();
+                        v_float = v[n];
+                        v_float /= l;
+                        res[n] = v_float.get_d();
                 }
-
                 return res;
         }
 
@@ -363,7 +366,7 @@ public:
 
         [[nodiscard]] Vector<N, double> double_ortho() const
         {
-                return normalized_double_vector(ortho_);
+                return normalize<double>(ortho_);
         }
 
         [[nodiscard]] bool last_ortho_coord_is_negative() const
