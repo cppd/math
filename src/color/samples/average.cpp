@@ -112,6 +112,7 @@ void init(
         std::vector<ResultType>& result)
 {
         dst_i = 0;
+        dst_prev = from;
         dst_next = from;
         move_dst(from, to, count, dst_i, dst_prev, dst_next);
 
