@@ -136,7 +136,8 @@ public:
                 const std::vector<Vector<N, DataType>>& points,
                 const int point_index) const
         {
-                return facet_.visible_from_point(points, vertices_[0], point_index);
+                // strictly greater than 0
+                return facet_.dot_product_sign(points, vertices_[0], point_index) > 0;
         }
 
         [[nodiscard]] decltype(auto) double_ortho() const

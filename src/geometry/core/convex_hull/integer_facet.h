@@ -62,23 +62,6 @@ class IntegerFacet final
 
         Vector<N, ComputeType> ortho_;
 
-        // dot(ortho, vector from facet to point)
-        [[nodiscard]] ComputeType visible(
-                const std::vector<Vector<N, DataType>>& points,
-                const int facet_point_index,
-                const int point_index) const
-        {
-                const Vector<N, DataType>& facet_point = points[facet_point_index];
-                const Vector<N, DataType>& point = points[point_index];
-
-                ComputeType d = ortho_[0] * (point[0] - facet_point[0]);
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        d += ortho_[n] * (point[n] - facet_point[n]);
-                }
-                return d;
-        }
-
         template <bool USE_DIRECTION_FACET>
         IntegerFacet(
                 std::bool_constant<USE_DIRECTION_FACET>,
@@ -90,7 +73,7 @@ class IntegerFacet final
         {
                 ASSERT(!ortho_.is_zero());
 
-                const ComputeType v = visible(points, vertices[0], direction_point);
+                const auto v = dot_product_sign(points, vertices[0], direction_point);
 
                 if (v < 0)
                 {
@@ -147,13 +130,20 @@ public:
         {
         }
 
-        [[nodiscard]] bool visible_from_point(
+        [[nodiscard]] ComputeType dot_product_sign(
                 const std::vector<Vector<N, DataType>>& points,
-                const int facet_point_index,
-                const int point_index) const
+                const int from_index,
+                const int to_index) const
         {
-                // strictly greater than 0
-                return visible(points, facet_point_index, point_index) > 0;
+                const Vector<N, DataType>& from = points[from_index];
+                const Vector<N, DataType>& to = points[to_index];
+
+                ComputeType d = ortho_[0] * (to[0] - from[0]);
+                for (unsigned n = 1; n < N; ++n)
+                {
+                        d += ortho_[n] * (to[n] - from[n]);
+                }
+                return d;
         }
 
         [[nodiscard]] Vector<N, double> double_ortho() const
@@ -254,52 +244,6 @@ class IntegerFacet<N, DataType, mpz_class> final
 
         Vector<N, mpz_class> ortho_;
 
-        // sign of dot(ortho, vector from facet to point)
-        [[nodiscard]] int visible(
-                const std::vector<Vector<N, DataType>>& points,
-                const int facet_point_index,
-                const int point_index) const
-        {
-                thread_local mpz_class d;
-                thread_local mpz_class to_point;
-
-                const Vector<N, DataType>& facet_point = points[facet_point_index];
-                const Vector<N, DataType>& point = points[point_index];
-
-                set_mpz(&to_point, point[0] - facet_point[0]);
-                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        set_mpz(&to_point, point[n] - facet_point[n]);
-                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), to_point.get_mpz_t());
-                }
-
-                return mpz_sgn(d.get_mpz_t());
-        }
-
-        // sign of dot(ortho, vector from facet to point)
-        [[nodiscard]] int visible(
-                const std::vector<Vector<N, mpz_class>>& points,
-                const int facet_point_index,
-                const int point_index) const
-        {
-                thread_local mpz_class d;
-                thread_local mpz_class to_point;
-
-                const Vector<N, mpz_class>& facet_point = points[facet_point_index];
-                const Vector<N, mpz_class>& point = points[point_index];
-
-                mpz_sub(to_point.get_mpz_t(), point[0].get_mpz_t(), facet_point[0].get_mpz_t());
-                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        mpz_sub(to_point.get_mpz_t(), point[n].get_mpz_t(), facet_point[n].get_mpz_t());
-                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), to_point.get_mpz_t());
-                }
-
-                return mpz_sgn(d.get_mpz_t());
-        }
-
         template <bool USE_DIRECTION_FACET>
         IntegerFacet(
                 std::bool_constant<USE_DIRECTION_FACET>,
@@ -316,7 +260,7 @@ class IntegerFacet<N, DataType, mpz_class> final
                         reduce(&ortho_);
                 }
 
-                const int v = visible(points, vertices[0], direction_point);
+                const auto v = dot_product_sign(points, vertices[0], direction_point);
 
                 if (v < 0)
                 {
@@ -373,13 +317,48 @@ public:
         {
         }
 
-        [[nodiscard]] bool visible_from_point(
+        [[nodiscard]] int dot_product_sign(
                 const std::vector<Vector<N, DataType>>& points,
-                const int facet_point_index,
-                const int point_index) const
+                const int from_index,
+                const int to_index) const
         {
-                // strictly greater than 0
-                return visible(points, facet_point_index, point_index) > 0;
+                thread_local mpz_class d;
+                thread_local mpz_class v;
+
+                const Vector<N, DataType>& from = points[from_index];
+                const Vector<N, DataType>& to = points[to_index];
+
+                set_mpz(&v, to[0] - from[0]);
+                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), v.get_mpz_t());
+                for (unsigned n = 1; n < N; ++n)
+                {
+                        set_mpz(&v, to[n] - from[n]);
+                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), v.get_mpz_t());
+                }
+
+                return mpz_sgn(d.get_mpz_t());
+        }
+
+        [[nodiscard]] int dot_product_sign(
+                const std::vector<Vector<N, mpz_class>>& points,
+                const int from_index,
+                const int to_index) const
+        {
+                thread_local mpz_class d;
+                thread_local mpz_class v;
+
+                const Vector<N, mpz_class>& from = points[from_index];
+                const Vector<N, mpz_class>& to = points[to_index];
+
+                mpz_sub(v.get_mpz_t(), to[0].get_mpz_t(), from[0].get_mpz_t());
+                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), v.get_mpz_t());
+                for (unsigned n = 1; n < N; ++n)
+                {
+                        mpz_sub(v.get_mpz_t(), to[n].get_mpz_t(), from[n].get_mpz_t());
+                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), v.get_mpz_t());
+                }
+
+                return mpz_sgn(d.get_mpz_t());
         }
 
         [[nodiscard]] Vector<N, double> double_ortho() const
