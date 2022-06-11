@@ -44,9 +44,14 @@ class Facet final : public IntegerFacet<N, DataType, ComputeType>
 public:
         Facet(const std::vector<Vector<N, DataType>>& points,
               std::array<int, N>&& vertices,
-              const int convex_hull_point,
-              const Facet* const convex_hull_facet)
-                : Base(points, std::move(vertices), convex_hull_point, convex_hull_facet)
+              const int direction_point,
+              const Facet& direction_facet)
+                : Base(points, std::move(vertices), direction_point, direction_facet)
+        {
+        }
+
+        Facet(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, const int direction_point)
+                : Base(points, std::move(vertices), direction_point)
         {
         }
 

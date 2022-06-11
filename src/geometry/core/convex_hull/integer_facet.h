@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <type_traits>
 #include <vector>
 
 namespace ns::geometry::convex_hull
@@ -103,39 +104,73 @@ class IntegerFacet
                 return d;
         }
 
-protected:
+        template <bool USE_DIRECTION_FACET>
         IntegerFacet(
+                std::bool_constant<USE_DIRECTION_FACET>,
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
-                const int convex_hull_point,
-                const IntegerFacet* const convex_hull_facet)
+                const int direction_point,
+                const IntegerFacet* const direction_facet)
                 : vertices_(std::move(vertices)),
                   ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices_.data()))
         {
                 ASSERT(!ortho_.is_zero());
 
-                const ComputeType v = visible(points, convex_hull_point);
+                const ComputeType v = visible(points, direction_point);
 
                 if (v < 0)
                 {
-                        // A convex hull point is invisible, ortho is directed outside
+                        // direction point is invisible, ortho is directed outside
                         return;
                 }
 
                 if (v > 0)
                 {
-                        // A convex hull point is visible, change ortho direction
+                        // direction point is visible, change ortho direction
                         negate(&ortho_);
                         return;
                 }
 
-                // A convex hull point is on the facet plane.
-                // convex_hull_facet == nullptr when creating initial convex hull.
-                ASSERT(convex_hull_facet);
-                if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
+                // direction point is on the facet plane
+
+                if constexpr (USE_DIRECTION_FACET)
                 {
-                        negate(&ortho_);
+                        if (opposite_orthos(ortho_, direction_facet->ortho_))
+                        {
+                                negate(&ortho_);
+                        }
+                        return;
                 }
+
+                error("Direction point is on the facet plane");
+        }
+
+protected:
+        IntegerFacet(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                const int direction_point,
+                const IntegerFacet& direction_facet)
+                : IntegerFacet(
+                        /*use direction facet*/ std::bool_constant<true>(),
+                        points,
+                        std::move(vertices),
+                        direction_point,
+                        &direction_facet)
+        {
+        }
+
+        IntegerFacet(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                const int direction_point)
+                : IntegerFacet(
+                        /*use direction facet*/ std::bool_constant<false>(),
+                        points,
+                        std::move(vertices),
+                        direction_point,
+                        nullptr)
+        {
         }
 
         ~IntegerFacet() = default;
@@ -236,8 +271,8 @@ class IntegerFacet<N, DataType, mpz_class>
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
-                        int sgn1 = mpz_sgn(v1[n].get_mpz_t());
-                        int sgn2 = mpz_sgn(v2[n].get_mpz_t());
+                        const int sgn1 = mpz_sgn(v1[n].get_mpz_t());
+                        const int sgn2 = mpz_sgn(v2[n].get_mpz_t());
                         if ((sgn1 > 0 && sgn2 < 0) || (sgn1 < 0 && sgn2 > 0))
                         {
                                 return true;
@@ -291,12 +326,13 @@ class IntegerFacet<N, DataType, mpz_class>
                 return mpz_sgn(d.get_mpz_t());
         }
 
-protected:
+        template <bool USE_DIRECTION_FACET>
         IntegerFacet(
+                std::bool_constant<USE_DIRECTION_FACET>,
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
-                const int convex_hull_point,
-                const IntegerFacet* const convex_hull_facet)
+                const int direction_point,
+                const IntegerFacet* const direction_facet)
                 : vertices_(std::move(vertices)),
                   ortho_(numerical::orthogonal_complement<mpz_class>(points, vertices_.data()))
         {
@@ -307,28 +343,61 @@ protected:
                         reduce(&ortho_);
                 }
 
-                const int v = visible(points, convex_hull_point);
+                const int v = visible(points, direction_point);
 
                 if (v < 0)
                 {
-                        // a convex hull point is invisible, ortho is directed outside
+                        // direction point is invisible, ortho is directed outside
                         return;
                 }
 
                 if (v > 0)
                 {
-                        // a convex hull point is visible, change ortho direction
+                        // direction point is visible, change ortho direction
                         negate(&ortho_);
                         return;
                 }
 
-                // A convex hull point is on the facet plane.
-                // convex_hull_facet == nullptr when creating initial convex hull.
-                ASSERT(convex_hull_facet);
-                if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
+                // direction point is on the facet plane
+
+                if constexpr (USE_DIRECTION_FACET)
                 {
-                        negate(&ortho_);
+                        if (opposite_orthos(ortho_, direction_facet->ortho_))
+                        {
+                                negate(&ortho_);
+                        }
+                        return;
                 }
+
+                error("Direction point is on the facet plane");
+        }
+
+protected:
+        IntegerFacet(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                const int direction_point,
+                const IntegerFacet& direction_facet)
+                : IntegerFacet(
+                        /*use direction facet*/ std::bool_constant<true>(),
+                        points,
+                        std::move(vertices),
+                        direction_point,
+                        &direction_facet)
+        {
+        }
+
+        IntegerFacet(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                const int direction_point)
+                : IntegerFacet(
+                        /*use direction facet*/ std::bool_constant<false>(),
+                        points,
+                        std::move(vertices),
+                        direction_point,
+                        nullptr)
+        {
         }
 
         ~IntegerFacet() = default;

@@ -97,8 +97,7 @@ std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
                 for (std::size_t r = 0; r < N + 1; ++r)
                 {
                         // ortho is directed outside
-                        orthos[r] =
-                                ch::Facet<N, S, C>(data, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
+                        orthos[r] = ch::Facet<N, S, C>(data, del_elem(vertices, r), vertices[r]).double_ortho();
                 }
 
                 simplices.emplace_back(points.restore_indices(vertices), orthos);

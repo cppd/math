@@ -85,7 +85,7 @@ void create_initial_convex_hull(
         facets->clear();
         for (std::size_t i = 0; i < N + 1; ++i)
         {
-                facets->emplace_back(points, del_elem(*vertices, i), (*vertices)[i], nullptr);
+                facets->emplace_back(points, del_elem(*vertices, i), (*vertices)[i]);
                 std::prev(facets->end())->set_iter(std::prev(facets->cend()));
         }
 
@@ -241,7 +241,7 @@ void create_facets_for_point_and_horizon(
 
                         new_facets->emplace_back(
                                 points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
-                                link_facet);
+                                *link_facet);
 
                         Facet* const new_facet = &(*std::prev(new_facets->end()));
                         new_facet->set_iter(std::prev(new_facets->cend()));
