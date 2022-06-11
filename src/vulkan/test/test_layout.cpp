@@ -63,6 +63,7 @@ struct TestFloat final
         std140::Vector3f v;
         float f;
 };
+
 static_assert(sizeof(TestFloat) == 4 * sizeof(float));
 static_assert(alignof(TestFloat) == 4 * sizeof(float));
 
@@ -71,6 +72,7 @@ struct TestDouble final
         std140::Vector3d v;
         double d;
 };
+
 static_assert(sizeof(TestDouble) == 4 * sizeof(double));
 static_assert(alignof(TestDouble) == 4 * sizeof(double));
 }

@@ -27,7 +27,6 @@ namespace ns::color
 {
 namespace
 {
-
 template <typename T>
 constexpr T DEFAULT_VALUE = 0;
 

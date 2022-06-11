@@ -44,6 +44,7 @@ struct Matrix final
         {
                 std::array<T, N> data;
         };
+
         std::array<Column, N> columns;
 };
 
