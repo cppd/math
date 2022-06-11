@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/mpz.h>
-#include <src/com/sort.h>
 #include <src/com/type/concept.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
@@ -30,34 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::convex_hull
 {
-namespace integer_facet_implementation
-{
-template <std::size_t N>
-class FacetVertices final
-{
-        static_assert(N > 1);
-
-        std::array<int, N> vertices_;
-
-public:
-        explicit FacetVertices(std::array<int, N>&& vertices) : vertices_(sort(std::move(vertices)))
-        {
-        }
-
-        [[nodiscard]] const std::array<int, N>& data() const
-        {
-                return vertices_;
-        }
-
-        [[nodiscard]] int operator[](const unsigned index) const
-        {
-                return vertices_[index];
-        }
-};
-}
-
 template <std::size_t N, typename DataType, typename ComputeType>
-class IntegerFacet
+class IntegerFacet final
 {
         static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
         static_assert(Integral<DataType> && Integral<ComputeType>);
@@ -87,14 +60,16 @@ class IntegerFacet
 
         //
 
-        integer_facet_implementation::FacetVertices<N> vertices_;
         Vector<N, ComputeType> ortho_;
 
         // dot(ortho, vector from facet to point)
-        [[nodiscard]] ComputeType visible(const std::vector<Vector<N, DataType>>& points, const int p) const
+        [[nodiscard]] ComputeType visible(
+                const std::vector<Vector<N, DataType>>& points,
+                const int facet_point_index,
+                const int point_index) const
         {
-                const Vector<N, DataType>& facet_point = points[vertices_[0]];
-                const Vector<N, DataType>& point = points[p];
+                const Vector<N, DataType>& facet_point = points[facet_point_index];
+                const Vector<N, DataType>& point = points[point_index];
 
                 ComputeType d = ortho_[0] * (point[0] - facet_point[0]);
                 for (unsigned n = 1; n < N; ++n)
@@ -108,15 +83,14 @@ class IntegerFacet
         IntegerFacet(
                 std::bool_constant<USE_DIRECTION_FACET>,
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point,
                 const IntegerFacet* const direction_facet)
-                : vertices_(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices_.data()))
+                : ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices))
         {
                 ASSERT(!ortho_.is_zero());
 
-                const ComputeType v = visible(points, direction_point);
+                const ComputeType v = visible(points, vertices[0], direction_point);
 
                 if (v < 0)
                 {
@@ -145,16 +119,16 @@ class IntegerFacet
                 error("Direction point is on the facet plane");
         }
 
-protected:
+public:
         IntegerFacet(
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point,
                 const IntegerFacet& direction_facet)
                 : IntegerFacet(
                         /*use direction facet*/ std::bool_constant<true>(),
                         points,
-                        std::move(vertices),
+                        vertices,
                         direction_point,
                         &direction_facet)
         {
@@ -162,29 +136,24 @@ protected:
 
         IntegerFacet(
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point)
                 : IntegerFacet(
                         /*use direction facet*/ std::bool_constant<false>(),
                         points,
-                        std::move(vertices),
+                        vertices,
                         direction_point,
                         nullptr)
         {
         }
 
-        ~IntegerFacet() = default;
-
-public:
-        [[nodiscard]] const std::array<int, N>& vertices() const
-        {
-                return vertices_.data();
-        }
-
-        [[nodiscard]] bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
+        [[nodiscard]] bool visible_from_point(
+                const std::vector<Vector<N, DataType>>& points,
+                const int facet_point_index,
+                const int point_index) const
         {
                 // strictly greater than 0
-                return visible(points, point) > 0;
+                return visible(points, facet_point_index, point_index) > 0;
         }
 
         [[nodiscard]] Vector<N, double> double_ortho() const
@@ -199,7 +168,7 @@ public:
 };
 
 template <std::size_t N, typename DataType>
-class IntegerFacet<N, DataType, mpz_class>
+class IntegerFacet<N, DataType, mpz_class> final
 {
         static_assert(!std::is_class_v<DataType>);
         static_assert(Integral<DataType>);
@@ -283,17 +252,19 @@ class IntegerFacet<N, DataType, mpz_class>
 
         //
 
-        integer_facet_implementation::FacetVertices<N> vertices_;
         Vector<N, mpz_class> ortho_;
 
         // sign of dot(ortho, vector from facet to point)
-        [[nodiscard]] int visible(const std::vector<Vector<N, DataType>>& points, const int p) const
+        [[nodiscard]] int visible(
+                const std::vector<Vector<N, DataType>>& points,
+                const int facet_point_index,
+                const int point_index) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
 
-                const Vector<N, DataType>& facet_point = points[vertices_[0]];
-                const Vector<N, DataType>& point = points[p];
+                const Vector<N, DataType>& facet_point = points[facet_point_index];
+                const Vector<N, DataType>& point = points[point_index];
 
                 set_mpz(&to_point, point[0] - facet_point[0]);
                 mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
@@ -307,13 +278,16 @@ class IntegerFacet<N, DataType, mpz_class>
         }
 
         // sign of dot(ortho, vector from facet to point)
-        [[nodiscard]] int visible(const std::vector<Vector<N, mpz_class>>& points, const int p) const
+        [[nodiscard]] int visible(
+                const std::vector<Vector<N, mpz_class>>& points,
+                const int facet_point_index,
+                const int point_index) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
 
-                const Vector<N, mpz_class>& facet_point = points[vertices_[0]];
-                const Vector<N, mpz_class>& point = points[p];
+                const Vector<N, mpz_class>& facet_point = points[facet_point_index];
+                const Vector<N, mpz_class>& point = points[point_index];
 
                 mpz_sub(to_point.get_mpz_t(), point[0].get_mpz_t(), facet_point[0].get_mpz_t());
                 mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
@@ -330,11 +304,10 @@ class IntegerFacet<N, DataType, mpz_class>
         IntegerFacet(
                 std::bool_constant<USE_DIRECTION_FACET>,
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point,
                 const IntegerFacet* const direction_facet)
-                : vertices_(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<mpz_class>(points, vertices_.data()))
+                : ortho_(numerical::orthogonal_complement<mpz_class>(points, vertices))
         {
                 ASSERT(!ortho_.is_zero());
 
@@ -343,7 +316,7 @@ class IntegerFacet<N, DataType, mpz_class>
                         reduce(&ortho_);
                 }
 
-                const int v = visible(points, direction_point);
+                const int v = visible(points, vertices[0], direction_point);
 
                 if (v < 0)
                 {
@@ -372,16 +345,16 @@ class IntegerFacet<N, DataType, mpz_class>
                 error("Direction point is on the facet plane");
         }
 
-protected:
+public:
         IntegerFacet(
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point,
                 const IntegerFacet& direction_facet)
                 : IntegerFacet(
                         /*use direction facet*/ std::bool_constant<true>(),
                         points,
-                        std::move(vertices),
+                        vertices,
                         direction_point,
                         &direction_facet)
         {
@@ -389,29 +362,24 @@ protected:
 
         IntegerFacet(
                 const std::vector<Vector<N, DataType>>& points,
-                std::array<int, N>&& vertices,
+                const std::array<int, N>& vertices,
                 const int direction_point)
                 : IntegerFacet(
                         /*use direction facet*/ std::bool_constant<false>(),
                         points,
-                        std::move(vertices),
+                        vertices,
                         direction_point,
                         nullptr)
         {
         }
 
-        ~IntegerFacet() = default;
-
-public:
-        [[nodiscard]] const std::array<int, N>& vertices() const
-        {
-                return vertices_.data();
-        }
-
-        [[nodiscard]] bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int point) const
+        [[nodiscard]] bool visible_from_point(
+                const std::vector<Vector<N, DataType>>& points,
+                const int facet_point_index,
+                const int point_index) const
         {
                 // strictly greater than 0
-                return visible(points, point) > 0;
+                return visible(points, facet_point_index, point_index) > 0;
         }
 
         [[nodiscard]] Vector<N, double> double_ortho() const

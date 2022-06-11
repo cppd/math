@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/sort.h>
 
 #include <array>
 #include <list>
@@ -31,13 +32,16 @@ namespace ns::geometry::convex_hull
 template <typename F>
 using FacetList = std::list<F>;
 
-template <std::size_t N, typename DataType, typename ComputeType>
-class Facet final : public IntegerFacet<N, DataType, ComputeType>
-{
-        using Base = IntegerFacet<N, DataType, ComputeType>;
+template <typename F>
+using FacetListIter = typename FacetList<F>::const_iterator;
 
+template <std::size_t N, typename DataType, typename ComputeType>
+class Facet final
+{
+        std::array<int, N> vertices_;
+        IntegerFacet<N, DataType, ComputeType> facet_;
         std::vector<int> conflict_points_;
-        typename FacetList<Facet>::const_iterator facet_iter_;
+        FacetListIter<Facet> facet_iter_;
         std::array<Facet*, N> links_;
         mutable bool marked_as_visible_ = false;
 
@@ -46,12 +50,14 @@ public:
               std::array<int, N>&& vertices,
               const int direction_point,
               const Facet& direction_facet)
-                : Base(points, std::move(vertices), direction_point, direction_facet)
+                : vertices_(sort(std::move(vertices))),
+                  facet_(points, vertices_, direction_point, direction_facet.facet_)
         {
         }
 
         Facet(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, const int direction_point)
-                : Base(points, std::move(vertices), direction_point)
+                : vertices_(sort(std::move(vertices))),
+                  facet_(points, vertices_, direction_point)
         {
         }
 
@@ -59,7 +65,7 @@ public:
         {
                 for (std::size_t r = 0; r < N; ++r)
                 {
-                        if (Base::vertices()[r] == point)
+                        if (vertices_[r] == point)
                         {
                                 return r;
                         }
@@ -77,12 +83,12 @@ public:
                 return conflict_points_;
         }
 
-        void set_iter(typename FacetList<Facet>::const_iterator iter)
+        void set_iter(FacetListIter<Facet> iter)
         {
                 facet_iter_ = std::move(iter);
         }
 
-        [[nodiscard]] typename FacetList<Facet>::const_iterator iter() const
+        [[nodiscard]] FacetListIter<Facet> iter() const
         {
                 return facet_iter_;
         }
@@ -119,6 +125,28 @@ public:
         [[nodiscard]] bool marked_as_visible() const
         {
                 return marked_as_visible_;
+        }
+
+        [[nodiscard]] const std::array<int, N>& vertices() const
+        {
+                return vertices_;
+        }
+
+        [[nodiscard]] decltype(auto) visible_from_point(
+                const std::vector<Vector<N, DataType>>& points,
+                const int point_index) const
+        {
+                return facet_.visible_from_point(points, vertices_[0], point_index);
+        }
+
+        [[nodiscard]] decltype(auto) double_ortho() const
+        {
+                return facet_.double_ortho();
+        }
+
+        [[nodiscard]] decltype(auto) last_ortho_coord_is_negative() const
+        {
+                return facet_.last_ortho_coord_is_negative();
         }
 };
 }
