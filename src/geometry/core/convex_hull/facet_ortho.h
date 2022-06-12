@@ -145,7 +145,7 @@ template <typename Result, std::size_t N, typename T>
 template <typename Result, std::size_t N>
 [[nodiscard]] Vector<N, Result> normalize(const Vector<N, mpz_class>& v)
 {
-        static_assert(std::is_floating_point_v<Result>);
+        static_assert(std::is_same_v<Result, float> || std::is_same_v<Result, double>);
 
         static constexpr int FLOAT_BIT_PRECISION = 128;
 
@@ -312,12 +312,7 @@ public:
                 const std::array<int, N>& vertices,
                 const int direction_point,
                 const FacetOrtho& direction_facet)
-                : FacetOrtho(
-                        /*use direction facet*/ std::bool_constant<true>(),
-                        points,
-                        vertices,
-                        direction_point,
-                        &direction_facet)
+                : FacetOrtho(std::bool_constant<true>(), points, vertices, direction_point, &direction_facet)
         {
         }
 
@@ -325,12 +320,7 @@ public:
                 const std::vector<Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point)
-                : FacetOrtho(
-                        /*use direction facet*/ std::bool_constant<false>(),
-                        points,
-                        vertices,
-                        direction_point,
-                        nullptr)
+                : FacetOrtho(std::bool_constant<false>(), points, vertices, direction_point, nullptr)
         {
         }
 

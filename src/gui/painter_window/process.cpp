@@ -298,12 +298,13 @@ std::function<void(ProgressRatioList*)> save_image(
         }
 
         return [parameters = create_parameters(*dialog_parameters),
-                path_string = std::move(*dialog_parameters->path_string), size, color_format_rgb, color_format_rgba,
+                path_string = std::move(*dialog_parameters->path_string), color_format_rgb, color_format_rgba,
+                size = std::make_shared<std::vector<int>>(size),
                 pixels_rgb = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgb)),
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
                        ProgressRatioList* const progress_list)
         {
-                const int n = size.size() + 1;
+                const int n = size->size() + 1;
                 process::apply_for_dimension(
                         n,
                         [&]<std::size_t N>(const process::Dimension<N>&)
@@ -315,7 +316,7 @@ std::function<void(ProgressRatioList*)> save_image(
 
                                         ASSERT(!parameters.empty());
                                         save_image(
-                                                path_from_utf8(path_string), parameters, to_array<N_IMAGE, int>(size),
+                                                path_from_utf8(path_string), parameters, to_array<N_IMAGE, int>(*size),
                                                 color_format_rgb, std::move(*pixels_rgb), color_format_rgba,
                                                 std::move(*pixels_rgba), &progress);
                                 }
@@ -344,12 +345,13 @@ std::function<void(ProgressRatioList*)> add_volume(
         ASSERT(!dialog_parameters->path_string.has_value());
         ASSERT(!dialog_parameters->all);
 
-        return [parameters = create_parameters(*dialog_parameters), size, color_format_rgb, color_format_rgba,
+        return [parameters = create_parameters(*dialog_parameters), color_format_rgb, color_format_rgba,
+                size = std::make_shared<std::vector<int>>(size),
                 pixels_rgb = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgb)),
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
                        ProgressRatioList* const progress_list)
         {
-                const int n = size.size() + 1;
+                const int n = size->size() + 1;
                 process::apply_for_dimension(
                         n,
                         [&]<std::size_t N>(const process::Dimension<N>&)
@@ -361,7 +363,7 @@ std::function<void(ProgressRatioList*)> add_volume(
 
                                         ASSERT(parameters.size() == 1);
                                         add_volume(
-                                                parameters.front(), to_array<N_IMAGE, int>(size), color_format_rgb,
+                                                parameters.front(), to_array<N_IMAGE, int>(*size), color_format_rgb,
                                                 std::move(*pixels_rgb), color_format_rgba, std::move(*pixels_rgba),
                                                 &progress);
                                 }
