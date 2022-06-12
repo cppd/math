@@ -29,36 +29,229 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::convex_hull
 {
+namespace integer_facet_implementation
+{
+template <std::size_t N, typename T>
+void reduce(Vector<N, T>* const)
+{
+        static_assert(!std::is_class_v<T>);
+}
+
+template <std::size_t N>
+void reduce(Vector<N, mpz_class>* const v)
+{
+        static_assert(N >= 2);
+
+        thread_local mpz_class gcd;
+
+        mpz_gcd(gcd.get_mpz_t(), (*v)[0].get_mpz_t(), (*v)[1].get_mpz_t());
+        for (std::size_t i = 2; i < N && gcd != 1; ++i)
+        {
+                mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*v)[i].get_mpz_t());
+        }
+
+        if (gcd <= 1)
+        {
+                return;
+        }
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                mpz_divexact((*v)[i].get_mpz_t(), (*v)[i].get_mpz_t(), gcd.get_mpz_t());
+        }
+}
+
+//
+
+template <std::size_t N, typename T>
+void negate(Vector<N, T>* const v)
+{
+        static_assert(!std::is_class_v<T>);
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                (*v)[i] = -(*v)[i];
+        }
+}
+
+template <std::size_t N>
+void negate(Vector<N, mpz_class>* const v)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                mpz_neg((*v)[i].get_mpz_t(), (*v)[i].get_mpz_t());
+        }
+}
+
+//
+
+template <std::size_t N, typename T>
+[[nodiscard]] bool are_opposite(const Vector<N, T>& v1, const Vector<N, T>& v2)
+{
+        static_assert(!std::is_class_v<T>);
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if ((v1[i] > 0 && v2[i] < 0) || (v1[i] < 0 && v2[i] > 0))
+                {
+                        return true;
+                }
+        }
+        return false;
+}
+
+template <std::size_t N>
+[[nodiscard]] bool are_opposite(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                const int sgn1 = mpz_sgn(v1[i].get_mpz_t());
+                const int sgn2 = mpz_sgn(v2[i].get_mpz_t());
+                if ((sgn1 > 0 && sgn2 < 0) || (sgn1 < 0 && sgn2 > 0))
+                {
+                        return true;
+                }
+        }
+        return false;
+}
+
+//
+
+template <typename Result, std::size_t N, typename T>
+[[nodiscard]] Vector<N, Result> normalize(const Vector<N, T>& v)
+{
+        static_assert(!std::is_class_v<T>);
+
+        return to_vector<Result>(v).normalized();
+}
+
+template <typename Result, std::size_t N>
+[[nodiscard]] Vector<N, Result> normalize(const Vector<N, mpz_class>& v)
+{
+        static constexpr int FLOAT_BIT_PRECISION = 128;
+
+        const mpf_class& length = [&v]
+        {
+                thread_local mpz_class d;
+                mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), v[0].get_mpz_t());
+                for (std::size_t i = 1; i < N; ++i)
+                {
+                        mpz_addmul(d.get_mpz_t(), v[i].get_mpz_t(), v[i].get_mpz_t());
+                }
+
+                thread_local mpf_class res(0, FLOAT_BIT_PRECISION);
+                res = d;
+                mpf_sqrt(res.get_mpf_t(), res.get_mpf_t());
+                return res;
+        }();
+
+        Vector<N, Result> res;
+        thread_local mpf_class v_mpf(0, FLOAT_BIT_PRECISION);
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                v_mpf = v[i];
+                v_mpf /= length;
+                res[i] = v_mpf.get_d();
+        }
+        return res;
+}
+
+//
+
+template <std::size_t N, typename T>
+[[nodiscard]] bool last_coord_is_negative(const Vector<N, T>& v)
+{
+        static_assert(!std::is_class_v<T>);
+
+        return v[N - 1] < 0;
+}
+
+template <std::size_t N>
+[[nodiscard]] bool last_coord_is_negative(const Vector<N, mpz_class>& v)
+{
+        return mpz_sgn(v[N - 1].get_mpz_t()) < 0;
+}
+
+//
+
+template <std::size_t N, typename DataType, typename ComputeType>
+[[nodiscard]] ComputeType dot_product_sign(
+        const Vector<N, ComputeType>& v,
+        const std::vector<Vector<N, DataType>>& points,
+        const int from_index,
+        const int to_index)
+{
+        static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
+
+        const Vector<N, DataType>& from = points[from_index];
+        const Vector<N, DataType>& to = points[to_index];
+
+        ComputeType d = v[0] * (to[0] - from[0]);
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                d += v[i] * (to[i] - from[i]);
+        }
+        return d;
+}
+
+template <std::size_t N, typename DataType>
+[[nodiscard]] int dot_product_sign(
+        const Vector<N, mpz_class>& v,
+        const std::vector<Vector<N, DataType>>& points,
+        const int from_index,
+        const int to_index)
+{
+        static_assert(!std::is_class_v<DataType>);
+
+        thread_local mpz_class d;
+        thread_local mpz_class w;
+
+        const Vector<N, DataType>& from = points[from_index];
+        const Vector<N, DataType>& to = points[to_index];
+
+        set_mpz(&w, to[0] - from[0]);
+        mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), w.get_mpz_t());
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                set_mpz(&w, to[i] - from[i]);
+                mpz_addmul(d.get_mpz_t(), v[i].get_mpz_t(), w.get_mpz_t());
+        }
+
+        return mpz_sgn(d.get_mpz_t());
+}
+
+template <std::size_t N>
+[[nodiscard]] int dot_product_sign(
+        const Vector<N, mpz_class>& v,
+        const std::vector<Vector<N, mpz_class>>& points,
+        const int from_index,
+        const int to_index)
+{
+        thread_local mpz_class d;
+        thread_local mpz_class w;
+
+        const Vector<N, mpz_class>& from = points[from_index];
+        const Vector<N, mpz_class>& to = points[to_index];
+
+        mpz_sub(w.get_mpz_t(), to[0].get_mpz_t(), from[0].get_mpz_t());
+        mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), w.get_mpz_t());
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                mpz_sub(w.get_mpz_t(), to[i].get_mpz_t(), from[i].get_mpz_t());
+                mpz_addmul(d.get_mpz_t(), v[i].get_mpz_t(), w.get_mpz_t());
+        }
+
+        return mpz_sgn(d.get_mpz_t());
+}
+}
+
 template <std::size_t N, typename DataType, typename ComputeType>
 class IntegerFacet final
 {
-        static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
         static_assert(Integral<DataType> && Integral<ComputeType>);
         static_assert(Signed<DataType> && Signed<ComputeType>);
 
-        template <typename T>
-        static void negate(Vector<N, T>* const v)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        (*v)[n] = -(*v)[n];
-                }
-        }
-
-        template <typename T>
-        [[nodiscard]] static bool opposite_orthos(const Vector<N, T>& v1, const Vector<N, T>& v2)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        if ((v1[n] > 0 && v2[n] < 0) || (v1[n] < 0 && v2[n] > 0))
-                        {
-                                return true;
-                        }
-                }
-                return false;
-        }
-
-        //
+        static constexpr bool REDUCE = false;
 
         Vector<N, ComputeType> ortho_;
 
@@ -71,199 +264,16 @@ class IntegerFacet final
                 const IntegerFacet* const direction_facet)
                 : ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices))
         {
-                ASSERT(!ortho_.is_zero());
+                namespace impl = integer_facet_implementation;
 
-                const auto v = dot_product_sign(points, vertices[0], direction_point);
-
-                if (v < 0)
-                {
-                        // direction point is invisible, ortho is directed outside
-                        return;
-                }
-
-                if (v > 0)
-                {
-                        // direction point is visible, change ortho direction
-                        negate(&ortho_);
-                        return;
-                }
-
-                // direction point is on the facet plane
-
-                if constexpr (USE_DIRECTION_FACET)
-                {
-                        if (opposite_orthos(ortho_, direction_facet->ortho_))
-                        {
-                                negate(&ortho_);
-                        }
-                        return;
-                }
-
-                error("Direction point is on the facet plane");
-        }
-
-public:
-        IntegerFacet(
-                const std::vector<Vector<N, DataType>>& points,
-                const std::array<int, N>& vertices,
-                const int direction_point,
-                const IntegerFacet& direction_facet)
-                : IntegerFacet(
-                        /*use direction facet*/ std::bool_constant<true>(),
-                        points,
-                        vertices,
-                        direction_point,
-                        &direction_facet)
-        {
-        }
-
-        IntegerFacet(
-                const std::vector<Vector<N, DataType>>& points,
-                const std::array<int, N>& vertices,
-                const int direction_point)
-                : IntegerFacet(
-                        /*use direction facet*/ std::bool_constant<false>(),
-                        points,
-                        vertices,
-                        direction_point,
-                        nullptr)
-        {
-        }
-
-        [[nodiscard]] ComputeType dot_product_sign(
-                const std::vector<Vector<N, DataType>>& points,
-                const int from_index,
-                const int to_index) const
-        {
-                const Vector<N, DataType>& from = points[from_index];
-                const Vector<N, DataType>& to = points[to_index];
-
-                ComputeType d = ortho_[0] * (to[0] - from[0]);
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        d += ortho_[n] * (to[n] - from[n]);
-                }
-                return d;
-        }
-
-        [[nodiscard]] Vector<N, double> double_ortho() const
-        {
-                return to_vector<double>(ortho_).normalized();
-        }
-
-        [[nodiscard]] bool last_ortho_coord_is_negative() const
-        {
-                return ortho_[N - 1] < 0;
-        }
-};
-
-template <std::size_t N, typename DataType>
-class IntegerFacet<N, DataType, mpz_class> final
-{
-        static_assert(!std::is_class_v<DataType>);
-        static_assert(Integral<DataType>);
-        static_assert(Signed<DataType>);
-
-        static constexpr bool REDUCE = false;
-
-        static void reduce(Vector<N, mpz_class>* const v)
-        {
-                static_assert(N >= 2);
-
-                thread_local mpz_class gcd;
-
-                mpz_gcd(gcd.get_mpz_t(), (*v)[0].get_mpz_t(), (*v)[1].get_mpz_t());
-                for (unsigned n = 2; n < N && gcd != 1; ++n)
-                {
-                        mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*v)[n].get_mpz_t());
-                }
-
-                if (gcd <= 1)
-                {
-                        return;
-                }
-
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        mpz_divexact((*v)[n].get_mpz_t(), (*v)[n].get_mpz_t(), gcd.get_mpz_t());
-                }
-        }
-
-        static void negate(Vector<N, mpz_class>* const v)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        mpz_neg((*v)[n].get_mpz_t(), (*v)[n].get_mpz_t());
-                }
-        }
-
-        static void length(mpf_class* const res, const Vector<N, mpz_class>& v)
-        {
-                thread_local mpz_class d;
-                mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), v[0].get_mpz_t());
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        mpz_addmul(d.get_mpz_t(), v[n].get_mpz_t(), v[n].get_mpz_t());
-                }
-                *res = d;
-                mpf_sqrt(res->get_mpf_t(), res->get_mpf_t());
-        }
-
-        template <typename T>
-        [[nodiscard]] static Vector<N, T> normalize(const Vector<N, mpz_class>& v)
-        {
-                static constexpr int FLOAT_BIT_PRECISION = 128;
-
-                thread_local mpf_class l(0, FLOAT_BIT_PRECISION);
-                thread_local mpf_class v_float(0, FLOAT_BIT_PRECISION);
-
-                length(&l, v);
-
-                Vector<N, T> res;
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        v_float = v[n];
-                        v_float /= l;
-                        res[n] = v_float.get_d();
-                }
-                return res;
-        }
-
-        [[nodiscard]] static bool opposite_orthos(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        const int sgn1 = mpz_sgn(v1[n].get_mpz_t());
-                        const int sgn2 = mpz_sgn(v2[n].get_mpz_t());
-                        if ((sgn1 > 0 && sgn2 < 0) || (sgn1 < 0 && sgn2 > 0))
-                        {
-                                return true;
-                        }
-                }
-                return false;
-        }
-
-        //
-
-        Vector<N, mpz_class> ortho_;
-
-        template <bool USE_DIRECTION_FACET>
-        IntegerFacet(
-                std::bool_constant<USE_DIRECTION_FACET>,
-                const std::vector<Vector<N, DataType>>& points,
-                const std::array<int, N>& vertices,
-                const int direction_point,
-                const IntegerFacet* const direction_facet)
-                : ortho_(numerical::orthogonal_complement<mpz_class>(points, vertices))
-        {
                 ASSERT(!ortho_.is_zero());
 
                 if constexpr (REDUCE)
                 {
-                        reduce(&ortho_);
+                        impl::reduce(&ortho_);
                 }
 
-                const auto v = dot_product_sign(points, vertices[0], direction_point);
+                const auto v = impl::dot_product_sign(ortho_, points, vertices[0], direction_point);
 
                 if (v < 0)
                 {
@@ -274,7 +284,7 @@ class IntegerFacet<N, DataType, mpz_class> final
                 if (v > 0)
                 {
                         // direction point is visible, change ortho direction
-                        negate(&ortho_);
+                        impl::negate(&ortho_);
                         return;
                 }
 
@@ -282,9 +292,9 @@ class IntegerFacet<N, DataType, mpz_class> final
 
                 if constexpr (USE_DIRECTION_FACET)
                 {
-                        if (opposite_orthos(ortho_, direction_facet->ortho_))
+                        if (impl::are_opposite(ortho_, direction_facet->ortho_))
                         {
-                                negate(&ortho_);
+                                impl::negate(&ortho_);
                         }
                         return;
                 }
@@ -320,58 +330,22 @@ public:
         {
         }
 
-        [[nodiscard]] int dot_product_sign(
+        [[nodiscard]] auto dot_product_sign(
                 const std::vector<Vector<N, DataType>>& points,
                 const int from_index,
                 const int to_index) const
         {
-                thread_local mpz_class d;
-                thread_local mpz_class v;
-
-                const Vector<N, DataType>& from = points[from_index];
-                const Vector<N, DataType>& to = points[to_index];
-
-                set_mpz(&v, to[0] - from[0]);
-                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), v.get_mpz_t());
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        set_mpz(&v, to[n] - from[n]);
-                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), v.get_mpz_t());
-                }
-
-                return mpz_sgn(d.get_mpz_t());
-        }
-
-        [[nodiscard]] int dot_product_sign(
-                const std::vector<Vector<N, mpz_class>>& points,
-                const int from_index,
-                const int to_index) const
-        {
-                thread_local mpz_class d;
-                thread_local mpz_class v;
-
-                const Vector<N, mpz_class>& from = points[from_index];
-                const Vector<N, mpz_class>& to = points[to_index];
-
-                mpz_sub(v.get_mpz_t(), to[0].get_mpz_t(), from[0].get_mpz_t());
-                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), v.get_mpz_t());
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        mpz_sub(v.get_mpz_t(), to[n].get_mpz_t(), from[n].get_mpz_t());
-                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), v.get_mpz_t());
-                }
-
-                return mpz_sgn(d.get_mpz_t());
+                return integer_facet_implementation::dot_product_sign(ortho_, points, from_index, to_index);
         }
 
         [[nodiscard]] Vector<N, double> double_ortho() const
         {
-                return normalize<double>(ortho_);
+                return integer_facet_implementation::normalize<double>(ortho_);
         }
 
         [[nodiscard]] bool last_ortho_coord_is_negative() const
         {
-                return mpz_sgn(ortho_[N - 1].get_mpz_t()) < 0;
+                return integer_facet_implementation::last_coord_is_negative(ortho_);
         }
 };
 }
