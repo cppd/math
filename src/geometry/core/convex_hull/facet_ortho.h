@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::convex_hull
 {
-namespace integer_facet_implementation
+namespace facet_ortho_implementation
 {
 template <std::size_t N, typename T>
 void reduce(Vector<N, T>* const)
@@ -117,10 +117,27 @@ template <std::size_t N>
 
 //
 
+template <std::size_t N, typename T>
+[[nodiscard]] bool last_coord_is_negative(const Vector<N, T>& v)
+{
+        static_assert(!std::is_class_v<T>);
+
+        return v[N - 1] < 0;
+}
+
+template <std::size_t N>
+[[nodiscard]] bool last_coord_is_negative(const Vector<N, mpz_class>& v)
+{
+        return mpz_sgn(v[N - 1].get_mpz_t()) < 0;
+}
+
+//
+
 template <typename Result, std::size_t N, typename T>
 [[nodiscard]] Vector<N, Result> normalize(const Vector<N, T>& v)
 {
         static_assert(!std::is_class_v<T>);
+        static_assert(std::is_floating_point_v<Result>);
 
         return to_vector<Result>(v).normalized();
 }
@@ -128,6 +145,8 @@ template <typename Result, std::size_t N, typename T>
 template <typename Result, std::size_t N>
 [[nodiscard]] Vector<N, Result> normalize(const Vector<N, mpz_class>& v)
 {
+        static_assert(std::is_floating_point_v<Result>);
+
         static constexpr int FLOAT_BIT_PRECISION = 128;
 
         const mpf_class& length = [&v]
@@ -158,22 +177,6 @@ template <typename Result, std::size_t N>
 
 //
 
-template <std::size_t N, typename T>
-[[nodiscard]] bool last_coord_is_negative(const Vector<N, T>& v)
-{
-        static_assert(!std::is_class_v<T>);
-
-        return v[N - 1] < 0;
-}
-
-template <std::size_t N>
-[[nodiscard]] bool last_coord_is_negative(const Vector<N, mpz_class>& v)
-{
-        return mpz_sgn(v[N - 1].get_mpz_t()) < 0;
-}
-
-//
-
 template <std::size_t N, typename DataType, typename ComputeType>
 [[nodiscard]] ComputeType dot_product_sign(
         const Vector<N, ComputeType>& v,
@@ -182,6 +185,7 @@ template <std::size_t N, typename DataType, typename ComputeType>
         const int to_index)
 {
         static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
+        static_assert(std::is_same_v<ComputeType, std::common_type_t<ComputeType, DataType>>);
 
         const Vector<N, DataType>& from = points[from_index];
         const Vector<N, DataType>& to = points[to_index];
@@ -246,7 +250,7 @@ template <std::size_t N>
 }
 
 template <std::size_t N, typename DataType, typename ComputeType>
-class IntegerFacet final
+class FacetOrtho final
 {
         static_assert(Integral<DataType> && Integral<ComputeType>);
         static_assert(Signed<DataType> && Signed<ComputeType>);
@@ -256,15 +260,15 @@ class IntegerFacet final
         Vector<N, ComputeType> ortho_;
 
         template <bool USE_DIRECTION_FACET>
-        IntegerFacet(
+        FacetOrtho(
                 std::bool_constant<USE_DIRECTION_FACET>,
                 const std::vector<Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point,
-                const IntegerFacet* const direction_facet)
+                const FacetOrtho* const direction_facet)
                 : ortho_(numerical::orthogonal_complement<ComputeType>(points, vertices))
         {
-                namespace impl = integer_facet_implementation;
+                namespace impl = facet_ortho_implementation;
 
                 ASSERT(!ortho_.is_zero());
 
@@ -303,12 +307,12 @@ class IntegerFacet final
         }
 
 public:
-        IntegerFacet(
+        FacetOrtho(
                 const std::vector<Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point,
-                const IntegerFacet& direction_facet)
-                : IntegerFacet(
+                const FacetOrtho& direction_facet)
+                : FacetOrtho(
                         /*use direction facet*/ std::bool_constant<true>(),
                         points,
                         vertices,
@@ -317,11 +321,11 @@ public:
         {
         }
 
-        IntegerFacet(
+        FacetOrtho(
                 const std::vector<Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point)
-                : IntegerFacet(
+                : FacetOrtho(
                         /*use direction facet*/ std::bool_constant<false>(),
                         points,
                         vertices,
@@ -335,17 +339,18 @@ public:
                 const int from_index,
                 const int to_index) const
         {
-                return integer_facet_implementation::dot_product_sign(ortho_, points, from_index, to_index);
+                return facet_ortho_implementation::dot_product_sign(ortho_, points, from_index, to_index);
         }
 
-        [[nodiscard]] Vector<N, double> double_ortho() const
+        template <typename T>
+        [[nodiscard]] Vector<N, T> to_floating_point() const
         {
-                return integer_facet_implementation::normalize<double>(ortho_);
+                return facet_ortho_implementation::normalize<T>(ortho_);
         }
 
-        [[nodiscard]] bool last_ortho_coord_is_negative() const
+        [[nodiscard]] bool last_coord_is_negative() const
         {
-                return integer_facet_implementation::last_coord_is_negative(ortho_);
+                return facet_ortho_implementation::last_coord_is_negative(ortho_);
         }
 };
 }

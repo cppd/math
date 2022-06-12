@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "integer_facet.h"
+#include "facet_ortho.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -39,7 +39,7 @@ template <std::size_t N, typename DataType, typename ComputeType>
 class Facet final
 {
         std::array<int, N> vertices_;
-        IntegerFacet<N, DataType, ComputeType> facet_;
+        FacetOrtho<N, DataType, ComputeType> ortho_;
         std::vector<int> conflict_points_;
         FacetListIter<Facet> facet_iter_;
         std::array<Facet*, N> links_;
@@ -51,13 +51,13 @@ public:
               const int direction_point,
               const Facet& direction_facet)
                 : vertices_(sort(std::move(vertices))),
-                  facet_(points, vertices_, direction_point, direction_facet.facet_)
+                  ortho_(points, vertices_, direction_point, direction_facet.ortho_)
         {
         }
 
         Facet(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, const int direction_point)
                 : vertices_(sort(std::move(vertices))),
-                  facet_(points, vertices_, direction_point)
+                  ortho_(points, vertices_, direction_point)
         {
         }
 
@@ -137,17 +137,18 @@ public:
                 const int point_index) const
         {
                 // strictly greater than 0
-                return facet_.dot_product_sign(points, vertices_[0], point_index) > 0;
+                return ortho_.dot_product_sign(points, vertices_[0], point_index) > 0;
         }
 
-        [[nodiscard]] decltype(auto) double_ortho() const
+        template <typename T>
+        [[nodiscard]] decltype(auto) ortho_fp() const
         {
-                return facet_.double_ortho();
+                return ortho_.template to_floating_point<T>();
         }
 
         [[nodiscard]] decltype(auto) last_ortho_coord_is_negative() const
         {
-                return facet_.last_ortho_coord_is_negative();
+                return ortho_.last_coord_is_negative();
         }
 };
 }
