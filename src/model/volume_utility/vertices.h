@@ -59,11 +59,11 @@ std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
         Vector<N, double> org = transform(Vector<N, double>(0));
 
         std::array<Vector<N, double>, N> vectors;
-        for (unsigned n = 0; n < N; ++n)
+        for (unsigned i = 0; i < N; ++i)
         {
-                vectors[n] = Vector<N, double>(0);
-                vectors[n][n] = 1;
-                vectors[n] = transform(vectors[n]);
+                vectors[i] = Vector<N, double>(0);
+                vectors[i][i] = 1;
+                vectors[i] = transform(vectors[i]);
         }
 
         std::array<Vector<N, double>, (1 << N)> result;

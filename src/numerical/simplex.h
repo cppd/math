@@ -227,9 +227,9 @@ void make_aux_and_maps(
         *v = 0;
 
         (*c)[0] = -1;
-        for (unsigned n = 1; n < N; ++n)
+        for (unsigned i = 1; i < N; ++i)
         {
-                (*c)[n] = 0;
+                (*c)[i] = 0;
         }
 
         //

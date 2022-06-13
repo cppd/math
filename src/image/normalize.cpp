@@ -50,11 +50,11 @@ void normalize(std::vector<std::byte>* const bytes)
                 std::array<float, N> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t n = 0; n < N; ++n)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (std::isfinite(pixel[n]))
+                        if (std::isfinite(pixel[i]))
                         {
-                                max = std::max(max, pixel[n]);
+                                max = std::max(max, pixel[i]);
                         }
                 }
                 ptr += PIXEL_SIZE;
@@ -74,9 +74,9 @@ void normalize(std::vector<std::byte>* const bytes)
                 std::array<float, N> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t n = 0; n < N; ++n)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        pixel[n] /= max;
+                        pixel[i] /= max;
                 }
                 std::memcpy(ptr, pixel.data(), COLOR_SIZE);
                 ptr += PIXEL_SIZE;

@@ -56,6 +56,25 @@ struct MatrixWithDeterminant final
         T determinant;
 };
 
+template <std::size_t N, typename T, typename RandomEngine>
+void set_matrix(MatrixWithDeterminant<N, T>* const m, std::uniform_real_distribution<T>& urd, RandomEngine& engine)
+{
+        do
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        m->matrix(i, i) = urd(engine);
+                        for (std::size_t j = i + 1; j < N; ++j)
+                        {
+                                const T v = urd(engine);
+                                m->matrix(i, j) = v;
+                                m->matrix(j, i) = v;
+                        }
+                }
+                m->determinant = m->matrix.determinant();
+        } while (!(std::isfinite(m->determinant) && m->determinant >= T{0.001}));
+}
+
 template <std::size_t N, typename T>
 std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigned count, const T min, const T max)
 {
@@ -64,23 +83,9 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigne
 
         std::vector<MatrixWithDeterminant<N, T>> matrices;
         matrices.reserve(count);
-        for (std::size_t n = 0; n < count; ++n)
+        for (std::size_t i = 0; i < count; ++i)
         {
-                MatrixWithDeterminant<N, T>& m = matrices.emplace_back();
-                do
-                {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                m.matrix(i, i) = urd(engine);
-                                for (unsigned j = i + 1; j < N; ++j)
-                                {
-                                        T v = urd(engine);
-                                        m.matrix(i, j) = v;
-                                        m.matrix(j, i) = v;
-                                }
-                        }
-                        m.determinant = m.matrix.determinant();
-                } while (!(std::isfinite(m.determinant) && m.determinant >= T{0.001}));
+                set_matrix(&matrices.emplace_back(), urd, engine);
         }
         return matrices;
 }

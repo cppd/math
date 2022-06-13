@@ -226,10 +226,10 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
                 volume.image.size,
                 [&](const Vector<N, float>& coordinates)
                 {
-                        for (std::size_t n = 0; n < N; ++n)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
-                                float c = coordinates[n] / (1 << (n / 3));
-                                color[n % 3] = float_to_uint<std::uint8_t>(c);
+                                float c = coordinates[i] / (1 << (i / 3));
+                                color[i % 3] = float_to_uint<std::uint8_t>(c);
                         }
                         std::memcpy(ptr, color.data(), color.size());
                         ptr += color.size();

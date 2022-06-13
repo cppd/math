@@ -94,9 +94,9 @@ class DiscretePoints
                 static_assert(std::is_floating_point_v<T>);
 
                 Vector<N, int> r;
-                for (unsigned n = 0; n < N; ++n)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        r[n] = std::lround(v[n] * factor);
+                        r[i] = std::lround(v[i] * factor);
                 }
                 return r;
         }

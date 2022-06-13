@@ -74,7 +74,7 @@ std::unordered_map<int, int> test_distribution(T&& engine)
         std::unordered_map<int, int> map;
         std::uniform_int_distribution<int> uid(0, KEY_COUNT - 1);
 
-        for (int n = 0; n < VALUE_COUNT * KEY_COUNT; ++n)
+        for (int i = 0; i < VALUE_COUNT * KEY_COUNT; ++i)
         {
                 ++map[uid(engine)];
         }
@@ -99,7 +99,7 @@ std::unordered_set<typename T::result_type> test_values(T&& engine)
 
         std::unordered_set<typename T::result_type> set;
 
-        for (std::size_t n = 0; n < COUNT; ++n)
+        for (std::size_t i = 0; i < COUNT; ++i)
         {
                 set.insert(engine());
         }

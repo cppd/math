@@ -71,11 +71,11 @@ std::optional<T> max(const std::span<const std::byte>& bytes)
                 std::array<T, COLOR_COUNT> pixel;
                 static_assert(std::span<T>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t n = 0; n < COLOR_COUNT; ++n)
+                for (std::size_t i = 0; i < COLOR_COUNT; ++i)
                 {
-                        if (finite(pixel[n]))
+                        if (finite(pixel[i]))
                         {
-                                max = std::max(max, pixel[n]);
+                                max = std::max(max, pixel[i]);
                         }
                 }
                 ptr += PIXEL_SIZE;
