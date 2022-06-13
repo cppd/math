@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 
+#include <src/com/error.h>
+
 namespace ns::vulkan
 {
 class DeviceGraphics final
@@ -70,9 +72,15 @@ public:
                 return transfer_family_index_;
         }
 
-        [[nodiscard]] const std::vector<Queue>& graphics_compute_queues() const
+        [[nodiscard]] const Queue& graphics_compute_queue(const std::size_t index) const
         {
-                return graphics_compute_queues_;
+                ASSERT(index < graphics_compute_queues_.size());
+                return graphics_compute_queues_[index];
+        }
+
+        [[nodiscard]] std::size_t graphics_compute_queue_size() const
+        {
+                return graphics_compute_queues_.size();
         }
 
         [[nodiscard]] const Queue& compute_queue() const
