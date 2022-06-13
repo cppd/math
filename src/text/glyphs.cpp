@@ -79,17 +79,18 @@ void copy_image(
         }
 }
 
-void render_glyphs(
-        const std::vector<char32_t>& code_points,
-        const Font& font,
-        std::unordered_map<char32_t, FontGlyph>* const font_glyphs,
-        std::unordered_map<char32_t, std::vector<std::byte>>* const glyph_pixels)
+struct RenderedGlyph final
 {
-        font_glyphs->clear();
-        glyph_pixels->clear();
+        std::unordered_map<char32_t, FontGlyph> font_glyphs;
+        std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
+};
 
-        font_glyphs->reserve(code_points.size());
-        glyph_pixels->reserve(code_points.size());
+RenderedGlyph render_glyphs(const std::vector<char32_t>& code_points, const Font& font)
+{
+        RenderedGlyph res;
+
+        res.font_glyphs.reserve(code_points.size());
+        res.glyph_pixels.reserve(code_points.size());
 
         for (const char32_t code_point : code_points)
         {
@@ -111,7 +112,7 @@ void render_glyphs(
                         error("One-dimensional character image");
                 }
 
-                FontGlyph& font_glyph = font_glyphs->try_emplace(code_point).first->second;
+                FontGlyph& font_glyph = res.font_glyphs.try_emplace(code_point).first->second;
 
                 font_glyph.left = font_char->left;
                 font_glyph.top = font_char->top;
@@ -121,26 +122,32 @@ void render_glyphs(
 
                 static_assert(std::is_same_v<const unsigned char*, decltype(font_char->image)>);
 
-                std::vector<std::byte>& pixels = glyph_pixels->try_emplace(code_point).first->second;
+                std::vector<std::byte>& pixels = res.glyph_pixels.try_emplace(code_point).first->second;
                 pixels.resize(1ull * font_char->width * font_char->height);
                 std::memcpy(data_pointer(pixels), font_char->image, data_size(pixels));
         }
+
+        return res;
 }
 
+struct PlacedRectangles final
+{
+        int width;
+        int height;
+        std::unordered_map<char32_t, std::array<int, 2>> coordinates;
+};
+
 template <typename Key, typename Value>
-void place_rectangles_on_rectangle(
+PlacedRectangles place_rectangles_on_rectangle(
         const std::unordered_map<Key, Value>& rectangles,
         const int max_rectangle_width,
-        const int max_rectangle_height,
-        int* const rectangle_width,
-        int* const rectangle_height,
-        std::unordered_map<Key, std::array<int, 2>>* const rectangle_coordinates)
+        const int max_rectangle_height)
 {
-        rectangle_coordinates->clear();
-        rectangle_coordinates->reserve(rectangles.size());
+        PlacedRectangles res;
 
-        *rectangle_width = 0;
-        *rectangle_height = 0;
+        res.width = 0;
+        res.height = 0;
+        res.coordinates.reserve(rectangles.size());
 
         int row_height = 0;
         int insert_x = 0;
@@ -169,14 +176,16 @@ void place_rectangles_on_rectangle(
                         error("Maximum rectangle height exceeded");
                 }
 
-                rectangle_coordinates->emplace(key, std::array<int, 2>{insert_x, insert_y});
+                res.coordinates.emplace(key, std::array<int, 2>{insert_x, insert_y});
 
-                *rectangle_width = std::max(*rectangle_width, insert_x + value.width);
-                *rectangle_height = std::max(*rectangle_height, insert_y + value.height);
+                res.width = std::max(res.width, insert_x + value.width);
+                res.height = std::max(res.height, insert_y + value.height);
 
                 insert_x += value.width;
                 row_height = std::max(row_height, value.height);
         }
+
+        return res;
 }
 
 void fill_texture_pixels_and_texture_coordinates(
@@ -202,7 +211,6 @@ void fill_texture_pixels_and_texture_coordinates(
                 ASSERT(glyph_coordinates.count(cp) == 1);
 
                 const std::array<int, 2>& texture_offset = glyph_coordinates.find(cp)->second;
-
                 const std::vector<std::byte>& pixels = glyph_pixels.find(cp)->second;
                 const std::array<int, 2> size{font_glyph.width, font_glyph.height};
                 const std::array<int, 2> offset{0, 0};
@@ -220,19 +228,22 @@ void fill_texture_pixels_and_texture_coordinates(
 
 FontGlyphs create_font_glyphs(const Font& font, const int max_width, const int max_height)
 {
+        RenderedGlyph rendered_glyphs = render_glyphs(supported_code_points(), font);
+
+        const PlacedRectangles placed_rectangles =
+                place_rectangles_on_rectangle(rendered_glyphs.font_glyphs, max_width, max_height);
+
         FontGlyphs res;
 
-        std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
-        render_glyphs(supported_code_points(), font, &res.glyphs, &glyph_pixels);
-
-        std::unordered_map<char32_t, std::array<int, 2>> glyph_coordinates;
-        place_rectangles_on_rectangle(
-                res.glyphs, max_width, max_height, &res.image.size[0], &res.image.size[1], &glyph_coordinates);
+        res.glyphs = std::move(rendered_glyphs.font_glyphs);
 
         fill_texture_pixels_and_texture_coordinates(
-                res.image.size[0], res.image.size[1], glyph_pixels, glyph_coordinates, &res.glyphs, &res.image.pixels);
+                placed_rectangles.width, placed_rectangles.height, rendered_glyphs.glyph_pixels,
+                placed_rectangles.coordinates, &res.glyphs, &res.image.pixels);
 
         res.image.color_format = image::ColorFormat::R8_SRGB;
+        res.image.size[0] = placed_rectangles.width;
+        res.image.size[1] = placed_rectangles.height;
 
         // image::save(
         //         std::filesystem::temp_directory_path() / path_from_utf8(std::string_view("font_texture.png")),
