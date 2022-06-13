@@ -31,12 +31,6 @@ namespace ns::geometry::convex_hull
 inline constexpr int CONVEX_HULL_BITS = 30;
 inline constexpr int DELAUNAY_BITS = 24;
 
-using ConvexHullSourceInteger = LeastSignedInteger<CONVEX_HULL_BITS>;
-using DelaunaySourceInteger = LeastSignedInteger<DELAUNAY_BITS>;
-
-inline constexpr ConvexHullSourceInteger MAX_CONVEX_HULL{(1ull << CONVEX_HULL_BITS) - 1};
-inline constexpr DelaunaySourceInteger MAX_DELAUNAY{(1ull << DELAUNAY_BITS) - 1};
-
 //
 
 template <std::size_t N>

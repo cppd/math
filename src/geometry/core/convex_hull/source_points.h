@@ -17,28 +17,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "integer_types.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
+#include <src/com/shuffle.h>
+#include <src/com/type/limit.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <unordered_set>
 #include <vector>
 
 namespace ns::geometry::convex_hull
 {
-namespace integer_convert_implementation
+namespace source_points_implementation
 {
-template <std::size_t N, typename IntegerType>
-class Transform
+template <std::size_t N, typename T>
+class Transform final
 {
+        static_assert(std::is_integral_v<T>);
+
         const std::vector<Vector<N, float>>* points_;
-        IntegerType max_value_;
+        T max_value_;
         Vector<N, float> min_;
         double scale_;
 
 public:
-        Transform(const std::vector<Vector<N, float>>* const points, const std::type_identity_t<IntegerType>& max_value)
+        Transform(const std::vector<Vector<N, float>>* const points, const std::type_identity_t<T> max_value)
+                : points_(points),
+                  max_value_(max_value)
         {
                 ASSERT(points);
                 ASSERT(!points->empty());
@@ -56,24 +67,22 @@ public:
                 }
 
                 const double max_d = (max - min).norm_infinity();
-                if (max_d == 0)
+                if (!(max_d != 0))
                 {
-                        error("All points are equal to each other");
+                        error("No distinct points found");
                 }
 
-                points_ = points;
-                max_value_ = max_value;
                 min_ = min;
                 scale_ = max_value / max_d;
         }
 
-        [[nodiscard]] Vector<N, IntegerType> to_integer(const std::size_t index) const
+        [[nodiscard]] Vector<N, T> to_integer(const std::size_t index) const
         {
                 ASSERT(index < points_->size());
 
                 const Vector<N, double> float_value = to_vector<double>((*points_)[index] - min_) * scale_;
 
-                Vector<N, IntegerType> integer_value;
+                Vector<N, T> integer_value;
                 for (std::size_t n = 0; n < N; ++n)
                 {
                         const long long ll = std::llround(float_value[n]);
@@ -87,35 +96,65 @@ public:
                 return integer_value;
         }
 };
-}
 
-template <std::size_t N, typename IntegerType>
-void convert_to_unique_integer(
-        const std::vector<Vector<N, float>>& source_points,
-        const IntegerType& max_value,
-        std::vector<Vector<N, IntegerType>>* const points,
-        std::vector<int>* const map)
+template <std::size_t N, std::size_t BITS>
+class Points final
 {
-        ASSERT(points && map);
+        using T = LeastSignedInteger<BITS>;
+        static constexpr T MAX{(1ull << BITS) - 1};
 
-        points->clear();
-        points->reserve(source_points.size());
+        std::vector<Vector<N, T>> points_;
+        std::vector<int> map_;
 
-        map->clear();
-        map->reserve(source_points.size());
-
-        const integer_convert_implementation::Transform<N, IntegerType> transform{&source_points, max_value};
-
-        std::unordered_set<Vector<N, IntegerType>> set(source_points.size());
-
-        for (std::size_t i = 0; i < source_points.size(); ++i)
+public:
+        explicit Points(const std::vector<Vector<N, float>>& points)
         {
-                const Vector<N, IntegerType> integer_value = transform.to_integer(i);
-                if (set.insert(integer_value).second)
+                points_.reserve(points.size());
+                map_.reserve(points.size());
+
+                const Transform<N, T> transform{&points, MAX};
+
+                std::unordered_set<Vector<N, T>> set(points.size());
+
+                for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        points->push_back(integer_value);
-                        map->push_back(i);
+                        const Vector<N, T> integer_value = transform.to_integer(i);
+                        if (set.insert(integer_value).second)
+                        {
+                                points_.push_back(integer_value);
+                                map_.push_back(i);
+                        }
                 }
+
+                shuffle(PCG(points_.size()), &points_, &map_);
         }
+
+        [[nodiscard]] const std::vector<Vector<N, T>>& points() const
+        {
+                return points_;
+        }
+
+        template <std::size_t M>
+        [[nodiscard]] std::array<int, M> restore_indices(const std::array<int, M>& indices) const
+        {
+                std::array<int, M> res;
+                for (std::size_t n = 0; n < M; ++n)
+                {
+                        res[n] = map_[indices[n]];
+                }
+                return res;
+        }
+
+        [[nodiscard]] int restore_index(const int index) const
+        {
+                return map_[index];
+        }
+};
 }
+
+template <std::size_t N>
+using ConvexHullPoints = source_points_implementation::Points<N, CONVEX_HULL_BITS>;
+
+template <std::size_t N>
+using DelaunayPoints = source_points_implementation::Points<N, DELAUNAY_BITS>;
 }

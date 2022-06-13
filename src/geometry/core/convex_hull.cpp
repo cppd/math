@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "convex_hull/compute.h"
 #include "convex_hull/integer_types.h"
-#include "convex_hull/points.h"
+#include "convex_hull/source_points.h"
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
