@@ -152,19 +152,19 @@ unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_obj
 {
         static_assert(N >= 3);
 
-        std::vector<int> v;
+        std::vector<int> indices;
 
         for (const std::array<int, N>& obj : delaunay_objects)
         {
-                for (const int n : obj)
+                for (const int index : obj)
                 {
-                        v.push_back(n);
+                        indices.push_back(index);
                 }
         }
 
-        sort_and_unique(&v);
+        sort_and_unique(&indices);
 
-        return v.size();
+        return indices.size();
 }
 }
 

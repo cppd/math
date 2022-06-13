@@ -213,12 +213,12 @@ double compute_intersections_r_per_second(const int point_count, RandomEngine& e
 
         check_intersection_count(box, orgs, dirs_reciprocal, dirs_negative);
 
-        const std::size_t n = rays.size();
+        const std::size_t ray_count = rays.size();
 
         const Clock::time_point start_time = Clock::now();
-        for (int j = 0; j < COUNT; ++j)
+        for (int count = 0; count < COUNT; ++count)
         {
-                for (std::size_t i = 0; i < n; ++i)
+                for (std::size_t i = 0; i < ray_count; ++i)
                 {
                         do_not_optimize(box.intersect(orgs[i], dirs_reciprocal[i], dirs_negative[i]));
                 }

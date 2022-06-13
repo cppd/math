@@ -73,9 +73,9 @@ void initial_phase(
 
                 const bool flat = [&]
                 {
-                        for (const auto n : vertex.cocone_neighbors)
+                        for (const auto index : vertex.cocone_neighbors)
                         {
-                                if (!normal_condition(vertex, vertices[n], cosine_of_alpha))
+                                if (!normal_condition(vertex, vertices[index], cosine_of_alpha))
                                 {
                                         return false;
                                 }
@@ -113,14 +113,14 @@ void expansion_phase(
                         continue;
                 }
 
-                for (const auto& n : vertex.cocone_neighbors)
+                for (const auto index : vertex.cocone_neighbors)
                 {
-                        if (!(*interior_vertices)[n])
+                        if (!(*interior_vertices)[index])
                         {
                                 continue;
                         }
 
-                        if (normal_condition(vertex, vertices[n], cosine_of_alpha))
+                        if (normal_condition(vertex, vertices[index], cosine_of_alpha))
                         {
                                 (*interior_vertices)[v] = true;
                                 ++(*interior_count);

@@ -80,20 +80,20 @@ public:
         {
                 ASSERT(index < points_->size());
 
-                const Vector<N, double> float_value = to_vector<double>((*points_)[index] - min_) * scale_;
+                const Vector<N, float>& point = (*points_)[index];
 
-                Vector<N, T> integer_value;
-                for (std::size_t n = 0; n < N; ++n)
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        const long long ll = std::llround(float_value[n]);
-                        if (!(ll >= 0 && ll <= max_value_))
+                        const long long value = std::llround((point[i] - min_[i]) * scale_);
+                        if (!(value >= 0 && value <= max_value_))
                         {
-                                error("Error converting to integer: " + to_string(ll) + " is not in the range [0, "
+                                error("Error converting to integer: " + to_string(value) + " is not in the range [0, "
                                       + to_string(max_value_) + "]");
                         }
-                        integer_value[n] = ll;
+                        res[i] = value;
                 }
-                return integer_value;
+                return res;
         }
 };
 
@@ -138,9 +138,9 @@ public:
         [[nodiscard]] std::array<int, M> restore_indices(const std::array<int, M>& indices) const
         {
                 std::array<int, M> res;
-                for (std::size_t n = 0; n < M; ++n)
+                for (std::size_t i = 0; i < M; ++i)
                 {
-                        res[n] = map_[indices[n]];
+                        res[i] = map_[indices[i]];
                 }
                 return res;
         }
