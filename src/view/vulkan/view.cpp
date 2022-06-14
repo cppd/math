@@ -170,12 +170,12 @@ class Impl final
                 clip_plane_.command(clip_plane_command);
         }
 
-        void info(std::optional<info::Camera>* const camera_info) const
+        void info(std::optional<info::Camera>* const camera) const
         {
-                *camera_info = camera_.view_info();
+                *camera = camera_.camera();
         }
 
-        void info(std::optional<info::Image>* const image_info)
+        void info(std::optional<info::Image>* const image)
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
 
@@ -191,7 +191,7 @@ class Impl final
 
                 const VkSemaphore semaphore = draw();
 
-                *image_info = info::Image{
+                *image = info::Image{
                         .image = resolve_to_image(
                                 device_graphics_.device(), graphics_compute_command_pool_,
                                 device_graphics_.graphics_compute_queue(0), *render_buffers_, semaphore, IMAGE_INDEX)};

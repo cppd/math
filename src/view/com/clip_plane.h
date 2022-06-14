@@ -32,7 +32,7 @@ namespace ns::view
 class ClipPlane final
 {
         const Camera* camera_;
-        std::optional<Matrix4d> matrix_;
+        std::optional<Matrix4d> view_matrix_;
         double position_;
         std::function<void(const std::optional<Vector4d>&)> set_clip_plane_;
         std::function<void(const color::Color&)> set_clip_plane_color_;

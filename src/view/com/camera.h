@@ -52,7 +52,7 @@ class Camera final
         [[nodiscard]] Matrix4d main_view_matrix() const;
         [[nodiscard]] Matrix4d shadow_view_matrix() const;
 
-        [[nodiscard]] gpu::renderer::CameraInfo camera_info() const;
+        [[nodiscard]] gpu::renderer::CameraInfo renderer_camera_info() const;
 
 public:
         explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
@@ -63,7 +63,7 @@ public:
         void move(const Vector2d& delta);
         void resize(int width, int height);
 
-        [[nodiscard]] info::Camera view_info() const;
+        [[nodiscard]] info::Camera camera() const;
         [[nodiscard]] Matrix4d view_matrix() const;
 };
 }

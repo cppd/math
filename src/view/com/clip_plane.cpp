@@ -25,13 +25,13 @@ namespace ns::view
 {
 namespace
 {
-Vector4d create_clip_plane(const Matrix4d& clip_plane_view, const double position)
+Vector4d clip_plane_equation(const Matrix4d& view_matrix, const double position)
 {
         ASSERT(position >= 0 && position <= 1);
 
         // -z = 0 or (0, 0, -1, 0).
         // (0, 0, -1, 0) * view matrix.
-        Vector4d plane = -clip_plane_view.row(2);
+        Vector4d plane = -view_matrix.row(2);
 
         const Vector3d n(plane[0], plane[1], plane[2]);
         const double d = n.norm_1();
@@ -67,7 +67,7 @@ void ClipPlane::command(const ClipPlaneCommand& clip_plane_command)
 
 void ClipPlane::set_position(const double position)
 {
-        if (!matrix_)
+        if (!view_matrix_)
         {
                 error("Clip plane is not set");
         }
@@ -78,12 +78,12 @@ void ClipPlane::set_position(const double position)
         }
 
         position_ = position;
-        set_clip_plane_(create_clip_plane(*matrix_, position_));
+        set_clip_plane_(clip_plane_equation(*view_matrix_, position_));
 }
 
 void ClipPlane::command(const command::ClipPlaneHide&)
 {
-        matrix_.reset();
+        view_matrix_.reset();
         set_clip_plane_(std::nullopt);
 }
 
@@ -94,7 +94,7 @@ void ClipPlane::command(const command::ClipPlaneSetPosition& v)
 
 void ClipPlane::command(const command::ClipPlaneShow& v)
 {
-        matrix_ = camera_->view_matrix();
+        view_matrix_ = camera_->view_matrix();
         set_position(v.position);
 }
 
@@ -105,10 +105,10 @@ void ClipPlane::command(const command::ClipPlaneSetColor& v)
 
 std::optional<Vector4d> ClipPlane::equation() const
 {
-        if (!matrix_)
+        if (!view_matrix_)
         {
                 return std::nullopt;
         }
-        return create_clip_plane(*matrix_, position_);
+        return clip_plane_equation(*view_matrix_, position_);
 }
 }
