@@ -423,6 +423,11 @@ struct Camera final
         int height;
 };
 
+struct ClipPlane final
+{
+        std::optional<Vector4d> equation;
+};
+
 struct Image final
 {
         image::Image<2> image;
@@ -447,6 +452,7 @@ struct SampleCount final
 
 using Info = std::variant<
         std::optional<info::Camera>*,
+        std::optional<info::ClipPlane>*,
         std::optional<info::Description>*,
         std::optional<info::Functionality>*,
         std::optional<info::Image>*,

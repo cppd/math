@@ -200,6 +200,11 @@ class Impl final
                 create_swapchain_buffers();
         }
 
+        void info(std::optional<info::ClipPlane>* const clip_plane)
+        {
+                *clip_plane = info::ClipPlane{.equation = clip_plane_.equation()};
+        }
+
         void info(std::optional<info::Functionality>* const functionality) const
         {
                 gpu::renderer::info::Functionality info;

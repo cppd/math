@@ -77,7 +77,8 @@ void ClipPlane::set_position(const double position)
                 error("Error clip plane position " + to_string(position));
         }
 
-        set_clip_plane_(create_clip_plane(*matrix_, position));
+        position_ = position;
+        set_clip_plane_(create_clip_plane(*matrix_, position_));
 }
 
 void ClipPlane::command(const command::ClipPlaneHide&)
@@ -100,5 +101,14 @@ void ClipPlane::command(const command::ClipPlaneShow& v)
 void ClipPlane::command(const command::ClipPlaneSetColor& v)
 {
         set_clip_plane_color_(v.value);
+}
+
+std::optional<Vector4d> ClipPlane::equation() const
+{
+        if (!matrix_)
+        {
+                return std::nullopt;
+        }
+        return create_clip_plane(*matrix_, position_);
 }
 }
