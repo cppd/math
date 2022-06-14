@@ -105,8 +105,6 @@ gpu::renderer::CameraInfo Camera::camera_info() const
 
 void Camera::reset(const Vector3d& right, const Vector3d& up, const double scale, const Vector2d& window_center)
 {
-        std::lock_guard lg(lock_);
-
         set_vectors(right, up);
 
         scale_exponent_ = std::log(scale) / std::log(SCALE_BASE);
@@ -126,8 +124,6 @@ void Camera::reset(const Vector3d& right, const Vector3d& up, const double scale
 
 void Camera::scale(const double x, const double y, const double delta)
 {
-        std::lock_guard lg(lock_);
-
         if (!(x < width_ && y < height_))
         {
                 return;
@@ -158,8 +154,6 @@ void Camera::scale(const double x, const double y, const double delta)
 
 void Camera::rotate(const double around_up_axis, const double around_right_axis)
 {
-        std::lock_guard lg(lock_);
-
         const Vector3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
         const Vector3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
         set_vectors(right, up);
@@ -169,8 +163,6 @@ void Camera::rotate(const double around_up_axis, const double around_right_axis)
 
 void Camera::move(const Vector2d& delta)
 {
-        std::lock_guard lg(lock_);
-
         window_center_ += delta;
 
         set_camera_(camera_info());
@@ -178,8 +170,6 @@ void Camera::move(const Vector2d& delta)
 
 void Camera::resize(const int width, const int height)
 {
-        std::lock_guard lg(lock_);
-
         width_ = width;
         height_ = height;
 
@@ -188,8 +178,6 @@ void Camera::resize(const int width, const int height)
 
 info::Camera Camera::view_info() const
 {
-        std::lock_guard lg(lock_);
-
         info::Camera v;
 
         v.up = camera_up_;
@@ -214,10 +202,8 @@ info::Camera Camera::view_info() const
         return v;
 }
 
-gpu::renderer::CameraInfo Camera::renderer_info() const
+Matrix4d Camera::view_matrix() const
 {
-        std::lock_guard lg(lock_);
-
-        return camera_info();
+        return main_view_matrix();
 }
 }

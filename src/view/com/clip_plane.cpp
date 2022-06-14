@@ -93,7 +93,7 @@ void ClipPlane::command(const command::ClipPlaneSetPosition& v)
 
 void ClipPlane::command(const command::ClipPlaneShow& v)
 {
-        matrix_ = camera_->renderer_info().main_view_matrix;
+        matrix_ = camera_->view_matrix();
         set_position(v.position);
 }
 

@@ -24,14 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <functional>
-#include <mutex>
 
 namespace ns::view
 {
 class Camera final
 {
-        mutable std::mutex lock_;
-
         std::function<void(const gpu::renderer::CameraInfo&)> set_camera_;
 
         Vector3d camera_right_{0};
@@ -51,11 +48,11 @@ class Camera final
 
         void set_vectors(const Vector3d& right, const Vector3d& up);
 
-        gpu::renderer::CameraInfo::Volume main_volume() const;
-        Matrix4d main_view_matrix() const;
-        Matrix4d shadow_view_matrix() const;
+        [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
+        [[nodiscard]] Matrix4d main_view_matrix() const;
+        [[nodiscard]] Matrix4d shadow_view_matrix() const;
 
-        gpu::renderer::CameraInfo camera_info() const;
+        [[nodiscard]] gpu::renderer::CameraInfo camera_info() const;
 
 public:
         explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
@@ -66,7 +63,7 @@ public:
         void move(const Vector2d& delta);
         void resize(int width, int height);
 
-        info::Camera view_info() const;
-        gpu::renderer::CameraInfo renderer_info() const;
+        [[nodiscard]] info::Camera view_info() const;
+        [[nodiscard]] Matrix4d view_matrix() const;
 };
 }
