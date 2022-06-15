@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "command.h"
+#include "event.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
 
@@ -30,19 +30,19 @@ class RendererObject
         StorageMesh* mesh_storage_;
         StorageVolume* volume_storage_;
 
-        void command(const MeshUpdate& v)
+        void command(const command::MeshUpdate& v)
         {
                 ASSERT(!volume_storage_->contains(v.object->id()));
                 mesh_storage_->update(*v.object);
         }
 
-        void command(const VolumeUpdate& v)
+        void command(const command::VolumeUpdate& v)
         {
                 ASSERT(!mesh_storage_->contains(v.object->id()));
                 volume_storage_->update(*v.object);
         }
 
-        void command(const DeleteObject& v)
+        void command(const command::DeleteObject& v)
         {
                 if (mesh_storage_->erase(v.id))
                 {
@@ -54,7 +54,7 @@ class RendererObject
                 }
         }
 
-        void command(const DeleteAllObjects&)
+        void command(const command::DeleteAllObjects&)
         {
                 mesh_storage_->clear();
                 volume_storage_->clear();

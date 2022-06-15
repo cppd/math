@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "command.h"
+#include "event.h"
 
 #include "buffers/drawing.h"
 
@@ -62,68 +62,68 @@ class RendererView final
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
         }
 
-        void command(const SetLightingColor& v)
+        void command(const command::SetLightingColor& v)
         {
                 drawing_buffer_->set_lighting_color(v.color.rgb32().max_n(0));
         }
 
-        void command(const SetBackgroundColor& v)
+        void command(const command::SetBackgroundColor& v)
         {
                 drawing_buffer_->set_background_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const SetWireframeColor& v)
+        void command(const command::SetWireframeColor& v)
         {
                 drawing_buffer_->set_wireframe_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const SetClipPlaneColor& v)
+        void command(const command::SetClipPlaneColor& v)
         {
                 drawing_buffer_->set_clip_plane_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const SetNormalLength& v)
+        void command(const command::SetNormalLength& v)
         {
                 drawing_buffer_->set_normal_length(v.length);
         }
 
-        void command(const SetNormalColorPositive& v)
+        void command(const command::SetNormalColorPositive& v)
         {
                 drawing_buffer_->set_normal_color_positive(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const SetNormalColorNegative& v)
+        void command(const command::SetNormalColorNegative& v)
         {
                 drawing_buffer_->set_normal_color_negative(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const SetShowSmooth& v)
+        void command(const command::SetShowSmooth& v)
         {
                 drawing_buffer_->set_show_smooth(v.show);
         }
 
-        void command(const SetShowWireframe& v)
+        void command(const command::SetShowWireframe& v)
         {
                 drawing_buffer_->set_show_wireframe(v.show);
         }
 
-        void command(const SetShowShadow& v)
+        void command(const command::SetShowShadow& v)
         {
                 drawing_buffer_->set_show_shadow(v.show);
                 show_shadow_ = v.show;
         }
 
-        void command(const SetShowFog& v)
+        void command(const command::SetShowFog& v)
         {
                 drawing_buffer_->set_show_fog(v.show);
         }
 
-        void command(const SetShowMaterials& v)
+        void command(const command::SetShowMaterials& v)
         {
                 drawing_buffer_->set_show_materials(v.show);
         }
 
-        void command(const SetShowNormals& v)
+        void command(const command::SetShowNormals& v)
         {
                 if (show_normals_ != v.show)
                 {
@@ -132,7 +132,7 @@ class RendererView final
                 }
         }
 
-        void command(const SetShadowZoom& v)
+        void command(const command::SetShadowZoom& v)
         {
                 if (!shadow_mapping_)
                 {
@@ -145,7 +145,7 @@ class RendererView final
                 }
         }
 
-        void command(const SetCamera& v)
+        void command(const command::SetCamera& v)
         {
                 const CameraInfo& c = *v.info;
 
@@ -170,7 +170,7 @@ class RendererView final
                 events_->view_matrices_changed();
         }
 
-        void command(const SetClipPlane& v)
+        void command(const command::SetClipPlane& v)
         {
                 clip_plane_ = v.plane;
                 if (clip_plane_)

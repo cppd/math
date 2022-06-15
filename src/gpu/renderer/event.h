@@ -48,6 +48,8 @@ struct CameraInfo final
         Vector3d camera_direction;
 };
 
+namespace command
+{
 struct SetLightingColor final
 {
         color::Color color;
@@ -222,26 +224,28 @@ struct DeleteObject final
 struct DeleteAllObjects final
 {
 };
+}
 
 using ViewCommand = std::variant<
-        SetBackgroundColor,
-        SetCamera,
-        SetClipPlane,
-        SetClipPlaneColor,
-        SetLightingColor,
-        SetNormalColorNegative,
-        SetNormalColorPositive,
-        SetNormalLength,
-        SetShadowZoom,
-        SetShowFog,
-        SetShowMaterials,
-        SetShowNormals,
-        SetShowShadow,
-        SetShowSmooth,
-        SetShowWireframe,
-        SetWireframeColor>;
+        command::SetBackgroundColor,
+        command::SetCamera,
+        command::SetClipPlane,
+        command::SetClipPlaneColor,
+        command::SetLightingColor,
+        command::SetNormalColorNegative,
+        command::SetNormalColorPositive,
+        command::SetNormalLength,
+        command::SetShadowZoom,
+        command::SetShowFog,
+        command::SetShowMaterials,
+        command::SetShowNormals,
+        command::SetShowShadow,
+        command::SetShowSmooth,
+        command::SetShowWireframe,
+        command::SetWireframeColor>;
 
-using ObjectCommand = std::variant<DeleteAllObjects, DeleteObject, MeshUpdate, VolumeUpdate>;
+using ObjectCommand =
+        std::variant<command::DeleteAllObjects, command::DeleteObject, command::MeshUpdate, command::VolumeUpdate>;
 
 using Command = std::variant<ObjectCommand, ViewCommand>;
 

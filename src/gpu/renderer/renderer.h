@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "command.h"
+#include "event.h"
 
 #include <src/gpu/render_buffers.h>
 #include <src/model/mesh_object.h>
