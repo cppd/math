@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <mutex>
 #include <string>
 #include <thread>
-#include <tuple>
 #include <vector>
 
 namespace ns::progress
@@ -38,13 +37,13 @@ class RatioList final : public Ratios
 
 public:
         // for worker threads
-        void add_progress_ratio(RatioControl* ratio) override;
-        void delete_progress_ratio(const RatioControl* ratio) noexcept override;
+        void add_ratio(RatioControl* ratio) override;
+        void delete_ratio(const RatioControl* ratio) noexcept override;
 
         // for UI thread
         void terminate_all_quietly();
         void terminate_all_with_message();
         void enable();
-        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios() const;
+        std::vector<RatioInfo> ratios() const;
 };
 }

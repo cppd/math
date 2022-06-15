@@ -261,7 +261,7 @@ class Impl final : public WorkerThreads
         {
                 constexpr unsigned MAX_INT{Limits<int>::max()};
 
-                const std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
+                const std::vector<progress::RatioInfo> ratios = progress_list->ratios();
 
                 while (ratios.size() > progress_bars->size())
                 {
@@ -302,13 +302,13 @@ class Impl final : public WorkerThreads
                                 bar->show();
                         }
 
-                        bar->setFormat(QString::fromStdString(std::get<2>(ratios[i])));
+                        bar->setFormat(QString::fromStdString(ratios[i].text));
 
-                        const unsigned maximum = std::get<1>(ratios[i]);
+                        const auto maximum = ratios[i].maximum;
 
                         if (maximum > 0)
                         {
-                                const unsigned value = std::min(maximum, std::get<0>(ratios[i]));
+                                const auto value = std::min(maximum, ratios[i].value);
 
                                 if (maximum <= MAX_INT)
                                 {

@@ -31,14 +31,17 @@ class Ratio final
         std::unique_ptr<Impl> progress_;
 
 public:
-        explicit Ratio(Ratios* ratios, const std::string& permanent_text = "");
+        explicit Ratio(Ratios* ratios, std::string permanent_text = {});
         ~Ratio();
 
         void set(unsigned value, unsigned maximum);
         void set(double v);
         void set_undefined();
-        void set_text(const std::string& text);
+        void set_text(std::string text);
 
-        static bool lock_free();
+        static constexpr bool lock_free()
+        {
+                return true;
+        }
 };
 }

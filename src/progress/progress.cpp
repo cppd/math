@@ -28,17 +28,16 @@ namespace ns::progress
 {
 namespace
 {
-constexpr bool LOCK_FREE = true;
-
 template <typename T>
 class RelaxedAtomic final
 {
         std::atomic<T> counter_{0};
 
-        static_assert(decltype(counter_)::is_always_lock_free == LOCK_FREE);
+        static_assert(std::is_integral_v<T>);
+        static_assert(decltype(counter_)::is_always_lock_free);
 
 public:
-        void set(const T& v)
+        void set(const T v)
         {
                 counter_.store(v, std::memory_order_relaxed);
         }
@@ -48,12 +47,11 @@ public:
                 return counter_.load(std::memory_order_relaxed);
         }
 
-        void operator|=(const T& v)
+        void operator|=(const T v)
         {
                 counter_.fetch_or(v, std::memory_order_relaxed);
         }
 };
-}
 
 class AtomicTerminate final
 {
@@ -90,6 +88,7 @@ public:
                 }
         }
 };
+}
 
 class Ratio::Impl final : public RatioControl
 {
@@ -104,12 +103,12 @@ class Ratio::Impl final : public RatioControl
         std::string text_;
         mutable std::mutex text_mutex_;
 
-        Ratios* ratios_;
+        Ratios* const ratios_;
 
         const std::string permanent_text_;
 
 public:
-        Impl(Ratios* const ratios, std::string permanent_text)
+        Impl(Ratios* const ratios, std::string&& permanent_text)
                 : ratios_(ratios),
                   permanent_text_(std::move(permanent_text))
         {
@@ -117,7 +116,7 @@ public:
 
                 if (ratios_)
                 {
-                        ratios_->add_progress_ratio(this);
+                        ratios_->add_ratio(this);
                 }
         }
 
@@ -125,7 +124,7 @@ public:
         {
                 if (ratios_)
                 {
-                        ratios_->delete_progress_ratio(this);
+                        ratios_->delete_ratio(this);
                 }
         }
 
@@ -136,10 +135,9 @@ public:
                 counter_.set((static_cast<CounterType>(maximum & MAX) << SHIFT) | (value & MAX));
         }
 
-        void set(double v)
+        void set(const double v)
         {
-                v = std::clamp(v, 0.0, 1.0);
-                set(std::lround(v * MAX), MAX);
+                set(std::llround(std::clamp(v, 0.0, 1.0) * MAX), MAX);
         }
 
         void set_undefined()
@@ -147,10 +145,10 @@ public:
                 set(0, 0);
         }
 
-        void set_text(const std::string& text)
+        void set_text(std::string&& text)
         {
                 std::lock_guard lg(text_mutex_);
-                text_ = text;
+                text_ = std::move(text);
         }
 
         void terminate_quietly() override
@@ -163,15 +161,16 @@ public:
                 terminate_.set_terminate_with_message();
         }
 
-        Info info() const override
+        RatioInfo info() const override
         {
                 const CounterType c = counter_.value();
                 const unsigned value = c & MAX;
                 const unsigned maximum = c >> SHIFT;
-                return {.value = value, .maximum = maximum};
+
+                return {.value = value, .maximum = maximum, .text = text()};
         }
 
-        std::string text() const override
+        std::string text() const
         {
                 std::lock_guard lg(text_mutex_);
 
@@ -193,8 +192,8 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-Ratio::Ratio(Ratios* const ratios, const std::string& permanent_text)
-        : progress_(std::make_unique<Impl>(ratios, permanent_text))
+Ratio::Ratio(Ratios* const ratios, std::string permanent_text)
+        : progress_(std::make_unique<Impl>(ratios, std::move(permanent_text)))
 {
 }
 
@@ -215,13 +214,8 @@ void Ratio::set_undefined()
         progress_->set_undefined();
 }
 
-void Ratio::set_text(const std::string& text)
+void Ratio::set_text(std::string text)
 {
-        progress_->set_text(text);
-}
-
-bool Ratio::lock_free()
-{
-        return LOCK_FREE;
+        progress_->set_text(std::move(text));
 }
 }

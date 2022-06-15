@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exception.h>
 
+#include <mutex>
 #include <thread>
 
 namespace ns::progress
 {
 // for worker threads
-void RatioList::add_progress_ratio(RatioControl* const ratio)
+void RatioList::add_ratio(RatioControl* const ratio)
 {
         ASSERT(std::this_thread::get_id() != thread_id_);
 
@@ -45,7 +46,7 @@ void RatioList::add_progress_ratio(RatioControl* const ratio)
 }
 
 // for worker threads
-void RatioList::delete_progress_ratio(const RatioControl* const ratio) noexcept
+void RatioList::delete_ratio(const RatioControl* const ratio) noexcept
 {
         try
         {
@@ -53,13 +54,15 @@ void RatioList::delete_progress_ratio(const RatioControl* const ratio) noexcept
 
                 std::lock_guard lg(mutex_);
 
-                for (auto i = ratios_.begin(); i != ratios_.end(); ++i)
+                auto iter = ratios_.cbegin();
+                while (iter != ratios_.cend())
                 {
-                        if (*i == ratio)
+                        if (*iter == ratio)
                         {
-                                ratios_.erase(i);
-                                return;
+                                iter = ratios_.erase(iter);
+                                continue;
                         }
+                        ++iter;
                 }
         }
         catch (...)
@@ -110,20 +113,18 @@ void RatioList::enable()
 }
 
 // for UI thread
-std::vector<std::tuple<unsigned, unsigned, std::string>> RatioList::ratios() const
+std::vector<RatioInfo> RatioList::ratios() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::lock_guard lg(mutex_);
 
-        std::vector<std::tuple<unsigned, unsigned, std::string>> result;
-        result.reserve(ratios_.size());
-
+        std::vector<RatioInfo> res;
+        res.reserve(ratios_.size());
         for (const RatioControl* const ratio : ratios_)
         {
-                const RatioControl::Info info = ratio->info();
-                result.emplace_back(info.value, info.maximum, ratio->text());
+                res.push_back(ratio->info());
         }
-        return result;
+        return res;
 }
 }
