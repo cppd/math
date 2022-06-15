@@ -32,8 +32,8 @@ template <typename Path>
 VolumeInfo volume_info(const Path& path);
 
 template <std::size_t N, typename Path>
-void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* progress);
+void save_to_images(const Path& path, const image::ImageView<N>& image_view, progress::Ratio* progress);
 
 template <std::size_t N, typename Path>
-image::Image<N> load(const Path& path, ProgressRatio* progress);
+image::Image<N> load(const Path& path, progress::Ratio* progress);
 }

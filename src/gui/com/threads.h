@@ -35,11 +35,11 @@ struct WorkerThreads
         struct Progress final
         {
                 unsigned id;
-                const ProgressRatioList* progress_list;
+                const progress::RatioList* progress_list;
                 std::list<QProgressBar>* progress_bars;
         };
 
-        using Function = std::function<void(ProgressRatioList*)>;
+        using Function = std::function<void(progress::RatioList*)>;
 
         virtual ~WorkerThreads() = default;
 

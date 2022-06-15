@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <mutex>
 
-namespace ns
+namespace ns::progress
 {
 namespace
 {
@@ -91,7 +91,7 @@ public:
         }
 };
 
-class ProgressRatio::Impl final : public ProgressRatioControl
+class Ratio::Impl final : public RatioControl
 {
         using CounterType = std::uint_least64_t;
 
@@ -104,12 +104,12 @@ class ProgressRatio::Impl final : public ProgressRatioControl
         std::string text_;
         mutable std::mutex text_mutex_;
 
-        ProgressRatios* ratios_;
+        Ratios* ratios_;
 
         const std::string permanent_text_;
 
 public:
-        Impl(ProgressRatios* const ratios, std::string permanent_text)
+        Impl(Ratios* const ratios, std::string permanent_text)
                 : ratios_(ratios),
                   permanent_text_(std::move(permanent_text))
         {
@@ -193,34 +193,34 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-ProgressRatio::ProgressRatio(ProgressRatios* const ratios, const std::string& permanent_text)
+Ratio::Ratio(Ratios* const ratios, const std::string& permanent_text)
         : progress_(std::make_unique<Impl>(ratios, permanent_text))
 {
 }
 
-ProgressRatio::~ProgressRatio() = default;
+Ratio::~Ratio() = default;
 
-void ProgressRatio::set(const unsigned value, const unsigned maximum)
+void Ratio::set(const unsigned value, const unsigned maximum)
 {
         progress_->set(value, maximum);
 }
 
-void ProgressRatio::set(const double v)
+void Ratio::set(const double v)
 {
         progress_->set(v);
 }
 
-void ProgressRatio::set_undefined()
+void Ratio::set_undefined()
 {
         progress_->set_undefined();
 }
 
-void ProgressRatio::set_text(const std::string& text)
+void Ratio::set_text(const std::string& text)
 {
         progress_->set_text(text);
 }
 
-bool ProgressRatio::lock_free()
+bool Ratio::lock_free()
 {
         return LOCK_FREE;
 }

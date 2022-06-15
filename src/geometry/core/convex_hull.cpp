@@ -122,7 +122,7 @@ std::vector<ConvexHullSimplex<N>> convex_hull_simplices(
 }
 
 template <std::size_t N>
-std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& points, ProgressRatio* const progress)
+std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& points, progress::Ratio* const progress)
 {
         using S = ch::DelaunayParaboloidDataType<N + 1>;
         using C = ch::DelaunayParaboloidComputeType<N + 1>;
@@ -136,7 +136,7 @@ std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& po
 template <std::size_t N>
 std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         const ch::ConvexHullPoints<N>& points,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         using S = ch::ConvexHullDataType<N>;
         using C = ch::ConvexHullComputeType<N>;
@@ -151,7 +151,7 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
 template <std::size_t N>
 DelaunayData<N> compute_delaunay(
         const std::vector<Vector<N, float>>& points,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         const bool write_log)
 {
         if (points.empty())
@@ -190,7 +190,7 @@ DelaunayData<N> compute_delaunay(
 template <std::size_t N>
 std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         const std::vector<Vector<N, float>>& points,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         const bool write_log)
 {
         if (points.empty())
@@ -221,11 +221,11 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
 }
 
 #define COMPUTE_DELAUNAY_INSTANTIATION(N) \
-        template DelaunayData<N> compute_delaunay(const std::vector<Vector<(N), float>>&, ProgressRatio*, bool);
+        template DelaunayData<N> compute_delaunay(const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
 
 #define COMPUTE_CONVEX_HULL_INSTANTIATION(N)                              \
         template std::vector<ConvexHullSimplex<(N)>> compute_convex_hull( \
-                const std::vector<Vector<(N), float>>&, ProgressRatio*, bool);
+                const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
 
 COMPUTE_DELAUNAY_INSTANTIATION(2)
 COMPUTE_DELAUNAY_INSTANTIATION(3)

@@ -63,7 +63,7 @@ template <std::size_t N, typename T, typename Color>
 void test_intersections(
         const test::SphericalMesh<N, T, Color>& mesh,
         const std::vector<Ray<N, T>>& rays,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const double rays_size_reciprocal = 1.0 / rays.size();
 
@@ -102,7 +102,7 @@ template <std::size_t N, typename T, typename Color>
 void test_surface_ratio(
         const test::SphericalMesh<N, T, Color>& mesh,
         const std::vector<Ray<N, T>>& rays,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const double rays_size_reciprocal = 1.0 / rays.size();
 
@@ -144,7 +144,7 @@ void test_surface_ratio(
 }
 
 template <std::size_t N, typename T>
-void test(const int point_count, const int ray_count, ProgressRatio* const progress)
+void test(const int point_count, const int ray_count, progress::Ratio* const progress)
 {
         using Color = color::Spectrum;
 
@@ -167,28 +167,28 @@ void test(const int point_count, const int ray_count, ProgressRatio* const progr
 }
 
 template <std::size_t N>
-void test_mesh(const int point_count, const int ray_count, ProgressRatio* const progress)
+void test_mesh(const int point_count, const int ray_count, progress::Ratio* const progress)
 {
         test<N, float>(point_count, ray_count, progress);
         test<N, double>(point_count, ray_count, progress);
 }
 
-void test_mesh_3(ProgressRatio* const progress)
+void test_mesh_3(progress::Ratio* const progress)
 {
         test_mesh<3>(1000, 100'000, progress);
 }
 
-void test_mesh_4(ProgressRatio* const progress)
+void test_mesh_4(progress::Ratio* const progress)
 {
         test_mesh<4>(1000, 100'000, progress);
 }
 
-void test_mesh_5(ProgressRatio* const progress)
+void test_mesh_5(progress::Ratio* const progress)
 {
         test_mesh<5>(2000, 100'000, progress);
 }
 
-void test_mesh_6(ProgressRatio* const progress)
+void test_mesh_6(progress::Ratio* const progress)
 {
         test_mesh<6>(2000, 100'000, progress);
 }

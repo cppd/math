@@ -26,20 +26,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace ns
+namespace ns::progress
 {
-class ProgressRatioList final : public ProgressRatios
+class RatioList final : public Ratios
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        std::list<ProgressRatioControl*> ratios_;
+        std::list<RatioControl*> ratios_;
         bool terminate_quietly_ = false;
         bool terminate_with_message_ = false;
         mutable std::mutex mutex_;
 
 public:
         // for worker threads
-        void add_progress_ratio(ProgressRatioControl* ratio) override;
-        void delete_progress_ratio(const ProgressRatioControl* ratio) noexcept override;
+        void add_progress_ratio(RatioControl* ratio) override;
+        void delete_progress_ratio(const RatioControl* ratio) noexcept override;
 
         // for UI thread
         void terminate_all_quietly();

@@ -144,7 +144,7 @@ template <std::size_t N>
 void save_to_images(
         const std::filesystem::path& directory,
         const image::ImageView<N>& image_view,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         unsigned* const current,
         const unsigned count)
 {
@@ -193,7 +193,7 @@ void load_from_images(
         const image::ColorFormat image_format,
         const std::array<int, N>& image_size,
         const std::span<std::byte>& image_bytes,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         unsigned* const current,
         const unsigned count)
 {
@@ -308,7 +308,7 @@ VolumeInfo volume_info(const Path& path)
 }
 
 template <std::size_t N, typename Path>
-void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* const progress)
+void save_to_images(const Path& path, const image::ImageView<N>& image_view, progress::Ratio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -329,7 +329,7 @@ void save_to_images(const Path& path, const image::ImageView<N>& image_view, Pro
 }
 
 template <std::size_t N, typename Path>
-image::Image<N> load(const Path& path, ProgressRatio* const progress)
+image::Image<N> load(const Path& path, progress::Ratio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -366,9 +366,9 @@ image::Image<N> load(const Path& path, ProgressRatio* const progress)
 
 template VolumeInfo volume_info(const std::filesystem::path&);
 
-#define FUNCTION_INSTANTIATIONS(N)                                                                                \
-        template void save_to_images(const std::filesystem::path&, const image::ImageView<(N)>&, ProgressRatio*); \
-        template image::Image<(N)> load<(N)>(const std::filesystem::path&, ProgressRatio*);
+#define FUNCTION_INSTANTIATIONS(N)                                                                                  \
+        template void save_to_images(const std::filesystem::path&, const image::ImageView<(N)>&, progress::Ratio*); \
+        template image::Image<(N)> load<(N)>(const std::filesystem::path&, progress::Ratio*);
 
 FUNCTION_INSTANTIATIONS(3)
 FUNCTION_INSTANTIATIONS(4)

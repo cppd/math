@@ -109,7 +109,7 @@ void test_obj_file(
         const std::string& name,
         const std::filesystem::path& directory,
         const std::string& comment,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const std::filesystem::path file_name = [&]
         {
@@ -135,7 +135,7 @@ void test_stl_file(
         const std::string& name,
         const std::filesystem::path& directory,
         const std::string& comment,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         const bool ascii_format)
 {
         const std::string type_name = ascii_format ? "ASCII" : "binary";
@@ -195,7 +195,7 @@ void test_mesh_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& vertices,
         const std::vector<std::array<int, N>>& facets,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N >= 3);
 
@@ -233,7 +233,7 @@ void test()
                 return std::uniform_int_distribution<unsigned>(100, 1000)(engine);
         }();
 
-        ProgressRatio progress(nullptr);
+        progress::Ratio progress(nullptr);
 
         std::vector<Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;

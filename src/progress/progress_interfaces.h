@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns
+namespace ns::progress
 {
-class ProgressRatioControl
+class RatioControl
 {
 protected:
-        ~ProgressRatioControl() = default;
+        ~RatioControl() = default;
 
 public:
         struct Info final
@@ -39,13 +39,13 @@ public:
         [[nodiscard]] virtual std::string text() const = 0;
 };
 
-class ProgressRatios
+class Ratios
 {
 protected:
-        ~ProgressRatios() = default;
+        ~Ratios() = default;
 
 public:
-        virtual void add_progress_ratio(ProgressRatioControl* ratio) = 0;
-        virtual void delete_progress_ratio(const ProgressRatioControl* ratio) noexcept = 0;
+        virtual void add_progress_ratio(RatioControl* ratio) = 0;
+        virtual void delete_progress_ratio(const RatioControl* ratio) noexcept = 0;
 };
 }

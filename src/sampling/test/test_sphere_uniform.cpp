@@ -38,7 +38,7 @@ constexpr long long PERFORMANCE_COUNT = 10'000'000;
 //
 
 template <std::size_t N, typename T>
-void test_sphere_uniform(ProgressRatio* const progress)
+void test_sphere_uniform(progress::Ratio* const progress)
 {
         LOG("Sphere Uniform, " + space_name(N) + ", " + type_name<T>());
 
@@ -90,7 +90,7 @@ void test_sphere_uniform(ProgressRatio* const progress)
 }
 
 template <std::size_t N>
-void test_sphere_uniform(ProgressRatio* const progress)
+void test_sphere_uniform(progress::Ratio* const progress)
 {
         test_sphere_uniform<N, float>(progress);
         test_sphere_uniform<N, double>(progress);
@@ -124,7 +124,7 @@ void test_performance(const Counter& counter)
         test_performance<5, T>();
 }
 
-void test_sphere_uniform_performance(ProgressRatio* const progress)
+void test_sphere_uniform_performance(progress::Ratio* const progress)
 {
         constexpr int COUNT = 3 * 2;
         int i = -1;

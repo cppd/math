@@ -134,7 +134,7 @@ public:
                         const std::vector<int>& object_indices) const = 0;
         };
 
-        SpatialSubdivisionTree(const Objects& objects, ProgressRatio* progress);
+        SpatialSubdivisionTree(const Objects& objects, progress::Ratio* progress);
 
         [[nodiscard]] const Parallelotope& root() const
         {

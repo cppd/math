@@ -128,7 +128,7 @@ public:
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
              std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
-             ProgressRatio* const progress)
+             progress::Ratio* const progress)
                 : shapes_(std::move(shapes)),
                   light_sources_(std::move(light_sources)),
                   projector_(std::move(projector)),
@@ -146,7 +146,7 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N, T, Color>>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
@@ -156,7 +156,7 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(      \
                 const C&, std::unique_ptr<const Projector<(N), T>>&&,         \
                 std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&, \
-                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, ProgressRatio*);
+                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                   \
         CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Color) \

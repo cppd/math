@@ -85,7 +85,7 @@ void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<Ray<N,
 }
 
 template <std::size_t N, typename T>
-void test(const int point_count, const int ray_count, ProgressRatio* const progress)
+void test(const int point_count, const int ray_count, progress::Ratio* const progress)
 {
         using Color = color::Spectrum;
 
@@ -98,13 +98,13 @@ void test(const int point_count, const int ray_count, ProgressRatio* const progr
 }
 
 template <std::size_t N>
-void test(const int point_count, const int ray_count, ProgressRatio* const progress)
+void test(const int point_count, const int ray_count, progress::Ratio* const progress)
 {
         test<N, float>(point_count, ray_count, progress);
         test<N, double>(point_count, ray_count, progress);
 }
 
-void test_performance(ProgressRatio* const progress)
+void test_performance(progress::Ratio* const progress)
 {
         test<3>(150'000, 50'000, progress);
         test<4>(40'000, 20'000, progress);

@@ -133,7 +133,7 @@ void extend(
         std::deque<Box>* const boxes,
         ThreadTaskManager<Task<Box>>* const task_manager,
         const Objects& objects,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         while (const auto task = task_manager->get())
         {
@@ -193,7 +193,7 @@ void check_max_depth(const int max_depth)
 }
 
 template <typename Parallelotope>
-SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& objects, ProgressRatio* const progress)
+SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& objects, progress::Ratio* const progress)
 {
         static_assert(BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 

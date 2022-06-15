@@ -88,7 +88,7 @@ void compare_random_engines(const Counter& counter)
         test_random_engine<T, std::ranlux48_base>();
 }
 
-void compare(ProgressRatio* const progress)
+void compare(progress::Ratio* const progress)
 {
         constexpr int COUNT = 10 * 3;
         int i = -1;

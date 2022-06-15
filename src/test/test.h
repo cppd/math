@@ -33,13 +33,13 @@ class Tests final
         friend struct AddLargeTest;
         friend struct AddPerformanceTest;
 
-        using Test = std::variant<void (*)(), void (*)(ProgressRatio*)>;
+        using Test = std::variant<void (*)(), void (*)(progress::Ratio*)>;
 
         static void run(
                 const Test& test,
                 const std::string_view& test_name,
                 const char* type_name,
-                ProgressRatios* progress_ratios);
+                progress::Ratios* progress_ratios);
 
         std::unordered_map<std::string_view, Test> small_tests_;
         std::unordered_map<std::string_view, Test> large_tests_;
@@ -72,17 +72,17 @@ public:
         [[nodiscard]] std::vector<std::string> large_names() const;
         [[nodiscard]] std::vector<std::string> performance_names() const;
 
-        void run_small(const std::string_view& name, ProgressRatios* progress_ratios) const;
-        void run_large(const std::string_view& name, ProgressRatios* progress_ratios) const;
-        void run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const;
+        void run_small(const std::string_view& name, progress::Ratios* progress_ratios) const;
+        void run_large(const std::string_view& name, progress::Ratios* progress_ratios) const;
+        void run_performance(const std::string_view& name, progress::Ratios* progress_ratios) const;
 
-        void run_small(ProgressRatios* progress_ratios) const;
-        void run_large(ProgressRatios* progress_ratios) const;
-        void run_performance(ProgressRatios* progress_ratios) const;
+        void run_small(progress::Ratios* progress_ratios) const;
+        void run_large(progress::Ratios* progress_ratios) const;
+        void run_performance(progress::Ratios* progress_ratios) const;
 
-        void run_small(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
-        void run_large(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
-        void run_performance(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
+        void run_small(std::vector<std::string> names, progress::Ratios* progress_ratios) const;
+        void run_large(std::vector<std::string> names, progress::Ratios* progress_ratios) const;
+        void run_performance(std::vector<std::string> names, progress::Ratios* progress_ratios) const;
 };
 
 struct AddSmallTest final

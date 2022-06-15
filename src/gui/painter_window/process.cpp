@@ -75,7 +75,7 @@ void save_to_file(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N_IMAGE >= 2);
 
@@ -136,7 +136,7 @@ void add_volume(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N_IMAGE >= 3);
 
@@ -200,7 +200,7 @@ void save_image(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         if (parameters.size() == 1)
         {
@@ -238,7 +238,7 @@ void save_image(
 }
 }
 
-std::function<void(ProgressRatioList*)> save_image(
+std::function<void(progress::RatioList*)> save_image(
         const int width,
         const int height,
         image::ColorFormat color_format_rgb,
@@ -262,9 +262,9 @@ std::function<void(ProgressRatioList*)> save_image(
                 path_string = std::move(*dialog_parameters->path_string), width, height, color_format_rgb,
                 color_format_rgba, pixels_rgb = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgb)),
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
-                       ProgressRatioList* const progress_list)
+                       progress::RatioList* const progress_list)
         {
-                ProgressRatio progress(progress_list, "Saving");
+                progress::Ratio progress(progress_list, "Saving");
 
                 ASSERT(parameters.size() == 1);
                 save_to_file(
@@ -274,7 +274,7 @@ std::function<void(ProgressRatioList*)> save_image(
         };
 }
 
-std::function<void(ProgressRatioList*)> save_image(
+std::function<void(progress::RatioList*)> save_image(
         const std::vector<int>& size,
         image::ColorFormat color_format_rgb,
         std::vector<std::byte>&& pixels_rgb,
@@ -302,7 +302,7 @@ std::function<void(ProgressRatioList*)> save_image(
                 size = std::make_shared<std::vector<int>>(size),
                 pixels_rgb = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgb)),
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
-                       ProgressRatioList* const progress_list)
+                       progress::RatioList* const progress_list)
         {
                 const int n = size->size() + 1;
                 process::apply_for_dimension(
@@ -312,7 +312,7 @@ std::function<void(ProgressRatioList*)> save_image(
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)
                                 {
-                                        ProgressRatio progress(progress_list, "Saving");
+                                        progress::Ratio progress(progress_list, "Saving");
 
                                         ASSERT(!parameters.empty());
                                         save_image(
@@ -324,7 +324,7 @@ std::function<void(ProgressRatioList*)> save_image(
         };
 }
 
-std::function<void(ProgressRatioList*)> add_volume(
+std::function<void(progress::RatioList*)> add_volume(
         const std::vector<int>& size,
         image::ColorFormat color_format_rgb,
         std::vector<std::byte>&& pixels_rgb,
@@ -349,7 +349,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                 size = std::make_shared<std::vector<int>>(size),
                 pixels_rgb = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgb)),
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
-                       ProgressRatioList* const progress_list)
+                       progress::RatioList* const progress_list)
         {
                 const int n = size->size() + 1;
                 process::apply_for_dimension(
@@ -359,7 +359,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)
                                 {
-                                        ProgressRatio progress(progress_list, "Adding volume");
+                                        progress::Ratio progress(progress_list, "Adding volume");
 
                                         ASSERT(parameters.size() == 1);
                                         add_volume(

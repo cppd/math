@@ -83,11 +83,14 @@ struct DelaunayData final
 };
 
 template <std::size_t N>
-DelaunayData<N> compute_delaunay(const std::vector<Vector<N, float>>& points, ProgressRatio* progress, bool write_log);
+DelaunayData<N> compute_delaunay(
+        const std::vector<Vector<N, float>>& points,
+        progress::Ratio* progress,
+        bool write_log);
 
 template <std::size_t N>
 std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         const std::vector<Vector<N, float>>& points,
-        ProgressRatio* progress,
+        progress::Ratio* progress,
         bool write_log);
 }

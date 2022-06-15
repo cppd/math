@@ -33,5 +33,5 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
-        ProgressRatio* progress);
+        progress::Ratio* progress);
 }

@@ -40,7 +40,7 @@ std::vector<FileFormat> save_formats(unsigned dimension);
 std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions);
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* progress);
+std::unique_ptr<Mesh<N>> load(const Path& file_name, progress::Ratio* progress);
 
 template <std::size_t N, typename Path>
 std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment);

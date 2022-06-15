@@ -66,7 +66,7 @@ Vector<N, T> random_v(const Vector<N, T>& normal, RandomEngine& engine)
 //
 
 template <std::size_t N, typename T>
-void test_unit(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n)
+void test_unit(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n)
 {
         st::test_unit<N, T>(
                 "Visible Normals", UNIT_COUNT,
@@ -97,7 +97,7 @@ void test_unit(ProgressRatio* const progress, const T alpha, const Vector<N, T>&
 }
 
 template <std::size_t N, typename T>
-void test_distribution(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+void test_distribution(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
 {
         st::test_distribution_angle<N, T>(
                 "Normals", ANGLE_COUNT_PER_BUCKET, n,
@@ -159,7 +159,7 @@ void test_distribution(ProgressRatio* const progress, const T alpha, const Vecto
 }
 
 template <std::size_t N, typename T>
-void test_performance(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+void test_performance(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
 {
         st::test_performance<PERFORMANCE_COUNT>(
                 "Visible Normals",
@@ -180,7 +180,7 @@ void test_performance(ProgressRatio* const progress, const T alpha, const Vector
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_ggx(ProgressRatio* const progress, RandomEngine& engine)
+void test_ggx(progress::Ratio* const progress, RandomEngine& engine)
 {
         const auto alpha = random_alpha<T>(engine);
 
@@ -195,7 +195,7 @@ void test_ggx(ProgressRatio* const progress, RandomEngine& engine)
 }
 
 template <std::size_t N>
-void test_ggx(ProgressRatio* const progress)
+void test_ggx(progress::Ratio* const progress)
 {
         PCG engine;
 
@@ -249,7 +249,7 @@ void test_performance(const Counter& counter, RandomEngine& engine)
         test_performance<5, T>(engine);
 }
 
-void test_ggx_performance(ProgressRatio* const progress)
+void test_ggx_performance(progress::Ratio* const progress)
 {
         PCG engine;
 

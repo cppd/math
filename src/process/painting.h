@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_painter(
+std::function<void(progress::RatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,

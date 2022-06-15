@@ -137,7 +137,7 @@ class BvhBuild final
                 return res;
         }
 
-        void build(ThreadTaskManager<Task>* const task_manager, ProgressRatio* const progress)
+        void build(ThreadTaskManager<Task>* const task_manager, progress::Ratio* const progress)
         {
                 while (const auto task = task_manager->get())
                 {
@@ -168,7 +168,7 @@ class BvhBuild final
         }
 
 public:
-        explicit BvhBuild(const std::span<BvhObject<N, T>>& objects, ProgressRatio* const progress)
+        explicit BvhBuild(const std::span<BvhObject<N, T>>& objects, progress::Ratio* const progress)
                 : max_interior_node_count_reciprocal_(1.0 / max_interior_node_count(objects.size()))
         {
                 if (objects.empty())

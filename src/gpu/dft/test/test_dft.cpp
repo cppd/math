@@ -208,7 +208,7 @@ DftData run_vulkan(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         int* const computation,
         const int computation_count)
 {
@@ -239,7 +239,7 @@ void run_cuda(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         int* const computation,
         const int computation_count,
         const DftData& vulkan_data)
@@ -296,7 +296,7 @@ void run_fftw(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         int* const computation,
         const int computation_count,
         const DftData& vulkan_data)
@@ -353,7 +353,7 @@ void dft_test(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         int computation_count = 2;
 
@@ -379,7 +379,7 @@ void dft_test(
 #endif
 }
 
-void constant_data_test(ComputeVector* const dft, ProgressRatio* const progress)
+void constant_data_test(ComputeVector* const dft, progress::Ratio* const progress)
 {
         // Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
         // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
@@ -405,7 +405,7 @@ void constant_data_test(ComputeVector* const dft, ProgressRatio* const progress)
         LOG("---\nDFT check passed");
 }
 
-void random_data_test(ComputeVector* const dft, const std::array<int, 2>& dimensions, ProgressRatio* const progress)
+void random_data_test(ComputeVector* const dft, const std::array<int, 2>& dimensions, progress::Ratio* const progress)
 {
         LOG("\n----- Random Data DFT Tests -----");
 
@@ -460,7 +460,7 @@ std::array<int, 2> find_dimensions(const TestSize test_size)
         error_fatal("Unknown DFT test size");
 }
 
-void test(ProgressRatio* const progress)
+void test(progress::Ratio* const progress)
 {
         ASSERT(progress);
 

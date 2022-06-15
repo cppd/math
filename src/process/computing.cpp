@@ -44,7 +44,7 @@ std::vector<int> volume_image_size(const storage::VolumeObjectConst& object)
 }
 }
 
-std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshObjectConst& object)
+std::function<void(progress::RatioList*)> action_bound_cocone(const storage::MeshObjectConst& object)
 {
         std::optional<gui::dialog::BoundCoconeParameters> parameters = gui::dialog::BoundCoconeParametersDialog::show();
         if (!parameters)
@@ -55,7 +55,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
                 {
-                        std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
+                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* progress_list)
                         {
                                 constexpr bool CONVEX_HULL = false;
                                 constexpr bool COCONE = false;
@@ -70,7 +70,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
                 object);
 }
 
-std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObjectConst& object)
+std::function<void(progress::RatioList*)> action_3d_slice(const storage::VolumeObjectConst& object)
 {
         constexpr std::size_t DIMENSION = 3;
 
@@ -90,7 +90,7 @@ std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObj
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
-                        std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
+                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* progress_list)
                         {
                                 if constexpr (N > DIMENSION)
                                 {

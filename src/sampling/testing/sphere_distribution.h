@@ -138,7 +138,7 @@ class SphereDistribution final
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
-                ProgressRatio* const progress) const
+                progress::Ratio* const progress) const
         {
                 progress->set(0);
 
@@ -287,7 +287,7 @@ class SphereDistribution final
         }
 
 public:
-        explicit SphereDistribution(ProgressRatio* const progress) : sphere_mesh_(BUCKET_MIN_COUNT, progress)
+        explicit SphereDistribution(progress::Ratio* const progress) : sphere_mesh_(BUCKET_MIN_COUNT, progress)
         {
         }
 
@@ -308,7 +308,7 @@ public:
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
-                ProgressRatio* const progress) const
+                progress::Ratio* const progress) const
         {
                 const std::vector<SphereBucket<N, T>> buckets = compute_buckets(count, random_vector, pdf, progress);
 

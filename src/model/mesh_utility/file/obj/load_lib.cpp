@@ -164,7 +164,7 @@ template <std::size_t N>
 void read_lib(
         const std::filesystem::path& dir_name,
         const std::filesystem::path& file_name,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         std::map<std::string, int>* const material_index,
         std::map<std::filesystem::path, int>* const image_index,
         Mesh<N>* const mesh)
@@ -211,9 +211,9 @@ void read_lib(
         }
 }
 
-#define READ_LIB_INSTANTIATION(N)                                                           \
-        template void read_lib(                                                             \
-                const std::filesystem::path&, const std::filesystem::path&, ProgressRatio*, \
+#define READ_LIB_INSTANTIATION(N)                                                             \
+        template void read_lib(                                                               \
+                const std::filesystem::path&, const std::filesystem::path&, progress::Ratio*, \
                 std::map<std::string, int>*, std::map<std::filesystem::path, int>*, Mesh<(N)>*);
 
 READ_LIB_INSTANTIATION(3)

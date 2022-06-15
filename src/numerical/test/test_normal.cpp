@@ -138,7 +138,7 @@ void test_normal_random(const unsigned test_count)
         test_normal_random<10, T>(test_count);
 }
 
-void test_normal(ProgressRatio* const progress)
+void test_normal(progress::Ratio* const progress)
 {
         LOG("Test point normals");
         progress->set(0);

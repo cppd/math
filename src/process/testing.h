@@ -30,5 +30,5 @@ enum class TestType
         BENCHMARK
 };
 
-std::function<void(ProgressRatioList*)> action_self_test(TestType test_type);
+std::function<void(progress::RatioList*)> action_self_test(TestType test_type);
 }

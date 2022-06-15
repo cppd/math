@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshObjectConst& object);
+std::function<void(progress::RatioList*)> action_bound_cocone(const storage::MeshObjectConst& object);
 
-std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObjectConst& object);
+std::function<void(progress::RatioList*)> action_3d_slice(const storage::VolumeObjectConst& object);
 }

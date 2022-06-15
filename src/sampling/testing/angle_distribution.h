@@ -130,7 +130,7 @@ class AngleDistribution
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
-                ProgressRatio* const progress)
+                progress::Ratio* const progress)
         {
                 constexpr long long GROUP_SIZE = 1 << 16;
 
@@ -194,7 +194,7 @@ public:
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
-                ProgressRatio* const progress)
+                progress::Ratio* const progress)
         {
                 const std::vector<long long> buckets = compute_buckets(count, normal, random_vector, progress);
                 ASSERT(buckets.size() == BUCKET_COUNT);

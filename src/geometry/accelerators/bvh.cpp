@@ -59,7 +59,7 @@ unsigned make_depth_first_order(
 }
 
 template <std::size_t N, typename T>
-Bvh<N, T>::Bvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* const progress)
+Bvh<N, T>::Bvh(std::vector<BvhObject<N, T>>&& objects, progress::Ratio* const progress)
 {
         BvhBuild build(std::span(std::data(objects), std::size(objects)), progress);
 

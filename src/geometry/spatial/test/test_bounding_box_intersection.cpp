@@ -73,7 +73,7 @@ void test_performance(const Counter& counter)
         test_performance<5, T>();
 }
 
-void test_bounding_box_performance(ProgressRatio* const progress)
+void test_bounding_box_performance(progress::Ratio* const progress)
 {
         constexpr int COUNT = 4 * 2;
         int i = -1;

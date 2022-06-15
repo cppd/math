@@ -148,7 +148,7 @@ void test_performance(const Counter& counter)
         test_performance<T, PCG>(counter);
 }
 
-void test_sampler_performance(ProgressRatio* const progress)
+void test_sampler_performance(progress::Ratio* const progress)
 {
         constexpr int COUNT = 2 * 5 * 3 * 3;
         int i = -1;

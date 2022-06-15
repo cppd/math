@@ -67,7 +67,7 @@ void read_obj_stage_one(
         const Lines& lines,
         obj::Counters* const counters,
         std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const std::size_t line_count = lines.size();
         const double line_count_reciprocal = 1.0 / line_count;
@@ -103,7 +103,7 @@ template <std::size_t N, typename T>
 void read_obj_stage_two(
         const obj::Counters& counters,
         const std::vector<std::optional<obj::Line<N, T>>>& obj_lines,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
@@ -135,7 +135,7 @@ void read_obj_stage_two(
 template <std::size_t N>
 void read_obj(
         const std::filesystem::path& file_name,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         std::map<std::string, int>* const material_index,
         std::vector<std::filesystem::path>* const library_names,
         Mesh<N>* const mesh)
@@ -165,7 +165,7 @@ void read_obj(
 template <std::size_t N>
 void read_libs(
         const std::filesystem::path& dir_name,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         std::map<std::string, int>* const material_index,
         const std::vector<std::filesystem::path>& library_names,
         Mesh<N>* const mesh)
@@ -187,7 +187,7 @@ void read_libs(
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, ProgressRatio* const progress)
+std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, progress::Ratio* const progress)
 {
         progress->set_undefined();
 
@@ -213,7 +213,7 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 }
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* const progress)
+std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, progress::Ratio* const progress)
 {
         const Clock::time_point start_time = Clock::now();
 
@@ -224,8 +224,8 @@ std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::filesystem::path&, progress::Ratio*);
+template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::filesystem::path&, progress::Ratio*);
+template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::filesystem::path&, progress::Ratio*);
+template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::filesystem::path&, progress::Ratio*);
 }

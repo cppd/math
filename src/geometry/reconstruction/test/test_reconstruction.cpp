@@ -189,7 +189,7 @@ void test_objects(
         const unsigned object_count,
         const std::vector<Vector<N, float>>& points,
         const ManifoldConstructor<N>& constructor,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         ASSERT(points.size() % object_count == 0);
 
@@ -220,7 +220,7 @@ void test_bound_objects(
         const unsigned object_count,
         const std::vector<Vector<N, float>>& points,
         const ManifoldConstructor<N>& constructor,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         ASSERT(points.size() % object_count == 0);
 
@@ -248,7 +248,7 @@ void test_algorithms(
         const bool bound_object,
         const unsigned object_count,
         const std::vector<Vector<N, float>>& points,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         ASSERT(points.size() > N);
         ASSERT(object_count > 0);
@@ -274,7 +274,7 @@ void test_algorithms(
 }
 
 template <std::size_t N>
-void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, ProgressRatio* const progress)
+void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, progress::Ratio* const progress)
 {
         static_assert(2 <= N && N <= 4);
 
@@ -290,7 +290,7 @@ void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, 
 }
 
 template <std::size_t N>
-void test(const int low, const int high, ProgressRatio* const progress)
+void test(const int low, const int high, progress::Ratio* const progress)
 {
         const int point_count = [&]()
         {
@@ -305,17 +305,17 @@ void test(const int low, const int high, ProgressRatio* const progress)
         all_tests<N>(true, points_sphere_with_notch<N>(point_count, true), progress);
 }
 
-void test_reconstruction_2(ProgressRatio* const progress)
+void test_reconstruction_2(progress::Ratio* const progress)
 {
         test<2>(100, 1000, progress);
 }
 
-void test_reconstruction_3(ProgressRatio* const progress)
+void test_reconstruction_3(progress::Ratio* const progress)
 {
         test<3>(2000, 3000, progress);
 }
 
-void test_reconstruction_4(ProgressRatio* const progress)
+void test_reconstruction_4(progress::Ratio* const progress)
 {
         test<4>(20000, 25000, progress);
 }

@@ -210,7 +210,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -259,7 +259,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const Color& background_light,
         const std::array<int, N - 1>& screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N >= 3);
         namespace impl = cornell_box_scene_implementation;

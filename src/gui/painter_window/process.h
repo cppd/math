@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-std::function<void(ProgressRatioList*)> save_image(
+std::function<void(progress::RatioList*)> save_image(
         int width,
         int height,
         image::ColorFormat color_format_rgb,
@@ -34,14 +34,14 @@ std::function<void(ProgressRatioList*)> save_image(
         image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba);
 
-std::function<void(ProgressRatioList*)> save_image(
+std::function<void(progress::RatioList*)> save_image(
         const std::vector<int>& size,
         image::ColorFormat color_format_rgb,
         std::vector<std::byte>&& pixels_rgb,
         image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba);
 
-std::function<void(ProgressRatioList*)> add_volume(
+std::function<void(progress::RatioList*)> add_volume(
         const std::vector<int>& size,
         image::ColorFormat color_format_rgb,
         std::vector<std::byte>&& pixels_rgb,

@@ -63,7 +63,7 @@ void save_image(const std::filesystem::path& path, image::Image<N>&& image)
                 image.pixels = std::move(pixels);
         }
 
-        ProgressRatio progress(nullptr);
+        progress::Ratio progress(nullptr);
         model::volume::save_to_images(path, image::ImageView(image), &progress);
 }
 
@@ -182,7 +182,7 @@ std::unique_ptr<const model::mesh::Mesh<N>> sphere_mesh(const int facet_count)
 }
 
 template <std::size_t N>
-std::unique_ptr<const model::mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* const progress)
+std::unique_ptr<const model::mesh::Mesh<N>> file_mesh(const std::string& file_name, progress::Ratio* const progress)
 {
         LOG("Loading geometry from file...");
         return model::mesh::load<N>(path_from_utf8(file_name), progress);
@@ -243,7 +243,7 @@ enum class OutputType
 template <OutputType OUTPUT_TYPE, std::size_t N, typename T, typename Color>
 void test_painter(
         std::unique_ptr<const model::mesh::Mesh<N>>&& mesh,
-        ProgressRatio* const progress,
+        progress::Ratio* const progress,
         const int max_screen_size,
         const int samples_per_pixel,
         const int thread_count)
@@ -278,7 +278,7 @@ template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
 void test_painter(const int samples_per_pixel, const int facet_count, const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
-        ProgressRatio progress(nullptr);
+        progress::Ratio progress(nullptr);
 
         std::unique_ptr<const model::mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
 
@@ -290,7 +290,7 @@ template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
 void test_painter(const int samples_per_pixel, const std::string& file_name, const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
-        ProgressRatio progress(nullptr);
+        progress::Ratio progress(nullptr);
 
         std::unique_ptr<const model::mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
 

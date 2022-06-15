@@ -54,7 +54,7 @@ std::vector<gui::dialog::FileFilter> create_filters()
 }
 
 template <std::size_t N>
-std::function<void(ProgressRatioList*)> action_save_function(
+std::function<void(progress::RatioList*)> action_save_function(
         const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
 {
         const std::string name = mesh_object->name();
@@ -73,7 +73,7 @@ std::function<void(ProgressRatioList*)> action_save_function(
 
         const model::mesh::FileType file_type = model::mesh::file_type_by_name(file_name);
 
-        return [=](ProgressRatioList*)
+        return [=](progress::RatioList*)
         {
                 const model::mesh::Reading reading(*mesh_object);
                 switch (file_type)
@@ -114,7 +114,7 @@ std::string image_info(const image::Image<2>& image)
 }
 }
 
-std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object)
+std::function<void(progress::RatioList*)> action_save(const storage::MeshObjectConst& object)
 {
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
@@ -124,7 +124,7 @@ std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectCon
                 object);
 }
 
-std::function<void(ProgressRatioList*)> action_save(
+std::function<void(progress::RatioList*)> action_save(
         const std::chrono::system_clock::time_point& image_time,
         image::Image<2>&& image)
 {
@@ -141,7 +141,7 @@ std::function<void(ProgressRatioList*)> action_save(
         }
 
         return [parameters = std::move(*dialog_parameters),
-                image = std::make_shared<image::Image<2>>(std::move(image))](ProgressRatioList*)
+                image = std::make_shared<image::Image<2>>(std::move(image))](progress::RatioList*)
         {
                 if (parameters.normalize)
                 {

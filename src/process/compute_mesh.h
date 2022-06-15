@@ -55,7 +55,7 @@ std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
 template <std::size_t N>
 std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
         const model::mesh::Mesh<N>& mesh,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const std::vector<Vector<N, float>> points = [&]
         {
@@ -92,11 +92,11 @@ std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
 }
 
 template <std::size_t N>
-void convex_hull(ProgressRatioList* const progress_list, const model::mesh::Reading<N>& object)
+void convex_hull(progress::RatioList* const progress_list, const model::mesh::Reading<N>& object)
 {
         std::unique_ptr<const model::mesh::Mesh<N>> ch_mesh;
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
                 progress.set_text(object.name() + " convex hull in " + space_name(N) + ": %v of %m");
 
                 ch_mesh = mesh_convex_hull(object.mesh(), &progress);
@@ -114,7 +114,7 @@ void convex_hull(ProgressRatioList* const progress_list, const model::mesh::Read
 
 template <std::size_t N>
 void cocone(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
@@ -122,7 +122,7 @@ void cocone(
         std::unique_ptr<const model::mesh::Mesh<N>> mesh;
 
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
 
                 const Clock::time_point start_time = Clock::now();
 
@@ -144,7 +144,7 @@ void cocone(
 
 template <std::size_t N>
 void bound_cocone(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
@@ -154,7 +154,7 @@ void bound_cocone(
         std::unique_ptr<const model::mesh::Mesh<N>> mesh;
 
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
 
                 const Clock::time_point start_time = Clock::now();
 
@@ -177,14 +177,14 @@ void bound_cocone(
 
 template <std::size_t N>
 void mst(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::vector<std::array<int, 2>> mst_lines;
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
 
                 mst_lines = geometry::minimum_spanning_tree(
                         constructor.points(), constructor.delaunay_objects(), &progress);
@@ -203,10 +203,10 @@ void mst(
 
 template <std::size_t N>
 std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const std::vector<Vector<N, float>>& points)
 {
-        ProgressRatio progress(progress_list);
+        progress::Ratio progress(progress_list);
         const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
@@ -219,7 +219,7 @@ std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
 
 template <std::size_t N>
 void manifold_constructor(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const bool build_cocone,
         const bool build_bound_cocone,
         const bool build_mst,
@@ -278,7 +278,7 @@ void manifold_constructor(
 
 template <std::size_t N>
 void compute_meshes(
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const bool build_convex_hull,
         const bool build_cocone,
         const bool build_bound_cocone,

@@ -37,7 +37,7 @@ namespace ns::geometry::shapes::test
 namespace
 {
 template <std::size_t N, typename T>
-void test_integrate(ProgressRatio* const progress, const double progress_min, const double progress_max)
+void test_integrate(progress::Ratio* const progress, const double progress_min, const double progress_max)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -302,13 +302,13 @@ void test_2()
         test_sphere_2_simplex<long double>(1e-16);
 }
 
-void test_integrate_1_simplex(ProgressRatio* const progress)
+void test_integrate_1_simplex(progress::Ratio* const progress)
 {
         test_integrate<2, float>(progress, 0, 0.5);
         test_integrate<2, double>(progress, 0.5, 1.0);
 }
 
-void test_integrate_2_simplex(ProgressRatio* const progress)
+void test_integrate_2_simplex(progress::Ratio* const progress)
 {
         test_integrate<3, float>(progress, 0, 0.5);
         test_integrate<3, double>(progress, 0.5, 1);

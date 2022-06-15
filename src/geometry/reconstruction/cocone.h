@@ -37,7 +37,7 @@ struct ManifoldConstructorCocone
 
         [[nodiscard]] virtual std::vector<Vector<N, double>> normals() const = 0;
 
-        [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(ProgressRatio* progress) const = 0;
+        [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(progress::Ratio* progress) const = 0;
 };
 
 template <std::size_t N>
@@ -51,21 +51,21 @@ struct ManifoldConstructor
 
         [[nodiscard]] virtual std::vector<Vector<N, double>> normals() const = 0;
 
-        [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(ProgressRatio* progress) const = 0;
+        [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(progress::Ratio* progress) const = 0;
 
         [[nodiscard]] virtual std::vector<std::array<int, N>> bound_cocone(
                 double rho,
                 double alpha,
-                ProgressRatio* progress) const = 0;
+                progress::Ratio* progress) const = 0;
 };
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& source_points,
-        ProgressRatio* progress);
+        progress::Ratio* progress);
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points,
-        ProgressRatio* progress);
+        progress::Ratio* progress);
 }

@@ -36,7 +36,7 @@ namespace
 {
 class ThreadData
 {
-        ProgressRatioList progress_list_;
+        progress::RatioList progress_list_;
         std::list<QProgressBar> progress_bars_;
         std::thread thread_;
         std::atomic_bool working_ = false;
@@ -129,7 +129,7 @@ public:
                 return thread_.joinable();
         }
 
-        const ProgressRatioList* progress_list() const
+        const progress::RatioList* progress_list() const
         {
                 return &progress_list_;
         }
@@ -167,7 +167,7 @@ class Impl final : public WorkerThreads
         void start(
                 const unsigned id,
                 const std::string& description,
-                std::function<void(ProgressRatioList*)>&& function)
+                std::function<void(progress::RatioList*)>&& function)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -256,7 +256,7 @@ class Impl final : public WorkerThreads
 
         void set_progress(
                 const unsigned id,
-                const ProgressRatioList* const progress_list,
+                const progress::RatioList* const progress_list,
                 std::list<QProgressBar>* const progress_bars)
         {
                 constexpr unsigned MAX_INT{Limits<int>::max()};

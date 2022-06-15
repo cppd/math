@@ -29,6 +29,6 @@ namespace ns::model::mesh::file
 template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load_from_stl_file(
         const Path& file_name,
-        ProgressRatio* progress,
+        progress::Ratio* progress,
         bool byte_swap = (std::endian::native == std::endian::big));
 }

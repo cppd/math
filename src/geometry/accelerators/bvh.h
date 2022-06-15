@@ -85,7 +85,7 @@ class Bvh final
         std::vector<Node> nodes_;
 
 public:
-        explicit Bvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* progress);
+        explicit Bvh(std::vector<BvhObject<N, T>>&& objects, progress::Ratio* progress);
 
         [[nodiscard]] const BoundingBox<N, T>& bounding_box() const
         {

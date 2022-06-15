@@ -373,7 +373,7 @@ void add_point_to_convex_hull(
 }
 
 template <typename C, std::size_t N, typename S>
-FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, ProgressRatio* const progress)
+FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, progress::Ratio* const progress)
 {
         static_assert(N > 1);
 
@@ -415,7 +415,7 @@ FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& p
                         continue;
                 }
 
-                if (ProgressRatio::lock_free())
+                if (progress::Ratio::lock_free())
                 {
                         progress->set(points_processed, points.size());
                 }
@@ -436,7 +436,7 @@ FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& p
 }
 
 template <typename C, std::size_t N, typename S>
-FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, ProgressRatio* const progress)
+FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, progress::Ratio* const progress)
 {
         return compute_implementation::compute_convex_hull<C>(points, progress);
 }

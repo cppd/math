@@ -93,7 +93,7 @@ class SphereMesh final
         geometry::Bvh<N, T> bvh_;
 
 public:
-        SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
+        SphereMesh(const unsigned facet_min_count, progress::Ratio* const progress)
                 : sphere_(facet_min_count),
                   bvh_(sphere_.bvh_objects(), progress)
         {

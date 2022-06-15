@@ -167,7 +167,7 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
         const std::vector<Vector<N, float>>& points,
         const bool write_log,
         const bool write_info,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const Clock::time_point start_time = Clock::now();
 
@@ -189,7 +189,7 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
 }
 
 template <std::size_t N>
-void test(const std::size_t low, const std::size_t high, ProgressRatio* const progress)
+void test(const std::size_t low, const std::size_t high, progress::Ratio* const progress)
 {
         constexpr bool ON_SPHERE = false;
         constexpr bool WRITE_LOG = true;
@@ -233,28 +233,28 @@ void test_performance()
 
         // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}}
 
-        ProgressRatio progress(nullptr);
+        progress::Ratio progress(nullptr);
 
         create_convex_hull(random_data<N>(false /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, &progress);
         create_convex_hull(random_data<N>(true /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, &progress);
 }
 
-void test_2(ProgressRatio* const progress)
+void test_2(progress::Ratio* const progress)
 {
         test<2>(1000, 2000, progress);
 }
 
-void test_3(ProgressRatio* const progress)
+void test_3(progress::Ratio* const progress)
 {
         test<3>(1000, 2000, progress);
 }
 
-void test_4(ProgressRatio* const progress)
+void test_4(progress::Ratio* const progress)
 {
         test<4>(1000, 2000, progress);
 }
 
-void test_5(ProgressRatio* const progress)
+void test_5(progress::Ratio* const progress)
 {
         test<5>(1000, 2000, progress);
 }

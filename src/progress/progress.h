@@ -22,17 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
-namespace ns
+namespace ns::progress
 {
 // for worker threads
-class ProgressRatio final
+class Ratio final
 {
         class Impl;
         std::unique_ptr<Impl> progress_;
 
 public:
-        explicit ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text = "");
-        ~ProgressRatio();
+        explicit Ratio(Ratios* ratios, const std::string& permanent_text = "");
+        ~Ratio();
 
         void set(unsigned value, unsigned maximum);
         void set(double v);

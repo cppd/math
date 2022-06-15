@@ -192,7 +192,7 @@ namespace
 //
 //                 ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
 //
-//                 ProgressRatio progress(nullptr);
+//                 progress::Ratio progress(nullptr);
 //
 //                 const std::vector<ConvexHullSimplex<N>> facets =
 //                         compute_convex_hull(vertices, &facets, &progress, false);
@@ -355,7 +355,7 @@ void divide_facets(
 
         while (true)
         {
-                ProgressRatio progress(nullptr);
+                progress::Ratio progress(nullptr);
 
                 ch_facets = compute_convex_hull(ch_vertices, &progress, false);
 

@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object);
+std::function<void(progress::RatioList*)> action_save(const storage::MeshObjectConst& object);
 
-std::function<void(ProgressRatioList*)> action_save(
+std::function<void(progress::RatioList*)> action_save(
         const std::chrono::system_clock::time_point& image_time,
         image::Image<2>&& image);
 }

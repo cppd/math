@@ -195,7 +195,7 @@ void test_complement(const int vector_count)
         test_complement<6, T>(vector_count);
 }
 
-void test(ProgressRatio* const progress)
+void test(progress::Ratio* const progress)
 {
         progress->set(0);
         test_complement<float>(VECTOR_COUNT);

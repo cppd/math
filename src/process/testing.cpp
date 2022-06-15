@@ -25,13 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_self_test(const TestType test_type)
+std::function<void(progress::RatioList*)> action_self_test(const TestType test_type)
 {
         switch (test_type)
         {
         case TestType::SMALL:
         {
-                return [=](ProgressRatioList* progress_list)
+                return [=](progress::RatioList* progress_list)
                 {
                         test::Tests::instance().run_small(progress_list);
                 };
@@ -45,7 +45,7 @@ std::function<void(ProgressRatioList*)> action_self_test(const TestType test_typ
                 {
                         return nullptr;
                 }
-                return [=](ProgressRatioList* const progress_list)
+                return [=](progress::RatioList* const progress_list)
                 {
                         test::Tests::instance().run_small(progress_list);
                         test::Tests::instance().run_large(tests->test_names, progress_list);
@@ -60,7 +60,7 @@ std::function<void(ProgressRatioList*)> action_self_test(const TestType test_typ
                 {
                         return nullptr;
                 }
-                return [=](ProgressRatioList* const progress_list)
+                return [=](progress::RatioList* const progress_list)
                 {
                         test::Tests::instance().run_performance(tests->test_names, progress_list);
                 };

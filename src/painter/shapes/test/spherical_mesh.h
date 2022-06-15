@@ -56,7 +56,7 @@ std::unique_ptr<const model::mesh::Mesh<N>> create_spherical_mesh(
         const float radius,
         const int point_count,
         RandomEngine& engine,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         const Vector<N, float> center = random_center<N>(radius, engine);
 
@@ -136,7 +136,7 @@ template <std::size_t N, typename T, typename Color, typename RandomEngine>
 SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         const int point_count,
         RandomEngine& engine,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         namespace impl = spherical_mesh_implementation;
 

@@ -91,7 +91,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const bool cornell_box,
         const Color& light,
         const Color& background_light,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         if (cornell_box)
         {
@@ -123,7 +123,7 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         const bool cornell_box,
         const Color& light,
         const Color& background_light,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         static_assert(N >= 4);
 

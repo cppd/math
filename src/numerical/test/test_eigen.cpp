@@ -178,7 +178,7 @@ void test_eigen_random(const unsigned count)
         test_eigen_random<5, T>(count);
 }
 
-void test_eigen(ProgressRatio* const progress)
+void test_eigen(progress::Ratio* const progress)
 {
         LOG("Test eigenvalues and eigenvectors");
         progress->set(0);

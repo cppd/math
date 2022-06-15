@@ -30,7 +30,7 @@ namespace ns::process
 {
 template <std::size_t DIMENSION, std::size_t N>
 void compute_slice(
-        ProgressRatioList* const /*progress_list*/,
+        progress::RatioList* const /*progress_list*/,
         const model::volume::VolumeObject<N>& volume_object,
         const std::vector<std::optional<int>>& slice_coordinates)
 {

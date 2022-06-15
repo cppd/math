@@ -47,7 +47,7 @@ Vector<N, T> random_normal()
 //
 
 template <std::size_t N, typename T>
-void test_cosine_on_hemisphere(ProgressRatio* const progress)
+void test_cosine_on_hemisphere(progress::Ratio* const progress)
 {
         LOG("Sphere Cosine, " + space_name(N) + ", " + type_name<T>());
 
@@ -95,7 +95,7 @@ void test_cosine_on_hemisphere(ProgressRatio* const progress)
 }
 
 template <std::size_t N>
-void test_cosine_on_hemisphere(ProgressRatio* const progress)
+void test_cosine_on_hemisphere(progress::Ratio* const progress)
 {
         test_cosine_on_hemisphere<N, float>(progress);
         test_cosine_on_hemisphere<N, double>(progress);
@@ -131,7 +131,7 @@ void test_performance(const Counter& counter)
         test_performance<5, T>();
 }
 
-void test_cosine_on_hemisphere_performance(ProgressRatio* const progress)
+void test_cosine_on_hemisphere_performance(progress::Ratio* const progress)
 {
         constexpr int COUNT = 3 * 2;
         int i = -1;

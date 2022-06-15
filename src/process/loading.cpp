@@ -49,7 +49,7 @@ constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 }
 
-std::function<void(ProgressRatioList*)> action_load_mesh(
+std::function<void(progress::RatioList*)> action_load_mesh(
         std::filesystem::path path,
         const bool use_object_selection_dialog)
 {
@@ -98,7 +98,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
         const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
-        return [=](ProgressRatioList* const progress_list)
+        return [=](progress::RatioList* const progress_list)
         {
                 unsigned dimension = model::mesh::file_dimension(path);
 
@@ -117,7 +117,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_point_mesh(
+std::function<void(progress::RatioList*)> action_load_point_mesh(
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name)
@@ -146,7 +146,7 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
         const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
-        return [=](ProgressRatioList* const progress_list)
+        return [=](progress::RatioList* const progress_list)
         {
                 apply_for_dimension(
                         dimension,
@@ -163,7 +163,7 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_facet_mesh(
+std::function<void(progress::RatioList*)> action_load_facet_mesh(
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name)
@@ -192,7 +192,7 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
         const gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
 
-        return [=](ProgressRatioList* const progress_list)
+        return [=](progress::RatioList* const progress_list)
         {
                 apply_for_dimension(
                         dimension,
@@ -209,7 +209,7 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path path)
+std::function<void(progress::RatioList*)> action_load_volume(std::filesystem::path path)
 {
         if (path.empty())
         {
@@ -224,7 +224,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path
                 path = path_from_utf8(*directory_string);
         }
 
-        return [=](ProgressRatioList* const progress_list)
+        return [=](progress::RatioList* const progress_list)
         {
                 const unsigned dimension = model::volume::volume_info(path).size.size();
 
@@ -237,7 +237,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_volume(
+std::function<void(progress::RatioList*)> action_load_volume(
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name)
@@ -257,7 +257,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(
                 return nullptr;
         }
 
-        return [=](ProgressRatioList* const /*progress_list*/)
+        return [=](progress::RatioList* const /*progress_list*/)
         {
                 apply_for_dimension(
                         dimension,

@@ -172,7 +172,7 @@ void test_brdf(const Counter& counter, RandomEngine& engine)
         test_brdf<5, T, Color>(counter, engine);
 }
 
-void test_small(ProgressRatio* const progress)
+void test_small(progress::Ratio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
@@ -190,7 +190,7 @@ void test_small(ProgressRatio* const progress)
         LOG("Test GGX Diffuse BRDF passed");
 }
 
-void test_large(ProgressRatio* const progress)
+void test_large(progress::Ratio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
@@ -218,7 +218,7 @@ void test_distribution(
         const TestBRDF<N, T, Color>& brdf,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr int COUNT_PER_BUCKET = 10'000;
 
@@ -248,7 +248,7 @@ void test_distribution(
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-void test_sampling(ProgressRatio* const progress, RandomEngine& engine)
+void test_sampling(progress::Ratio* const progress, RandomEngine& engine)
 {
         LOG("GGX Diffuse Sampling, " + space_name(N) + ", " + type_name<T>());
 
@@ -259,7 +259,7 @@ void test_sampling(ProgressRatio* const progress, RandomEngine& engine)
 }
 
 template <std::size_t N>
-void test_sampling(ProgressRatio* const progress)
+void test_sampling(progress::Ratio* const progress)
 {
         using Color = color::Spectrum;
 

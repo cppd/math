@@ -72,7 +72,7 @@ void test_performance(const Counter& counter)
         test_performance<5, T>();
 }
 
-void test_hyperplane_parallelotope_performance(ProgressRatio* const progress)
+void test_hyperplane_parallelotope_performance(progress::Ratio* const progress)
 {
         constexpr int COUNT = 4 * 2;
         int i = -1;

@@ -146,7 +146,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& background_light,
         const int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         namespace impl = simple_scene_implementation;
 

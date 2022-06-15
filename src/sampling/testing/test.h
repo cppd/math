@@ -42,7 +42,7 @@ void test_unit(
         const std::string_view description,
         const long long count,
         const RandomVector& random_vector,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr unsigned INDENT = 2;
 
@@ -104,7 +104,7 @@ void test_distribution_angle(
         const Vector<N, T>& normal,
         const RandomVector& random_vector,
         const PDF& pdf,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr unsigned INDENT = 2;
 
@@ -144,7 +144,7 @@ void test_distribution_surface(
         const long long count_per_bucket,
         const RandomVector& random_vector,
         const PDF& pdf,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr unsigned INDENT = 2;
 
@@ -189,7 +189,7 @@ template <long long COUNT, typename RandomVector>
 void test_performance(
         const std::string_view description,
         const RandomVector& random_vector,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr unsigned INDENT = 2;
 

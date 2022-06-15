@@ -39,13 +39,13 @@ namespace ns::process
 template <std::size_t N>
 std::shared_ptr<model::mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const std::filesystem::path& path)
 {
         std::unique_ptr<model::mesh::Mesh<N>> mesh;
 
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
                 progress.set_text("Loading: %p%");
                 mesh = model::mesh::load<N>(path, &progress);
         }
@@ -136,13 +136,13 @@ std::shared_ptr<model::volume::VolumeObject<N>> load_volume(const std::string& o
 template <std::size_t N>
 std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
-        ProgressRatioList* const progress_list,
+        progress::RatioList* const progress_list,
         const std::filesystem::path& path)
 {
         auto volume = std::make_unique<model::volume::Volume<N>>();
 
         {
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
                 progress.set_text("Loading: %p%");
                 volume->image = model::volume::load<N>(path, &progress);
         }

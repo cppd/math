@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <thread>
 
-namespace ns
+namespace ns::progress
 {
 // for worker threads
-void ProgressRatioList::add_progress_ratio(ProgressRatioControl* const ratio)
+void RatioList::add_progress_ratio(RatioControl* const ratio)
 {
         ASSERT(std::this_thread::get_id() != thread_id_);
 
@@ -45,7 +45,7 @@ void ProgressRatioList::add_progress_ratio(ProgressRatioControl* const ratio)
 }
 
 // for worker threads
-void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* const ratio) noexcept
+void RatioList::delete_progress_ratio(const RatioControl* const ratio) noexcept
 {
         try
         {
@@ -69,35 +69,35 @@ void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* const 
 }
 
 // for UI thread
-void ProgressRatioList::terminate_all_quietly()
+void RatioList::terminate_all_quietly()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::lock_guard lg(mutex_);
 
         terminate_quietly_ = true;
-        for (ProgressRatioControl* const ratio : ratios_)
+        for (RatioControl* const ratio : ratios_)
         {
                 ratio->terminate_quietly();
         }
 }
 
 // for UI thread
-void ProgressRatioList::terminate_all_with_message()
+void RatioList::terminate_all_with_message()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::lock_guard lg(mutex_);
 
         terminate_with_message_ = true;
-        for (ProgressRatioControl* const ratio : ratios_)
+        for (RatioControl* const ratio : ratios_)
         {
                 ratio->terminate_with_message();
         }
 }
 
 // for UI thread
-void ProgressRatioList::enable()
+void RatioList::enable()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -110,7 +110,7 @@ void ProgressRatioList::enable()
 }
 
 // for UI thread
-std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::ratios() const
+std::vector<std::tuple<unsigned, unsigned, std::string>> RatioList::ratios() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -119,9 +119,9 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;
         result.reserve(ratios_.size());
 
-        for (const ProgressRatioControl* const ratio : ratios_)
+        for (const RatioControl* const ratio : ratios_)
         {
-                const ProgressRatioControl::Info info = ratio->info();
+                const RatioControl::Info info = ratio->info();
                 result.emplace_back(info.value, info.maximum, ratio->text());
         }
         return result;

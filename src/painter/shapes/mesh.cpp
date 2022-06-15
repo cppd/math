@@ -150,7 +150,7 @@ template <std::size_t N, typename T, typename Color>
 [[nodiscard]] geometry::Bvh<N, T> create_bvh(
         const MeshData<N, T, Color>& mesh_data,
         const bool write_log,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         progress->set_text("Painter mesh, " + space_name(N) + ", " + type_name<T>());
         progress->set(0);
@@ -231,7 +231,7 @@ public:
         ShapeImpl(
                 const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
                 const bool write_log,
-                ProgressRatio* const progress)
+                progress::Ratio* const progress)
                 : mesh_data_(mesh_objects, write_log),
                   bvh_(create_bvh(mesh_data_, write_log, progress)),
                   bounding_box_(bvh_.bounding_box()),
@@ -247,14 +247,14 @@ template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
         const bool write_log,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, write_log, progress);
 }
 
 #define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \
         template std::unique_ptr<Shape<(N), T, C>> create_mesh( \
-                const std::vector<const model::mesh::MeshObject<(N)>*>&, bool, ProgressRatio*);
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, bool, progress::Ratio*);
 
 #define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
         CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \

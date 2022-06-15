@@ -27,21 +27,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path path, bool use_object_selection_dialog);
+std::function<void(progress::RatioList*)> action_load_mesh(
+        std::filesystem::path path,
+        bool use_object_selection_dialog);
 
-std::function<void(ProgressRatioList*)> action_load_point_mesh(
+std::function<void(progress::RatioList*)> action_load_point_mesh(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name);
 
-std::function<void(ProgressRatioList*)> action_load_facet_mesh(
+std::function<void(progress::RatioList*)> action_load_facet_mesh(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name);
 
-std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path path);
+std::function<void(progress::RatioList*)> action_load_volume(std::filesystem::path path);
 
-std::function<void(ProgressRatioList*)> action_load_volume(
+std::function<void(progress::RatioList*)> action_load_volume(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name);

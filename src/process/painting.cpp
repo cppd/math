@@ -77,7 +77,7 @@ void thread_function(
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* const progress_list)
+        progress::RatioList* const progress_list)
 {
         std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
@@ -87,7 +87,7 @@ void thread_function(
                 {
                         meshes.push_back(object.get());
                 }
-                ProgressRatio progress(progress_list);
+                progress::Ratio progress(progress_list);
                 constexpr bool WRITE_LOG = true;
                 return painter::create_mesh<N, T, Color>(meshes, WRITE_LOG, &progress);
         }();
@@ -100,7 +100,7 @@ void thread_function(
         std::unique_ptr<const painter::Scene<N, T, Color>> scene;
         if constexpr (N == 3)
         {
-                ProgressRatio progress(nullptr);
+                progress::Ratio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
                         to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
@@ -109,7 +109,7 @@ void thread_function(
         }
         else
         {
-                ProgressRatio progress(nullptr);
+                progress::Ratio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), dimension_parameters.max_size, parameters.cornell_box, light,
                         background_light, &progress);
@@ -130,7 +130,7 @@ void thread_function(
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* const progress_list)
+        progress::RatioList* const progress_list)
 {
         static_assert(2 == std::tuple_size_v<Colors>);
         switch (parameters.color_index)
@@ -163,7 +163,7 @@ void thread_function(
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* const progress_list)
+        progress::RatioList* const progress_list)
 {
         static_assert(2 == std::tuple_size_v<Precisions>);
         switch (parameters.precision_index)
@@ -185,7 +185,7 @@ void thread_function(
 
 template <std::size_t N>
         requires(N == 3)
-std::function<void(ProgressRatioList*)> action_painter_function(
+std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
@@ -207,7 +207,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         std::shared_ptr shared_objects =
                 std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
 
-        return [=, shared_objects = std::move(shared_objects)](ProgressRatioList* const progress_list)
+        return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
         {
                 thread_function(
                         *shared_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
@@ -217,7 +217,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
 template <std::size_t N>
         requires(N >= 4)
-std::function<void(ProgressRatioList*)> action_painter_function(
+std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
@@ -242,7 +242,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         std::shared_ptr shared_objects =
                 std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
 
-        return [=, shared_objects = std::move(shared_objects)](ProgressRatioList* const progress_list)
+        return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
         {
                 thread_function(
                         *shared_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
@@ -290,7 +290,7 @@ std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_object
 }
 }
 
-std::function<void(ProgressRatioList*)> action_painter(
+std::function<void(progress::RatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,

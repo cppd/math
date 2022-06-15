@@ -70,7 +70,7 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 //
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* const progress)
+std::unique_ptr<Mesh<N>> load(const Path& file_name, progress::Ratio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -125,11 +125,11 @@ std::filesystem::path save_to_stl(
         return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
 }
 
-#define FUNCTION_INSTANTIATIONS(N)                                                              \
-        template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, ProgressRatio*); \
-        template std::filesystem::path save_to_obj(                                             \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);       \
-        template std::filesystem::path save_to_stl(                                             \
+#define FUNCTION_INSTANTIATIONS(N)                                                                \
+        template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, progress::Ratio*); \
+        template std::filesystem::path save_to_obj(                                               \
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);         \
+        template std::filesystem::path save_to_stl(                                               \
                 const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
 
 FUNCTION_INSTANTIATIONS(3)

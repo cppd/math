@@ -100,7 +100,7 @@ void create_voronoi_delaunay(
         std::vector<Vector<N, double>>* const points,
         std::vector<DelaunayObject<N>>* const delaunay_objects,
         std::vector<DelaunayFacet<N>>* const delaunay_facets,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         constexpr bool WRITE_LOG = true;
 
@@ -146,7 +146,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
         std::vector<std::array<int, N>> compute_facets(
                 const std::vector<bool>& interior_vertices,
                 std::vector<bool>&& cocone_facets,
-                ProgressRatio* const progress) const
+                progress::Ratio* const progress) const
         {
                 progress->set(1, 4);
                 LOG("prune facets...");
@@ -174,7 +174,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 return create_facets(delaunay_facets_, cocone_facets);
         }
 
-        [[nodiscard]] std::vector<std::array<int, N>> cocone(ProgressRatio* const progress) const override
+        [[nodiscard]] std::vector<std::array<int, N>> cocone(progress::Ratio* const progress) const override
         {
                 progress->set_text("Cocone reconstruction: %v of %m");
 
@@ -198,7 +198,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
         [[nodiscard]] std::vector<std::array<int, N>> bound_cocone(
                 const double rho,
                 const double alpha,
-                ProgressRatio* const progress) const override
+                progress::Ratio* const progress) const override
         {
                 if (cocone_only_)
                 {
@@ -257,7 +257,9 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
         }
 
 public:
-        Impl(const std::vector<Vector<N, float>>& source_points, const bool cocone_only, ProgressRatio* const progress)
+        Impl(const std::vector<Vector<N, float>>& source_points,
+             const bool cocone_only,
+             progress::Ratio* const progress)
                 : cocone_only_(cocone_only),
                   source_points_(source_points)
         {
@@ -283,7 +285,7 @@ public:
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& source_points,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N>>(source_points, false, progress);
 }
@@ -291,18 +293,18 @@ std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points,
-        ProgressRatio* const progress)
+        progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N>>(source_points, true, progress);
 }
 
 #define CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(N)                                    \
         template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor( \
-                const std::vector<Vector<(N), float>>&, ProgressRatio*);
+                const std::vector<Vector<(N), float>>&, progress::Ratio*);
 
 #define CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(N)                                          \
         template std::unique_ptr<ManifoldConstructorCocone<(N)>> create_manifold_constructor_cocone( \
-                const std::vector<Vector<(N), float>>&, ProgressRatio*);
+                const std::vector<Vector<(N), float>>&, progress::Ratio*);
 
 CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(2)
 CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(3)
