@@ -227,7 +227,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
         return create_storage_scene<N, T>(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
+                background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
+                std::move(shapes), progress);
 }
 
 template <std::size_t N, typename T>

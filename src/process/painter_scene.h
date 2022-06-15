@@ -86,6 +86,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const Vector<3, T>& light_direction,
         const Vector<3, T>& view_center,
         const std::type_identity_t<T> view_width,
+        const std::optional<Vector<4, T>>& clip_plane_equation,
         const int width,
         const int height,
         const bool cornell_box,
@@ -113,7 +114,8 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         shapes.push_back(std::move(shape));
 
         return painter::create_storage_scene(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
+                background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
+                std::move(shapes), progress);
 }
 
 template <std::size_t N, typename T, typename Color>

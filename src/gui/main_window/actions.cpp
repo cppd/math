@@ -133,14 +133,16 @@ void painter(
                         }
 
                         std::optional<view::info::Camera> camera;
-                        view->receive({&camera});
-                        if (!camera)
+                        std::optional<view::info::ClipPlane> clip_plane;
+                        view->receive({&camera, &clip_plane});
+                        if (!camera || !clip_plane)
                         {
-                                message_error("Failed to receive view camera");
+                                message_error("Failed to receive view information");
                                 return WorkerThreads::Function();
                         }
 
-                        return process::action_painter(objects, *camera, lighting->color(), colors->background_color());
+                        return process::action_painter(
+                                objects, *camera, *clip_plane, lighting->color(), colors->background_color());
                 });
 }
 

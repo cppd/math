@@ -31,6 +31,7 @@ namespace ns::process
 std::function<void(progress::RatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
+        const view::info::ClipPlane& clip_plane,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color);
 }

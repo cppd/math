@@ -163,6 +163,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         shapes.push_back(std::move(shape));
 
         return create_storage_scene<N, T, Color>(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
+                background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
+                std::move(shapes), progress);
 }
 }

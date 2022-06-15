@@ -171,7 +171,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> meshes;
         meshes.push_back(std::move(painter_mesh));
 
-        res.scene = create_storage_scene(Color(), {}, {}, std::move(meshes), progress);
+        res.scene = create_storage_scene(Color(), {}, {}, {}, std::move(meshes), progress);
 
         return res;
 }
