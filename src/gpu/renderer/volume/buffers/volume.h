@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/geometry/spatial/hyperplane.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
@@ -34,7 +35,7 @@ class VolumeBuffer final
                 vulkan::std140::Matrix4f texture_to_world_matrix;
                 vulkan::std140::Matrix4f texture_to_shadow_matrix;
                 vulkan::std140::Vector4f third_row_of_texture_to_device;
-                vulkan::std140::Vector4f clip_plane_equation;
+                vulkan::std140::Vector4f clip_plane;
                 vulkan::std140::Vector3f gradient_h;
                 vulkan::std140::Matrix3f gradient_to_world_matrix;
                 vulkan::std140::Matrix4f world_to_texture_matrix;
@@ -71,14 +72,14 @@ public:
                 const Matrix4d& device_to_texture_matrix,
                 const Matrix4d& texture_to_world_matrix,
                 const Vector4d& third_row_of_texture_to_device,
-                const Vector4d& clip_plane_equation,
+                const geometry::Hyperplane<3, double>& clip_plane,
                 const Vector3d& gradient_h,
                 const Matrix3d& gradient_to_world_matrix,
                 const Matrix4d& world_to_texture_matrix) const;
 
         void set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const;
 
-        void set_clip_plane(const Vector4d& clip_plane_equation) const;
+        void set_clip_plane(const geometry::Hyperplane<3, double>& clip_plane) const;
 
         void set_parameters(
                 const vulkan::CommandPool& command_pool,

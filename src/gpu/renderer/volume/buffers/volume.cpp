@@ -21,6 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+template <typename T>
+Vector<4, T> clip_plane_to_buffer_vector(const geometry::Hyperplane<3, double>& clip_plane)
+{
+        return {clip_plane.n[0], clip_plane.n[1], clip_plane.n[2], clip_plane.d};
+}
+}
+
 VolumeBuffer::VolumeBuffer(
         const vulkan::Device& device,
         const std::vector<std::uint32_t>& graphics_family_indices,
@@ -54,7 +63,7 @@ void VolumeBuffer::set_coordinates(
         const Matrix4d& device_to_texture_matrix,
         const Matrix4d& texture_to_world_matrix,
         const Vector4d& third_row_of_texture_to_device,
-        const Vector4d& clip_plane_equation,
+        const geometry::Hyperplane<3, double>& clip_plane,
         const Vector3d& gradient_h,
         const Matrix3d& gradient_to_world_matrix,
         const Matrix4d& world_to_texture_matrix) const
@@ -63,7 +72,7 @@ void VolumeBuffer::set_coordinates(
         coordinates.device_to_texture_matrix = vulkan::to_std140<float>(device_to_texture_matrix);
         coordinates.texture_to_world_matrix = vulkan::to_std140<float>(texture_to_world_matrix);
         coordinates.third_row_of_texture_to_device = to_vector<float>(third_row_of_texture_to_device);
-        coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
+        coordinates.clip_plane = clip_plane_to_buffer_vector<float>(clip_plane);
         coordinates.gradient_h = to_vector<float>(gradient_h);
         coordinates.gradient_to_world_matrix = vulkan::to_std140<float>(gradient_to_world_matrix);
         coordinates.world_to_texture_matrix = vulkan::to_std140<float>(world_to_texture_matrix);
@@ -77,11 +86,10 @@ void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shado
                 uniform_buffer_coordinates_, offsetof(VolumeCoordinates, texture_to_shadow_matrix), m);
 }
 
-void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const
+void VolumeBuffer::set_clip_plane(const geometry::Hyperplane<3, double>& clip_plane) const
 {
-        decltype(VolumeCoordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
-        vulkan::map_and_write_to_buffer(
-                uniform_buffer_coordinates_, offsetof(VolumeCoordinates, clip_plane_equation), clip_plane);
+        decltype(VolumeCoordinates().clip_plane) cp = clip_plane_to_buffer_vector<float>(clip_plane);
+        vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, offsetof(VolumeCoordinates, clip_plane), cp);
 }
 
 void VolumeBuffer::set_parameters(

@@ -40,15 +40,13 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world)
 }
 }
 
-Vector4d volume_clip_plane(const Vector4d& world_clip_plane, const Matrix4d& model)
+geometry::Hyperplane<3, double> volume_clip_plane(const Vector4d& world_clip_plane_equation, const Matrix4d& model)
 {
-        Vector4d p = world_clip_plane * model;
+        const Vector4d p = world_clip_plane_equation * model;
 
         // from n * x + d with normal directed inward
         // to n * x - d with normal directed outward
-        p[3] = -p[3];
-        const Vector3d n = Vector3d(p[0], p[1], p[2]);
-        return p / -n.norm();
+        return {Vector3d(-p[0], -p[1], -p[2]), p[3]};
 }
 
 // in texture coordinates

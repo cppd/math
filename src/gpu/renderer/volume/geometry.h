@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/geometry/spatial/hyperplane.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 
 namespace ns::gpu::renderer
 {
-Vector4d volume_clip_plane(const Vector4d& world_clip_plane, const Matrix4d& model);
+geometry::Hyperplane<3, double> volume_clip_plane(const Vector4d& world_clip_plane_equation, const Matrix4d& model);
 
 // in texture coordinates
 Vector3d volume_gradient_h(const Matrix4d& texture_to_world, const vulkan::Image& image);

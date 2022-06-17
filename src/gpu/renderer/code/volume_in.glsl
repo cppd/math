@@ -83,7 +83,7 @@ layout(set = 1, binding = 0, std140) uniform restrict VolumeCoordinates
         mat4 texture_to_world_matrix;
         mat4 texture_to_shadow_matrix;
         vec4 third_row_of_texture_to_device;
-        vec4 clip_plane_equation;
+        vec4 clip_plane;
         vec3 gradient_h;
         mat3 gradient_to_world_matrix;
         mat4 world_to_texture_matrix;
