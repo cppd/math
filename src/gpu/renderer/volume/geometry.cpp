@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry.h"
 
 #include <src/com/error.h>
+#include <src/geometry/spatial/clip_plane.h>
 
 #include <algorithm>
 
@@ -42,11 +43,7 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world)
 
 geometry::Hyperplane<3, double> volume_clip_plane(const Vector4d& world_clip_plane_equation, const Matrix4d& model)
 {
-        const Vector4d p = world_clip_plane_equation * model;
-
-        // from n * x + d with normal directed inward
-        // to n * x - d with normal directed outward
-        return {Vector3d(-p[0], -p[1], -p[2]), p[3]};
+        return geometry::clip_plane_equation_to_clip_plane(world_clip_plane_equation * model);
 }
 
 // in texture coordinates

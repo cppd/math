@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
+#include <src/geometry/spatial/clip_plane.h>
 #include <src/geometry/spatial/convex_polytope.h>
 
 #include <optional>
@@ -63,24 +64,6 @@ template <typename P>
 }
 
 template <std::size_t N, typename T>
-geometry::Hyperplane<N - 1, T> clip_plane_equation_to_clip_plane(const Vector<N, T>& clip_plane_equation)
-{
-        // from n * x + d with normal directed inward
-        // to n * x - d with normal directed outward
-        const T d = clip_plane_equation[N - 1];
-        const Vector<N - 1, T> n = [&]
-        {
-                Vector<N - 1, T> res;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        res[i] = -clip_plane_equation[i];
-                }
-                return res;
-        }();
-        return {n, d};
-}
-
-template <std::size_t N, typename T>
 std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
         const std::optional<Vector<N, T>>& clip_plane_equation)
 {
@@ -88,7 +71,7 @@ std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
         {
                 return std::nullopt;
         }
-        return geometry::ConvexPolytope<N - 1, T>{{clip_plane_equation_to_clip_plane(*clip_plane_equation)}};
+        return geometry::ConvexPolytope<N - 1, T>{{geometry::clip_plane_equation_to_clip_plane(*clip_plane_equation)}};
 }
 
 template <std::size_t N, typename T, typename Color, bool USE_CLIP_POLYTOPE>
