@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
+#include <src/geometry/spatial/convex_polytope.h>
 
 #include <optional>
 
@@ -61,7 +62,36 @@ template <typename P>
         return result;
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T>
+geometry::Hyperplane<N - 1, T> clip_plane_equation_to_clip_plane(const Vector<N, T>& clip_plane_equation)
+{
+        // from n * x + d with normal directed inward
+        // to n * x - d with normal directed outward
+        const T d = clip_plane_equation[N - 1];
+        const Vector<N - 1, T> n = [&]
+        {
+                Vector<N - 1, T> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i] = -clip_plane_equation[i];
+                }
+                return res;
+        }();
+        return {n, d};
+}
+
+template <std::size_t N, typename T>
+std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
+        const std::optional<Vector<N, T>>& clip_plane_equation)
+{
+        if (!clip_plane_equation)
+        {
+                return std::nullopt;
+        }
+        return geometry::ConvexPolytope<N - 1, T>{{clip_plane_equation_to_clip_plane(*clip_plane_equation)}};
+}
+
+template <std::size_t N, typename T, typename Color, bool USE_CLIP_POLYTOPE>
 class Impl final : public Scene<N, T, Color>
 {
         inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
@@ -70,6 +100,7 @@ class Impl final : public Scene<N, T, Color>
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources_;
         std::unique_ptr<const Projector<N, T>> projector_;
         Color background_light_;
+        std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
 
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
@@ -81,10 +112,25 @@ class Impl final : public Scene<N, T, Color>
         {
                 ++thread_ray_count_;
 
-                const Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(ray_org(geometric_normal, ray));
+                Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(ray_org(geometric_normal, ray));
+                T ray_max_distance = Limits<T>::max();
+
+                if constexpr (USE_CLIP_POLYTOPE)
+                {
+                        T near = 0;
+                        if (clip_polytope_->intersect(ray_moved, &near, &ray_max_distance))
+                        {
+                                ray_moved.move(near);
+                                ray_max_distance -= near;
+                        }
+                        else
+                        {
+                                return {};
+                        }
+                }
 
                 const auto intersection = bvh_.intersect(
-                        ray_moved, Limits<T>::max(),
+                        ray_moved, ray_max_distance,
                         [shapes = &shapes_, &ray_moved](const auto& indices, const auto& max_distance)
                                 -> std::optional<std::tuple<T, const Surface<N, T, Color>*>>
                         {
@@ -125,7 +171,7 @@ class Impl final : public Scene<N, T, Color>
 
 public:
         Impl(const Color& background_light,
-             const std::optional<Vector<N + 1, T>>& /*clip_plane_equation*/,
+             const std::optional<Vector<N + 1, T>>& clip_plane_equation,
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
              std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
@@ -134,6 +180,7 @@ public:
                   light_sources_(std::move(light_sources)),
                   projector_(std::move(projector)),
                   background_light_(background_light),
+                  clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
                   light_source_pointers_(to_pointers(light_sources_)),
                   bvh_(geometry::bvh_objects(shapes_), progress)
         {
@@ -150,7 +197,13 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
         progress::Ratio* const progress)
 {
-        return std::make_unique<Impl<N, T, Color>>(
+        if (clip_plane_equation)
+        {
+                return std::make_unique<Impl<N, T, Color, true>>(
+                        background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
+                        std::move(shapes), progress);
+        }
+        return std::make_unique<Impl<N, T, Color, false>>(
                 background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
                 std::move(shapes), progress);
 }
