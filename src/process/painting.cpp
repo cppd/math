@@ -69,6 +69,23 @@ std::array<const char*, 2> color_names()
         return {std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
 }
 
+template <std::size_t N, typename T>
+std::optional<Vector<N + 1, T>> make_clip_plane_equation(const view::info::ClipPlane& clip_plane)
+{
+        if constexpr (N >= 4)
+        {
+                return std::nullopt;
+        }
+        else
+        {
+                if (clip_plane.equation)
+                {
+                        return to_vector<T>(*clip_plane.equation);
+                }
+                return std::nullopt;
+        }
+}
+
 template <typename T, typename Color, std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
@@ -80,6 +97,8 @@ void thread_function(
         const Parameters& dimension_parameters,
         progress::RatioList* const progress_list)
 {
+        const auto clip_plane_equation = make_clip_plane_equation<N, T>(clip_plane);
+
         std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
                 std::vector<const model::mesh::MeshObject<N>*> meshes;
@@ -90,7 +109,7 @@ void thread_function(
                 }
                 progress::Ratio progress(progress_list);
                 constexpr bool WRITE_LOG = true;
-                return painter::create_mesh<N, T, Color>(meshes, WRITE_LOG, &progress);
+                return painter::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
         }();
         if (!shape)
         {
@@ -105,9 +124,8 @@ void thread_function(
                 scene = create_painter_scene(
                         std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
                         to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
-                        clip_plane.equation ? std::optional(to_vector<T>(*clip_plane.equation)) : std::nullopt,
-                        dimension_parameters.width, dimension_parameters.height, parameters.cornell_box, light,
-                        background_light, &progress);
+                        clip_plane_equation, dimension_parameters.width, dimension_parameters.height,
+                        parameters.cornell_box, light, background_light, &progress);
         }
         else
         {

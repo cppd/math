@@ -163,8 +163,10 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
 
+        static constexpr std::optional<Vector<N + 1, T>> CLIP_PLANE_EQUATION;
+
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh =
-                create_mesh<N, T, Color>(mesh_objects, impl::WRITE_LOG, progress);
+                create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, impl::WRITE_LOG, progress);
 
         res.bounding_box = painter_mesh->bounding_box();
 

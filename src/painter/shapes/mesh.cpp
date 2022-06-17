@@ -230,9 +230,10 @@ class ShapeImpl final : public Shape<N, T, Color>
 public:
         ShapeImpl(
                 const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
+                const std::optional<Vector<N + 1, T>>& clip_plane_equation,
                 const bool write_log,
                 progress::Ratio* const progress)
-                : mesh_data_(mesh_objects, write_log),
+                : mesh_data_(mesh_objects, clip_plane_equation, write_log),
                   bvh_(create_bvh(mesh_data_, write_log, progress)),
                   bounding_box_(bvh_.bounding_box()),
                   intersection_cost_(
@@ -246,15 +247,17 @@ public:
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         const bool write_log,
         progress::Ratio* const progress)
 {
-        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, write_log, progress);
+        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
 }
 
-#define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \
-        template std::unique_ptr<Shape<(N), T, C>> create_mesh( \
-                const std::vector<const model::mesh::MeshObject<(N)>*>&, bool, progress::Ratio*);
+#define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                                                                       \
+        template std::unique_ptr<Shape<(N), T, C>> create_mesh(                                                        \
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<N + 1, T>>&, bool, \
+                progress::Ratio*);
 
 #define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
         CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \

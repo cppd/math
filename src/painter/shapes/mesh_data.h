@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 namespace ns::painter
@@ -203,7 +204,9 @@ class MeshData final
                 }
         }
 
-        void create(const std::vector<model::mesh::Reading<N>>& mesh_objects)
+        void create(
+                const std::vector<model::mesh::Reading<N>>& mesh_objects,
+                const std::optional<Vector<N + 1, T>>& /*clip_plane_equation*/)
         {
                 if (mesh_objects.empty())
                 {
@@ -266,7 +269,10 @@ class MeshData final
         }
 
 public:
-        MeshData(const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects, const bool write_log)
+        MeshData(
+                const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
+                const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+                const bool write_log)
         {
                 const Clock::time_point start_time = Clock::now();
 
@@ -276,7 +282,7 @@ public:
                 {
                         reading.emplace_back(*mesh_object);
                 }
-                create(reading);
+                create(reading, clip_plane_equation);
 
                 const double duration = duration_from(start_time);
 

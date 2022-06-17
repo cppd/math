@@ -254,7 +254,9 @@ void test_painter(
                 std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
 
-                painter_mesh = create_mesh<N, T, Color>(mesh_objects, WRITE_LOG, progress);
+                static constexpr std::optional<Vector<N + 1, T>> CLIP_PLANE_EQUATION;
+
+                painter_mesh = create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, WRITE_LOG, progress);
         }
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace ns::painter
@@ -30,6 +31,7 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         bool write_log,
         progress::Ratio* progress);
 }
