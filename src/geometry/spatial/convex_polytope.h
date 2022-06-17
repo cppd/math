@@ -28,11 +28,14 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class ConvexPolytope final
 {
+        static_assert(N >= 1);
+        static_assert(std::is_floating_point_v<T>);
+
         // Planes have vectors n directed outward
         std::vector<Hyperplane<N, T>> planes_;
 
 public:
-        explicit ConvexPolytope(const std::vector<Hyperplane<N, T>>& planes) : planes_(planes)
+        explicit ConvexPolytope(std::vector<Hyperplane<N, T>> planes) : planes_(std::move(planes))
         {
         }
 
@@ -40,10 +43,12 @@ public:
         {
                 T l_near = *near;
                 T l_far = *far;
+
                 for (const Hyperplane<N, T>& plane : planes_)
                 {
                         const T s = dot(ray.dir(), plane.n);
                         const T d = dot(ray.org(), plane.n);
+
                         if (s == 0)
                         {
                                 if (d > plane.d)
@@ -52,6 +57,7 @@ public:
                                 }
                                 continue;
                         }
+
                         const T a = (plane.d - d) / s;
                         if (s > 0)
                         {
@@ -61,11 +67,13 @@ public:
                         {
                                 l_near = a > l_near ? a : l_near;
                         }
+
                         if (l_far < l_near)
                         {
                                 return false;
                         }
                 }
+
                 *near = l_near;
                 *far = l_far;
                 return true;
