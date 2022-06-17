@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
+#include <array>
 #include <random>
 #include <vector>
 
@@ -44,13 +45,15 @@ ConvexPolytope<N, T> create_random_spherical_polytope(RandomEngine& engine)
         constexpr std::size_t COUNT = 10 * N;
 
         std::uniform_real_distribution<T> urd(MIN_D<T>, MAX_D<T>);
+
         std::vector<Hyperplane<N, T>> planes;
         planes.reserve(COUNT);
         for (std::size_t i = 0; i < COUNT; ++i)
         {
                 planes.emplace_back(sampling::uniform_on_sphere<N, T>(engine), urd(engine));
         }
-        return ConvexPolytope<N, T>{planes};
+
+        return ConvexPolytope<N, T>{std::move(planes)};
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -58,6 +61,7 @@ std::vector<Vector<N, T>> internal_points(const int count, RandomEngine& engine)
 {
         Vector<N, T> v;
         T v_length_square;
+
         std::vector<Vector<N, T>> points;
         points.reserve(count);
         for (int i = 0; i < count; ++i)
@@ -68,79 +72,91 @@ std::vector<Vector<N, T>> internal_points(const int count, RandomEngine& engine)
         return points;
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-void test_intersections(const ConvexPolytope<N, T>& convex_polytope, const int point_count, RandomEngine& engine)
+template <typename T>
+std::string str(const T near, const T far)
 {
-        for (const Vector<N, T>& point : internal_points<N, T>(point_count, engine))
+        return "near = " + to_string(near) + ", far = " + to_string(far);
+}
+
+template <std::size_t N, typename T>
+Ray<N, T> test_ray_internal_and_move_ray(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+{
+        T near = Limits<T>::max();
+        T far = 0;
+
+        if (polytope.intersect(ray, &near, &far))
         {
-                Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                error("Convex polytope intersection error, internal point: " + str(near, far));
+        }
 
-                T near = Limits<T>::max();
-                T far = 0;
+        near = 0;
+        far = Limits<T>::max();
 
-                if (convex_polytope.intersect(ray, &near, &far))
-                {
-                        error("Convex polytope intersection error, internal point: near = " + to_string(near)
-                              + ", far = " + to_string(far));
-                }
+        if (!polytope.intersect(ray, &near, &far))
+        {
+                error("No convex polytope intersection found, internal point");
+        }
 
-                near = 0;
-                far = Limits<T>::max();
+        if (!(near == 0 && near < far && far < Limits<T>::max()))
+        {
+                error("Convex polytope intersection error, internal point: " + str(near, far));
+        }
 
-                if (!convex_polytope.intersect(ray, &near, &far))
-                {
-                        error("No convex polytope intersection found, internal point");
-                }
+        return ray.moved(far * 2);
+}
 
-                if (!(near == 0 && near < far && far < Limits<T>::max()))
-                {
-                        error("Convex polytope intersection error, internal point: near = " + to_string(near)
-                              + ", far = " + to_string(far));
-                }
+template <std::size_t N, typename T>
+void test_ray_external(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+{
+        T near = 0;
+        T far = Limits<T>::max();
 
-                ray.move(far * 2);
-                near = 0;
-                far = Limits<T>::max();
+        if (polytope.intersect(ray, &near, &far))
+        {
+                error("Convex polytope intersection, external point: " + str(near, far));
+        }
+}
 
-                if (convex_polytope.intersect(ray, &near, &far))
-                {
-                        error("Convex polytope intersection, external point: near = " + to_string(near)
-                              + ", far = " + to_string(far));
-                }
+template <std::size_t N, typename T>
+std::array<T, 2> test_reversed_ray_external_intersection(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+{
+        T near = 0;
+        T far = Limits<T>::max();
 
-                ray = ray.reversed();
+        if (!polytope.intersect(ray, &near, &far))
+        {
+                error("No convex polytope intersection found, reversed ray, external point");
+        }
 
-                T r_near = 0;
-                T r_far = Limits<T>::max();
+        if (!(near > 0 && near < far && far < Limits<T>::max()))
+        {
+                error("Convex polytope intersection error, reversed ray, external point: " + str(near, far));
+        }
 
-                if (!convex_polytope.intersect(ray, &r_near, &r_far))
-                {
-                        error("No convex polytope intersection found, external point, reversed");
-                }
+        return {near, far};
+}
 
-                if (!(r_near > 0 && r_near < r_far && r_far < Limits<T>::max()))
-                {
-                        error("Convex polytope intersection error, external point, reversed: near = "
-                              + to_string(r_near) + ", far = " + to_string(r_far));
-                }
+template <std::size_t N, typename T>
+void test_reversed_ray_external_no_intersection(
+        const ConvexPolytope<N, T>& polytope,
+        const Ray<N, T>& ray,
+        const T intersection_near,
+        const T intersection_far)
+{
+        T near = 0;
+        T far = intersection_near / 2;
 
-                near = 0;
-                far = r_near / 2;
+        if (polytope.intersect(ray, &near, &far))
+        {
+                error("Convex polytope intersection, reversed ray, external point: " + str(near, far));
+        }
 
-                if (convex_polytope.intersect(ray, &near, &far))
-                {
-                        error("Convex polytope intersection, external point, reversed: near = " + to_string(near)
-                              + ", far = " + to_string(far));
-                }
+        near = intersection_far * 2;
+        far = Limits<T>::max();
 
-                near = r_far * 2;
-                far = Limits<T>::max();
-
-                if (convex_polytope.intersect(ray, &near, &far))
-                {
-                        error("Convex polytope intersection, external point, reversed: near = " + to_string(near)
-                              + ", far = " + to_string(far));
-                }
+        if (polytope.intersect(ray, &near, &far))
+        {
+                error("Convex polytope intersection, reversed ray, external point: " + str(near, far));
         }
 }
 
@@ -148,7 +164,21 @@ template <std::size_t N, typename T, typename RandomEngine>
 void test(const int point_count, RandomEngine& engine)
 {
         const ConvexPolytope<N, T> polytope = create_random_spherical_polytope<N, T>(engine);
-        test_intersections(polytope, point_count, engine);
+
+        for (const Vector<N, T>& point : internal_points<N, T>(point_count, engine))
+        {
+                Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+
+                ray = test_ray_internal_and_move_ray(polytope, ray);
+
+                test_ray_external(polytope, ray);
+
+                ray = ray.reversed();
+
+                const auto [near, far] = test_reversed_ray_external_intersection(polytope, ray);
+
+                test_reversed_ray_external_no_intersection(polytope, ray, near, far);
+        }
 }
 
 template <typename T, typename RandomEngine>
@@ -158,6 +188,7 @@ void test(const int point_count, RandomEngine& engine)
         test<3, T>(point_count, engine);
         test<4, T>(point_count, engine);
         test<5, T>(point_count, engine);
+        test<6, T>(point_count, engine);
 }
 
 void test_convex_polytope()
