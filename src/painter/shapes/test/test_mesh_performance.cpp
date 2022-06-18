@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 namespace ns::painter
@@ -84,32 +85,58 @@ void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<Ray<N,
         LOG(s);
 }
 
+struct Parameters final
+{
+        int point_count;
+        int ray_count;
+};
+
 template <std::size_t N, typename T>
-void test(const int point_count, const int ray_count, progress::Ratio* const progress)
+void test(const Parameters& parameters, progress::Ratio* const progress)
 {
         using Color = color::Spectrum;
 
         PCG engine;
 
         test::SphericalMesh<N, T, Color> mesh =
-                test::create_spherical_mesh_scene<N, T, Color>(point_count, engine, progress);
+                test::create_spherical_mesh_scene<N, T, Color>(parameters.point_count, engine, progress);
 
-        test(mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, engine));
+        test(mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, parameters.ray_count, engine));
 }
 
 template <std::size_t N>
-void test(const int point_count, const int ray_count, progress::Ratio* const progress)
+void test(const Parameters& parameters, progress::Ratio* const progress)
 {
-        test<N, float>(point_count, ray_count, progress);
-        test<N, double>(point_count, ray_count, progress);
+        test<N, float>(parameters, progress);
+        test<N, double>(parameters, progress);
+}
+
+template <std::size_t N>
+Parameters parameters()
+{
+        static_assert(N >= 3);
+        switch (N)
+        {
+        case 3:
+                return {.point_count = 150'000, .ray_count = 50'000};
+        case 4:
+                return {.point_count = 40'000, .ray_count = 20'000};
+        case 5:
+                return {.point_count = 10'000, .ray_count = 5'000};
+        default:
+                return {.point_count = 2'000, .ray_count = 500};
+        }
+}
+
+template <std::size_t... I>
+void test(progress::Ratio* const progress, std::index_sequence<I...>&&)
+{
+        (test<I>(parameters<I>(), progress), ...);
 }
 
 void test_performance(progress::Ratio* const progress)
 {
-        test<3>(150'000, 50'000, progress);
-        test<4>(40'000, 20'000, progress);
-        test<5>(10'000, 5'000, progress);
-        test<6>(2'000, 500, progress);
+        test(progress, settings::Dimensions());
 }
 
 TEST_PERFORMANCE("Mesh intersections", test_performance)
