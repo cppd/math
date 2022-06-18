@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::image
 {
@@ -265,13 +266,9 @@ Image<N> delete_alpha(const Image<N>& image)
         error("Unsupported image format " + format_to_string(image.color_format) + " for deleting alpha");
 }
 
-template Image<2> add_alpha(const Image<2>&, float);
-template Image<3> add_alpha(const Image<3>&, float);
-template Image<4> add_alpha(const Image<4>&, float);
-template Image<5> add_alpha(const Image<5>&, float);
+#define TEMPLATE(N)                                              \
+        template Image<(N)> add_alpha(const Image<(N)>&, float); \
+        template Image<(N)> delete_alpha(const Image<(N)>&);
 
-template Image<2> delete_alpha(const Image<2>&);
-template Image<3> delete_alpha(const Image<3>&);
-template Image<4> delete_alpha(const Image<4>&);
-template Image<5> delete_alpha(const Image<5>&);
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

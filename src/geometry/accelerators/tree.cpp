@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/thread_tasks.h>
 #include <src/com/type/limit.h>
+#include <src/settings/instantiation.h>
 
 #include <algorithm>
 #include <cmath>
@@ -250,14 +251,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
                       * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T{N}));
 }
 
-#define SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N_T(N, T) template class SpatialSubdivisionTree<ParallelotopeAA<(N), T>>;
+#define TEMPLATE(N, T) template class SpatialSubdivisionTree<ParallelotopeAA<(N), T>>;
 
-#define SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N(N)            \
-        SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N_T((N), float) \
-        SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N_T((N), double)
-
-SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N(3)
-SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N(4)
-SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N(5)
-SPATIAL_SUBDIVISION_TREE_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

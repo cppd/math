@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/print.h>
+#include <src/settings/instantiation.h>
 
 #include <algorithm>
 #include <cstring>
@@ -217,12 +218,8 @@ Image<N - S> slice(const Image<N>& image, const std::array<Slice, S>& slices)
         unknown_color_format_error(image.color_format);
 }
 
-template Image<2> slice(const Image<3>&, const std::array<Slice, 1>&);
+#define TEMPLATE(N) \
+        template Image<(N) >= 4 ? 3 : (N)-1> slice(const Image<(N)>&, const std::array<Slice, (N) >= 4 ? (N)-3 : 1>&);
 
-template Image<2> slice(const Image<4>&, const std::array<Slice, 2>&);
-template Image<3> slice(const Image<4>&, const std::array<Slice, 1>&);
-
-template Image<2> slice(const Image<5>&, const std::array<Slice, 3>&);
-template Image<3> slice(const Image<5>&, const std::array<Slice, 2>&);
-template Image<4> slice(const Image<5>&, const std::array<Slice, 1>&);
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

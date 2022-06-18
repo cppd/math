@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "format.h"
 
 #include <src/com/error.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::image
 {
@@ -66,8 +67,7 @@ template <std::size_t N>
         return image;
 }
 
-template Image<2> convert_to_8_bit(const Image<2>&);
-template Image<3> convert_to_8_bit(const Image<3>&);
-template Image<4> convert_to_8_bit(const Image<4>&);
-template Image<5> convert_to_8_bit(const Image<5>&);
+#define TEMPLATE(N) template Image<(N)> convert_to_8_bit(const Image<(N)>&);
+
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

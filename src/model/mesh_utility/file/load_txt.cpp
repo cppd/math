@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/settings/instantiation.h>
 
 #include <filesystem>
 
@@ -136,8 +137,8 @@ std::unique_ptr<Mesh<N>> load_from_txt_file(const Path& file_name, progress::Rat
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_txt_file(const std::filesystem::path&, progress::Ratio*);
-template std::unique_ptr<Mesh<4>> load_from_txt_file(const std::filesystem::path&, progress::Ratio*);
-template std::unique_ptr<Mesh<5>> load_from_txt_file(const std::filesystem::path&, progress::Ratio*);
-template std::unique_ptr<Mesh<6>> load_from_txt_file(const std::filesystem::path&, progress::Ratio*);
+#define TEMPLATE(N) \
+        template std::unique_ptr<Mesh<(N)>> load_from_txt_file(const std::filesystem::path&, progress::Ratio*);
+
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

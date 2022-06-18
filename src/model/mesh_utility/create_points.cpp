@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::model::mesh
 {
@@ -78,12 +79,9 @@ std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& 
         return create_mesh_for_points_impl<N>(std::move(points));
 }
 
-#define CREATE_MESH_FOR_POINTS_INSTANTIATION(N)                                                             \
+#define TEMPLATE(N)                                                                                         \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(const std::vector<Vector<(N), float>>&); \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(std::vector<Vector<(N), float>>&&);
 
-CREATE_MESH_FOR_POINTS_INSTANTIATION(3)
-CREATE_MESH_FOR_POINTS_INSTANTIATION(4)
-CREATE_MESH_FOR_POINTS_INSTANTIATION(5)
-CREATE_MESH_FOR_POINTS_INSTANTIATION(6)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

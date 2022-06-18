@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/spatial/ray_intersection.h>
+#include <src/settings/instantiation.h>
 #include <src/shading/ggx_diffuse.h>
 #include <src/shading/metalness.h>
 
@@ -254,21 +255,10 @@ std::unique_ptr<Shape<N, T, Color>> create_mesh(
         return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
 }
 
-#define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                                                                       \
+#define TEMPLATE(N, T, C)                                                                                              \
         template std::unique_ptr<Shape<(N), T, C>> create_mesh(                                                        \
                 const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<N + 1, T>>&, bool, \
                 progress::Ratio*);
 
-#define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
-        CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \
-        CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Spectrum)
-
-#define CREATE_MESH_INSTANTIATION_N(N)            \
-        CREATE_MESH_INSTANTIATION_N_T((N), float) \
-        CREATE_MESH_INSTANTIATION_N_T((N), double)
-
-CREATE_MESH_INSTANTIATION_N(3)
-CREATE_MESH_INSTANTIATION_N(4)
-CREATE_MESH_INSTANTIATION_N(5)
-CREATE_MESH_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

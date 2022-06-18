@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 #include <src/com/type/limit.h>
+#include <src/settings/instantiation.h>
 
 #include <fstream>
 
@@ -327,12 +328,9 @@ std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_nam
         return full_name;
 }
 
-#define SAVE_TO_OBJ_FILE_INSTANTIATION(N)                \
+#define TEMPLATE(N)                                      \
         template std::filesystem::path save_to_obj_file( \
                 const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);
 
-SAVE_TO_OBJ_FILE_INSTANTIATION(3)
-SAVE_TO_OBJ_FILE_INSTANTIATION(4)
-SAVE_TO_OBJ_FILE_INSTANTIATION(5)
-SAVE_TO_OBJ_FILE_INSTANTIATION(6)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

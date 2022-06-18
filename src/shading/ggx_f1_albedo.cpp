@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ggx_f1_albedo.h"
 
 #include <src/numerical/interpolation.h>
+#include <src/settings/instantiation.h>
 
 #include <array>
 
@@ -641,19 +642,12 @@ std::tuple<std::array<int, 1>, std::span<const T>> ggx_f1_albedo_cosine_weighted
         return {GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE, GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>};
 }
 
-#define CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T(N, T)                                                               \
+#define TEMPLATE(N, T)                                                                                             \
         template T ggx_f1_albedo<(N)>(T, T);                                                                       \
         template T ggx_f1_albedo_cosine_weighted_average<(N)>(T);                                                  \
         template std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data<(N), T>(); \
         template std::tuple<std::array<int, 1>, std::span<const T>>                                                \
                 ggx_f1_albedo_cosine_weighted_average_data<(N), T>();
 
-#define CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(N)            \
-        CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T((N), float) \
-        CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T((N), double)
-
-CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(3)
-CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(4)
-CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(5)
-CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

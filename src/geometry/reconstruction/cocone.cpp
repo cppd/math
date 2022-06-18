@@ -37,6 +37,7 @@ Cambridge University Press, 2007.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/settings/instantiation.h>
 
 #include <unordered_set>
 
@@ -298,21 +299,14 @@ std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone
         return std::make_unique<Impl<N>>(source_points, true, progress);
 }
 
-#define CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(N)                                    \
+#define TEMPLATE_CONSTRUCTOR(N)                                                         \
         template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor( \
                 const std::vector<Vector<(N), float>>&, progress::Ratio*);
 
-#define CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(N)                                          \
+#define TEMPLATE_CONSTRUCTOR_COCONE(N)                                                               \
         template std::unique_ptr<ManifoldConstructorCocone<(N)>> create_manifold_constructor_cocone( \
                 const std::vector<Vector<(N), float>>&, progress::Ratio*);
 
-CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(2)
-CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(3)
-CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(4)
-CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(5)
-
-CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(2)
-CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(3)
-CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(4)
-CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(5)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE_CONSTRUCTOR)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE_CONSTRUCTOR_COCONE)
 }

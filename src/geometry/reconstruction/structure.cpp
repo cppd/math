@@ -28,6 +28,7 @@ Cambridge University Press, 2007.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::geometry
 {
@@ -471,14 +472,11 @@ void find_vertex_and_facet_data(
         ASSERT(vertex_data->size() == points.size());
 }
 
-#define VERTEX_AND_FACET_DATA_INSTANTIATION(N)                                                          \
+#define TEMPLATE(N)                                                                                     \
         template void find_vertex_and_facet_data(                                                       \
                 bool, const std::vector<Vector<(N), double>>&, const std::vector<DelaunayObject<(N)>>&, \
                 const std::vector<DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
                 std::vector<ManifoldFacet<(N)>>*);
 
-VERTEX_AND_FACET_DATA_INSTANTIATION(2)
-VERTEX_AND_FACET_DATA_INSTANTIATION(3)
-VERTEX_AND_FACET_DATA_INSTANTIATION(4)
-VERTEX_AND_FACET_DATA_INSTANTIATION(5)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

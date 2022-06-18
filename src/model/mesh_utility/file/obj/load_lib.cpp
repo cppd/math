@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_load.h>
 #include <src/image/flip.h>
 #include <src/numerical/vector.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::model::mesh::file::obj
 {
@@ -211,13 +212,10 @@ void read_lib(
         }
 }
 
-#define READ_LIB_INSTANTIATION(N)                                                             \
+#define TEMPLATE(N)                                                                           \
         template void read_lib(                                                               \
                 const std::filesystem::path&, const std::filesystem::path&, progress::Ratio*, \
                 std::map<std::string, int>*, std::map<std::filesystem::path, int>*, Mesh<(N)>*);
 
-READ_LIB_INSTANTIATION(3)
-READ_LIB_INSTANTIATION(4)
-READ_LIB_INSTANTIATION(5)
-READ_LIB_INSTANTIATION(6)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

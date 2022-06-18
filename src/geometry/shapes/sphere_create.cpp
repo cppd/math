@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/sort.h>
+#include <src/settings/instantiation.h>
 
 #include <algorithm>
 #include <map>
@@ -405,15 +406,8 @@ void create_sphere(
         divide_facets(min_facet_count, create_initial_facets<N, T>(), vertices, facets);
 }
 
-#define CREATE_SPHERE_INSTANTIATION_N_T(N, T) \
+#define TEMPLATE(N, T) \
         template void create_sphere(unsigned, std::vector<Vector<(N), T>>*, std::vector<std::array<int, (N)>>*);
 
-#define CREATE_SPHERE_INSTANTIATION_N(N)            \
-        CREATE_SPHERE_INSTANTIATION_N_T((N), float) \
-        CREATE_SPHERE_INSTANTIATION_N_T((N), double)
-
-CREATE_SPHERE_INSTANTIATION_N(3)
-CREATE_SPHERE_INSTANTIATION_N(4)
-CREATE_SPHERE_INSTANTIATION_N(5)
-CREATE_SPHERE_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

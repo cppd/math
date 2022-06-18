@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_load.h>
 #include <src/image/file_save.h>
 #include <src/image/flip.h>
+#include <src/settings/instantiation.h>
 
 #include <algorithm>
 #include <cmath>
@@ -366,11 +367,9 @@ image::Image<N> load(const Path& path, progress::Ratio* const progress)
 
 template VolumeInfo volume_info(const std::filesystem::path&);
 
-#define FUNCTION_INSTANTIATIONS(N)                                                                                  \
+#define TEMPLATE(N)                                                                                                 \
         template void save_to_images(const std::filesystem::path&, const image::ImageView<(N)>&, progress::Ratio*); \
         template image::Image<(N)> load<(N)>(const std::filesystem::path&, progress::Ratio*);
 
-FUNCTION_INSTANTIATIONS(3)
-FUNCTION_INSTANTIATIONS(4)
-FUNCTION_INSTANTIATIONS(5)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

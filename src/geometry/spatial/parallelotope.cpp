@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/settings/instantiation.h>
 
 #include <cmath>
 
@@ -40,15 +41,7 @@ T Parallelotope<N, T>::intersection_cost()
         return cost;
 }
 
-#define FUNCTION_INSTANTIATION_N_T(N, T) template T Parallelotope<(N), T>::intersection_cost();
+#define TEMPLATE(N, T) template T Parallelotope<(N), T>::intersection_cost();
 
-#define FUNCTION_INSTANTIATION_N(N)            \
-        FUNCTION_INSTANTIATION_N_T((N), float) \
-        FUNCTION_INSTANTIATION_N_T((N), double)
-
-FUNCTION_INSTANTIATION_N(2)
-FUNCTION_INSTANTIATION_N(3)
-FUNCTION_INSTANTIATION_N(4)
-FUNCTION_INSTANTIATION_N(5)
-FUNCTION_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }

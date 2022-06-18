@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/settings/instantiation.h>
 
 #include <unordered_map>
 
@@ -99,12 +100,9 @@ std::unique_ptr<Mesh<N>> create_mesh_for_lines(
         return mesh;
 }
 
-#define CREATE_MESH_FOR_LINES_INSTANTIATION(N)                     \
+#define TEMPLATE(N)                                                \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_lines( \
                 const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, 2>>&);
 
-CREATE_MESH_FOR_LINES_INSTANTIATION(3)
-CREATE_MESH_FOR_LINES_INSTANTIATION(4)
-CREATE_MESH_FOR_LINES_INSTANTIATION(5)
-CREATE_MESH_FOR_LINES_INSTANTIATION(6)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

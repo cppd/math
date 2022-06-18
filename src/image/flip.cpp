@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "flip.h"
 
 #include <src/com/error.h>
+#include <src/settings/instantiation.h>
 
 #include <cstring>
 #include <vector>
@@ -56,8 +57,7 @@ void flip_vertically(Image<N>* const image)
         }
 }
 
-template void flip_vertically(Image<2>*);
-template void flip_vertically(Image<3>*);
-template void flip_vertically(Image<4>*);
-template void flip_vertically(Image<5>*);
+#define TEMPLATE(N) template void flip_vertically(Image<(N)>*);
+
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

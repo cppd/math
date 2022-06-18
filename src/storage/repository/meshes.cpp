@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/torus.h>
 #include <src/model/mesh_utility.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/settings/instantiation.h>
 
 #include <functional>
 #include <map>
@@ -395,7 +396,7 @@ std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository()
         return std::make_unique<Impl<N>>();
 }
 
-template std::unique_ptr<MeshObjectRepository<3>> create_mesh_object_repository<3>();
-template std::unique_ptr<MeshObjectRepository<4>> create_mesh_object_repository<4>();
-template std::unique_ptr<MeshObjectRepository<5>> create_mesh_object_repository<5>();
+#define TEMPLATE(N) template std::unique_ptr<MeshObjectRepository<(N)>> create_mesh_object_repository<(N)>();
+
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

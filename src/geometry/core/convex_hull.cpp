@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/settings/instantiation.h>
 
 #include <array>
 #include <vector>
@@ -220,21 +221,13 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         return facets;
 }
 
-#define COMPUTE_DELAUNAY_INSTANTIATION(N) \
+#define TEMPLATE_DELAUNAY(N) \
         template DelaunayData<N> compute_delaunay(const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
 
-#define COMPUTE_CONVEX_HULL_INSTANTIATION(N)                              \
+#define TEMPLATE_CONVEX_HULL(N)                                           \
         template std::vector<ConvexHullSimplex<(N)>> compute_convex_hull( \
                 const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
 
-COMPUTE_DELAUNAY_INSTANTIATION(2)
-COMPUTE_DELAUNAY_INSTANTIATION(3)
-COMPUTE_DELAUNAY_INSTANTIATION(4)
-COMPUTE_DELAUNAY_INSTANTIATION(5)
-
-COMPUTE_CONVEX_HULL_INSTANTIATION(2)
-COMPUTE_CONVEX_HULL_INSTANTIATION(3)
-COMPUTE_CONVEX_HULL_INSTANTIATION(4)
-COMPUTE_CONVEX_HULL_INSTANTIATION(5)
-COMPUTE_CONVEX_HULL_INSTANTIATION(6)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE_DELAUNAY)
+TEMPLATE_INSTANTIATION_N_2_A(TEMPLATE_CONVEX_HULL)
 }

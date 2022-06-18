@@ -31,6 +31,7 @@ Springer-Verlag London, 2012.
 #include <src/geometry/shapes/sphere_simplex.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/normal.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::model::mesh
 {
@@ -182,8 +183,7 @@ void compute_normals(Mesh<N>* const mesh)
         }
 }
 
-template void compute_normals(Mesh<3>* mesh);
-template void compute_normals(Mesh<4>* mesh);
-template void compute_normals(Mesh<5>* mesh);
-template void compute_normals(Mesh<6>* mesh);
+#define TEMPLATE(N) template void compute_normals(Mesh<(N)>*);
+
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::model::mesh
 {
@@ -125,15 +126,12 @@ std::filesystem::path save_to_stl(
         return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
 }
 
-#define FUNCTION_INSTANTIATIONS(N)                                                                \
+#define TEMPLATE(N)                                                                               \
         template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, progress::Ratio*); \
         template std::filesystem::path save_to_obj(                                               \
                 const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);         \
         template std::filesystem::path save_to_stl(                                               \
                 const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
 
-FUNCTION_INSTANTIATIONS(3)
-FUNCTION_INSTANTIATIONS(4)
-FUNCTION_INSTANTIATIONS(5)
-FUNCTION_INSTANTIATIONS(6)
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

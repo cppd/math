@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
+#include <src/settings/instantiation.h>
 
 #include <atomic>
 #include <barrier>
@@ -456,20 +457,9 @@ std::unique_ptr<Painter> create_painter(
                 notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
 }
 
-#define CREATE_PAINTER_INSTANTIATION_N_T_C(N, T, C)       \
+#define TEMPLATE(N, T, C)                                 \
         template std::unique_ptr<Painter> create_painter( \
                 Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T, C>>, int, bool);
 
-#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)                   \
-        CREATE_PAINTER_INSTANTIATION_N_T_C((N), T, color::Color) \
-        CREATE_PAINTER_INSTANTIATION_N_T_C((N), T, color::Spectrum)
-
-#define CREATE_PAINTER_INSTANTIATION_N(N)            \
-        CREATE_PAINTER_INSTANTIATION_N_T((N), float) \
-        CREATE_PAINTER_INSTANTIATION_N_T((N), double)
-
-CREATE_PAINTER_INSTANTIATION_N(3)
-CREATE_PAINTER_INSTANTIATION_N(4)
-CREATE_PAINTER_INSTANTIATION_N(5)
-CREATE_PAINTER_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bvh_build.h"
 
+#include <src/settings/instantiation.h>
+
 namespace ns::geometry
 {
 namespace
@@ -76,14 +78,7 @@ Bvh<N, T>::Bvh(std::vector<BvhObject<N, T>>&& objects, progress::Ratio* const pr
         ASSERT(nodes_.size() == build.nodes().size());
 }
 
-#define BVH_TREE_INSTANTIATION_N_T(N, T) template class Bvh<(N), T>;
+#define TEMPLATE(N, T) template class Bvh<(N), T>;
 
-#define BVH_TREE_INSTANTIATION_N(N)            \
-        BVH_TREE_INSTANTIATION_N_T((N), float) \
-        BVH_TREE_INSTANTIATION_N_T((N), double)
-
-BVH_TREE_INSTANTIATION_N(3)
-BVH_TREE_INSTANTIATION_N(4)
-BVH_TREE_INSTANTIATION_N(5)
-BVH_TREE_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

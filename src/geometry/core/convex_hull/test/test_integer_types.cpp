@@ -18,32 +18,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../integer_types.h"
 
 #include <src/com/type/concept.h>
+#include <src/settings/instantiation.h>
 
 namespace ns::geometry::convex_hull
 {
 namespace
 {
-template <std::size_t N, bool CHECK_NON_CLASS>
-struct Check final
+
+template <std::size_t N>
+constexpr bool CHECK_NON_CLASS = (N <= 4);
+
+template <std::size_t N>
+struct CheckDelaunay final
 {
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullComputeType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidComputeType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayComputeType<N>>);
-        static_assert(Integral<ConvexHullDataType<N>>);
-        static_assert(Integral<ConvexHullComputeType<N>>);
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<DelaunayParaboloidDataType<N>>);
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<DelaunayParaboloidComputeType<N>>);
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<DelaunayDataType<N>>);
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<DelaunayComputeType<N>>);
         static_assert(Integral<DelaunayParaboloidDataType<N>>);
         static_assert(Integral<DelaunayParaboloidComputeType<N>>);
         static_assert(Integral<DelaunayDataType<N>>);
         static_assert(Integral<DelaunayComputeType<N>>);
 };
 
-template struct Check<2, true>;
-template struct Check<3, true>;
-template struct Check<4, true>;
-template struct Check<5, false>;
-template struct Check<6, false>;
+template <std::size_t N>
+struct CheckConvexHull final
+{
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<ConvexHullDataType<N>>);
+        static_assert(!CHECK_NON_CLASS<N> || !std::is_class_v<ConvexHullComputeType<N>>);
+        static_assert(Integral<ConvexHullDataType<N>>);
+        static_assert(Integral<ConvexHullComputeType<N>>);
+};
+
+#define TEMPLATE_DELAUNAY(N) template struct CheckDelaunay<(N)>;
+#define TEMPLATE_CONVEX_HULL(N) template struct CheckConvexHull<(N)>;
+
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE_DELAUNAY)
+TEMPLATE_INSTANTIATION_N_2_A(TEMPLATE_CONVEX_HULL)
 }
 }

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/spatial/clip_plane.h>
 #include <src/geometry/spatial/convex_polytope.h>
+#include <src/settings/instantiation.h>
 
 #include <optional>
 
@@ -191,22 +192,11 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
                 std::move(shapes), progress);
 }
 
-#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C(N, T, C)                                                     \
-        template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(                                      \
-                const C&, const std::optional<Vector<N + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
-                std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&,                                 \
+#define TEMPLATE(N, T, C)                                                                                       \
+        template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(                                        \
+                const C&, const std::optional<Vector<(N) + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
+                std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&,                                   \
                 std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);
 
-#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                   \
-        CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Color) \
-        CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Spectrum)
-
-#define CREATE_STORAGE_SCENE_INSTANTIATION_N(N)            \
-        CREATE_STORAGE_SCENE_INSTANTIATION_N_T((N), float) \
-        CREATE_STORAGE_SCENE_INSTANTIATION_N_T((N), double)
-
-CREATE_STORAGE_SCENE_INSTANTIATION_N(3)
-CREATE_STORAGE_SCENE_INSTANTIATION_N(4)
-CREATE_STORAGE_SCENE_INSTANTIATION_N(5)
-CREATE_STORAGE_SCENE_INSTANTIATION_N(6)
+TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

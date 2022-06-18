@@ -33,6 +33,7 @@ Kruskal’s algorithm
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/union_find.h>
+#include <src/settings/instantiation.h>
 
 #include <algorithm>
 
@@ -213,13 +214,10 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
         return mst;
 }
 
-#define MINIMUM_SPANNING_TREE_INSTANTIATION(N)                                                        \
+#define TEMPLATE(N)                                                                                   \
         template std::vector<std::array<int, 2>> minimum_spanning_tree(                               \
                 const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N) + 1>>&, \
                 progress::Ratio*);
 
-MINIMUM_SPANNING_TREE_INSTANTIATION(2)
-MINIMUM_SPANNING_TREE_INSTANTIATION(3)
-MINIMUM_SPANNING_TREE_INSTANTIATION(4)
-MINIMUM_SPANNING_TREE_INSTANTIATION(5)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

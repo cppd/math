@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/model/volume_utility.h>
+#include <src/settings/instantiation.h>
 
 #include <cmath>
 #include <cstring>
@@ -292,7 +293,7 @@ std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository()
         return std::make_unique<Impl<N>>();
 }
 
-template std::unique_ptr<VolumeObjectRepository<3>> create_volume_object_repository();
-template std::unique_ptr<VolumeObjectRepository<4>> create_volume_object_repository();
-template std::unique_ptr<VolumeObjectRepository<5>> create_volume_object_repository();
+#define TEMPLATE(N) template std::unique_ptr<VolumeObjectRepository<(N)>> create_volume_object_repository();
+
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }
