@@ -28,21 +28,15 @@ namespace ns::test
 {
 namespace
 {
-constexpr const char* SMALL = "Small";
-constexpr const char* LARGE = "Large";
-constexpr const char* PERFORMANCE = "Performance";
-}
-
-Tests& Tests::instance()
-{
-        static Tests tests;
-        return tests;
+constexpr std::string_view SMALL = "Small";
+constexpr std::string_view LARGE = "Large";
+constexpr std::string_view PERFORMANCE = "Performance";
 }
 
 void Tests::run(
         const Test& test,
-        const std::string_view& test_name,
-        const char* const type_name,
+        const std::string_view test_name,
+        const std::string_view type_name,
         progress::Ratios* const progress_ratios)
 {
         const std::string name = [&]()
@@ -106,7 +100,7 @@ std::vector<std::string> Tests::performance_names() const
         return names;
 }
 
-void Tests::run_small(const std::string_view& name, progress::Ratios* const progress_ratios) const
+void Tests::run_small(const std::string_view name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = small_tests_.find(name);
         if (iter == small_tests_.cend())
@@ -118,7 +112,7 @@ void Tests::run_small(const std::string_view& name, progress::Ratios* const prog
         run(iter->second, iter->first, SMALL, progress_ratios);
 }
 
-void Tests::run_large(const std::string_view& name, progress::Ratios* const progress_ratios) const
+void Tests::run_large(const std::string_view name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = large_tests_.find(name);
         if (iter == large_tests_.cend())
@@ -130,7 +124,7 @@ void Tests::run_large(const std::string_view& name, progress::Ratios* const prog
         run(iter->second, iter->first, LARGE, progress_ratios);
 }
 
-void Tests::run_performance(const std::string_view& name, progress::Ratios* const progress_ratios) const
+void Tests::run_performance(const std::string_view name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = performance_tests_.find(name);
         if (iter == performance_tests_.cend())
