@@ -123,21 +123,6 @@ public:
         }
 };
 
-void check_application_instance()
-{
-        if (!QApplication::instance())
-        {
-                error("No application object for path tracing tests.\n"
-                      "#include <QApplication>\n"
-                      "int main(int argc, char* argv[])\n"
-                      "{\n"
-                      "    QApplication a(argc, argv);\n"
-                      "    //\n"
-                      "    return a.exec();\n"
-                      "}\n");
-        }
-}
-
 template <std::size_t N>
 float random_radius()
 {
@@ -226,7 +211,10 @@ void test_painter_window(
 
         LOG("Window painting...");
 
-        check_application_instance();
+        if (!QApplication::instance())
+        {
+                error("No application object for path tracing tests");
+        }
 
         std::string name = "Path Tracing In " + to_upper_first_letters(space_name(N));
 

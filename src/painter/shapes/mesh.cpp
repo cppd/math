@@ -255,10 +255,10 @@ std::unique_ptr<Shape<N, T, Color>> create_mesh(
         return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
 }
 
-#define TEMPLATE(N, T, C)                                                                                              \
-        template std::unique_ptr<Shape<(N), T, C>> create_mesh(                                                        \
-                const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<N + 1, T>>&, bool, \
-                progress::Ratio*);
+#define TEMPLATE(N, T, C)                                                                                          \
+        template std::unique_ptr<Shape<(N), T, C>> create_mesh(                                                    \
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<(N) + 1, T>>&, \
+                bool, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }
