@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/painter_parameters_3d.h>
 #include <src/gui/dialogs/painter_parameters_nd.h>
 #include <src/gui/painter_window/painter_window.h>
+#include <src/painter/shapes/mesh.h>
 
 #include <set>
 #include <tuple>

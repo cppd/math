@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "loading.h"
 
-#include "compute_mesh.h"
+#include "compute_meshes.h"
 #include "dimension.h"
 #include "load.h"
 

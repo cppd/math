@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "computing.h"
 
-#include "compute_mesh.h"
+#include "compute_meshes.h"
 #include "compute_volume.h"
 
 #include <src/gui/dialogs/bound_cocone.h>

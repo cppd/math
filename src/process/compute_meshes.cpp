@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "compute_meshes.h"
 
 #include <src/com/chrono.h>
 #include <src/com/log.h>
@@ -28,18 +28,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_utility.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress_list.h>
+#include <src/settings/instantiation.h>
 
 #include <array>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
 namespace ns::process
 {
-namespace process_implementation
+namespace
 {
-inline constexpr bool WRITE_LOG = true;
+constexpr bool WRITE_LOG = true;
 
 template <typename T>
 std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
@@ -287,8 +287,6 @@ void compute_meshes(
         const double rho,
         const double alpha)
 {
-        namespace impl = process_implementation;
-
         Threads threads(2);
         try
         {
@@ -298,7 +296,7 @@ void compute_meshes(
                                 [&]()
                                 {
                                         const model::mesh::Reading reading(mesh_object);
-                                        impl::convex_hull(progress_list, reading);
+                                        convex_hull(progress_list, reading);
                                 });
                 }
 
@@ -318,7 +316,7 @@ void compute_meshes(
                                                 matrix = reading.matrix();
                                                 id = reading.id();
                                         }
-                                        impl::manifold_constructor(
+                                        manifold_constructor(
                                                 progress_list, build_cocone, build_bound_cocone, build_mst, *matrix,
                                                 *id, points, rho, alpha);
                                 });
@@ -331,4 +329,10 @@ void compute_meshes(
         }
         threads.join();
 }
+
+#define TEMPLATE(N)                   \
+        template void compute_meshes( \
+                progress::RatioList*, bool, bool, bool, bool, const model::mesh::MeshObject<N>&, double, double);
+
+TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }
