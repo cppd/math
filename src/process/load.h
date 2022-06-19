@@ -17,38 +17,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "dimension.h"
 #include "options.h"
 
-#include <src/com/error.h>
+#include <src/image/image.h>
 #include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_object.h>
 #include <src/model/volume_utility.h>
-#include <src/numerical/vector.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 
-#include <functional>
+#include <filesystem>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace ns::process
 {
-template <std::size_t N>
+template <std::size_t N, typename Path>
 std::shared_ptr<model::mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         progress::RatioList* const progress_list,
-        const std::filesystem::path& path)
+        const Path& path)
 {
-        std::unique_ptr<model::mesh::Mesh<N>> mesh;
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
 
+        std::unique_ptr<model::mesh::Mesh<N>> mesh = [&]
         {
                 progress::Ratio progress(progress_list);
                 progress.set_text("Loading: %p%");
-                mesh = model::mesh::load<N>(path, &progress);
-        }
+                return model::mesh::load<N>(path, &progress);
+        }();
 
         auto mesh_object = std::make_shared<model::mesh::MeshObject<N>>(
                 std::move(mesh),
@@ -96,6 +94,35 @@ std::shared_ptr<model::mesh::MeshObject<N>> load_facet_mesh(
         return mesh_object;
 }
 
+template <std::size_t N, typename Path>
+std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
+        const std::string& object_name,
+        progress::RatioList* const progress_list,
+        const Path& path)
+{
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
+        auto volume = std::make_unique<model::volume::Volume<N>>();
+
+        volume->image = [&]
+        {
+                progress::Ratio progress(progress_list);
+                progress.set_text("Loading: %p%");
+                return model::volume::load<N>(path, &progress);
+        }();
+
+        volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
+
+        auto volume_object = std::make_shared<model::volume::VolumeObject<N>>(
+                std::move(volume),
+                model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>),
+                object_name);
+
+        volume_object->insert();
+
+        return volume_object;
+}
+
 template <std::size_t N>
 std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
@@ -114,39 +141,12 @@ std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
         return volume_object;
 }
 
-template <std::size_t N, typename Image>
-std::shared_ptr<model::volume::VolumeObject<N>> load_volume(const std::string& object_name, Image&& image)
-{
-        auto volume = std::make_unique<model::volume::Volume<N>>();
-
-        volume->image = std::forward<Image>(image);
-
-        volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
-
-        auto volume_object = std::make_shared<model::volume::VolumeObject<N>>(
-                std::move(volume),
-                model::volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>),
-                object_name);
-
-        volume_object->insert();
-
-        return volume_object;
-}
-
 template <std::size_t N>
-std::shared_ptr<model::volume::VolumeObject<N>> load_volume(
-        const std::string& object_name,
-        progress::RatioList* const progress_list,
-        const std::filesystem::path& path)
+std::shared_ptr<model::volume::VolumeObject<N>> load_volume(const std::string& object_name, image::Image<N>&& image)
 {
         auto volume = std::make_unique<model::volume::Volume<N>>();
 
-        {
-                progress::Ratio progress(progress_list);
-                progress.set_text("Loading: %p%");
-                volume->image = model::volume::load<N>(path, &progress);
-        }
-
+        volume->image = std::move(image);
         volume->matrix = model::volume::matrix_for_image_size(volume->image.size);
 
         auto volume_object = std::make_shared<model::volume::VolumeObject<N>>(

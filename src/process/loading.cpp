@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/point_object.h>
 #include <src/gui/dialogs/volume_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/model/volume_utility.h>
 #include <src/settings/utility.h>
 
 namespace ns::process

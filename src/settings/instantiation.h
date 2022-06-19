@@ -38,6 +38,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         TEMPLATE_N(6)                            \
         TEMPLATE_N(7)
 
+#define TEMPLATE_INSTANTIATION_N_M(TEMPLATE_N_M) \
+        TEMPLATE_N_M(3, 1)                       \
+        TEMPLATE_N_M(3, 2)                       \
+        TEMPLATE_N_M(4, 1)                       \
+        TEMPLATE_N_M(4, 2)                       \
+        TEMPLATE_N_M(4, 3)                       \
+        TEMPLATE_N_M(5, 1)                       \
+        TEMPLATE_N_M(5, 2)                       \
+        TEMPLATE_N_M(5, 3)                       \
+        TEMPLATE_N_M(5, 4)                       \
+        TEMPLATE_N_M(6, 1)                       \
+        TEMPLATE_N_M(6, 2)                       \
+        TEMPLATE_N_M(6, 3)                       \
+        TEMPLATE_N_M(6, 4)                       \
+        TEMPLATE_N_M(6, 5)
+
 //
 
 #define TEMPLATE_INSTANTIATION_N_T_IMPL_N(N, TEMPLATE_N_T) \

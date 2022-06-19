@@ -218,8 +218,7 @@ Image<N - S> slice(const Image<N>& image, const std::array<Slice, S>& slices)
         unknown_color_format_error(image.color_format);
 }
 
-#define TEMPLATE(N) \
-        template Image<(N) >= 4 ? 3 : (N)-1> slice(const Image<(N)>&, const std::array<Slice, (N) >= 4 ? (N)-3 : 1>&);
+#define TEMPLATE(N, M) template Image<(N) - (M)> slice(const Image<(N)>&, const std::array<Slice, M>&);
 
-TEMPLATE_INSTANTIATION_N(TEMPLATE)
+TEMPLATE_INSTANTIATION_N_M(TEMPLATE)
 }

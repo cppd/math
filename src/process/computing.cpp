@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute_meshes.h"
 #include "compute_volume.h"
 
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/gui/dialogs/bound_cocone.h>
 #include <src/gui/dialogs/image_slice.h>
 
