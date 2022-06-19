@@ -128,15 +128,13 @@ Parameters parameters()
         }
 }
 
-template <std::size_t... I>
-void test(progress::Ratio* const progress, std::index_sequence<I...>&&)
-{
-        (test<I>(parameters<I>(), progress), ...);
-}
-
 void test_performance(progress::Ratio* const progress)
 {
-        test(progress, settings::Dimensions());
+        const auto f = [progress]<std::size_t... I>(std::index_sequence<I...> &&)
+        {
+                (test<I>(parameters<I>(), progress), ...);
+        };
+        f(settings::Dimensions());
 }
 
 TEST_PERFORMANCE("Mesh intersections", test_performance)

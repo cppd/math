@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 #include <vector>
@@ -143,8 +144,14 @@ void test_surface_ratio(
         LOG(s);
 }
 
+struct Parameters final
+{
+        int point_count;
+        int ray_count;
+};
+
 template <std::size_t N, typename T>
-void test(const int point_count, const int ray_count, progress::Ratio* const progress)
+void test(const Parameters& parameters, progress::Ratio* const progress)
 {
         using Color = color::Spectrum;
 
@@ -155,47 +162,54 @@ void test(const int point_count, const int ray_count, progress::Ratio* const pro
         PCG engine;
 
         test::SphericalMesh<N, T, Color> mesh =
-                test::create_spherical_mesh_scene<N, T, Color>(point_count, engine, progress);
+                test::create_spherical_mesh_scene<N, T, Color>(parameters.point_count, engine, progress);
 
         test_intersections(
-                mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, engine), progress);
+                mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, parameters.ray_count, engine),
+                progress);
 
         test_surface_ratio(
-                mesh, test::create_random_intersections_rays(mesh.bounding_box, ray_count, engine), progress);
+                mesh, test::create_random_intersections_rays(mesh.bounding_box, parameters.ray_count, engine),
+                progress);
 
         LOG(name + " passed");
 }
 
 template <std::size_t N>
-void test_mesh(const int point_count, const int ray_count, progress::Ratio* const progress)
+void test(const Parameters& parameters, progress::Ratio* const progress)
 {
-        test<N, float>(point_count, ray_count, progress);
-        test<N, double>(point_count, ray_count, progress);
+        test<N, float>(parameters, progress);
+        test<N, double>(parameters, progress);
 }
 
-void test_mesh_3(progress::Ratio* const progress)
+template <std::size_t N>
+Parameters parameters()
 {
-        test_mesh<3>(1000, 100'000, progress);
+        static_assert(N >= 3);
+        switch (N)
+        {
+        case 3:
+        case 4:
+                return {.point_count = 1'000, .ray_count = 100'000};
+        default:
+                return {.point_count = 2'000, .ray_count = 100'000};
+        }
 }
 
-void test_mesh_4(progress::Ratio* const progress)
+template <std::size_t N>
+void test_mesh(progress::Ratio* const progress)
 {
-        test_mesh<4>(1000, 100'000, progress);
+        test<N>(parameters<N>(), progress);
 }
 
-void test_mesh_5(progress::Ratio* const progress)
+template <std::size_t... I>
+auto mesh_tests(std::index_sequence<I...>&&) noexcept
 {
-        test_mesh<5>(2000, 100'000, progress);
+        return std::to_array({std::make_tuple(
+                I <= 4 ? ns::test::Type::SMALL : ns::test::Type::LARGE,
+                "Mesh Intersections, " + std::to_string(I) + "-Space", test_mesh<I>)...});
 }
 
-void test_mesh_6(progress::Ratio* const progress)
-{
-        test_mesh<6>(2000, 100'000, progress);
-}
-
-TEST_SMALL("Mesh Intersections, 3-Space", test_mesh_3)
-TEST_SMALL("Mesh Intersections, 4-Space", test_mesh_4)
-TEST_LARGE("Mesh Intersections, 5-Space", test_mesh_5)
-TEST_LARGE("Mesh Intersections, 6-Space", test_mesh_6)
+TESTS(mesh_tests(settings::Dimensions()))
 }
 }

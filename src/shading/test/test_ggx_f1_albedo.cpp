@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 namespace ns::shading::test
@@ -82,19 +83,20 @@ void test()
         }
 }
 
-template <typename T>
+template <std::size_t N>
 void test()
 {
-        test<3, T>();
-        test<4, T>();
-        test<5, T>();
-        test<6, T>();
+        test<N, float>();
+        test<N, double>();
 }
 
 void test_albedo()
 {
-        test<float>();
-        test<double>();
+        const auto f = []<std::size_t... I>(std::index_sequence<I...> &&)
+        {
+                (test<I>(), ...);
+        };
+        f(settings::Dimensions());
 }
 
 TEST_SMALL("GGX F1 Albedo", test_albedo)
