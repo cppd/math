@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -41,36 +42,32 @@ class Tests final
 
         using Test = std::variant<void (*)(), void (*)(progress::Ratio*)>;
 
-        static void run(
-                const Test& test,
-                std::string_view test_name,
-                std::string_view type_name,
-                progress::Ratios* progress_ratios);
+        std::unordered_map<std::string, Test> small_tests_;
+        std::unordered_map<std::string, Test> large_tests_;
+        std::unordered_map<std::string, Test> performance_tests_;
 
-        std::unordered_map<std::string_view, Test> small_tests_;
-        std::unordered_map<std::string_view, Test> large_tests_;
-        std::unordered_map<std::string_view, Test> performance_tests_;
-
-        template <typename T>
-        void add(const Type type, const std::string_view name, T* const function)
+        template <typename T, typename S>
+        void add(const Type type, S&& name, T* const function)
         {
                 const bool inserted = [&]
                 {
                         switch (type)
                         {
                         case Type::SMALL:
-                                return small_tests_.emplace(name, function).second;
+                                return small_tests_.emplace(std::forward<S>(name), function).second;
                         case Type::LARGE:
-                                return large_tests_.emplace(name, function).second;
+                                return large_tests_.emplace(std::forward<S>(name), function).second;
                         case Type::PERFORMANCE:
-                                return performance_tests_.emplace(name, function).second;
+                                return performance_tests_.emplace(std::forward<S>(name), function).second;
                         }
-                        error_fatal("Unknown test type " + std::to_string(enum_to_int(type)));
+                        error_fatal(
+                                "Unknown test type " + std::to_string(enum_to_int(type)) + ", test name "
+                                + std::string(std::forward<S>(name)));
                 }();
 
                 if (!inserted)
                 {
-                        error_fatal("Not unique test name " + std::string(name));
+                        error_fatal("Not unique test name " + std::string(std::forward<S>(name)));
                 }
         }
 
@@ -93,9 +90,9 @@ public:
         [[nodiscard]] std::vector<std::string> large_names() const;
         [[nodiscard]] std::vector<std::string> performance_names() const;
 
-        void run_small(std::string_view name, progress::Ratios* progress_ratios) const;
-        void run_large(std::string_view name, progress::Ratios* progress_ratios) const;
-        void run_performance(std::string_view name, progress::Ratios* progress_ratios) const;
+        void run_small(const std::string& name, progress::Ratios* progress_ratios) const;
+        void run_large(const std::string& name, progress::Ratios* progress_ratios) const;
+        void run_performance(const std::string& name, progress::Ratios* progress_ratios) const;
 
         void run_small(progress::Ratios* progress_ratios) const;
         void run_large(progress::Ratios* progress_ratios) const;
@@ -108,16 +105,40 @@ public:
 
 struct AddTest final
 {
-        template <typename T>
-        AddTest(const Type type, const std::string_view name, T* const function) noexcept
+        AddTest(const AddTest&) = delete;
+        AddTest& operator=(const AddTest&) = delete;
+        AddTest(AddTest&&) = delete;
+        AddTest& operator=(AddTest&&) = delete;
+
+        template <typename T, typename S>
+        AddTest(const Type type, S&& name, T* const function) noexcept
         {
                 try
                 {
-                        Tests::instance_impl().add(type, name, function);
+                        Tests::instance_impl().add(type, std::forward<S>(name), function);
                 }
                 catch (...)
                 {
-                        error_fatal("Error adding test " + std::to_string(enum_to_int(type)));
+                        error_fatal("Error adding test");
+                }
+        }
+
+        template <typename T>
+        explicit AddTest(T&& tests) noexcept
+        {
+                try
+                {
+                        for (auto&& test : std::forward<T>(tests))
+                        {
+                                Tests::instance_impl().add(
+                                        std::get<0>(std::forward<decltype(test)>(test)),
+                                        std::get<1>(std::forward<decltype(test)>(test)),
+                                        std::get<2>(std::forward<decltype(test)>(test)));
+                        }
+                }
+                catch (...)
+                {
+                        error_fatal("Error adding tests");
                 }
         }
 };
@@ -133,7 +154,7 @@ struct AddTest final
 #define TEST_IMPL_UNIQUE_NAME_2(n) test_impl_name_##n
 #define TEST_IMPL_UNIQUE_NAME(n) TEST_IMPL_UNIQUE_NAME_2(n)
 
-#define TEST_IMPL_ADD(type, name, f)                                                    \
+#define TEST(type, name, f)                                                             \
         namespace                                                                       \
         {                                                                               \
         TEST_IMPL_PRAGMA_PUSH                                                           \
@@ -141,8 +162,15 @@ struct AddTest final
         TEST_IMPL_PRAGMA_POP                                                            \
         }
 
-#define TEST_SMALL(name, f) TEST_IMPL_ADD(::ns::test::Type::SMALL, (name), (f))
-#define TEST_LARGE(name, f) TEST_IMPL_ADD(::ns::test::Type::LARGE, (name), (f))
-#define TEST_PERFORMANCE(name, f) TEST_IMPL_ADD(::ns::test::Type::PERFORMANCE, (name), (f))
-#define TEST(type, name, f) TEST_IMPL_ADD((type), (name), (f))
+#define TESTS(tests)                                                        \
+        namespace                                                           \
+        {                                                                   \
+        TEST_IMPL_PRAGMA_PUSH                                               \
+        const ::ns::test::AddTest TEST_IMPL_UNIQUE_NAME(__LINE__){(tests)}; \
+        TEST_IMPL_PRAGMA_POP                                                \
+        }
+
+#define TEST_SMALL(name, f) TEST(::ns::test::Type::SMALL, (name), (f))
+#define TEST_LARGE(name, f) TEST(::ns::test::Type::LARGE, (name), (f))
+#define TEST_PERFORMANCE(name, f) TEST(::ns::test::Type::PERFORMANCE, (name), (f))
 }

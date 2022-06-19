@@ -31,19 +31,22 @@ namespace
 constexpr std::string_view SMALL = "Small";
 constexpr std::string_view LARGE = "Large";
 constexpr std::string_view PERFORMANCE = "Performance";
-}
 
-void Tests::run(
-        const Test& test,
-        const std::string_view test_name,
-        const std::string_view type_name,
+template <typename T>
+void run(
+        const T& test,
+        const std::string_view& test_name,
+        const std::string_view& type_name,
         progress::Ratios* const progress_ratios)
 {
         const std::string name = [&]()
         {
-                std::ostringstream oss;
-                oss << "Self-Test, " << type_name << ", " << test_name;
-                return oss.str();
+                std::string s;
+                s += "Self-Test, ";
+                s += type_name;
+                s += ", ";
+                s += test_name;
+                return s;
         }();
 
         progress::Ratio progress(progress_ratios, name);
@@ -65,6 +68,7 @@ void Tests::run(
                 {
                         std::visit(visitors, test);
                 });
+}
 }
 
 std::vector<std::string> Tests::small_names() const
@@ -100,7 +104,7 @@ std::vector<std::string> Tests::performance_names() const
         return names;
 }
 
-void Tests::run_small(const std::string_view name, progress::Ratios* const progress_ratios) const
+void Tests::run_small(const std::string& name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = small_tests_.find(name);
         if (iter == small_tests_.cend())
@@ -112,7 +116,7 @@ void Tests::run_small(const std::string_view name, progress::Ratios* const progr
         run(iter->second, iter->first, SMALL, progress_ratios);
 }
 
-void Tests::run_large(const std::string_view name, progress::Ratios* const progress_ratios) const
+void Tests::run_large(const std::string& name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = large_tests_.find(name);
         if (iter == large_tests_.cend())
@@ -124,7 +128,7 @@ void Tests::run_large(const std::string_view name, progress::Ratios* const progr
         run(iter->second, iter->first, LARGE, progress_ratios);
 }
 
-void Tests::run_performance(const std::string_view name, progress::Ratios* const progress_ratios) const
+void Tests::run_performance(const std::string& name, progress::Ratios* const progress_ratios) const
 {
         const auto iter = performance_tests_.find(name);
         if (iter == performance_tests_.cend())
