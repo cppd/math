@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::settings
 {
-using Dimensions = std::index_sequence<3, 4, 5>;
+using Dimensions = std::index_sequence<3, 4, 5, 6>;
 }
