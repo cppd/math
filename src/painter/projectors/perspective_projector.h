@@ -73,12 +73,12 @@ public:
                 projectors_implementation::check_orthogonality(camera_dir_, screen_axes_);
         }
 
-        const std::array<int, N - 1>& screen_size() const override
+        [[nodiscard]] const std::array<int, N - 1>& screen_size() const override
         {
                 return screen_size_;
         }
 
-        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
+        [[nodiscard]] Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 const Vector<N - 1, T> screen_point = screen_org_ + point;
                 const Vector<N, T> screen_dir = projectors_implementation::screen_dir(screen_axes_, screen_point);
