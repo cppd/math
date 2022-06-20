@@ -50,5 +50,6 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         bool cornell_box,
         const Color& light,
         const Color& background_light,
+        std::optional<std::type_identity_t<T>> clip_plane_position,
         progress::Ratio* progress);
 }

@@ -87,6 +87,16 @@ std::optional<Vector<N + 1, T>> make_clip_plane_equation(const view::info::ClipP
         }
 }
 
+template <typename T>
+std::optional<T> make_clip_plane_position(const view::info::ClipPlane& clip_plane)
+{
+        if (clip_plane.position)
+        {
+                return *clip_plane.position;
+        }
+        return std::nullopt;
+}
+
 template <typename T, typename Color, std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
@@ -133,7 +143,7 @@ void thread_function(
                 progress::Ratio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), dimension_parameters.max_size, parameters.cornell_box, light,
-                        background_light, &progress);
+                        background_light, make_clip_plane_position<T>(clip_plane), &progress);
         }
         ASSERT(scene);
 

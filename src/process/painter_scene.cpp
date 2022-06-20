@@ -121,12 +121,13 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         const bool cornell_box,
         const Color& light,
         const Color& background_light,
+        const std::optional<std::type_identity_t<T>> clip_plane_position,
         progress::Ratio* const progress)
 {
         if (!cornell_box)
         {
                 return painter::create_simple_scene(
-                        light, background_light, max_screen_size, std::move(shape), progress);
+                        light, background_light, clip_plane_position, max_screen_size, std::move(shape), progress);
         }
 
         std::array<int, N - 1> screen_size;
@@ -143,9 +144,10 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
                 const Vector<3, T>&, const Vector<3, T>&, std::type_identity_t<T>, const std::optional<Vector<4, T>>&, \
                 int, int, bool, const C&, const C&, progress::Ratio*);
 
-#define TEMPLATE(N, T, C)                                                               \
-        template std::unique_ptr<const painter::Scene<(N), T, C>> create_painter_scene( \
-                std::unique_ptr<const painter::Shape<(N), T, C>>&&, int, bool, const C&, const C&, progress::Ratio*);
+#define TEMPLATE(N, T, C)                                                                          \
+        template std::unique_ptr<const painter::Scene<(N), T, C>> create_painter_scene(            \
+                std::unique_ptr<const painter::Shape<(N), T, C>>&&, int, bool, const C&, const C&, \
+                std::optional<std::type_identity_t<T>>, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_3)
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

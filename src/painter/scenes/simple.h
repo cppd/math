@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 
 #include <memory>
+#include <optional>
 
 namespace ns::painter
 {
@@ -30,6 +31,7 @@ template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
+        std::optional<std::type_identity_t<T>> clip_plane_position,
         int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* progress);

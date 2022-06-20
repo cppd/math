@@ -137,12 +137,43 @@ void create_light_sources(
         light_sources->clear();
         light_sources->push_back(std::move(ptr));
 }
+
+template <std::size_t N, typename T>
+std::optional<Vector<N + 1, T>> create_clip_plane(
+        const std::optional<T> clip_plane_position,
+        const geometry::BoundingBox<N, T>& bounding_box)
+{
+        static_assert(N >= 1);
+
+        if (!clip_plane_position)
+        {
+                return std::nullopt;
+        }
+
+        Vector<N + 1, T> res;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                res[i] = 0;
+        }
+        res[N - 1] = -1;
+
+        // n * point + d = 0
+        // d = -n * point
+        // d = point
+        const T min = bounding_box.min()[N - 1];
+        const T max = bounding_box.max()[N - 1];
+        const T t = std::clamp(*clip_plane_position, T{0}, T{1});
+        res[N] = std::lerp(min, max, t);
+
+        return res;
+}
 }
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
+        const std::optional<std::type_identity_t<T>> clip_plane_position,
         const int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* const progress)
@@ -160,13 +191,14 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         shapes.push_back(std::move(shape));
 
         return create_storage_scene<N, T, Color>(
-                background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
-                std::move(shapes), progress);
+                background_light, create_clip_plane(clip_plane_position, bounding_box), std::move(projector),
+                std::move(light_sources), std::move(shapes), progress);
 }
 
-#define TEMPLATE(N, T, C)                                                     \
-        template std::unique_ptr<const Scene<(N), T, C>> create_simple_scene( \
-                const C&, const C&, int, std::unique_ptr<const Shape<(N), T, C>>&&, progress::Ratio*);
+#define TEMPLATE(N, T, C)                                                        \
+        template std::unique_ptr<const Scene<(N), T, C>> create_simple_scene(    \
+                const C&, const C&, std::optional<std::type_identity_t<T>>, int, \
+                std::unique_ptr<const Shape<(N), T, C>>&&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }
