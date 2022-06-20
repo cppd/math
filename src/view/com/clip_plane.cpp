@@ -111,4 +111,13 @@ std::optional<Vector4d> ClipPlane::equation() const
         }
         return clip_plane_equation(*view_matrix_, position_);
 }
+
+[[nodiscard]] std::optional<double> ClipPlane::position() const
+{
+        if (!view_matrix_)
+        {
+                return std::nullopt;
+        }
+        return position_;
+}
 }

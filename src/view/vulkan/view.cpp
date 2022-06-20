@@ -202,7 +202,7 @@ class Impl final
 
         void info(std::optional<info::ClipPlane>* const clip_plane)
         {
-                *clip_plane = info::ClipPlane{.equation = clip_plane_.equation()};
+                *clip_plane = info::ClipPlane{.equation = clip_plane_.equation(), .position = clip_plane_.position()};
         }
 
         void info(std::optional<info::Functionality>* const functionality) const

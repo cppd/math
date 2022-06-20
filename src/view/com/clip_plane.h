@@ -53,5 +53,6 @@ public:
         void command(const ClipPlaneCommand& clip_plane_command);
 
         [[nodiscard]] std::optional<Vector4d> equation() const;
+        [[nodiscard]] std::optional<double> position() const;
 };
 }

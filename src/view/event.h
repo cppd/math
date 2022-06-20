@@ -426,6 +426,7 @@ struct Camera final
 struct ClipPlane final
 {
         std::optional<Vector4d> equation;
+        std::optional<double> position;
 };
 
 struct Image final
