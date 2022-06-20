@@ -87,7 +87,7 @@ void test_bounding_box_performance(progress::Ratio* const progress)
 
 //
 
-TEST_SMALL("Bounding box intersection", test_bounding_box_intersection)
-TEST_PERFORMANCE("Bounding box intersection", test_bounding_box_performance)
+TEST_SMALL("Bounding Box Intersection", test_bounding_box_intersection)
+TEST_PERFORMANCE("Bounding Box Intersection", test_bounding_box_performance)
 }
 }

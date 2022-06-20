@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/pcg.h>
+#include <src/com/string/str.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 #include <random>
@@ -176,7 +178,7 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
         const double time = duration_from(start_time);
 
         std::string s;
-        s += "Convex hull: time = " + to_string_fixed(time, 5) + " s";
+        s += "Convex hull in " + space_name(N) + ": time = " + to_string_fixed(time, 5) + " s";
         if (write_info)
         {
                 s += ", source points = " + to_string_digit_groups(points.size());
@@ -189,8 +191,10 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
 }
 
 template <std::size_t N>
-void test(const std::size_t low, const std::size_t high, progress::Ratio* const progress)
+void test_convex_hull(progress::Ratio* const progress)
 {
+        constexpr int MIN_SIZE = 1'000;
+        constexpr int MAX_SIZE = 2'000;
         constexpr bool ON_SPHERE = false;
         constexpr bool WRITE_LOG = true;
         constexpr bool WRITE_INFO = true;
@@ -198,8 +202,10 @@ void test(const std::size_t low, const std::size_t high, progress::Ratio* const 
         const int size = [&]()
         {
                 PCG engine;
-                return std::uniform_int_distribution<int>(low, high)(engine);
+                return std::uniform_int_distribution<int>(MIN_SIZE, MAX_SIZE)(engine);
         }();
+
+        // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}}
 
         const std::string name = "Test convex hull in " + space_name(N);
         LOG(name);
@@ -220,51 +226,45 @@ void test(const std::size_t low, const std::size_t high, progress::Ratio* const 
         LOG(name + " passed");
 }
 
-void test_performance()
+template <std::size_t N>
+void test_performance(progress::Ratio* const progress)
 {
         // N = 4, in parallel, 100000 points, inside sphere, time: 1.7 s, 0.4 s.
-
-        constexpr std::size_t N = 4;
 
         constexpr bool ON_SPHERE = false;
         constexpr int SIZE = 100'000;
         constexpr bool WRITE_LOG = false;
         constexpr bool WRITE_INFO = false;
 
-        // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}}
-
-        progress::Ratio progress(nullptr);
-
-        create_convex_hull(random_data<N>(false /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, &progress);
-        create_convex_hull(random_data<N>(true /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, &progress);
+        {
+                constexpr bool ZERO = false;
+                create_convex_hull(random_data<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
+        }
+        {
+                constexpr bool ZERO = true;
+                create_convex_hull(random_data<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
+        }
 }
 
-void test_2(progress::Ratio* const progress)
+void performance_tests(progress::Ratio* const progress)
 {
-        test<2>(1000, 2000, progress);
+        [progress]<std::size_t... I>(std::index_sequence<I...> &&)
+        {
+                (test_performance<I>(progress), ...);
+        }
+        (settings::Dimensions2A());
 }
 
-void test_3(progress::Ratio* const progress)
+template <std::size_t... I>
+auto convex_hull_tests(std::index_sequence<I...>&&) noexcept
 {
-        test<3>(1000, 2000, progress);
+        return std::to_array({std::make_tuple(
+                I <= 4 ? ns::test::Type::SMALL : ns::test::Type::LARGE,
+                "Convex Hull, " + to_upper_first_letters(space_name(I)), test_convex_hull<I>)...});
 }
 
-void test_4(progress::Ratio* const progress)
-{
-        test<4>(1000, 2000, progress);
-}
+TESTS(convex_hull_tests(settings::Dimensions2A()))
 
-void test_5(progress::Ratio* const progress)
-{
-        test<5>(1000, 2000, progress);
-}
-
-TEST_SMALL("Convex hull, 2-Space", test_2)
-TEST_SMALL("Convex hull, 3-Space", test_3)
-TEST_SMALL("Convex hull, 4-Space", test_4)
-
-TEST_LARGE("Convex hull, 5-Space", test_5)
-
-TEST_PERFORMANCE("Convex hull", test_performance)
+TEST_PERFORMANCE("Convex Hull", performance_tests)
 }
 }

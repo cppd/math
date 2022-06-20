@@ -56,6 +56,6 @@ void test()
         test_negative_epsilon<long double>();
 }
 
-TEST_SMALL("Test type numbers", test)
+TEST_SMALL("Type Numbers", test)
 }
 }

@@ -290,7 +290,7 @@ void test_erf_performance()
         test_performance<long double>();
 }
 
-TEST_SMALL("Inverse error function", test_erf)
-TEST_PERFORMANCE("Inverse error function", test_erf_performance)
+TEST_SMALL("Inverse Error Function", test_erf)
+TEST_PERFORMANCE("Inverse Error Function", test_erf_performance)
 }
 }

@@ -85,7 +85,7 @@ void test_hyperplane_simplex_performance(progress::Ratio* const progress)
 
 //
 
-TEST_SMALL("Hyperplane simplex intersection", test_hyperplane_simplex_intersection)
-TEST_PERFORMANCE("Hyperplane simplex intersection", test_hyperplane_simplex_performance)
+TEST_SMALL("Hyperplane Simplex Intersection", test_hyperplane_simplex_intersection)
+TEST_PERFORMANCE("Hyperplane Simplex Intersection", test_hyperplane_simplex_performance)
 }
 }

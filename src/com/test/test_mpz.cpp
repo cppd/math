@@ -111,6 +111,6 @@ void test()
         compare(static_cast<unsigned __int128>(0xF000'FFFF'FFFF'FFFF) << 64);
 }
 
-TEST_SMALL("GMP integer import", test)
+TEST_SMALL("GMP Integer Import", test)
 }
 }

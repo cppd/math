@@ -203,6 +203,6 @@ void test(progress::Ratio* const progress)
         test_performance<SampleType::IN_SPHERE>(counter);
 }
 
-TEST_PERFORMANCE("Uniform sphere samples", test)
+TEST_PERFORMANCE("Uniform Sphere Samples", test)
 }
 }

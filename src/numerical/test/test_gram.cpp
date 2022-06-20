@@ -136,6 +136,6 @@ void test()
         LOG("Test Gram matrix passed");
 }
 
-TEST_SMALL("Gram matrix", test)
+TEST_SMALL("Gram Matrix", test)
 }
 }

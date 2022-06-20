@@ -202,6 +202,6 @@ void test_convex_polytope()
         LOG("Test convex polytope passed");
 }
 
-TEST_SMALL("Convex polytope", test_convex_polytope)
+TEST_SMALL("Convex Polytope", test_convex_polytope)
 }
 }

@@ -142,6 +142,6 @@ TEST_LARGE("Sample Distribution, Sphere Uniform, 3-Space", test_sphere_uniform<3
 TEST_LARGE("Sample Distribution, Sphere Uniform, 4-Space", test_sphere_uniform<4>)
 TEST_LARGE("Sample Distribution, Sphere Uniform, 5-Space", test_sphere_uniform<5>)
 
-TEST_PERFORMANCE("Sampling, sphere uniform", test_sphere_uniform_performance)
+TEST_PERFORMANCE("Sampling, Sphere Uniform", test_sphere_uniform_performance)
 }
 }

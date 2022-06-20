@@ -36,20 +36,21 @@ constexpr bool compare_two_elements(const std::tuple<T...>& t)
         }
 }
 
-template <typename... T, std::size_t... I>
+template <unsigned MIN, typename... T, std::size_t... I>
 constexpr bool compare(std::tuple<T...>&& t, std::index_sequence<I...>&&)
 {
         static_assert(sizeof...(T) > 0 && sizeof...(T) == sizeof...(I));
 
-        return ((std::get<I>(t) >= 3) && ...) && (compare_two_elements<I>(t) && ...);
+        return ((std::get<I>(t) >= MIN) && ...) && (compare_two_elements<I>(t) && ...);
 }
 
-template <template <typename T, T...> typename Sequence, typename T, T... I>
+template <unsigned MIN, template <typename T, T...> typename Sequence, typename T, T... I>
 constexpr bool check(const Sequence<T, I...>&)
 {
-        return compare(std::make_tuple(I...), std::make_index_sequence<sizeof...(I)>());
+        return compare<MIN>(std::make_tuple(I...), std::make_index_sequence<sizeof...(I)>());
 }
 
-static_assert(check(Dimensions()));
+static_assert(check<3>(Dimensions()));
+static_assert(check<2>(Dimensions2A()));
 }
 }

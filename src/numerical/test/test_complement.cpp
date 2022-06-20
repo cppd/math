@@ -301,6 +301,6 @@ void test_integer()
 }
 
 TEST_SMALL("Complement", test)
-TEST_SMALL("Complement, integer", test_integer)
+TEST_SMALL("Complement, Integer", test_integer)
 }
 }

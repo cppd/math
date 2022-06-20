@@ -25,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/string/str.h>
 #include <src/geometry/shapes/sphere_create.h>
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 #include <filesystem>
@@ -244,8 +246,13 @@ void test()
         LOG("Test mesh files passed");
 }
 
-TEST_SMALL("Mesh Files 3-Space", test<3>)
-TEST_SMALL("Mesh Files 4-Space", test<4>)
-TEST_SMALL("Mesh Files 5-Space", test<5>)
+template <std::size_t... I>
+auto mesh_file_tests(std::index_sequence<I...>&&) noexcept
+{
+        return std::to_array({std::make_tuple(
+                ns::test::Type::SMALL, "Mesh Files, " + to_upper_first_letters(space_name(I)), test<I>)...});
+}
+
+TESTS(mesh_file_tests(settings::Dimensions()))
 }
 }

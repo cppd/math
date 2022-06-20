@@ -145,6 +145,6 @@ void compare_types()
         write<unsigned __int128>(1e16);
 }
 
-TEST_PERFORMANCE("Arithmetic types", compare_types)
+TEST_PERFORMANCE("Arithmetic Types", compare_types)
 }
 }

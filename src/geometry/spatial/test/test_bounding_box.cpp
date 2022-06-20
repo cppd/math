@@ -364,6 +364,6 @@ void test_bounding_box()
         LOG("Test bounding box passed");
 }
 
-TEST_SMALL("Bounding box", test_bounding_box)
+TEST_SMALL("Bounding Box", test_bounding_box)
 }
 }

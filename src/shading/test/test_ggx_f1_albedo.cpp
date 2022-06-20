@@ -92,11 +92,11 @@ void test()
 
 void test_albedo()
 {
-        const auto f = []<std::size_t... I>(std::index_sequence<I...> &&)
+        []<std::size_t... I>(std::index_sequence<I...> &&)
         {
                 (test<I>(), ...);
-        };
-        f(settings::Dimensions());
+        }
+        (settings::Dimensions());
 }
 
 TEST_SMALL("GGX F1 Albedo", test_albedo)

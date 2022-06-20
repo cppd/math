@@ -200,6 +200,6 @@ void write()
         write_to_files<long double>();
 }
 
-TEST_SMALL("Sampler files", write)
+TEST_SMALL("Sampler Files", write)
 }
 }

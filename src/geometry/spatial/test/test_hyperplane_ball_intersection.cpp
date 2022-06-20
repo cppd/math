@@ -85,7 +85,7 @@ void test_hyperplane_ball_performance(progress::Ratio* const progress)
 
 //
 
-TEST_SMALL("Hyperplane ball intersection", test_hyperplane_ball_intersection)
-TEST_PERFORMANCE("Hyperplane ball intersection", test_hyperplane_ball_performance)
+TEST_SMALL("Hyperplane Ball Intersection", test_hyperplane_ball_intersection)
+TEST_PERFORMANCE("Hyperplane Ball Intersection", test_hyperplane_ball_performance)
 }
 }

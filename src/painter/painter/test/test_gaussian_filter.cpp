@@ -111,6 +111,6 @@ void test()
         test_filter<double>(1e-13);
 }
 
-TEST_SMALL("Painter filter", test)
+TEST_SMALL("Painter Filter", test)
 }
 }

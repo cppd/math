@@ -212,6 +212,6 @@ void test_sampler_discrepancy()
         LOG("Test sampler discrepancy passed");
 }
 
-TEST_SMALL("Sampler discrepancy", test_sampler_discrepancy)
+TEST_SMALL("Sampler Discrepancy", test_sampler_discrepancy)
 }
 }

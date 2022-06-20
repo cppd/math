@@ -86,7 +86,7 @@ void test_hyperplane_parallelotope_performance(progress::Ratio* const progress)
 
 //
 
-TEST_SMALL("Hyperplane parallelotope intersection", test_hyperplane_parallelotope_intersection)
-TEST_PERFORMANCE("Hyperplane parallelotope intersection", test_hyperplane_parallelotope_performance)
+TEST_SMALL("Hyperplane Parallelotope Intersection", test_hyperplane_parallelotope_intersection)
+TEST_PERFORMANCE("Hyperplane Parallelotope Intersection", test_hyperplane_parallelotope_performance)
 }
 }

@@ -85,7 +85,7 @@ void test_parallelotope_performance(progress::Ratio* const progress)
 
 //
 
-TEST_SMALL("Parallelotope intersection", test_parallelotope_intersection)
-TEST_PERFORMANCE("Parallelotope intersection", test_parallelotope_performance)
+TEST_SMALL("Parallelotope Intersection", test_parallelotope_intersection)
+TEST_PERFORMANCE("Parallelotope Intersection", test_parallelotope_performance)
 }
 }

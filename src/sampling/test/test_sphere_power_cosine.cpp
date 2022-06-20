@@ -160,6 +160,6 @@ TEST_LARGE("Sample Distribution, Sphere Power Cosine, 3-Space", test_power_cosin
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 4-Space", test_power_cosine_on_hemisphere<4>)
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 5-Space", test_power_cosine_on_hemisphere<5>)
 
-TEST_PERFORMANCE("Sampling, sphere power cosine", test_power_cosine_on_hemisphere_performance)
+TEST_PERFORMANCE("Sampling, Sphere Power Cosine", test_power_cosine_on_hemisphere_performance)
 }
 }

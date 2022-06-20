@@ -179,6 +179,6 @@ void test()
         write_samples_to_files<long double>();
 }
 
-TEST_SMALL("Uniform samples file", test)
+TEST_SMALL("Uniform Samples File", test)
 }
 }

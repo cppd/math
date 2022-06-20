@@ -146,7 +146,7 @@ void test_performance()
         test_min_max_performance<double>(engine);
 }
 
-TEST_SMALL("Algorithm minimum and maximum", test_equal)
-TEST_PERFORMANCE("Algorithm minimum and maximum", test_performance)
+TEST_SMALL("Algorithm Minimum And Maximum", test_equal)
+TEST_PERFORMANCE("Algorithm Minimum And Maximum", test_performance)
 }
 }

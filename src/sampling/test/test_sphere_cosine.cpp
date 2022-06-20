@@ -149,6 +149,6 @@ TEST_LARGE("Sample Distribution, Sphere Cosine, 3-Space", test_cosine_on_hemisph
 TEST_LARGE("Sample Distribution, Sphere Cosine, 4-Space", test_cosine_on_hemisphere<4>)
 TEST_LARGE("Sample Distribution, Sphere Cosine, 5-Space", test_cosine_on_hemisphere<5>)
 
-TEST_PERFORMANCE("Sampling, sphere cosine", test_cosine_on_hemisphere_performance)
+TEST_PERFORMANCE("Sampling, Sphere Cosine", test_cosine_on_hemisphere_performance)
 }
 }
