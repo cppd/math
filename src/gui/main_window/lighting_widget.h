@@ -43,6 +43,7 @@ private:
         double intensity_;
         color::Spectrum spectrum_;
         color::Color rgb_;
+        double front_lighting_proportion_;
 
         void send_color();
 
@@ -53,6 +54,7 @@ private:
         void on_daylight_toggled();
         void on_blackbody_a_toggled();
         void on_blackbody_toggled();
+        void on_front_lighting_changed();
 
 public:
         LightingWidget();
@@ -62,5 +64,6 @@ public:
         [[nodiscard]] std::tuple<color::Spectrum, color::Color> color() const;
         [[nodiscard]] color::Spectrum spectrum() const;
         [[nodiscard]] color::Color rgb() const;
+        [[nodiscard]] double front_lighting_proportion() const;
 };
 }

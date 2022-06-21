@@ -170,6 +170,7 @@ std::vector<view::Command> MainWindow::view_initial_commands() const
                 view::command::OpticalFlowShow(view_widget_->optical_flow_checked()),
                 view::command::PencilSketchShow(view_widget_->pencil_sketch_checked()),
                 view::command::SetLightingColor(lighting_widget_->rgb()),
+                view::command::SetFrontLightingProportion(lighting_widget_->front_lighting_proportion()),
                 view::command::SetNormalColorNegative(colors_widget_->normal_color_negative()),
                 view::command::SetNormalColorPositive(colors_widget_->normal_color_positive()),
                 view::command::SetNormalLength(view_widget_->normal_length()),

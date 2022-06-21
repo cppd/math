@@ -84,6 +84,15 @@ struct SetLightingColor final
         }
 };
 
+struct SetFrontLightingProportion final
+{
+        float proportion;
+
+        explicit SetFrontLightingProportion(const float proportion) : proportion(proportion)
+        {
+        }
+};
+
 struct SetBackgroundColor final
 {
         color::Color value;
@@ -389,6 +398,7 @@ using ViewCommand = std::variant<
         command::DeleteObject,
         command::ResetView,
         command::SetBackgroundColor,
+        command::SetFrontLightingProportion,
         command::SetLightingColor,
         command::SetNormalColorNegative,
         command::SetNormalColorPositive,

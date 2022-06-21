@@ -83,6 +83,11 @@ class ViewProcess final
                 renderer_->exec(gpu::renderer::command::SetLightingColor(v.value));
         }
 
+        void command(const command::SetFrontLightingProportion& v)
+        {
+                renderer_->exec(gpu::renderer::command::SetFrontLightingProportion(v.proportion));
+        }
+
         void command(const command::SetBackgroundColor& v)
         {
                 clear_color_rgb32_ = v.value.rgb32().clamp(0, 1);

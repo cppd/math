@@ -41,6 +41,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 vec3 direction_to_camera;                                                   \
                 vec2 viewport_center;                                                       \
                 vec2 viewport_factor;                                                       \
+                float front_lighting_proportion;                                            \
+                float side_lighting_proportion;                                             \
         }                                                                                   \
         drawing;
 

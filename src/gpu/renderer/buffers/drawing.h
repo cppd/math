@@ -50,6 +50,8 @@ class DrawingBuffer final
                 vulkan::std140::Vector3f direction_to_camera;
                 vulkan::std140::Vector2f viewport_center;
                 vulkan::std140::Vector2f viewport_factor;
+                float front_lighting_proportion;
+                float side_lighting_proportion;
         };
 
         vulkan::BufferWithMemory buffer_;
@@ -75,6 +77,7 @@ public:
         void set_normal_length(float length) const;
         void set_show_materials(bool show) const;
         void set_direction_to_light(const Vector3f& direction) const;
+        void set_lighting_proportions(float front, float side) const;
         void set_direction_to_camera(const Vector3f& direction) const;
         void set_show_smooth(bool show) const;
         void set_show_wireframe(bool show) const;

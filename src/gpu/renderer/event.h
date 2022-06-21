@@ -59,6 +59,15 @@ struct SetLightingColor final
         }
 };
 
+struct SetFrontLightingProportion final
+{
+        float proportion;
+
+        explicit SetFrontLightingProportion(const float proportion) : proportion(proportion)
+        {
+        }
+};
+
 struct SetBackgroundColor final
 {
         color::Color color;
@@ -231,6 +240,7 @@ using ViewCommand = std::variant<
         command::SetCamera,
         command::SetClipPlane,
         command::SetClipPlaneColor,
+        command::SetFrontLightingProportion,
         command::SetLightingColor,
         command::SetNormalColorNegative,
         command::SetNormalColorPositive,

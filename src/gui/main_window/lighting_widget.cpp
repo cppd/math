@@ -46,6 +46,8 @@ constexpr std::string_view BLACKBODY_T = "Blackbody %1K";
 
 constexpr double TEMPERATURE_ROUND = 10;
 
+constexpr double FRONT_LIGHTING_PROPORTION = 0.2;
+
 double ceil(const double v, const int t)
 {
         return std::ceil(v / t) * t;
@@ -115,6 +117,10 @@ LightingWidget::LightingWidget()
         ui_.radioButton_d65->setText(QString::fromUtf8(DAYLIGHT_D65.data(), DAYLIGHT_D65.size()));
         ui_.radioButton_blackbody_a->setText(QString::fromUtf8(BLACKBODY_A.data(), BLACKBODY_A.size()));
 
+        ui_.slider_front_lighting->setMinimum(0);
+        ui_.slider_front_lighting->setMaximum(100);
+        set_slider_position(ui_.slider_front_lighting, FRONT_LIGHTING_PROPORTION);
+
         on_intensity_changed();
         on_daylight_changed();
         on_blackbody_changed();
@@ -122,6 +128,7 @@ LightingWidget::LightingWidget()
         on_daylight_toggled();
         on_blackbody_a_toggled();
         on_blackbody_toggled();
+        on_front_lighting_changed();
 
         connect(ui_.slider_intensity, &QSlider::valueChanged, this, &LightingWidget::on_intensity_changed);
         connect(ui_.slider_daylight_cct, &QSlider::valueChanged, this, &LightingWidget::on_daylight_changed);
@@ -130,6 +137,7 @@ LightingWidget::LightingWidget()
         connect(ui_.radioButton_daylight, &QRadioButton::toggled, this, &LightingWidget::on_daylight_toggled);
         connect(ui_.radioButton_blackbody_a, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_a_toggled);
         connect(ui_.radioButton_blackbody, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_toggled);
+        connect(ui_.slider_front_lighting, &QSlider::valueChanged, this, &LightingWidget::on_front_lighting_changed);
 }
 
 void LightingWidget::set_view(view::View* const view)
@@ -242,6 +250,20 @@ void LightingWidget::on_blackbody_changed()
         send_color();
 }
 
+void LightingWidget::on_front_lighting_changed()
+{
+        front_lighting_proportion_ = slider_position(ui_.slider_front_lighting);
+
+        std::ostringstream oss;
+        oss << std::setprecision(2) << std::fixed << front_lighting_proportion_;
+        ui_.label_front_lighting->setText(QString::fromStdString(oss.str()));
+
+        if (view_)
+        {
+                view_->send(view::command::SetFrontLightingProportion(front_lighting_proportion_));
+        }
+}
+
 color::Spectrum LightingWidget::spectrum() const
 {
         return intensity_ * spectrum_;
@@ -255,5 +277,10 @@ color::Color LightingWidget::rgb() const
 std::tuple<color::Spectrum, color::Color> LightingWidget::color() const
 {
         return {spectrum(), rgb()};
+}
+
+double LightingWidget::front_lighting_proportion() const
+{
+        return front_lighting_proportion_;
 }
 }

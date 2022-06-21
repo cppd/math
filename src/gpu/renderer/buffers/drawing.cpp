@@ -166,6 +166,25 @@ void DrawingBuffer::set_direction_to_light(const Vector3f& direction) const
         copy_to_buffer(offsetof(Drawing, direction_to_light), d);
 }
 
+void DrawingBuffer::set_lighting_proportions(const float front, const float side) const
+{
+        static_assert(
+                offsetof(Drawing, front_lighting_proportion) + sizeof(Drawing::front_lighting_proportion)
+                == offsetof(Drawing, side_lighting_proportion));
+
+        constexpr std::size_t OFFSET = offsetof(Drawing, front_lighting_proportion);
+        constexpr std::size_t SIZE =
+                sizeof(Drawing::front_lighting_proportion) + sizeof(Drawing::side_lighting_proportion);
+
+        vulkan::BufferMapper map(buffer_, OFFSET, SIZE);
+
+        decltype(Drawing().front_lighting_proportion) front_lighting_proportion = front;
+        decltype(Drawing().side_lighting_proportion) side_lighting_proportion = side;
+
+        map.write(0, front_lighting_proportion);
+        map.write(sizeof(front_lighting_proportion), side_lighting_proportion);
+}
+
 void DrawingBuffer::set_direction_to_camera(const Vector3f& direction) const
 {
         decltype(Drawing().direction_to_camera) d = direction;

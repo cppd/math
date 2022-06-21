@@ -67,6 +67,12 @@ class RendererView final
                 drawing_buffer_->set_lighting_color(v.color.rgb32().max_n(0));
         }
 
+        void command(const command::SetFrontLightingProportion& v)
+        {
+                ASSERT(v.proportion >= 0 && v.proportion <= 1);
+                drawing_buffer_->set_lighting_proportions(v.proportion, 1 - v.proportion);
+        }
+
         void command(const command::SetBackgroundColor& v)
         {
                 drawing_buffer_->set_background_color(v.color.rgb32().clamp(0, 1));
