@@ -32,6 +32,7 @@ std::function<void(progress::RatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color);
 }

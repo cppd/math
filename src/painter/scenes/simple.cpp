@@ -174,6 +174,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
         const std::optional<std::type_identity_t<T>> clip_plane_position,
+        const std::type_identity_t<T> /*front_light_proportion*/,
         const int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* const progress)
@@ -195,9 +196,9 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
                 std::move(light_sources), std::move(shapes), progress);
 }
 
-#define TEMPLATE(N, T, C)                                                        \
-        template std::unique_ptr<const Scene<(N), T, C>> create_simple_scene(    \
-                const C&, const C&, std::optional<std::type_identity_t<T>>, int, \
+#define TEMPLATE(N, T, C)                                                                                 \
+        template std::unique_ptr<const Scene<(N), T, C>> create_simple_scene(                             \
+                const C&, const C&, std::optional<std::type_identity_t<T>>, std::type_identity_t<T>, int, \
                 std::unique_ptr<const Shape<(N), T, C>>&&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

@@ -45,6 +45,7 @@ namespace
 {
 constexpr color::RGB8 BACKGROUND_LIGHT(50, 100, 150);
 constexpr float LIGHTING_INTENSITY = 1;
+constexpr float FRONT_LIGHT_PROPORTION = 0.2;
 
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
@@ -249,7 +250,8 @@ void test_painter(
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
                 Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
-                Color::illuminant(BACKGROUND_LIGHT), std::nullopt, max_screen_size, std::move(painter_mesh), progress);
+                Color::illuminant(BACKGROUND_LIGHT), std::nullopt, FRONT_LIGHT_PROPORTION, max_screen_size,
+                std::move(painter_mesh), progress);
 
         static_assert(OUTPUT_TYPE == OutputType::FILE || OUTPUT_TYPE == OutputType::WINDOW);
 

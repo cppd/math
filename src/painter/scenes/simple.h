@@ -32,6 +32,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
         std::optional<std::type_identity_t<T>> clip_plane_position,
+        std::type_identity_t<T> front_light_proportion,
         int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* progress);

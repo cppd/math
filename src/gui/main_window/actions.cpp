@@ -142,7 +142,8 @@ void painter(
                         }
 
                         return process::action_painter(
-                                objects, *camera, *clip_plane, lighting->color(), colors->background_color());
+                                objects, *camera, *clip_plane, lighting->front_lighting_proportion(), lighting->color(),
+                                colors->background_color());
                 });
 }
 

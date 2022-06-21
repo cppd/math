@@ -102,6 +102,7 @@ void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const Color& light,
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
@@ -135,15 +136,16 @@ void thread_function(
                 scene = create_painter_scene(
                         std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
                         to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
-                        clip_plane_equation, dimension_parameters.width, dimension_parameters.height,
-                        parameters.cornell_box, light, background_light, &progress);
+                        clip_plane_equation, static_cast<T>(front_light_proportion), dimension_parameters.width,
+                        dimension_parameters.height, parameters.cornell_box, light, background_light, &progress);
         }
         else
         {
                 progress::Ratio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), dimension_parameters.max_size, parameters.cornell_box, light,
-                        background_light, make_clip_plane_position<T>(clip_plane), &progress);
+                        background_light, make_clip_plane_position<T>(clip_plane),
+                        static_cast<T>(front_light_proportion), &progress);
         }
         ASSERT(scene);
 
@@ -158,6 +160,7 @@ void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
@@ -171,7 +174,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<0, Colors>;
                 thread_function<T, Color>(
-                        objects, camera, clip_plane, std::get<Color>(lighting_color),
+                        objects, camera, clip_plane, front_light_proportion, std::get<Color>(lighting_color),
                         to_illuminant<Color>(background_color), parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -179,7 +182,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<1, Colors>;
                 thread_function<T, Color>(
-                        objects, camera, clip_plane, std::get<Color>(lighting_color),
+                        objects, camera, clip_plane, front_light_proportion, std::get<Color>(lighting_color),
                         to_illuminant<Color>(background_color), parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -192,6 +195,7 @@ void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
@@ -203,14 +207,14 @@ void thread_function(
         {
         case 0:
                 thread_function<std::tuple_element_t<0, Precisions>>(
-                        objects, camera, clip_plane, lighting_color, background_color, parameters, dimension_parameters,
-                        progress_list);
+                        objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        parameters, dimension_parameters, progress_list);
                 return;
 
         case 1:
                 thread_function<std::tuple_element_t<1, Precisions>>(
-                        objects, camera, clip_plane, lighting_color, background_color, parameters, dimension_parameters,
-                        progress_list);
+                        objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        parameters, dimension_parameters, progress_list);
                 return;
         }
         error("Unknown precision index " + to_string(parameters.precision_index));
@@ -222,6 +226,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
@@ -244,8 +249,8 @@ std::function<void(progress::RatioList*)> action_painter_function(
         return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
         {
                 thread_function(
-                        *shared_objects, camera, clip_plane, lighting_color, background_color, std::get<0>(*parameters),
-                        std::get<1>(*parameters), progress_list);
+                        *shared_objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        std::get<0>(*parameters), std::get<1>(*parameters), progress_list);
         };
 }
 
@@ -255,6 +260,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
@@ -280,8 +286,8 @@ std::function<void(progress::RatioList*)> action_painter_function(
         return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
         {
                 thread_function(
-                        *shared_objects, camera, clip_plane, lighting_color, background_color, std::get<0>(*parameters),
-                        std::get<1>(*parameters), progress_list);
+                        *shared_objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        std::get<0>(*parameters), std::get<1>(*parameters), progress_list);
         };
 }
 
@@ -329,6 +335,7 @@ std::function<void(progress::RatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
+        const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
@@ -359,7 +366,9 @@ std::function<void(progress::RatioList*)> action_painter(
                                 },
                                 std::move(paint_object));
                 }
-                return action_painter_function(std::move(meshes), camera, clip_plane, lighting_color, background_color);
+                return action_painter_function(
+                        std::move(meshes), camera, clip_plane, front_light_proportion, lighting_color,
+                        background_color);
         };
 
         return apply_for_dimension(dimension, f);
