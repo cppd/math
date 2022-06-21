@@ -54,25 +54,27 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 }
 
 template <typename T, typename Color>
-void create_light_sources(
+std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> create_light_sources(
         const T& shape_size,
-        const Vector<3, T>& center,
-        const Vector<3, T>& direction,
-        const Color& color,
-        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>>* const light_sources)
+        const Vector<3, T>& view_center,
+        const Vector<3, T>& light_direction,
+        const Color& color)
 {
+        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> res;
+
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
 
         const T distance = shape_size * DISTANCE;
         const T radius = shape_size * RADIUS;
-        const Vector<3, T> position = center - direction.normalized() * distance;
+        const Vector<3, T> position = view_center - light_direction.normalized() * distance;
 
-        auto ptr = std::make_unique<painter::BallLight<3, T, Color>>(position, direction, radius, color);
+        auto ptr = std::make_unique<painter::BallLight<3, T, Color>>(position, light_direction, radius, color);
         ptr->set_color_for_distance(distance);
 
-        light_sources->clear();
-        light_sources->push_back(std::move(ptr));
+        res.push_back(std::move(ptr));
+
+        return res;
 }
 }
 
@@ -104,8 +106,8 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         std::unique_ptr<const painter::Projector<3, T>> projector =
                 create_projector(shape_size, camera_up, camera_direction, view_center, view_width, width, height);
 
-        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources;
-        create_light_sources(shape_size, view_center, light_direction, light, &light_sources);
+        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources =
+                create_light_sources(shape_size, view_center, light_direction, light);
 
         std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
