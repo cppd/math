@@ -50,19 +50,15 @@ namespace ns::sampling
 {
 namespace sphere_implementation
 {
-template <typename T, typename RandomEngine, typename Distribution, std::size_t... I>
-Vector<sizeof...(I), T> random_vector(
-        RandomEngine& engine,
-        Distribution& distribution,
-        std::integer_sequence<std::size_t, I...>&&)
-{
-        return Vector<sizeof...(I), T>((static_cast<void>(I), distribution(engine))...);
-}
-
 template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
 Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 {
-        return random_vector<T>(engine, distribution, std::make_integer_sequence<std::size_t, N>());
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                return Vector<N, T>((static_cast<void>(I), distribution(engine))...);
+        }
+        (std::make_integer_sequence<std::size_t, N>());
 }
 
 //

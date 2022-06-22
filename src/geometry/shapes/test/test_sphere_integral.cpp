@@ -194,12 +194,6 @@ void compare_with_gamma(const T& precision)
         }
 }
 
-template <typename T, unsigned... I>
-void compare_with_gamma(const T& precision, std::integer_sequence<unsigned, I...>&&)
-{
-        (compare_with_gamma<I + 2, T>(precision), ...);
-}
-
 template <typename T>
 void compare_with_gamma(const T& precision)
 {
@@ -207,7 +201,11 @@ void compare_with_gamma(const T& precision)
 
         LOG(name);
 
-        compare_with_gamma<T>(precision, std::make_integer_sequence<unsigned, 100>());
+        [&]<unsigned... I>(std::integer_sequence<unsigned, I...> &&)
+        {
+                (compare_with_gamma<I + 2, T>(precision), ...);
+        }
+        (std::make_integer_sequence<unsigned, 100>());
 
         compare_with_gamma<1'000, T>(precision);
         compare_with_gamma<1'111, T>(precision);

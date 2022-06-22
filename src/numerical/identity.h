@@ -26,32 +26,27 @@ namespace ns::numerical
 {
 namespace identity_implementation
 {
-template <std::size_t VALUE_INDEX, typename T, int... I>
-constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>&&, const T& value)
-{
-        static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
-
-        return Vector<sizeof...(I), T>((I == VALUE_INDEX ? value : 0)...);
-}
-
 template <std::size_t N, typename T, std::size_t VALUE_INDEX>
 constexpr Vector<N, T> make_vector_one_value(const T& value)
 {
-        return make_vector_one_value<VALUE_INDEX>(std::make_integer_sequence<int, N>(), value);
-}
-
-template <typename T, int... I>
-constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vector_one_value(
-        std::integer_sequence<int, I...>&&,
-        const T& value)
-{
-        return {make_vector_one_value<sizeof...(I), T, I>(value)...};
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
+                return Vector<sizeof...(I), T>((I == VALUE_INDEX ? value : 0)...);
+        }
+        (std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N, typename T>
 constexpr std::array<Vector<N, T>, N> make_array_of_vector_one_value(const T& value)
 {
-        return make_array_of_vector_one_value(std::make_integer_sequence<int, N>(), value);
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                return std::array<Vector<N, T>, N>{make_vector_one_value<sizeof...(I), T, I>(value)...};
+        }
+        (std::make_integer_sequence<std::size_t, N>());
 }
 }
 

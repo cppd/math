@@ -42,17 +42,6 @@ constexpr double BOUND_COCONE_ALPHA = 0.14;
 
 constexpr double LAST_AXIS_VALUE = -0.3;
 
-#if 0
-template <typename T, std::size_t... I, typename V>
-constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
-{
-        return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
-}
-
-template <std::size_t N, typename T>
-constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
-#endif
-
 template <std::size_t N, typename T>
 constexpr T last_axis(const Vector<N, T>& v)
 {

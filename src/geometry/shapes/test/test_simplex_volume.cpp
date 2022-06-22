@@ -63,17 +63,6 @@ void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices, const T& volu
         }
 }
 
-template <std::size_t N, typename T, std::size_t... I>
-void test(
-        const std::array<Vector<N, T>, N + 1>& vertices,
-        const T& scale,
-        const T& precision,
-        std::integer_sequence<std::size_t, I...>&&)
-{
-        static_assert(sizeof...(I) == N);
-        (test_simplex<I + 1>(vertices, power<I + 1>(scale) / FACTORIAL<I + 1>, precision), ...);
-}
-
 template <std::size_t N, typename T, typename RandomEngine>
 void test(const T& precision, RandomEngine& engine)
 {
@@ -91,15 +80,24 @@ void test(const T& precision, RandomEngine& engine)
                 return res;
         }();
 
-        std::array<Vector<N, T>, N + 1> vertices;
-        vertices[0] = point;
-        for (std::size_t i = 0; i < N - 1; ++i)
+        const std::array<Vector<N, T>, N + 1> vertices = [&]
         {
-                vertices[i + 1] = point + complement[i] * scale;
-        }
-        vertices[N] = point + vector * scale;
+                std::array<Vector<N, T>, N + 1> res;
+                res[0] = point;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i + 1] = point + complement[i] * scale;
+                }
+                res[N] = point + vector * scale;
+                return res;
+        }();
 
-        test(vertices, scale, precision, std::make_integer_sequence<std::size_t, N>());
+        [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                (test_simplex<I + 1>(vertices, power<I + 1>(scale) / FACTORIAL<I + 1>, precision), ...);
+        }
+        (std::make_integer_sequence<std::size_t, N>());
 }
 
 template <typename T, typename RandomEngine>
@@ -121,6 +119,6 @@ void test_simplex_volume()
         LOG("Test simplex volume passed");
 }
 
-TEST_SMALL("Simplex Volume", test_simplex_volume);
+TEST_SMALL("Simplex Volume", test_simplex_volume)
 }
 }

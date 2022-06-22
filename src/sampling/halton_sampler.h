@@ -40,15 +40,6 @@ class HaltonSampler final
 
         unsigned sample_ = 0;
 
-        template <std::size_t... I>
-        static Vector<N, T> generate(const unsigned sample, std::integer_sequence<std::size_t, I...>&&)
-        {
-                static_assert(N <= std::size(PRIMES));
-                static_assert(sizeof...(I) == N);
-
-                return {radical_inverse<PRIMES[I], T>(sample)...};
-        }
-
 public:
         HaltonSampler()
         {
@@ -56,7 +47,14 @@ public:
 
         Vector<N, T> generate()
         {
-                return generate(sample_++, std::make_integer_sequence<std::size_t, N>());
+                return []<std::size_t... I>(const unsigned sample, std::integer_sequence<std::size_t, I...>&&)
+                {
+                        static_assert(sizeof...(I) == N);
+                        static_assert(N <= std::size(PRIMES));
+
+                        return Vector<N, T>{radical_inverse<PRIMES[I], T>(sample)...};
+                }
+                (sample_++, std::make_integer_sequence<std::size_t, N>());
         }
 };
 }

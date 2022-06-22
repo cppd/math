@@ -35,73 +35,55 @@ class Matrix final
         static_assert(FloatingPoint<T>);
         static_assert(ROWS >= 1 && COLUMNS >= 1);
 
-        //
-
-        template <std::size_t COLUMN, std::size_t... I>
-        static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(
-                const T& v,
-                std::integer_sequence<std::size_t, I...>&&)
+        template <std::size_t COLUMN>
+        static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(const T& v)
         {
-                static_assert(sizeof...(I) == COLUMNS);
-                static_assert(((I >= 0 && I < COLUMNS) && ...));
-                static_assert(COLUMN >= 0 && COLUMN < COLUMNS);
-
-                return {(I == COLUMN ? v : 0)...};
-        }
-
-        //
-
-        template <std::size_t... I>
-        static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_one_value_rows_impl(
-                const T& v,
-                std::integer_sequence<std::size_t, I...>&&)
-        {
-                static_assert(sizeof...(I) == ROWS);
-                static_assert(((I >= 0 && I < ROWS) && ...));
-
-                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<std::size_t, COLUMNS>())...};
+                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+                {
+                        static_assert(sizeof...(I) == COLUMNS);
+                        static_assert(((I >= 0 && I < COLUMNS) && ...));
+                        return Vector<COLUMNS, T>{(I == COLUMN ? v : 0)...};
+                }
+                (std::make_integer_sequence<std::size_t, COLUMNS>());
         }
 
         static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_diagonal_matrix(const T& v)
         {
-                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, ROWS>());
-        }
-
-        //
-
-        template <std::size_t... I>
-        static constexpr std::array<Vector<ROWS, T>, ROWS> make_one_value_rows_impl(
-                const Vector<ROWS, T>& v,
-                std::integer_sequence<std::size_t, I...>&&) requires(COLUMNS == ROWS)
-        {
-                static_assert(sizeof...(I) == ROWS);
-                static_assert(((I >= 0 && I < ROWS) && ...));
-
-                return {make_vector_one_value_impl<I>(v[I], std::make_integer_sequence<std::size_t, ROWS>())...};
+                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+                {
+                        static_assert(sizeof...(I) == ROWS);
+                        static_assert(((I >= 0 && I < ROWS) && ...));
+                        return std::array<Vector<COLUMNS, T>, ROWS>{make_vector_one_value_impl<I>(v)...};
+                }
+                (std::make_integer_sequence<std::size_t, ROWS>());
         }
 
         static constexpr std::array<Vector<ROWS, T>, ROWS> make_diagonal_matrix(const Vector<ROWS, T>& v) requires(
                 COLUMNS == ROWS)
         {
-                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, ROWS>());
+                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+                {
+                        static_assert(sizeof...(I) == ROWS);
+                        static_assert(((I >= 0 && I < ROWS) && ...));
+                        return std::array<Vector<ROWS, T>, ROWS>{make_vector_one_value_impl<I>(v[I])...};
+                }
+                (std::make_integer_sequence<std::size_t, ROWS>());
         }
 
         //
 
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
-        // template <std::size_t... I>
-        // constexpr Vector<ROWS, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>&&) const
+        // constexpr Vector<ROWS, T> column_impl(const std::size_t column) const
         // {
-        //         static_assert(sizeof...(I) == ROWS);
-        //         static_assert(((I >= 0 && I < ROWS) && ...));
+        //         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        //         {
+        //                 static_assert(sizeof...(I) == ROWS);
+        //                 static_assert(((I >= 0 && I < ROWS) && ...));
         //
-        //         return Vector<ROWS, T>{rows_[I][column]...};
-        // }
-        //
-        // constexpr Vector<ROWES, T> column_impl(std::size_t column) const
-        // {
-        //         return column_impl(column, std::make_integer_sequence<std::size_t, ROWS>());
+        //                 return Vector<ROWS, T>{rows_[I][column]...};
+        //         }
+        //         (std::make_integer_sequence<std::size_t, ROWS>());
         // }
 
 public:

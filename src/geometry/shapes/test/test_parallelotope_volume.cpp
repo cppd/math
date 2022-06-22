@@ -62,17 +62,6 @@ void test(const std::array<Vector<N, T>, N>& vectors, const T& volume, const T& 
         }
 }
 
-template <std::size_t N, typename T, std::size_t... I>
-void test(
-        const std::array<Vector<N, T>, N>& vectors,
-        const T& scale,
-        const T& precision,
-        std::integer_sequence<std::size_t, I...>&&)
-{
-        static_assert(sizeof...(I) == N);
-        (test<I + 1>(vectors, power<I + 1>(scale), precision), ...);
-}
-
 template <std::size_t N, typename T, typename RandomEngine>
 void test(const T& precision, RandomEngine& engine)
 {
@@ -80,14 +69,23 @@ void test(const T& precision, RandomEngine& engine)
         const Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
         const std::array<Vector<N, T>, N - 1> complement = numerical::orthogonal_complement_of_unit_vector(vector);
 
-        std::array<Vector<N, T>, N> vectors;
-        for (std::size_t i = 0; i < N - 1; ++i)
+        const std::array<Vector<N, T>, N> vectors = [&]
         {
-                vectors[i] = complement[i] * scale;
-        }
-        vectors[N - 1] = vector * scale;
+                std::array<Vector<N, T>, N> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i] = complement[i] * scale;
+                }
+                res[N - 1] = vector * scale;
+                return res;
+        }();
 
-        test(vectors, scale, precision, std::make_integer_sequence<std::size_t, N>());
+        [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                (test<I + 1>(vectors, power<I + 1>(scale), precision), ...);
+        }
+        (std::make_integer_sequence<std::size_t, N>());
 }
 
 template <typename T, typename RandomEngine>
@@ -109,6 +107,6 @@ void test_parallelotope_volume()
         LOG("Test parallelotope volume passed");
 }
 
-TEST_SMALL("Parallelotope Volume", test_parallelotope_volume);
+TEST_SMALL("Parallelotope Volume", test_parallelotope_volume)
 }
 }
