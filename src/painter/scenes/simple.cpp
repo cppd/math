@@ -115,11 +115,28 @@ std::unique_ptr<const Projector<N, T>> create_projector(
 }
 
 template <std::size_t N, typename T, typename Color>
-void create_light_sources(
-        const geometry::BoundingBox<N, T>& bounding_box,
+std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
+        const Vector<N, T> center,
+        const T distance,
+        const T radius,
         const Color& color,
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
+        const Vector<N, T>& direction,
+        const T proportion)
 {
+        const Vector<N, T> position = center - direction.normalized() * distance;
+        auto ptr = std::make_unique<painter::BallLight<N, T, Color>>(position, direction, radius, color * proportion);
+        ptr->set_color_for_distance(distance);
+        return ptr;
+}
+
+template <std::size_t N, typename T, typename Color>
+std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_sources(
+        const geometry::BoundingBox<N, T>& bounding_box,
+        const T front_light_proportion,
+        const Color& color)
+{
+        ASSERT(front_light_proportion >= 0 && front_light_proportion <= 1);
+
         const Vector<N, T> box_diagonal = bounding_box.diagonal();
         const Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
         const T object_size = box_diagonal.norm();
@@ -129,13 +146,30 @@ void create_light_sources(
 
         const T distance = object_size * DISTANCE;
         const T radius = object_size * RADIUS;
-        const Vector<N, T> position = center + box_diagonal.normalized() * distance;
 
-        auto ptr = std::make_unique<painter::BallLight<N, T, Color>>(position, -box_diagonal, radius, color);
-        ptr->set_color_for_distance(distance);
+        const auto camera_direction = []
+        {
+                Vector<N, T> res(0);
+                res[N - 1] = -1;
+                return res;
+        };
 
-        light_sources->clear();
-        light_sources->push_back(std::move(ptr));
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> res;
+
+        if (front_light_proportion > 0)
+        {
+                res.push_back(create_light_source(
+                        center, distance, radius, color, camera_direction(), front_light_proportion));
+        }
+
+        const T side_light_proportion = 1 - front_light_proportion;
+        if (side_light_proportion > 0)
+        {
+                res.push_back(
+                        create_light_source(center, distance, radius, color, -box_diagonal, side_light_proportion));
+        }
+
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -174,7 +208,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
         const std::optional<std::type_identity_t<T>> clip_plane_position,
-        const std::type_identity_t<T> /*front_light_proportion*/,
+        const std::type_identity_t<T> front_light_proportion,
         const int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* const progress)
@@ -185,8 +219,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
 
         std::unique_ptr<const Projector<N, T>> projector = create_projector(bounding_box, max_screen_size);
 
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
-        create_light_sources(bounding_box, light, &light_sources);
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources =
+                create_light_sources(bounding_box, front_light_proportion, light);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         shapes.push_back(std::move(shape));

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_scene.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/painter/lights/ball_light.h>
 #include <src/painter/objects.h>
@@ -54,25 +55,51 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 }
 
 template <typename T, typename Color>
+std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
+        const Vector<3, T>& center,
+        const T distance,
+        const T radius,
+        const Color& color,
+        const Vector<3, T>& direction,
+        const T proportion)
+{
+        const Vector<3, T> position = center - direction.normalized() * distance;
+        auto ptr = std::make_unique<painter::BallLight<3, T, Color>>(position, direction, radius, color * proportion);
+        ptr->set_color_for_distance(distance);
+        return ptr;
+}
+
+template <typename T, typename Color>
 std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> create_light_sources(
         const T& shape_size,
-        const Vector<3, T>& view_center,
+        const Vector<3, T>& center,
         const Vector<3, T>& light_direction,
+        const Vector<3, T>& camera_direction,
+        const T front_light_proportion,
         const Color& color)
 {
-        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> res;
+        ASSERT(front_light_proportion >= 0 && front_light_proportion <= 1);
 
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
 
         const T distance = shape_size * DISTANCE;
         const T radius = shape_size * RADIUS;
-        const Vector<3, T> position = view_center - light_direction.normalized() * distance;
 
-        auto ptr = std::make_unique<painter::BallLight<3, T, Color>>(position, light_direction, radius, color);
-        ptr->set_color_for_distance(distance);
+        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> res;
 
-        res.push_back(std::move(ptr));
+        if (front_light_proportion > 0)
+        {
+                res.push_back(
+                        create_light_source(center, distance, radius, color, camera_direction, front_light_proportion));
+        }
+
+        const T side_light_proportion = 1 - front_light_proportion;
+        if (side_light_proportion > 0)
+        {
+                res.push_back(
+                        create_light_source(center, distance, radius, color, light_direction, side_light_proportion));
+        }
 
         return res;
 }
@@ -87,7 +114,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const Vector<3, T>& view_center,
         const std::type_identity_t<T> view_width,
         const std::optional<Vector<4, T>>& clip_plane_equation,
-        const std::type_identity_t<T> /*front_light_proportion*/,
+        const std::type_identity_t<T> front_light_proportion,
         const int width,
         const int height,
         const bool cornell_box,
@@ -106,8 +133,8 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         std::unique_ptr<const painter::Projector<3, T>> projector =
                 create_projector(shape_size, camera_up, camera_direction, view_center, view_width, width, height);
 
-        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources =
-                create_light_sources(shape_size, view_center, light_direction, light);
+        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources = create_light_sources(
+                shape_size, view_center, light_direction, camera_direction, front_light_proportion, light);
 
         std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
