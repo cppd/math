@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/lights/ball_light.h>
 #include <src/painter/objects.h>
 #include <src/painter/projectors/parallel_projector.h>
-#include <src/painter/scenes/cornell_box.h>
-#include <src/painter/scenes/simple.h>
 #include <src/painter/scenes/storage_scene.h>
 #include <src/settings/instantiation.h>
 
@@ -117,17 +115,10 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const std::type_identity_t<T> front_light_proportion,
         const int width,
         const int height,
-        const bool cornell_box,
         const Color& light,
         const Color& background_light,
         progress::Ratio* const progress)
 {
-        if (cornell_box)
-        {
-                return painter::create_cornell_box_scene(
-                        light, background_light, {width, height}, std::move(shape), progress);
-        }
-
         const T shape_size = shape->bounding_box().diagonal().norm();
 
         std::unique_ptr<const painter::Projector<3, T>> projector =
@@ -144,43 +135,11 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
                 std::move(shapes), progress);
 }
 
-template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
-        std::unique_ptr<const painter::Shape<N, T, Color>>&& shape,
-        const int max_screen_size,
-        const bool cornell_box,
-        const Color& light,
-        const Color& background_light,
-        const std::optional<std::type_identity_t<T>> clip_plane_position,
-        const std::type_identity_t<T> front_light_proportion,
-        progress::Ratio* const progress)
-{
-        if (!cornell_box)
-        {
-                return painter::create_simple_scene(
-                        light, background_light, clip_plane_position, front_light_proportion, max_screen_size,
-                        std::move(shape), progress);
-        }
-
-        std::array<int, N - 1> screen_size;
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                screen_size[i] = max_screen_size;
-        }
-        return painter::create_cornell_box_scene(light, background_light, screen_size, std::move(shape), progress);
-}
-
 #define TEMPLATE_3(T, C)                                                                                               \
         template std::unique_ptr<const painter::Scene<3, T, C>> create_painter_scene(                                  \
                 std::unique_ptr<const painter::Shape<3, T, C>>&&, const Vector<3, T>&, const Vector<3, T>&,            \
                 const Vector<3, T>&, const Vector<3, T>&, std::type_identity_t<T>, const std::optional<Vector<4, T>>&, \
-                std::type_identity_t<T>, int, int, bool, const C&, const C&, progress::Ratio*);
-
-#define TEMPLATE(N, T, C)                                                                          \
-        template std::unique_ptr<const painter::Scene<(N), T, C>> create_painter_scene(            \
-                std::unique_ptr<const painter::Shape<(N), T, C>>&&, int, bool, const C&, const C&, \
-                std::optional<std::type_identity_t<T>>, std::type_identity_t<T>, progress::Ratio*);
+                std::type_identity_t<T>, int, int, const C&, const C&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_3)
-TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

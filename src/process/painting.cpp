@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_scene.h"
 
 #include <src/color/illuminants.h>
+#include <src/com/arrays.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/thread.h>
@@ -28,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/painter_parameters_3d.h>
 #include <src/gui/dialogs/painter_parameters_nd.h>
 #include <src/gui/painter_window/painter_window.h>
+#include <src/painter/scenes/cornell_box.h>
+#include <src/painter/scenes/simple.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <set>
@@ -97,12 +100,79 @@ std::optional<T> make_clip_plane_position(const view::info::ClipPlane& clip_plan
         return std::nullopt;
 }
 
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const painter::Shape<N, T, Color>> make_shape(
+        const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        progress::RatioList* const progress_list)
+{
+        constexpr bool WRITE_LOG = true;
+
+        std::vector<const model::mesh::MeshObject<N>*> meshes;
+        meshes.reserve(objects.size());
+
+        for (const std::shared_ptr<const model::mesh::MeshObject<N>>& object : objects)
+        {
+                meshes.push_back(object.get());
+        }
+
+        progress::Ratio progress(progress_list);
+
+        return painter::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
+}
+
+template <std::size_t N, typename T, typename Color, typename Parameters>
+std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
+        std::unique_ptr<const painter::Shape<N, T, Color>> shape,
+        const view::info::Camera& camera,
+        const view::info::ClipPlane& clip_plane,
+        const std::type_identity_t<T> front_light_proportion,
+        const Color& light,
+        const Color& background_light,
+        const gui::dialog::PainterParameters& parameters,
+        const Parameters& dimension_parameters,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+{
+        if constexpr (N == 3)
+        {
+                progress::Ratio progress(nullptr);
+
+                if (parameters.cornell_box)
+                {
+                        return painter::create_cornell_box_scene(
+                                light, background_light, {dimension_parameters.width, dimension_parameters.height},
+                                std::move(shape), &progress);
+                }
+
+                return create_painter_scene(
+                        std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
+                        to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
+                        clip_plane_equation, front_light_proportion, dimension_parameters.width,
+                        dimension_parameters.height, light, background_light, &progress);
+        }
+        else
+        {
+                progress::Ratio progress(nullptr);
+
+                if (parameters.cornell_box)
+                {
+                        return painter::create_cornell_box_scene(
+                                light, background_light, make_array_value<int, N - 1>(dimension_parameters.max_size),
+                                std::move(shape), &progress);
+                }
+
+                return painter::create_simple_scene(
+                        light, background_light, make_clip_plane_position<T>(clip_plane), front_light_proportion,
+                        dimension_parameters.max_size, std::move(shape), &progress);
+        }
+}
+
 template <typename T, typename Color, std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
-        const double front_light_proportion,
+        const std::type_identity_t<T> front_light_proportion,
         const Color& light,
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
@@ -111,42 +181,19 @@ void thread_function(
 {
         const auto clip_plane_equation = make_clip_plane_equation<N, T>(clip_plane);
 
-        std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
-        {
-                std::vector<const model::mesh::MeshObject<N>*> meshes;
-                meshes.reserve(objects.size());
-                for (const std::shared_ptr<const model::mesh::MeshObject<N>>& object : objects)
-                {
-                        meshes.push_back(object.get());
-                }
-                progress::Ratio progress(progress_list);
-                constexpr bool WRITE_LOG = true;
-                return painter::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
-        }();
+        std::unique_ptr<const painter::Shape<N, T, Color>> shape =
+                make_shape<N, T, Color>(objects, clip_plane_equation, progress_list);
+
         if (!shape)
         {
                 message_warning("No object to paint");
                 return;
         }
 
-        std::unique_ptr<const painter::Scene<N, T, Color>> scene;
-        if constexpr (N == 3)
-        {
-                progress::Ratio progress(nullptr);
-                scene = create_painter_scene(
-                        std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
-                        to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
-                        clip_plane_equation, static_cast<T>(front_light_proportion), dimension_parameters.width,
-                        dimension_parameters.height, parameters.cornell_box, light, background_light, &progress);
-        }
-        else
-        {
-                progress::Ratio progress(nullptr);
-                scene = create_painter_scene(
-                        std::move(shape), dimension_parameters.max_size, parameters.cornell_box, light,
-                        background_light, make_clip_plane_position<T>(clip_plane),
-                        static_cast<T>(front_light_proportion), &progress);
-        }
+        std::unique_ptr<const painter::Scene<N, T, Color>> scene = make_scene(
+                std::move(shape), camera, clip_plane, front_light_proportion, light, background_light, parameters,
+                dimension_parameters, clip_plane_equation);
+
         ASSERT(scene);
 
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
@@ -160,7 +207,7 @@ void thread_function(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
-        const double front_light_proportion,
+        const std::type_identity_t<T> front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,

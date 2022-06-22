@@ -39,19 +39,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         std::type_identity_t<T> front_light_proportion,
         int width,
         int height,
-        bool cornell_box,
         const Color& light,
         const Color& background_light,
-        progress::Ratio* progress);
-
-template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
-        std::unique_ptr<const painter::Shape<N, T, Color>>&& shape,
-        int max_screen_size,
-        bool cornell_box,
-        const Color& light,
-        const Color& background_light,
-        std::optional<std::type_identity_t<T>> clip_plane_position,
-        std::type_identity_t<T> front_light_proportion,
         progress::Ratio* progress);
 }
