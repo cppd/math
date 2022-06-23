@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painting.h"
 
 #include "dimension.h"
-#include "painter_scene.h"
 
 #include <src/color/illuminants.h>
 #include <src/com/arrays.h>
@@ -140,15 +139,15 @@ std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
                 if (parameters.cornell_box)
                 {
                         return painter::create_cornell_box_scene(
-                                light, background_light, {dimension_parameters.width, dimension_parameters.height},
-                                std::move(shape), &progress);
+                                std::move(shape), light, background_light,
+                                {dimension_parameters.width, dimension_parameters.height}, &progress);
                 }
 
-                return create_painter_scene(
-                        std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
-                        to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
-                        clip_plane_equation, front_light_proportion, dimension_parameters.width,
-                        dimension_parameters.height, light, background_light, &progress);
+                return painter::create_simple_scene(
+                        std::move(shape), light, background_light, clip_plane_equation, front_light_proportion,
+                        dimension_parameters.width, dimension_parameters.height, to_vector<T>(camera.up),
+                        to_vector<T>(camera.forward), to_vector<T>(camera.lighting), to_vector<T>(camera.view_center),
+                        camera.view_width, &progress);
         }
         else
         {
@@ -157,13 +156,13 @@ std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
                 if (parameters.cornell_box)
                 {
                         return painter::create_cornell_box_scene(
-                                light, background_light, make_array_value<int, N - 1>(dimension_parameters.max_size),
-                                std::move(shape), &progress);
+                                std::move(shape), light, background_light,
+                                make_array_value<int, N - 1>(dimension_parameters.max_size), &progress);
                 }
 
                 return painter::create_simple_scene(
-                        light, background_light, make_clip_plane_position<T>(clip_plane), front_light_proportion,
-                        dimension_parameters.max_size, std::move(shape), &progress);
+                        std::move(shape), light, background_light, make_clip_plane_position<T>(clip_plane),
+                        front_light_proportion, dimension_parameters.max_size, &progress);
         }
 }
 

@@ -253,10 +253,10 @@ std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const ge
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
         const std::array<int, N - 1>& screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* const progress)
 {
         static_assert(N >= 3);
@@ -269,7 +269,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
 #define TEMPLATE(N, T, C)                                                                                     \
         template std::unique_ptr<const Scene<(N), T, C>> create_cornell_box_scene(                            \
-                const C&, const C&, const std::array<int, (N)-1>&, std::unique_ptr<const Shape<(N), T, C>>&&, \
+                std::unique_ptr<const Shape<(N), T, C>>&&, const C&, const C&, const std::array<int, (N)-1>&, \
                 progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

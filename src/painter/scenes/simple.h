@@ -27,13 +27,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
+template <typename T, typename Color>
+std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
+        std::unique_ptr<const Shape<3, T, Color>>&& shape,
+        const Color& light,
+        const Color& background_light,
+        const std::optional<Vector<4, T>>& clip_plane_equation,
+        std::type_identity_t<T> front_light_proportion,
+        int width,
+        int height,
+        const Vector<3, T>& camera_up,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& light_direction,
+        const Vector<3, T>& view_center,
+        std::type_identity_t<T> view_width,
+        progress::Ratio* progress);
+
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
         std::optional<std::type_identity_t<T>> clip_plane_position,
         std::type_identity_t<T> front_light_proportion,
         int max_screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* progress);
 }

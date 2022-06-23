@@ -29,9 +29,9 @@ namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
         const std::array<int, N - 1>& screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* progress);
 }

@@ -249,9 +249,8 @@ void test_painter(
         }
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
-                Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
-                Color::illuminant(BACKGROUND_LIGHT), std::nullopt, FRONT_LIGHT_PROPORTION, max_screen_size,
-                std::move(painter_mesh), progress);
+                std::move(painter_mesh), Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
+                Color::illuminant(BACKGROUND_LIGHT), std::nullopt, FRONT_LIGHT_PROPORTION, max_screen_size, progress);
 
         static_assert(OUTPUT_TYPE == OutputType::FILE || OUTPUT_TYPE == OutputType::WINDOW);
 
