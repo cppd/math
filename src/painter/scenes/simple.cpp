@@ -43,7 +43,7 @@ constexpr T RADIUS = DISTANCE<T> / 100;
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
-        const Vector<N, T> center,
+        const Vector<N, T>& center,
         const T distance,
         const T radius,
         const Color& color,
@@ -61,7 +61,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_source
         const T object_size,
         const Vector<N, T>& center,
         const Vector<N, T>& camera_direction,
-        const Vector<N, T> light_direction,
+        const Vector<N, T>& light_direction,
         const T front_light_proportion,
         const Color& color)
 {
@@ -90,21 +90,21 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_source
 
 template <typename T>
 std::unique_ptr<const Projector<3, T>> create_projector(
-        const T& shape_size,
+        const T shape_size,
         const Vector<3, T>& camera_up,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& view_center,
         const T view_width,
-        const int width,
-        const int height)
+        const int screen_width,
+        const int screen_height)
 {
         const Vector<3, T> camera_position = view_center - camera_direction * (2 * shape_size);
         const Vector<3, T> camera_right = cross(camera_direction, camera_up);
 
         const std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};
-        const std::array<int, 2> screen_size{width, height};
+        const std::array<int, 2> screen_size{screen_width, screen_height};
 
-        const T units_per_pixel = view_width / width;
+        const T units_per_pixel = view_width / screen_width;
 
         return std::make_unique<const ParallelProjector<3, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
@@ -123,23 +123,23 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                       + to_string(1 + 2 * BORDER_SIZE));
         }
 
-        const int max_object_size = max_screen_size - 2 * BORDER_SIZE;
+        const int max_view_screen_size = max_screen_size - 2 * BORDER_SIZE;
 
-        const Vector<N, T> size = bounding_box.diagonal();
+        const Vector<N, T> view_size = bounding_box.diagonal();
         const Vector<N, T> center = bounding_box.center();
 
-        const T max_size = [&]
+        const T max_view_size = [&]
         {
                 static_assert(N >= 2);
                 T res = 0;
                 // excluding camera direction N - 1
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        if (!(size[i] > 0))
+                        if (!(view_size[i] > 0))
                         {
-                                error("Object projection size " + to_string(size[i]) + " is not positive");
+                                error("Object projection size " + to_string(view_size[i]) + " is not positive");
                         }
-                        res = std::max(size[i], res);
+                        res = std::max(view_size[i], res);
                 }
                 return res;
         }();
@@ -149,8 +149,8 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 std::array<int, N - 1> res;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        const int size_in_pixels = std::ceil((size[i] / max_size) * max_object_size);
-                        ASSERT(size_in_pixels <= max_object_size);
+                        const int size_in_pixels = std::ceil((view_size[i] / max_view_size) * max_view_screen_size);
+                        ASSERT(size_in_pixels <= max_view_screen_size);
                         res[i] = std::max(1, size_in_pixels) + 2 * BORDER_SIZE;
                 }
                 return res;
@@ -159,7 +159,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const Vector<N, T> camera_position = [&]
         {
                 Vector<N, T> res(center);
-                res[N - 1] = bounding_box.max()[N - 1] + size.norm();
+                res[N - 1] = bounding_box.max()[N - 1] + view_size.norm();
                 return res;
         }();
 
@@ -175,15 +175,13 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 std::array<Vector<N, T>, N - 1> res;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        for (std::size_t n = 0; n < N; ++n)
-                        {
-                                res[i][n] = (i != n) ? 0 : 1;
-                        }
+                        res[i] = Vector<N, T>(0);
+                        res[i][i] = 1;
                 }
                 return res;
         }();
 
-        const T units_per_pixel = max_size / max_object_size;
+        const T units_per_pixel = max_view_size / max_view_screen_size;
 
         return std::make_unique<const ParallelProjector<N, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
