@@ -41,7 +41,7 @@ class ViewProcess final
         bool text_active_ = true;
         Vector3f clear_color_rgb32_ = Vector3f(0);
 
-        void command(const command::UpdateMeshObject& v)
+        void exec(const command::UpdateMeshObject& v)
         {
                 if (const auto ptr = v.object.lock())
                 {
@@ -49,7 +49,7 @@ class ViewProcess final
                 }
         }
 
-        void command(const command::UpdateVolumeObject& v)
+        void exec(const command::UpdateVolumeObject& v)
         {
                 if (const auto ptr = v.object.lock())
                 {
@@ -57,38 +57,38 @@ class ViewProcess final
                 }
         }
 
-        void command(const command::DeleteObject& v)
+        void exec(const command::DeleteObject& v)
         {
                 renderer_->exec(gpu::renderer::command::DeleteObject(v.id));
         }
 
-        void command(const command::DeleteAllObjects&)
+        void exec(const command::DeleteAllObjects&)
         {
                 renderer_->exec(gpu::renderer::command::DeleteAllObjects());
-                command(command::ResetView());
+                exec(command::ResetView());
         }
 
-        void command(const command::ResetView&)
+        void exec(const command::ResetView&)
         {
                 camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
         }
 
-        void command(const command::SetSampleCount& v)
+        void exec(const command::SetSampleCount& v)
         {
                 set_sample_count_(v.sample_count);
         }
 
-        void command(const command::SetLightingColor& v)
+        void exec(const command::SetLightingColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetLightingColor(v.value));
         }
 
-        void command(const command::SetFrontLightingProportion& v)
+        void exec(const command::SetFrontLightingProportion& v)
         {
                 renderer_->exec(gpu::renderer::command::SetFrontLightingProportion(v.proportion));
         }
 
-        void command(const command::SetBackgroundColor& v)
+        void exec(const command::SetBackgroundColor& v)
         {
                 clear_color_rgb32_ = v.value.rgb32().clamp(0, 1);
                 clear_buffer_->set_color(clear_color_rgb32_);
@@ -106,67 +106,67 @@ class ViewProcess final
                 }
         }
 
-        void command(const command::SetClipPlaneColor& v)
+        void exec(const command::SetClipPlaneColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetClipPlaneColor(v.value));
         }
 
-        void command(const command::SetWireframeColor& v)
+        void exec(const command::SetWireframeColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetWireframeColor(v.value));
         }
 
-        void command(const command::SetNormalLength& v)
+        void exec(const command::SetNormalLength& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalLength(v.value));
         }
 
-        void command(const command::SetNormalColorPositive& v)
+        void exec(const command::SetNormalColorPositive& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalColorPositive(v.value));
         }
 
-        void command(const command::SetNormalColorNegative& v)
+        void exec(const command::SetNormalColorNegative& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalColorNegative(v.value));
         }
 
-        void command(const command::ShowSmooth& v)
+        void exec(const command::ShowSmooth& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowSmooth(v.show));
         }
 
-        void command(const command::ShowWireframe& v)
+        void exec(const command::ShowWireframe& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowWireframe(v.show));
         }
 
-        void command(const command::ShowShadow& v)
+        void exec(const command::ShowShadow& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowShadow(v.show));
         }
 
-        void command(const command::ShowFog& v)
+        void exec(const command::ShowFog& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowFog(v.show));
         }
 
-        void command(const command::ShowMaterials& v)
+        void exec(const command::ShowMaterials& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowMaterials(v.show));
         }
 
-        void command(const command::ShowFps& v)
+        void exec(const command::ShowFps& v)
         {
                 text_active_ = v.show;
         }
 
-        void command(const command::ShowClipPlaneLines& v)
+        void exec(const command::ShowClipPlaneLines& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowClipPlaneLines(v.show));
         }
 
-        void command(const command::SetVerticalSync& v)
+        void exec(const command::SetVerticalSync& v)
         {
                 if (v.enabled != vertical_sync_)
                 {
@@ -175,17 +175,17 @@ class ViewProcess final
                 }
         }
 
-        void command(const command::SetShadowZoom& v)
+        void exec(const command::SetShadowZoom& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShadowZoom(v.value));
         }
 
-        void command(const command::ShowNormals& v)
+        void exec(const command::ShowNormals& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowNormals(v.show));
         }
 
-        void command(const command::WindowResize&)
+        void exec(const command::WindowResize&)
         {
         }
 
@@ -212,7 +212,7 @@ public:
         {
                 const auto visitor = [this](const auto& v)
                 {
-                        command(v);
+                        exec(v);
                 };
                 std::visit(visitor, view_command);
         }
