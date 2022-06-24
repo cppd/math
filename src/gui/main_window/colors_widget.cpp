@@ -198,7 +198,7 @@ void ColorsWidget::set_clip_plane_color(const QColor& c)
         clip_plane_color_ = c;
         if (view_)
         {
-                view_->send(view::command::ClipPlaneSetColor(qcolor_to_color(c)));
+                view_->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
         }
         set_widget_color(ui_.widget_clip_plane_color, c);
 }

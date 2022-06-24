@@ -459,10 +459,6 @@ public:
                           [this](const auto& clip_plane)
                           {
                                   renderer_->exec(gpu::renderer::command::SetClipPlane(clip_plane));
-                          },
-                          [this](const auto& clip_plane_color)
-                          {
-                                  renderer_->exec(gpu::renderer::command::SetClipPlaneColor(clip_plane_color));
                           }),
                   view_process_(
                           &clear_buffer_,

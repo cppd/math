@@ -46,13 +46,9 @@ Vector4d clip_plane_equation(const Matrix4d& view_matrix, const double position)
 }
 }
 
-ClipPlane::ClipPlane(
-        const Camera* const camera,
-        std::function<void(const std::optional<Vector4d>&)> set_clip_plane,
-        std::function<void(const color::Color&)> set_clip_plane_color)
+ClipPlane::ClipPlane(const Camera* const camera, std::function<void(const std::optional<Vector4d>&)> set_clip_plane)
         : camera_(camera),
-          set_clip_plane_(std::move(set_clip_plane)),
-          set_clip_plane_color_(std::move(set_clip_plane_color))
+          set_clip_plane_(std::move(set_clip_plane))
 {
 }
 
@@ -96,11 +92,6 @@ void ClipPlane::command(const command::ClipPlaneShow& v)
 {
         view_matrix_ = camera_->view_matrix();
         set_position(v.position);
-}
-
-void ClipPlane::command(const command::ClipPlaneSetColor& v)
-{
-        set_clip_plane_color_(v.value);
 }
 
 std::optional<Vector4d> ClipPlane::equation() const

@@ -161,14 +161,14 @@ void MainWindow::constructor_objects()
 
 std::vector<view::Command> MainWindow::view_initial_commands() const
 {
-        return {view::command::ClipPlaneSetColor(colors_widget_->clip_plane_color()),
-                view::command::ConvexHullShow(view_widget_->convex_hull_2d_checked()),
+        return {view::command::ConvexHullShow(view_widget_->convex_hull_2d_checked()),
                 view::command::DftSetBackgroundColor(colors_widget_->dft_background_color()),
                 view::command::DftSetBrightness(view_widget_->dft_brightness()),
                 view::command::DftSetColor(colors_widget_->dft_color()),
                 view::command::DftShow(view_widget_->dft_checked()),
                 view::command::OpticalFlowShow(view_widget_->optical_flow_checked()),
                 view::command::PencilSketchShow(view_widget_->pencil_sketch_checked()),
+                view::command::SetClipPlaneColor(colors_widget_->clip_plane_color()),
                 view::command::SetLightingColor(lighting_widget_->rgb()),
                 view::command::SetFrontLightingProportion(lighting_widget_->front_lighting_proportion()),
                 view::command::SetNormalColorNegative(colors_widget_->normal_color_negative()),

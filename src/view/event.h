@@ -192,6 +192,15 @@ struct ShowFps final
         }
 };
 
+struct ShowClipPlaneLines final
+{
+        bool show;
+
+        explicit ShowClipPlaneLines(const bool show) : show(show)
+        {
+        }
+};
+
 struct SetVerticalSync final
 {
         bool enabled;
@@ -229,11 +238,11 @@ struct WindowResize final
         }
 };
 
-struct ClipPlaneSetColor final
+struct SetClipPlaneColor final
 {
         color::Color value;
 
-        explicit ClipPlaneSetColor(const color::Color& value) : value(value)
+        explicit SetClipPlaneColor(const color::Color& value) : value(value)
         {
         }
 };
@@ -376,11 +385,7 @@ struct SetSampleCount final
 };
 }
 
-using ClipPlaneCommand = std::variant<
-        command::ClipPlaneHide,
-        command::ClipPlaneSetColor,
-        command::ClipPlaneSetPosition,
-        command::ClipPlaneShow>;
+using ClipPlaneCommand = std::variant<command::ClipPlaneHide, command::ClipPlaneSetPosition, command::ClipPlaneShow>;
 
 using ImageCommand = std::variant<
         command::ConvexHullShow,
@@ -398,6 +403,7 @@ using ViewCommand = std::variant<
         command::DeleteObject,
         command::ResetView,
         command::SetBackgroundColor,
+        command::SetClipPlaneColor,
         command::SetFrontLightingProportion,
         command::SetLightingColor,
         command::SetNormalColorNegative,
@@ -407,6 +413,7 @@ using ViewCommand = std::variant<
         command::SetShadowZoom,
         command::SetVerticalSync,
         command::SetWireframeColor,
+        command::ShowClipPlaneLines,
         command::ShowFog,
         command::ShowFps,
         command::ShowMaterials,

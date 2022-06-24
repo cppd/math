@@ -106,6 +106,11 @@ class ViewProcess final
                 }
         }
 
+        void command(const command::SetClipPlaneColor& v)
+        {
+                renderer_->exec(gpu::renderer::command::SetClipPlaneColor(v.value));
+        }
+
         void command(const command::SetWireframeColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetWireframeColor(v.value));
@@ -154,6 +159,11 @@ class ViewProcess final
         void command(const command::ShowFps& v)
         {
                 text_active_ = v.show;
+        }
+
+        void command(const command::ShowClipPlaneLines& v)
+        {
+                renderer_->exec(gpu::renderer::command::SetShowClipPlaneLines(v.show));
         }
 
         void command(const command::SetVerticalSync& v)

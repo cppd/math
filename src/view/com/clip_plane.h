@@ -35,20 +35,15 @@ class ClipPlane final
         std::optional<Matrix4d> view_matrix_;
         double position_;
         std::function<void(const std::optional<Vector4d>&)> set_clip_plane_;
-        std::function<void(const color::Color&)> set_clip_plane_color_;
 
         void set_position(double position);
 
         void command(const command::ClipPlaneHide&);
         void command(const command::ClipPlaneSetPosition& v);
         void command(const command::ClipPlaneShow& v);
-        void command(const command::ClipPlaneSetColor& v);
 
 public:
-        ClipPlane(
-                const Camera* camera,
-                std::function<void(const std::optional<Vector4d>&)> set_clip_plane,
-                std::function<void(const color::Color&)> set_clip_plane_color);
+        ClipPlane(const Camera* camera, std::function<void(const std::optional<Vector4d>&)> set_clip_plane);
 
         void command(const ClipPlaneCommand& clip_plane_command);
 
