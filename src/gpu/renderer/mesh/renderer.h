@@ -84,8 +84,8 @@ class MeshRenderer
         void draw_commands(
                 const std::vector<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
-                bool clip_plane,
-                bool normals,
+                bool show_clip_plane_lines,
+                bool show_normals,
                 bool transparent) const;
 
 public:
@@ -127,8 +127,8 @@ public:
         void create_render_command_buffers(
                 const std::vector<const MeshObject*>& meshes,
                 VkCommandPool graphics_command_pool,
-                bool clip_plane,
-                bool normals,
+                bool show_clip_plane_lines,
+                bool show_normals,
                 const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
                 const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands);
         void delete_render_command_buffers();

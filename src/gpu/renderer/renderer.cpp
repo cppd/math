@@ -281,7 +281,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 mesh_renderer_.create_render_command_buffers(
                         mesh_storage_.visible_objects(), graphics_command_pool_->handle(),
-                        renderer_view_.clip_plane().has_value(), renderer_view_.show_normals(),
+                        renderer_view_.clip_plane().has_value() && renderer_view_.show_clip_plane_lines(),
+                        renderer_view_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_.commands_init(command_buffer);
@@ -468,15 +469,26 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 }
         }
 
-        void view_clip_plane_changed() override
+        void view_clip_plane_changed(const bool visibility_changed) override
         {
-                create_mesh_render_command_buffers();
+                if (visibility_changed && renderer_view_.show_clip_plane_lines())
+                {
+                        create_mesh_render_command_buffers();
+                }
                 if (renderer_view_.clip_plane())
                 {
                         for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                         {
                                 visible_volume->set_clip_plane(*renderer_view_.clip_plane());
                         }
+                }
+        }
+
+        void view_show_clip_plane_lines_changed() override
+        {
+                if (renderer_view_.clip_plane())
+                {
+                        create_mesh_render_command_buffers();
                 }
         }
 

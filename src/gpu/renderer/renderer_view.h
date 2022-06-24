@@ -37,7 +37,8 @@ protected:
 public:
         virtual void view_show_normals_changed() = 0;
         virtual void view_matrices_changed() = 0;
-        virtual void view_clip_plane_changed() = 0;
+        virtual void view_clip_plane_changed(bool visibility_changed) = 0;
+        virtual void view_show_clip_plane_lines_changed() = 0;
         virtual void view_shadow_zoom_changed() = 0;
 };
 
@@ -54,6 +55,7 @@ class RendererView final
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
         std::optional<Vector4d> clip_plane_;
+        bool show_clip_plane_lines_ = true;
         bool show_normals_ = false;
 
         [[nodiscard]] static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
@@ -178,6 +180,11 @@ class RendererView final
 
         void command(const command::SetClipPlane& v)
         {
+                if (clip_plane_ == v.plane)
+                {
+                        return;
+                }
+                const bool visibility_changed = clip_plane_.has_value() != v.plane.has_value();
                 clip_plane_ = v.plane;
                 if (clip_plane_)
                 {
@@ -187,7 +194,17 @@ class RendererView final
                 {
                         drawing_buffer_->set_clip_plane(Vector4d(0), false);
                 }
-                events_->view_clip_plane_changed();
+                events_->view_clip_plane_changed(visibility_changed);
+        }
+
+        void command(const command::SetShowClipPlaneLines& v)
+        {
+                if (show_clip_plane_lines_ == v.show)
+                {
+                        return;
+                }
+                show_clip_plane_lines_ = v.show;
+                events_->view_show_clip_plane_lines_changed();
         }
 
 public:
@@ -215,6 +232,11 @@ public:
         [[nodiscard]] const std::optional<Vector4d>& clip_plane() const
         {
                 return clip_plane_;
+        }
+
+        [[nodiscard]] bool show_clip_plane_lines() const
+        {
+                return show_clip_plane_lines_;
         }
 
         [[nodiscard]] bool show_normals() const

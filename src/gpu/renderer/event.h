@@ -131,6 +131,15 @@ struct SetClipPlane final
         }
 };
 
+struct SetShowClipPlaneLines final
+{
+        bool show;
+
+        explicit SetShowClipPlaneLines(const bool show) : show(show)
+        {
+        }
+};
+
 struct SetNormalLength final
 {
         float length;
@@ -246,6 +255,7 @@ using ViewCommand = std::variant<
         command::SetNormalColorPositive,
         command::SetNormalLength,
         command::SetShadowZoom,
+        command::SetShowClipPlaneLines,
         command::SetShowFog,
         command::SetShowMaterials,
         command::SetShowNormals,

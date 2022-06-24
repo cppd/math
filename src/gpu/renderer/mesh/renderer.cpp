@@ -244,8 +244,8 @@ VkSampler MeshRenderer::texture_sampler() const
 void MeshRenderer::draw_commands(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
-        const bool clip_plane,
-        const bool normals,
+        const bool show_clip_plane_lines,
+        const bool show_normals,
         const bool transparent) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
@@ -269,14 +269,14 @@ void MeshRenderer::draw_commands(
                 meshes, command_buffer, render_pipelines(transparent)->points, transparent, points_program_,
                 points_shared_memory_);
 
-        if (clip_plane)
+        if (show_clip_plane_lines)
         {
                 commands_triangle_lines(
                         meshes, command_buffer, render_pipelines(transparent)->triangle_lines, transparent,
                         triangle_lines_program_, triangle_lines_shared_memory_);
         }
 
-        if (normals)
+        if (show_normals)
         {
                 commands_normals(
                         meshes, command_buffer, render_pipelines(transparent)->normals, transparent, normals_program_,
@@ -287,8 +287,8 @@ void MeshRenderer::draw_commands(
 void MeshRenderer::create_render_command_buffers(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandPool graphics_command_pool,
-        const bool clip_plane,
-        const bool normals,
+        const bool show_clip_plane_lines,
+        const bool show_normals,
         const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
         const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands)
 {
@@ -330,11 +330,15 @@ void MeshRenderer::create_render_command_buffers(
         {
                 if (!opaque_meshes.empty())
                 {
-                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
+                        draw_commands(
+                                opaque_meshes, command_buffer, show_clip_plane_lines, show_normals,
+                                false /*transparent*/);
                 }
                 if (!transparent_meshes.empty())
                 {
-                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/);
+                        draw_commands(
+                                transparent_meshes, command_buffer, show_clip_plane_lines, show_normals,
+                                true /*transparent*/);
                 }
         };
         command_buffers_all_ = vulkan::create_command_buffers(info);
@@ -345,7 +349,9 @@ void MeshRenderer::create_render_command_buffers(
                 info.after_render_pass_commands = nullptr;
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
-                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
+                        draw_commands(
+                                transparent_meshes, command_buffer, show_clip_plane_lines, show_normals,
+                                false /*transparent*/);
                 };
                 command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
         }
