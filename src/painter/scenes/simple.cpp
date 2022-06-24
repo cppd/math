@@ -36,10 +36,102 @@ namespace ns::painter
 namespace
 {
 template <typename T>
-constexpr T DISTANCE = 100;
+constexpr T LIGHT_SOURCE_DISTANCE = 100;
 
 template <typename T>
-constexpr T RADIUS = DISTANCE<T> / 100;
+constexpr T LIGHT_SOURCE_RADIUS = LIGHT_SOURCE_DISTANCE<T> / 100;
+
+template <std::size_t N, typename T>
+struct Info final
+{
+        Vector<N, T> light_direction;
+        Vector<N, T> camera_direction;
+        std::array<Vector<N, T>, N - 1> screen_axes;
+        std::array<int, N - 1> screen_size;
+        T units_per_pixel;
+};
+
+template <typename T>
+Info<3, T> create_info(
+        const int screen_width,
+        const int screen_height,
+        const Vector<3, T>& camera_up,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& light_direction,
+        const T view_width)
+{
+        Info<3, T> info;
+        info.light_direction = light_direction;
+        info.camera_direction = camera_direction;
+        info.screen_axes = {cross(camera_direction, camera_up), camera_up};
+        info.screen_size = {screen_width, screen_height};
+        info.units_per_pixel = view_width / screen_width;
+        return info;
+}
+
+template <std::size_t N, typename T>
+Info<N, T> create_info(const geometry::BoundingBox<N, T>& bounding_box, const int max_screen_size)
+{
+        static constexpr int BORDER_SIZE = PixelFilter<N, T>::integer_radius();
+
+        if (max_screen_size <= 2 * BORDER_SIZE)
+        {
+                error("Maximum screen size (" + to_string(max_screen_size) + ") must be greater than or equal to "
+                      + to_string(1 + 2 * BORDER_SIZE));
+        }
+
+        const int max_view_screen_size = max_screen_size - 2 * BORDER_SIZE;
+
+        const Vector<N, T> view_size = bounding_box.diagonal();
+
+        const T max_view_size = [&]
+        {
+                static_assert(N >= 2);
+                T res = 0;
+                // excluding camera direction N - 1
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        if (!(view_size[i] > 0))
+                        {
+                                error("Object projection size " + to_string(view_size[i]) + " is not positive");
+                        }
+                        res = std::max(view_size[i], res);
+                }
+                return res;
+        }();
+
+        Info<N, T> info;
+        info.light_direction = -bounding_box.diagonal();
+        info.camera_direction = []
+        {
+                Vector<N, T> res(0);
+                res[N - 1] = -1;
+                return res;
+        }();
+        info.screen_axes = []
+        {
+                std::array<Vector<N, T>, N - 1> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i] = Vector<N, T>(0);
+                        res[i][i] = 1;
+                }
+                return res;
+        }();
+        info.screen_size = [&]
+        {
+                std::array<int, N - 1> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        const int size_in_pixels = std::ceil((view_size[i] / max_view_size) * max_view_screen_size);
+                        ASSERT(size_in_pixels <= max_view_screen_size);
+                        res[i] = std::max(1, size_in_pixels) + 2 * BORDER_SIZE;
+                }
+                return res;
+        }();
+        info.units_per_pixel = max_view_size / max_view_screen_size;
+        return info;
+}
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
@@ -60,131 +152,43 @@ template <std::size_t N, typename T, typename Color>
 std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_sources(
         const T object_size,
         const Vector<N, T>& center,
-        const Vector<N, T>& camera_direction,
-        const Vector<N, T>& light_direction,
+        const Info<N, T>& info,
         const T front_light_proportion,
         const Color& color)
 {
         ASSERT(front_light_proportion >= 0 && front_light_proportion <= 1);
 
-        const T distance = object_size * DISTANCE<T>;
-        const T radius = object_size * RADIUS<T>;
+        const T distance = object_size * LIGHT_SOURCE_DISTANCE<T>;
+        const T radius = object_size * LIGHT_SOURCE_RADIUS<T>;
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> res;
 
         if (front_light_proportion > 0)
         {
-                res.push_back(
-                        create_light_source(center, distance, radius, color, camera_direction, front_light_proportion));
+                res.push_back(create_light_source(
+                        center, distance, radius, color, info.camera_direction, front_light_proportion));
         }
 
         const T side_light_proportion = 1 - front_light_proportion;
         if (side_light_proportion > 0)
         {
-                res.push_back(
-                        create_light_source(center, distance, radius, color, light_direction, side_light_proportion));
+                res.push_back(create_light_source(
+                        center, distance, radius, color, info.light_direction, side_light_proportion));
         }
 
         return res;
 }
 
-template <typename T>
-std::unique_ptr<const Projector<3, T>> create_projector(
-        const T shape_size,
-        const Vector<3, T>& camera_up,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& view_center,
-        const T view_width,
-        const int screen_width,
-        const int screen_height)
-{
-        const Vector<3, T> camera_position = view_center - camera_direction * (2 * shape_size);
-        const Vector<3, T> camera_right = cross(camera_direction, camera_up);
-
-        const std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};
-        const std::array<int, 2> screen_size{screen_width, screen_height};
-
-        const T units_per_pixel = view_width / screen_width;
-
-        return std::make_unique<const ParallelProjector<3, T>>(
-                camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
-}
-
 template <std::size_t N, typename T>
 std::unique_ptr<const Projector<N, T>> create_projector(
-        const geometry::BoundingBox<N, T>& bounding_box,
-        const int max_screen_size)
+        const T shape_size,
+        const Vector<N, T>& center,
+        const Info<N, T>& info)
 {
-        static constexpr int BORDER_SIZE = PixelFilter<N, T>::integer_radius();
-
-        if (max_screen_size <= 2 * BORDER_SIZE)
-        {
-                error("Maximum screen size (" + to_string(max_screen_size) + ") must be greater than or equal to "
-                      + to_string(1 + 2 * BORDER_SIZE));
-        }
-
-        const int max_view_screen_size = max_screen_size - 2 * BORDER_SIZE;
-
-        const Vector<N, T> view_size = bounding_box.diagonal();
-        const Vector<N, T> center = bounding_box.center();
-
-        const T max_view_size = [&]
-        {
-                static_assert(N >= 2);
-                T res = 0;
-                // excluding camera direction N - 1
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        if (!(view_size[i] > 0))
-                        {
-                                error("Object projection size " + to_string(view_size[i]) + " is not positive");
-                        }
-                        res = std::max(view_size[i], res);
-                }
-                return res;
-        }();
-
-        const std::array<int, N - 1> screen_size = [&]
-        {
-                std::array<int, N - 1> res;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        const int size_in_pixels = std::ceil((view_size[i] / max_view_size) * max_view_screen_size);
-                        ASSERT(size_in_pixels <= max_view_screen_size);
-                        res[i] = std::max(1, size_in_pixels) + 2 * BORDER_SIZE;
-                }
-                return res;
-        }();
-
-        const Vector<N, T> camera_position = [&]
-        {
-                Vector<N, T> res(center);
-                res[N - 1] = bounding_box.max()[N - 1] + view_size.norm();
-                return res;
-        }();
-
-        const Vector<N, T> camera_direction = []
-        {
-                Vector<N, T> res(0);
-                res[N - 1] = -1;
-                return res;
-        }();
-
-        const std::array<Vector<N, T>, N - 1> screen_axes = []
-        {
-                std::array<Vector<N, T>, N - 1> res;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        res[i] = Vector<N, T>(0);
-                        res[i][i] = 1;
-                }
-                return res;
-        }();
-
-        const T units_per_pixel = max_view_size / max_view_screen_size;
+        const Vector<N, T> camera_position = center - info.camera_direction * (2 * shape_size);
 
         return std::make_unique<const ParallelProjector<N, T>>(
-                camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
+                camera_position, info.camera_direction, info.screen_axes, info.units_per_pixel, info.screen_size);
 }
 
 template <std::size_t N, typename T>
@@ -216,6 +220,33 @@ std::optional<Vector<N + 1, T>> create_clip_plane(
 
         return res;
 }
+
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_scene(
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        const Color& light,
+        const Color& background_light,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const T front_light_proportion,
+        const Vector<N, T>& center,
+        const T shape_size,
+        const Info<N, T>& info,
+        progress::Ratio* const progress)
+{
+        ASSERT(shape);
+
+        std::unique_ptr<const Projector<N, T>> projector = create_projector(shape_size, center, info);
+
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources =
+                create_light_sources(shape_size, center, info, front_light_proportion, light);
+
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
+        shapes.push_back(std::move(shape));
+
+        return create_storage_scene<N, T, Color>(
+                background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
+                std::move(shapes), progress);
+}
 }
 
 template <typename T, typename Color>
@@ -225,8 +256,8 @@ std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
         const Color& background_light,
         const std::optional<Vector<4, T>>& clip_plane_equation,
         const std::type_identity_t<T> front_light_proportion,
-        const int width,
-        const int height,
+        const int screen_width,
+        const int screen_height,
         const Vector<3, T>& camera_up,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& light_direction,
@@ -236,20 +267,13 @@ std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
 {
         ASSERT(shape);
 
+        const Info<3, T> info =
+                create_info(screen_width, screen_height, camera_up, camera_direction, light_direction, view_width);
         const T shape_size = shape->bounding_box().diagonal().norm();
 
-        std::unique_ptr<const Projector<3, T>> projector =
-                create_projector(shape_size, camera_up, camera_direction, view_center, view_width, width, height);
-
-        std::vector<std::unique_ptr<const LightSource<3, T, Color>>> light_sources = create_light_sources(
-                shape_size, view_center, camera_direction, light_direction, front_light_proportion, light);
-
-        std::vector<std::unique_ptr<const Shape<3, T, Color>>> shapes;
-        shapes.push_back(std::move(shape));
-
-        return create_storage_scene(
-                background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
-                std::move(shapes), progress);
+        return create_scene(
+                std::move(shape), light, background_light, clip_plane_equation, front_light_proportion, view_center,
+                shape_size, info, progress);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -265,29 +289,16 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         ASSERT(shape);
 
         const geometry::BoundingBox<N, T> bounding_box = shape->bounding_box();
-
-        std::unique_ptr<const Projector<N, T>> projector = create_projector(bounding_box, max_screen_size);
-
         const Vector<N, T> box_diagonal = bounding_box.diagonal();
         const Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
+
+        const Info<N, T> info = create_info(bounding_box, max_screen_size);
         const T shape_size = box_diagonal.norm();
-        const Vector<N, T> camera_direction = []
-        {
-                Vector<N, T> res(0);
-                res[N - 1] = -1;
-                return res;
-        }();
-        const Vector<N, T> light_direction = -box_diagonal;
+        const std::optional<Vector<N + 1, T>> clip_plane = create_clip_plane(clip_plane_position, bounding_box);
 
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources = create_light_sources(
-                shape_size, center, camera_direction, light_direction, front_light_proportion, light);
-
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
-        shapes.push_back(std::move(shape));
-
-        return create_storage_scene<N, T, Color>(
-                background_light, create_clip_plane(clip_plane_position, bounding_box), std::move(projector),
-                std::move(light_sources), std::move(shapes), progress);
+        return create_scene(
+                std::move(shape), light, background_light, clip_plane, front_light_proportion, center, shape_size, info,
+                progress);
 }
 
 #define TEMPLATE_3(T, C)                                                                                          \
