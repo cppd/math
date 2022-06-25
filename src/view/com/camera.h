@@ -44,7 +44,7 @@ class Camera final
         int height_{-1};
 
         double scale_exponent_{0};
-        double default_scale_{1};
+        double default_scale_{0};
 
         void set_vectors(const Vector3d& right, const Vector3d& up);
 
@@ -57,7 +57,7 @@ class Camera final
 public:
         explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
 
-        void reset(const Vector3d& right, const Vector3d& up, double scale, const Vector2d& window_center);
+        void reset_view();
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
         void move(const Vector2d& delta);

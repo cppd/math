@@ -65,12 +65,12 @@ class ViewProcess final
         void cmd(const command::DeleteAllObjects&)
         {
                 renderer_->exec(gpu::renderer::command::DeleteAllObjects());
-                cmd(command::ResetView());
+                camera_->reset_view();
         }
 
         void cmd(const command::ResetView&)
         {
-                camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
+                camera_->reset_view();
         }
 
         void cmd(const command::SetSampleCount& v)

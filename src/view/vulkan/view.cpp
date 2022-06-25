@@ -478,8 +478,7 @@ public:
                 ASSERT(device_graphics_.graphics_compute_queue_size() >= 2);
 
                 create_swapchain(window_size_in_mm);
-
-                cmd(command::ResetView());
+                camera_.reset_view();
         }
 
         ~Impl()

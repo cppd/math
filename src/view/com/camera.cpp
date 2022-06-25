@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/quaternion.h>
 #include <src/numerical/transform.h>
 
-#include <mutex>
-
 namespace ns::view
 {
 namespace
@@ -45,10 +43,20 @@ Vector3d rotate_vector_degree(const Vector3d& axis, const double angle_degree, c
 {
         return rotate_vector(axis, to_radians(angle_degree), v);
 }
+
+double default_scale(const int width, const int height)
+{
+        if (width > 0 && height > 0)
+        {
+                return 2.0 / std::min(width, height);
+        }
+        return 1;
+}
 }
 
 Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera) : set_camera_(std::move(set_camera))
 {
+        reset_view();
 }
 
 void Camera::set_vectors(const Vector3d& right, const Vector3d& up)
@@ -99,21 +107,18 @@ gpu::renderer::CameraInfo Camera::renderer_camera_info() const
                 .camera_direction = camera_direction_from_};
 }
 
-void Camera::reset(const Vector3d& right, const Vector3d& up, const double scale, const Vector2d& window_center)
+void Camera::reset_view()
 {
-        set_vectors(right, up);
+        constexpr Vector3d RIGHT{1, 0, 0};
+        constexpr Vector3d UP{0, 1, 0};
+        constexpr double SCALE{1};
+        constexpr Vector2d WINDOW_CENTER{0, 0};
 
-        scale_exponent_ = std::log(scale) / std::log(SCALE_BASE);
-        window_center_ = window_center;
+        set_vectors(RIGHT, UP);
 
-        if (width_ > 0 && height_ > 0)
-        {
-                default_scale_ = 2.0 / std::min(width_, height_);
-        }
-        else
-        {
-                default_scale_ = 1;
-        }
+        scale_exponent_ = std::log(SCALE) / std::log(SCALE_BASE);
+        window_center_ = WINDOW_CENTER;
+        default_scale_ = default_scale(width_, height_);
 
         set_camera_(renderer_camera_info());
 }
@@ -184,7 +189,7 @@ info::Camera Camera::camera() const
                 res[0] = (volume.right + volume.left) * 0.5;
                 res[1] = (volume.top + volume.bottom) * 0.5;
                 res[2] = (volume.far + volume.near) * 0.5;
-                res[3] = 1.0;
+                res[3] = 1;
                 return res;
         }();
 
