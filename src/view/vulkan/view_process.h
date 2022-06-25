@@ -41,7 +41,7 @@ class ViewProcess final
         bool text_active_ = true;
         Vector3f clear_color_rgb32_ = Vector3f(0);
 
-        void exec(const command::UpdateMeshObject& v)
+        void cmd(const command::UpdateMeshObject& v)
         {
                 if (const auto ptr = v.object.lock())
                 {
@@ -49,7 +49,7 @@ class ViewProcess final
                 }
         }
 
-        void exec(const command::UpdateVolumeObject& v)
+        void cmd(const command::UpdateVolumeObject& v)
         {
                 if (const auto ptr = v.object.lock())
                 {
@@ -57,38 +57,38 @@ class ViewProcess final
                 }
         }
 
-        void exec(const command::DeleteObject& v)
+        void cmd(const command::DeleteObject& v)
         {
                 renderer_->exec(gpu::renderer::command::DeleteObject(v.id));
         }
 
-        void exec(const command::DeleteAllObjects&)
+        void cmd(const command::DeleteAllObjects&)
         {
                 renderer_->exec(gpu::renderer::command::DeleteAllObjects());
-                exec(command::ResetView());
+                cmd(command::ResetView());
         }
 
-        void exec(const command::ResetView&)
+        void cmd(const command::ResetView&)
         {
                 camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
         }
 
-        void exec(const command::SetSampleCount& v)
+        void cmd(const command::SetSampleCount& v)
         {
                 set_sample_count_(v.sample_count);
         }
 
-        void exec(const command::SetLightingColor& v)
+        void cmd(const command::SetLightingColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetLightingColor(v.value));
         }
 
-        void exec(const command::SetFrontLightingProportion& v)
+        void cmd(const command::SetFrontLightingProportion& v)
         {
                 renderer_->exec(gpu::renderer::command::SetFrontLightingProportion(v.proportion));
         }
 
-        void exec(const command::SetBackgroundColor& v)
+        void cmd(const command::SetBackgroundColor& v)
         {
                 clear_color_rgb32_ = v.value.rgb32().clamp(0, 1);
                 clear_buffer_->set_color(clear_color_rgb32_);
@@ -106,67 +106,67 @@ class ViewProcess final
                 }
         }
 
-        void exec(const command::SetClipPlaneColor& v)
+        void cmd(const command::SetClipPlaneColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetClipPlaneColor(v.value));
         }
 
-        void exec(const command::SetWireframeColor& v)
+        void cmd(const command::SetWireframeColor& v)
         {
                 renderer_->exec(gpu::renderer::command::SetWireframeColor(v.value));
         }
 
-        void exec(const command::SetNormalLength& v)
+        void cmd(const command::SetNormalLength& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalLength(v.value));
         }
 
-        void exec(const command::SetNormalColorPositive& v)
+        void cmd(const command::SetNormalColorPositive& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalColorPositive(v.value));
         }
 
-        void exec(const command::SetNormalColorNegative& v)
+        void cmd(const command::SetNormalColorNegative& v)
         {
                 renderer_->exec(gpu::renderer::command::SetNormalColorNegative(v.value));
         }
 
-        void exec(const command::ShowSmooth& v)
+        void cmd(const command::ShowSmooth& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowSmooth(v.show));
         }
 
-        void exec(const command::ShowWireframe& v)
+        void cmd(const command::ShowWireframe& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowWireframe(v.show));
         }
 
-        void exec(const command::ShowShadow& v)
+        void cmd(const command::ShowShadow& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowShadow(v.show));
         }
 
-        void exec(const command::ShowFog& v)
+        void cmd(const command::ShowFog& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowFog(v.show));
         }
 
-        void exec(const command::ShowMaterials& v)
+        void cmd(const command::ShowMaterials& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowMaterials(v.show));
         }
 
-        void exec(const command::ShowFps& v)
+        void cmd(const command::ShowFps& v)
         {
                 text_active_ = v.show;
         }
 
-        void exec(const command::ShowClipPlaneLines& v)
+        void cmd(const command::ShowClipPlaneLines& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowClipPlaneLines(v.show));
         }
 
-        void exec(const command::SetVerticalSync& v)
+        void cmd(const command::SetVerticalSync& v)
         {
                 if (v.enabled != vertical_sync_)
                 {
@@ -175,17 +175,17 @@ class ViewProcess final
                 }
         }
 
-        void exec(const command::SetShadowZoom& v)
+        void cmd(const command::SetShadowZoom& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShadowZoom(v.value));
         }
 
-        void exec(const command::ShowNormals& v)
+        void cmd(const command::ShowNormals& v)
         {
                 renderer_->exec(gpu::renderer::command::SetShowNormals(v.show));
         }
 
-        void exec(const command::WindowResize&)
+        void cmd(const command::WindowResize&)
         {
         }
 
@@ -208,13 +208,14 @@ public:
         {
         }
 
-        void command(const ViewCommand& view_command)
+        void exec(const ViewCommand& command)
         {
-                const auto visitor = [this](const auto& v)
-                {
-                        exec(v);
-                };
-                std::visit(visitor, view_command);
+                std::visit(
+                        [this](const auto& v)
+                        {
+                                cmd(v);
+                        },
+                        command);
         }
 
         [[nodiscard]] bool vertical_sync() const

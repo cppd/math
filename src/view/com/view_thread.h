@@ -132,7 +132,7 @@ public:
 
         void dispatch_events(T* const view)
         {
-                view->send(send_queue_.pop());
+                view->exec(send_queue_.pop());
 
                 for (QueueEvent* const event : receive_queue_.pop())
                 {

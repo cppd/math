@@ -63,7 +63,7 @@ ImageProcess::ImageProcess(
         }
 }
 
-void ImageProcess::command(const command::PencilSketchShow& v)
+void ImageProcess::cmd(const command::PencilSketchShow& v)
 {
         if (pencil_sketch_active_ != v.show)
         {
@@ -71,7 +71,7 @@ void ImageProcess::command(const command::PencilSketchShow& v)
         }
 }
 
-void ImageProcess::command(const command::DftShow& v)
+void ImageProcess::cmd(const command::DftShow& v)
 {
         if (dft_active_ != v.show)
         {
@@ -79,22 +79,22 @@ void ImageProcess::command(const command::DftShow& v)
         }
 }
 
-void ImageProcess::command(const command::DftSetBrightness& v)
+void ImageProcess::cmd(const command::DftSetBrightness& v)
 {
         dft_->set_brightness(v.value);
 }
 
-void ImageProcess::command(const command::DftSetBackgroundColor& v)
+void ImageProcess::cmd(const command::DftSetBackgroundColor& v)
 {
         dft_->set_background_color(v.value);
 }
 
-void ImageProcess::command(const command::DftSetColor& v)
+void ImageProcess::cmd(const command::DftSetColor& v)
 {
         dft_->set_color(v.value);
 }
 
-void ImageProcess::command(const command::ConvexHullShow& v)
+void ImageProcess::cmd(const command::ConvexHullShow& v)
 {
         if (convex_hull_active_ != v.show)
         {
@@ -106,7 +106,7 @@ void ImageProcess::command(const command::ConvexHullShow& v)
         }
 }
 
-void ImageProcess::command(const command::OpticalFlowShow& v)
+void ImageProcess::cmd(const command::OpticalFlowShow& v)
 {
         if (optical_flow_active_ != v.show)
         {
@@ -114,13 +114,14 @@ void ImageProcess::command(const command::OpticalFlowShow& v)
         }
 }
 
-void ImageProcess::command(const ImageCommand& image_command)
+void ImageProcess::exec(const ImageCommand& command)
 {
-        const auto visitor = [this](const auto& v)
-        {
-                command(v);
-        };
-        std::visit(visitor, image_command);
+        std::visit(
+                [this](const auto& v)
+                {
+                        cmd(v);
+                },
+                command);
 }
 
 bool ImageProcess::two_windows() const

@@ -52,13 +52,14 @@ ClipPlane::ClipPlane(const Camera* const camera, std::function<void(const std::o
 {
 }
 
-void ClipPlane::command(const ClipPlaneCommand& clip_plane_command)
+void ClipPlane::exec(const ClipPlaneCommand& command)
 {
-        const auto visitor = [this](const auto& v)
-        {
-                command(v);
-        };
-        std::visit(visitor, clip_plane_command);
+        std::visit(
+                [this](const auto& v)
+                {
+                        cmd(v);
+                },
+                command);
 }
 
 void ClipPlane::set_position(const double position)
@@ -77,18 +78,18 @@ void ClipPlane::set_position(const double position)
         set_clip_plane_(clip_plane_equation(*view_matrix_, position_));
 }
 
-void ClipPlane::command(const command::ClipPlaneHide&)
+void ClipPlane::cmd(const command::ClipPlaneHide&)
 {
         view_matrix_.reset();
         set_clip_plane_(std::nullopt);
 }
 
-void ClipPlane::command(const command::ClipPlaneSetPosition& v)
+void ClipPlane::cmd(const command::ClipPlaneSetPosition& v)
 {
         set_position(v.position);
 }
 
-void ClipPlane::command(const command::ClipPlaneShow& v)
+void ClipPlane::cmd(const command::ClipPlaneShow& v)
 {
         view_matrix_ = camera_->view_matrix();
         set_position(v.position);

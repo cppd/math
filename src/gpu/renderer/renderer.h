@@ -37,7 +37,7 @@ struct Renderer
 
         virtual ~Renderer() = default;
 
-        virtual void info(const Info& info) const = 0;
+        virtual void receive(const Info& info) const = 0;
 
         virtual void exec(Command&& command) = 0;
 

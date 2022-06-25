@@ -30,19 +30,19 @@ class RendererObject
         StorageMesh* mesh_storage_;
         StorageVolume* volume_storage_;
 
-        void command(const command::MeshUpdate& v)
+        void cmd(const command::MeshUpdate& v)
         {
                 ASSERT(!volume_storage_->contains(v.object->id()));
                 mesh_storage_->update(*v.object);
         }
 
-        void command(const command::VolumeUpdate& v)
+        void cmd(const command::VolumeUpdate& v)
         {
                 ASSERT(!mesh_storage_->contains(v.object->id()));
                 volume_storage_->update(*v.object);
         }
 
-        void command(const command::DeleteObject& v)
+        void cmd(const command::DeleteObject& v)
         {
                 if (mesh_storage_->erase(v.id))
                 {
@@ -54,7 +54,7 @@ class RendererObject
                 }
         }
 
-        void command(const command::DeleteAllObjects&)
+        void cmd(const command::DeleteAllObjects&)
         {
                 mesh_storage_->clear();
                 volume_storage_->clear();
@@ -67,13 +67,14 @@ public:
         {
         }
 
-        void command(const ObjectCommand& object_command)
+        void exec(const ObjectCommand& command)
         {
-                const auto visitor = [this](const auto& v)
-                {
-                        command(v);
-                };
-                std::visit(visitor, object_command);
+                std::visit(
+                        [this](const auto& v)
+                        {
+                                cmd(v);
+                        },
+                        command);
         }
 };
 }

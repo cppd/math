@@ -35,13 +35,14 @@ std::tuple<int, int> Mouse::position(const double x, const double y) const
         return {std::lround(x * width_), std::lround(y * height_)};
 }
 
-void Mouse::command(const MouseCommand& mouse_command)
+void Mouse::exec(const MouseCommand& command)
 {
-        const auto visitor = [this](const auto& v)
-        {
-                command(v);
-        };
-        std::visit(visitor, mouse_command);
+        std::visit(
+                [this](const auto& v)
+                {
+                        cmd(v);
+                },
+                command);
 }
 
 const Mouse::MouseButtonInfo& Mouse::info(const MouseButton button) const
@@ -55,7 +56,7 @@ const Mouse::MouseButtonInfo& Mouse::info(const MouseButton button) const
         return INFO;
 }
 
-void Mouse::command(const command::MousePress& v)
+void Mouse::cmd(const command::MousePress& v)
 {
         const auto [x, y] = position(v.x, v.y);
 
@@ -70,7 +71,7 @@ void Mouse::command(const command::MousePress& v)
         m.delta_y = 0;
 }
 
-void Mouse::command(const command::MouseRelease& v)
+void Mouse::cmd(const command::MouseRelease& v)
 {
         const auto [x, y] = position(v.x, v.y);
 
@@ -79,7 +80,7 @@ void Mouse::command(const command::MouseRelease& v)
         y_ = y;
 }
 
-void Mouse::command(const command::MouseMove& v)
+void Mouse::cmd(const command::MouseMove& v)
 {
         const auto [x, y] = position(v.x, v.y);
 
@@ -110,7 +111,7 @@ void Mouse::command(const command::MouseMove& v)
         }
 }
 
-void Mouse::command(const command::MouseWheel& v)
+void Mouse::cmd(const command::MouseWheel& v)
 {
         const auto [x, y] = position(v.x, v.y);
 

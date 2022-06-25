@@ -145,29 +145,29 @@ class Impl final
 
         //
 
-        void command(const ViewCommand& view_command)
+        void cmd(const ViewCommand& command)
         {
-                view_process_.command(view_command);
+                view_process_.exec(command);
         }
 
-        void command(const MouseCommand& mouse_command)
+        void cmd(const MouseCommand& command)
         {
-                mouse_.command(mouse_command);
+                mouse_.exec(command);
         }
 
-        void command(const ImageCommand& image_command)
+        void cmd(const ImageCommand& command)
         {
                 const bool two_windows = image_process_.two_windows();
-                image_process_.command(image_command);
+                image_process_.exec(command);
                 if (two_windows != image_process_.two_windows())
                 {
                         create_swapchain();
                 }
         }
 
-        void command(const ClipPlaneCommand& clip_plane_command)
+        void cmd(const ClipPlaneCommand& command)
         {
-                clip_plane_.command(clip_plane_command);
+                clip_plane_.exec(command);
         }
 
         void info(std::optional<info::Camera>* const camera) const
@@ -208,14 +208,14 @@ class Impl final
         void info(std::optional<info::Functionality>* const functionality) const
         {
                 gpu::renderer::info::Functionality info;
-                renderer_->info(&info);
+                renderer_->receive(&info);
                 *functionality = info::Functionality{.shadow_zoom = info.shadow_zoom};
         }
 
         void info(std::optional<info::Description>* const description) const
         {
                 gpu::renderer::info::Description info;
-                renderer_->info(&info);
+                renderer_->receive(&info);
                 *description = info::Description{.ray_tracing = info.ray_tracing};
         }
 
@@ -479,7 +479,7 @@ public:
 
                 create_swapchain(window_size_in_mm);
 
-                command(command::ResetView());
+                cmd(command::ResetView());
         }
 
         ~Impl()
@@ -516,17 +516,17 @@ public:
                 }
         }
 
-        void send(std::vector<Command>&& commands)
+        void exec(std::vector<Command>&& commands)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 const auto visitor = [this](const auto& v)
                 {
-                        command(v);
+                        cmd(v);
                 };
-                for (const view::Command& v : commands)
+                for (const view::Command& command : commands)
                 {
-                        std::visit(visitor, v);
+                        std::visit(visitor, command);
                 }
         }
 
@@ -538,9 +538,9 @@ public:
                 {
                         info(v);
                 };
-                for (const Info& v : infos)
+                for (const Info& info : infos)
                 {
-                        std::visit(visitor, v);
+                        std::visit(visitor, info);
                 }
         }
 };

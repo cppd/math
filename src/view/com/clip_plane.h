@@ -38,14 +38,14 @@ class ClipPlane final
 
         void set_position(double position);
 
-        void command(const command::ClipPlaneHide&);
-        void command(const command::ClipPlaneSetPosition& v);
-        void command(const command::ClipPlaneShow& v);
+        void cmd(const command::ClipPlaneHide&);
+        void cmd(const command::ClipPlaneSetPosition& v);
+        void cmd(const command::ClipPlaneShow& v);
 
 public:
         ClipPlane(const Camera* camera, std::function<void(const std::optional<Vector4d>&)> set_clip_plane);
 
-        void command(const ClipPlaneCommand& clip_plane_command);
+        void exec(const ClipPlaneCommand& command);
 
         [[nodiscard]] std::optional<Vector4d> equation() const;
         [[nodiscard]] std::optional<double> position() const;

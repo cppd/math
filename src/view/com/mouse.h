@@ -58,15 +58,15 @@ class Mouse final
 
         [[nodiscard]] const MouseButtonInfo& info(MouseButton button) const;
 
-        void command(const command::MousePress& v);
-        void command(const command::MouseRelease& v);
-        void command(const command::MouseMove& v);
-        void command(const command::MouseWheel& v);
+        void cmd(const command::MousePress& v);
+        void cmd(const command::MouseRelease& v);
+        void cmd(const command::MouseMove& v);
+        void cmd(const command::MouseWheel& v);
 
 public:
         explicit Mouse(Camera* camera);
 
         void set_rectangle(const Region<2, int>& rectangle, int width, int height);
-        void command(const MouseCommand& mouse_command);
+        void exec(const MouseCommand& command);
 };
 }

@@ -109,36 +109,38 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 description->ray_tracing = ray_tracing_;
         }
 
-        void info(const Info& info) const override
+        void receive(const Info& info) const override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                const auto visitor = [this](const auto& v)
-                {
-                        this->info(v);
-                };
-                std::visit(visitor, info);
+                std::visit(
+                        [this](const auto& v)
+                        {
+                                this->info(v);
+                        },
+                        info);
         }
 
-        void exec(const ObjectCommand& command)
+        void cmd(const ObjectCommand& command)
         {
-                renderer_object_.command(command);
+                renderer_object_.exec(command);
         }
 
-        void exec(const ViewCommand& command)
+        void cmd(const ViewCommand& command)
         {
-                renderer_view_.command(command);
+                renderer_view_.exec(command);
         }
 
         void exec(Command&& command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                const auto visitor = [this](const auto& v)
-                {
-                        exec(v);
-                };
-                std::visit(visitor, command);
+                std::visit(
+                        [this](const auto& v)
+                        {
+                                cmd(v);
+                        },
+                        command);
         }
 
         VkSemaphore draw(

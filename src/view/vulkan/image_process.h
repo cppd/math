@@ -50,13 +50,13 @@ class ImageProcess
 
         std::vector<std::array<vulkan::handle::Semaphore, 2>> resolve_semaphores_;
 
-        void command(const command::PencilSketchShow& v);
-        void command(const command::DftShow& v);
-        void command(const command::DftSetBrightness& v);
-        void command(const command::DftSetBackgroundColor& v);
-        void command(const command::DftSetColor& v);
-        void command(const command::ConvexHullShow& v);
-        void command(const command::OpticalFlowShow& v);
+        void cmd(const command::PencilSketchShow& v);
+        void cmd(const command::DftShow& v);
+        void cmd(const command::DftSetBrightness& v);
+        void cmd(const command::DftSetBackgroundColor& v);
+        void cmd(const command::DftSetColor& v);
+        void cmd(const command::ConvexHullShow& v);
+        void cmd(const command::OpticalFlowShow& v);
 
 public:
         static vulkan::DeviceFunctionality device_functionality();
@@ -72,7 +72,7 @@ public:
                 const vulkan::Queue* compute_queue,
                 unsigned image_count);
 
-        void command(const ImageCommand& image_command);
+        void exec(const ImageCommand& command);
 
         [[nodiscard]] bool two_windows() const;
 

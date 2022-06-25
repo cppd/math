@@ -64,74 +64,74 @@ class RendererView final
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
         }
 
-        void command(const command::SetLightingColor& v)
+        void cmd(const command::SetLightingColor& v)
         {
                 drawing_buffer_->set_lighting_color(v.color.rgb32().max_n(0));
         }
 
-        void command(const command::SetFrontLightingProportion& v)
+        void cmd(const command::SetFrontLightingProportion& v)
         {
                 ASSERT(v.proportion >= 0 && v.proportion <= 1);
                 drawing_buffer_->set_lighting_proportions(v.proportion, 1 - v.proportion);
         }
 
-        void command(const command::SetBackgroundColor& v)
+        void cmd(const command::SetBackgroundColor& v)
         {
                 drawing_buffer_->set_background_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const command::SetWireframeColor& v)
+        void cmd(const command::SetWireframeColor& v)
         {
                 drawing_buffer_->set_wireframe_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const command::SetClipPlaneColor& v)
+        void cmd(const command::SetClipPlaneColor& v)
         {
                 drawing_buffer_->set_clip_plane_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const command::SetNormalLength& v)
+        void cmd(const command::SetNormalLength& v)
         {
                 drawing_buffer_->set_normal_length(v.length);
         }
 
-        void command(const command::SetNormalColorPositive& v)
+        void cmd(const command::SetNormalColorPositive& v)
         {
                 drawing_buffer_->set_normal_color_positive(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const command::SetNormalColorNegative& v)
+        void cmd(const command::SetNormalColorNegative& v)
         {
                 drawing_buffer_->set_normal_color_negative(v.color.rgb32().clamp(0, 1));
         }
 
-        void command(const command::SetShowSmooth& v)
+        void cmd(const command::SetShowSmooth& v)
         {
                 drawing_buffer_->set_show_smooth(v.show);
         }
 
-        void command(const command::SetShowWireframe& v)
+        void cmd(const command::SetShowWireframe& v)
         {
                 drawing_buffer_->set_show_wireframe(v.show);
         }
 
-        void command(const command::SetShowShadow& v)
+        void cmd(const command::SetShowShadow& v)
         {
                 drawing_buffer_->set_show_shadow(v.show);
                 show_shadow_ = v.show;
         }
 
-        void command(const command::SetShowFog& v)
+        void cmd(const command::SetShowFog& v)
         {
                 drawing_buffer_->set_show_fog(v.show);
         }
 
-        void command(const command::SetShowMaterials& v)
+        void cmd(const command::SetShowMaterials& v)
         {
                 drawing_buffer_->set_show_materials(v.show);
         }
 
-        void command(const command::SetShowNormals& v)
+        void cmd(const command::SetShowNormals& v)
         {
                 if (show_normals_ != v.show)
                 {
@@ -140,7 +140,7 @@ class RendererView final
                 }
         }
 
-        void command(const command::SetShadowZoom& v)
+        void cmd(const command::SetShadowZoom& v)
         {
                 if (!shadow_mapping_)
                 {
@@ -153,7 +153,7 @@ class RendererView final
                 }
         }
 
-        void command(const command::SetCamera& v)
+        void cmd(const command::SetCamera& v)
         {
                 const CameraInfo& c = *v.info;
 
@@ -178,7 +178,7 @@ class RendererView final
                 events_->view_matrices_changed();
         }
 
-        void command(const command::SetClipPlane& v)
+        void cmd(const command::SetClipPlane& v)
         {
                 if (clip_plane_ == v.plane)
                 {
@@ -197,7 +197,7 @@ class RendererView final
                 events_->view_clip_plane_changed(visibility_changed);
         }
 
-        void command(const command::SetShowClipPlaneLines& v)
+        void cmd(const command::SetShowClipPlaneLines& v)
         {
                 if (show_clip_plane_lines_ == v.show)
                 {
@@ -215,13 +215,14 @@ public:
         {
         }
 
-        void command(const ViewCommand& view_command)
+        void exec(const ViewCommand& command)
         {
-                const auto visitor = [this](const auto& v)
-                {
-                        command(v);
-                };
-                std::visit(visitor, view_command);
+                std::visit(
+                        [this](const auto& v)
+                        {
+                                cmd(v);
+                        },
+                        command);
         }
 
         [[nodiscard]] bool show_shadow() const
