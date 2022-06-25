@@ -49,6 +49,8 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
         ui_.slider_shadow_quality->setVisible(false);
 
         ui_.checkBox_clip_plane->setChecked(false);
+        ui_.checkBox_clip_plane_lines->setEnabled(false);
+        ui_.checkBox_clip_plane_lines->setChecked(true);
         ui_.slider_clip_plane->setEnabled(false);
         set_slider_position(ui_.slider_clip_plane, 0.5);
         ASSERT(((ui_.slider_clip_plane->maximum() - ui_.slider_clip_plane->minimum()) & 1) == 0);
@@ -66,6 +68,7 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
         on_clip_plane_clicked();
 
         connect(ui_.checkBox_clip_plane, &QCheckBox::clicked, this, &ViewWidget::on_clip_plane_clicked);
+        connect(ui_.checkBox_clip_plane_lines, &QCheckBox::clicked, this, &ViewWidget::on_clip_plane_lines_clicked);
         connect(ui_.checkBox_convex_hull_2d, &QCheckBox::clicked, this, &ViewWidget::on_convex_hull_2d_clicked);
         connect(ui_.checkBox_dft, &QCheckBox::clicked, this, &ViewWidget::on_dft_clicked);
         connect(ui_.checkBox_fog, &QCheckBox::clicked, this, &ViewWidget::on_fog_clicked);
@@ -139,7 +142,9 @@ void ViewWidget::on_clip_plane_clicked()
 {
         constexpr double DEFAULT_POSITION = 0.5;
 
-        bool checked = ui_.checkBox_clip_plane->isChecked();
+        const bool checked = ui_.checkBox_clip_plane->isChecked();
+
+        ui_.checkBox_clip_plane_lines->setEnabled(checked);
 
         ui_.slider_clip_plane->setEnabled(checked);
         {
@@ -147,20 +152,22 @@ void ViewWidget::on_clip_plane_clicked()
                 set_slider_position(ui_.slider_clip_plane, DEFAULT_POSITION);
         }
 
-        if (checked)
+        if (view_)
         {
-                if (view_)
+                if (checked)
                 {
                         view_->send(view::command::ClipPlaneShow(slider_position(ui_.slider_clip_plane)));
                 }
-        }
-        else
-        {
-                if (view_)
+                else
                 {
                         view_->send(view::command::ClipPlaneHide());
                 }
         }
+}
+
+void ViewWidget::on_clip_plane_lines_clicked()
+{
+        view_->send(view::command::ShowClipPlaneLines(ui_.checkBox_clip_plane_lines->isChecked()));
 }
 
 void ViewWidget::on_convex_hull_2d_clicked()
@@ -170,7 +177,7 @@ void ViewWidget::on_convex_hull_2d_clicked()
 
 void ViewWidget::on_dft_clicked()
 {
-        bool checked = ui_.checkBox_dft->isChecked();
+        const bool checked = ui_.checkBox_dft->isChecked();
 
         ui_.label_dft_brightness->setEnabled(checked);
         ui_.slider_dft_brightness->setEnabled(checked);
@@ -198,7 +205,7 @@ void ViewWidget::on_materials_clicked()
 
 void ViewWidget::on_normals_clicked()
 {
-        bool checked = ui_.checkBox_normals->isChecked();
+        const bool checked = ui_.checkBox_normals->isChecked();
         ui_.slider_normals->setEnabled(checked);
         view_->send(view::command::ShowNormals(checked));
 }
@@ -215,7 +222,7 @@ void ViewWidget::on_pencil_sketch_clicked()
 
 void ViewWidget::on_shadow_clicked()
 {
-        bool checked = ui_.checkBox_shadow->isChecked();
+        const bool checked = ui_.checkBox_shadow->isChecked();
 
         ui_.label_shadow_quality->setEnabled(checked);
         ui_.slider_shadow_quality->setEnabled(checked);
@@ -271,9 +278,9 @@ void ViewWidget::on_shadow_quality_changed(int)
 
 double ViewWidget::dft_brightness() const
 {
-        double value = ui_.slider_dft_brightness->value() - ui_.slider_dft_brightness->minimum();
-        double delta = ui_.slider_dft_brightness->maximum() - ui_.slider_dft_brightness->minimum();
-        double value_gamma = std::pow(value / delta, DFT_GAMMA);
+        const double value = ui_.slider_dft_brightness->value() - ui_.slider_dft_brightness->minimum();
+        const double delta = ui_.slider_dft_brightness->maximum() - ui_.slider_dft_brightness->minimum();
+        const double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
 
@@ -345,5 +352,10 @@ bool ViewWidget::normals_checked() const
 bool ViewWidget::vertical_sync_checked() const
 {
         return ui_.checkBox_vertical_sync->isChecked();
+}
+
+bool ViewWidget::clip_plane_lines_checked() const
+{
+        return ui_.checkBox_clip_plane_lines->isChecked();
 }
 }

@@ -149,6 +149,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="checkBox_clip_plane_lines">
+     <property name="text">
+      <string>Clip Plane Lines</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="checkBox_normals">
      <property name="text">
       <string>Normals</string>

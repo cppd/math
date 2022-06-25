@@ -36,6 +36,7 @@ private:
         void set_sample_count(const view::info::SampleCount& sample_count);
 
         void on_clip_plane_clicked();
+        void on_clip_plane_lines_clicked();
         void on_convex_hull_2d_clicked();
         void on_dft_clicked();
         void on_fog_clicked();
@@ -74,5 +75,6 @@ public:
         [[nodiscard]] bool optical_flow_checked() const;
         [[nodiscard]] bool normals_checked() const;
         [[nodiscard]] bool vertical_sync_checked() const;
+        [[nodiscard]] bool clip_plane_lines_checked() const;
 };
 }
