@@ -56,14 +56,17 @@ private:
         void on_blackbody_toggled();
         void on_front_lighting_changed();
 
+        [[nodiscard]] color::Spectrum spectrum() const;
+        [[nodiscard]] color::Color rgb() const;
+
 public:
         LightingWidget();
 
         void set_view(view::View* view);
 
+        [[nodiscard]] std::vector<view::Command> commands() const;
+
         [[nodiscard]] std::tuple<color::Spectrum, color::Color> color() const;
-        [[nodiscard]] color::Spectrum spectrum() const;
-        [[nodiscard]] color::Color rgb() const;
         [[nodiscard]] double front_lighting_proportion() const;
 };
 }

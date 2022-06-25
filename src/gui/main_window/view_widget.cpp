@@ -276,6 +276,26 @@ void ViewWidget::on_shadow_quality_changed(int)
         }
 }
 
+std::vector<view::Command> ViewWidget::commands() const
+{
+        return {view::command::ConvexHullShow(ui_.checkBox_convex_hull_2d->isChecked()),
+                view::command::DftSetBrightness(dft_brightness()),
+                view::command::DftShow(ui_.checkBox_dft->isChecked()),
+                view::command::OpticalFlowShow(ui_.checkBox_optical_flow->isChecked()),
+                view::command::PencilSketchShow(ui_.checkBox_pencil_sketch->isChecked()),
+                view::command::SetNormalLength(normal_length()),
+                view::command::SetShadowZoom(shadow_zoom()),
+                view::command::SetVerticalSync(ui_.checkBox_vertical_sync->isChecked()),
+                view::command::ShowClipPlaneLines(ui_.checkBox_clip_plane_lines->isChecked()),
+                view::command::ShowFog(ui_.checkBox_fog->isChecked()),
+                view::command::ShowFps(ui_.checkBox_fps->isChecked()),
+                view::command::ShowMaterials(ui_.checkBox_materials->isChecked()),
+                view::command::ShowNormals(ui_.checkBox_normals->isChecked()),
+                view::command::ShowShadow(ui_.checkBox_shadow->isChecked()),
+                view::command::ShowSmooth(ui_.checkBox_smooth->isChecked()),
+                view::command::ShowWireframe(ui_.checkBox_wireframe->isChecked())};
+}
+
 double ViewWidget::dft_brightness() const
 {
         const double value = ui_.slider_dft_brightness->value() - ui_.slider_dft_brightness->minimum();
@@ -292,70 +312,5 @@ double ViewWidget::shadow_zoom() const
 double ViewWidget::normal_length() const
 {
         return std::lerp(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui_.slider_normals));
-}
-
-bool ViewWidget::smooth_checked() const
-{
-        return ui_.checkBox_smooth->isChecked();
-}
-
-bool ViewWidget::wireframe_checked() const
-{
-        return ui_.checkBox_wireframe->isChecked();
-}
-
-bool ViewWidget::shadow_checked() const
-{
-        return ui_.checkBox_shadow->isChecked();
-}
-
-bool ViewWidget::fog_checked() const
-{
-        return ui_.checkBox_fog->isChecked();
-}
-
-bool ViewWidget::materials_checked() const
-{
-        return ui_.checkBox_materials->isChecked();
-}
-
-bool ViewWidget::fps_checked() const
-{
-        return ui_.checkBox_fps->isChecked();
-}
-
-bool ViewWidget::pencil_sketch_checked() const
-{
-        return ui_.checkBox_pencil_sketch->isChecked();
-}
-
-bool ViewWidget::dft_checked() const
-{
-        return ui_.checkBox_dft->isChecked();
-}
-
-bool ViewWidget::convex_hull_2d_checked() const
-{
-        return ui_.checkBox_convex_hull_2d->isChecked();
-}
-
-bool ViewWidget::optical_flow_checked() const
-{
-        return ui_.checkBox_optical_flow->isChecked();
-}
-
-bool ViewWidget::normals_checked() const
-{
-        return ui_.checkBox_normals->isChecked();
-}
-
-bool ViewWidget::vertical_sync_checked() const
-{
-        return ui_.checkBox_vertical_sync->isChecked();
-}
-
-bool ViewWidget::clip_plane_lines_checked() const
-{
-        return ui_.checkBox_clip_plane_lines->isChecked();
 }
 }

@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/merge.h>
 #include <src/com/message.h>
 #include <src/com/type/limit.h>
 #include <src/settings/name.h>
@@ -161,31 +162,8 @@ void MainWindow::constructor_objects()
 
 std::vector<view::Command> MainWindow::view_initial_commands() const
 {
-        return {view::command::ConvexHullShow(view_widget_->convex_hull_2d_checked()),
-                view::command::DftSetBackgroundColor(colors_widget_->dft_background_color()),
-                view::command::DftSetBrightness(view_widget_->dft_brightness()),
-                view::command::DftSetColor(colors_widget_->dft_color()),
-                view::command::DftShow(view_widget_->dft_checked()),
-                view::command::OpticalFlowShow(view_widget_->optical_flow_checked()),
-                view::command::PencilSketchShow(view_widget_->pencil_sketch_checked()),
-                view::command::SetBackgroundColor(colors_widget_->background_color()),
-                view::command::SetClipPlaneColor(colors_widget_->clip_plane_color()),
-                view::command::SetFrontLightingProportion(lighting_widget_->front_lighting_proportion()),
-                view::command::SetLightingColor(lighting_widget_->rgb()),
-                view::command::SetNormalColorNegative(colors_widget_->normal_color_negative()),
-                view::command::SetNormalColorPositive(colors_widget_->normal_color_positive()),
-                view::command::SetNormalLength(view_widget_->normal_length()),
-                view::command::SetShadowZoom(view_widget_->shadow_zoom()),
-                view::command::SetVerticalSync(view_widget_->vertical_sync_checked()),
-                view::command::SetWireframeColor(colors_widget_->wireframe_color()),
-                view::command::ShowClipPlaneLines(view_widget_->clip_plane_lines_checked()),
-                view::command::ShowFog(view_widget_->fog_checked()),
-                view::command::ShowFps(view_widget_->fps_checked()),
-                view::command::ShowMaterials(view_widget_->materials_checked()),
-                view::command::ShowNormals(view_widget_->normals_checked()),
-                view::command::ShowShadow(view_widget_->shadow_checked()),
-                view::command::ShowSmooth(view_widget_->smooth_checked()),
-                view::command::ShowWireframe(view_widget_->wireframe_checked())};
+        return merge<std::vector<view::Command>>(
+                colors_widget_->commands(), lighting_widget_->commands(), view_widget_->commands());
 }
 
 MainWindow::~MainWindow()

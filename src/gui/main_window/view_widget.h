@@ -55,26 +55,15 @@ private:
         void on_normals_changed(int);
         void on_shadow_quality_changed(int);
 
+        [[nodiscard]] double dft_brightness() const;
+        [[nodiscard]] double shadow_zoom() const;
+        [[nodiscard]] double normal_length() const;
+
 public:
         ViewWidget();
 
         void set_view(view::View* view);
 
-        [[nodiscard]] double dft_brightness() const;
-        [[nodiscard]] double shadow_zoom() const;
-        [[nodiscard]] double normal_length() const;
-        [[nodiscard]] bool smooth_checked() const;
-        [[nodiscard]] bool wireframe_checked() const;
-        [[nodiscard]] bool shadow_checked() const;
-        [[nodiscard]] bool fog_checked() const;
-        [[nodiscard]] bool materials_checked() const;
-        [[nodiscard]] bool fps_checked() const;
-        [[nodiscard]] bool pencil_sketch_checked() const;
-        [[nodiscard]] bool dft_checked() const;
-        [[nodiscard]] bool convex_hull_2d_checked() const;
-        [[nodiscard]] bool optical_flow_checked() const;
-        [[nodiscard]] bool normals_checked() const;
-        [[nodiscard]] bool vertical_sync_checked() const;
-        [[nodiscard]] bool clip_plane_lines_checked() const;
+        [[nodiscard]] std::vector<view::Command> commands() const;
 };
 }

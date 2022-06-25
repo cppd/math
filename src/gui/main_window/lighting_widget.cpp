@@ -264,6 +264,12 @@ void LightingWidget::on_front_lighting_changed()
         }
 }
 
+std::vector<view::Command> LightingWidget::commands() const
+{
+        return {view::command::SetLightingColor(rgb()),
+                view::command::SetFrontLightingProportion(front_lighting_proportion())};
+}
+
 color::Spectrum LightingWidget::spectrum() const
 {
         return intensity_ * spectrum_;
