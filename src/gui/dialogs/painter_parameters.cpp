@@ -105,43 +105,43 @@ PainterParametersWidget::PainterParametersWidget(
 
         this->layout()->setContentsMargins(0, 0, 0, 0);
 
-        ui_.spinBox_threads->setMinimum(1);
-        ui_.spinBox_threads->setMaximum(max_thread_count);
-        ui_.spinBox_threads->setValue(max_thread_count);
+        ui_.spin_box_threads->setMinimum(1);
+        ui_.spin_box_threads->setMaximum(max_thread_count);
+        ui_.spin_box_threads->setValue(max_thread_count);
 
-        ui_.spinBox_samples_per_pixel->setMinimum(1);
-        ui_.spinBox_samples_per_pixel->setMaximum(max_samples_per_pixel);
-        ui_.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
+        ui_.spin_box_samples_per_pixel->setMinimum(1);
+        ui_.spin_box_samples_per_pixel->setMaximum(max_samples_per_pixel);
+        ui_.spin_box_samples_per_pixel->setValue(default_samples_per_pixel);
 
-        ui_.checkBox_flat_facets->setChecked(false);
-        ui_.checkBox_cornell_box->setChecked(false);
+        ui_.check_box_flat_facets->setChecked(false);
+        ui_.check_box_cornell_box->setChecked(false);
 
-        ui_.radioButton_precision_0->setText(precisions[0]);
-        ui_.radioButton_precision_1->setText(precisions[1]);
+        ui_.radio_button_precision_0->setText(precisions[0]);
+        ui_.radio_button_precision_1->setText(precisions[1]);
         if (default_precision_index == 0)
         {
-                ui_.radioButton_precision_0->setChecked(true);
+                ui_.radio_button_precision_0->setChecked(true);
         }
         else
         {
-                ui_.radioButton_precision_1->setChecked(true);
+                ui_.radio_button_precision_1->setChecked(true);
         }
 
-        ui_.radioButton_color_0->setText(colors[0]);
-        ui_.radioButton_color_1->setText(colors[1]);
+        ui_.radio_button_color_0->setText(colors[0]);
+        ui_.radio_button_color_1->setText(colors[1]);
         if (default_color_index == 0)
         {
-                ui_.radioButton_color_0->setChecked(true);
+                ui_.radio_button_color_0->setChecked(true);
         }
         else
         {
-                ui_.radioButton_color_1->setChecked(true);
+                ui_.radio_button_color_1->setChecked(true);
         }
 }
 
 bool PainterParametersWidget::check()
 {
-        const int thread_count = ui_.spinBox_threads->value();
+        const int thread_count = ui_.spin_box_threads->value();
         if (!(thread_count >= 1 && thread_count <= max_thread_count_))
         {
                 const std::string msg = "Thread count must be in the range [1, " + to_string(max_thread_count_) + "].";
@@ -149,7 +149,7 @@ bool PainterParametersWidget::check()
                 return false;
         }
 
-        const int samples_per_pixel = ui_.spinBox_samples_per_pixel->value();
+        const int samples_per_pixel = ui_.spin_box_samples_per_pixel->value();
         if (!(samples_per_pixel >= 1 && samples_per_pixel <= max_samples_per_pixel_))
         {
                 const std::string msg =
@@ -158,13 +158,13 @@ bool PainterParametersWidget::check()
                 return false;
         }
 
-        if (!(ui_.radioButton_precision_0->isChecked() || ui_.radioButton_precision_1->isChecked()))
+        if (!(ui_.radio_button_precision_0->isChecked() || ui_.radio_button_precision_1->isChecked()))
         {
                 dialog::message_critical("Precision is not selected");
                 return false;
         }
 
-        if (!(ui_.radioButton_color_0->isChecked() || ui_.radioButton_color_1->isChecked()))
+        if (!(ui_.radio_button_color_0->isChecked() || ui_.radio_button_color_1->isChecked()))
         {
                 dialog::message_critical("Color is not selected");
                 return false;
@@ -176,12 +176,12 @@ bool PainterParametersWidget::check()
 [[nodiscard]] PainterParameters PainterParametersWidget::parameters()
 {
         PainterParameters p;
-        p.thread_count = ui_.spinBox_threads->value();
-        p.samples_per_pixel = ui_.spinBox_samples_per_pixel->value();
-        p.flat_facets = ui_.checkBox_flat_facets->isChecked();
-        p.cornell_box = ui_.checkBox_cornell_box->isChecked();
-        p.precision_index = ui_.radioButton_precision_0->isChecked() ? 0 : 1;
-        p.color_index = ui_.radioButton_color_0->isChecked() ? 0 : 1;
+        p.thread_count = ui_.spin_box_threads->value();
+        p.samples_per_pixel = ui_.spin_box_samples_per_pixel->value();
+        p.flat_facets = ui_.check_box_flat_facets->isChecked();
+        p.cornell_box = ui_.check_box_cornell_box->isChecked();
+        p.precision_index = ui_.radio_button_precision_0->isChecked() ? 0 : 1;
+        p.color_index = ui_.radio_button_color_0->isChecked() ? 0 : 1;
         return p;
 }
 }

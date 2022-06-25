@@ -15,10 +15,10 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLineEdit" name="lineEdit_filter"/>
+    <widget class="QLineEdit" name="line_edit_filter"/>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_regex">
+    <widget class="QCheckBox" name="check_box_regex">
      <property name="text">
       <string>Regular Expression</string>
      </property>
@@ -36,14 +36,14 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QPushButton" name="pushButton_set_all">
+        <widget class="QPushButton" name="push_button_set_all">
          <property name="text">
           <string>Set All</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_clear_all">
+        <widget class="QPushButton" name="push_button_clear_all">
          <property name="text">
           <string>Clear All</string>
          </property>

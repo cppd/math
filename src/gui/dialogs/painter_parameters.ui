@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox_threads"/>
+      <widget class="QSpinBox" name="spin_box_threads"/>
      </item>
      <item>
       <spacer name="horizontalSpacer_3">
@@ -51,7 +51,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox_samples_per_pixel"/>
+      <widget class="QSpinBox" name="spin_box_samples_per_pixel"/>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -69,21 +69,21 @@
     </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_flat_facets">
+    <widget class="QCheckBox" name="check_box_flat_facets">
      <property name="text">
       <string>Flat Facets</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_cornell_box">
+    <widget class="QCheckBox" name="check_box_cornell_box">
      <property name="text">
       <string>Cornell Box</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_color">
+    <widget class="QGroupBox" name="group_box_color">
      <property name="title">
       <string>Color</string>
      </property>
@@ -101,14 +101,14 @@
        <number>5</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="radioButton_color_0">
+       <widget class="QRadioButton" name="radio_button_color_0">
         <property name="text">
          <string>c_0</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="radioButton_color_1">
+       <widget class="QRadioButton" name="radio_button_color_1">
         <property name="text">
          <string>c_1</string>
         </property>
@@ -118,7 +118,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_precision">
+    <widget class="QGroupBox" name="group_box_precision">
      <property name="title">
       <string>Precision</string>
      </property>
@@ -136,14 +136,14 @@
        <number>5</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="radioButton_precision_0">
+       <widget class="QRadioButton" name="radio_button_precision_0">
         <property name="text">
          <string>p_0</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="radioButton_precision_1">
+       <widget class="QRadioButton" name="radio_button_precision_1">
         <property name="text">
          <string>p_1</string>
         </property>

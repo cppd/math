@@ -62,21 +62,21 @@ void PainterImageDialog::set_path()
         {
         case PainterImagePathType::NONE:
                 ui_.label_path_name->setVisible(false);
-                ui_.lineEdit_path->setVisible(false);
-                ui_.toolButton_select_path->setVisible(false);
+                ui_.line_edit_path->setVisible(false);
+                ui_.tool_button_select_path->setVisible(false);
                 return;
         case PainterImagePathType::DIRECTORY:
                 ui_.label_path_name->setText("Directory:");
-                set_line_edit_width(ui_.lineEdit_path);
-                ui_.lineEdit_path->setReadOnly(true);
-                connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
+                set_line_edit_width(ui_.line_edit_path);
+                ui_.line_edit_path->setReadOnly(true);
+                connect(ui_.tool_button_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         case PainterImagePathType::FILE:
                 ui_.label_path_name->setText("File:");
-                set_line_edit_width(ui_.lineEdit_path);
-                ui_.lineEdit_path->setReadOnly(true);
-                connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
+                set_line_edit_width(ui_.line_edit_path);
+                ui_.line_edit_path->setReadOnly(true);
+                connect(ui_.tool_button_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         }
@@ -87,12 +87,12 @@ void PainterImageDialog::set_checkboxes(const bool use_all)
 {
         if (use_all)
         {
-                ui_.checkBox_all->setVisible(true);
-                connect(ui_.checkBox_all, &QCheckBox::toggled, this, &PainterImageDialog::on_all_toggled);
+                ui_.check_box_all->setVisible(true);
+                connect(ui_.check_box_all, &QCheckBox::toggled, this, &PainterImageDialog::on_all_toggled);
         }
         else
         {
-                ui_.checkBox_all->setVisible(false);
+                ui_.check_box_all->setVisible(false);
         }
 }
 
@@ -108,7 +108,7 @@ void PainterImageDialog::done(const int r)
 
         if (path_type_ == PainterImagePathType::DIRECTORY)
         {
-                path_string = ui_.lineEdit_path->text().toStdString();
+                path_string = ui_.line_edit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path))
                 {
@@ -119,7 +119,7 @@ void PainterImageDialog::done(const int r)
         }
         else if (path_type_ == PainterImagePathType::FILE)
         {
-                path_string = ui_.lineEdit_path->text().toStdString();
+                path_string = ui_.line_edit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
                 {
@@ -133,7 +133,7 @@ void PainterImageDialog::done(const int r)
 
         parameters_->path_string = path_string;
 
-        if (ui_.checkBox_all->isVisible() && ui_.checkBox_all->isChecked())
+        if (ui_.check_box_all->isVisible() && ui_.check_box_all->isChecked())
         {
                 parameters_->all = true;
                 parameters_->with_background = false;
@@ -142,8 +142,8 @@ void PainterImageDialog::done(const int r)
         else
         {
                 parameters_->all = false;
-                parameters_->with_background = ui_.checkBox_with_background->isChecked();
-                parameters_->convert_to_8_bit = ui_.checkBox_8_bit->isChecked();
+                parameters_->with_background = ui_.check_box_with_background->isChecked();
+                parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
         }
 
         QDialog::done(r);
@@ -181,21 +181,21 @@ void PainterImageDialog::on_select_path_clicked()
 
         if (path && !ptr.isNull())
         {
-                ui_.lineEdit_path->setText(QString::fromStdString(*path));
+                ui_.line_edit_path->setText(QString::fromStdString(*path));
         }
 }
 
 void PainterImageDialog::on_all_toggled()
 {
-        if (ui_.checkBox_all->isChecked())
+        if (ui_.check_box_all->isChecked())
         {
-                ui_.checkBox_8_bit->setVisible(false);
-                ui_.checkBox_with_background->setVisible(false);
+                ui_.check_box_8_bit->setVisible(false);
+                ui_.check_box_with_background->setVisible(false);
         }
         else
         {
-                ui_.checkBox_8_bit->setVisible(true);
-                ui_.checkBox_with_background->setVisible(true);
+                ui_.check_box_8_bit->setVisible(true);
+                ui_.check_box_with_background->setVisible(true);
         }
         set_dialog_height(this);
 }

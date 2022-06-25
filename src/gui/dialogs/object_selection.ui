@@ -19,28 +19,28 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QCheckBox" name="checkBox_convex_hull">
+        <widget class="QCheckBox" name="check_box_convex_hull">
          <property name="text">
           <string>Convex Hull</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBox_minumum_spanning_tree">
+        <widget class="QCheckBox" name="check_box_minumum_spanning_tree">
          <property name="text">
           <string>Minimum Spanning Tree</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBox_cocone">
+        <widget class="QCheckBox" name="check_box_cocone">
          <property name="text">
           <string>Cocone</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBox_bound_cocone">
+        <widget class="QCheckBox" name="check_box_bound_cocone">
          <property name="text">
           <string>BoundCocone</string>
          </property>
@@ -58,14 +58,14 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QPushButton" name="pushButton_set_all">
+        <widget class="QPushButton" name="push_button_set_all">
          <property name="text">
           <string>Set All</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_clear_all">
+        <widget class="QPushButton" name="push_button_clear_all">
          <property name="text">
           <string>Clear All</string>
          </property>

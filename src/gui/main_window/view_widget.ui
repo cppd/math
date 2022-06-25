@@ -17,7 +17,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="pushButton_reset_view">
+      <widget class="QPushButton" name="push_button_reset_view">
        <property name="maximumSize">
         <size>
          <width>16777215</width>
@@ -55,7 +55,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_materials">
+    <widget class="QCheckBox" name="check_box_materials">
      <property name="text">
       <string>Materials</string>
      </property>
@@ -65,7 +65,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_smooth">
+    <widget class="QCheckBox" name="check_box_smooth">
      <property name="text">
       <string>Smooth</string>
      </property>
@@ -75,7 +75,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_fog">
+    <widget class="QCheckBox" name="check_box_fog">
      <property name="text">
       <string>Fog</string>
      </property>
@@ -85,7 +85,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_wireframe">
+    <widget class="QCheckBox" name="check_box_wireframe">
      <property name="text">
       <string>Wireframe</string>
      </property>
@@ -95,7 +95,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_shadow">
+    <widget class="QCheckBox" name="check_box_shadow">
      <property name="text">
       <string>Shadow</string>
      </property>
@@ -129,7 +129,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_clip_plane">
+    <widget class="QCheckBox" name="check_box_clip_plane">
      <property name="text">
       <string>Clip Plane</string>
      </property>
@@ -149,14 +149,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_clip_plane_lines">
+    <widget class="QCheckBox" name="check_box_clip_plane_lines">
      <property name="text">
       <string>Clip Plane Lines</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_normals">
+    <widget class="QCheckBox" name="check_box_normals">
      <property name="text">
       <string>Normals</string>
      </property>
@@ -183,7 +183,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_fps">
+    <widget class="QCheckBox" name="check_box_fps">
      <property name="text">
       <string>FPS</string>
      </property>
@@ -193,14 +193,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_pencil_sketch">
+    <widget class="QCheckBox" name="check_box_pencil_sketch">
      <property name="text">
       <string>Pencil Sketch</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_convex_hull_2d">
+    <widget class="QCheckBox" name="check_box_convex_hull_2d">
      <property name="text">
       <string>Convex Hull</string>
      </property>
@@ -210,14 +210,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_optical_flow">
+    <widget class="QCheckBox" name="check_box_optical_flow">
      <property name="text">
       <string>Optical Flow</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_dft">
+    <widget class="QCheckBox" name="check_box_dft">
      <property name="text">
       <string>DFT</string>
      </property>
@@ -255,7 +255,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_vertical_sync">
+    <widget class="QCheckBox" name="check_box_vertical_sync">
      <property name="text">
       <string>V-Sync</string>
      </property>
@@ -269,7 +269,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_sample_counts"/>
+    <layout class="QVBoxLayout" name="vertical_layout_sample_counts"/>
    </item>
    <item>
     <spacer name="verticalSpacer_3">

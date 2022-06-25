@@ -85,10 +85,10 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui_.spinBox_facet_count->setMinimum(min_facet_count);
-        ui_.spinBox_facet_count->setMaximum(max_facet_count);
-        ui_.spinBox_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
-        ui_.spinBox_facet_count->setValue(default_facet_count);
+        ui_.spin_box_facet_count->setMinimum(min_facet_count);
+        ui_.spin_box_facet_count->setMaximum(max_facet_count);
+        ui_.spin_box_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
+        ui_.spin_box_facet_count->setValue(default_facet_count);
 
         set_dialog_size(this);
 }
@@ -101,7 +101,7 @@ void FacetObjectParametersDialog::done(const int r)
                 return;
         }
 
-        const int facet_count = ui_.spinBox_facet_count->value();
+        const int facet_count = ui_.spin_box_facet_count->value();
         if (!(facet_count >= min_facet_count_ && facet_count <= max_facet_count_))
         {
                 std::string msg = "Facet count must be in the range [" + to_string(min_facet_count_) + ", "

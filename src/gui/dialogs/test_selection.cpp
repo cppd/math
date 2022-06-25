@@ -185,29 +185,29 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
                 ui_.listWidget->addItem(item.release());
         }
 
-        connect(ui_.pushButton_set_all, &QPushButton::clicked, this,
+        connect(ui_.push_button_set_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         items_->check(true);
                 });
 
-        connect(ui_.pushButton_clear_all, &QPushButton::clicked, this,
+        connect(ui_.push_button_clear_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         items_->check(false);
                 });
 
-        connect(ui_.lineEdit_filter, &QLineEdit::textChanged, this,
+        connect(ui_.line_edit_filter, &QLineEdit::textChanged, this,
                 [this](const QString& text)
                 {
                         filter(text);
                 });
 
-        ui_.checkBox_regex->setChecked(true);
-        connect(ui_.checkBox_regex, &QCheckBox::stateChanged, this,
+        ui_.check_box_regex->setChecked(true);
+        connect(ui_.check_box_regex, &QCheckBox::stateChanged, this,
                 [this]()
                 {
-                        filter(ui_.lineEdit_filter->text());
+                        filter(ui_.line_edit_filter->text());
                 });
 
         set_window_size(this);
@@ -218,7 +218,7 @@ TestSelectionParametersDialog::~TestSelectionParametersDialog() = default;
 void TestSelectionParametersDialog::filter(const QString& text)
 {
         const char* style = nullptr;
-        if (ui_.checkBox_regex->isChecked())
+        if (ui_.check_box_regex->isChecked())
         {
                 if (items_->filter_regex(text))
                 {
@@ -234,7 +234,7 @@ void TestSelectionParametersDialog::filter(const QString& text)
                 items_->filter_substr(text);
                 style = "color: black;";
         }
-        ui_.lineEdit_filter->setStyleSheet(style);
+        ui_.line_edit_filter->setStyleSheet(style);
 }
 
 void TestSelectionParametersDialog::done(const int r)

@@ -104,14 +104,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="radioButton_d65">
+    <widget class="QRadioButton" name="radio_button_d65">
      <property name="text">
       <string>D65</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="radioButton_daylight">
+    <widget class="QRadioButton" name="radio_button_daylight">
      <property name="text">
       <string>Daylight</string>
      </property>
@@ -125,14 +125,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="radioButton_blackbody_a">
+    <widget class="QRadioButton" name="radio_button_blackbody_a">
      <property name="text">
       <string>Blackbody A</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="radioButton_blackbody">
+    <widget class="QRadioButton" name="radio_button_blackbody">
      <property name="text">
       <string>Blackbody</string>
      </property>

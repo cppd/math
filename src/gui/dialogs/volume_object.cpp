@@ -85,10 +85,10 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui_.spinBox_image_size->setMinimum(min_image_size);
-        ui_.spinBox_image_size->setMaximum(max_image_size);
-        ui_.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
-        ui_.spinBox_image_size->setValue(default_image_size);
+        ui_.spin_box_image_size->setMinimum(min_image_size);
+        ui_.spin_box_image_size->setMaximum(max_image_size);
+        ui_.spin_box_image_size->setSingleStep(std::max(1, max_image_size / 1000));
+        ui_.spin_box_image_size->setValue(default_image_size);
 
         set_dialog_size(this);
 }
@@ -101,7 +101,7 @@ void VolumeObjectParametersDialog::done(const int r)
                 return;
         }
 
-        const int image_size = ui_.spinBox_image_size->value();
+        const int image_size = ui_.spin_box_image_size->value();
         if (!(image_size >= min_image_size_ && image_size <= max_image_size_))
         {
                 std::string msg = "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "

@@ -58,7 +58,7 @@
      <item row="1" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QSpinBox" name="spinBox_point_count"/>
+        <widget class="QSpinBox" name="spin_box_point_count"/>
        </item>
        <item>
         <spacer name="horizontalSpacer">

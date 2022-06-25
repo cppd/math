@@ -91,11 +91,11 @@ PainterParametersNdDialog::PainterParametersNdDialog(
 
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
 
-        ui_.spinBox_max_size->setMinimum(min_screen_size);
-        ui_.spinBox_max_size->setMaximum(max_screen_size);
-        ui_.spinBox_max_size->setValue(default_screen_size);
+        ui_.spin_box_max_size->setMinimum(min_screen_size);
+        ui_.spin_box_max_size->setMaximum(max_screen_size);
+        ui_.spin_box_max_size->setValue(default_screen_size);
 
-        ui_.verticalLayout_parameters->addWidget(parameters_widget_);
+        ui_.vertical_layout_parameters->addWidget(parameters_widget_);
 
         set_dialog_size(this);
 }
@@ -113,7 +113,7 @@ void PainterParametersNdDialog::done(const int r)
                 return;
         }
 
-        const int max_size = ui_.spinBox_max_size->value();
+        const int max_size = ui_.spin_box_max_size->value();
         if (!(max_size >= min_screen_size_ && max_size <= max_screen_size_))
         {
                 std::string msg = "Maximum screen size must be in the range [" + to_string(min_screen_size_) + ", "

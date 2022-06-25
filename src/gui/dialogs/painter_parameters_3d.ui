@@ -55,10 +55,10 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox_width"/>
+        <widget class="QSpinBox" name="spin_box_width"/>
        </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="spinBox_height"/>
+        <widget class="QSpinBox" name="spin_box_height"/>
        </item>
       </layout>
      </item>
@@ -85,7 +85,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_parameters"/>
+    <layout class="QVBoxLayout" name="vertical_layout_parameters"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

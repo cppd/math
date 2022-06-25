@@ -45,22 +45,23 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
 
-        connect(ui_.toolButton_background_color, &QToolButton::clicked, this,
+        connect(ui_.tool_button_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_background_color_clicked);
-        connect(ui_.toolButton_clip_plane_color, &QToolButton::clicked, this,
+        connect(ui_.tool_button_clip_plane_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_clip_plane_color_clicked);
-        connect(ui_.toolButton_dft_background_color, &QToolButton::clicked, this,
+        connect(ui_.tool_button_dft_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_dft_background_color_clicked);
-        connect(ui_.toolButton_dft_color, &QToolButton::clicked, this, &ColorsWidget::on_dft_color_clicked);
-        connect(ui_.toolButton_normal_color_negative, &QToolButton::clicked, this,
+        connect(ui_.tool_button_dft_color, &QToolButton::clicked, this, &ColorsWidget::on_dft_color_clicked);
+        connect(ui_.tool_button_normal_color_negative, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_negative_clicked);
-        connect(ui_.toolButton_normal_color_positive, &QToolButton::clicked, this,
+        connect(ui_.tool_button_normal_color_positive, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_positive_clicked);
-        connect(ui_.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
+        connect(ui_.tool_button_wireframe_color, &QToolButton::clicked, this,
+                &ColorsWidget::on_wireframe_color_clicked);
 
         this->adjustSize();
 
-        const auto h = ui_.toolButton_background_color->size().height();
+        const auto h = ui_.tool_button_background_color->size().height();
         ui_.widget_background_color->setMinimumSize(h, h);
         ui_.widget_clip_plane_color->setMinimumSize(h, h);
         ui_.widget_dft_background_color->setMinimumSize(h, h);

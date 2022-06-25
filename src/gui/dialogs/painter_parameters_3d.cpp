@@ -81,42 +81,42 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         ui_.setupUi(this);
         setWindowTitle("Painter");
 
-        connect(ui_.spinBox_width, QOverload<int>::of(&QSpinBox::valueChanged), this,
+        connect(ui_.spin_box_width, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParameters3dDialog::on_width_value_changed);
-        connect(ui_.spinBox_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
+        connect(ui_.spin_box_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParameters3dDialog::on_height_value_changed);
 
         ui_.label_space->setText(QString::fromStdString(space_name(DIMENSION)));
 
-        ui_.spinBox_width->setMinimum(min_width_);
-        ui_.spinBox_width->setMaximum(max_width_);
-        ui_.spinBox_width->setValue(min_width_);
-        ui_.spinBox_width->setSingleStep(std::max(1, min_width_ / 10));
+        ui_.spin_box_width->setMinimum(min_width_);
+        ui_.spin_box_width->setMaximum(max_width_);
+        ui_.spin_box_width->setValue(min_width_);
+        ui_.spin_box_width->setSingleStep(std::max(1, min_width_ / 10));
 
-        ui_.spinBox_height->setMinimum(min_height_);
-        ui_.spinBox_height->setMaximum(max_height_);
-        ui_.spinBox_height->setValue(min_height_);
-        ui_.spinBox_height->setSingleStep(std::max(1, min_height_ / 10));
+        ui_.spin_box_height->setMinimum(min_height_);
+        ui_.spin_box_height->setMaximum(max_height_);
+        ui_.spin_box_height->setValue(min_height_);
+        ui_.spin_box_height->setSingleStep(std::max(1, min_height_ / 10));
 
-        ui_.verticalLayout_parameters->addWidget(parameters_widget_);
+        ui_.vertical_layout_parameters->addWidget(parameters_widget_);
 
         set_dialog_size(this);
 }
 
 void PainterParameters3dDialog::on_width_value_changed(int)
 {
-        int height = std::lround(ui_.spinBox_width->value() / aspect_ratio_);
+        int height = std::lround(ui_.spin_box_width->value() / aspect_ratio_);
 
-        QSignalBlocker blocker(ui_.spinBox_height);
-        ui_.spinBox_height->setValue(std::clamp(height, min_height_, max_height_));
+        QSignalBlocker blocker(ui_.spin_box_height);
+        ui_.spin_box_height->setValue(std::clamp(height, min_height_, max_height_));
 }
 
 void PainterParameters3dDialog::on_height_value_changed(int)
 {
-        int width = std::lround(ui_.spinBox_height->value() * aspect_ratio_);
+        int width = std::lround(ui_.spin_box_height->value() * aspect_ratio_);
 
-        QSignalBlocker blocker(ui_.spinBox_width);
-        ui_.spinBox_width->setValue(std::clamp(width, min_width_, max_width_));
+        QSignalBlocker blocker(ui_.spin_box_width);
+        ui_.spin_box_width->setValue(std::clamp(width, min_width_, max_width_));
 }
 
 void PainterParameters3dDialog::done(const int r)
@@ -132,7 +132,7 @@ void PainterParameters3dDialog::done(const int r)
                 return;
         }
 
-        const int width = ui_.spinBox_width->value();
+        const int width = ui_.spin_box_width->value();
         if (!(min_width_ <= width && width <= max_width_))
         {
                 std::string msg =
@@ -141,7 +141,7 @@ void PainterParameters3dDialog::done(const int r)
                 return;
         }
 
-        const int height = ui_.spinBox_height->value();
+        const int height = ui_.spin_box_height->value();
         if (!(min_height_ <= height && height <= max_height_))
         {
                 std::string msg =

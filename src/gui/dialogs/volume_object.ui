@@ -65,7 +65,7 @@
      <item row="1" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QSpinBox" name="spinBox_image_size"/>
+        <widget class="QSpinBox" name="spin_box_image_size"/>
        </item>
        <item>
         <spacer name="horizontalSpacer">

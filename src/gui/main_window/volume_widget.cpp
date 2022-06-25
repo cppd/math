@@ -88,7 +88,7 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
 
         set_model_tree(nullptr);
 
-        connect(ui_.checkBox_isosurface, &QCheckBox::clicked, this, &VolumeWidget::on_isosurface_clicked);
+        connect(ui_.check_box_isosurface, &QCheckBox::clicked, this, &VolumeWidget::on_isosurface_clicked);
         connect(ui_.slider_isosurface_transparency, &QSlider::valueChanged, this,
                 &VolumeWidget::on_isosurface_transparency_changed);
         connect(ui_.slider_isovalue, &QSlider::valueChanged, this, &VolumeWidget::on_isovalue_changed);
@@ -96,12 +96,12 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
         connect(ui_.slider_metalness, &QSlider::valueChanged, this, &VolumeWidget::on_metalness_changed);
         connect(ui_.slider_roughness, &QSlider::valueChanged, this, &VolumeWidget::on_roughness_changed);
         connect(ui_.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
-        connect(ui_.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
+        connect(ui_.tool_button_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
         connect(slider_levels_.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
 
         this->adjustSize();
 
-        const auto h = ui_.toolButton_color->size().height();
+        const auto h = ui_.tool_button_color->size().height();
         ui_.widget_color->setMinimumSize(h, h);
 }
 
@@ -196,7 +196,7 @@ void VolumeWidget::on_isosurface_clicked()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        const bool checked = ui_.checkBox_isosurface->isChecked();
+        const bool checked = ui_.check_box_isosurface->isChecked();
         ui_.slider_isovalue->setEnabled(checked);
 
         const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
@@ -380,8 +380,8 @@ void VolumeWidget::ui_disable()
                 set_slider_to_middle(ui_.slider_transparency);
         }
         {
-                QSignalBlocker blocker(ui_.checkBox_isosurface);
-                ui_.checkBox_isosurface->setChecked(false);
+                QSignalBlocker blocker(ui_.check_box_isosurface);
+                ui_.check_box_isosurface->setChecked(false);
         }
         {
                 QSignalBlocker blocker(ui_.slider_isovalue);
@@ -441,8 +441,8 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 set_slider_position(ui_.slider_transparency, position);
                         }
                         {
-                                QSignalBlocker blocker(ui_.checkBox_isosurface);
-                                ui_.checkBox_isosurface->setChecked(info.isosurface);
+                                QSignalBlocker blocker(ui_.check_box_isosurface);
+                                ui_.check_box_isosurface->setChecked(info.isosurface);
                         }
                         {
                                 const double position = 1.0 - info.isosurface_alpha;

@@ -65,7 +65,7 @@
      <item row="1" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QSpinBox" name="spinBox_facet_count"/>
+        <widget class="QSpinBox" name="spin_box_facet_count"/>
        </item>
        <item>
         <spacer name="horizontalSpacer">

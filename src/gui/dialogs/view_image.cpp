@@ -128,8 +128,8 @@ ViewImageDialog::ViewImageDialog(
         ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
 
-        ui_.checkBox_normalize->setChecked(input.normalize);
-        ui_.checkBox_8_bit->setChecked(input.convert_to_8_bit);
+        ui_.check_box_normalize->setChecked(input.normalize);
+        ui_.check_box_8_bit->setChecked(input.convert_to_8_bit);
 
         if (!info.empty())
         {
@@ -142,12 +142,12 @@ ViewImageDialog::ViewImageDialog(
                 ui_.line->setVisible(false);
         }
 
-        ui_.lineEdit_path->setReadOnly(true);
-        ui_.lineEdit_path->setText(QString::fromStdString(initial_path_string(input, file_name)));
+        ui_.line_edit_path->setReadOnly(true);
+        ui_.line_edit_path->setText(QString::fromStdString(initial_path_string(input, file_name)));
 
-        connect(ui_.toolButton_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
+        connect(ui_.tool_button_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
 
-        set_line_edit_width(ui_.lineEdit_path);
+        set_line_edit_width(ui_.line_edit_path);
 
         set_dialog_height(this);
 }
@@ -160,7 +160,7 @@ void ViewImageDialog::done(const int r)
                 return;
         }
 
-        std::string path_string = ui_.lineEdit_path->text().toStdString();
+        std::string path_string = ui_.line_edit_path->text().toStdString();
 
         if (!has_directory_and_filename(path_string))
         {
@@ -172,8 +172,8 @@ void ViewImageDialog::done(const int r)
         parameters_.emplace();
 
         parameters_->path_string = std::move(path_string);
-        parameters_->normalize = ui_.checkBox_normalize->isChecked();
-        parameters_->convert_to_8_bit = ui_.checkBox_8_bit->isChecked();
+        parameters_->normalize = ui_.check_box_normalize->isChecked();
+        parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
 
         QDialog::done(r);
 }
@@ -189,14 +189,14 @@ void ViewImageDialog::on_select_path_clicked()
         constexpr bool READ_ONLY = true;
 
         const std::string file_name =
-                generic_utf8_filename(path_from_utf8(ui_.lineEdit_path->text().toStdString()).filename());
+                generic_utf8_filename(path_from_utf8(ui_.line_edit_path->text().toStdString()).filename());
 
         std::optional<std::string> path =
                 dialog::save_file(caption, file_name.empty() ? file_name_ : file_name, {filter}, READ_ONLY);
 
         if (path && !ptr.isNull())
         {
-                ui_.lineEdit_path->setText(QString::fromStdString(*path));
+                ui_.line_edit_path->setText(QString::fromStdString(*path));
         }
 }
 

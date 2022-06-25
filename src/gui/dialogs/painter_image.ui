@@ -24,10 +24,10 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLineEdit" name="lineEdit_path"/>
+      <widget class="QLineEdit" name="line_edit_path"/>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton_select_path">
+      <widget class="QToolButton" name="tool_button_select_path">
        <property name="text">
         <string>...</string>
        </property>
@@ -36,21 +36,21 @@
     </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_all">
+    <widget class="QCheckBox" name="check_box_all">
      <property name="text">
       <string>All combinations</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_with_background">
+    <widget class="QCheckBox" name="check_box_with_background">
      <property name="text">
       <string>With background</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_8_bit">
+    <widget class="QCheckBox" name="check_box_8_bit">
      <property name="text">
       <string>8-bit depth</string>
      </property>

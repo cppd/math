@@ -48,7 +48,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox_max_size"/>
+        <widget class="QSpinBox" name="spin_box_max_size"/>
        </item>
       </layout>
      </item>
@@ -75,7 +75,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_parameters"/>
+    <layout class="QVBoxLayout" name="vertical_layout_parameters"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

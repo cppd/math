@@ -85,10 +85,10 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
         ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui_.spinBox_point_count->setMinimum(min_point_count);
-        ui_.spinBox_point_count->setMaximum(max_point_count);
-        ui_.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
-        ui_.spinBox_point_count->setValue(default_point_count);
+        ui_.spin_box_point_count->setMinimum(min_point_count);
+        ui_.spin_box_point_count->setMaximum(max_point_count);
+        ui_.spin_box_point_count->setSingleStep(std::max(1, max_point_count / 1000));
+        ui_.spin_box_point_count->setValue(default_point_count);
 
         set_dialog_size(this);
 }
@@ -101,7 +101,7 @@ void PointObjectParametersDialog::done(const int r)
                 return;
         }
 
-        const int point_count = ui_.spinBox_point_count->value();
+        const int point_count = ui_.spin_box_point_count->value();
         if (!(point_count >= min_point_count_ && point_count <= max_point_count_))
         {
                 std::string msg = "Point count must be in the range [" + to_string(min_point_count_) + ", "
