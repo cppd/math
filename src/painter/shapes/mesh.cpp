@@ -45,16 +45,17 @@ class SurfaceImpl final : public Surface<N, T, Color>
         const MeshData<N, T, Color>* mesh_data_;
         const MeshFacet<N, T>* facet_;
 
-        [[nodiscard]] shading::Colors<Color> surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
+        [[nodiscard]] shading::Colors<Color> surface_color(const Vector<N, T>& point, const MeshMaterial<T, Color>& m)
+                const
         {
-                if (facet_->has_texcoord() && m.image >= 0)
+                if (facet_->has_texcoord() && m.image() >= 0)
                 {
                         const Vector<3, float> rgb =
-                                mesh_data_->images()[m.image].color(facet_->texcoord(mesh_data_->texcoords(), point));
+                                mesh_data_->images()[m.image()].color(facet_->texcoord(mesh_data_->texcoords(), point));
                         const Color color = Color(rgb[0], rgb[1], rgb[2]);
-                        return shading::compute_metalness(color, m.metalness);
+                        return shading::compute_metalness(color, m.metalness());
                 }
-                return shading::compute_metalness(m.color, m.metalness);
+                return shading::compute_metalness(m.color(), m.metalness());
         }
 
         //
@@ -87,9 +88,9 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                return shading::ggx_diffuse::f(m.roughness, surface_color(point, m), n, v, l);
+                return shading::ggx_diffuse::f(m.roughness(), surface_color(point, m), n, v, l);
         }
 
         [[nodiscard]] T pdf(
@@ -100,9 +101,9 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                return shading::ggx_diffuse::pdf(m.roughness, n, v, l);
+                return shading::ggx_diffuse::pdf(m.roughness(), n, v, l);
         }
 
         [[nodiscard]] Sample<N, T, Color> sample_brdf(
@@ -113,10 +114,10 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
                 const shading::Sample<N, T, Color>& sample =
-                        shading::ggx_diffuse::sample_f(engine, m.roughness, surface_color(point, m), n, v);
+                        shading::ggx_diffuse::sample_f(engine, m.roughness(), surface_color(point, m), n, v);
 
                 Sample<N, T, Color> s;
                 s.l = sample.l;
