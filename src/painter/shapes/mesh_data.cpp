@@ -94,6 +94,7 @@ void MeshData<N, T, Color>::create(const model::mesh::Reading<N>& mesh_object)
         {
                 return;
         }
+
         if (mesh.facets.empty())
         {
                 return;
@@ -105,24 +106,27 @@ void MeshData<N, T, Color>::create(const model::mesh::Reading<N>& mesh_object)
         const int materials_offset = materials_.size();
         const int images_offset = images_.size();
 
+        const Matrix<N + 1, N + 1, T> mesh_matrix = to_matrix<T>(mesh_object.matrix());
+
         {
-                const std::vector<Vector<N, T>>& vertices = to_vector<T>(mesh.vertices);
-                vertices_.insert(vertices_.cend(), vertices.cbegin(), vertices.cend());
+                const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
+                for (const auto& v : mesh.vertices)
+                {
+                        vertices_.push_back(multiplier(to_vector<T>(v)));
+                }
         }
+
         {
-                const auto iter_begin = std::next(vertices_.begin(), vertices_offset);
-                const auto iter_end = vertices_.end();
-                std::transform(
-                        iter_begin, iter_end, iter_begin,
-                        numerical::transform::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
+                const Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inverse().transpose();
+                for (const auto& v : mesh.normals)
+                {
+                        normals_.push_back(matrix * to_vector<T>(v));
+                }
         }
+
+        for (const auto& v : mesh.texcoords)
         {
-                const std::vector<Vector<N, T>>& normals = to_vector<T>(mesh.normals);
-                normals_.insert(normals_.cend(), normals.cbegin(), normals.cend());
-        }
-        {
-                const std::vector<Vector<N - 1, T>>& texcoords = to_vector<T>(mesh.texcoords);
-                texcoords_.insert(texcoords_.cend(), texcoords.cbegin(), texcoords.cend());
+                texcoords_.push_back(to_vector<T>(v));
         }
 
         const int default_material_index = mesh.materials.size();
@@ -142,6 +146,7 @@ void MeshData<N, T, Color>::create(const model::mesh::Reading<N>& mesh_object)
                 facets_.emplace_back(
                         vertices_to_array(vertices_, vertices), normals_, facet.has_normal, normals, facet.has_texcoord,
                         texcoords, material);
+
                 facet_vertex_indices_.push_back(vertices);
 
                 facets_without_material = facets_without_material || no_material;
@@ -182,6 +187,7 @@ void MeshData<N, T, Color>::create(
         materials_.clear();
         images_.clear();
         facets_.clear();
+        facet_vertex_indices_.clear();
         std::size_t vertex_count = 0;
         std::size_t normal_count = 0;
         std::size_t texcoord_count = 0;
@@ -212,6 +218,7 @@ void MeshData<N, T, Color>::create(
         materials_.reserve(material_count);
         images_.reserve(image_count);
         facets_.reserve(facet_count);
+        facet_vertex_indices_.reserve(facet_count);
 
         for (const model::mesh::Reading<N>& mesh_object : mesh_objects)
         {
