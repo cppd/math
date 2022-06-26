@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/model/mesh_utility.h>
 #include <src/numerical/transform.h>
 #include <src/settings/instantiation.h>
 
@@ -87,7 +88,7 @@ void MeshData<N, T, Color>::create(const model::mesh::Reading<N>& mesh_object)
                 return;
         }
 
-        const model::mesh::Mesh<N>& mesh = mesh_object.mesh();
+        const model::mesh::Mesh<N> mesh = model::mesh::optimize(mesh_object.mesh());
 
         if (mesh.vertices.empty())
         {
@@ -216,13 +217,6 @@ void MeshData<N, T, Color>::create(
         {
                 create(mesh_object);
         }
-
-        ASSERT(vertex_count == vertices_.size());
-        ASSERT(normal_count == normals_.size());
-        ASSERT(texcoord_count == texcoords_.size());
-        ASSERT(material_count == materials_.size());
-        ASSERT(image_count == images_.size());
-        ASSERT(facet_count == facets_.size());
 
         if (facets_.empty())
         {
