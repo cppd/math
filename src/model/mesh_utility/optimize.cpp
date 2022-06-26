@@ -52,6 +52,27 @@ void insert_vertices(const MeshFacet<N>& facet, std::unordered_map<int, int>* co
 }
 
 template <std::size_t N>
+void insert_vertices(const MeshPoint<N>& point, std::unordered_map<int, int>* const vertices, int* const idx_vertices)
+{
+        if (vertices->try_emplace(point.vertex, *idx_vertices).second)
+        {
+                ++(*idx_vertices);
+        }
+}
+
+template <std::size_t N>
+void insert_vertices(const MeshLine<N>& line, std::unordered_map<int, int>* const vertices, int* const idx_vertices)
+{
+        for (const int index : line.vertices)
+        {
+                if (vertices->try_emplace(index, *idx_vertices).second)
+                {
+                        ++(*idx_vertices);
+                }
+        }
+}
+
+template <std::size_t N>
 void insert_normals(const MeshFacet<N>& facet, std::unordered_map<int, int>* const normals, int* const idx_normals)
 {
         if (!facet.has_normal)
@@ -91,7 +112,7 @@ void insert_texcoords(
 }
 
 template <std::size_t N>
-void insert_materials(
+void insert_materials_and_images(
         const MeshFacet<N>& facet,
         const std::vector<MeshMaterial<N>>& mesh_materials,
         std::unordered_map<int, int>* const materials,
@@ -121,96 +142,71 @@ void insert_materials(
         }
 }
 
-template <std::size_t N>
-void insert_vertices(const MeshPoint<N>& point, std::unordered_map<int, int>* const vertices, int* const idx_vertices)
+//
+
+struct Maps final
 {
-        if (vertices->try_emplace(point.vertex, *idx_vertices).second)
-        {
-                ++(*idx_vertices);
-        }
-}
+        std::unordered_map<int, int> vertices;
+        std::unordered_map<int, int> normals;
+        std::unordered_map<int, int> texcoords;
+        std::unordered_map<int, int> materials;
+        std::unordered_map<int, int> images;
+};
 
 template <std::size_t N>
-void insert_vertices(const MeshLine<N>& line, std::unordered_map<int, int>* const vertices, int* const idx_vertices)
+Maps create_maps(const Mesh<N>& mesh)
 {
-        for (const int index : line.vertices)
+        Maps res;
+
+        int idx_vertices = 0;
+        int idx_normals = 0;
+        int idx_texcoords = 0;
+        int idx_materials = 0;
+        int idx_images = 0;
+
+        for (const MeshFacet<N>& facet : mesh.facets)
         {
-                if (vertices->try_emplace(index, *idx_vertices).second)
-                {
-                        ++(*idx_vertices);
-                }
+                insert_vertices<N>(facet, &res.vertices, &idx_vertices);
+                insert_normals<N>(facet, &res.normals, &idx_normals);
+                insert_texcoords<N>(facet, &res.texcoords, &idx_texcoords);
+                insert_materials_and_images<N>(
+                        facet, mesh.materials, &res.materials, &idx_materials, &res.images, &idx_images);
         }
+
+        for (const MeshPoint<N>& point : mesh.points)
+        {
+                insert_vertices<N>(point, &res.vertices, &idx_vertices);
+        }
+
+        for (const MeshLine<N>& line : mesh.lines)
+        {
+                insert_vertices<N>(line, &res.vertices, &idx_vertices);
+        }
+
+        ASSERT(idx_vertices == static_cast<int>(res.vertices.size()));
+        ASSERT(idx_normals == static_cast<int>(res.normals.size()));
+        ASSERT(idx_texcoords == static_cast<int>(res.texcoords.size()));
+        ASSERT(idx_materials == static_cast<int>(res.materials.size()));
+        ASSERT(idx_images == static_cast<int>(res.images.size()));
+
+        return res;
 }
 
 //
 
 template <std::size_t N>
-void fill_mesh(
-        const std::unordered_map<int, int>& vertices,
-        const std::unordered_map<int, int>& normals,
-        const std::unordered_map<int, int>& texcoords,
-        const std::unordered_map<int, int>& materials,
-        const std::unordered_map<int, int>& images,
-        const Mesh<N>& src_mesh,
-        Mesh<N>* const mesh)
-{
-        mesh->vertices.resize(vertices.size());
-        for (const auto& [old_index, new_index] : vertices)
-        {
-                mesh->vertices[new_index] = src_mesh.vertices[old_index];
-        }
-
-        mesh->normals.resize(normals.size());
-        for (const auto& [old_index, new_index] : normals)
-        {
-                mesh->normals[new_index] = src_mesh.normals[old_index];
-        }
-
-        mesh->texcoords.resize(texcoords.size());
-        for (const auto& [old_index, new_index] : texcoords)
-        {
-                mesh->texcoords[new_index] = src_mesh.texcoords[old_index];
-        }
-
-        mesh->materials.resize(materials.size());
-        for (const auto& [old_index, new_index] : materials)
-        {
-                mesh->materials[new_index] = src_mesh.materials[old_index];
-                const int old_image_index = src_mesh.materials[old_index].image;
-                if (old_image_index >= 0)
-                {
-                        const auto iter = images.find(old_image_index);
-                        ASSERT(iter != images.cend());
-                        mesh->materials[new_index].image = iter->second;
-                }
-        }
-
-        mesh->images.resize(images.size());
-        for (const auto& [old_index, new_index] : images)
-        {
-                mesh->images[new_index] = src_mesh.images[old_index];
-        }
-}
-
-template <std::size_t N>
-void fill_facet_vertices(
-        const std::unordered_map<int, int>& vertices,
-        const MeshFacet<N>& src_facet,
-        MeshFacet<N>* const facet)
+void fill_facet_vertices(const Maps& maps, const MeshFacet<N>& src_facet, MeshFacet<N>* const facet)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
-                const auto iter = vertices.find(src_facet.vertices[i]);
-                ASSERT(iter != vertices.cend());
+                const auto iter = maps.vertices.find(src_facet.vertices[i]);
+                ASSERT(iter != maps.vertices.cend());
                 facet->vertices[i] = iter->second;
         }
 }
 
 template <std::size_t N>
-void fill_facet_normals(
-        const std::unordered_map<int, int>& normals,
-        const MeshFacet<N>& src_facet,
-        MeshFacet<N>* const facet)
+void fill_facet_normals(const Maps& maps, const MeshFacet<N>& src_facet, MeshFacet<N>* const facet)
 {
         if (!src_facet.has_normal)
         {
@@ -225,17 +221,14 @@ void fill_facet_normals(
         facet->has_normal = true;
         for (std::size_t i = 0; i < N; ++i)
         {
-                const auto iter = normals.find(src_facet.normals[i]);
-                ASSERT(iter != normals.cend());
+                const auto iter = maps.normals.find(src_facet.normals[i]);
+                ASSERT(iter != maps.normals.cend());
                 facet->normals[i] = iter->second;
         }
 }
 
 template <std::size_t N>
-void fill_facet_texcoords(
-        const std::unordered_map<int, int>& texcoords,
-        const MeshFacet<N>& src_facet,
-        MeshFacet<N>* const facet)
+void fill_facet_texcoords(const Maps& maps, const MeshFacet<N>& src_facet, MeshFacet<N>* const facet)
 {
         if (!src_facet.has_texcoord)
         {
@@ -250,17 +243,14 @@ void fill_facet_texcoords(
         facet->has_texcoord = true;
         for (std::size_t i = 0; i < N; ++i)
         {
-                const auto iter = texcoords.find(src_facet.texcoords[i]);
-                ASSERT(iter != texcoords.cend());
+                const auto iter = maps.texcoords.find(src_facet.texcoords[i]);
+                ASSERT(iter != maps.texcoords.cend());
                 facet->texcoords[i] = iter->second;
         }
 }
 
 template <std::size_t N>
-void fill_facet_materials(
-        const std::unordered_map<int, int>& materials,
-        const MeshFacet<N>& src_facet,
-        MeshFacet<N>* const facet)
+void fill_facet_materials(const Maps& maps, const MeshFacet<N>& src_facet, MeshFacet<N>* const facet)
 {
         if (src_facet.material < 0)
         {
@@ -268,114 +258,130 @@ void fill_facet_materials(
                 return;
         }
 
-        const auto iter = materials.find(src_facet.material);
-        ASSERT(iter != materials.cend());
+        const auto iter = maps.materials.find(src_facet.material);
+        ASSERT(iter != maps.materials.cend());
         facet->material = iter->second;
 }
 
-template <std::size_t N>
-MeshFacet<N> make_facet(
-        const std::unordered_map<int, int>& vertices,
-        const std::unordered_map<int, int>& normals,
-        const std::unordered_map<int, int>& texcoords,
-        const std::unordered_map<int, int>& materials,
-        const MeshFacet<N>& facet)
-{
-        MeshFacet<N> res;
-
-        fill_facet_vertices<N>(vertices, facet, &res);
-        fill_facet_normals<N>(normals, facet, &res);
-        fill_facet_texcoords<N>(texcoords, facet, &res);
-        fill_facet_materials<N>(materials, facet, &res);
-
-        return res;
-}
+//
 
 template <std::size_t N>
-MeshPoint<N> make_point(const std::unordered_map<int, int>& vertices, const MeshPoint<N>& point)
+void fill_mesh_vertices(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
 {
-        MeshPoint<N> res;
-
-        const auto iter = vertices.find(point.vertex);
-        ASSERT(iter != vertices.cend());
-        res.vertex = iter->second;
-
-        return res;
-}
-
-template <std::size_t N>
-MeshLine<N> make_line(const std::unordered_map<int, int>& vertices, const MeshLine<N>& line)
-{
-        MeshLine<N> res;
-
-        for (std::size_t i = 0; i < 2; ++i)
+        mesh->vertices.resize(maps.vertices.size());
+        for (const auto& [old_index, new_index] : maps.vertices)
         {
-                const auto iter = vertices.find(line.vertices[i]);
-                ASSERT(iter != vertices.cend());
-                res.vertices[i] = iter->second;
+                mesh->vertices[new_index] = src_mesh.vertices[old_index];
         }
+}
 
-        return res;
+template <std::size_t N>
+void fill_mesh_normals(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->normals.resize(maps.normals.size());
+        for (const auto& [old_index, new_index] : maps.normals)
+        {
+                mesh->normals[new_index] = src_mesh.normals[old_index];
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_texcoords(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->texcoords.resize(maps.texcoords.size());
+        for (const auto& [old_index, new_index] : maps.texcoords)
+        {
+                mesh->texcoords[new_index] = src_mesh.texcoords[old_index];
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_materials(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->materials.resize(maps.materials.size());
+        for (const auto& [old_index, new_index] : maps.materials)
+        {
+                mesh->materials[new_index] = src_mesh.materials[old_index];
+                const int old_image_index = src_mesh.materials[old_index].image;
+                if (old_image_index >= 0)
+                {
+                        const auto iter = maps.images.find(old_image_index);
+                        ASSERT(iter != maps.images.cend());
+                        mesh->materials[new_index].image = iter->second;
+                }
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_images(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->images.resize(maps.images.size());
+        for (const auto& [old_index, new_index] : maps.images)
+        {
+                mesh->images[new_index] = src_mesh.images[old_index];
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_facets(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->facets.reserve(src_mesh.facets.size());
+        for (const MeshFacet<N>& facet : src_mesh.facets)
+        {
+                MeshFacet<N>& f = mesh->facets.emplace_back();
+                fill_facet_vertices<N>(maps, facet, &f);
+                fill_facet_normals<N>(maps, facet, &f);
+                fill_facet_texcoords<N>(maps, facet, &f);
+                fill_facet_materials<N>(maps, facet, &f);
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_points(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->points.reserve(src_mesh.points.size());
+        for (const MeshPoint<N>& point : src_mesh.points)
+        {
+                MeshPoint<N>& p = mesh->points.emplace_back();
+                const auto iter = maps.vertices.find(point.vertex);
+                ASSERT(iter != maps.vertices.cend());
+                p.vertex = iter->second;
+        }
+}
+
+template <std::size_t N>
+void fill_mesh_lines(const Maps& maps, const Mesh<N>& src_mesh, Mesh<N>* const mesh)
+{
+        mesh->lines.reserve(src_mesh.lines.size());
+        for (const MeshLine<N>& line : src_mesh.lines)
+        {
+                MeshLine<N>& l = mesh->lines.emplace_back();
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                        const auto iter = maps.vertices.find(line.vertices[i]);
+                        ASSERT(iter != maps.vertices.cend());
+                        l.vertices[i] = iter->second;
+                }
+        }
 }
 }
 
 template <std::size_t N>
 Mesh<N> optimize(const Mesh<N>& mesh)
 {
-        std::unordered_map<int, int> vertices;
-        std::unordered_map<int, int> normals;
-        std::unordered_map<int, int> texcoords;
-        std::unordered_map<int, int> materials;
-        std::unordered_map<int, int> images;
-
-        int idx_vertices = 0;
-        int idx_normals = 0;
-        int idx_texcoords = 0;
-        int idx_materials = 0;
-        int idx_images = 0;
-
-        for (const MeshFacet<N>& facet : mesh.facets)
-        {
-                insert_vertices<N>(facet, &vertices, &idx_vertices);
-                insert_normals<N>(facet, &normals, &idx_normals);
-                insert_texcoords<N>(facet, &texcoords, &idx_texcoords);
-                insert_materials<N>(facet, mesh.materials, &materials, &idx_materials, &images, &idx_images);
-        }
-
-        for (const MeshPoint<N>& point : mesh.points)
-        {
-                insert_vertices<N>(point, &vertices, &idx_vertices);
-        }
-
-        for (const MeshLine<N>& line : mesh.lines)
-        {
-                insert_vertices<N>(line, &vertices, &idx_vertices);
-        }
-
-        ASSERT(idx_vertices == static_cast<int>(vertices.size()));
-        ASSERT(idx_normals == static_cast<int>(normals.size()));
-        ASSERT(idx_texcoords == static_cast<int>(texcoords.size()));
-        ASSERT(idx_materials == static_cast<int>(materials.size()));
-        ASSERT(idx_images == static_cast<int>(images.size()));
+        const Maps maps = create_maps(mesh);
 
         Mesh<N> res;
 
-        fill_mesh(vertices, normals, texcoords, materials, images, mesh, &res);
+        fill_mesh_vertices(maps, mesh, &res);
+        fill_mesh_normals(maps, mesh, &res);
+        fill_mesh_texcoords(maps, mesh, &res);
+        fill_mesh_materials(maps, mesh, &res);
+        fill_mesh_images(maps, mesh, &res);
 
-        for (const MeshFacet<N>& facet : mesh.facets)
-        {
-                res.facets.push_back(make_facet<N>(vertices, normals, texcoords, materials, facet));
-        }
-
-        for (const MeshPoint<N>& point : mesh.points)
-        {
-                res.points.push_back(make_point<N>(vertices, point));
-        }
-
-        for (const MeshLine<N>& line : mesh.lines)
-        {
-                res.lines.push_back(make_line<N>(vertices, line));
-        }
+        fill_mesh_facets(maps, mesh, &res);
+        fill_mesh_points(maps, mesh, &res);
+        fill_mesh_lines(maps, mesh, &res);
 
         return res;
 }
