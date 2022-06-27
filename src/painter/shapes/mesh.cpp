@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 #include <src/geometry/accelerators/bvh.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/settings/instantiation.h>
 #include <src/shading/ggx_diffuse.h>
@@ -51,7 +52,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 if (facet_->has_texcoord() && m.image() >= 0)
                 {
                         const Vector<3, float> rgb =
-                                mesh_data_->images()[m.image()].color(facet_->texcoord(mesh_data_->texcoords(), point));
+                                mesh_data_->images[m.image()].color(facet_->texcoord(mesh_data_->texcoords, point));
                         const Color color = Color(rgb[0], rgb[1], rgb[2]);
                         return shading::compute_metalness(color, m.metalness());
                 }
@@ -72,7 +73,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         [[nodiscard]] std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
         {
-                return facet_->shading_normal(mesh_data_->normals(), point);
+                return facet_->shading_normal(mesh_data_->normals, point);
         }
 
         [[nodiscard]] std::optional<Color> light_source() const override
@@ -88,7 +89,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials[facet_->material()];
 
                 return shading::ggx_diffuse::f(m.roughness(), surface_color(point, m), n, v, l);
         }
@@ -101,7 +102,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials[facet_->material()];
 
                 return shading::ggx_diffuse::pdf(m.roughness(), n, v, l);
         }
@@ -114,7 +115,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& m = mesh_data_->materials()[facet_->material()];
+                const MeshMaterial<T, Color>& m = mesh_data_->materials[facet_->material()];
 
                 const shading::Sample<N, T, Color>& sample =
                         shading::ggx_diffuse::sample_f(engine, m.roughness(), surface_color(point, m), n, v);
@@ -136,14 +137,19 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects(const MeshData<N, T, Color>& mesh_data)
+[[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects(
+        const MeshData<N, T, Color>& mesh_data,
+        const std::vector<std::array<int, N>>& facet_vertex_indices)
 {
-        const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets();
+        const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets;
         std::vector<geometry::BvhObject<N, T>> res;
         res.reserve(facets.size());
         for (std::size_t i = 0; i < facets.size(); ++i)
         {
-                res.emplace_back(mesh_data.facet_bounding_box(i), facets[i].intersection_cost(), i);
+                ASSERT(i < facet_vertex_indices.size());
+                res.emplace_back(
+                        geometry::BoundingBox(mesh_data.vertices, facet_vertex_indices[i]),
+                        facets[i].intersection_cost(), i);
         }
         return res;
 }
@@ -151,6 +157,7 @@ template <std::size_t N, typename T, typename Color>
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] geometry::Bvh<N, T> create_bvh(
         const MeshData<N, T, Color>& mesh_data,
+        const std::vector<std::array<int, N>>& facet_vertex_indices,
         const bool write_log,
         progress::Ratio* const progress)
 {
@@ -159,7 +166,7 @@ template <std::size_t N, typename T, typename Color>
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::Bvh<N, T> bvh(bvh_objects(mesh_data), progress);
+        geometry::Bvh<N, T> bvh(bvh_objects(mesh_data, facet_vertex_indices), progress);
 
         if (write_log)
         {
@@ -194,7 +201,7 @@ class ShapeImpl final : public Shape<N, T, Color>
         {
                 const auto intersection = bvh_.intersect(
                         ray, max_distance,
-                        [facets = &mesh_data_.facets(), &ray](const auto& indices, const auto& local_max_distance)
+                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& local_max_distance)
                                 -> std::optional<std::tuple<T, const MeshFacet<N, T>*>>
                         {
                                 const std::tuple<T, const MeshFacet<N, T>*> info =
@@ -229,18 +236,26 @@ class ShapeImpl final : public Shape<N, T, Color>
                 };
         }
 
+        ShapeImpl(MeshInfo<N, T, Color>&& mesh_info, const bool write_log, progress::Ratio* const progress)
+                : mesh_data_(std::move(mesh_info.mesh_data)),
+                  bvh_(create_bvh(mesh_data_, mesh_info.facet_vertex_indices, write_log, progress)),
+                  bounding_box_(bvh_.bounding_box()),
+                  intersection_cost_(
+                          mesh_data_.facets.size()
+                          * std::remove_reference_t<decltype(mesh_data_.facets.front())>::intersection_cost())
+        {
+        }
+
 public:
         ShapeImpl(
                 const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
                 const std::optional<Vector<N + 1, T>>& clip_plane_equation,
                 const bool write_log,
                 progress::Ratio* const progress)
-                : mesh_data_(mesh_objects, clip_plane_equation, write_log),
-                  bvh_(create_bvh(mesh_data_, write_log, progress)),
-                  bounding_box_(bvh_.bounding_box()),
-                  intersection_cost_(
-                          mesh_data_.facets().size()
-                          * std::remove_reference_t<decltype(mesh_data_.facets().front())>::intersection_cost())
+                : ShapeImpl(
+                        create_mesh_info<N, T, Color>(mesh_objects, clip_plane_equation, write_log),
+                        write_log,
+                        progress)
         {
         }
 };
