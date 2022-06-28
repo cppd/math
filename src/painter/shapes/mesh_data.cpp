@@ -78,6 +78,19 @@ template <std::size_t N, typename T>
         return res;
 }
 
+template <std::size_t N>
+[[nodiscard]] model::mesh::Mesh<N> optimize_mesh(const model::mesh::Mesh<N>& mesh)
+{
+        model::mesh::Mesh<N> res;
+        res.vertices = mesh.vertices;
+        res.normals = mesh.normals;
+        res.texcoords = mesh.texcoords;
+        res.materials = mesh.materials;
+        res.images = mesh.images;
+        res.facets = mesh.facets;
+        return model::mesh::optimize(res);
+}
+
 template <std::size_t N, typename T, typename Color>
 void create(
         const model::mesh::Reading<N>& mesh_object,
@@ -91,7 +104,7 @@ void create(
                 return;
         }
 
-        const model::mesh::Mesh<N> mesh = model::mesh::optimize(mesh_object.mesh());
+        const model::mesh::Mesh<N> mesh = optimize_mesh(mesh_object.mesh());
 
         if (mesh.vertices.empty())
         {
@@ -155,11 +168,11 @@ void create(
                 facets_without_material = facets_without_material || no_material;
         }
 
-        for (const typename model::mesh::Mesh<N>::Material& m : mesh.materials)
+        for (const typename model::mesh::Mesh<N>::Material& material : mesh.materials)
         {
-                const int image = m.image < 0 ? -1 : (images_offset + m.image);
+                const int image = material.image < 0 ? -1 : (images_offset + material.image);
                 mesh_data->materials.emplace_back(
-                        mesh_object.metalness(), mesh_object.roughness(), m.color, image, alpha);
+                        mesh_object.metalness(), mesh_object.roughness(), material.color, image, alpha);
         }
 
         if (facets_without_material)
@@ -194,30 +207,33 @@ void create(
         mesh_data->images.clear();
         mesh_data->facets.clear();
         facet_vertex_indices->clear();
+
         std::size_t vertex_count = 0;
         std::size_t normal_count = 0;
         std::size_t texcoord_count = 0;
         std::size_t material_count = 0;
         std::size_t image_count = 0;
         std::size_t facet_count = 0;
+
         for (const model::mesh::Reading<N>& mesh : mesh_objects)
         {
                 vertex_count += mesh.mesh().vertices.size();
                 normal_count += mesh.mesh().normals.size();
                 texcoord_count += mesh.mesh().texcoords.size();
-                bool no_material = false;
+                image_count += mesh.mesh().images.size();
+                facet_count += mesh.mesh().facets.size();
+                material_count += mesh.mesh().materials.size();
+
                 for (const typename model::mesh::Mesh<N>::Facet& facet : mesh.mesh().facets)
                 {
                         if (facet.material < 0)
                         {
-                                no_material = true;
+                                ++material_count;
                                 break;
                         }
                 }
-                material_count += mesh.mesh().materials.size() + (no_material ? 1 : 0);
-                image_count += mesh.mesh().images.size();
-                facet_count += mesh.mesh().facets.size();
         }
+
         mesh_data->vertices.reserve(vertex_count);
         mesh_data->normals.reserve(normal_count);
         mesh_data->texcoords.reserve(texcoord_count);
