@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "optimize.h"
 
+#include "position.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
@@ -419,6 +421,8 @@ Mesh<N> optimize(const Mesh<N>& mesh)
         fill_mesh_facets(maps, mesh, &res);
         fill_mesh_points(maps, mesh, &res);
         fill_mesh_lines(maps, mesh, &res);
+
+        set_center_and_length(&res);
 
         return res;
 }
