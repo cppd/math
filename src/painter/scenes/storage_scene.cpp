@@ -37,7 +37,7 @@ template <typename T>
 constexpr T RAY_OFFSET = 64 * Limits<T>::epsilon();
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
+[[nodiscard]] Vector<N, T> move_ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
 {
         if (!geometric_normal)
         {
@@ -96,7 +96,7 @@ class Impl final : public Scene<N, T, Color>
         {
                 ++thread_ray_count_;
 
-                Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(ray_org(geometric_normal, ray));
+                Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(move_ray_org(geometric_normal, ray));
                 T ray_max_distance = Limits<T>::max();
 
                 if constexpr (USE_CLIP_POLYTOPE)
