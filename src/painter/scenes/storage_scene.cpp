@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/spatial/clip_plane.h>
 #include <src/geometry/spatial/convex_polytope.h>
+#include <src/geometry/spatial/point_offset.h>
 #include <src/settings/instantiation.h>
 
 #include <optional>
@@ -33,25 +34,6 @@ namespace ns::painter
 {
 namespace
 {
-template <typename T>
-constexpr T RAY_OFFSET = 64 * Limits<T>::epsilon();
-
-template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> move_ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
-{
-        if (!geometric_normal)
-        {
-                return ray.org();
-        }
-        const T ray_offset = (dot(*geometric_normal, ray.dir()) < 0) ? -RAY_OFFSET<T> : RAY_OFFSET<T>;
-        Vector<N, T> org;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                org[i] = ray.org()[i] + std::abs(ray.org()[i]) * ray_offset * (*geometric_normal)[i];
-        }
-        return org;
-}
-
 template <typename P>
 [[nodiscard]] std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 {
@@ -96,7 +78,10 @@ class Impl final : public Scene<N, T, Color>
         {
                 ++thread_ray_count_;
 
-                Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(move_ray_org(geometric_normal, ray));
+                Ray<N, T> ray_moved =
+                        geometric_normal ? Ray<N, T>(ray).set_org(geometry::offset_ray_org(*geometric_normal, ray))
+                                         : ray;
+
                 T ray_max_distance = Limits<T>::max();
 
                 if constexpr (USE_CLIP_POLYTOPE)
