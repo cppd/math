@@ -29,12 +29,22 @@ struct Hyperplane final
         Vector<N, T> n;
         T d;
 
-        Hyperplane()
+        constexpr Hyperplane()
         {
         }
 
-        Hyperplane(const Vector<N, T>& n, const T& d) : n(n), d(d)
+        constexpr Hyperplane(const Vector<N, T>& n, const T& d) : n(n), d(d)
         {
+        }
+
+        // equation n * x + d = 0
+        explicit constexpr Hyperplane(const Vector<N + 1, T>& equation)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        n[i] = equation[i];
+                }
+                d = -equation[N];
         }
 
         void reverse_normal()

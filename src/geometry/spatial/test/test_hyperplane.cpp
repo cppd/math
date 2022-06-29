@@ -30,6 +30,19 @@ namespace ns::geometry::spatial
 {
 namespace
 {
+template <typename T>
+struct Test final
+{
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5).n == Vector<4, T>(1.1, 1.2, 1.3, 1.4));
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5).d == 1.5);
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4, 1.5}).n == Vector<4, T>(1.1, 1.2, 1.3, 1.4));
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4, 1.5}).d == -1.5);
+};
+
+template struct Test<float>;
+template struct Test<double>;
+template struct Test<long double>;
+
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_vector(RandomEngine& engine)
 {
