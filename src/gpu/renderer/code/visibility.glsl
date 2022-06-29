@@ -20,18 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef RAY_TRACING
 
+#include "constant.glsl"
+#include "point_offset.glsl"
+
 #extension GL_EXT_ray_query : require
 
-const float RAY_TRACING_FLOAT_EPSILON = 1.0 / (1 << 23);
-const float RAY_TRACING_RAY_OFFSET = 64 * RAY_TRACING_FLOAT_EPSILON;
-
 const float RAY_TRACING_T_MAX = 1e38;
-
-vec3 ray_tracing_move_ray_org(const vec3 geometric_normal, const vec3 ray_org, const vec3 ray_dir)
-{
-        const float ray_offset = dot(geometric_normal, ray_dir) < 0 ? -RAY_TRACING_RAY_OFFSET : RAY_TRACING_RAY_OFFSET;
-        return ray_org + ray_offset * geometric_normal * abs(ray_org);
-}
 
 bool ray_tracing_any_intersection(
         const vec3 org,
@@ -90,7 +84,7 @@ bool occluded_impl(
                 return true;
         }
 
-        t += t * RAY_TRACING_FLOAT_EPSILON;
+        t += t * FLOAT_EPSILON;
         if (t <= t_max)
         {
                 return ray_tracing_any_intersection(org, dir, acceleration_structure, t, t_max);
@@ -104,7 +98,7 @@ bool occluded(
         const vec3 geometric_normal,
         const accelerationStructureEXT acceleration_structure)
 {
-        const vec3 moved_org = ray_tracing_move_ray_org(geometric_normal, org, dir);
+        const vec3 moved_org = offset_ray_org(geometric_normal, org, dir);
         return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
 }
 
@@ -115,7 +109,7 @@ bool occluded(
         const vec4 clip_plane_equation,
         const accelerationStructureEXT acceleration_structure)
 {
-        const vec3 moved_org = ray_tracing_move_ray_org(geometric_normal, org, dir);
+        const vec3 moved_org = offset_ray_org(geometric_normal, org, dir);
 
         // org is inside the clip plane
 
