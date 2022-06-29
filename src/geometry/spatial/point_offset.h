@@ -44,4 +44,17 @@ template <std::size_t N, typename T>
         }
         return org;
 }
+
+template <std::size_t N, typename T>
+[[nodiscard]] Vector<N, T> offset_point(const Vector<N, T>& normal, const Vector<N, T>& point)
+{
+        namespace impl = point_offset_implementation;
+
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = point[i] + std::abs(point[i]) * impl::OFFSET<T> * normal[i];
+        }
+        return res;
+}
 }
