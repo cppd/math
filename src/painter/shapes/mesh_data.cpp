@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_data.h"
 
+#include "mesh_optimize.h"
+
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/model/mesh_utility.h>
 #include <src/numerical/transform.h>
 #include <src/settings/instantiation.h>
 
@@ -78,22 +79,10 @@ template <std::size_t N, typename T>
         return res;
 }
 
-template <std::size_t N>
-[[nodiscard]] model::mesh::Mesh<N> optimize_mesh(const model::mesh::Mesh<N>& mesh)
-{
-        model::mesh::Mesh<N> res;
-        res.vertices = mesh.vertices;
-        res.normals = mesh.normals;
-        res.texcoords = mesh.texcoords;
-        res.materials = mesh.materials;
-        res.images = mesh.images;
-        res.facets = mesh.facets;
-        return model::mesh::optimize(res);
-}
-
 template <std::size_t N, typename T, typename Color>
 void create(
         const model::mesh::Reading<N>& mesh_object,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         MeshData<N, T, Color>* const mesh_data,
         std::vector<std::array<int, N>>* const facet_vertex_indices)
 {
@@ -104,7 +93,7 @@ void create(
                 return;
         }
 
-        const model::mesh::Mesh<N> mesh = optimize_mesh(mesh_object.mesh());
+        const model::mesh::Mesh<N> mesh = optimize_mesh(mesh_object, clip_plane_equation);
 
         if (mesh.vertices.empty())
         {
@@ -191,7 +180,7 @@ void create(
 template <std::size_t N, typename T, typename Color>
 void create(
         const std::vector<model::mesh::Reading<N>>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& /*clip_plane_equation*/,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         MeshData<N, T, Color>* const mesh_data,
         std::vector<std::array<int, N>>* const facet_vertex_indices)
 {
@@ -244,7 +233,7 @@ void create(
 
         for (const model::mesh::Reading<N>& mesh_object : mesh_objects)
         {
-                create(mesh_object, mesh_data, facet_vertex_indices);
+                create(mesh_object, clip_plane_equation, mesh_data, facet_vertex_indices);
         }
 
         if (mesh_data->facets.empty())
