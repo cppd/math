@@ -61,71 +61,81 @@ bool check_vectors(const T& min_length, const T& max_length, const std::array<Ve
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> point(const T& interval, RandomEngine& engine)
+Vector<N, T> point(const std::type_identity_t<T>& interval, RandomEngine& engine)
 {
-        ASSERT(interval >= 0);
+        ASSERT(interval > 0);
 
         std::uniform_real_distribution<T> urd(-interval, interval);
-        Vector<N, T> v;
+
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                v[i] = urd(engine);
+                res[i] = urd(engine);
         }
-        return v;
+        return res;
 }
 
 template <std::size_t M, std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N, T>, M> vectors(const T& min_length, const T& max_length, RandomEngine& engine)
+std::array<Vector<N, T>, M> vectors(
+        const std::type_identity_t<T>& min_length,
+        const std::type_identity_t<T>& max_length,
+        RandomEngine& engine)
 {
         static_assert(M > 0 && M <= N);
 
         ASSERT(min_length > 0 && min_length < max_length);
 
         std::uniform_real_distribution<T> urd(min_length, max_length);
-
         std::array<Vector<N, T>, M> vectors;
-        do
+
+        while (true)
         {
                 for (Vector<N, T>& v : vectors)
                 {
                         v = urd(engine) * sampling::uniform_on_sphere<N, T>(engine);
                 }
 
-        } while (!vectors_implementation::check_vectors(min_length, max_length, vectors));
-
-        return vectors;
+                if (vectors_implementation::check_vectors(min_length, max_length, vectors))
+                {
+                        return vectors;
+                }
+        }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::array<T, N> aa_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
+std::array<T, N> aa_vectors(
+        const std::type_identity_t<T>& min_length,
+        const std::type_identity_t<T>& max_length,
+        RandomEngine& engine)
 {
         ASSERT(min_length > 0 && min_length < max_length);
 
         std::uniform_real_distribution<T> urd(min_length, max_length);
-        std::array<T, N> vectors;
+
+        std::array<T, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                vectors[i] = urd(engine);
+                res[i] = urd(engine);
         }
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, RandomEngine& engine)
 {
+        ASSERT(from >= 0 && from < to);
+
         while (true)
         {
-                const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
-                const T d = dot(normal, v);
+                const Vector<N, T> direction = sampling::uniform_on_sphere<N, T>(engine);
+                const T d = dot(normal, direction);
+
                 if (!(std::abs(d) >= from && std::abs(d) <= to))
                 {
                         continue;
                 }
-                if (d < 0)
-                {
-                        return -v;
-                }
-                return v;
+
+                return (d < 0) ? -direction : direction;
         }
 }
 }
