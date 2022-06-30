@@ -16,20 +16,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../hyperplane.h"
+#include "../random/vectors.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
-#include <random>
+#include <cmath>
 #include <sstream>
 
 namespace ns::geometry::spatial
 {
 namespace
 {
+template <typename T>
+constexpr T INTERVAL = 5;
+
 template <typename T>
 struct Test final
 {
@@ -42,46 +47,6 @@ struct Test final
 template struct Test<float>;
 template struct Test<double>;
 template struct Test<long double>;
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_vector(RandomEngine& engine)
-{
-        std::uniform_real_distribution<T> urd(-5, 5);
-        Vector<N, T> v;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                v[i] = urd(engine);
-        }
-        return v;
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction(RandomEngine& engine)
-{
-        std::uniform_real_distribution<T> urd(-5, 5);
-        Vector<N, T> v;
-        do
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        v[i] = urd(engine);
-                }
-                v.normalize();
-        } while (!is_finite(v));
-        return v;
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Ray<N, T> random_ray(RandomEngine& engine)
-{
-        Ray<N, T> ray;
-        do
-        {
-                ray.set_org(random_vector<N, T>(engine));
-                ray.set_dir(random_vector<N, T>(engine));
-        } while (!is_finite(ray.dir()));
-        return ray;
-}
 
 template <std::size_t N, typename T>
 bool test_point_on_plane(
@@ -114,59 +79,67 @@ bool test_point_on_plane(
 template <std::size_t N, typename T, typename RandomEngine>
 void test_intersect(const T& precision, RandomEngine& engine)
 {
-        constexpr int COUNT = 100;
+        constexpr int TEST_COUNT = 100;
 
-        const Vector<N, T> plane_normal = random_direction<N, T>(engine);
-        const Vector<N, T> plane_point = random_vector<N, T>(engine);
+        const Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
+        const Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
         const Hyperplane plane(plane_normal, dot(plane_normal, plane_point));
 
-        int i_sum = 0;
-        int m_sum = 0;
-        for (int i = 0; i < COUNT; ++i)
+        int intersected_count = 0;
+        int missed_count = 0;
+
+        for (int i = 0; i < TEST_COUNT; ++i)
         {
-                const Ray<N, T> ray = random_ray<N, T>(engine);
-                const T t = plane.intersect(ray);
+                const Ray<N, T> random_ray(
+                        random::point<N, T>(INTERVAL<T>, engine), sampling::uniform_on_sphere<N, T>(engine));
+
+                const T t = plane.intersect(random_ray);
+
                 if (!(t > 0))
                 {
-                        ++m_sum;
+                        ++missed_count;
                         continue;
                 }
-                if (test_point_on_plane(precision, ray.point(t), plane, plane_point))
+
+                if (test_point_on_plane(precision, random_ray.point(t), plane, plane_point))
                 {
-                        ++i_sum;
+                        ++intersected_count;
                 }
         }
 
-        if (!(i_sum >= COUNT * 0.2 && m_sum >= COUNT * 0.2))
+        if (!(intersected_count >= TEST_COUNT * 0.2 && missed_count >= TEST_COUNT * 0.2))
         {
-                error("Error intersect, ray count = " + to_string(COUNT) + ", intersections = " + to_string(i_sum)
-                      + ", missed = " + to_string(m_sum));
+                error("Error intersect, ray count = " + to_string(TEST_COUNT)
+                      + ", intersections = " + to_string(intersected_count) + ", missed = " + to_string(missed_count));
         }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
 void test_project(const T& precision, RandomEngine& engine)
 {
-        constexpr int COUNT = 100;
+        constexpr int TEST_COUNT = 100;
 
-        const Vector<N, T> plane_normal = random_direction<N, T>(engine);
-        const Vector<N, T> plane_point = random_vector<N, T>(engine);
+        const Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
+        const Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
         const Hyperplane plane(plane_normal, dot(plane_normal, plane_point));
 
-        int sum = 0;
-        for (int i = 0; i < COUNT; ++i)
+        int projected_count = 0;
+
+        for (int i = 0; i < TEST_COUNT; ++i)
         {
-                const Vector<N, T> point = random_vector<N, T>(engine);
-                const Vector<N, T> projection = plane.project(point);
+                const Vector<N, T> random_point = random::point<N, T>(INTERVAL<T>, engine);
+                const Vector<N, T> projection = plane.project(random_point);
+
                 if (test_point_on_plane(precision, projection, plane, plane_point))
                 {
-                        ++sum;
+                        ++projected_count;
                 }
         }
 
-        if (!(sum >= COUNT * 0.8))
+        if (!(projected_count >= TEST_COUNT * 0.8))
         {
-                error("Error project, point count = " + to_string(COUNT) + ", projections = " + to_string(sum));
+                error("Error project, point count = " + to_string(TEST_COUNT)
+                      + ", projections = " + to_string(projected_count));
         }
 }
 
