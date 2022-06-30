@@ -47,7 +47,7 @@ struct Hyperplane final
                 d = -equation[N];
         }
 
-        void reverse_normal()
+        constexpr void reverse_normal()
         {
                 n = -n;
                 d = -d;
