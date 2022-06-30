@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/pcg.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <array>
 #include <cmath>
-#include <random>
+#include <string>
 
 namespace ns::geometry::spatial::test
 {
@@ -49,26 +50,6 @@ inline void print_message(const std::string& msg)
         if (PRINT)
         {
                 LOG(msg);
-        }
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction(RandomEngine& engine)
-{
-        std::uniform_real_distribution<T> urd_dir(-1, 1);
-
-        // equal probability is not needed
-        while (true)
-        {
-                Vector<N, T> direction;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        direction[i] = urd_dir(engine);
-                }
-                if (direction.norm() > 0)
-                {
-                        return direction;
-                }
         }
 }
 
@@ -139,7 +120,7 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
-                const Ray<N, T> ray(point, random_direction<N, T>(engine));
+                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
 
                 {
                         const Ray<N, T> r = ray;
