@@ -300,7 +300,9 @@ Actions::Actions(
 
         create_repository_menu(WORKER_THREAD_ID, &connections_, worker_threads_.get(), menu_create, repository);
 
+#if !defined(BUILD_RELEASE)
         self_test(worker_threads_.get(), process::TestType::SMALL, "Self-Test");
+#endif
 
         if (!options.file_name.empty())
         {
