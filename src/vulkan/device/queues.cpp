@@ -34,7 +34,8 @@ std::vector<std::uint32_t> distribute_device_queues(
 {
         std::vector<std::uint32_t> queues;
 
-        for (std::size_t i = 0; i < count; ++i)
+        queues.reserve(count);
+        for (std::uint32_t i = 0; i < count; ++i)
         {
                 std::uint32_t& device_queue = (*queue_count)[family_index];
                 if (device_queue >= device_queue_count)
