@@ -17,125 +17,106 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code_points.h"
 
+#include <src/com/error.h>
+
+#include <tuple>
+
 namespace ns::text
 {
-std::vector<char32_t> supported_code_points()
+namespace
 {
-        std::vector<char32_t> code_points;
+std::vector<std::tuple<char32_t, char32_t>> code_point_ranges()
+{
+        std::vector<std::tuple<char32_t, char32_t>> res;
+        res.reserve(19);
 
         // C0 Controls and Basic Latin
-        for (char32_t code_point = 0x0; code_point <= 0x7F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x0, 0x7F);
 
         // C1 Controls and Latin-1 Supplement
-        for (char32_t code_point = 0x80; code_point <= 0xFF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x80, 0xFF);
 
         // Latin Extended-A
-        for (char32_t code_point = 0x100; code_point <= 0x17F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x100, 0x17F);
 
         // Latin Extended-B
-        for (char32_t code_point = 0x180; code_point <= 0x24F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x180, 0x24F);
 
         // Latin Extended Additional
-        for (char32_t code_point = 0x1E00; code_point <= 0x1EFF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x1E00, 0x1EFF);
 
         // Latin Extended-C
-        for (char32_t code_point = 0x2C60; code_point <= 0x2C7F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x2C60, 0x2C7F);
 
         // Latin Extended-D
-        for (char32_t code_point = 0xA720; code_point <= 0xA7FF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0xA720, 0xA7FF);
 
         // Latin Extended-E
-        for (char32_t code_point = 0xAB30; code_point <= 0xAB6F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0xAB30, 0xAB6F);
 
         // IPA Extensions
-        for (char32_t code_point = 0x250; code_point <= 0x2AF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x250, 0x2AF);
 
         // Spacing Modifier Letters
-        for (char32_t code_point = 0x2B0; code_point <= 0x2FF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x2B0, 0x2FF);
 
 #if 0
         // Combining Diacritical Marks
-        for (char32_t code_point = 0x300; code_point <= 0x36F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x300, 0x36F);
 #endif
 
         // Greek and Coptic
-        for (char32_t code_point = 0x370; code_point <= 0x3FF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x370, 0x3FF);
 
         // Greek Extended
-        for (char32_t code_point = 0x1F00; code_point <= 0x1FFF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x1F00, 0x1FFF);
 
         // Cyrillic
-        for (char32_t code_point = 0x400; code_point <= 0x4FF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x400, 0x4FF);
 
         // Cyrillic Supplement
-        for (char32_t code_point = 0x500; code_point <= 0x52F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x500, 0x52F);
 
         // Cyrillic Extended-A
-        for (char32_t code_point = 0x2DE0; code_point <= 0x2DFF; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x2DE0, 0x2DFF);
 
         // Cyrillic Extended-B
-        for (char32_t code_point = 0xA640; code_point <= 0xA69F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0xA640, 0xA69F);
 
         // Cyrillic Extended-C
-        for (char32_t code_point = 0x1C80; code_point <= 0x1C8F; ++code_point)
-        {
-                code_points.push_back(code_point);
-        }
+        res.emplace_back(0x1C80, 0x1C8F);
 
         // Replacement character
-        code_points.push_back(0xFFFD);
+        res.emplace_back(0xFFFD, 0xFFFD);
 
-        return code_points;
+        return res;
+}
+}
+
+std::vector<char32_t> supported_code_points()
+{
+        const std::vector<std::tuple<char32_t, char32_t>>& ranges = code_point_ranges();
+
+        const std::size_t count = [&]
+        {
+                std::size_t res = ranges.size();
+                for (const auto& [min, max] : ranges)
+                {
+                        ASSERT(max >= min);
+                        res += max - min;
+                }
+                return res;
+        }();
+
+        std::vector<char32_t> res;
+        res.reserve(count);
+        for (const auto& [min, max] : ranges)
+        {
+                for (char32_t i = min; i <= max; ++i)
+                {
+                        res.push_back(i);
+                }
+        }
+        return res;
 }
 }
