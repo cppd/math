@@ -162,7 +162,6 @@ Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, 
                 ASSERT(images[2].image_view().format() == VK_FORMAT_R32G32B32A32_SFLOAT);
                 ASSERT(images[3].image_view().format() == VK_FORMAT_R32G32_SFLOAT);
         }
-
         ASSERT(std::all_of(
                 images.cbegin(), images.cend(),
                 [&](const vulkan::ImageWithMemory& image)
@@ -170,11 +169,13 @@ Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, 
                         return render_buffers->sample_count() == image.image_view().sample_count();
                 }));
 
-        const std::size_t buffer_count = render_buffers->framebuffers().size();
-
         render_pass_ =
                 create_render_pass(device, render_buffers->depth_format(), render_buffers->sample_count(), images);
 
+        const std::size_t buffer_count = render_buffers->framebuffers().size();
+
+        framebuffers_.reserve(buffer_count);
+        framebuffers_handles_.reserve(buffer_count);
         std::vector<VkImageView> attachments(images.size() + 1);
         for (std::size_t i = 0; i < buffer_count; ++i)
         {

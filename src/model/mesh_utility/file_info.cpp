@@ -39,21 +39,22 @@ std::string obj_file_extension(const std::size_t n)
 
 std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions)
 {
-        std::vector<std::string> result;
+        std::vector<std::string> res;
+        res.reserve(dimensions.size() + (dimensions.contains(3) ? 1 : 0));
         for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
                 if (d == 3)
                 {
-                        result.emplace_back("obj");
-                        result.emplace_back("obj3");
+                        res.emplace_back("obj");
+                        res.emplace_back("obj3");
                 }
                 else
                 {
-                        result.push_back("obj" + to_string(d));
+                        res.push_back("obj" + to_string(d));
                 }
         }
-        return result;
+        return res;
 }
 
 bool file_has_obj_extension(const std::size_t n, const std::filesystem::path& file_name)
@@ -71,21 +72,22 @@ std::string stl_file_extension(const std::size_t n)
 
 std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions)
 {
-        std::vector<std::string> result;
+        std::vector<std::string> res;
+        res.reserve(dimensions.size() + (dimensions.contains(3) ? 1 : 0));
         for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
                 if (d == 3)
                 {
-                        result.emplace_back("stl");
-                        result.emplace_back("stl3");
+                        res.emplace_back("stl");
+                        res.emplace_back("stl3");
                 }
                 else
                 {
-                        result.push_back("stl" + to_string(d));
+                        res.push_back("stl" + to_string(d));
                 }
         }
-        return result;
+        return res;
 }
 
 bool file_has_stl_extension(const std::size_t n, const std::filesystem::path& file_name)
@@ -130,13 +132,14 @@ FileType file_type_by_name(const std::filesystem::path& file_name)
 
 std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions)
 {
-        std::vector<std::string> result;
-        result.emplace_back("txt");
+        std::vector<std::string> res;
+        res.reserve(dimensions.size() + 1);
+        res.emplace_back("txt");
         for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
-                result.push_back("txt" + to_string(d));
+                res.push_back("txt" + to_string(d));
         }
-        return result;
+        return res;
 }
 }
