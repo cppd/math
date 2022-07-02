@@ -19,7 +19,6 @@ concurrency-*,
 cppcoreguidelines-*,
 -cppcoreguidelines-avoid-c-arrays,
 -cppcoreguidelines-avoid-magic-numbers,
--cppcoreguidelines-narrowing-conversions,
 -cppcoreguidelines-owning-memory,
 -cppcoreguidelines-pro-bounds-constant-array-index,
 -cppcoreguidelines-pro-bounds-pointer-arithmetic,
@@ -68,6 +67,12 @@ CheckOptions:
   value: 'glibc'
 - key:   cppcoreguidelines-macro-usage.CheckCapsOnly
   value: '1'
+- key:   cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
+  value: '0'
+- key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
+  value: '0'
+- key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerToFloatingPointNarrowingConversion
+  value: '0'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-loop-convert.UseCxx20ReverseRanges
