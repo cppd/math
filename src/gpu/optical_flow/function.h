@@ -43,5 +43,5 @@ struct TopLevelPoints final
         std::vector<Vector2i> points;
 };
 
-TopLevelPoints create_top_level_points(int width, int height, double distance_between_points_in_mm, int ppi);
+TopLevelPoints create_top_level_points(int width, int height, double distance_between_points_in_mm, double ppi);
 }

@@ -123,7 +123,7 @@ TopLevelPoints create_top_level_points(
         const int width,
         const int height,
         const double distance_between_points_in_mm,
-        const int ppi)
+        const double ppi)
 {
         ASSERT(width >= 0 && height >= 0 && ppi >= 0);
 
