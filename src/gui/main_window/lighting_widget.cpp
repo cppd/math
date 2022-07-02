@@ -44,18 +44,23 @@ constexpr double BLACKBODY_MAX_T = 25000;
 constexpr std::string_view BLACKBODY_A = "Blackbody A";
 constexpr std::string_view BLACKBODY_T = "Blackbody %1K";
 
-constexpr double TEMPERATURE_ROUND = 10;
+constexpr int TEMPERATURE_ROUND = 10;
 
 constexpr double FRONT_LIGHTING_PROPORTION = 0.2;
 
-double ceil(const double v, const int t)
+int temperature_ceil(const double v)
 {
-        return std::ceil(v / t) * t;
+        return static_cast<int>(std::ceil(v / TEMPERATURE_ROUND)) * TEMPERATURE_ROUND;
 }
 
-double floor(const double v, const int t)
+int temperature_floor(const double v)
 {
-        return std::floor(v / t) * t;
+        return static_cast<int>(std::floor(v / TEMPERATURE_ROUND)) * TEMPERATURE_ROUND;
+}
+
+int temperature_round(const double v)
+{
+        return static_cast<int>(std::round(v / TEMPERATURE_ROUND)) * TEMPERATURE_ROUND;
 }
 
 double position_to_intensity(const double position)
@@ -71,21 +76,20 @@ double intensity_to_position(const double intensity)
         return std::clamp((position + 1) / 2, 0.0, 1.0);
 }
 
-int position_to_temperature(const double position, const double min, const double max)
+int position_to_temperature(const double position, const int min, const int max)
 {
         ASSERT(min > 0 && min < max);
-        double t = min * std::pow(max / min, position);
-        t = std::round(t / TEMPERATURE_ROUND) * TEMPERATURE_ROUND;
-        return std::clamp(t, min, max);
+        const double t = min * std::pow(static_cast<double>(max) / min, position);
+        return std::clamp(temperature_round(t), min, max);
 }
 }
 
 LightingWidget::LightingWidget()
         : QWidget(nullptr),
-          daylight_min_cct_(ceil(color::daylight_min_cct(), TEMPERATURE_ROUND)),
-          daylight_max_cct_(floor(color::daylight_max_cct(), TEMPERATURE_ROUND)),
-          blackbody_min_t_(ceil(BLACKBODY_MIN_T, TEMPERATURE_ROUND)),
-          blackbody_max_t_(floor(BLACKBODY_MAX_T, TEMPERATURE_ROUND))
+          daylight_min_cct_(temperature_ceil(color::daylight_min_cct())),
+          daylight_max_cct_(temperature_floor(color::daylight_max_cct())),
+          blackbody_min_t_(temperature_ceil(BLACKBODY_MIN_T)),
+          blackbody_max_t_(temperature_floor(BLACKBODY_MAX_T))
 {
         if (!(daylight_max_cct_ > daylight_min_cct_))
         {

@@ -35,10 +35,10 @@ private:
 
         view::View* view_ = nullptr;
 
-        const double daylight_min_cct_;
-        const double daylight_max_cct_;
-        const double blackbody_min_t_;
-        const double blackbody_max_t_;
+        const int daylight_min_cct_;
+        const int daylight_max_cct_;
+        const int blackbody_min_t_;
+        const int blackbody_max_t_;
 
         double intensity_;
         color::Spectrum spectrum_;
