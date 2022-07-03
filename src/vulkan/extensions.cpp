@@ -24,24 +24,15 @@ namespace ns::vulkan
 namespace
 {
 template <typename T>
-void set_instance(const VkInstance instance, const char* const name, T*& ptr)
+void set_instance(const VkInstance instance, const char* const name, T** const ptr)
 {
-        ptr = reinterpret_cast<T*>(vkGetInstanceProcAddr(instance, name));
+        *ptr = reinterpret_cast<T*>(vkGetInstanceProcAddr(instance, name));
 }
 
 template <typename T>
-void set_device(const VkDevice device, const char* const name, T*& ptr)
+void set_device(const VkDevice device, const char* const name, T** const ptr)
 {
-        ptr = reinterpret_cast<T*>(vkGetDeviceProcAddr(device, name));
-}
-
-#define SET_INSTANCE(name) set_instance((instance), #name, (name));
-#define SET_DEVICE(name) set_device((device), #name, (name));
-
-template <typename T>
-void reset(T*& ptr)
-{
-        ptr = nullptr;
+        *ptr = reinterpret_cast<T*>(vkGetDeviceProcAddr(device, name));
 }
 }
 
@@ -56,7 +47,8 @@ PFN_vkVoidFunction instance_proc_addr(const VkInstance instance, const char* con
         error(std::string("Failed to find address of ") + name);
 }
 
-//
+#define SET_INSTANCE(instance, name) set_instance((instance), #name, &(name));
+#define SET_DEVICE(device, name) set_device((device), #name, &(name));
 
 InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance) : lock_(mutex_, std::try_to_lock)
 {
@@ -67,47 +59,45 @@ InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance
                 error("Vulkan instance extension function pointers are busy");
         }
 
-        SET_INSTANCE(vkDestroySurfaceKHR)
-        SET_INSTANCE(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
-        SET_INSTANCE(vkGetPhysicalDeviceSurfaceFormatsKHR)
-        SET_INSTANCE(vkGetPhysicalDeviceSurfacePresentModesKHR)
-        SET_INSTANCE(vkGetPhysicalDeviceSurfaceSupportKHR)
+        SET_INSTANCE(instance, vkDestroySurfaceKHR)
+        SET_INSTANCE(instance, vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
+        SET_INSTANCE(instance, vkGetPhysicalDeviceSurfaceFormatsKHR)
+        SET_INSTANCE(instance, vkGetPhysicalDeviceSurfacePresentModesKHR)
+        SET_INSTANCE(instance, vkGetPhysicalDeviceSurfaceSupportKHR)
 
-        SET_INSTANCE(vkCmdBeginDebugUtilsLabelEXT)
-        SET_INSTANCE(vkCmdEndDebugUtilsLabelEXT)
-        SET_INSTANCE(vkCmdInsertDebugUtilsLabelEXT)
-        SET_INSTANCE(vkCreateDebugUtilsMessengerEXT)
-        SET_INSTANCE(vkDestroyDebugUtilsMessengerEXT)
-        SET_INSTANCE(vkQueueBeginDebugUtilsLabelEXT)
-        SET_INSTANCE(vkQueueEndDebugUtilsLabelEXT)
-        SET_INSTANCE(vkQueueInsertDebugUtilsLabelEXT)
-        SET_INSTANCE(vkSetDebugUtilsObjectNameEXT)
-        SET_INSTANCE(vkSetDebugUtilsObjectTagEXT)
-        SET_INSTANCE(vkSubmitDebugUtilsMessageEXT)
+        SET_INSTANCE(instance, vkCmdBeginDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkCmdEndDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkCmdInsertDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkCreateDebugUtilsMessengerEXT)
+        SET_INSTANCE(instance, vkDestroyDebugUtilsMessengerEXT)
+        SET_INSTANCE(instance, vkQueueBeginDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkQueueEndDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkQueueInsertDebugUtilsLabelEXT)
+        SET_INSTANCE(instance, vkSetDebugUtilsObjectNameEXT)
+        SET_INSTANCE(instance, vkSetDebugUtilsObjectTagEXT)
+        SET_INSTANCE(instance, vkSubmitDebugUtilsMessageEXT)
 }
 
 InstanceExtensionFunctions::~InstanceExtensionFunctions()
 {
-        reset(vkDestroySurfaceKHR);
-        reset(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
-        reset(vkGetPhysicalDeviceSurfaceFormatsKHR);
-        reset(vkGetPhysicalDeviceSurfacePresentModesKHR);
-        reset(vkGetPhysicalDeviceSurfaceSupportKHR);
+        vkDestroySurfaceKHR = nullptr;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
+        vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
+        vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
+        vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
 
-        reset(vkCmdBeginDebugUtilsLabelEXT);
-        reset(vkCmdEndDebugUtilsLabelEXT);
-        reset(vkCmdInsertDebugUtilsLabelEXT);
-        reset(vkCreateDebugUtilsMessengerEXT);
-        reset(vkDestroyDebugUtilsMessengerEXT);
-        reset(vkQueueBeginDebugUtilsLabelEXT);
-        reset(vkQueueEndDebugUtilsLabelEXT);
-        reset(vkQueueInsertDebugUtilsLabelEXT);
-        reset(vkSetDebugUtilsObjectNameEXT);
-        reset(vkSetDebugUtilsObjectTagEXT);
-        reset(vkSubmitDebugUtilsMessageEXT);
+        vkCmdBeginDebugUtilsLabelEXT = nullptr;
+        vkCmdEndDebugUtilsLabelEXT = nullptr;
+        vkCmdInsertDebugUtilsLabelEXT = nullptr;
+        vkCreateDebugUtilsMessengerEXT = nullptr;
+        vkDestroyDebugUtilsMessengerEXT = nullptr;
+        vkQueueBeginDebugUtilsLabelEXT = nullptr;
+        vkQueueEndDebugUtilsLabelEXT = nullptr;
+        vkQueueInsertDebugUtilsLabelEXT = nullptr;
+        vkSetDebugUtilsObjectNameEXT = nullptr;
+        vkSetDebugUtilsObjectTagEXT = nullptr;
+        vkSubmitDebugUtilsMessageEXT = nullptr;
 }
-
-//
 
 DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device) : lock_(mutex_, std::try_to_lock)
 {
@@ -118,69 +108,69 @@ DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device) : lock
                 error("Vulkan device extension function pointers are busy");
         }
 
-        SET_DEVICE(vkAcquireNextImageKHR)
-        SET_DEVICE(vkCreateSwapchainKHR)
-        SET_DEVICE(vkDestroySwapchainKHR)
-        SET_DEVICE(vkGetSwapchainImagesKHR)
-        SET_DEVICE(vkQueuePresentKHR)
+        SET_DEVICE(device, vkAcquireNextImageKHR)
+        SET_DEVICE(device, vkCreateSwapchainKHR)
+        SET_DEVICE(device, vkDestroySwapchainKHR)
+        SET_DEVICE(device, vkGetSwapchainImagesKHR)
+        SET_DEVICE(device, vkQueuePresentKHR)
 
-        SET_DEVICE(vkCmdSetRayTracingPipelineStackSizeKHR)
-        SET_DEVICE(vkCmdTraceRaysIndirectKHR)
-        SET_DEVICE(vkCmdTraceRaysKHR)
-        SET_DEVICE(vkCreateRayTracingPipelinesKHR)
-        SET_DEVICE(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR)
-        SET_DEVICE(vkGetRayTracingShaderGroupHandlesKHR)
-        SET_DEVICE(vkGetRayTracingShaderGroupStackSizeKHR)
+        SET_DEVICE(device, vkCmdSetRayTracingPipelineStackSizeKHR)
+        SET_DEVICE(device, vkCmdTraceRaysIndirectKHR)
+        SET_DEVICE(device, vkCmdTraceRaysKHR)
+        SET_DEVICE(device, vkCreateRayTracingPipelinesKHR)
+        SET_DEVICE(device, vkGetRayTracingCaptureReplayShaderGroupHandlesKHR)
+        SET_DEVICE(device, vkGetRayTracingShaderGroupHandlesKHR)
+        SET_DEVICE(device, vkGetRayTracingShaderGroupStackSizeKHR)
 
-        SET_DEVICE(vkBuildAccelerationStructuresKHR)
-        SET_DEVICE(vkCmdBuildAccelerationStructuresIndirectKHR)
-        SET_DEVICE(vkCmdBuildAccelerationStructuresKHR)
-        SET_DEVICE(vkCmdCopyAccelerationStructureKHR)
-        SET_DEVICE(vkCmdCopyAccelerationStructureToMemoryKHR)
-        SET_DEVICE(vkCmdCopyMemoryToAccelerationStructureKHR)
-        SET_DEVICE(vkCmdWriteAccelerationStructuresPropertiesKHR)
-        SET_DEVICE(vkCopyAccelerationStructureKHR)
-        SET_DEVICE(vkCopyAccelerationStructureToMemoryKHR)
-        SET_DEVICE(vkCopyMemoryToAccelerationStructureKHR)
-        SET_DEVICE(vkCreateAccelerationStructureKHR)
-        SET_DEVICE(vkDestroyAccelerationStructureKHR)
-        SET_DEVICE(vkGetAccelerationStructureBuildSizesKHR)
-        SET_DEVICE(vkGetAccelerationStructureDeviceAddressKHR)
-        SET_DEVICE(vkGetDeviceAccelerationStructureCompatibilityKHR)
-        SET_DEVICE(vkWriteAccelerationStructuresPropertiesKHR)
+        SET_DEVICE(device, vkBuildAccelerationStructuresKHR)
+        SET_DEVICE(device, vkCmdBuildAccelerationStructuresIndirectKHR)
+        SET_DEVICE(device, vkCmdBuildAccelerationStructuresKHR)
+        SET_DEVICE(device, vkCmdCopyAccelerationStructureKHR)
+        SET_DEVICE(device, vkCmdCopyAccelerationStructureToMemoryKHR)
+        SET_DEVICE(device, vkCmdCopyMemoryToAccelerationStructureKHR)
+        SET_DEVICE(device, vkCmdWriteAccelerationStructuresPropertiesKHR)
+        SET_DEVICE(device, vkCopyAccelerationStructureKHR)
+        SET_DEVICE(device, vkCopyAccelerationStructureToMemoryKHR)
+        SET_DEVICE(device, vkCopyMemoryToAccelerationStructureKHR)
+        SET_DEVICE(device, vkCreateAccelerationStructureKHR)
+        SET_DEVICE(device, vkDestroyAccelerationStructureKHR)
+        SET_DEVICE(device, vkGetAccelerationStructureBuildSizesKHR)
+        SET_DEVICE(device, vkGetAccelerationStructureDeviceAddressKHR)
+        SET_DEVICE(device, vkGetDeviceAccelerationStructureCompatibilityKHR)
+        SET_DEVICE(device, vkWriteAccelerationStructuresPropertiesKHR)
 }
 
 DeviceExtensionFunctions::~DeviceExtensionFunctions()
 {
-        reset(vkAcquireNextImageKHR);
-        reset(vkCreateSwapchainKHR);
-        reset(vkDestroySwapchainKHR);
-        reset(vkGetSwapchainImagesKHR);
-        reset(vkQueuePresentKHR);
+        vkAcquireNextImageKHR = nullptr;
+        vkCreateSwapchainKHR = nullptr;
+        vkDestroySwapchainKHR = nullptr;
+        vkGetSwapchainImagesKHR = nullptr;
+        vkQueuePresentKHR = nullptr;
 
-        reset(vkCmdSetRayTracingPipelineStackSizeKHR);
-        reset(vkCmdTraceRaysIndirectKHR);
-        reset(vkCmdTraceRaysKHR);
-        reset(vkCreateRayTracingPipelinesKHR);
-        reset(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR);
-        reset(vkGetRayTracingShaderGroupHandlesKHR);
-        reset(vkGetRayTracingShaderGroupStackSizeKHR);
+        vkCmdSetRayTracingPipelineStackSizeKHR = nullptr;
+        vkCmdTraceRaysIndirectKHR = nullptr;
+        vkCmdTraceRaysKHR = nullptr;
+        vkCreateRayTracingPipelinesKHR = nullptr;
+        vkGetRayTracingCaptureReplayShaderGroupHandlesKHR = nullptr;
+        vkGetRayTracingShaderGroupHandlesKHR = nullptr;
+        vkGetRayTracingShaderGroupStackSizeKHR = nullptr;
 
-        reset(vkBuildAccelerationStructuresKHR);
-        reset(vkCmdBuildAccelerationStructuresIndirectKHR);
-        reset(vkCmdBuildAccelerationStructuresKHR);
-        reset(vkCmdCopyAccelerationStructureKHR);
-        reset(vkCmdCopyAccelerationStructureToMemoryKHR);
-        reset(vkCmdCopyMemoryToAccelerationStructureKHR);
-        reset(vkCmdWriteAccelerationStructuresPropertiesKHR);
-        reset(vkCopyAccelerationStructureKHR);
-        reset(vkCopyAccelerationStructureToMemoryKHR);
-        reset(vkCopyMemoryToAccelerationStructureKHR);
-        reset(vkCreateAccelerationStructureKHR);
-        reset(vkDestroyAccelerationStructureKHR);
-        reset(vkGetAccelerationStructureBuildSizesKHR);
-        reset(vkGetAccelerationStructureDeviceAddressKHR);
-        reset(vkGetDeviceAccelerationStructureCompatibilityKHR);
-        reset(vkWriteAccelerationStructuresPropertiesKHR);
+        vkBuildAccelerationStructuresKHR = nullptr;
+        vkCmdBuildAccelerationStructuresIndirectKHR = nullptr;
+        vkCmdBuildAccelerationStructuresKHR = nullptr;
+        vkCmdCopyAccelerationStructureKHR = nullptr;
+        vkCmdCopyAccelerationStructureToMemoryKHR = nullptr;
+        vkCmdCopyMemoryToAccelerationStructureKHR = nullptr;
+        vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
+        vkCopyAccelerationStructureKHR = nullptr;
+        vkCopyAccelerationStructureToMemoryKHR = nullptr;
+        vkCopyMemoryToAccelerationStructureKHR = nullptr;
+        vkCreateAccelerationStructureKHR = nullptr;
+        vkDestroyAccelerationStructureKHR = nullptr;
+        vkGetAccelerationStructureBuildSizesKHR = nullptr;
+        vkGetAccelerationStructureDeviceAddressKHR = nullptr;
+        vkGetDeviceAccelerationStructureCompatibilityKHR = nullptr;
+        vkWriteAccelerationStructuresPropertiesKHR = nullptr;
 }
 }
