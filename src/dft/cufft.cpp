@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cufft.h"
 
 #include <src/com/chrono.h>
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -33,7 +34,7 @@ namespace ns::dft
 {
 namespace
 {
-void cuda_check_errors()
+void check_errors()
 {
         if (cudaPeekAtLastError() != cudaSuccess)
         {
@@ -41,39 +42,53 @@ void cuda_check_errors()
         }
 }
 
-void cuda_select_device()
+int device_count()
 {
-        int dev_count;
-        int max_proc_count = -1;
-        int dev_num = -1;
+        check_errors();
+        int res;
+        cudaGetDeviceCount(&res);
+        check_errors();
+        return res;
+}
 
-        cuda_check_errors();
-        cudaGetDeviceCount(&dev_count);
-        cuda_check_errors();
+void select_device()
+{
+        const int count = device_count();
 
-        for (int i = 0; i < dev_count; ++i)
+        int max_processor_count = 0;
+        int device_number = -1;
+
+        for (int i = 0; i < count; ++i)
         {
                 cudaDeviceProp p;
                 cudaGetDeviceProperties(&p, i);
-                cuda_check_errors();
-                if (p.multiProcessorCount > max_proc_count)
+                check_errors();
+                if (p.multiProcessorCount > max_processor_count)
                 {
-                        max_proc_count = p.multiProcessorCount;
-                        dev_num = i;
+                        max_processor_count = p.multiProcessorCount;
+                        device_number = i;
                 }
         }
 
-        cudaSetDevice(dev_num);
-        cuda_check_errors();
+        if (max_processor_count <= 0)
+        {
+                error("Cuda device not found");
+        }
+
+        ASSERT(device_number >= 0);
+        cudaSetDevice(device_number);
+        check_errors();
+
         cudaDeviceReset();
-        cuda_check_errors();
+        check_errors();
+
         cudaFree(nullptr);
-        cuda_check_errors();
+        check_errors();
 }
 
-void cuda_device_sync()
+void device_sync()
 {
-        cuda_check_errors();
+        check_errors();
         if (cudaDeviceSynchronize() != cudaSuccess)
         {
                 error("CUDA error: Failed to synchronize");
@@ -99,7 +114,7 @@ public:
                 cufftDestroy(plan_);
         }
 
-        cufftHandle handle() const
+        [[nodiscard]] cufftHandle handle() const
         {
                 return plan_;
         }
@@ -124,9 +139,9 @@ public:
                         error("CUDA malloc size < 1");
                 }
 
-                cuda_check_errors();
+                check_errors();
 
-                const cudaError_t r = cudaMalloc(&memory_, size_ * sizeof(T));
+                const auto r = cudaMalloc(&memory_, size_ * sizeof(T));
                 if (r != cudaSuccess)
                 {
                         error("Error CUDA malloc " + to_string(size_ * sizeof(T)) + " bytes: " + cudaGetErrorString(r));
@@ -138,17 +153,17 @@ public:
                 cudaFree(memory_);
         }
 
-        T* data() const
+        [[nodiscard]] T* data() const
         {
                 return memory_;
         }
 
-        std::size_t size() const
+        [[nodiscard]] std::size_t size() const
         {
                 return size_;
         }
 
-        std::size_t bytes() const
+        [[nodiscard]] std::size_t bytes() const
         {
                 return size_ * sizeof(T);
         }
@@ -160,41 +175,40 @@ public:
 };
 
 template <typename M, typename T>
-void cuda_memory_copy(CudaMemory<M>& memory, const std::vector<T>& src)
+void memory_copy(CudaMemory<M>& memory, const std::vector<T>& src)
 {
-        if (memory.bytes() != src.size() * sizeof(T))
+        if (memory.bytes() != data_size(src))
         {
-                error("CUDA copy size error " + to_string(memory.bytes()) + " <- " + to_string(src.size() * sizeof(T)));
+                error("CUDA copy size error " + to_string(memory.bytes()) + " <- " + to_string(data_size(src)));
         }
 
-        cuda_check_errors();
+        check_errors();
 
-        cudaError_t r = cudaMemcpy(memory.data(), src.data(), memory.bytes(), cudaMemcpyHostToDevice);
+        const auto r = cudaMemcpy(memory.data(), src.data(), memory.bytes(), cudaMemcpyHostToDevice);
         if (r != cudaSuccess)
         {
-                error("CUDA copy to device error: " + std::string(cudaGetErrorString(r)));
+                error(std::string("CUDA copy to device error: ") + cudaGetErrorString(r));
         }
 }
 
 template <typename M, typename T>
-void cuda_memory_copy(std::vector<T>* const dst, const CudaMemory<M>& memory)
+void memory_copy(std::vector<T>* const dst, const CudaMemory<M>& memory)
 {
-        if (memory.bytes() != dst->size() * sizeof(T))
+        if (memory.bytes() != data_size(*dst))
         {
-                error("CUDA copy size error " + to_string(dst->size() * sizeof(T)) + " <- "
-                      + to_string(memory.bytes()));
+                error("CUDA copy size error " + to_string(data_size(*dst)) + " <- " + to_string(memory.bytes()));
         }
 
-        cuda_check_errors();
+        check_errors();
 
-        const cudaError_t r = cudaMemcpy(dst->data(), memory.data(), memory.bytes(), cudaMemcpyDeviceToHost);
+        const auto r = cudaMemcpy(dst->data(), memory.data(), memory.bytes(), cudaMemcpyDeviceToHost);
         if (r != cudaSuccess)
         {
-                error("CUDA copy from device error: " + std::string(cudaGetErrorString(r)));
+                error(std::string("CUDA copy from device error: ") + cudaGetErrorString(r));
         }
 }
 
-class CudaFFT final : public DFT
+class Impl final : public DFT
 {
         static_assert(std::is_standard_layout_v<cufftComplex>);
         static_assert(sizeof(std::complex<float>) == sizeof(cufftComplex));
@@ -211,37 +225,37 @@ class CudaFFT final : public DFT
         {
                 if (data->size() != memory_.size())
                 {
-                        error("Error size cuFFT");
+                        error("Error cuFFT size");
                 }
 
-                cuda_memory_copy(memory_, *data);
+                memory_copy(memory_, *data);
 
-                cuda_device_sync();
+                device_sync();
 
                 const Clock::time_point start_time = Clock::now();
 
                 if (inverse)
                 {
-                        if (CUFFT_SUCCESS
-                            != cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_INVERSE))
+                        const auto r = cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_INVERSE);
+                        if (r != CUFFT_SUCCESS)
                         {
                                 error("cuFFT Error: Unable to execute inverse plan");
                         }
                 }
                 else
                 {
-                        if (CUFFT_SUCCESS
-                            != cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_FORWARD))
+                        const auto r = cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_FORWARD);
+                        if (r != CUFFT_SUCCESS)
                         {
                                 error("cuFFT Error: Unable to execute forward plan");
                         }
                 }
 
-                cuda_device_sync();
+                device_sync();
 
                 LOG("calc cuFFT: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
 
-                cuda_memory_copy(data, memory_);
+                memory_copy(data, memory_);
 
                 if (inverse)
                 {
@@ -255,7 +269,10 @@ class CudaFFT final : public DFT
         }
 
 public:
-        CudaFFT(const int x, const int y) : plan_(x, y), memory_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
+        Impl(const unsigned long long x, const unsigned long long y)
+                : plan_(x, y),
+                  memory_(x * y),
+                  inv_k_(1.0f / (x * y))
         {
         }
 };
@@ -263,8 +280,13 @@ public:
 
 std::unique_ptr<DFT> create_cufft(const int x, const int y)
 {
-        cuda_select_device();
-        return std::make_unique<CudaFFT>(x, y);
+        if (!(x > 0 && y > 0))
+        {
+                error("Error cuFFT data size");
+        }
+
+        select_device();
+        return std::make_unique<Impl>(x, y);
 }
 }
 

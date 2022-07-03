@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <fftw3.h>
 #include <mutex>
+#include <type_traits>
 
 namespace ns::dft
 {
@@ -69,12 +70,12 @@ class FFTPlan final
 
 public:
         FFTPlan(const bool inverse,
-                const int n1,
-                const int n2,
+                const unsigned n1,
+                const unsigned n2,
                 std::vector<std::complex<float>>* const in,
                 std::vector<std::complex<float>>* const out)
         {
-                ASSERT(1ull * n1 * n2 == in->size());
+                ASSERT(static_cast<unsigned long long>(n1) * n2 == in->size());
                 ASSERT(in->size() == out->size());
 
                 fftwf_plan_with_nthreads(hardware_concurrency());
@@ -110,7 +111,7 @@ public:
         FFTPlan& operator=(FFTPlan&&) = delete;
 };
 
-class FFTW final : public DFT
+class Impl final : public DFT
 {
         FFTPlanThreads threads_;
         std::vector<std::complex<float>> in_;
@@ -123,7 +124,7 @@ class FFTW final : public DFT
         {
                 if (data->size() != in_.size())
                 {
-                        error("Error size FFTW");
+                        error("Error FFTW size");
                 }
 
                 const Clock::time_point start_time = Clock::now();
@@ -152,12 +153,12 @@ class FFTW final : public DFT
         }
 
 public:
-        FFTW(const int n1, const int n2)
-                : in_(1ull * n1 * n2),
-                  out_(1ull * n1 * n2),
+        Impl(const unsigned long long n1, const unsigned long long n2)
+                : in_(n1 * n2),
+                  out_(n1 * n2),
                   forward_(false, n1, n2, &in_, &out_),
                   backward_(true, n1, n2, &in_, &out_),
-                  inv_k_(1.0f / (1ull * n1 * n2))
+                  inv_k_(1.0f / (n1 * n2))
         {
         }
 };
@@ -165,7 +166,12 @@ public:
 
 std::unique_ptr<DFT> create_fftw(const int x, const int y)
 {
-        return std::make_unique<FFTW>(x, y);
+        if (!(x > 0 && y > 0))
+        {
+                error("Error FFTW data size");
+        }
+
+        return std::make_unique<Impl>(x, y);
 }
 }
 
