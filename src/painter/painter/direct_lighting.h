@@ -149,7 +149,7 @@ std::optional<Color> sample_brdf_with_mis(
 }
 
 template <typename Dst, typename Src>
-void add(Dst* const dst, Src&& src) requires requires
+void add(std::optional<Dst>* const dst, Src&& src) requires requires
 {
         **dst = src;
 }
@@ -165,7 +165,7 @@ void add(Dst* const dst, Src&& src) requires requires
 }
 
 template <typename Dst, typename Src>
-void add(Dst* const dst, Src&& src) requires requires
+void add(std::optional<Dst>* const dst, Src&& src) requires requires
 {
         **dst = *src;
 }
