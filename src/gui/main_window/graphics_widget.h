@@ -29,8 +29,7 @@ class GraphicsWidget final : public QWidget
         Q_OBJECT
 
 public:
-        explicit GraphicsWidget(QWidget* const parent = nullptr, const Qt::WindowFlags = Qt::WindowFlags())
-                : QWidget(parent)
+        explicit GraphicsWidget(QWidget* const parent) : QWidget(parent)
         {
                 // setMouseTracking(true);
         }
