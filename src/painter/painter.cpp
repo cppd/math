@@ -40,33 +40,6 @@ namespace ns::painter
 {
 namespace
 {
-void join_thread(std::thread* const thread) noexcept
-{
-        ASSERT(thread);
-        try
-        {
-                try
-                {
-                        if (thread->joinable())
-                        {
-                                thread->join();
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("Error joining painter thread ") + e.what());
-                }
-                catch (...)
-                {
-                        error_fatal("Unknown error joining painter thread");
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in painter join thread exception handlers");
-        }
-}
-
 template <std::size_t N>
 class ThreadBusy final
 {
@@ -396,7 +369,7 @@ public:
                         std::make_unique<PaintingStatistics>(multiply_all<long long>(scene->projector().screen_size()));
 
                 thread_ = std::thread(
-                        [=, stop = &stop_, statistics = statistics_.get(), scene = std::move(scene)]()
+                        [=, stop = &stop_, statistics = statistics_.get(), scene = std::move(scene)]() noexcept
                         {
                                 painter_thread<FLAT_SHADING>(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,

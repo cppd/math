@@ -187,4 +187,32 @@ void run_in_threads(const F& f, const std::size_t count)
                 f(task);
         }
 }
+
+inline void join_thread(std::thread* const thread) noexcept
+{
+        ASSERT(thread);
+
+        try
+        {
+                try
+                {
+                        if (thread->joinable())
+                        {
+                                thread->join();
+                        }
+                }
+                catch (const std::exception& e)
+                {
+                        error_fatal(std::string("Error joining thread ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Unknown error joining thread");
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in join thread exception handlers");
+        }
+}
 }
