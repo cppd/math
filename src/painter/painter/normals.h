@@ -28,28 +28,27 @@ struct Normals final
 {
         Vector<N, T> geometric;
         Vector<N, T> shading;
-        bool smooth;
+        bool flat_shading;
 };
 
-template <std::size_t N, typename T, typename Color>
-Normals<N, T> compute_normals(
-        const bool smooth_normals,
-        const SurfacePoint<N, T, Color>& surface,
-        const Vector<N, T>& ray_dir)
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+Normals<N, T> compute_normals(const SurfacePoint<N, T, Color>& surface, const Vector<N, T>& ray_dir)
 {
         const Vector<N, T> g_normal = surface.geometric_normal();
         ASSERT(g_normal.is_unit());
         const bool flip = dot(ray_dir, g_normal) >= 0;
         const Vector<N, T> geometric = flip ? -g_normal : g_normal;
-        if (smooth_normals)
+        if (!FLAT_SHADING)
         {
                 const auto s_normal = surface.shading_normal();
                 if (s_normal)
                 {
                         ASSERT(s_normal->is_unit());
-                        return {.geometric = geometric, .shading = (flip ? -*s_normal : *s_normal), .smooth = true};
+                        return {.geometric = geometric,
+                                .shading = (flip ? -*s_normal : *s_normal),
+                                .flat_shading = false};
                 }
         }
-        return {.geometric = geometric, .shading = geometric, .smooth = false};
+        return {.geometric = geometric, .shading = geometric, .flat_shading = true};
 }
 }

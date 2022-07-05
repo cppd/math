@@ -198,7 +198,7 @@ void thread_function(
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 
         gui::painter_window::create_painter_window(
-                name, parameters.thread_count, parameters.samples_per_pixel, !parameters.flat_facets, std::move(scene));
+                name, parameters.thread_count, parameters.samples_per_pixel, parameters.flat_shading, std::move(scene));
 }
 
 template <typename T, std::size_t N, typename Parameters>

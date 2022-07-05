@@ -39,13 +39,13 @@ bool surface_before_distance(
 }
 
 template <std::size_t N, typename T, typename Color>
-bool occluded(
+bool point_occluded(
         const Scene<N, T, Color>& scene,
         const Normals<N, T>& normals,
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        if (!normals.smooth)
+        if (normals.flat_shading)
         {
                 if (dot(ray.dir(), normals.geometric) <= 0)
                 {
@@ -72,10 +72,9 @@ bool occluded(
         return surface_before_distance(ray.org(), surface_2, distance);
 }
 
-template <std::size_t N, typename T, typename Color>
-SurfacePoint<N, T, Color> intersect(
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+SurfacePoint<N, T, Color> scene_intersect(
         const Scene<N, T, Color>& scene,
-        const bool smooth_normals,
         const std::optional<Vector<N, T>>& geometric_normal,
         const Ray<N, T>& ray,
         Normals<N, T>* const normals)
@@ -87,8 +86,8 @@ SurfacePoint<N, T, Color> intersect(
         }
 
         {
-                Normals<N, T> n = compute_normals(smooth_normals, surface, ray.dir());
-                if (!smooth_normals || dot(ray.dir(), n.shading) <= 0)
+                Normals<N, T> n = compute_normals<FLAT_SHADING>(surface, ray.dir());
+                if (FLAT_SHADING || dot(ray.dir(), n.shading) <= 0)
                 {
                         *normals = std::move(n);
                         return surface;
@@ -104,7 +103,7 @@ SurfacePoint<N, T, Color> intersect(
                 }
         }
 
-        *normals = compute_normals(smooth_normals, surface, ray.dir());
+        *normals = compute_normals<FLAT_SHADING>(surface, ray.dir());
         return surface;
 }
 }

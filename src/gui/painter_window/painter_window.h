@@ -81,9 +81,9 @@ public:
 template <std::size_t N, typename T, typename Color>
 void create_painter_window(
         const std::string& name,
-        unsigned thread_count,
-        int samples_per_pixel,
-        bool smooth_normal,
+        const unsigned thread_count,
+        const int samples_per_pixel,
+        const bool flat_shading,
         std::unique_ptr<const painter::Scene<N, T, Color>>&& scene)
 {
         Application::run(
@@ -91,7 +91,7 @@ void create_painter_window(
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
                                 name, std::make_unique<PainterPixels<N>>(
-                                              scene, thread_count, samples_per_pixel, smooth_normal));
+                                              scene, thread_count, samples_per_pixel, flat_shading));
                 });
 }
 }

@@ -113,7 +113,7 @@ PainterParametersWidget::PainterParametersWidget(
         ui_.spin_box_samples_per_pixel->setMaximum(max_samples_per_pixel);
         ui_.spin_box_samples_per_pixel->setValue(default_samples_per_pixel);
 
-        ui_.check_box_flat_facets->setChecked(false);
+        ui_.check_box_flat_shading->setChecked(false);
         ui_.check_box_cornell_box->setChecked(false);
 
         ui_.radio_button_precision_0->setText(precisions[0]);
@@ -178,7 +178,7 @@ bool PainterParametersWidget::check()
         PainterParameters p;
         p.thread_count = ui_.spin_box_threads->value();
         p.samples_per_pixel = ui_.spin_box_samples_per_pixel->value();
-        p.flat_facets = ui_.check_box_flat_facets->isChecked();
+        p.flat_shading = ui_.check_box_flat_shading->isChecked();
         p.cornell_box = ui_.check_box_cornell_box->isChecked();
         p.precision_index = ui_.radio_button_precision_0->isChecked() ? 0 : 1;
         p.color_index = ui_.radio_button_color_0->isChecked() ? 0 : 1;

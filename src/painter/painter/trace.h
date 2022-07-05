@@ -115,18 +115,14 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
         return true;
 }
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<Color> trace_path(
-        const Scene<N, T, Color>& scene,
-        const bool smooth_normals,
-        Ray<N, T> ray,
-        RandomEngine& engine)
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
+std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, RandomEngine& engine)
 {
         Normals<N, T> normals;
         SurfacePoint<N, T, Color> surface = [&]
         {
                 static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-                return intersect(scene, smooth_normals, GEOMETRIC_NORMAL, ray, &normals);
+                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray, &normals);
         }();
 
         if (!surface)
@@ -180,7 +176,7 @@ std::optional<Color> trace_path(
                 }
 
                 ray = Ray<N, T>(surface.point(), sample->l);
-                surface = intersect<N, T>(scene, smooth_normals, normals.geometric, ray, &normals);
+                surface = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray, &normals);
                 if (!surface)
                 {
                         color.multiply_add(beta, scene.background_light());
@@ -192,13 +188,9 @@ std::optional<Color> trace_path(
 }
 }
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<Color> trace_path(
-        const Scene<N, T, Color>& scene,
-        const bool smooth_normals,
-        const Ray<N, T>& ray,
-        RandomEngine& engine)
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
+std::optional<Color> trace_path(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, RandomEngine& engine)
 {
-        return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, engine);
+        return trace_implementation::trace_path<FLAT_SHADING>(scene, ray, engine);
 }
 }

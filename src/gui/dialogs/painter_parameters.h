@@ -27,7 +27,7 @@ struct PainterParameters final
 {
         int thread_count;
         int samples_per_pixel;
-        bool flat_facets;
+        bool flat_shading;
         bool cornell_box;
         int precision_index;
         int color_index;

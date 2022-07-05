@@ -181,7 +181,7 @@ void test_painter_file(
         std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
         constexpr int MAX_PASS_COUNT = 1;
-        constexpr bool SMOOTH_NORMAL = true;
+        constexpr bool FLAT_SHADING = false;
 
         Image<N - 1> image(DIRECTORY_NAME);
 
@@ -191,7 +191,7 @@ void test_painter_file(
                 std::unique_ptr<Painter> painter = create_painter(
                         &image, samples_per_pixel, MAX_PASS_COUNT,
                         std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene)), thread_count,
-                        SMOOTH_NORMAL);
+                        FLAT_SHADING);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
@@ -208,7 +208,7 @@ void test_painter_window(
         const int thread_count,
         std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
-        constexpr bool SMOOTH_NORMAL = true;
+        constexpr bool FLAT_SHADING = false;
 
         LOG("Window painting...");
 
@@ -220,7 +220,7 @@ void test_painter_window(
         std::string name = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
         gui::painter_window::create_painter_window(
-                name, thread_count, samples_per_pixel, SMOOTH_NORMAL, std::move(scene));
+                name, thread_count, samples_per_pixel, FLAT_SHADING, std::move(scene));
 }
 
 enum class OutputType

@@ -151,7 +151,7 @@ void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_num
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = trace_path<N, T, Color>(*scene_, !FLAT_SHADING, ray, engine);
+                        sample_colors[i] = trace_path<FLAT_SHADING>(*scene_, ray, engine);
                 }
 
                 pixels_.add_samples(*pixel, sample_points, sample_colors);
@@ -394,9 +394,9 @@ std::unique_ptr<Painter> create_painter(
         const std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T, Color>> scene,
         const int thread_count,
-        const bool smooth_normals)
+        const bool flat_shading)
 {
-        if (smooth_normals)
+        if (!flat_shading)
         {
                 return std::make_unique<Impl>(
                         notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, std::false_type());

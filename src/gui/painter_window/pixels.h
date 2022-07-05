@@ -368,7 +368,7 @@ public:
                 std::shared_ptr<const painter::Scene<N, T, Color>> scene,
                 const unsigned thread_count,
                 const int samples_per_pixel,
-                const bool smooth_normal)
+                const bool flat_shading)
                 : floating_point_name_(type_bit_name<T>()),
                   color_name_(Color::name()),
                   global_index_(scene->projector().screen_size()),
@@ -384,7 +384,7 @@ public:
                           MAX_PASS_COUNT,
                           std::move(scene),
                           thread_count,
-                          smooth_normal))
+                          flat_shading))
         {
                 normalize_thread_ = std::thread(
                         [this]

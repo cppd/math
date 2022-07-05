@@ -140,5 +140,5 @@ std::unique_ptr<Painter> create_painter(
         std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T, Color>> scene,
         int thread_count,
-        bool smooth_normals);
+        bool flat_shading);
 }
