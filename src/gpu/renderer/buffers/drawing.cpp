@@ -154,10 +154,10 @@ void DrawingBuffer::set_show_fog(const bool show) const
         copy_to_buffer(offsetof(Drawing, show_fog), s);
 }
 
-void DrawingBuffer::set_show_smooth(const bool show) const
+void DrawingBuffer::set_flat_shading(const bool flat_shading) const
 {
-        decltype(Drawing().show_smooth) s = show ? 1 : 0;
-        copy_to_buffer(offsetof(Drawing, show_smooth), s);
+        decltype(Drawing().flat_shading) s = flat_shading ? 1 : 0;
+        copy_to_buffer(offsetof(Drawing, flat_shading), s);
 }
 
 void DrawingBuffer::set_direction_to_light(const Vector3f& direction) const

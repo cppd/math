@@ -131,9 +131,9 @@ class ViewProcess final
                 renderer_->exec(gpu::renderer::command::SetNormalColorNegative(v.value));
         }
 
-        void cmd(const command::ShowSmooth& v)
+        void cmd(const command::SetFlatShading& v)
         {
-                renderer_->exec(gpu::renderer::command::SetShowSmooth(v.show));
+                renderer_->exec(gpu::renderer::command::SetFlatShading(v.flat_shading));
         }
 
         void cmd(const command::ShowWireframe& v)

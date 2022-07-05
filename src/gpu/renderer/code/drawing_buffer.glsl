@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 bool show_materials;                                                        \
                 bool show_shadow;                                                           \
                 bool show_fog;                                                              \
-                bool show_smooth;                                                           \
+                bool flat_shading;                                                          \
                 uint transparency_max_node_count;                                           \
                 vec3 clip_plane_color;                                                      \
                 bool clip_plane_enabled;                                                    \

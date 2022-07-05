@@ -149,11 +149,11 @@ struct SetNormalLength final
         }
 };
 
-struct SetShowSmooth final
+struct SetFlatShading final
 {
-        bool show;
+        bool flat_shading;
 
-        explicit SetShowSmooth(const bool show) : show(show)
+        explicit SetFlatShading(const bool flat_shading) : flat_shading(flat_shading)
         {
         }
 };
@@ -249,6 +249,7 @@ using ViewCommand = std::variant<
         command::SetCamera,
         command::SetClipPlane,
         command::SetClipPlaneColor,
+        command::SetFlatShading,
         command::SetFrontLightingProportion,
         command::SetLightingColor,
         command::SetNormalColorNegative,
@@ -260,7 +261,6 @@ using ViewCommand = std::variant<
         command::SetShowMaterials,
         command::SetShowNormals,
         command::SetShowShadow,
-        command::SetShowSmooth,
         command::SetShowWireframe,
         command::SetWireframeColor>;
 

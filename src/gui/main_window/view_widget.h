@@ -46,7 +46,7 @@ private:
         void on_optical_flow_clicked();
         void on_pencil_sketch_clicked();
         void on_shadow_clicked();
-        void on_smooth_clicked();
+        void on_flat_shading_clicked();
         void on_vertical_sync_clicked();
         void on_wireframe_clicked();
         void on_reset_view_clicked();

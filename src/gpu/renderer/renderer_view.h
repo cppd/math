@@ -105,9 +105,9 @@ class RendererView final
                 drawing_buffer_->set_normal_color_negative(v.color.rgb32().clamp(0, 1));
         }
 
-        void cmd(const command::SetShowSmooth& v)
+        void cmd(const command::SetFlatShading& v)
         {
-                drawing_buffer_->set_show_smooth(v.show);
+                drawing_buffer_->set_flat_shading(v.flat_shading);
         }
 
         void cmd(const command::SetShowWireframe& v)

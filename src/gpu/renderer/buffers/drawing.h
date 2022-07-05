@@ -41,7 +41,7 @@ class DrawingBuffer final
                 std::uint32_t show_materials;
                 std::uint32_t show_shadow;
                 std::uint32_t show_fog;
-                std::uint32_t show_smooth;
+                std::uint32_t flat_shading;
                 std::uint32_t transparency_max_node_count;
                 vulkan::std140::Vector3f clip_plane_color;
                 std::uint32_t clip_plane_enabled;
@@ -79,7 +79,7 @@ public:
         void set_direction_to_light(const Vector3f& direction) const;
         void set_lighting_proportions(float front, float side) const;
         void set_direction_to_camera(const Vector3f& direction) const;
-        void set_show_smooth(bool show) const;
+        void set_flat_shading(bool flat_shading) const;
         void set_show_wireframe(bool show) const;
         void set_show_shadow(bool show) const;
         void set_show_fog(bool show) const;

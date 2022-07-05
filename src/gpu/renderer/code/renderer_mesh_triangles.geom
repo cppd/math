@@ -73,7 +73,7 @@ vec3[3] compute_normals(const vec3 n)
 {
         vec3 normals[3];
 
-        if (drawing.show_smooth)
+        if (!drawing.flat_shading)
         {
                 const vec3 n_r = -n;
                 normals[0] = faceforward(vs[0].world_normal, n_r, vs[0].world_normal);

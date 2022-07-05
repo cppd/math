@@ -78,7 +78,7 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
         connect(ui_.check_box_optical_flow, &QCheckBox::clicked, this, &ViewWidget::on_optical_flow_clicked);
         connect(ui_.check_box_pencil_sketch, &QCheckBox::clicked, this, &ViewWidget::on_pencil_sketch_clicked);
         connect(ui_.check_box_shadow, &QCheckBox::clicked, this, &ViewWidget::on_shadow_clicked);
-        connect(ui_.check_box_smooth, &QCheckBox::clicked, this, &ViewWidget::on_smooth_clicked);
+        connect(ui_.check_box_flat_shading, &QCheckBox::clicked, this, &ViewWidget::on_flat_shading_clicked);
         connect(ui_.check_box_vertical_sync, &QCheckBox::clicked, this, &ViewWidget::on_vertical_sync_clicked);
         connect(ui_.check_box_wireframe, &QCheckBox::clicked, this, &ViewWidget::on_wireframe_clicked);
         connect(ui_.push_button_reset_view, &QPushButton::clicked, this, &ViewWidget::on_reset_view_clicked);
@@ -233,9 +233,9 @@ void ViewWidget::on_shadow_clicked()
         }
 }
 
-void ViewWidget::on_smooth_clicked()
+void ViewWidget::on_flat_shading_clicked()
 {
-        view_->send(view::command::ShowSmooth(ui_.check_box_smooth->isChecked()));
+        view_->send(view::command::SetFlatShading(ui_.check_box_flat_shading->isChecked()));
 }
 
 void ViewWidget::on_vertical_sync_clicked()
@@ -283,6 +283,7 @@ std::vector<view::Command> ViewWidget::commands() const
                 view::command::DftShow(ui_.check_box_dft->isChecked()),
                 view::command::OpticalFlowShow(ui_.check_box_optical_flow->isChecked()),
                 view::command::PencilSketchShow(ui_.check_box_pencil_sketch->isChecked()),
+                view::command::SetFlatShading(ui_.check_box_flat_shading->isChecked()),
                 view::command::SetNormalLength(normal_length()),
                 view::command::SetShadowZoom(shadow_zoom()),
                 view::command::SetVerticalSync(ui_.check_box_vertical_sync->isChecked()),
@@ -292,7 +293,6 @@ std::vector<view::Command> ViewWidget::commands() const
                 view::command::ShowMaterials(ui_.check_box_materials->isChecked()),
                 view::command::ShowNormals(ui_.check_box_normals->isChecked()),
                 view::command::ShowShadow(ui_.check_box_shadow->isChecked()),
-                view::command::ShowSmooth(ui_.check_box_smooth->isChecked()),
                 view::command::ShowWireframe(ui_.check_box_wireframe->isChecked())};
 }
 
