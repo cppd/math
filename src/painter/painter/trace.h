@@ -118,11 +118,13 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, RandomEngine& engine)
 {
+        SurfacePoint<N, T, Color> surface;
         Normals<N, T> normals;
-        SurfacePoint<N, T, Color> surface = [&]
+
+        std::tie(surface, normals) = [&]
         {
                 static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray, &normals);
+                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
         if (!surface)
@@ -176,7 +178,8 @@ std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, 
                 }
 
                 ray = Ray<N, T>(surface.point(), sample->l);
-                surface = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray, &normals);
+                std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
+
                 if (!surface)
                 {
                         color.multiply_add(beta, scene.background_light());

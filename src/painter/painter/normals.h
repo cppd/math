@@ -29,6 +29,17 @@ struct Normals final
         Vector<N, T> geometric;
         Vector<N, T> shading;
         bool flat_shading;
+
+        Normals()
+        {
+        }
+
+        Normals(const Vector<N, T>& geometric, const Vector<N, T>& shading, const bool flat_shading)
+                : geometric(geometric),
+                  shading(shading),
+                  flat_shading(flat_shading)
+        {
+        }
 };
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -40,15 +51,14 @@ Normals<N, T> compute_normals(const SurfacePoint<N, T, Color>& surface, const Ve
         const Vector<N, T> geometric = flip ? -g_normal : g_normal;
         if (!FLAT_SHADING)
         {
-                const auto s_normal = surface.shading_normal();
-                if (s_normal)
+                const auto shading_normal = surface.shading_normal();
+                if (shading_normal)
                 {
-                        ASSERT(s_normal->is_unit());
-                        return {.geometric = geometric,
-                                .shading = (flip ? -*s_normal : *s_normal),
-                                .flat_shading = false};
+                        ASSERT(shading_normal->is_unit());
+                        Normals<N, T> res;
+                        return {geometric, (flip ? -*shading_normal : *shading_normal), false};
                 }
         }
-        return {.geometric = geometric, .shading = geometric, .flat_shading = true};
+        return {geometric, geometric, true};
 }
 }

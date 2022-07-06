@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <optional>
+#include <tuple>
 
 namespace ns::painter
 {
@@ -73,25 +74,21 @@ bool point_occluded(
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-SurfacePoint<N, T, Color> scene_intersect(
+std::tuple<SurfacePoint<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
         const std::optional<Vector<N, T>>& geometric_normal,
-        const Ray<N, T>& ray,
-        Normals<N, T>* const normals)
+        const Ray<N, T>& ray)
 {
-        SurfacePoint surface = scene.intersect(geometric_normal, ray);
+        SurfacePoint<N, T, Color> surface = scene.intersect(geometric_normal, ray);
         if (!surface)
         {
                 return {};
         }
 
+        Normals<N, T> normals = compute_normals<FLAT_SHADING>(surface, ray.dir());
+        if (FLAT_SHADING || dot(ray.dir(), normals.shading) <= 0)
         {
-                Normals<N, T> n = compute_normals<FLAT_SHADING>(surface, ray.dir());
-                if (FLAT_SHADING || dot(ray.dir(), n.shading) <= 0)
-                {
-                        *normals = std::move(n);
-                        return surface;
-                }
+                return {surface, normals};
         }
 
         for (int i = 0; i < 2; ++i)
@@ -103,7 +100,6 @@ SurfacePoint<N, T, Color> scene_intersect(
                 }
         }
 
-        *normals = compute_normals<FLAT_SHADING>(surface, ray.dir());
-        return surface;
+        return {surface, compute_normals<FLAT_SHADING>(surface, ray.dir())};
 }
 }
