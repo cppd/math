@@ -40,21 +40,13 @@ bool surface_before_distance(
 }
 
 template <std::size_t N, typename T, typename Color>
-bool point_occluded(
+bool light_source_occluded(
         const Scene<N, T, Color>& scene,
         const Normals<N, T>& normals,
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        if (normals.flat_shading)
-        {
-                if (dot(ray.dir(), normals.geometric) <= 0)
-                {
-                        return true;
-                }
-                const SurfacePoint surface = scene.intersect(normals.geometric, ray);
-                return surface_before_distance(ray.org(), surface, distance);
-        }
+        ASSERT(dot(ray.dir(), normals.shading) > 0);
 
         if (dot(ray.dir(), normals.geometric) >= 0)
         {

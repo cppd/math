@@ -83,7 +83,7 @@ std::optional<Color> sample_light_with_mis(
                 return {};
         }
 
-        if (point_occluded(scene, normals, Ray<N, T>(surface.point(), l), sample.distance))
+        if (light_source_occluded(scene, normals, Ray<N, T>(surface.point(), l), sample.distance))
         {
                 return {};
         }
@@ -135,7 +135,7 @@ std::optional<Color> sample_brdf_with_mis(
                 return {};
         }
 
-        if (point_occluded(scene, normals, Ray<N, T>(surface.point(), l), light_info.distance))
+        if (light_source_occluded(scene, normals, Ray<N, T>(surface.point(), l), light_info.distance))
         {
                 return {};
         }
