@@ -29,7 +29,8 @@ class StringTree
                 std::string name;
                 std::vector<std::size_t> children;
 
-                explicit Node(std::string s) : name(std::move(s))
+                explicit Node(std::string s)
+                        : name(std::move(s))
                 {
                 }
         };

@@ -210,7 +210,8 @@ void log(const std::string_view& text, const MessageType type) noexcept
         log_events().log_event(text, type);
 }
 
-LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : observer_(std::move(observer))
+LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer)
+        : observer_(std::move(observer))
 {
         log_events().insert(&observer_);
 }

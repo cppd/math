@@ -45,7 +45,8 @@ long long make_lines(std::vector<char>* const data)
 }
 }
 
-Lines::Lines(std::vector<char>&& text_data) : data_(std::move(text_data))
+Lines::Lines(std::vector<char>&& text_data)
+        : data_(std::move(text_data))
 {
         if (data_.empty())
         {

@@ -33,7 +33,9 @@ struct Hyperplane final
         {
         }
 
-        constexpr Hyperplane(const Vector<N, T>& n, const T& d) : n(n), d(d)
+        constexpr Hyperplane(const Vector<N, T>& n, const T& d)
+                : n(n),
+                  d(d)
         {
         }
 

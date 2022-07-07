@@ -99,7 +99,8 @@ class Parallelotope final : public Shape<N, T, Color>
                 }
 
         public:
-                explicit SurfaceImpl(const Parallelotope* const obj) : obj_(obj)
+                explicit SurfaceImpl(const Parallelotope* const obj)
+                        : obj_(obj)
                 {
                 }
         };

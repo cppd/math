@@ -41,7 +41,8 @@ class SamplerHalton final
         }
 
 public:
-        explicit SamplerHalton(const int samples_per_pixel) : samples_per_pixel_(samples_per_pixel)
+        explicit SamplerHalton(const int samples_per_pixel)
+                : samples_per_pixel_(samples_per_pixel)
         {
                 if (samples_per_pixel <= 0)
                 {
@@ -73,7 +74,8 @@ class SamplerStratifiedJittered final
         sampling::StratifiedJitteredSampler<N, T> sampler_;
 
 public:
-        explicit SamplerStratifiedJittered(const int samples_per_pixel) : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
+        explicit SamplerStratifiedJittered(const int samples_per_pixel)
+                : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
         {
         }
 

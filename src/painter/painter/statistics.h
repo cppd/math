@@ -56,7 +56,8 @@ class PaintingStatistics
         }
 
 public:
-        explicit PaintingStatistics(const long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
+        explicit PaintingStatistics(const long long screen_pixel_count)
+                : screen_pixel_count_(screen_pixel_count)
         {
                 init_impl();
         }

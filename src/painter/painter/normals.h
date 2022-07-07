@@ -33,7 +33,9 @@ struct Normals final
         {
         }
 
-        Normals(const Vector<N, T>& geometric, const Vector<N, T>& shading) : geometric(geometric), shading(shading)
+        Normals(const Vector<N, T>& geometric, const Vector<N, T>& shading)
+                : geometric(geometric),
+                  shading(shading)
         {
         }
 };

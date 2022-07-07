@@ -44,7 +44,8 @@ constexpr VkImageUsageFlags USAGE_FLAGS = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
 constexpr VkImageType IMAGE_TYPE = VK_IMAGE_TYPE_2D;
 }
 
-OpacityBuffers::OpacityBuffers(const bool ray_tracing) : image_count_(ray_tracing ? 4 : 2)
+OpacityBuffers::OpacityBuffers(const bool ray_tracing)
+        : image_count_(ray_tracing ? 4 : 2)
 {
 }
 

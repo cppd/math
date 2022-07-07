@@ -54,7 +54,8 @@ class PointSearch
         std::vector<Vector<N, T>> points_;
 
 public:
-        explicit PointSearch(std::vector<Vector<N, T>> points) : points_(std::move(points))
+        explicit PointSearch(std::vector<Vector<N, T>> points)
+                : points_(std::move(points))
         {
         }
 

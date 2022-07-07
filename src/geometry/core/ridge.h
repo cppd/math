@@ -37,7 +37,8 @@ class Ridge final
         std::array<int, N - 1> vertices_;
 
 public:
-        explicit Ridge(std::array<int, N - 1>&& vertices) : vertices_(vertices)
+        explicit Ridge(std::array<int, N - 1>&& vertices)
+                : vertices_(vertices)
         {
                 ASSERT(std::is_sorted(vertices.cbegin(), vertices.cend()));
         }
@@ -122,7 +123,8 @@ class RidgeFacets2 final
         RidgeFacet<Facet> facet_1_;
 
 public:
-        RidgeFacets2(const Facet* const facet, const int external_point_index) : facet_0_(facet, external_point_index)
+        RidgeFacets2(const Facet* const facet, const int external_point_index)
+                : facet_0_(facet, external_point_index)
         {
         }
 

@@ -35,7 +35,8 @@ class FeatureIsNotSupported final : public std::exception
         std::string text_;
 
 public:
-        explicit FeatureIsNotSupported(std::string&& name) noexcept : text_(std::move(name))
+        explicit FeatureIsNotSupported(std::string&& name) noexcept
+                : text_(std::move(name))
         {
         }
 

@@ -96,7 +96,8 @@ class Instance::Impl final
         }
 
 public:
-        Impl() : Impl(layers(), extensions())
+        Impl()
+                : Impl(layers(), extensions())
         {
         }
 

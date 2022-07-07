@@ -99,7 +99,8 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
                 }
 
         public:
-                explicit SurfaceImpl(const HyperplaneParallelotope* const obj) : obj_(obj)
+                explicit SurfaceImpl(const HyperplaneParallelotope* const obj)
+                        : obj_(obj)
                 {
                 }
         };

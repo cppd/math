@@ -101,7 +101,8 @@ class MapVertex final
         }
 
 public:
-        explicit MapVertex(const Vertex* const v) noexcept : data_(v)
+        explicit MapVertex(const Vertex* const v) noexcept
+                : data_(v)
         {
         }
 

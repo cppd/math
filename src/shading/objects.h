@@ -31,7 +31,9 @@ struct Colors final
         {
         }
 
-        constexpr Colors(const Color& f0, const Color& rho_ss) : f0(f0), rho_ss(rho_ss)
+        constexpr Colors(const Color& f0, const Color& rho_ss)
+                : f0(f0),
+                  rho_ss(rho_ss)
         {
         }
 };
@@ -47,7 +49,10 @@ struct Sample final
         {
         }
 
-        constexpr Sample(const Vector<N, T>& l, const T pdf, const Color& brdf) : l(l), pdf(pdf), brdf(brdf)
+        constexpr Sample(const Vector<N, T>& l, const T pdf, const Color& brdf)
+                : l(l),
+                  pdf(pdf),
+                  brdf(brdf)
         {
         }
 };

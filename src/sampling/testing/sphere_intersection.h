@@ -36,7 +36,8 @@ class SphereIntersection final
         long long missed_intersection_count_ = 0;
 
 public:
-        explicit SphereIntersection(const SphereMesh<N, T>* const sphere_mesh) : sphere_mesh_(sphere_mesh)
+        explicit SphereIntersection(const SphereMesh<N, T>* const sphere_mesh)
+                : sphere_mesh_(sphere_mesh)
         {
         }
 

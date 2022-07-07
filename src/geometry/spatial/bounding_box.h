@@ -161,12 +161,14 @@ public:
         {
         }
 
-        explicit constexpr BoundingBox(const Vector<N, T>& p) : bounds_{p, p}
+        explicit constexpr BoundingBox(const Vector<N, T>& p)
+                : bounds_{p, p}
         {
         }
 
         template <std::size_t SIZE>
-        explicit constexpr BoundingBox(const std::array<Vector<N, T>, SIZE>& points) : BoundingBox(points[0])
+        explicit constexpr BoundingBox(const std::array<Vector<N, T>, SIZE>& points)
+                : BoundingBox(points[0])
         {
                 static_assert(SIZE > 0);
                 for (std::size_t i = 1; i < SIZE; ++i)

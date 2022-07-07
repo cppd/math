@@ -54,7 +54,8 @@ class Impl final : public Interface<T>
         }
 
 public:
-        explicit Impl(std::type_identity_t<T>&& v) : data_(std::move(v))
+        explicit Impl(std::type_identity_t<T>&& v)
+                : data_(std::move(v))
         {
         }
 };

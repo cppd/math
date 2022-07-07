@@ -35,7 +35,8 @@ void Connection::move(Connection* const from) noexcept
         from->connection_.reset();
 }
 
-Connection::Connection(QMetaObject::Connection&& connection) : connection_(std::move(connection))
+Connection::Connection(QMetaObject::Connection&& connection)
+        : connection_(std::move(connection))
 {
 }
 

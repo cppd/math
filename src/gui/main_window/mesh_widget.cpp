@@ -63,7 +63,8 @@ MeshInfo read_mesh(const model::mesh::MeshObject<N>& mesh_object)
 }
 }
 
-MeshWidget::MeshWidget() : QWidget(nullptr)
+MeshWidget::MeshWidget()
+        : QWidget(nullptr)
 {
         ui_.setupUi(this);
 

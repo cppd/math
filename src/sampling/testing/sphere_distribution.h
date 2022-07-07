@@ -287,7 +287,8 @@ class SphereDistribution final
         }
 
 public:
-        explicit SphereDistribution(progress::Ratio* const progress) : sphere_mesh_(BUCKET_MIN_COUNT, progress)
+        explicit SphereDistribution(progress::Ratio* const progress)
+                : sphere_mesh_(BUCKET_MIN_COUNT, progress)
         {
         }
 

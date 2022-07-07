@@ -93,21 +93,25 @@ public:
 
         template <typename... Args>
                 requires((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
-        explicit constexpr Matrix(Args&&... args) : rows_{std::forward<Args>(args)...}
+        explicit constexpr Matrix(Args&&... args)
+                : rows_{std::forward<Args>(args)...}
         {
         }
 
         template <typename Arg>
                 requires std::is_convertible_v<Arg, T>
-        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS) : rows_(make_diagonal_matrix(v))
+        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS)
+                : rows_(make_diagonal_matrix(v))
         {
         }
 
-        explicit constexpr Matrix(const Vector<ROWS, T>& v) requires(COLUMNS == ROWS) : rows_(make_diagonal_matrix(v))
+        explicit constexpr Matrix(const Vector<ROWS, T>& v) requires(COLUMNS == ROWS)
+                : rows_(make_diagonal_matrix(v))
         {
         }
 
-        explicit constexpr Matrix(const std::array<Vector<COLUMNS, T>, ROWS>& data) : rows_(data)
+        explicit constexpr Matrix(const std::array<Vector<COLUMNS, T>, ROWS>& data)
+                : rows_(data)
         {
         }
 

@@ -71,15 +71,18 @@ PCG::PCG(const std::array<std::uint32_t, 4>& data)
 {
 }
 
-PCG::PCG() : PCG(random_data())
+PCG::PCG()
+        : PCG(random_data())
 {
 }
 
-PCG::PCG(std::seed_seq& seed_seq) : PCG(random_data(seed_seq))
+PCG::PCG(std::seed_seq& seed_seq)
+        : PCG(random_data(seed_seq))
 {
 }
 
-PCG::PCG(const result_type value) : PCG(random_data(value))
+PCG::PCG(const result_type value)
+        : PCG(random_data(value))
 {
 }
 }

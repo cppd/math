@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-Mouse::Mouse(Camera* const camera) : camera_(camera)
+Mouse::Mouse(Camera* const camera)
+        : camera_(camera)
 {
 }
 

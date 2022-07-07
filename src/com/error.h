@@ -28,7 +28,8 @@ class ErrorException final : public std::exception
         std::string text_;
 
 public:
-        explicit ErrorException(std::string&& text) : text_(std::move(text))
+        explicit ErrorException(std::string&& text)
+                : text_(std::move(text))
         {
         }
 

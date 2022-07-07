@@ -47,7 +47,8 @@ class Vector final
         std::array<T, N> data_;
 
         template <std::size_t... I>
-        constexpr Vector(std::integer_sequence<std::size_t, I...>&&, const T& v) : data_{(static_cast<void>(I), v)...}
+        constexpr Vector(std::integer_sequence<std::size_t, I...>&&, const T& v)
+                : data_{(static_cast<void>(I), v)...}
         {
                 static_assert(sizeof...(I) == N);
         }

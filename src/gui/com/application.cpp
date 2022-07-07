@@ -25,7 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui
 {
-Application::Application(int* const argc, char** const argv) : QApplication(*argc, argv)
+Application::Application(int* const argc, char** const argv)
+        : QApplication(*argc, argv)
 {
         static std::atomic_int call_counter = 0;
         if (++call_counter != 1)

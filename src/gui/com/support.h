@@ -43,11 +43,13 @@ class QtObjectInDynamicMemory final : public QPointer<T>
 {
 public:
         template <typename... Args>
-        explicit QtObjectInDynamicMemory(Args&&... args) : QPointer<T>(new T(std::forward<Args>(args)...))
+        explicit QtObjectInDynamicMemory(Args&&... args)
+                : QPointer<T>(new T(std::forward<Args>(args)...))
         {
         }
 
-        explicit QtObjectInDynamicMemory(T* ptr) : QPointer<T>(ptr)
+        explicit QtObjectInDynamicMemory(T* ptr)
+                : QPointer<T>(ptr)
         {
         }
 

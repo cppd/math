@@ -34,7 +34,9 @@ public:
         {
         }
 
-        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : org_(org), dir_(dir.normalized())
+        Ray(const Vector<N, T>& org, const Vector<N, T>& dir)
+                : org_(org),
+                  dir_(dir.normalized())
         {
         }
 

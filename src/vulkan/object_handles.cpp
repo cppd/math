@@ -143,7 +143,8 @@ void SwapchainKHR::move(SwapchainKHR* const from) noexcept
         from->swapchain_ = VK_NULL_HANDLE;
 }
 
-SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR& create_info) : device_(device)
+SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain_));
 }
@@ -167,7 +168,8 @@ void ShaderModule::move(ShaderModule* const from) noexcept
         from->shader_module_ = VK_NULL_HANDLE;
 }
 
-ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code) : device_(device)
+ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code)
+        : device_(device)
 {
         static_assert(sizeof(std::uint32_t) == 4);
 
@@ -202,7 +204,8 @@ void RenderPass::move(RenderPass* const from) noexcept
         from->render_pass_ = VK_NULL_HANDLE;
 }
 
-RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info) : device_(device)
+RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateRenderPass(device, &create_info, nullptr, &render_pass_));
 }
@@ -226,7 +229,8 @@ void PipelineLayout::move(PipelineLayout* const from) noexcept
         from->pipeline_layout_ = VK_NULL_HANDLE;
 }
 
-PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCreateInfo& create_info) : device_(device)
+PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreatePipelineLayout(device, &create_info, nullptr, &pipeline_layout_));
 }
@@ -250,21 +254,24 @@ void Pipeline::move(Pipeline* const from) noexcept
         from->pipeline_ = VK_NULL_HANDLE;
 }
 
-Pipeline::Pipeline(const VkDevice device, const VkGraphicsPipelineCreateInfo& create_info) : device_(device)
+Pipeline::Pipeline(const VkDevice device, const VkGraphicsPipelineCreateInfo& create_info)
+        : device_(device)
 {
         static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
 
         VULKAN_CHECK(vkCreateGraphicsPipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
 }
 
-Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& create_info) : device_(device)
+Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& create_info)
+        : device_(device)
 {
         static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
 
         VULKAN_CHECK(vkCreateComputePipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
 }
 
-Pipeline::Pipeline(const VkDevice device, const VkRayTracingPipelineCreateInfoKHR& create_info) : device_(device)
+Pipeline::Pipeline(const VkDevice device, const VkRayTracingPipelineCreateInfoKHR& create_info)
+        : device_(device)
 {
         static constexpr VkDeferredOperationKHR DEFERRED_OPERATION = VK_NULL_HANDLE;
         static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
@@ -292,7 +299,8 @@ void Framebuffer::move(Framebuffer* const from) noexcept
         from->framebuffer_ = VK_NULL_HANDLE;
 }
 
-Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& create_info) : device_(device)
+Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateFramebuffer(device, &create_info, nullptr, &framebuffer_));
 }
@@ -316,7 +324,8 @@ void CommandPool::move(CommandPool* const from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
 }
 
-CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info) : device_(device)
+CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateCommandPool(device, &create_info, nullptr, &command_pool_));
 }
@@ -340,7 +349,8 @@ void Semaphore::move(Semaphore* const from) noexcept
         from->semaphore_ = VK_NULL_HANDLE;
 }
 
-Semaphore::Semaphore(const VkDevice device) : device_(device)
+Semaphore::Semaphore(const VkDevice device)
+        : device_(device)
 {
         VkSemaphoreCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -366,7 +376,8 @@ void Fence::move(Fence* const from) noexcept
         from->fence_ = VK_NULL_HANDLE;
 }
 
-Fence::Fence(const VkDevice device, const bool signaled) : device_(device)
+Fence::Fence(const VkDevice device, const bool signaled)
+        : device_(device)
 {
         VkFenceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -396,7 +407,8 @@ void Buffer::move(Buffer* const from) noexcept
         from->buffer_ = VK_NULL_HANDLE;
 }
 
-Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info) : device_(device)
+Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateBuffer(device, &create_info, nullptr, &buffer_));
 }
@@ -420,7 +432,8 @@ void DeviceMemory::move(DeviceMemory* const from) noexcept
         from->device_memory_ = VK_NULL_HANDLE;
 }
 
-DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& allocate_info) : device_(device)
+DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& allocate_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkAllocateMemory(device, &allocate_info, nullptr, &device_memory_));
 }
@@ -538,7 +551,8 @@ void DescriptorPool::move(DescriptorPool* const from) noexcept
         from->descriptor_pool_ = VK_NULL_HANDLE;
 }
 
-DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCreateInfo& create_info) : device_(device)
+DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateDescriptorPool(device, &create_info, nullptr, &descriptor_pool_));
 }
@@ -652,7 +666,8 @@ void Image::move(Image* const from) noexcept
         from->image_ = VK_NULL_HANDLE;
 }
 
-Image::Image(const VkDevice device, const VkImageCreateInfo& create_info) : device_(device)
+Image::Image(const VkDevice device, const VkImageCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateImage(device, &create_info, nullptr, &image_));
 }
@@ -676,7 +691,8 @@ void ImageView::move(ImageView* const from) noexcept
         from->image_view_ = VK_NULL_HANDLE;
 }
 
-ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info) : device_(device)
+ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateImageView(device, &create_info, nullptr, &image_view_));
 }
@@ -700,7 +716,8 @@ void Sampler::move(Sampler* const from) noexcept
         from->sampler_ = VK_NULL_HANDLE;
 }
 
-Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info) : device_(device)
+Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info)
+        : device_(device)
 {
         VULKAN_CHECK(vkCreateSampler(device, &create_info, nullptr, &sampler_));
 }

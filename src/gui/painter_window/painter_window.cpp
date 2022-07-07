@@ -33,7 +33,8 @@ constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
 constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 }
 
-PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : pixels_(std::move(pixels))
+PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels)
+        : pixels_(std::move(pixels))
 {
         ui_.setupUi(this);
 

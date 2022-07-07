@@ -82,7 +82,8 @@ class SurfacePoint final
         Vector<N, T> point_;
 
 public:
-        SurfacePoint() : surface_(nullptr)
+        SurfacePoint()
+                : surface_(nullptr)
         {
         }
 

@@ -53,7 +53,9 @@ std::tuple<T, const Object*> ray_intersection(
                 T distance;
                 const Shape* shape;
 
-                Intersection(const T& distance, const Shape* const shape) : distance(distance), shape(shape)
+                Intersection(const T& distance, const Shape* const shape)
+                        : distance(distance),
+                          shape(shape)
                 {
                 }
 

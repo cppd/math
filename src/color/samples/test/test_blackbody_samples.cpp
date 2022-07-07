@@ -31,7 +31,8 @@ class Exception final : public std::exception
         std::string text_;
 
 public:
-        explicit Exception(std::string&& text) : text_(std::move(text))
+        explicit Exception(std::string&& text)
+                : text_(std::move(text))
         {
         }
 

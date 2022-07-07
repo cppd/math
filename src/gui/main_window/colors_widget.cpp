@@ -33,7 +33,8 @@ constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 }
 
-ColorsWidget::ColorsWidget() : QWidget(nullptr)
+ColorsWidget::ColorsWidget()
+        : QWidget(nullptr)
 {
         ui_.setupUi(this);
 

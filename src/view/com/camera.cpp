@@ -54,7 +54,8 @@ double default_scale(const int width, const int height)
 }
 }
 
-Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera) : set_camera_(std::move(set_camera))
+Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
+        : set_camera_(std::move(set_camera))
 {
         reset_view();
 }

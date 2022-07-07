@@ -28,7 +28,8 @@ struct PointsVertex final
 {
         Vector3f position;
 
-        explicit constexpr PointsVertex(const Vector3f& position) : position(position)
+        explicit constexpr PointsVertex(const Vector3f& position)
+                : position(position)
         {
         }
 

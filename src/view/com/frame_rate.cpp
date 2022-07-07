@@ -30,7 +30,8 @@ constexpr int SAMPLE_COUNT = 10;
 constexpr const char* TEXT = "FPS: ";
 }
 
-FrameRate::FrameRate() : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
+FrameRate::FrameRate()
+        : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
 {
         text_data_.text.resize(2);
         text_data_.text[0] = TEXT;

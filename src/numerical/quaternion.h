@@ -33,15 +33,18 @@ public:
         {
         }
 
-        Quaternion(const T w, const T x, const T y, const T z) : data_(w, x, y, z)
+        Quaternion(const T w, const T x, const T y, const T z)
+                : data_(w, x, y, z)
         {
         }
 
-        Quaternion(const T w, const Vector<3, T>& v) : data_(w, v[0], v[1], v[2])
+        Quaternion(const T w, const Vector<3, T>& v)
+                : data_(w, v[0], v[1], v[2])
         {
         }
 
-        explicit Quaternion(const Vector<4, T>& v) : data_(v)
+        explicit Quaternion(const Vector<4, T>& v)
+                : data_(v)
         {
         }
 

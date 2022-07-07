@@ -87,7 +87,9 @@ struct Bucket final
         {
         }
 
-        Bucket(const BoundingBox<N, T>& bounds, const T& cost) : bounds(bounds), cost(cost)
+        Bucket(const BoundingBox<N, T>& bounds, const T& cost)
+                : bounds(bounds),
+                  cost(cost)
         {
         }
 };

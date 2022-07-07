@@ -33,7 +33,8 @@ class ObjectId final
         T id_;
 
 public:
-        ObjectId() noexcept : id_(1 + current_id_.fetch_add(1, std::memory_order_relaxed))
+        ObjectId() noexcept
+                : id_(1 + current_id_.fetch_add(1, std::memory_order_relaxed))
         {
         }
 

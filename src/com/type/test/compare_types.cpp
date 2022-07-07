@@ -106,7 +106,8 @@ class MpfPrecision final
         mp_bitcnt_t precision_;
 
 public:
-        explicit MpfPrecision(const mp_bitcnt_t& precision) : precision_(mpf_get_default_prec())
+        explicit MpfPrecision(const mp_bitcnt_t& precision)
+                : precision_(mpf_get_default_prec())
         {
                 mpf_set_default_prec(precision);
         }

@@ -54,7 +54,8 @@ struct SetLightingColor final
 {
         color::Color color;
 
-        explicit SetLightingColor(const color::Color& color) : color(color)
+        explicit SetLightingColor(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -63,7 +64,8 @@ struct SetFrontLightingProportion final
 {
         float proportion;
 
-        explicit SetFrontLightingProportion(const float proportion) : proportion(proportion)
+        explicit SetFrontLightingProportion(const float proportion)
+                : proportion(proportion)
         {
         }
 };
@@ -72,7 +74,8 @@ struct SetBackgroundColor final
 {
         color::Color color;
 
-        explicit SetBackgroundColor(const color::Color& color) : color(color)
+        explicit SetBackgroundColor(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -81,7 +84,8 @@ struct SetWireframeColor final
 {
         color::Color color;
 
-        explicit SetWireframeColor(const color::Color& color) : color(color)
+        explicit SetWireframeColor(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -90,7 +94,8 @@ struct SetClipPlaneColor final
 {
         color::Color color;
 
-        explicit SetClipPlaneColor(const color::Color& color) : color(color)
+        explicit SetClipPlaneColor(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -99,7 +104,8 @@ struct SetNormalColorPositive final
 {
         color::Color color;
 
-        explicit SetNormalColorPositive(const color::Color& color) : color(color)
+        explicit SetNormalColorPositive(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -108,7 +114,8 @@ struct SetNormalColorNegative final
 {
         color::Color color;
 
-        explicit SetNormalColorNegative(const color::Color& color) : color(color)
+        explicit SetNormalColorNegative(const color::Color& color)
+                : color(color)
         {
         }
 };
@@ -117,7 +124,8 @@ struct SetCamera final
 {
         const CameraInfo* info;
 
-        explicit SetCamera(const CameraInfo* const info) : info(info)
+        explicit SetCamera(const CameraInfo* const info)
+                : info(info)
         {
         }
 };
@@ -126,7 +134,8 @@ struct SetClipPlane final
 {
         std::optional<Vector4d> plane;
 
-        explicit SetClipPlane(const std::optional<Vector4d>& plane) : plane(plane)
+        explicit SetClipPlane(const std::optional<Vector4d>& plane)
+                : plane(plane)
         {
         }
 };
@@ -135,7 +144,8 @@ struct SetShowClipPlaneLines final
 {
         bool show;
 
-        explicit SetShowClipPlaneLines(const bool show) : show(show)
+        explicit SetShowClipPlaneLines(const bool show)
+                : show(show)
         {
         }
 };
@@ -144,7 +154,8 @@ struct SetNormalLength final
 {
         float length;
 
-        explicit SetNormalLength(const float length) : length(length)
+        explicit SetNormalLength(const float length)
+                : length(length)
         {
         }
 };
@@ -153,7 +164,8 @@ struct SetFlatShading final
 {
         bool flat_shading;
 
-        explicit SetFlatShading(const bool flat_shading) : flat_shading(flat_shading)
+        explicit SetFlatShading(const bool flat_shading)
+                : flat_shading(flat_shading)
         {
         }
 };
@@ -162,7 +174,8 @@ struct SetShowWireframe final
 {
         bool show;
 
-        explicit SetShowWireframe(const bool show) : show(show)
+        explicit SetShowWireframe(const bool show)
+                : show(show)
         {
         }
 };
@@ -171,7 +184,8 @@ struct SetShowShadow final
 {
         bool show;
 
-        explicit SetShowShadow(const bool show) : show(show)
+        explicit SetShowShadow(const bool show)
+                : show(show)
         {
         }
 };
@@ -180,7 +194,8 @@ struct SetShowFog final
 {
         bool show;
 
-        explicit SetShowFog(const bool show) : show(show)
+        explicit SetShowFog(const bool show)
+                : show(show)
         {
         }
 };
@@ -189,7 +204,8 @@ struct SetShowMaterials final
 {
         bool show;
 
-        explicit SetShowMaterials(const bool show) : show(show)
+        explicit SetShowMaterials(const bool show)
+                : show(show)
         {
         }
 };
@@ -198,7 +214,8 @@ struct SetShowNormals final
 {
         bool show;
 
-        explicit SetShowNormals(const bool show) : show(show)
+        explicit SetShowNormals(const bool show)
+                : show(show)
         {
         }
 };
@@ -207,7 +224,8 @@ struct SetShadowZoom final
 {
         double zoom;
 
-        explicit SetShadowZoom(const double zoom) : zoom(zoom)
+        explicit SetShadowZoom(const double zoom)
+                : zoom(zoom)
         {
         }
 };
@@ -216,7 +234,8 @@ struct MeshUpdate final
 {
         const model::mesh::MeshObject<3>* object;
 
-        explicit MeshUpdate(const model::mesh::MeshObject<3>* const object) : object(object)
+        explicit MeshUpdate(const model::mesh::MeshObject<3>* const object)
+                : object(object)
         {
         }
 };
@@ -225,7 +244,8 @@ struct VolumeUpdate final
 {
         const model::volume::VolumeObject<3>* object;
 
-        explicit VolumeUpdate(const model::volume::VolumeObject<3>* const object) : object(object)
+        explicit VolumeUpdate(const model::volume::VolumeObject<3>* const object)
+                : object(object)
         {
         }
 };
@@ -234,7 +254,8 @@ struct DeleteObject final
 {
         model::ObjectId id;
 
-        explicit DeleteObject(const model::ObjectId id) : id(id)
+        explicit DeleteObject(const model::ObjectId id)
+                : id(id)
         {
         }
 };

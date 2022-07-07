@@ -46,7 +46,8 @@ class Storage final
                 std::unique_ptr<T> ptr;
                 std::size_t visible_index = EMPTY;
 
-                explicit Object(std::unique_ptr<T>&& ptr) : ptr(std::move(ptr))
+                explicit Object(std::unique_ptr<T>&& ptr)
+                        : ptr(std::move(ptr))
                 {
                 }
         };
@@ -70,7 +71,8 @@ class Storage final
         }
 
 public:
-        explicit Storage(StorageEvents<T>* const events) : events_(events)
+        explicit Storage(StorageEvents<T>* const events)
+                : events_(events)
         {
         }
 

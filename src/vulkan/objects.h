@@ -34,7 +34,9 @@ class Queue final
 public:
         Queue() = default;
 
-        Queue(const std::uint32_t family_index, const VkQueue queue) : queue_(queue), family_index_(family_index)
+        Queue(const std::uint32_t family_index, const VkQueue queue)
+                : queue_(queue),
+                  family_index_(family_index)
         {
         }
 

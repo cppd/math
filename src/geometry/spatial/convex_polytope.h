@@ -35,7 +35,8 @@ class ConvexPolytope final
         std::vector<Hyperplane<N, T>> planes_;
 
 public:
-        explicit ConvexPolytope(std::vector<Hyperplane<N, T>> planes) : planes_(std::move(planes))
+        explicit ConvexPolytope(std::vector<Hyperplane<N, T>> planes)
+                : planes_(std::move(planes))
         {
         }
 

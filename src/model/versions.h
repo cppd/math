@@ -35,7 +35,9 @@ class Versions
                 int version;
                 std::bitset<N> updates;
 
-                Version(int version, const std::bitset<N>& updates) : version(version), updates(updates)
+                Version(int version, const std::bitset<N>& updates)
+                        : version(version),
+                          updates(updates)
                 {
                 }
         };

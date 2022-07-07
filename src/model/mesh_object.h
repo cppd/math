@@ -57,7 +57,8 @@ struct Erase final
 {
         ObjectId id;
 
-        explicit Erase(const ObjectId id) : id(id)
+        explicit Erase(const ObjectId id)
+                : id(id)
         {
         }
 };
@@ -67,7 +68,8 @@ struct Update final
 {
         std::weak_ptr<MeshObject<N>> object;
 
-        explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
+        explicit Update(std::weak_ptr<MeshObject<N>>&& object)
+                : object(std::move(object))
         {
         }
 };
@@ -231,7 +233,9 @@ class Writing final
         Updates updates_;
 
 public:
-        explicit Writing(MeshObject<N>* const object) : object_(object), lock_(object_->mutex_)
+        explicit Writing(MeshObject<N>* const object)
+                : object_(object),
+                  lock_(object_->mutex_)
         {
         }
 
@@ -364,7 +368,9 @@ class Reading final
         std::shared_lock<std::shared_mutex> lock_;
 
 public:
-        explicit Reading(const MeshObject<N>& object) : object_(&object), lock_(object.mutex_)
+        explicit Reading(const MeshObject<N>& object)
+                : object_(&object),
+                  lock_(object.mutex_)
         {
         }
 

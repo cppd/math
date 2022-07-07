@@ -27,7 +27,8 @@ class Code final
         bool ray_tracing_;
 
 public:
-        explicit Code(const bool ray_tracing) : ray_tracing_(ray_tracing)
+        explicit Code(const bool ray_tracing)
+                : ray_tracing_(ray_tracing)
         {
         }
 

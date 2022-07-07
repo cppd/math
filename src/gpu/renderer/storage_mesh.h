@@ -86,7 +86,9 @@ class StorageMesh final : private StorageEvents<MeshObject>
         }
 
 public:
-        explicit StorageMesh(StorageMeshEvents* const events) : storage_(this), events_(events)
+        explicit StorageMesh(StorageMeshEvents* const events)
+                : storage_(this),
+                  events_(events)
         {
         }
 

@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::main_window
 {
-ModelTree::ModelTree() : QWidget(nullptr), thread_id_(std::this_thread::get_id())
+ModelTree::ModelTree()
+        : QWidget(nullptr),
+          thread_id_(std::this_thread::get_id())
 {
         ui_.setupUi(this);
 

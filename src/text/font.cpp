@@ -82,7 +82,8 @@ public:
         }
 #endif
         template <typename T>
-        Face(const FT_Library library, T&& font_data) : font_data_(std::forward<T>(font_data))
+        Face(const FT_Library library, T&& font_data)
+                : font_data_(std::forward<T>(font_data))
         {
                 if (FT_New_Memory_Face(library, data_pointer(font_data_), data_size(font_data_), 0, &face_))
                 {

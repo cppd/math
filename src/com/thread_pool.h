@@ -184,7 +184,8 @@ class ThreadPool final
         }
 
 public:
-        explicit ThreadPool(const unsigned thread_count) : thread_count_(thread_count)
+        explicit ThreadPool(const unsigned thread_count)
+                : thread_count_(thread_count)
         {
                 for (unsigned i = 0; i < thread_count_; ++i)
                 {

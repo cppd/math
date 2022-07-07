@@ -58,7 +58,9 @@ class Switcher final
         S* const src_;
 
 public:
-        Switcher(std::atomic<D*>* const dst, S* const src) : dst_(dst), src_(src)
+        Switcher(std::atomic<D*>* const dst, S* const src)
+                : dst_(dst),
+                  src_(src)
         {
         }
 

@@ -30,7 +30,9 @@ class Visitor final
         view::View* view_;
 
 public:
-        Visitor(ModelTreeEvents* const tree, view::View* const view) : tree_(tree), view_(view)
+        Visitor(ModelTreeEvents* const tree, view::View* const view)
+                : tree_(tree),
+                  view_(view)
         {
         }
 

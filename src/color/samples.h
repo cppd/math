@@ -36,7 +36,8 @@ class Samples
 
 protected:
         template <typename... Args>
-        constexpr explicit Samples(Args... args) : data_(args...)
+        constexpr explicit Samples(Args... args)
+                : data_(args...)
         {
                 static_assert(std::is_base_of_v<Samples, Derived>);
                 static_assert(std::is_final_v<Derived>);

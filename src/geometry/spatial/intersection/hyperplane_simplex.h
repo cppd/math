@@ -52,7 +52,9 @@ struct Simplex final
         HyperplaneSimplex<N, T> simplex;
         std::array<Vector<N, T>, N> vertices;
 
-        explicit Simplex(const std::array<Vector<N, T>, N>& vertices) : simplex(vertices), vertices(vertices)
+        explicit Simplex(const std::array<Vector<N, T>, N>& vertices)
+                : simplex(vertices),
+                  vertices(vertices)
         {
         }
 };

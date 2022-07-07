@@ -43,7 +43,9 @@ class Threads final
                 std::future<void> future;
                 std::thread thread;
 
-                explicit Thread(std::packaged_task<void()>&& task) : future(task.get_future()), thread(std::move(task))
+                explicit Thread(std::packaged_task<void()>&& task)
+                        : future(task.get_future()),
+                          thread(std::move(task))
                 {
                 }
         };

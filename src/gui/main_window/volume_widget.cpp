@@ -74,7 +74,8 @@ VolumeInfo read_volume(const model::volume::VolumeObject<N>& volume_object)
 }
 }
 
-VolumeWidget::VolumeWidget() : QWidget(nullptr)
+VolumeWidget::VolumeWidget()
+        : QWidget(nullptr)
 {
         ui_.setupUi(this);
 

@@ -132,7 +132,8 @@ class CudaMemory final
         T* memory_;
 
 public:
-        explicit CudaMemory(const std::size_t size) : size_(size)
+        explicit CudaMemory(const std::size_t size)
+                : size_(size)
         {
                 if (size_ < 1)
                 {

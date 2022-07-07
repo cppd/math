@@ -56,7 +56,8 @@ public:
         {
         }
 
-        constexpr explicit RGB(const std::type_identity_t<T> v) : Base(std::max(T{0}, v))
+        constexpr explicit RGB(const std::type_identity_t<T> v)
+                : Base(std::max(T{0}, v))
         {
                 ASSERT(is_finite(v));
         }
@@ -69,7 +70,8 @@ public:
         {
         }
 
-        constexpr explicit RGB(const RGB8 c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
+        constexpr explicit RGB(const RGB8 c)
+                : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -332,7 +334,8 @@ public:
         {
         }
 
-        constexpr explicit SpectrumSamples(const std::type_identity_t<T> v) : Base(std::max(T{0}, v))
+        constexpr explicit SpectrumSamples(const std::type_identity_t<T> v)
+                : Base(std::max(T{0}, v))
         {
                 ASSERT(is_finite(v));
         }
@@ -351,7 +354,8 @@ public:
         {
         }
 
-        explicit SpectrumSamples(const RGB8 c) : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
+        explicit SpectrumSamples(const RGB8 c)
+                : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 

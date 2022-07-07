@@ -48,7 +48,8 @@ class SpatialSubdivisionTree final
                 std::vector<int> object_indices;
                 std::array<int, CHILD_COUNT> childs;
 
-                explicit Box(Parallelotope&& parallelotope) : parallelotope(std::move(parallelotope))
+                explicit Box(Parallelotope&& parallelotope)
+                        : parallelotope(std::move(parallelotope))
                 {
                 }
         };

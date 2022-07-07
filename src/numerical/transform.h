@@ -105,7 +105,8 @@ class MatrixVectorMultiplier
         Matrix<N, N, T> matrix_;
 
 public:
-        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m) : matrix_(m)
+        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m)
+                : matrix_(m)
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {

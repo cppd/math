@@ -73,7 +73,8 @@ class QueueEvent final
         bool received_ = false;
 
 public:
-        explicit QueueEvent(const std::vector<Info>* const info) : info_(info)
+        explicit QueueEvent(const std::vector<Info>* const info)
+                : info_(info)
         {
         }
 

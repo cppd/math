@@ -102,7 +102,8 @@ class ThreadTaskManager final
         bool has_task_ = false;
 
 public:
-        explicit ThreadTaskManager(ThreadTasks<Task>* const tasks) : tasks_(tasks)
+        explicit ThreadTaskManager(ThreadTasks<Task>* const tasks)
+                : tasks_(tasks)
         {
         }
 

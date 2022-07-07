@@ -50,7 +50,8 @@ PFN_vkVoidFunction instance_proc_addr(const VkInstance instance, const char* con
 #define SET_INSTANCE(instance, name) set_instance((instance), #name, &(name));
 #define SET_DEVICE(device, name) set_device((device), #name, &(name));
 
-InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance) : lock_(mutex_, std::try_to_lock)
+InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance)
+        : lock_(mutex_, std::try_to_lock)
 {
         ASSERT(instance != VK_NULL_HANDLE);
 
@@ -99,7 +100,8 @@ InstanceExtensionFunctions::~InstanceExtensionFunctions()
         vkSubmitDebugUtilsMessageEXT = nullptr;
 }
 
-DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device) : lock_(mutex_, std::try_to_lock)
+DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device)
+        : lock_(mutex_, std::try_to_lock)
 {
         ASSERT(device != VK_NULL_HANDLE);
 

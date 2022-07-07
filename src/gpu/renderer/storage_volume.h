@@ -86,7 +86,9 @@ class StorageVolume final : private StorageEvents<VolumeObject>
         }
 
 public:
-        explicit StorageVolume(StorageVolumeEvents* const events) : storage_(this), events_(events)
+        explicit StorageVolume(StorageVolumeEvents* const events)
+                : storage_(this),
+                  events_(events)
         {
         }
 
