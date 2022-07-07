@@ -9,7 +9,6 @@ AlignEscapedNewlines: Left
 AlignOperands: Align
 AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
@@ -86,7 +85,7 @@ LambdaBodyIndentation: Signature
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PPIndentWidth: -1
-PackConstructorInitializers: CurrentLine
+PackConstructorInitializers: Never
 # PenaltyBreakAssignment: 0
 # PenaltyBreakBeforeFirstCallParameter: 19
 # PenaltyBreakComment: 300
