@@ -38,11 +38,11 @@ Elsevier, 2017.
 #pragma once
 
 #include "normals.h"
-#include "visibility.h"
 
 #include "../objects.h"
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/sampling/mis.h>
 
 #include <optional>
@@ -57,6 +57,12 @@ T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
         return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
 }
 
+template <typename T, typename Color>
+bool use_pdf_color(const T pdf, const Color& color)
+{
+        return pdf > 0 && !color.is_black();
+}
+
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_light_with_mis(
         const LightSource<N, T, Color>& light,
@@ -69,7 +75,7 @@ std::optional<Color> sample_light_with_mis(
         const Vector<N, T>& n = normals.shading;
 
         const LightSourceSample<N, T, Color> sample = light.sample(engine, surface.point());
-        if (sample.pdf <= 0 || sample.radiance.is_black())
+        if (!use_pdf_color(sample.pdf, sample.radiance))
         {
                 return {};
         }
@@ -78,7 +84,7 @@ std::optional<Color> sample_light_with_mis(
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
-        if (n_l <= 0)
+        if (!(n_l > 0))
         {
                 return {};
         }
@@ -93,6 +99,7 @@ std::optional<Color> sample_light_with_mis(
         {
                 return brdf * sample.radiance * (n_l / sample.pdf);
         }
+
         const T pdf = surface.pdf(n, v, l);
         const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
         return brdf * sample.radiance * (weight * n_l / sample.pdf);
@@ -115,7 +122,7 @@ std::optional<Color> sample_brdf_with_mis(
         const Vector<N, T>& n = normals.shading;
 
         const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
-        if (sample.pdf <= 0 || sample.brdf.is_black())
+        if (!use_pdf_color(sample.pdf, sample.brdf))
         {
                 return {};
         }
@@ -124,13 +131,13 @@ std::optional<Color> sample_brdf_with_mis(
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
-        if (n_l <= 0)
+        if (!(n_l > 0))
         {
                 return {};
         }
 
-        LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
-        if (light_info.pdf <= 0 || light_info.radiance.is_black())
+        const LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
+        if (!use_pdf_color(light_info.pdf, light_info.radiance))
         {
                 return {};
         }
@@ -144,6 +151,7 @@ std::optional<Color> sample_brdf_with_mis(
         {
                 return sample.brdf * light_info.radiance * (n_l / sample.pdf);
         }
+
         const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
         return sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
 }
@@ -206,23 +214,44 @@ std::optional<Color> directly_visible_light_sources(
 {
         namespace impl = direct_lighting_implementation;
 
+        if (!surface)
+        {
+                std::optional<Color> res;
+                for (const LightSource<N, T, Color>* const light : scene.light_sources())
+                {
+                        const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
+                        if (impl::use_pdf_color(info.pdf, info.radiance))
+                        {
+                                impl::add(&res, info.radiance);
+                        }
+                }
+                return res;
+        }
+
+        const T distance_squared = (ray.org() - surface.point()).norm_squared();
+
         std::optional<Color> res;
 
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                LightSourceInfo<T, Color> light_info = light->info(ray.org(), ray.dir());
+                const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
 
-                if (light_info.pdf <= 0 || light_info.radiance.is_black())
+                if (!impl::use_pdf_color(info.pdf, info.radiance))
                 {
                         continue;
                 }
 
-                if (surface_before_distance(ray.org(), surface, light_info.distance))
+                if (!info.distance)
                 {
                         continue;
                 }
 
-                impl::add(&res, light_info.radiance);
+                if (!(square(*info.distance) < distance_squared))
+                {
+                        continue;
+                }
+
+                impl::add(&res, info.radiance);
         }
 
         return res;

@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
+namespace visibility_implementation
+{
 template <std::size_t N, typename T, typename Color>
 bool surface_before_distance(
         const Vector<N, T>& org,
@@ -37,6 +39,7 @@ bool surface_before_distance(
         const std::optional<T>& distance)
 {
         return surface && (!distance || (org - surface.point()).norm_squared() < square(*distance));
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -46,23 +49,25 @@ bool light_source_occluded(
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
+        namespace impl = visibility_implementation;
+
         ASSERT(dot(ray.dir(), normals.shading) > 0);
 
         if (dot(ray.dir(), normals.geometric) >= 0)
         {
                 const SurfacePoint surface = scene.intersect(normals.geometric, ray);
-                return surface_before_distance(ray.org(), surface, distance);
+                return impl::surface_before_distance(ray.org(), surface, distance);
         }
 
         const SurfacePoint surface_1 = scene.intersect(normals.geometric, ray);
-        if (!surface_before_distance(ray.org(), surface_1, distance))
+        if (!impl::surface_before_distance(ray.org(), surface_1, distance))
         {
                 return true;
         }
 
         const SurfacePoint surface_2 =
                 scene.intersect(surface_1.geometric_normal(), Ray<N, T>(ray).set_org(surface_1.point()));
-        return surface_before_distance(ray.org(), surface_2, distance);
+        return impl::surface_before_distance(ray.org(), surface_2, distance);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
