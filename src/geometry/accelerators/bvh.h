@@ -26,163 +26,144 @@ Elsevier, 2017.
 #pragma once
 
 #include "bvh_object.h"
+#include "bvh_stack.h"
 
 #include "../spatial/bounding_box.h"
 
 #include <src/com/error.h>
 #include <src/progress/progress.h>
 
-#include <array>
 #include <span>
 #include <utility>
 #include <vector>
 
 namespace ns::geometry
 {
-template <std::size_t N, typename T>
-class Bvh final
+namespace bvh_implementation
 {
-        static constexpr unsigned STACK_SIZE = 64;
-
-        class Stack final
+template <std::size_t N, typename T>
+struct Node final
+{
+        BoundingBox<N, T> bounds;
+        union
         {
-                std::array<unsigned, STACK_SIZE> stack_;
-                int next_ = 0;
-
-        public:
-                void push(const unsigned v)
-                {
-                        stack_[next_++] = v;
-                }
-
-                unsigned pop()
-                {
-                        return stack_[--next_];
-                }
-
-                [[nodiscard]] bool empty() const
-                {
-                        return next_ == 0;
-                }
+                std::uint32_t object_offset;
+                std::uint32_t second_child_offset;
         };
+        std::uint16_t object_count;
+        std::uint8_t axis;
+};
 
-        struct Node final
+template <std::size_t N, typename T, typename ObjectIntersect>
+class Intersect final
+{
+        using Result = std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&>;
+
+        const std::vector<unsigned>& object_indices_;
+        const std::vector<Node<N, T>>& nodes_;
+        const ObjectIntersect& object_intersect_;
+        const Ray<N, T>& ray_;
+
+        const Vector<N, T> dir_reciprocal_;
+        const Vector<N, bool> dir_negative_;
+
+        T distance_;
+        unsigned node_index_ = 0;
+        Result result_;
+        BvhStack stack_;
+
+        void push(const Node<N, T>& node)
         {
-                BoundingBox<N, T> bounds;
-                union
+                if (dir_negative_[node.axis])
                 {
-                        std::uint32_t object_offset;
-                        std::uint32_t second_child_offset;
-                };
-                std::uint16_t object_count;
-                std::uint8_t axis;
-        };
+                        stack_.push(node_index_ + 1);
+                        node_index_ = node.second_child_offset;
+                }
+                else
+                {
+                        stack_.push(node.second_child_offset);
+                        ++node_index_;
+                }
+        }
 
-        static_assert(
-                N != 3 || !std::is_same_v<float, T> || sizeof(Node) == 6 * sizeof(float) + 2 * sizeof(std::uint32_t));
-
-        template <typename ObjectIntersect>
-        class Intersect final
+        [[nodiscard]] bool pop()
         {
-                using Result = std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&>;
-
-                const std::vector<unsigned>& object_indices_;
-                const std::vector<Node>& nodes_;
-                const ObjectIntersect& object_intersect_;
-                const Ray<N, T>& ray_;
-
-                const Vector<N, T> dir_reciprocal_;
-                const Vector<N, bool> dir_negative_;
-
-                T distance_;
-                unsigned node_index_ = 0;
-                Result result_;
-                Stack stack_;
-
-                void push(const Node& node)
+                if (stack_.empty())
                 {
-                        if (dir_negative_[node.axis])
-                        {
-                                stack_.push(node_index_ + 1);
-                                node_index_ = node.second_child_offset;
-                        }
-                        else
-                        {
-                                stack_.push(node.second_child_offset);
-                                ++node_index_;
-                        }
+                        return false;
                 }
+                node_index_ = stack_.pop();
+                return true;
+        }
 
-                [[nodiscard]] bool pop()
+        [[nodiscard]] bool traverse()
+        {
+                const Node<N, T>& node = nodes_[node_index_];
+
+                if (!node.bounds.intersect(ray_.org(), dir_reciprocal_, dir_negative_, distance_))
                 {
-                        if (stack_.empty())
-                        {
-                                return false;
-                        }
-                        node_index_ = stack_.pop();
-                        return true;
-                }
-
-                [[nodiscard]] bool traverse()
-                {
-                        const Node& node = nodes_[node_index_];
-
-                        if (!node.bounds.intersect(ray_.org(), dir_reciprocal_, dir_negative_, distance_))
-                        {
-                                return pop();
-                        }
-
-                        if (node.object_count == 0)
-                        {
-                                push(node);
-                                return true;
-                        }
-
-                        auto info = object_intersect_(
-                                std::span(object_indices_.data() + node.object_offset, node.object_count),
-                                std::as_const(distance_));
-
-                        static_assert(std::is_same_v<decltype(info), decltype(result_)>);
-                        static_assert(std::is_same_v<T, std::remove_reference_t<decltype(std::get<0>(*info))>>);
-
-                        if (info)
-                        {
-                                ASSERT(std::get<0>(*info) < distance_);
-                                distance_ = std::get<0>(*info);
-                                result_ = std::move(*info);
-                        }
-
                         return pop();
                 }
 
-        public:
-                Intersect(
-                        const std::vector<unsigned>& object_indices,
-                        const std::vector<Node>& nodes,
-                        const Ray<N, T>& ray,
-                        const T& max_distance,
-                        const ObjectIntersect& object_intersect)
-                        : object_indices_(object_indices),
-                          nodes_(nodes),
-                          object_intersect_(object_intersect),
-                          ray_(ray),
-                          dir_reciprocal_(reciprocal(ray.dir())),
-                          dir_negative_(negative_bool(ray.dir())),
-                          distance_(max_distance)
+                if (node.object_count == 0)
                 {
+                        push(node);
+                        return true;
                 }
 
-                [[nodiscard]] Result compute()
+                auto info = object_intersect_(
+                        std::span(object_indices_.data() + node.object_offset, node.object_count),
+                        std::as_const(distance_));
+
+                static_assert(std::is_same_v<decltype(info), decltype(result_)>);
+                static_assert(std::is_same_v<T, std::remove_reference_t<decltype(std::get<0>(*info))>>);
+
+                if (info)
                 {
-                        while (traverse())
-                        {
-                        }
-                        return result_;
+                        ASSERT(std::get<0>(*info) < distance_);
+                        distance_ = std::get<0>(*info);
+                        result_ = std::move(*info);
                 }
-        };
+
+                return pop();
+        }
+
+public:
+        Intersect(
+                const std::vector<unsigned>& object_indices,
+                const std::vector<Node<N, T>>& nodes,
+                const Ray<N, T>& ray,
+                const T& max_distance,
+                const ObjectIntersect& object_intersect)
+                : object_indices_(object_indices),
+                  nodes_(nodes),
+                  object_intersect_(object_intersect),
+                  ray_(ray),
+                  dir_reciprocal_(reciprocal(ray.dir())),
+                  dir_negative_(negative_bool(ray.dir())),
+                  distance_(max_distance)
+        {
+        }
+
+        [[nodiscard]] Result compute()
+        {
+                while (traverse())
+                {
+                }
+                return result_;
+        }
+};
+}
+
+template <std::size_t N, typename T>
+class Bvh final
+{
+        static_assert(
+                N != 3 || !(std::is_same_v<float, T>)
+                || sizeof(bvh_implementation::Node<N, T>) == 6 * sizeof(float) + 2 * sizeof(std::uint32_t));
 
         std::vector<unsigned> object_indices_;
-        std::vector<Node> nodes_;
+        std::vector<bvh_implementation::Node<N, T>> nodes_;
 
 public:
         explicit Bvh(std::vector<BvhObject<N, T>>&& objects, progress::Ratio* progress);
@@ -205,7 +186,8 @@ public:
                 const T& max_distance,
                 const ObjectIntersect& object_intersect) const
         {
-                return Intersect<ObjectIntersect>(object_indices_, nodes_, ray, max_distance, object_intersect)
+                return bvh_implementation::Intersect<N, T, ObjectIntersect>(
+                               object_indices_, nodes_, ray, max_distance, object_intersect)
                         .compute();
         }
 };
