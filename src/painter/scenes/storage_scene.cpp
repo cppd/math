@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/ray_intersection.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
@@ -47,7 +48,7 @@ template <typename P>
 }
 
 template <std::size_t N, typename T>
-std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
+[[nodiscard]] std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
         const std::optional<Vector<N, T>>& clip_plane_equation)
 {
         if (!clip_plane_equation)
@@ -72,50 +73,86 @@ class Impl final : public Scene<N, T, Color>
 
         geometry::Bvh<N, T> bvh_;
 
+        [[nodiscard]] bool move_ray(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                Ray<N, T>* const ray,
+                T* const max_distance) const
+        {
+                if (geometric_normal)
+                {
+                        ray->set_org(geometry::offset_ray_org(*geometric_normal, *ray));
+                }
+
+                if constexpr (!USE_CLIP_POLYTOPE)
+                {
+                        return true;
+                }
+
+                T near = 0;
+                if (clip_polytope_->intersect(*ray, &near, max_distance))
+                {
+                        ray->move(near);
+                        *max_distance -= near;
+                        return true;
+                }
+                return false;
+        }
+
+        [[nodiscard]] SurfacePoint<N, T, Color> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+        {
+                const auto intersection = bvh_.intersect(
+                        ray, max_distance,
+                        [shapes = &shapes_, &ray](const auto& indices, const auto& max)
+                                -> std::optional<std::tuple<T, const Surface<N, T, Color>*>>
+                        {
+                                const std::tuple<T, const Surface<N, T, Color>*> info =
+                                        ray_intersection(*shapes, indices, ray, max);
+                                if (std::get<1>(info))
+                                {
+                                        return info;
+                                }
+                                return {};
+                        });
+
+                if (intersection)
+                {
+                        return {std::get<1>(*intersection), ray, std::get<0>(*intersection)};
+                }
+
+                return {};
+        }
+
+        [[nodiscard]] SurfacePoint<N, T, Color> intersect_impl(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                Ray<N, T> ray,
+                T max_distance) const
+        {
+                if (move_ray(geometric_normal, &ray, &max_distance))
+                {
+                        return intersect_impl(ray, max_distance);
+                }
+                return {};
+        }
+
+        //
+
         [[nodiscard]] SurfacePoint<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
+                return intersect_impl(geometric_normal, ray, Limits<T>::max());
+        }
 
-                Ray<N, T> ray_moved =
-                        geometric_normal ? Ray<N, T>(ray).set_org(geometry::offset_ray_org(*geometric_normal, ray))
-                                         : ray;
+        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                const Ray<N, T>& ray,
+                const T max_distance) const override
+        {
+                ASSERT(max_distance > 0);
 
-                T ray_max_distance = Limits<T>::max();
-
-                if constexpr (USE_CLIP_POLYTOPE)
-                {
-                        T near = 0;
-                        if (clip_polytope_->intersect(ray_moved, &near, &ray_max_distance))
-                        {
-                                ray_moved.move(near);
-                                ray_max_distance -= near;
-                        }
-                        else
-                        {
-                                return {};
-                        }
-                }
-
-                const auto intersection = bvh_.intersect(
-                        ray_moved, ray_max_distance,
-                        [shapes = &shapes_, &ray_moved](const auto& indices, const auto& max_distance)
-                                -> std::optional<std::tuple<T, const Surface<N, T, Color>*>>
-                        {
-                                const std::tuple<T, const Surface<N, T, Color>*> info =
-                                        ray_intersection(*shapes, indices, ray_moved, max_distance);
-                                if (std::get<1>(info))
-                                {
-                                        return info;
-                                }
-                                return std::nullopt;
-                        });
-                if (intersection)
-                {
-                        return {std::get<1>(*intersection), ray_moved, std::get<0>(*intersection)};
-                }
-                return {};
+                ++thread_ray_count_;
+                return intersect_impl(geometric_normal, ray, max_distance);
         }
 
         [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
