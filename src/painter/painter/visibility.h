@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/com/exponent.h>
+#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 
@@ -30,18 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-namespace visibility_implementation
-{
-template <std::size_t N, typename T, typename Color>
-bool surface_before_distance(
-        const Vector<N, T>& org,
-        const SurfacePoint<N, T, Color>& surface,
-        const std::optional<T>& distance)
-{
-        return surface && (!distance || (org - surface.point()).norm_squared() < square(*distance));
-}
-}
-
 template <std::size_t N, typename T, typename Color>
 bool light_source_occluded(
         const Scene<N, T, Color>& scene,
@@ -49,25 +37,24 @@ bool light_source_occluded(
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        namespace impl = visibility_implementation;
-
         ASSERT(dot(ray.dir(), normals.shading) > 0);
+
+        const T d = distance ? *distance : Limits<T>::infinity();
 
         if (dot(ray.dir(), normals.geometric) >= 0)
         {
-                const SurfacePoint surface = scene.intersect(normals.geometric, ray);
-                return impl::surface_before_distance(ray.org(), surface, distance);
+                return scene.intersect_any(normals.geometric, ray, d);
         }
 
-        const SurfacePoint surface_1 = scene.intersect(normals.geometric, ray);
-        if (!impl::surface_before_distance(ray.org(), surface_1, distance))
+        const SurfacePoint surface = scene.intersect(normals.geometric, ray, d);
+        if (!surface)
         {
                 return true;
         }
 
-        const SurfacePoint surface_2 =
-                scene.intersect(surface_1.geometric_normal(), Ray<N, T>(ray).set_org(surface_1.point()));
-        return impl::surface_before_distance(ray.org(), surface_2, distance);
+        return scene.intersect_any(
+                surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()),
+                d - (surface.point() - ray.org()).norm());
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
