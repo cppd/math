@@ -166,6 +166,17 @@ class Impl final : public Scene<N, T, Color>
                 return intersect_impl(geometric_normal, ray, Limits<T>::infinity());
         }
 
+        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                const Ray<N, T>& ray,
+                const T max_distance) const override
+        {
+                ASSERT(max_distance > 0);
+
+                ++thread_ray_count_;
+                return intersect_impl(geometric_normal, ray, max_distance);
+        }
+
         [[nodiscard]] bool intersect_any(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray,
