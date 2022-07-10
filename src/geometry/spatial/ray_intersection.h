@@ -26,8 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N, typename T, typename Objects, typename Indices>
-auto ray_intersection(const Objects& objects, const Indices& indices, const Ray<N, T>& ray, const T& max_distance)
-        -> std::tuple<T, const std::remove_reference_t<decltype(to_ref(objects.front()))>*>
+[[nodiscard]] auto ray_intersection(
+        const Objects& objects,
+        const Indices& indices,
+        const Ray<N, T>& ray,
+        const T& max_distance) -> std::tuple<T, const std::remove_reference_t<decltype(to_ref(objects.front()))>*>
 {
         using Object = std::remove_reference_t<decltype(to_ref(objects.front()))>;
 
@@ -46,5 +49,24 @@ auto ray_intersection(const Objects& objects, const Indices& indices, const Ray<
         }
 
         return {min_distance, closest_object};
+}
+
+template <std::size_t N, typename T, typename Objects, typename Indices>
+[[nodiscard]] bool ray_intersection_any(
+        const Objects& objects,
+        const Indices& indices,
+        const Ray<N, T>& ray,
+        const T& max_distance)
+{
+        for (const auto index : indices)
+        {
+                const auto distance = to_ref(objects[index]).intersect(ray);
+                static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(*distance)>>);
+                if (distance && *distance < max_distance)
+                {
+                        return true;
+                }
+        }
+        return false;
 }
 }

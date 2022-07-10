@@ -111,11 +111,38 @@ std::tuple<T, const Object*> ray_intersection(
 
         return {min_distance, closest_object};
 }
+
+template <typename Shape, std::size_t N, typename T>
+bool ray_intersection_any(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
+{
+        const auto distance = shape.intersect_bounds(ray, max_distance);
+        if (distance)
+        {
+                return shape.intersect_any(ray, max_distance, *distance);
+        }
+        return false;
+}
+
+template <typename Shapes, typename Indices, std::size_t N, typename T>
+bool ray_intersection_any(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
+{
+        for (const auto index : indices)
+        {
+                if (ray_intersection_any(to_ref(shapes[index]), ray, max_distance))
+                {
+                        return true;
+                }
+        }
+        return false;
+}
 }
 
 template <std::size_t N, typename T, typename Shapes, typename Indices>
-auto ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
-        -> decltype(to_ref(shapes.front()).intersect(ray, T(), T()))
+[[nodiscard]] auto ray_intersection(
+        const Shapes& shapes,
+        const Indices& indices,
+        const Ray<N, T>& ray,
+        const T max_distance) -> decltype(to_ref(shapes.front()).intersect(ray, T(), T()))
 {
         namespace impl = ray_intersection_implementation;
 
@@ -132,5 +159,22 @@ auto ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<N,
         }
 
         return impl::ray_intersection<Object>(shapes, indices, ray, max_distance);
+}
+
+template <std::size_t N, typename T, typename Shapes, typename Indices>
+[[nodiscard]] bool ray_intersection_any(
+        const Shapes& shapes,
+        const Indices& indices,
+        const Ray<N, T>& ray,
+        const T max_distance)
+{
+        namespace impl = ray_intersection_implementation;
+
+        if (indices.size() == 1)
+        {
+                return impl::ray_intersection_any(to_ref(shapes[indices.front()]), ray, max_distance);
+        }
+
+        return impl::ray_intersection_any(shapes, indices, ray, max_distance);
 }
 }
