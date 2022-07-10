@@ -59,6 +59,8 @@ class Intersect final
 {
         using Result = std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&>;
 
+        static constexpr bool TERMINATE_ON_FIRST_HIT = std::is_same_v<Result, bool>;
+
         const std::vector<unsigned>& object_indices_;
         const std::vector<Node<N, T>>& nodes_;
         const ObjectIntersect& object_intersect_;
@@ -69,7 +71,7 @@ class Intersect final
 
         T distance_;
         unsigned node_index_ = 0;
-        Result result_;
+        Result result_{};
         BvhStack stack_;
 
         void push(const Node<N, T>& node)
@@ -116,13 +118,24 @@ class Intersect final
                         std::as_const(distance_));
 
                 static_assert(std::is_same_v<decltype(info), decltype(result_)>);
-                static_assert(std::is_same_v<T, std::remove_reference_t<decltype(std::get<0>(*info))>>);
 
-                if (info)
+                if constexpr (TERMINATE_ON_FIRST_HIT)
                 {
-                        ASSERT(std::get<0>(*info) < distance_);
-                        distance_ = std::get<0>(*info);
-                        result_ = std::move(*info);
+                        if (info)
+                        {
+                                result_ = true;
+                                return false;
+                        }
+                }
+                else
+                {
+                        static_assert(std::is_same_v<T, std::remove_reference_t<decltype(std::get<0>(*info))>>);
+                        if (info)
+                        {
+                                ASSERT(std::get<0>(*info) < distance_);
+                                distance_ = std::get<0>(*info);
+                                result_ = std::move(*info);
+                        }
                 }
 
                 return pop();
@@ -180,6 +193,7 @@ public:
 
         // The signature of the object_intersect function
         // std::optional<std::tuple<T, ...> f(const auto& indices, const auto& max_distance);
+        // bool f(const auto& indices, const auto& max_distance);
         template <typename ObjectIntersect>
         [[nodiscard]] std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
                 const Ray<N, T>& ray,
