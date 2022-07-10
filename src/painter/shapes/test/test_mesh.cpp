@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
+#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
@@ -44,21 +45,53 @@ constexpr std::size_t GROUP_SIZE = 0x1000;
 template <std::size_t N, typename T, typename Color>
 bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 {
-        const SurfacePoint surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
-        if (!surface_1)
-        {
-                return false;
-        }
-        ray.set_org(surface_1.point());
+        std::optional<Vector<N, T>> geometric_normal;
 
-        const SurfacePoint surface_2 = scene.intersect(surface_1.geometric_normal(), ray);
-        if (!surface_2)
         {
-                return false;
-        }
-        ray.set_org(surface_2.point());
+                const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+                const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
 
-        return !scene.intersect(surface_2.geometric_normal(), ray);
+                if (!(static_cast<bool>(surface) == intersection))
+                {
+                        error("Intersect 1 is not equal to intersect any");
+                }
+
+                if (!surface)
+                {
+                        return false;
+                }
+
+                ray.set_org(surface.point());
+                geometric_normal = surface.geometric_normal();
+        }
+
+        {
+                const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+                const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
+
+                if (!(static_cast<bool>(surface) == intersection))
+                {
+                        error("Intersect 2 is not equal to intersect any");
+                }
+
+                if (!surface)
+                {
+                        return false;
+                }
+
+                ray.set_org(surface.point());
+                geometric_normal = surface.geometric_normal();
+        }
+
+        const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+        const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
+
+        if (!(static_cast<bool>(surface) == intersection))
+        {
+                error("Intersect 3 is not equal to intersect any");
+        }
+
+        return !surface;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -91,9 +124,10 @@ void test_intersections(
         }
 
         std::string s;
-        s += "miss count = " + to_string_digit_groups(miss_count);
+        s += '<' + space_name(N) + ", " + type_name<T>() + '>';
+        s += " miss count = " + to_string_digit_groups(miss_count);
         s += ", ray count = " + to_string_digit_groups(rays.size());
-        if (!(miss_count <= std::lround(rays.size() * 4e-5)))
+        if (!(miss_count <= std::lround(rays.size() * 2e-5)))
         {
                 error("Too many intersection errors, " + s);
         }
@@ -136,9 +170,10 @@ void test_surface_ratio(
                                  / std::max(std::abs(intersection_ratio), std::abs(surface_ratio));
 
         std::string s;
-        s += "intersection ratio = " + to_string(intersection_ratio);
+        s += '<' + space_name(N) + ", " + type_name<T>() + '>';
+        s += " intersection ratio = " + to_string(intersection_ratio);
         s += ", area ratio = " + to_string(surface_ratio);
-        if (!(relative_error < 0.05))
+        if (!(relative_error < T{0.05}))
         {
                 error("Intersection error, " + s + ", relative error " + to_string(relative_error));
         }
