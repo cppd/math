@@ -191,7 +191,7 @@ struct Scene
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray) const = 0;
 
-        [[nodiscard]] virtual SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] virtual bool intersect_any(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray,
                 T max_distance) const = 0;

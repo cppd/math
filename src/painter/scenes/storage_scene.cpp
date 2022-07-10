@@ -122,6 +122,16 @@ class Impl final : public Scene<N, T, Color>
                 return {};
         }
 
+        [[nodiscard]] bool intersect_any_impl(const Ray<N, T>& ray, const T max_distance) const
+        {
+                return bvh_.intersect(
+                        ray, max_distance,
+                        [shapes = &shapes_, &ray](const auto& indices, const auto& max) -> bool
+                        {
+                                return ray_intersection_any(*shapes, indices, ray, max);
+                        });
+        }
+
         [[nodiscard]] SurfacePoint<N, T, Color> intersect_impl(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 Ray<N, T> ray,
@@ -134,6 +144,18 @@ class Impl final : public Scene<N, T, Color>
                 return {};
         }
 
+        [[nodiscard]] bool intersect_any_impl(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                Ray<N, T> ray,
+                T max_distance) const
+        {
+                if (move_ray(geometric_normal, &ray, &max_distance))
+                {
+                        return intersect_any_impl(ray, max_distance);
+                }
+                return false;
+        }
+
         //
 
         [[nodiscard]] SurfacePoint<N, T, Color> intersect(
@@ -141,10 +163,10 @@ class Impl final : public Scene<N, T, Color>
                 const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
-                return intersect_impl(geometric_normal, ray, Limits<T>::max());
+                return intersect_impl(geometric_normal, ray, Limits<T>::infinity());
         }
 
-        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] bool intersect_any(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray,
                 const T max_distance) const override
@@ -152,7 +174,7 @@ class Impl final : public Scene<N, T, Color>
                 ASSERT(max_distance > 0);
 
                 ++thread_ray_count_;
-                return intersect_impl(geometric_normal, ray, max_distance);
+                return intersect_any_impl(geometric_normal, ray, max_distance);
         }
 
         [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
