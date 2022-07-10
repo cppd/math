@@ -133,6 +133,12 @@ class Parallelotope final : public Shape<N, T, Color>
                 return {bounding_distance, make_arena_ptr<SurfaceImpl>(this)};
         }
 
+        bool intersect_any(const Ray<N, T>& /*ray*/, const T /*max_distance*/, const T /*bounding_distance*/)
+                const override
+        {
+                return true;
+        }
+
         geometry::BoundingBox<N, T> bounding_box() const override
         {
                 return geometry::BoundingBox<N, T>(parallelotope_.vertices());

@@ -202,11 +202,11 @@ class ShapeImpl final : public Shape<N, T, Color>
         {
                 const auto intersection = bvh_.intersect(
                         ray, max_distance,
-                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& local_max_distance)
+                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& max)
                                 -> std::optional<std::tuple<T, const MeshFacet<N, T>*>>
                         {
                                 const std::tuple<T, const MeshFacet<N, T>*> info =
-                                        geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                                        geometry::ray_intersection(*facets, indices, ray, max);
                                 if (std::get<1>(info))
                                 {
                                         return info;
@@ -219,6 +219,17 @@ class ShapeImpl final : public Shape<N, T, Color>
                 }
                 const auto& [distance, facet] = *intersection;
                 return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_data_, facet)};
+        }
+
+        [[nodiscard]] bool intersect_any(const Ray<N, T>& ray, const T max_distance, const T /*bounding_distance*/)
+                const override
+        {
+                return bvh_.intersect(
+                        ray, max_distance,
+                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& max) -> bool
+                        {
+                                return geometry::ray_intersection_any(*facets, indices, ray, max);
+                        });
         }
 
         [[nodiscard]] geometry::BoundingBox<N, T> bounding_box() const override
