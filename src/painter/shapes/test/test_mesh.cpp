@@ -197,7 +197,7 @@ void test(const Parameters& parameters, progress::Ratio* const progress)
 
         PCG engine;
 
-        test::SphericalMesh<N, T, Color> mesh =
+        const test::SphericalMesh<N, T, Color> mesh =
                 test::create_spherical_mesh_scene<N, T, Color>(parameters.point_count, engine, progress);
 
         test_intersections(
