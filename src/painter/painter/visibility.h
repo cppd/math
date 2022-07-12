@@ -49,12 +49,15 @@ bool light_source_occluded(
         const SurfacePoint surface = scene.intersect(normals.geometric, ray, d);
         if (!surface)
         {
-                return true;
+                return false;
         }
 
-        return scene.intersect_any(
-                surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()),
-                d - (surface.point() - ray.org()).norm());
+        const T d_2 = d - (surface.point() - ray.org()).norm();
+        if (d_2 > 0)
+        {
+                return scene.intersect_any(surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()), d_2);
+        }
+        return false;
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -69,10 +72,12 @@ std::tuple<SurfacePoint<N, T, Color>, Normals<N, T>> scene_intersect(
                 return {};
         }
 
-        Normals<N, T> normals = compute_normals<FLAT_SHADING>(surface, ray.dir());
-        if (FLAT_SHADING || dot(ray.dir(), normals.shading) <= 0)
         {
-                return {surface, normals};
+                const Normals<N, T> normals = compute_normals<FLAT_SHADING>(surface, ray.dir());
+                if (FLAT_SHADING || dot(ray.dir(), normals.shading) <= 0)
+                {
+                        return {surface, normals};
+                }
         }
 
         for (int i = 0; i < 2; ++i)

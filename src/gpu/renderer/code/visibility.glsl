@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 const float RAY_TRACING_T_MAX = 1e38;
 
-bool ray_tracing_any_intersection(
+bool ray_tracing_intersect_any(
         const vec3 org,
         const vec3 dir,
         const accelerationStructureEXT acceleration_structure,
@@ -43,7 +43,7 @@ bool ray_tracing_any_intersection(
         return rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
 }
 
-bool ray_tracing_intersection(
+bool ray_tracing_intersect(
         const vec3 org,
         const vec3 dir,
         const accelerationStructureEXT acceleration_structure,
@@ -75,19 +75,19 @@ bool light_source_occluded_impl(
 {
         if (dot(dir, geometric_normal) >= 0)
         {
-                return ray_tracing_any_intersection(org, dir, acceleration_structure, /*t_min*/ 0, t_max);
+                return ray_tracing_intersect_any(org, dir, acceleration_structure, /*t_min*/ 0, t_max);
         }
 
         float t;
-        if (!ray_tracing_intersection(org, dir, acceleration_structure, /*t_min*/ 0, t_max, t))
+        if (!ray_tracing_intersect(org, dir, acceleration_structure, /*t_min*/ 0, t_max, t))
         {
-                return true;
+                return false;
         }
 
         t += t * FLOAT_EPSILON;
         if (t <= t_max)
         {
-                return ray_tracing_any_intersection(org, dir, acceleration_structure, t, t_max);
+                return ray_tracing_intersect_any(org, dir, acceleration_structure, t, t_max);
         }
         return false;
 }
