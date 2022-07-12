@@ -96,7 +96,7 @@ void LogEvents::log_event(const std::string_view& text, const LogType type) noex
 {
         try
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
 
                 std::string log_text = write_log_event(text, type);
 
@@ -126,7 +126,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
         {
                 const LogType log_type = message_type_to_log_type(type);
 
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
 
                 std::string log_text = write_log_event(text, log_type);
 
@@ -161,7 +161,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
 
 void LogEvents::insert(const std::function<void(const LogEvent&)>* const observer)
 {
-        std::lock_guard lg(lock_);
+        const std::lock_guard lg(lock_);
         if (std::find(log_observers_.cbegin(), log_observers_.cend(), observer) == log_observers_.cend())
         {
                 log_observers_.push_back(observer);
@@ -170,14 +170,14 @@ void LogEvents::insert(const std::function<void(const LogEvent&)>* const observe
 
 void LogEvents::erase(const std::function<void(const LogEvent&)>* const observer)
 {
-        std::lock_guard lg(lock_);
+        const std::lock_guard lg(lock_);
         const auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
         log_observers_.erase(iter, log_observers_.cend());
 }
 
 void LogEvents::insert(const std::function<void(const MessageEvent&)>* const observer)
 {
-        std::lock_guard lg(lock_);
+        const std::lock_guard lg(lock_);
         if (std::find(msg_observers_.cbegin(), msg_observers_.cend(), observer) == msg_observers_.cend())
         {
                 msg_observers_.push_back(observer);
@@ -186,7 +186,7 @@ void LogEvents::insert(const std::function<void(const MessageEvent&)>* const obs
 
 void LogEvents::erase(const std::function<void(const MessageEvent&)>* const observer)
 {
-        std::lock_guard lg(lock_);
+        const std::lock_guard lg(lock_);
         const auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
         msg_observers_.erase(iter, msg_observers_.cend());
 }

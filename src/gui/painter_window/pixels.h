@@ -186,7 +186,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         for (std::size_t i = 0; i < pixels_original_.size(); ++i)
                         {
                                 {
-                                        std::lock_guard lg(pixels_lock_[i]);
+                                        const std::lock_guard lg(pixels_lock_[i]);
                                         const Vector<3, float>& pixel = pixels_original_[i];
                                         if (pixel[0] != MIN)
                                         {
@@ -220,7 +220,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 const std::size_t index = global_index_.compute(flip_vertically(pixel));
                 std::byte* const ptr = pixels_r8g8b8a8_.data() + PIXEL_SIZE * index;
 
-                std::lock_guard lg(pixels_lock_[index]);
+                const std::lock_guard lg(pixels_lock_[index]);
                 pixels_original_[index] = rgb;
                 write_r8g8b8a8(ptr, rgb * pixels_coef_);
         }

@@ -48,7 +48,7 @@ class ThreadTasks final
                 {
                         return;
                 }
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 --task_count_;
         }
 
@@ -56,7 +56,7 @@ class ThreadTasks final
         {
                 while (true)
                 {
-                        std::lock_guard lg(lock_);
+                        const std::lock_guard lg(lock_);
                         if (stop_)
                         {
                                 return {};
@@ -84,13 +84,13 @@ public:
         template <typename... Ts>
         void emplace(Ts&&... vs)
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 tasks_.emplace(std::forward<Ts>(vs)...);
         }
 
         void stop()
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 stop_ = true;
         }
 };

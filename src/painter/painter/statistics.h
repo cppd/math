@@ -64,7 +64,7 @@ public:
 
         void init()
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 init_impl();
         }
 
@@ -78,13 +78,13 @@ public:
         void pass_done()
         {
                 const Clock::time_point now = Clock::now();
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 previous_pass_duration_ = duration(pass_start_time_, now);
         }
 
         void next_pass()
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 ++pass_number_;
                 pass_start_time_ = Clock::now();
                 pass_start_pixel_count_ = pixel_counter_;
@@ -94,7 +94,7 @@ public:
         {
                 Statistics s;
 
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
 
                 s.pass_number = pass_number_;
                 s.pass_progress = static_cast<double>(pixel_counter_ - pass_start_pixel_count_) / screen_pixel_count_;

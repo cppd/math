@@ -87,7 +87,7 @@ class Pixels final
                 const auto color_alpha = pixel.color_alpha(background_contribution_);
                 if (color_alpha)
                 {
-                        Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                        const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
                         Vector<4, float> rgba;
                         rgba[0] = rgb[0];
                         rgba[1] = rgb[1];
@@ -107,7 +107,7 @@ class Pixels final
                 const auto color = pixel.color(background_, background_contribution_);
                 if (color)
                 {
-                        Vector<3, float> rgb = color->rgb32();
+                        const Vector<3, float> rgb = color->rgb32();
                         if (!is_finite(rgb))
                         {
                                 LOG("Not finite RGB color " + to_string(rgb));
@@ -143,7 +143,7 @@ class Pixels final
                 const long long index = global_index_.compute(region_pixel);
                 Pixel<Color>& p = pixels_[index];
 
-                std::lock_guard lg(pixel_locks_[index]);
+                const std::lock_guard lg(pixel_locks_[index]);
                 if (color_samples)
                 {
                         p.merge(*color_samples);
@@ -178,14 +178,14 @@ public:
                 return pixels_implementation::to_type<int>(
                         [&]
                         {
-                                std::lock_guard lg(paintbrush_lock_);
+                                const std::lock_guard lg(paintbrush_lock_);
                                 return paintbrush_.next_pixel();
                         }());
         }
 
         void next_pass()
         {
-                std::lock_guard lg(paintbrush_lock_);
+                const std::lock_guard lg(paintbrush_lock_);
                 paintbrush_.reset();
         }
 
@@ -235,7 +235,7 @@ public:
 
                         {
                                 const Pixel<Color>& pixel = pixels_[i];
-                                std::lock_guard lg(pixel_locks_[i]);
+                                const std::lock_guard lg(pixel_locks_[i]);
                                 rgba = rgba_color(pixel);
                                 rgb = rgb_color(pixel);
                         }

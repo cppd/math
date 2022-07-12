@@ -25,7 +25,7 @@ std::tm time_to_local_time(const std::chrono::system_clock::time_point& time)
 {
         const std::time_t t = std::chrono::system_clock::to_time_t(time);
         static std::mutex mutex;
-        std::lock_guard lg(mutex);
+        const std::lock_guard lg(mutex);
         return *std::localtime(&t);
 }
 }

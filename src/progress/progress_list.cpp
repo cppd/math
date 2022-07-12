@@ -30,7 +30,7 @@ void RatioList::add_ratio(RatioControl* const ratio)
 {
         ASSERT(std::this_thread::get_id() != thread_id_);
 
-        std::lock_guard lg(mutex_);
+        const std::lock_guard lg(mutex_);
 
         if (terminate_quietly_)
         {
@@ -52,7 +52,7 @@ void RatioList::delete_ratio(const RatioControl* const ratio) noexcept
         {
                 ASSERT(std::this_thread::get_id() != thread_id_);
 
-                std::lock_guard lg(mutex_);
+                const std::lock_guard lg(mutex_);
 
                 auto iter = ratios_.cbegin();
                 while (iter != ratios_.cend())
@@ -76,7 +76,7 @@ void RatioList::terminate_all_quietly()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(mutex_);
+        const std::lock_guard lg(mutex_);
 
         terminate_quietly_ = true;
         for (RatioControl* const ratio : ratios_)
@@ -90,7 +90,7 @@ void RatioList::terminate_all_with_message()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(mutex_);
+        const std::lock_guard lg(mutex_);
 
         terminate_with_message_ = true;
         for (RatioControl* const ratio : ratios_)
@@ -104,7 +104,7 @@ void RatioList::enable()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(mutex_);
+        const std::lock_guard lg(mutex_);
 
         ASSERT(ratios_.empty());
 
@@ -117,7 +117,7 @@ std::vector<RatioInfo> RatioList::ratios() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(mutex_);
+        const std::lock_guard lg(mutex_);
 
         std::vector<RatioInfo> res;
         res.reserve(ratios_.size());

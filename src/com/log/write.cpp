@@ -132,17 +132,18 @@ public:
                 oss_line_beginning_ << std::right;
                 oss_line_beginning_ << std::setprecision(6);
 
-                std::string directory_name = std::string(settings::APPLICATION_NAME) + " Log";
-                std::filesystem::path directory = std::filesystem::temp_directory_path() / directory_name;
+                const std::string directory_name = std::string(settings::APPLICATION_NAME) + " Log";
+                const std::filesystem::path directory = std::filesystem::temp_directory_path() / directory_name;
+
                 std::filesystem::create_directory(directory);
                 std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
 
-                std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
+                const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
                 std::ostringstream name;
                 name << std::fixed;
                 name << duration.count();
 
-                std::filesystem::path file = directory / name.str();
+                const std::filesystem::path file = directory / name.str();
                 file_ = std::ofstream(file);
                 std::filesystem::permissions(
                         file, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
@@ -151,13 +152,13 @@ public:
 
         std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 return write(text, description);
         }
 
         [[noreturn]] void write_log_fatal_error_and_exit(const char* const text) noexcept
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 write(text, "fatal error");
                 std::abort();
         }

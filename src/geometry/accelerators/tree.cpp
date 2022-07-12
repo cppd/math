@@ -105,7 +105,7 @@ std::array<ChildBox<Box>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_chil
         std::array<Parallelotope, N> child_parallelotopes = parallelotope.binary_division();
         std::array<ChildBox<Box>, N> res;
 
-        std::lock_guard lg(*boxes_lock);
+        const std::lock_guard lg(*boxes_lock);
         for (int i = 0, index = boxes->size(); i < N; ++i, ++index)
         {
                 res[i].box = &boxes->emplace_back(std::move(child_parallelotopes[i]));

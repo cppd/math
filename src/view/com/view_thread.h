@@ -42,7 +42,7 @@ public:
         template <typename A>
         void push(A&& e)
         {
-                std::lock_guard lg(lock_);
+                const std::lock_guard lg(lock_);
                 queue_.push(std::forward<A>(e));
         }
 
@@ -53,7 +53,7 @@ public:
 
                 std::vector<T> result;
                 {
-                        std::lock_guard lg(lock_);
+                        const std::lock_guard lg(lock_);
                         while (!queue_.empty())
                         {
                                 result.push_back(std::move(queue_.front()));
@@ -97,7 +97,7 @@ public:
         void notify()
         {
                 {
-                        std::lock_guard<std::mutex> lock(mutex_);
+                        const std::lock_guard<std::mutex> lock(mutex_);
                         received_ = true;
                 }
                 cv_.notify_all();

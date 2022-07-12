@@ -42,7 +42,7 @@ class FFTPlanThreads final
 public:
         FFTPlanThreads()
         {
-                std::lock_guard lg(mutex_);
+                const std::lock_guard lg(mutex_);
                 if (++counter_ == 1)
                 {
                         fftwf_init_threads();
@@ -51,7 +51,7 @@ public:
 
         ~FFTPlanThreads()
         {
-                std::lock_guard lg(mutex_);
+                const std::lock_guard lg(mutex_);
                 if (--counter_ == 0)
                 {
                         fftwf_cleanup_threads();

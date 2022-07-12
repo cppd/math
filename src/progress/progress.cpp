@@ -147,7 +147,7 @@ public:
 
         void set_text(std::string&& text)
         {
-                std::lock_guard lg(text_mutex_);
+                const std::lock_guard lg(text_mutex_);
                 text_ = std::move(text);
         }
 
@@ -172,7 +172,7 @@ public:
 
         std::string text() const
         {
-                std::lock_guard lg(text_mutex_);
+                const std::lock_guard lg(text_mutex_);
 
                 if (permanent_text_.empty())
                 {

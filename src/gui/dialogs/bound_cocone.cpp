@@ -41,13 +41,13 @@ class DialogParameters final
 public:
         BoundCoconeParameters read() const
         {
-                std::lock_guard lg(mutex_);
+                const std::lock_guard lg(mutex_);
                 return parameters_;
         }
 
         void write(const BoundCoconeParameters& parameters)
         {
-                std::lock_guard lg(mutex_);
+                const std::lock_guard lg(mutex_);
                 parameters_ = parameters;
         }
 };

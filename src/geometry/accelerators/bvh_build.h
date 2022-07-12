@@ -115,7 +115,7 @@ class BvhBuild final
 
         unsigned create_indices(const unsigned count)
         {
-                std::lock_guard lg(object_indices_lock_);
+                const std::lock_guard lg(object_indices_lock_);
                 const unsigned offset = object_indices_size_;
                 object_indices_size_ += count;
                 return offset;
@@ -130,7 +130,7 @@ class BvhBuild final
         std::array<ChildNode, 2> create_child_nodes()
         {
                 std::array<ChildNode, 2> res;
-                std::lock_guard lg(nodes_lock_);
+                const std::lock_guard lg(nodes_lock_);
                 const unsigned offset = nodes_.size();
                 res[0] = {.node = &nodes_.emplace_back(), .index = offset};
                 res[1] = {.node = &nodes_.emplace_back(), .index = offset + 1};
