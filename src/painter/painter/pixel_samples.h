@@ -26,116 +26,198 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <typename Color>
-auto pixel_samples_color_contribution(const Color& color)
+[[nodiscard]] auto pixel_samples_color_contribution(const Color& color)
 {
         return color.luminance();
 }
 
 template <typename Color>
-struct ColorSamples final
+class ColorSamples final
 {
-        Color sum;
-        Color min;
-        Color max;
+        Color sum_{0};
+        Color min_{0};
+        Color max_{0};
 
-        typename Color::DataType sum_weight;
-        typename Color::DataType min_contribution;
-        typename Color::DataType min_weight;
-        typename Color::DataType max_contribution;
-        typename Color::DataType max_weight;
+        typename Color::DataType sum_weight_{0};
+        typename Color::DataType min_contribution_{Limits<decltype(min_contribution_)>::max()};
+        typename Color::DataType min_weight_{0};
+        typename Color::DataType max_contribution_{Limits<decltype(max_contribution_)>::lowest()};
+        typename Color::DataType max_weight_{0};
 
+public:
         ColorSamples()
         {
         }
 
-        void init()
+        template <typename T>
+                requires(std::is_same_v<T, typename Color::DataType>)
+        ColorSamples(
+                const Color& sum,
+                const Color& min,
+                const Color& max,
+                const T sum_weight,
+                const T min_contribution,
+                const T min_weight,
+                const T max_contribution,
+                const T max_weight)
+                : sum_(sum),
+                  min_(min),
+                  max_(max),
+                  sum_weight_(sum_weight),
+                  min_contribution_(min_contribution),
+                  min_weight_(min_weight),
+                  max_contribution_(max_contribution),
+                  max_weight_(max_weight)
         {
-                sum = Color(0);
-                min = Color(0);
-                max = Color(0);
+        }
 
-                sum_weight = 0;
-                min_contribution = Limits<decltype(min_contribution)>::max();
-                min_weight = 0;
-                max_contribution = Limits<decltype(max_contribution)>::lowest();
-                max_weight = 0;
+        [[nodiscard]] bool empty() const
+        {
+                return min_contribution_ > max_contribution_;
+        }
+
+        [[nodiscard]] const Color& sum() const
+        {
+                return sum_;
+        }
+
+        [[nodiscard]] const Color& min() const
+        {
+                return min_;
+        }
+
+        [[nodiscard]] const Color& max() const
+        {
+                return max_;
+        }
+
+        [[nodiscard]] typename Color::DataType sum_weight() const
+        {
+                return sum_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_contribution() const
+        {
+                return min_contribution_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_weight() const
+        {
+                return min_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_contribution() const
+        {
+                return max_contribution_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_weight() const
+        {
+                return max_weight_;
         }
 
         void merge(const ColorSamples<Color>& samples)
         {
-                sum += samples.sum;
-                sum_weight += samples.sum_weight;
+                ASSERT(!samples.empty());
 
-                if (samples.min_contribution < min_contribution)
+                sum_ += samples.sum_;
+                sum_weight_ += samples.sum_weight_;
+
+                if (samples.min_contribution_ < min_contribution_)
                 {
-                        sum += min;
-                        sum_weight += min_weight;
-                        min = samples.min;
-                        min_contribution = samples.min_contribution;
-                        min_weight = samples.min_weight;
+                        sum_ += min_;
+                        sum_weight_ += min_weight_;
+                        min_ = samples.min_;
+                        min_contribution_ = samples.min_contribution_;
+                        min_weight_ = samples.min_weight_;
                 }
                 else
                 {
-                        sum += samples.min;
-                        sum_weight += samples.min_weight;
+                        sum_ += samples.min_;
+                        sum_weight_ += samples.min_weight_;
                 }
 
-                if (samples.max_contribution > max_contribution)
+                if (samples.max_contribution_ > max_contribution_)
                 {
-                        sum += max;
-                        sum_weight += max_weight;
-                        max = samples.max;
-                        max_contribution = samples.max_contribution;
-                        max_weight = samples.max_weight;
+                        sum_ += max_;
+                        sum_weight_ += max_weight_;
+                        max_ = samples.max_;
+                        max_contribution_ = samples.max_contribution_;
+                        max_weight_ = samples.max_weight_;
                 }
                 else
                 {
-                        sum += samples.max;
-                        sum_weight += samples.max_weight;
+                        sum_ += samples.max_;
+                        sum_weight_ += samples.max_weight_;
                 }
         }
 };
 
 template <typename Color>
-struct BackgroundSamples final
+class BackgroundSamples final
 {
-        typename Color::DataType sum_weight;
-        typename Color::DataType min_weight;
-        typename Color::DataType max_weight;
+        typename Color::DataType sum_weight_{0};
+        typename Color::DataType min_weight_{Limits<decltype(min_weight_)>::max()};
+        typename Color::DataType max_weight_{Limits<decltype(max_weight_)>::lowest()};
 
+public:
         BackgroundSamples()
         {
         }
 
-        void init()
+        template <typename T>
+                requires(std::is_same_v<T, typename Color::DataType>)
+        BackgroundSamples(const T sum_weight, const T min_weight, const T max_weight)
+                : sum_weight_(sum_weight),
+                  min_weight_(min_weight),
+                  max_weight_(max_weight)
         {
-                sum_weight = 0;
-                min_weight = Limits<decltype(min_weight)>::max();
-                max_weight = Limits<decltype(max_weight)>::lowest();
+        }
+
+        [[nodiscard]] bool empty() const
+        {
+                return min_weight_ > max_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType sum_weight() const
+        {
+                return sum_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_weight() const
+        {
+                return min_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_weight() const
+        {
+                return max_weight_;
         }
 
         void merge(const BackgroundSamples<Color>& samples)
         {
-                sum_weight += samples.sum_weight;
+                ASSERT(!samples.empty());
 
-                if (samples.min_weight < min_weight)
+                sum_weight_ += samples.sum_weight_;
+
+                if (samples.min_weight_ < min_weight_)
                 {
-                        sum_weight += min_weight;
-                        min_weight = samples.min_weight;
+                        sum_weight_ += min_weight_;
+                        min_weight_ = samples.min_weight_;
                 }
                 else
                 {
-                        sum_weight += samples.min_weight;
+                        sum_weight_ += samples.min_weight_;
                 }
 
-                if (samples.max_weight > max_weight)
+                if (samples.max_weight_ > max_weight_)
                 {
-                        sum_weight += max_weight;
-                        max_weight = samples.max_weight;
+                        sum_weight_ += max_weight_;
+                        max_weight_ = samples.max_weight_;
                 }
                 else
                 {
-                        sum_weight += samples.max_weight;
+                        sum_weight_ += samples.max_weight_;
                 }
         }
 };
@@ -149,46 +231,49 @@ struct PixelSamples final
 };
 
 template <typename Color>
-PixelSamples<Color> merge_color_and_background(
+[[nodiscard]] PixelSamples<Color> merge_color_and_background(
         const ColorSamples<Color>& color,
         const BackgroundSamples<Color>& background,
-        const typename Color::DataType& background_contribution)
+        const typename Color::DataType background_contribution)
 {
         using T = typename Color::DataType;
 
+        ASSERT(!color.empty());
+        ASSERT(!background.empty());
+
         PixelSamples<Color> res{
-                .color = color.sum,
-                .color_weight = color.sum_weight,
-                .background_weight = background.sum_weight};
+                .color = color.sum(),
+                .color_weight = color.sum_weight(),
+                .background_weight = background.sum_weight()};
 
-        const T background_min_contribution = background.min_weight * background_contribution;
-        const T background_max_contribution = background.max_weight * background_contribution;
+        const T background_min_contribution = background.min_weight() * background_contribution;
+        const T background_max_contribution = background.max_weight() * background_contribution;
 
-        if (background_min_contribution < color.min_contribution)
+        if (background_min_contribution < color.min_contribution())
         {
-                res.color += color.min;
-                res.color_weight += color.min_weight;
+                res.color += color.min();
+                res.color_weight += color.min_weight();
         }
         else
         {
-                res.background_weight += background.min_weight;
+                res.background_weight += background.min_weight();
         }
 
-        if (background_max_contribution > color.max_contribution)
+        if (background_max_contribution > color.max_contribution())
         {
-                res.color += color.max;
-                res.color_weight += color.max_weight;
+                res.color += color.max();
+                res.color_weight += color.max_weight();
         }
         else
         {
-                res.background_weight += background.max_weight;
+                res.background_weight += background.max_weight();
         }
 
         return res;
 }
 
 template <typename Color, typename Weight>
-std::optional<ColorSamples<Color>> make_color_samples(
+[[nodiscard]] std::optional<ColorSamples<Color>> make_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<Weight>& color_weights)
 {
@@ -248,18 +333,8 @@ std::optional<ColorSamples<Color>> make_color_samples(
         ASSERT(min_i < samples.size());
         ASSERT(max_i < samples.size());
 
-        std::optional<ColorSamples<Color>> res(std::in_place);
-
-        res->sum = Color(0);
-        res->sum_weight = 0;
-
-        res->min = samples[min_i];
-        res->min_contribution = contributions[min_i];
-        res->min_weight = weights[min_i];
-
-        res->max = samples[max_i];
-        res->max_contribution = contributions[max_i];
-        res->max_weight = weights[max_i];
+        Color sum(0);
+        T sum_weight = 0;
 
         if (samples.size() > 2)
         {
@@ -267,17 +342,25 @@ std::optional<ColorSamples<Color>> make_color_samples(
                 {
                         if (i != min_i && i != max_i)
                         {
-                                res->sum += samples[i];
-                                res->sum_weight += weights[i];
+                                sum += samples[i];
+                                sum_weight += weights[i];
                         }
                 }
         }
 
-        return res;
+        return ColorSamples<Color>{
+                sum,
+                samples[min_i],
+                samples[max_i],
+                sum_weight,
+                contributions[min_i],
+                weights[min_i],
+                contributions[max_i],
+                weights[max_i]};
 }
 
 template <typename Color, typename Weight>
-std::optional<BackgroundSamples<Color>> make_background_samples(
+[[nodiscard]] std::optional<BackgroundSamples<Color>> make_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<Weight>& color_weights)
 {
@@ -331,11 +414,7 @@ std::optional<BackgroundSamples<Color>> make_background_samples(
         ASSERT(min_i < weights.size());
         ASSERT(max_i < weights.size());
 
-        std::optional<BackgroundSamples<Color>> res(std::in_place);
-
-        res->sum_weight = 0;
-        res->min_weight = weights[min_i];
-        res->max_weight = weights[max_i];
+        T sum_weight = 0;
 
         if (weights.size() > 2)
         {
@@ -343,11 +422,11 @@ std::optional<BackgroundSamples<Color>> make_background_samples(
                 {
                         if (i != min_i && i != max_i)
                         {
-                                res->sum_weight += weights[i];
+                                sum_weight += weights[i];
                         }
                 }
         }
 
-        return res;
+        return BackgroundSamples<Color>{sum_weight, weights[min_i], weights[max_i]};
 }
 }

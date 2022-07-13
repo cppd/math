@@ -35,8 +35,6 @@ class Pixel final
 public:
         Pixel()
         {
-                color_.init();
-                background_.init();
         }
 
         void merge(const ColorSamples<Color>& samples)
@@ -49,16 +47,21 @@ public:
                 background_.merge(samples);
         }
 
-        [[nodiscard]] std::optional<Color> color(const Color& background_color, const T& background_contribution) const
+        [[nodiscard]] std::optional<Color> color(const Color& background_color, const T background_contribution) const
         {
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
-
-                const T sum = p.color_weight + p.background_weight;
-
-                if (sum == p.background_weight)
+                if (color_.empty())
                 {
                         return std::nullopt;
                 }
+
+                if (background_.empty())
+                {
+                        return color_.sum() / color_.sum_weight();
+                }
+
+                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
+
+                const T sum = p.color_weight + p.background_weight;
 
                 if (p.color_weight == sum || (p.color_weight / sum) == 1)
                 {
@@ -68,21 +71,21 @@ public:
                 return (p.color + p.background_weight * background_color) / sum;
         }
 
-        [[nodiscard]] std::optional<std::tuple<Color, T>> color_alpha(const T& background_contribution) const
+        [[nodiscard]] std::optional<std::tuple<Color, T>> color_alpha(const T background_contribution) const
         {
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
-
-                const T sum = p.color_weight + p.background_weight;
-
-                if (sum == p.background_weight)
+                if (color_.empty())
                 {
                         return std::nullopt;
                 }
 
-                if (p.color_weight == sum || (p.color_weight / sum) == 1)
+                if (background_.empty())
                 {
-                        return std::make_tuple(p.color / sum, T{1});
+                        return std::tuple<Color, T>(color_.sum() / color_.sum_weight(), 1);
                 }
+
+                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
+
+                const T sum = p.color_weight + p.background_weight;
 
                 return std::make_tuple(p.color / sum, p.color_weight / sum);
         }
