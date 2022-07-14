@@ -60,6 +60,71 @@ bool light_source_occluded(
         return false;
 }
 
+template <std::size_t N, typename T, typename Color>
+bool occluded(
+        const Scene<N, T, Color>& scene,
+        const Vector<N, T>& point_1,
+        const Normals<N, T>& normals_1,
+        const Vector<N, T>& point_2,
+        const Normals<N, T>& normals_2)
+{
+        static constexpr T EPSILON = 1000 * Limits<T>::epsilon();
+        static_assert(EPSILON < 1);
+
+        const Vector<N, T> direction_1 = point_2 - point_1;
+        const Ray<N, T> ray_1(point_1, direction_1);
+
+        ASSERT(dot(ray_1.dir(), normals_1.shading) >= 0);
+        ASSERT(dot(ray_1.dir(), normals_2.shading) <= 0);
+
+        const bool visible_1 = dot(ray_1.dir(), normals_1.geometric) >= 0;
+        const bool visible_2 = dot(ray_1.dir(), normals_2.geometric) <= 0;
+
+        T distance = direction_1.norm() * (1 - EPSILON);
+
+        if (visible_1 && visible_2)
+        {
+                return scene.intersect_any(normals_1.geometric, ray_1, distance);
+        }
+
+        if (!visible_1)
+        {
+                const SurfacePoint surface = scene.intersect(normals_1.geometric, ray_1, distance);
+                if (!surface)
+                {
+                        return false;
+                }
+
+                distance -= (surface.point() - ray_1.org()).norm();
+                if (distance <= 0)
+                {
+                        return false;
+                }
+        }
+
+        const Ray<N, T> ray_2 = ray_1.reversed().set_org(point_2);
+
+        if (!visible_2)
+        {
+                const SurfacePoint surface = scene.intersect(normals_2.geometric, ray_2, distance);
+                if (!surface)
+                {
+                        return false;
+                }
+
+                distance -= (surface.point() - ray_2.org()).norm();
+                if (distance <= 0)
+                {
+                        return false;
+                }
+
+                return scene.intersect_any(
+                        surface.geometric_normal(), Ray<N, T>(ray_2).set_org(surface.point()), distance);
+        }
+
+        return scene.intersect_any(normals_2.geometric, ray_2, distance);
+}
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::tuple<SurfacePoint<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
