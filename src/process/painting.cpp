@@ -40,24 +40,24 @@ namespace ns::process
 namespace
 {
 template <std::size_t N>
-constexpr int PAINTER_DEFAULT_SAMPLES_PER_PIXEL = (N == 3) ? 25 : 1;
+constexpr int SAMPLES_PER_PIXEL = (N == 3) ? 25 : 1;
 template <std::size_t N>
-constexpr int PAINTER_MAXIMUM_SAMPLES_PER_PIXEL = power<N - 1>(10u);
+constexpr int SAMPLES_PER_PIXEL_MAXIMUM = power<N - 1>(10u);
 
-constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
+constexpr int SCREEN_SIZE_3D_MAXIMUM = 10000;
 
-constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
-constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
+constexpr int SCREEN_SIZE_ND_MINIMUM = 50;
+constexpr int SCREEN_SIZE_ND_MAXIMUM = 5000;
 template <std::size_t N>
-constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 300 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
+constexpr int SCREEN_SIZE_ND = (N == 4) ? 300 : ((N == 5) ? 100 : SCREEN_SIZE_ND_MINIMUM);
 
 using Precisions = std::tuple<double, float>;
-constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
-static_assert(DEFAULT_PRECISION_INDEX < std::tuple_size_v<Precisions>);
+constexpr std::size_t PRECISION_INDEX = 0;
+static_assert(PRECISION_INDEX < std::tuple_size_v<Precisions>);
 
 using Colors = std::tuple<color::Spectrum, color::Color>;
-constexpr std::size_t DEFAULT_COLOR_INDEX = 0;
-static_assert(DEFAULT_COLOR_INDEX < std::tuple_size_v<Colors>);
+template <std::size_t N>
+constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 
 std::array<const char*, 2> precision_names()
 {
@@ -276,13 +276,14 @@ std::function<void(progress::RatioList*)> action_painter_function(
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
-        static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+        static_assert(SAMPLES_PER_PIXEL<N> <= SAMPLES_PER_PIXEL_MAXIMUM<N>);
+        static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
         std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParameters3d>> parameters =
                 gui::dialog::PainterParameters3dDialog::show(
-                        hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                        PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precision_names(),
-                        DEFAULT_PRECISION_INDEX, color_names(), DEFAULT_COLOR_INDEX);
+                        hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM,
+                        SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
+                        color_names(), COLOR_INDEX<N>);
 
         if (!parameters)
         {
@@ -310,16 +311,16 @@ std::function<void(progress::RatioList*)> action_painter_function(
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
-        static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
-        static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> >= PAINTER_MINIMUM_SCREEN_SIZE_ND);
-        static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> <= PAINTER_MAXIMUM_SCREEN_SIZE_ND);
+        static_assert(SAMPLES_PER_PIXEL<N> <= SAMPLES_PER_PIXEL_MAXIMUM<N>);
+        static_assert(SCREEN_SIZE_ND<N> >= SCREEN_SIZE_ND_MINIMUM);
+        static_assert(SCREEN_SIZE_ND<N> <= SCREEN_SIZE_ND_MAXIMUM);
+        static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
         std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParametersNd>> parameters =
                 gui::dialog::PainterParametersNdDialog::show(
-                        N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>, PAINTER_MINIMUM_SCREEN_SIZE_ND,
-                        PAINTER_MAXIMUM_SCREEN_SIZE_ND, PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>,
-                        PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precision_names(), DEFAULT_PRECISION_INDEX, color_names(),
-                        DEFAULT_COLOR_INDEX);
+                        N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
+                        SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
+                        color_names(), COLOR_INDEX<N>);
 
         if (!parameters)
         {
