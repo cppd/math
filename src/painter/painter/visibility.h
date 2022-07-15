@@ -52,7 +52,7 @@ bool light_source_occluded(
                 return false;
         }
 
-        const T d_2 = d - (surface.point() - ray.org()).norm();
+        const T d_2 = d - surface.distance();
         if (d_2 > 0)
         {
                 return scene.intersect_any(surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()), d_2);
@@ -95,7 +95,7 @@ bool occluded(
                         return false;
                 }
 
-                distance -= (surface.point() - ray_1.org()).norm();
+                distance -= surface.distance();
                 if (distance <= 0)
                 {
                         return false;
@@ -112,7 +112,7 @@ bool occluded(
                         return false;
                 }
 
-                distance -= (surface.point() - ray_2.org()).norm();
+                distance -= surface.distance();
                 if (distance <= 0)
                 {
                         return false;

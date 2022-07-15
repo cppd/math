@@ -196,13 +196,28 @@ std::optional<Color> direct_lighting(
         namespace impl = direct_lighting_implementation;
 
         std::optional<Color> res;
-
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
                 impl::add(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
                 impl::add(&res, impl::sample_brdf_with_mis(*light, scene, surface, v, normals, engine));
         }
+        return res;
+}
 
+template <std::size_t N, typename T, typename Color>
+std::optional<Color> directly_visible_light_sources(const Scene<N, T, Color>& scene, const Ray<N, T>& ray)
+{
+        namespace impl = direct_lighting_implementation;
+
+        std::optional<Color> res;
+        for (const LightSource<N, T, Color>* const light : scene.light_sources())
+        {
+                const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
+                if (impl::use_pdf_color(info.pdf, info.radiance))
+                {
+                        impl::add(&res, info.radiance);
+                }
+        }
         return res;
 }
 
@@ -214,21 +229,7 @@ std::optional<Color> directly_visible_light_sources(
 {
         namespace impl = direct_lighting_implementation;
 
-        if (!surface)
-        {
-                std::optional<Color> res;
-                for (const LightSource<N, T, Color>* const light : scene.light_sources())
-                {
-                        const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
-                        if (impl::use_pdf_color(info.pdf, info.radiance))
-                        {
-                                impl::add(&res, info.radiance);
-                        }
-                }
-                return res;
-        }
-
-        const T distance_squared = (ray.org() - surface.point()).norm_squared();
+        ASSERT(surface);
 
         std::optional<Color> res;
 
@@ -246,7 +247,7 @@ std::optional<Color> directly_visible_light_sources(
                         continue;
                 }
 
-                if (!(square(*info.distance) < distance_squared))
+                if (!(*info.distance < surface.distance()))
                 {
                         continue;
                 }

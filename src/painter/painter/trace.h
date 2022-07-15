@@ -129,7 +129,7 @@ std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, 
 
         if (!surface)
         {
-                if (const auto c = directly_visible_light_sources(scene, surface, ray))
+                if (const auto c = directly_visible_light_sources(scene, ray))
                 {
                         return *c + scene.background_light();
                 }
