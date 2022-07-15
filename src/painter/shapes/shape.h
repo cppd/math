@@ -33,6 +33,8 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 struct Shape
 {
+        static_assert(std::is_floating_point_v<T>);
+
         virtual ~Shape() = default;
 
         [[nodiscard]] virtual T intersection_cost() const = 0;

@@ -67,7 +67,7 @@ template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_light_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
+        const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         RandomEngine& engine)
@@ -109,7 +109,7 @@ template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_brdf_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
+        const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         RandomEngine& engine)
@@ -188,7 +188,7 @@ void add(std::optional<Dst>* const dst, Src&& src) requires requires
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
+        const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         RandomEngine& engine)
@@ -209,7 +209,7 @@ std::optional<Color> direct_lighting(
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> directly_visible_light_sources(
         const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
+        const SurfaceIntersection<N, T, Color>& surface,
         const Ray<N, T>& ray)
 {
         namespace impl = direct_lighting_implementation;

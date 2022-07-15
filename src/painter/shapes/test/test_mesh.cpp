@@ -48,7 +48,7 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
         std::optional<Vector<N, T>> geometric_normal;
 
         {
-                const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+                const SurfaceIntersection surface = scene.intersect(geometric_normal, ray);
                 const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
 
                 if (!(static_cast<bool>(surface) == intersection))
@@ -66,7 +66,7 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
         }
 
         {
-                const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+                const SurfaceIntersection surface = scene.intersect(geometric_normal, ray);
                 const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
 
                 if (!(static_cast<bool>(surface) == intersection))
@@ -83,7 +83,7 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
                 geometric_normal = surface.geometric_normal();
         }
 
-        const SurfacePoint surface = scene.intersect(geometric_normal, ray);
+        const SurfaceIntersection surface = scene.intersect(geometric_normal, ray);
         const bool intersection = scene.intersect_any(geometric_normal, ray, Limits<T>::infinity());
 
         if (!(static_cast<bool>(surface) == intersection))

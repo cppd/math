@@ -41,7 +41,7 @@ struct Normals final
 };
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-Normals<N, T> compute_normals(const SurfacePoint<N, T, Color>& surface, const Vector<N, T>& ray_dir)
+Normals<N, T> compute_normals(const SurfaceIntersection<N, T, Color>& surface, const Vector<N, T>& ray_dir)
 {
         const Vector<N, T> g_normal = surface.geometric_normal();
         ASSERT(g_normal.is_unit());

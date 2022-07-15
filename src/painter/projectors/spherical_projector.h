@@ -38,7 +38,7 @@ class SphericalProjector final : public Projector<N, T>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        static T make_square_radius(const T& width_view_angle_degrees, const std::array<int, N - 1>& screen_size)
+        static T make_square_radius(const T width_view_angle_degrees, const std::array<int, N - 1>& screen_size)
         {
                 if (!(width_view_angle_degrees > 0))
                 {
@@ -75,7 +75,7 @@ public:
                 const Vector<N, T>& camera_org,
                 const Vector<N, T>& camera_dir,
                 const std::array<Vector<N, T>, N - 1>& screen_axes,
-                const T& width_view_angle_degrees,
+                const T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
                 : screen_size_(screen_size),
                   screen_axes_(projectors_implementation::normalize_axes(screen_axes)),

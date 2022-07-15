@@ -62,7 +62,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         //
 
-        [[nodiscard]] Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
+        [[nodiscard]] Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
         {
                 return facet_->project(ray.point(distance));
         }

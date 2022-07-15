@@ -98,7 +98,7 @@ class Impl final : public Scene<N, T, Color>
                 return false;
         }
 
-        [[nodiscard]] SurfacePoint<N, T, Color> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
         {
                 const auto intersection = bvh_.intersect(
                         ray, max_distance,
@@ -132,7 +132,7 @@ class Impl final : public Scene<N, T, Color>
                         });
         }
 
-        [[nodiscard]] SurfacePoint<N, T, Color> intersect_impl(
+        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 Ray<N, T> ray,
                 T max_distance) const
@@ -158,7 +158,7 @@ class Impl final : public Scene<N, T, Color>
 
         //
 
-        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray) const override
         {
@@ -166,7 +166,7 @@ class Impl final : public Scene<N, T, Color>
                 return intersect_impl(geometric_normal, ray, Limits<T>::infinity());
         }
 
-        [[nodiscard]] SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray,
                 const T max_distance) const override

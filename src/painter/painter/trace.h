@@ -59,7 +59,7 @@ struct BrdfSample final
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<BrdfSample<N, T, Color>> sample_brdf(
-        const SurfacePoint<N, T, Color>& surface,
+        const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         RandomEngine& engine)
@@ -118,7 +118,7 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, RandomEngine& engine)
 {
-        SurfacePoint<N, T, Color> surface;
+        SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
 
         std::tie(surface, normals) = [&]

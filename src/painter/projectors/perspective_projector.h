@@ -37,7 +37,7 @@ class PerspectiveProjector final : public Projector<N, T>
 
         static Vector<N, T> make_camera_dir(
                 const Vector<N, T>& camera_dir,
-                const T& width_view_angle_degrees,
+                const T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
         {
                 if (!(width_view_angle_degrees > 0 && width_view_angle_degrees < 180))
@@ -62,7 +62,7 @@ public:
                 const Vector<N, T>& camera_org,
                 const Vector<N, T>& camera_dir,
                 const std::array<Vector<N, T>, N - 1>& screen_axes,
-                const T& width_view_angle_degrees,
+                const T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
                 : screen_size_(screen_size),
                   screen_axes_(projectors_implementation::normalize_axes(screen_axes)),

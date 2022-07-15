@@ -26,14 +26,14 @@ namespace ns::painter
 namespace
 {
 template <typename T>
-void compare(const T& a, const T& b, const T& precision)
+void compare(const T a, const T b, const T precision)
 {
         if (a == b)
         {
                 return;
         }
-        T abs = std::abs(a - b);
-        T max = std::max(std::abs(a), std::abs(b));
+        const T abs = std::abs(a - b);
+        const T max = std::max(std::abs(a), std::abs(b));
         if (!(abs / max < precision))
         {
                 error("Values are not equal: " + to_string(a) + " and " + to_string(b));
@@ -41,13 +41,13 @@ void compare(const T& a, const T& b, const T& precision)
 }
 
 template <typename T, std::size_t N>
-void compare(const T& width, const T& radius, const Vector<N, T>& p, const T& value, const T& precision)
+void compare(const T width, const T radius, const Vector<N, T>& p, const T value, const T precision)
 {
         compare(GaussianFilter<T>(width, radius).compute(p), value, precision);
 }
 
 template <typename T>
-void test_filter(const T& precision)
+void test_filter(const T precision)
 {
         // gaussian[width_, x_] := Exp[-1/2*Power[ x/width, 2]];
         // filter[width_, radius_, list_] :=

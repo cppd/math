@@ -43,17 +43,19 @@ template <std::size_t N, typename T>
 template <typename T>
 class Spotlight final
 {
+        static_assert(std::is_floating_point_v<T>);
+
         T falloff_start_;
         T width_;
         T falloff_width_;
 
-        [[nodiscard]] T falloff_coef(const T& cosine) const
+        [[nodiscard]] T falloff_coef(const T cosine) const
         {
                 return power<4>((cosine - width_) / falloff_width_);
         }
 
 public:
-        Spotlight(const std::type_identity_t<T>& falloff_start, const std::type_identity_t<T>& width)
+        Spotlight(const std::type_identity_t<T> falloff_start, const std::type_identity_t<T> width)
                 : falloff_start_(std::cos((falloff_start / 180) * PI<T>)),
                   width_(std::cos((width / 180) * PI<T>)),
                   falloff_width_(falloff_start_ - width_)
@@ -67,7 +69,7 @@ public:
                 ASSERT(falloff_start_ >= width_ && falloff_width_ >= 0);
         }
 
-        [[nodiscard]] T coef(const T& cosine) const
+        [[nodiscard]] T coef(const T cosine) const
         {
                 if (cosine >= falloff_start_)
                 {
@@ -81,7 +83,7 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] Color color(const Color& color, const T& cosine) const
+        [[nodiscard]] Color color(const Color& color, const T cosine) const
         {
                 if (cosine >= falloff_start_)
                 {

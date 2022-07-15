@@ -36,7 +36,7 @@ class ParallelProjector final : public Projector<N, T>
 
         static std::array<Vector<N, T>, N - 1> make_screen_axes(
                 const std::array<Vector<N, T>, N - 1>& screen_axes,
-                const T& units_per_pixel)
+                const T units_per_pixel)
         {
                 if (!(units_per_pixel > 0))
                 {
@@ -62,7 +62,7 @@ public:
                 const Vector<N, T>& camera_org,
                 const Vector<N, T>& camera_dir,
                 const std::array<Vector<N, T>, N - 1>& screen_axes,
-                const T& units_per_pixel,
+                const T units_per_pixel,
                 const std::array<int, N - 1>& screen_size)
                 : screen_size_(screen_size),
                   screen_axes_(make_screen_axes(screen_axes, units_per_pixel)),

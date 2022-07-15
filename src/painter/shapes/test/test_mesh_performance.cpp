@@ -44,7 +44,7 @@ template <bool ANY, std::size_t N, typename T, typename Color>
         requires(!ANY)
 bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 {
-        const SurfacePoint surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
+        const SurfaceIntersection surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
         if (!surface_1)
         {
                 return false;

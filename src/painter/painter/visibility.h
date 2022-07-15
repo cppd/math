@@ -46,7 +46,7 @@ bool light_source_occluded(
                 return scene.intersect_any(normals.geometric, ray, d);
         }
 
-        const SurfacePoint surface = scene.intersect(normals.geometric, ray, d);
+        const SurfaceIntersection surface = scene.intersect(normals.geometric, ray, d);
         if (!surface)
         {
                 return false;
@@ -89,7 +89,7 @@ bool occluded(
 
         if (!visible_1)
         {
-                const SurfacePoint surface = scene.intersect(normals_1.geometric, ray_1, distance);
+                const SurfaceIntersection surface = scene.intersect(normals_1.geometric, ray_1, distance);
                 if (!surface)
                 {
                         return false;
@@ -106,7 +106,7 @@ bool occluded(
 
         if (!visible_2)
         {
-                const SurfacePoint surface = scene.intersect(normals_2.geometric, ray_2, distance);
+                const SurfaceIntersection surface = scene.intersect(normals_2.geometric, ray_2, distance);
                 if (!surface)
                 {
                         return false;
@@ -126,12 +126,12 @@ bool occluded(
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::tuple<SurfacePoint<N, T, Color>, Normals<N, T>> scene_intersect(
+std::tuple<SurfaceIntersection<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
         const std::optional<Vector<N, T>>& geometric_normal,
         const Ray<N, T>& ray)
 {
-        SurfacePoint<N, T, Color> surface = scene.intersect(geometric_normal, ray);
+        SurfaceIntersection<N, T, Color> surface = scene.intersect(geometric_normal, ray);
         if (!surface)
         {
                 return {};

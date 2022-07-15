@@ -48,7 +48,7 @@ class BallLight final : public LightSource<N, T, Color>
         std::optional<lights::common::Spotlight<T>> spotlight_;
 
 public:
-        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T& radius, const Color& color)
+        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T radius, const Color& color)
                 : ball_(center, direction, radius),
                   color_(color),
                   pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
@@ -68,7 +68,7 @@ public:
         BallLight(
                 const Vector<N, T>& center,
                 const Vector<N, T>& direction,
-                const T& radius,
+                const T radius,
                 const Color& color,
                 const std::type_identity_t<T>& spotlight_falloff_start,
                 const std::type_identity_t<T>& spotlight_width)
@@ -83,7 +83,7 @@ public:
                 spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 
-        void set_color_for_distance(const T& distance)
+        void set_color_for_distance(const T distance)
         {
                 if (!(distance > 0))
                 {

@@ -44,7 +44,7 @@ class Parallelotope final : public Shape<N, T, Color>
         {
                 const Parallelotope* obj_;
 
-                Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
+                Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
                 {
                         return obj_->parallelotope_.project(ray.point(distance));
                 }

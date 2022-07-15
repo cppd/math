@@ -44,7 +44,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
         {
                 const HyperplaneParallelotope* obj_;
 
-                Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
+                Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
                 {
                         return obj_->hyperplane_parallelotope_.project(ray.point(distance));
                 }

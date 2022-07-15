@@ -31,6 +31,8 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 struct Sample final
 {
+        static_assert(std::is_floating_point_v<T>);
+
         Vector<N, T> l;
         T pdf;
         Color brdf;
@@ -44,11 +46,13 @@ struct Sample final
 template <std::size_t N, typename T, typename Color>
 class Surface
 {
+        static_assert(std::is_floating_point_v<T>);
+
 protected:
         ~Surface() = default;
 
 public:
-        [[nodiscard]] virtual Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const = 0;
+        [[nodiscard]] virtual Vector<N, T> point(const Ray<N, T>& ray, T distance) const = 0;
 
         [[nodiscard]] virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
 
@@ -76,20 +80,23 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-class SurfacePoint final
+class SurfaceIntersection final
 {
-        const Surface<N, T, Color>* surface_;
+        static_assert(std::is_floating_point_v<T>);
+
+        const Surface<N, T, Color>* surface_ = nullptr;
         Vector<N, T> point_;
+        T distance_;
 
 public:
-        SurfacePoint()
-                : surface_(nullptr)
+        SurfaceIntersection()
         {
         }
 
-        SurfacePoint(const Surface<N, T, Color>* const surface, const Ray<N, T>& ray, const T& distance)
+        SurfaceIntersection(const Surface<N, T, Color>* const surface, const Ray<N, T>& ray, const T distance)
                 : surface_(surface),
-                  point_(surface->point(ray, distance))
+                  point_(surface->point(ray, distance)),
+                  distance_(distance)
         {
         }
 
@@ -101,6 +108,11 @@ public:
         [[nodiscard]] const Vector<N, T>& point() const
         {
                 return point_;
+        }
+
+        [[nodiscard]] T distance() const
+        {
+                return distance_;
         }
 
         [[nodiscard]] decltype(auto) geometric_normal() const
@@ -137,6 +149,8 @@ public:
 template <typename T, typename Color>
 struct LightSourceInfo final
 {
+        static_assert(std::is_floating_point_v<T>);
+
         T pdf;
         Color radiance;
         std::optional<T> distance;
@@ -149,6 +163,8 @@ struct LightSourceInfo final
 template <std::size_t N, typename T, typename Color>
 struct LightSourceSample final
 {
+        static_assert(std::is_floating_point_v<T>);
+
         Vector<N, T> l;
         T pdf;
         Color radiance;
@@ -162,6 +178,8 @@ struct LightSourceSample final
 template <std::size_t N, typename T, typename Color>
 struct LightSource
 {
+        static_assert(std::is_floating_point_v<T>);
+
         virtual ~LightSource() = default;
 
         [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)
@@ -175,6 +193,8 @@ struct LightSource
 template <std::size_t N, typename T>
 struct Projector
 {
+        static_assert(std::is_floating_point_v<T>);
+
         virtual ~Projector() = default;
 
         [[nodiscard]] virtual const std::array<int, N - 1>& screen_size() const = 0;
@@ -185,13 +205,15 @@ struct Projector
 template <std::size_t N, typename T, typename Color>
 struct Scene
 {
+        static_assert(std::is_floating_point_v<T>);
+
         virtual ~Scene() = default;
 
-        [[nodiscard]] virtual SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray) const = 0;
 
-        [[nodiscard]] virtual SurfacePoint<N, T, Color> intersect(
+        [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
                 const Ray<N, T>& ray,
                 T max_distance) const = 0;
