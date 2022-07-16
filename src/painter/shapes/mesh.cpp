@@ -108,7 +108,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return shading::ggx_diffuse::pdf(material.roughness(), n, v, l);
         }
 
-        [[nodiscard]] Sample<N, T, Color> sample_brdf(
+        [[nodiscard]] SurfaceSample<N, T, Color> sample(
                 PCG& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
@@ -121,7 +121,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const shading::Sample<N, T, Color>& sample = shading::ggx_diffuse::sample_f(
                         engine, material.roughness(), surface_color(point, material), n, v);
 
-                Sample<N, T, Color> s;
+                SurfaceSample<N, T, Color> s;
                 s.l = sample.l;
                 s.pdf = sample.pdf;
                 s.brdf = sample.brdf;

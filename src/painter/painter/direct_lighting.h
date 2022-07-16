@@ -106,7 +106,7 @@ std::optional<Color> sample_light_with_mis(
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<Color> sample_brdf_with_mis(
+std::optional<Color> sample_surface_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
@@ -121,7 +121,7 @@ std::optional<Color> sample_brdf_with_mis(
 
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
         if (!use_pdf_color(sample.pdf, sample.brdf))
         {
                 return {};
@@ -199,7 +199,7 @@ std::optional<Color> direct_lighting(
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
                 impl::add(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
-                impl::add(&res, impl::sample_brdf_with_mis(*light, scene, surface, v, normals, engine));
+                impl::add(&res, impl::sample_surface_with_mis(*light, scene, surface, v, normals, engine));
         }
         return res;
 }

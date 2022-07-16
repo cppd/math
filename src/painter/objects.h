@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
-struct Sample final
+struct SurfaceSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -38,7 +38,7 @@ struct Sample final
         Color brdf;
         bool specular;
 
-        Sample()
+        SurfaceSample()
         {
         }
 };
@@ -72,7 +72,7 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        [[nodiscard]] virtual Sample<N, T, Color> sample_brdf(
+        [[nodiscard]] virtual SurfaceSample<N, T, Color> sample(
                 PCG& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
@@ -140,9 +140,9 @@ public:
                 return surface_->pdf(point_, n, v, l);
         }
 
-        [[nodiscard]] decltype(auto) sample_brdf(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
+        [[nodiscard]] decltype(auto) sample(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
         {
-                return surface_->sample_brdf(engine, point_, n, v);
+                return surface_->sample(engine, point_, n, v);
         }
 };
 

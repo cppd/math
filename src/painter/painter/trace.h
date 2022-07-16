@@ -58,7 +58,7 @@ struct BrdfSample final
 };
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<BrdfSample<N, T, Color>> sample_brdf(
+std::optional<BrdfSample<N, T, Color>> sample_surface(
         const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
@@ -66,7 +66,7 @@ std::optional<BrdfSample<N, T, Color>> sample_brdf(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
 
         if (sample.pdf <= 0 || sample.brdf.is_black())
         {
@@ -164,7 +164,7 @@ std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, 
                         color.multiply_add(beta, *c);
                 }
 
-                const auto sample = sample_brdf(surface, v, normals, engine);
+                const auto sample = sample_surface(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;

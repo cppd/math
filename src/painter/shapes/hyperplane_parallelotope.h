@@ -81,7 +81,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
                         return shading::ggx_diffuse::pdf(obj_->roughness_, n, v, l);
                 }
 
-                Sample<N, T, Color> sample_brdf(
+                SurfaceSample<N, T, Color> sample(
                         PCG& engine,
                         const Vector<N, T>& /*point*/,
                         const Vector<N, T>& n,
@@ -90,7 +90,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
                         const shading::Sample<N, T, Color>& sample =
                                 shading::ggx_diffuse::sample_f(engine, obj_->roughness_, obj_->colors_, n, v);
 
-                        Sample<N, T, Color> s;
+                        SurfaceSample<N, T, Color> s;
                         s.l = sample.l;
                         s.pdf = sample.pdf;
                         s.brdf = sample.brdf;
