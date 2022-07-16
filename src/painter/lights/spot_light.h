@@ -43,26 +43,6 @@ class SpotLight final : public LightSource<N, T, Color>
         T coef_;
         lights::common::Spotlight<T> spotlight_;
 
-public:
-        SpotLight(
-                const Vector<N, T>& location,
-                const Vector<N, T>& direction,
-                const Color& color,
-                const std::type_identity_t<T>& unit_intensity_distance,
-                const std::type_identity_t<T>& falloff_start,
-                const std::type_identity_t<T>& width)
-                : location_(location),
-                  direction_(direction.normalized()),
-                  color_(color),
-                  coef_(power<N - 1>(unit_intensity_distance)),
-                  spotlight_(falloff_start, width)
-        {
-                if (!(unit_intensity_distance > 0))
-                {
-                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
-                }
-        }
-
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& point) const override
         {
                 const Vector<N, T> direction = location_ - point;
@@ -109,6 +89,26 @@ public:
         [[nodiscard]] bool is_delta() const override
         {
                 return true;
+        }
+
+public:
+        SpotLight(
+                const Vector<N, T>& location,
+                const Vector<N, T>& direction,
+                const Color& color,
+                const std::type_identity_t<T>& unit_intensity_distance,
+                const std::type_identity_t<T>& falloff_start,
+                const std::type_identity_t<T>& width)
+                : location_(location),
+                  direction_(direction.normalized()),
+                  color_(color),
+                  coef_(power<N - 1>(unit_intensity_distance)),
+                  spotlight_(falloff_start, width)
+        {
+                if (!(unit_intensity_distance > 0))
+                {
+                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
+                }
         }
 };
 }

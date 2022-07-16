@@ -44,47 +44,6 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         T pdf_;
         std::optional<lights::common::Spotlight<T>> spotlight_;
 
-public:
-        ParallelotopeLight(
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N - 1>& vectors,
-                const Vector<N, T>& direction,
-                const Color& color)
-                : parallelotope_(org, vectors),
-                  color_(color),
-                  pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
-        {
-                if (!std::all_of(
-                            vectors.cbegin(), vectors.cend(),
-                            [](const Vector<N, T>& v)
-                            {
-                                    return v.norm_squared() > 0;
-                            }))
-                {
-                        error("Parallelotope vectors " + to_string(vectors) + " must be non-zero");
-                }
-
-                parallelotope_.set_normal_direction(direction);
-        }
-
-        ParallelotopeLight(
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N - 1>& vectors,
-                const Vector<N, T>& direction,
-                const Color& color,
-                const std::type_identity_t<T>& spotlight_falloff_start,
-                const std::type_identity_t<T>& spotlight_width)
-                : ParallelotopeLight(org, vectors, direction, color)
-        {
-                if (!(spotlight_width <= 90))
-                {
-                        error("Parallolotope spotlight width " + to_string(spotlight_width)
-                              + " must be less than or equal to 90");
-                }
-
-                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
-        }
-
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
         {
                 if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
@@ -155,6 +114,47 @@ public:
         [[nodiscard]] bool is_delta() const override
         {
                 return false;
+        }
+
+public:
+        ParallelotopeLight(
+                const Vector<N, T>& org,
+                const std::array<Vector<N, T>, N - 1>& vectors,
+                const Vector<N, T>& direction,
+                const Color& color)
+                : parallelotope_(org, vectors),
+                  color_(color),
+                  pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
+        {
+                if (!std::all_of(
+                            vectors.cbegin(), vectors.cend(),
+                            [](const Vector<N, T>& v)
+                            {
+                                    return v.norm_squared() > 0;
+                            }))
+                {
+                        error("Parallelotope vectors " + to_string(vectors) + " must be non-zero");
+                }
+
+                parallelotope_.set_normal_direction(direction);
+        }
+
+        ParallelotopeLight(
+                const Vector<N, T>& org,
+                const std::array<Vector<N, T>, N - 1>& vectors,
+                const Vector<N, T>& direction,
+                const Color& color,
+                const std::type_identity_t<T>& spotlight_falloff_start,
+                const std::type_identity_t<T>& spotlight_width)
+                : ParallelotopeLight(org, vectors, direction, color)
+        {
+                if (!(spotlight_width <= 90))
+                {
+                        error("Parallolotope spotlight width " + to_string(spotlight_width)
+                              + " must be less than or equal to 90");
+                }
+
+                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 };
 }

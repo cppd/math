@@ -41,21 +41,6 @@ class PointLight final : public LightSource<N, T, Color>
         Color color_;
         T coef_;
 
-public:
-        PointLight(
-                const Vector<N, T>& location,
-                const Color& color,
-                const std::type_identity_t<T>& unit_intensity_distance)
-                : location_(location),
-                  color_(color),
-                  coef_(power<N - 1>(unit_intensity_distance))
-        {
-                if (!(unit_intensity_distance > 0))
-                {
-                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
-                }
-        }
-
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& point) const override
         {
                 const Vector<N, T> direction = location_ - point;
@@ -82,6 +67,21 @@ public:
         [[nodiscard]] bool is_delta() const override
         {
                 return true;
+        }
+
+public:
+        PointLight(
+                const Vector<N, T>& location,
+                const Color& color,
+                const std::type_identity_t<T>& unit_intensity_distance)
+                : location_(location),
+                  color_(color),
+                  coef_(power<N - 1>(unit_intensity_distance))
+        {
+                if (!(unit_intensity_distance > 0))
+                {
+                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
+                }
         }
 };
 }

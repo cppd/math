@@ -33,14 +33,6 @@ class DistantLight final : public LightSource<N, T, Color>
 
         LightSourceSample<N, T, Color> sample_;
 
-public:
-        DistantLight(const Vector<N, T>& direction, const Color& color)
-        {
-                sample_.l = -direction.normalized();
-                sample_.pdf = 1;
-                sample_.radiance = color;
-        }
-
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& /*point*/)
                 const override
         {
@@ -58,6 +50,14 @@ public:
         [[nodiscard]] bool is_delta() const override
         {
                 return true;
+        }
+
+public:
+        DistantLight(const Vector<N, T>& direction, const Color& color)
+        {
+                sample_.l = -direction.normalized();
+                sample_.pdf = 1;
+                sample_.radiance = color;
         }
 };
 }

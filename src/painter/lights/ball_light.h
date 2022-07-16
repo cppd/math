@@ -47,52 +47,6 @@ class BallLight final : public LightSource<N, T, Color>
         std::array<Vector<N, T>, N - 1> vectors_;
         std::optional<lights::common::Spotlight<T>> spotlight_;
 
-public:
-        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T radius, const Color& color)
-                : ball_(center, direction, radius),
-                  color_(color),
-                  pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
-                  vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
-        {
-                if (!(radius > 0))
-                {
-                        error("Ball light radius " + to_string(radius) + " must be positive");
-                }
-
-                for (Vector<N, T>& v : vectors_)
-                {
-                        v *= radius;
-                }
-        }
-
-        BallLight(
-                const Vector<N, T>& center,
-                const Vector<N, T>& direction,
-                const T radius,
-                const Color& color,
-                const std::type_identity_t<T>& spotlight_falloff_start,
-                const std::type_identity_t<T>& spotlight_width)
-                : BallLight(center, direction, radius, color)
-        {
-                if (!(spotlight_width <= 90))
-                {
-                        error("Ball spotlight width " + to_string(spotlight_width)
-                              + " must be less than or equal to 90");
-                }
-
-                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
-        }
-
-        void set_color_for_distance(const T distance)
-        {
-                if (!(distance > 0))
-                {
-                        error("Ball light distance " + to_string(distance) + " must be positive");
-                }
-
-                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
-        }
-
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
         {
                 if (dot(ball_.normal(), point - ball_.center()) <= 0)
@@ -162,6 +116,52 @@ public:
         [[nodiscard]] bool is_delta() const override
         {
                 return false;
+        }
+
+public:
+        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T radius, const Color& color)
+                : ball_(center, direction, radius),
+                  color_(color),
+                  pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
+                  vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
+        {
+                if (!(radius > 0))
+                {
+                        error("Ball light radius " + to_string(radius) + " must be positive");
+                }
+
+                for (Vector<N, T>& v : vectors_)
+                {
+                        v *= radius;
+                }
+        }
+
+        BallLight(
+                const Vector<N, T>& center,
+                const Vector<N, T>& direction,
+                const T radius,
+                const Color& color,
+                const std::type_identity_t<T>& spotlight_falloff_start,
+                const std::type_identity_t<T>& spotlight_width)
+                : BallLight(center, direction, radius, color)
+        {
+                if (!(spotlight_width <= 90))
+                {
+                        error("Ball spotlight width " + to_string(spotlight_width)
+                              + " must be less than or equal to 90");
+                }
+
+                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
+        }
+
+        void set_color_for_distance(const T distance)
+        {
+                if (!(distance > 0))
+                {
+                        error("Ball light distance " + to_string(distance) + " must be positive");
+                }
+
+                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
         }
 };
 }
