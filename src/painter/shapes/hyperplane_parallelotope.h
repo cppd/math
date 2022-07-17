@@ -17,13 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
 #include "../scenes/shape.h"
 
-#include <src/com/memory_arena.h>
 #include <src/geometry/spatial/hyperplane_parallelotope.h>
-#include <src/shading/ggx_diffuse.h>
-#include <src/shading/metalness.h>
+#include <src/shading/objects.h>
 
 namespace ns::painter
 {
@@ -37,137 +34,37 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
         const T alpha_;
         const bool alpha_nonzero_ = alpha_ > 0;
 
-        //
+        T intersection_cost() const override;
 
-        class SurfaceImpl final : public Surface<N, T, Color>
-        {
-                const HyperplaneParallelotope* obj_;
+        std::optional<T> intersect_bounds(const Ray<N, T>& r, T max_distance) const override;
 
-                Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
-                {
-                        return obj_->hyperplane_parallelotope_.project(ray.point(distance));
-                }
+        std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
+                const override;
 
-                Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
-                {
-                        return obj_->hyperplane_parallelotope_.normal();
-                }
+        bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;
 
-                std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& /*point*/) const override
-                {
-                        return std::nullopt;
-                }
-
-                std::optional<Color> light_source() const override
-                {
-                        return obj_->light_source_;
-                }
-
-                Color brdf(
-                        const Vector<N, T>& /*point*/,
-                        const Vector<N, T>& n,
-                        const Vector<N, T>& v,
-                        const Vector<N, T>& l) const override
-                {
-                        return shading::ggx_diffuse::f(obj_->roughness_, obj_->colors_, n, v, l);
-                }
-
-                T pdf(const Vector<N, T>& /*point*/,
-                      const Vector<N, T>& n,
-                      const Vector<N, T>& v,
-                      const Vector<N, T>& l) const override
-                {
-                        return shading::ggx_diffuse::pdf(obj_->roughness_, n, v, l);
-                }
-
-                SurfaceSample<N, T, Color> sample(
-                        PCG& engine,
-                        const Vector<N, T>& /*point*/,
-                        const Vector<N, T>& n,
-                        const Vector<N, T>& v) const override
-                {
-                        const shading::Sample<N, T, Color>& sample =
-                                shading::ggx_diffuse::sample_f(engine, obj_->roughness_, obj_->colors_, n, v);
-
-                        SurfaceSample<N, T, Color> s;
-                        s.l = sample.l;
-                        s.pdf = sample.pdf;
-                        s.brdf = sample.brdf;
-                        s.specular = false;
-                        return s;
-                }
-
-        public:
-                explicit SurfaceImpl(const HyperplaneParallelotope* const obj)
-                        : obj_(obj)
-                {
-                }
-        };
-
-        //
-
-        T intersection_cost() const override
-        {
-                return hyperplane_parallelotope_.intersection_cost();
-        }
-
-        std::optional<T> intersect_bounds(const Ray<N, T>& r, const T max_distance) const override
-        {
-                if (alpha_nonzero_ || light_source_)
-                {
-                        std::optional<T> res = hyperplane_parallelotope_.intersect(r);
-                        if (res && *res < max_distance)
-                        {
-                                return res;
-                        }
-                }
-                return std::nullopt;
-        }
-
-        std::tuple<T, const Surface<N, T, Color>*> intersect(
-                const Ray<N, T>& /*ray*/,
-                const T /*max_distance*/,
-                const T bounding_distance) const override
-        {
-                return {bounding_distance, make_arena_ptr<SurfaceImpl>(this)};
-        }
-
-        bool intersect_any(const Ray<N, T>& /*ray*/, const T /*max_distance*/, const T /*bounding_distance*/)
-                const override
-        {
-                return true;
-        }
-
-        geometry::BoundingBox<N, T> bounding_box() const override
-        {
-                return geometry::BoundingBox<N, T>(hyperplane_parallelotope_.vertices());
-        }
+        geometry::BoundingBox<N, T> bounding_box() const override;
 
         std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
-                const override
-        {
-                return hyperplane_parallelotope_.overlap_function();
-        }
+                const override;
 
 public:
-        template <typename... V>
         HyperplaneParallelotope(
-                const T metalness,
-                const T roughness,
+                std::type_identity_t<T> metalness,
+                std::type_identity_t<T> roughness,
                 const Color& color,
-                const T alpha,
+                std::type_identity_t<T> alpha,
                 const Vector<N, T>& org,
-                const V&... e)
-                : hyperplane_parallelotope_(org, e...),
-                  roughness_(std::clamp(roughness, T{0}, T{1})),
-                  colors_(shading::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T{0}, T{1}))),
-                  alpha_(std::clamp(alpha, T{0}, T{1}))
-        {
-        }
+                const std::array<Vector<N, T>, N - 1>& vectors);
 
-        void set_light_source(const Color& color)
-        {
-                light_source_ = color;
-        }
+        void set_light_source(const Color& color);
+
+        const geometry::HyperplaneParallelotope<N, T>& hyperplane_parallelotope() const;
+
+        const std::optional<Color>& light_source() const;
+
+        T roughness() const;
+
+        const shading::Colors<Color>& colors() const;
 };
 }
