@@ -143,7 +143,7 @@ std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
         const T proportion)
 {
         const Vector<N, T> position = center - direction.normalized() * distance;
-        auto ptr = std::make_unique<BallLight<N, T, Color>>(position, direction, radius, color * proportion);
+        auto ptr = std::make_unique<lights::BallLight<N, T, Color>>(position, direction, radius, color * proportion);
         ptr->set_color_for_distance(distance);
         return ptr;
 }
@@ -187,7 +187,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
 {
         const Vector<N, T> camera_position = center - info.camera_direction * (2 * shape_size);
 
-        return std::make_unique<const ParallelProjector<N, T>>(
+        return std::make_unique<const projectors::ParallelProjector<N, T>>(
                 camera_position, info.camera_direction, info.screen_axes, info.units_per_pixel, info.screen_size);
 }
 

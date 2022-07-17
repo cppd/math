@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ns::painter::projectors_implementation
+namespace ns::painter::projectors::com
 {
 template <std::size_t N, typename T>
 void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector<N, T>, N - 1>& screen_axes)

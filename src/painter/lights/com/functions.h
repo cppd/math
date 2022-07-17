@@ -17,27 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
+#include <src/com/exponent.h>
 
 #include <type_traits>
 
-namespace ns::painter::lights
+namespace ns::painter::lights::com
 {
-template <std::size_t N, typename T, typename Color>
-class DistantLight final : public LightSource<N, T, Color>
+// power<N - 1>(distance)
+template <std::size_t N, typename T>
+[[nodiscard]] T power_n1(const T squared_distance, const T distance)
 {
-        static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        LightSourceSample<N, T, Color> sample_;
-
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
-
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
-
-        [[nodiscard]] bool is_delta() const override;
-
-public:
-        DistantLight(const Vector<N, T>& direction, const Color& color);
-};
+        if constexpr ((N & 1) == 1)
+        {
+                return power<((N - 1) / 2)>(squared_distance);
+        }
+        else
+        {
+                return power<((N - 2) / 2)>(squared_distance) * distance;
+        }
+}
 }

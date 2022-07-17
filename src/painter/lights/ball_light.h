@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "common.h"
-
 #include "../objects.h"
+#include "com/spot_light.h"
 
 #include <src/geometry/spatial/hyperplane_ball.h>
 
@@ -27,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <type_traits>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 class BallLight final : public LightSource<N, T, Color>
@@ -39,7 +38,7 @@ class BallLight final : public LightSource<N, T, Color>
         Color color_;
         T pdf_;
         std::array<Vector<N, T>, N - 1> vectors_;
-        std::optional<lights::common::Spotlight<T>> spotlight_;
+        std::optional<com::SpotLight<T>> spotlight_;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 

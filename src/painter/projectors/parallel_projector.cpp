@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallel_projector.h"
 
-#include "functions.h"
+#include "com/functions.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
-namespace ns::painter
+namespace ns::painter::projectors
 {
 namespace
 {
@@ -37,7 +37,7 @@ std::array<Vector<N, T>, N - 1> make_screen_axes(
                 error("Error units per pixel " + to_string(units_per_pixel) + " for parallel projection");
         }
 
-        std::array<Vector<N, T>, N - 1> res = projectors_implementation::normalize_axes(screen_axes);
+        std::array<Vector<N, T>, N - 1> res = com::normalize_axes(screen_axes);
         for (std::size_t i = 0; i < res.size(); ++i)
         {
                 res[i] *= units_per_pixel;
@@ -56,7 +56,7 @@ template <std::size_t N, typename T>
 Ray<N, T> ParallelProjector<N, T>::ray(const Vector<N - 1, T>& point) const
 {
         const Vector<N - 1, T> screen_point = screen_org_ + point;
-        const Vector<N, T> screen_dir = projectors_implementation::screen_dir(screen_axes_, screen_point);
+        const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
         return Ray<N, T>(camera_org_ + screen_dir, camera_dir_);
 }
 
@@ -69,11 +69,11 @@ ParallelProjector<N, T>::ParallelProjector(
         const std::array<int, N - 1>& screen_size)
         : screen_size_(screen_size),
           screen_axes_(make_screen_axes(screen_axes, units_per_pixel)),
-          screen_org_(projectors_implementation::screen_org<T>(screen_size)),
+          screen_org_(com::screen_org<T>(screen_size)),
           camera_org_(camera_org),
           camera_dir_(camera_dir.normalized())
 {
-        projectors_implementation::check_orthogonality(camera_dir_, screen_axes_);
+        com::check_orthogonality(camera_dir_, screen_axes_);
 }
 
 #define TEMPLATE(N, T) template class ParallelProjector<(N), T>;

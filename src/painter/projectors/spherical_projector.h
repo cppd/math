@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <type_traits>
 
-namespace ns::painter
+namespace ns::painter::projectors
 {
 // Project screen points onto a hemisphere with the center on the screen.
 // Make rays from the hemisphere center to the projections.

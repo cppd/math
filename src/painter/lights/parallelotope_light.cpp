@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> ParallelotopeLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& point) const

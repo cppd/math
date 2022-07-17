@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "common.h"
-
 #include "../objects.h"
+#include "com/spot_light.h"
 
 #include <type_traits>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 class SpotLight final : public LightSource<N, T, Color>
@@ -35,7 +34,7 @@ class SpotLight final : public LightSource<N, T, Color>
         Vector<N, T> direction_;
         Color color_;
         T coef_;
-        lights::common::Spotlight<T> spotlight_;
+        com::SpotLight<T> spotlight_;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 

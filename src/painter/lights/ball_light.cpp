@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& point) const

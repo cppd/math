@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "point_light.h"
 
-#include "common.h"
+#include "com/functions.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
@@ -35,7 +35,7 @@ LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, 
         const Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();
         const T distance = std::sqrt(squared_distance);
-        const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
+        const T coef = coef_ / com::power_n1<N>(squared_distance, distance);
 
         LightSourceSample<N, T, Color> s;
         s.distance = distance;

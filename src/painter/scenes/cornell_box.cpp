@@ -123,12 +123,12 @@ std::unique_ptr<Projector<N, T>> create_projector(
         {
         case 0:
         {
-                return std::make_unique<PerspectiveProjector<N, T>>(
+                return std::make_unique<projectors::PerspectiveProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 60, screen_size);
         }
         case 1:
         {
-                return std::make_unique<SphericalProjector<N, T>>(
+                return std::make_unique<projectors::SphericalProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 70, screen_size);
         }
         }
@@ -168,7 +168,7 @@ void create_light_sources(
 
                 Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<const ParallelotopeLight<N, T, Color>>(
+                light_sources->push_back(std::make_unique<const lights::ParallelotopeLight<N, T, Color>>(
                         org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
                 break;
@@ -180,7 +180,7 @@ void create_light_sources(
                 const Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<const SpotLight<N, T, Color>>(
+                light_sources->push_back(std::make_unique<const lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
                 break;
@@ -192,7 +192,7 @@ void create_light_sources(
                 const Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
                 light_sources->push_back(
-                        std::make_unique<const PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
+                        std::make_unique<const lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
 
                 break;
         }

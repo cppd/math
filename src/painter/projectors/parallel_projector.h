@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <type_traits>
 
-namespace ns::painter
+namespace ns::painter::projectors
 {
 template <std::size_t N, typename T>
 class ParallelProjector final : public Projector<N, T>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "spot_light.h"
 
-#include "common.h"
+#include "com/functions.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
@@ -52,7 +52,7 @@ LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, c
                 return s;
         }
 
-        const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
+        const T coef = coef_ / com::power_n1<N>(squared_distance, distance);
         if (spotlight_coef >= 1)
         {
                 s.radiance = color_ * coef;

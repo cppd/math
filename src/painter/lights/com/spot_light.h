@@ -24,24 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter::lights::common
+namespace ns::painter::lights::com
 {
-// power<N - 1>(distance)
-template <std::size_t N, typename T>
-[[nodiscard]] T power_n1(const T& squared_distance, const T& distance)
-{
-        if constexpr ((N & 1) == 1)
-        {
-                return power<((N - 1) / 2)>(squared_distance);
-        }
-        else
-        {
-                return power<((N - 2) / 2)>(squared_distance) * distance;
-        }
-}
-
 template <typename T>
-class Spotlight final
+class SpotLight final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -55,7 +41,7 @@ class Spotlight final
         }
 
 public:
-        Spotlight(const std::type_identity_t<T> falloff_start, const std::type_identity_t<T> width)
+        SpotLight(const std::type_identity_t<T> falloff_start, const std::type_identity_t<T> width)
                 : falloff_start_(std::cos((falloff_start / 180) * PI<T>)),
                   width_(std::cos((width / 180) * PI<T>)),
                   falloff_width_(falloff_start_ - width_)

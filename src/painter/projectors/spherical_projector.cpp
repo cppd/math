@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "spherical_projector.h"
 
-#include "functions.h"
+#include "com/functions.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::projectors
 {
 namespace
 {
@@ -75,7 +75,7 @@ Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point) const
         }
 
         const T z = std::sqrt(radicand);
-        const Vector<N, T> screen_dir = projectors_implementation::screen_dir(screen_axes_, screen_point);
+        const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
 
         return Ray<N, T>(camera_org_, camera_dir_ * z + screen_dir);
 }
@@ -88,13 +88,13 @@ SphericalProjector<N, T>::SphericalProjector(
         const std::type_identity_t<T> width_view_angle_degrees,
         const std::array<int, N - 1>& screen_size)
         : screen_size_(screen_size),
-          screen_axes_(projectors_implementation::normalize_axes(screen_axes)),
-          screen_org_(projectors_implementation::screen_org<T>(screen_size)),
+          screen_axes_(com::normalize_axes(screen_axes)),
+          screen_org_(com::screen_org<T>(screen_size)),
           camera_org_(camera_org),
           camera_dir_(camera_dir.normalized()),
           square_radius_(make_square_radius<T>(width_view_angle_degrees, screen_size))
 {
-        projectors_implementation::check_orthogonality(camera_dir_, screen_axes_);
+        com::check_orthogonality(camera_dir_, screen_axes_);
 }
 
 #define TEMPLATE(N, T) template class SphericalProjector<(N), T>;
