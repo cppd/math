@@ -21,17 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/geometry/spatial/hyperplane_ball.h>
-#include <src/numerical/complement.h>
-#include <src/numerical/vector.h>
-#include <src/sampling/pdf.h>
-#include <src/sampling/sphere_uniform.h>
 
 #include <array>
-#include <cmath>
 #include <optional>
+#include <type_traits>
 
 namespace ns::painter
 {
@@ -47,121 +41,27 @@ class BallLight final : public LightSource<N, T, Color>
         std::array<Vector<N, T>, N - 1> vectors_;
         std::optional<lights::common::Spotlight<T>> spotlight_;
 
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
-        {
-                if (dot(ball_.normal(), point - ball_.center()) <= 0)
-                {
-                        LightSourceSample<N, T, Color> sample;
-                        sample.pdf = 0;
-                        return sample;
-                }
+        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
-                const Vector<N, T> sample_location = ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
+        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
 
-                const Vector<N, T> direction = sample_location - point;
-                const T distance = direction.norm();
-                const Vector<N, T> l = direction / distance;
-
-                const T cos = std::abs(dot(l, ball_.normal()));
-
-                LightSourceSample<N, T, Color> s;
-                s.l = l;
-                s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-                if (!spotlight_)
-                {
-                        s.radiance = color_;
-                }
-                else
-                {
-                        s.radiance = spotlight_->color(color_, cos);
-                }
-                s.distance = distance;
-                return s;
-        }
-
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
-        {
-                if (dot(ball_.normal(), point - ball_.center()) <= 0)
-                {
-                        LightSourceInfo<T, Color> info;
-                        info.pdf = 0;
-                        return info;
-                }
-
-                const Ray<N, T> ray(point, l);
-                const auto intersection = ball_.intersect(ray);
-                if (!intersection)
-                {
-                        LightSourceInfo<T, Color> info;
-                        info.pdf = 0;
-                        return info;
-                }
-
-                const T cos = std::abs(dot(ray.dir(), ball_.normal()));
-
-                LightSourceInfo<T, Color> info;
-                info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-                if (!spotlight_)
-                {
-                        info.radiance = color_;
-                }
-                else
-                {
-                        info.radiance = spotlight_->color(color_, cos);
-                }
-                info.distance = *intersection;
-                return info;
-        }
-
-        [[nodiscard]] bool is_delta() const override
-        {
-                return false;
-        }
+        [[nodiscard]] bool is_delta() const override;
 
 public:
-        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T radius, const Color& color)
-                : ball_(center, direction, radius),
-                  color_(color),
-                  pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
-                  vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
-        {
-                if (!(radius > 0))
-                {
-                        error("Ball light radius " + to_string(radius) + " must be positive");
-                }
-
-                for (Vector<N, T>& v : vectors_)
-                {
-                        v *= radius;
-                }
-        }
+        BallLight(
+                const Vector<N, T>& center,
+                const Vector<N, T>& direction,
+                std::type_identity_t<T> radius,
+                const Color& color);
 
         BallLight(
                 const Vector<N, T>& center,
                 const Vector<N, T>& direction,
-                const T radius,
+                std::type_identity_t<T> radius,
                 const Color& color,
-                const std::type_identity_t<T>& spotlight_falloff_start,
-                const std::type_identity_t<T>& spotlight_width)
-                : BallLight(center, direction, radius, color)
-        {
-                if (!(spotlight_width <= 90))
-                {
-                        error("Ball spotlight width " + to_string(spotlight_width)
-                              + " must be less than or equal to 90");
-                }
+                std::type_identity_t<T> spotlight_falloff_start,
+                std::type_identity_t<T> spotlight_width);
 
-                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
-        }
-
-        void set_color_for_distance(const T distance)
-        {
-                if (!(distance > 0))
-                {
-                        error("Ball light distance " + to_string(distance) + " must be positive");
-                }
-
-                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
-        }
+        void set_color_for_distance(T distance);
 };
 }

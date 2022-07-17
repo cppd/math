@@ -21,12 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/com/error.h>
-#include <src/com/exponent.h>
-#include <src/com/print.h>
-#include <src/numerical/vector.h>
-
-#include <cmath>
 #include <type_traits>
 
 namespace ns::painter
@@ -43,72 +37,19 @@ class SpotLight final : public LightSource<N, T, Color>
         T coef_;
         lights::common::Spotlight<T> spotlight_;
 
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& point) const override
-        {
-                const Vector<N, T> direction = location_ - point;
-                const T squared_distance = direction.norm_squared();
-                const T distance = std::sqrt(squared_distance);
-                const Vector<N, T> l = direction / distance;
-                const T cos = -dot(l, direction_);
+        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
-                LightSourceSample<N, T, Color> s;
+        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
 
-                s.distance = distance;
-                s.l = l;
-                s.pdf = 1;
-
-                const T spotlight_coef = spotlight_.coef(cos);
-
-                if (spotlight_coef <= 0)
-                {
-                        s.radiance = Color(0);
-                        return s;
-                }
-
-                const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
-                if (spotlight_coef >= 1)
-                {
-                        s.radiance = color_ * coef;
-                }
-                else
-                {
-                        s.radiance = color_ * (coef * spotlight_coef);
-                }
-
-                return s;
-        }
-
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/)
-                const override
-        {
-                LightSourceInfo<T, Color> info;
-                info.pdf = 0;
-                return info;
-        }
-
-        [[nodiscard]] bool is_delta() const override
-        {
-                return true;
-        }
+        [[nodiscard]] bool is_delta() const override;
 
 public:
         SpotLight(
                 const Vector<N, T>& location,
                 const Vector<N, T>& direction,
                 const Color& color,
-                const std::type_identity_t<T>& unit_intensity_distance,
-                const std::type_identity_t<T>& falloff_start,
-                const std::type_identity_t<T>& width)
-                : location_(location),
-                  direction_(direction.normalized()),
-                  color_(color),
-                  coef_(power<N - 1>(unit_intensity_distance)),
-                  spotlight_(falloff_start, width)
-        {
-                if (!(unit_intensity_distance > 0))
-                {
-                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
-                }
-        }
+                std::type_identity_t<T> unit_intensity_distance,
+                std::type_identity_t<T> falloff_start,
+                std::type_identity_t<T> width);
 };
 }

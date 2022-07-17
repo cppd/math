@@ -17,16 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "common.h"
-
 #include "../objects.h"
 
-#include <src/com/error.h>
-#include <src/com/exponent.h>
-#include <src/com/print.h>
-#include <src/numerical/vector.h>
-
-#include <cmath>
 #include <type_traits>
 
 namespace ns::painter
@@ -41,47 +33,13 @@ class PointLight final : public LightSource<N, T, Color>
         Color color_;
         T coef_;
 
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& point) const override
-        {
-                const Vector<N, T> direction = location_ - point;
-                const T squared_distance = direction.norm_squared();
-                const T distance = std::sqrt(squared_distance);
-                const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
+        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
-                LightSourceSample<N, T, Color> s;
-                s.distance = distance;
-                s.l = direction / distance;
-                s.pdf = 1;
-                s.radiance = color_ * coef;
-                return s;
-        }
+        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
 
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/)
-                const override
-        {
-                LightSourceInfo<T, Color> info;
-                info.pdf = 0;
-                return info;
-        }
-
-        [[nodiscard]] bool is_delta() const override
-        {
-                return true;
-        }
+        [[nodiscard]] bool is_delta() const override;
 
 public:
-        PointLight(
-                const Vector<N, T>& location,
-                const Color& color,
-                const std::type_identity_t<T>& unit_intensity_distance)
-                : location_(location),
-                  color_(color),
-                  coef_(power<N - 1>(unit_intensity_distance))
-        {
-                if (!(unit_intensity_distance > 0))
-                {
-                        error("Error unit intensity distance " + to_string(unit_intensity_distance));
-                }
-        }
+        PointLight(const Vector<N, T>& location, const Color& color, std::type_identity_t<T> unit_intensity_distance);
 };
 }

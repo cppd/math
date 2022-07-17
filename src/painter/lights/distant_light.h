@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/numerical/vector.h>
-
 #include <type_traits>
 
 namespace ns::painter
@@ -33,31 +31,13 @@ class DistantLight final : public LightSource<N, T, Color>
 
         LightSourceSample<N, T, Color> sample_;
 
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& /*point*/)
-                const override
-        {
-                return sample_;
-        }
+        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/)
-                const override
-        {
-                LightSourceInfo<T, Color> info;
-                info.pdf = 0;
-                return info;
-        }
+        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
 
-        [[nodiscard]] bool is_delta() const override
-        {
-                return true;
-        }
+        [[nodiscard]] bool is_delta() const override;
 
 public:
-        DistantLight(const Vector<N, T>& direction, const Color& color)
-        {
-                sample_.l = -direction.normalized();
-                sample_.pdf = 1;
-                sample_.radiance = color;
-        }
+        DistantLight(const Vector<N, T>& direction, const Color& color);
 };
 }
