@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shape.h"
+#include "../scenes/shape.h"
 
 #include <src/model/mesh_object.h>
 #include <src/progress/progress.h>

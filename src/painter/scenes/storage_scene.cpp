@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
-#include "../shapes/ray_intersection.h"
+#include "ray_intersection.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
