@@ -73,14 +73,14 @@ void create_shapes(
 
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                        shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED), ALPHA, org,
                                 del_elem(walls_vectors, i)));
-                        shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                        shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN), ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
@@ -103,7 +103,7 @@ void create_shapes(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes->push_back(std::make_unique<Parallelotope<N, T, Color>>(
+                shapes->push_back(std::make_unique<shapes::Parallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::MAGENTA), ALPHA, box_org, box_vectors));
         }
 }

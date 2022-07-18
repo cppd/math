@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <optional>
 
-namespace ns::painter
+namespace ns::painter::shapes
 {
 namespace
 {

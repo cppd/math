@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::painter::test
+namespace ns::painter::shapes::test
 {
 namespace spherical_mesh_implementation
 {

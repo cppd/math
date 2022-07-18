@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/shading/ggx_diffuse.h>
 #include <src/shading/metalness.h>
 
-namespace ns::painter
+namespace ns::painter::shapes
 {
 namespace
 {

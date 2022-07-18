@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::painter
+namespace ns::painter::shapes
 {
 template <std::size_t N>
 class MeshTexture

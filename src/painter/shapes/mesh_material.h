@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ns::painter
+namespace ns::painter::shapes
 {
 template <typename T, typename Color>
 class MeshMaterial final

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/hyperplane_parallelotope.h>
 #include <src/shading/objects.h>
 
-namespace ns::painter
+namespace ns::painter::shapes
 {
 template <std::size_t N, typename T, typename Color>
 class HyperplaneParallelotope final : public Shape<N, T, Color>

@@ -117,7 +117,7 @@ std::unique_ptr<const painter::Shape<N, T, Color>> make_shape(
 
         progress::Ratio progress(progress_list);
 
-        return painter::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
+        return painter::shapes::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
 }
 
 template <std::size_t N, typename T, typename Color, typename Parameters>
