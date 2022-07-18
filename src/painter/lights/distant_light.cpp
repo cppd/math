@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "distant_light.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/settings/instantiation.h>
 
 namespace ns::painter::lights
@@ -35,6 +36,12 @@ LightSourceInfo<T, Color> DistantLight<N, T, Color>::info(const Vector<N, T>& /*
         LightSourceInfo<T, Color> info;
         info.pdf = 0;
         return info;
+}
+
+template <std::size_t N, typename T, typename Color>
+LightSourceSampleEmit<N, T, Color> DistantLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+{
+        error("not implemented");
 }
 
 template <std::size_t N, typename T, typename Color>

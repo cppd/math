@@ -180,16 +180,34 @@ struct LightSourceSample final
 };
 
 template <std::size_t N, typename T, typename Color>
+struct LightSourceSampleEmit final
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        Ray<N, T> ray;
+        Vector<N, T> n;
+        T pdf_pos;
+        T pdf_dir;
+        Color radiance;
+
+        LightSourceSampleEmit()
+        {
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
 struct LightSource
 {
         static_assert(std::is_floating_point_v<T>);
 
         virtual ~LightSource() = default;
 
+        [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
+
         [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)
                 const = 0;
 
-        [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual LightSourceSampleEmit<N, T, Color> sample_emit(PCG& engine) const = 0;
 
         [[nodiscard]] virtual bool is_delta() const = 0;
 };

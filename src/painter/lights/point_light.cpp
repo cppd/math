@@ -54,6 +54,12 @@ LightSourceInfo<T, Color> PointLight<N, T, Color>::info(const Vector<N, T>& /*po
 }
 
 template <std::size_t N, typename T, typename Color>
+LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool PointLight<N, T, Color>::is_delta() const
 {
         return true;

@@ -43,6 +43,8 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
 
+        [[nodiscard]] LightSourceSampleEmit<N, T, Color> sample_emit(PCG& engine) const override;
+
         [[nodiscard]] bool is_delta() const override;
 
 public:

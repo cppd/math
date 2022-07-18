@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "parallelotope_light.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/pdf.h>
 #include <src/settings/instantiation.h>
@@ -94,6 +96,12 @@ LightSourceInfo<T, Color> ParallelotopeLight<N, T, Color>::info(const Vector<N, 
         }
         info.distance = *intersection;
         return info;
+}
+
+template <std::size_t N, typename T, typename Color>
+LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+{
+        error("not implemented");
 }
 
 template <std::size_t N, typename T, typename Color>

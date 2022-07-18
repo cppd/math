@@ -98,6 +98,12 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
 }
 
 template <std::size_t N, typename T, typename Color>
+LightSourceSampleEmit<N, T, Color> BallLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool BallLight<N, T, Color>::is_delta() const
 {
         return false;

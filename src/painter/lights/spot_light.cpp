@@ -74,6 +74,12 @@ LightSourceInfo<T, Color> SpotLight<N, T, Color>::info(const Vector<N, T>& /*poi
 }
 
 template <std::size_t N, typename T, typename Color>
+LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool SpotLight<N, T, Color>::is_delta() const
 {
         return true;
