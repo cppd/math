@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shape.h"
-
 #include "../objects.h"
 
 #include <src/progress/progress.h>
@@ -26,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
+std::unique_ptr<Scene<N, T, Color>> create_scene(
         const Color& background_light,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         std::unique_ptr<const Projector<N, T>>&& projector,

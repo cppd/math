@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cornell_box.h"
 
-#include "storage_scene.h"
+#include "scene.h"
 
 #include "../lights/parallelotope_light.h"
 #include "../lights/point_light.h"
@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tuple>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 namespace
 {
@@ -223,7 +223,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
-        return create_storage_scene<N, T>(
+        return create_scene<N, T>(
                 background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
                 std::move(shapes), progress);
 }

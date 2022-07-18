@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simple.h"
 
-#include "storage_scene.h"
+#include "scene.h"
 
 #include "../lights/ball_light.h"
 #include "../painter/pixel_filter.h"
@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 namespace
 {
@@ -222,7 +222,7 @@ std::optional<Vector<N + 1, T>> create_clip_plane(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_scene(
+std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -243,7 +243,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_scene(
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return create_storage_scene<N, T, Color>(
+        return create_scene<N, T, Color>(
                 background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
                 std::move(shapes), progress);
 }
@@ -271,7 +271,7 @@ std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
                 create_info(screen_width, screen_height, camera_up, camera_direction, light_direction, view_width);
         const T shape_size = shape->bounding_box().diagonal().norm();
 
-        return create_scene(
+        return create_simple_scene(
                 std::move(shape), light, background_light, clip_plane_equation, front_light_proportion, view_center,
                 shape_size, info, progress);
 }
@@ -296,7 +296,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const T shape_size = box_diagonal.norm();
         const std::optional<Vector<N + 1, T>> clip_plane = create_clip_plane(clip_plane_position, bounding_box);
 
-        return create_scene(
+        return create_simple_scene(
                 std::move(shape), light, background_light, clip_plane, front_light_proportion, center, shape_size, info,
                 progress);
 }

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <type_traits>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 namespace ray_intersection_implementation
 {

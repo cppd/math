@@ -138,12 +138,12 @@ std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
 
                 if (parameters.cornell_box)
                 {
-                        return painter::create_cornell_box_scene(
+                        return painter::scenes::create_cornell_box_scene(
                                 std::move(shape), light, background_light,
                                 {dimension_parameters.width, dimension_parameters.height}, &progress);
                 }
 
-                return painter::create_simple_scene(
+                return painter::scenes::create_simple_scene(
                         std::move(shape), light, background_light, clip_plane_equation, front_light_proportion,
                         dimension_parameters.width, dimension_parameters.height, to_vector<T>(camera.up),
                         to_vector<T>(camera.forward), to_vector<T>(camera.lighting), to_vector<T>(camera.view_center),
@@ -155,12 +155,12 @@ std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
 
                 if (parameters.cornell_box)
                 {
-                        return painter::create_cornell_box_scene(
+                        return painter::scenes::create_cornell_box_scene(
                                 std::move(shape), light, background_light,
                                 make_array_value<int, N - 1>(dimension_parameters.max_size), &progress);
                 }
 
-                return painter::create_simple_scene(
+                return painter::scenes::create_simple_scene(
                         std::move(shape), light, background_light, make_clip_plane_position<T>(clip_plane),
                         front_light_proportion, dimension_parameters.max_size, &progress);
         }

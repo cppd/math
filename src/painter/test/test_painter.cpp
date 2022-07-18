@@ -248,7 +248,7 @@ void test_painter(
                 painter_mesh = shapes::create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, WRITE_LOG, progress);
         }
 
-        std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
+        std::unique_ptr<const Scene<N, T, Color>> scene = scenes::create_simple_scene(
                 std::move(painter_mesh), Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
                 Color::illuminant(BACKGROUND_LIGHT), std::nullopt, FRONT_LIGHT_PROPORTION, max_screen_size, progress);
 

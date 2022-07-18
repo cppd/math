@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "storage_scene.h"
+#include "scene.h"
 
 #include "ray_intersection.h"
 
@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 namespace
 {
@@ -228,7 +228,7 @@ public:
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
+std::unique_ptr<Scene<N, T, Color>> create_scene(
         const Color& background_light,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         std::unique_ptr<const Projector<N, T>>&& projector,
@@ -248,7 +248,7 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
 }
 
 #define TEMPLATE(N, T, C)                                                                                       \
-        template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(                                        \
+        template std::unique_ptr<Scene<(N), T, C>> create_scene(                                                \
                 const C&, const std::optional<Vector<(N) + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
                 std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&,                                   \
                 std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);

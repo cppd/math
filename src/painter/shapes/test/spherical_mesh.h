@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../scenes/storage_scene.h"
+#include "../../scenes/scene.h"
 #include "../mesh.h"
 
 #include <src/geometry/core/convex_hull.h>
@@ -173,7 +173,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> meshes;
         meshes.push_back(std::move(painter_mesh));
 
-        res.scene = create_storage_scene(Color(), {}, {}, {}, std::move(meshes), progress);
+        res.scene = scenes::create_scene(Color(), {}, {}, {}, std::move(meshes), progress);
 
         return res;
 }

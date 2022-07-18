@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shape.h"
-
 #include "../objects.h"
 
 #include <src/progress/progress.h>
@@ -26,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 
-namespace ns::painter
+namespace ns::painter::scenes
 {
 template <typename T, typename Color>
 std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
