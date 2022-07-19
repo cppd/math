@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/reference.h>
+#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 
 #include <algorithm>
@@ -39,6 +40,67 @@ std::tuple<T, const Object*> ray_intersection(const Shape& shape, const Ray<N, T
         return {0, nullptr};
 }
 
+template <typename T, typename Shape>
+struct BoundingIntersection final
+{
+        T distance;
+        const Shape* shape;
+
+        BoundingIntersection(const T distance, const Shape* const shape)
+                : distance(distance),
+                  shape(shape)
+        {
+        }
+
+        [[nodiscard]] bool operator<(const BoundingIntersection& v) const
+        {
+                return distance < v.distance;
+        }
+};
+
+template <typename T, typename Shape>
+class BoundingIntersectionHeap final
+{
+        std::vector<BoundingIntersection<T, Shape>> intersections_;
+
+public:
+        template <std::size_t N, typename Shapes, typename Indices>
+        void make(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
+        {
+                intersections_.clear();
+                intersections_.reserve(indices.size());
+
+                for (const auto index : indices)
+                {
+                        const auto& shape = to_ref(shapes[index]);
+                        const auto distance = shape.intersect_bounds(ray, max_distance);
+                        if (distance)
+                        {
+                                ASSERT(*distance < max_distance);
+                                intersections_.emplace_back(*distance, &shape);
+                        }
+                }
+
+                std::make_heap(intersections_.begin(), intersections_.end());
+        }
+
+        [[nodiscard]] bool empty() const
+        {
+                return intersections_.empty();
+        }
+
+        [[nodiscard]] const BoundingIntersection<T, Shape>& front() const
+        {
+                return intersections_.front();
+        }
+
+        void pop()
+        {
+                std::pop_heap(intersections_.begin(), intersections_.end());
+                intersections_.pop_back();
+        }
+};
+
 template <typename Object, std::size_t N, typename T, typename Shapes, typename Indices>
 std::tuple<T, const Object*> ray_intersection(
         const Shapes& shapes,
@@ -48,66 +110,28 @@ std::tuple<T, const Object*> ray_intersection(
 {
         using Shape = std::remove_reference_t<decltype(to_ref(shapes.front()))>;
 
-        struct Intersection final
-        {
-                T distance;
-                const Shape* shape;
+        thread_local BoundingIntersectionHeap<T, Shape> heap;
 
-                Intersection(const T& distance, const Shape* const shape)
-                        : distance(distance),
-                          shape(shape)
-                {
-                }
-
-                bool operator<(const Intersection& v) const
-                {
-                        return distance < v.distance;
-                }
-        };
-
-        thread_local std::vector<Intersection> intersections;
-        intersections.clear();
-        intersections.reserve(indices.size());
-        for (const auto index : indices)
-        {
-                const auto& shape = to_ref(shapes[index]);
-                const auto distance = shape.intersect_bounds(ray, max_distance);
-                if (distance)
-                {
-                        ASSERT(*distance < max_distance);
-                        intersections.emplace_back(*distance, &shape);
-                }
-        }
-        if (intersections.empty())
-        {
-                return {0, nullptr};
-        }
-
-        std::make_heap(intersections.begin(), intersections.end());
-
-        T min_distance = max_distance;
+        T min_distance = Limits<T>::infinity();
         const Object* closest_object = nullptr;
 
-        do
+        for (heap.make(shapes, indices, ray, max_distance); !heap.empty(); heap.pop())
         {
-                const Intersection& bounding = intersections.front();
+                const BoundingIntersection<T, Shape>& bound = heap.front();
 
-                if (min_distance < bounding.distance)
+                if (min_distance < bound.distance)
                 {
                         break;
                 }
 
-                const auto [distance, object] = bounding.shape->intersect(ray, min_distance, bounding.distance);
+                const auto [distance, object] = bound.shape->intersect(ray, min_distance, bound.distance);
                 if (object)
                 {
                         ASSERT(distance < min_distance);
                         min_distance = distance;
                         closest_object = object;
                 }
-
-                std::pop_heap(intersections.begin(), intersections.end());
-                intersections.pop_back();
-        } while (!intersections.empty());
+        }
 
         return {min_distance, closest_object};
 }
@@ -144,6 +168,8 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
         const Ray<N, T>& ray,
         const T max_distance) -> decltype(to_ref(shapes.front()).intersect(ray, T(), T()))
 {
+        static_assert(std::is_floating_point_v<T>);
+
         namespace impl = ray_intersection_implementation;
 
         using Tuple = decltype(to_ref(shapes.front()).intersect(ray, T(), T()));
@@ -168,6 +194,8 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
         const Ray<N, T>& ray,
         const T max_distance)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         namespace impl = ray_intersection_implementation;
 
         if (indices.size() == 1)
