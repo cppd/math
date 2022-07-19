@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
+#include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
 #include <cmath>
@@ -54,9 +55,15 @@ LightSourceInfo<T, Color> PointLight<N, T, Color>::info(const Vector<N, T>& /*po
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& engine) const
 {
-        error("not implemented");
+        LightSourceSampleEmit<N, T, Color> s;
+        s.ray = Ray<N, T>(location_, sampling::uniform_on_sphere<N, T>(engine));
+        s.n = s.ray.dir();
+        s.pdf_pos = 1;
+        s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
+        s.radiance = color_;
+        return s;
 }
 
 template <std::size_t N, typename T, typename Color>
