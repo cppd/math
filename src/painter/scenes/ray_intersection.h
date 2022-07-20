@@ -29,17 +29,6 @@ namespace ns::painter::scenes
 {
 namespace ray_intersection_implementation
 {
-template <typename Object, typename Shape, std::size_t N, typename T>
-std::tuple<T, const Object*> ray_intersection(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
-{
-        const auto distance = shape.intersect_bounds(ray, max_distance);
-        if (distance)
-        {
-                return shape.intersect(ray, max_distance, *distance);
-        }
-        return {0, nullptr};
-}
-
 template <typename T, typename Shape>
 struct BoundingIntersection final
 {
@@ -135,30 +124,6 @@ std::tuple<T, const Object*> ray_intersection(
 
         return {min_distance, closest_object};
 }
-
-template <typename Shape, std::size_t N, typename T>
-bool ray_intersection_any(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
-{
-        const auto distance = shape.intersect_bounds(ray, max_distance);
-        if (distance)
-        {
-                return shape.intersect_any(ray, max_distance, *distance);
-        }
-        return false;
-}
-
-template <typename Shapes, typename Indices, std::size_t N, typename T>
-bool ray_intersection_any(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
-{
-        for (const auto index : indices)
-        {
-                if (ray_intersection_any(to_ref(shapes[index]), ray, max_distance))
-                {
-                        return true;
-                }
-        }
-        return false;
-}
 }
 
 template <std::size_t N, typename T, typename Shapes, typename Indices>
@@ -170,21 +135,25 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        namespace impl = ray_intersection_implementation;
-
         using Tuple = decltype(to_ref(shapes.front()).intersect(ray, T(), T()));
         static_assert(2 == std::tuple_size_v<Tuple>);
         static_assert(std::is_same_v<T, std::tuple_element_t<0, Tuple>>);
         static_assert(std::is_pointer_v<std::tuple_element_t<1, Tuple>>);
 
-        using Object = std::remove_pointer_t<std::tuple_element_t<1, Tuple>>;
-
         if (indices.size() == 1)
         {
-                return impl::ray_intersection<Object>(to_ref(shapes[indices.front()]), ray, max_distance);
+                const auto& shape = to_ref(shapes[indices.front()]);
+                const auto distance = shape.intersect_bounds(ray, max_distance);
+                if (distance)
+                {
+                        return shape.intersect(ray, max_distance, *distance);
+                }
+                return {Limits<T>::infinity(), nullptr};
         }
 
-        return impl::ray_intersection<Object>(shapes, indices, ray, max_distance);
+        using Object = std::remove_pointer_t<std::tuple_element_t<1, Tuple>>;
+
+        return ray_intersection_implementation::ray_intersection<Object>(shapes, indices, ray, max_distance);
 }
 
 template <std::size_t N, typename T, typename Shapes, typename Indices>
@@ -196,13 +165,28 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        namespace impl = ray_intersection_implementation;
+        const auto any_intersection = [&ray, max_distance](const auto& shape)
+        {
+                const auto distance = shape.intersect_bounds(ray, max_distance);
+                if (distance)
+                {
+                        return shape.intersect_any(ray, max_distance, *distance);
+                }
+                return false;
+        };
 
         if (indices.size() == 1)
         {
-                return impl::ray_intersection_any(to_ref(shapes[indices.front()]), ray, max_distance);
+                return any_intersection(to_ref(shapes[indices.front()]));
         }
 
-        return impl::ray_intersection_any(shapes, indices, ray, max_distance);
+        for (const auto index : indices)
+        {
+                if (any_intersection(to_ref(shapes[index])))
+                {
+                        return true;
+                }
+        }
+        return false;
 }
 }
