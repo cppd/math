@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/pdf.h>
+#include <src/sampling/sphere_cosine.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
@@ -99,9 +100,17 @@ LightSourceInfo<T, Color> ParallelotopeLight<N, T, Color>::info(const Vector<N, 
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(PCG& engine) const
 {
-        error("not implemented");
+        LightSourceSampleEmit<N, T, Color> s;
+        s.ray = Ray<N, T>(
+                parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine),
+                sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
+        s.n = parallelotope_.normal();
+        s.pdf_pos = pdf_;
+        s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(dot(s.n, s.ray.dir()));
+        s.radiance = color_;
+        return s;
 }
 
 template <std::size_t N, typename T, typename Color>
