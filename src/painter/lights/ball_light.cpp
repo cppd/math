@@ -31,18 +31,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+bool BallLight<N, T, Color>::visible(const Vector<N, T>& point) const
+{
+        return dot(ball_.normal(), point - ball_.center()) > 0;
+}
+
+template <std::size_t N, typename T, typename Color>
+Vector<N, T> BallLight<N, T, Color>::sample_location(PCG& engine) const
+{
+        return ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
+}
+
+template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& point) const
 {
-        if (dot(ball_.normal(), point - ball_.center()) <= 0)
+        if (!visible(point))
         {
                 LightSourceSample<N, T, Color> sample;
                 sample.pdf = 0;
                 return sample;
         }
 
-        const Vector<N, T> sample_location = ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
-
-        const Vector<N, T> direction = sample_location - point;
+        const Vector<N, T> direction = sample_location(engine) - point;
         const T distance = direction.norm();
         const Vector<N, T> l = direction / distance;
 
@@ -66,7 +76,7 @@ LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const
 template <std::size_t N, typename T, typename Color>
 LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point, const Vector<N, T>& l) const
 {
-        if (dot(ball_.normal(), point - ball_.center()) <= 0)
+        if (!visible(point))
         {
                 LightSourceInfo<T, Color> info;
                 info.pdf = 0;
@@ -102,9 +112,7 @@ template <std::size_t N, typename T, typename Color>
 LightSourceSampleEmit<N, T, Color> BallLight<N, T, Color>::sample_emit(PCG& engine) const
 {
         LightSourceSampleEmit<N, T, Color> s;
-        s.ray = Ray<N, T>(
-                ball_.center() + sampling::uniform_in_sphere(vectors_, engine),
-                sampling::cosine_on_hemisphere(engine, ball_.normal()));
+        s.ray = Ray<N, T>(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
         s.n = ball_.normal();
         s.pdf_pos = pdf_;
         s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(dot(s.n, s.ray.dir()));

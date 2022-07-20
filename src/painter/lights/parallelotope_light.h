@@ -39,6 +39,9 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         T pdf_;
         std::optional<com::SpotLight<T>> spotlight_;
 
+        [[nodiscard]] bool visible(const Vector<N, T>& point) const;
+        [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;
+
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
         [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;

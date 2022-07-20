@@ -31,19 +31,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+bool ParallelotopeLight<N, T, Color>::visible(const Vector<N, T>& point) const
+{
+        return dot(parallelotope_.normal(), point - parallelotope_.org()) > 0;
+}
+
+template <std::size_t N, typename T, typename Color>
+Vector<N, T> ParallelotopeLight<N, T, Color>::sample_location(PCG& engine) const
+{
+        return parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine);
+}
+
+template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> ParallelotopeLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& point) const
 {
-        if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
+        if (!visible(point))
         {
                 LightSourceSample<N, T, Color> sample;
                 sample.pdf = 0;
                 return sample;
         }
 
-        const Vector<N, T> sample_location =
-                parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine);
-
-        const Vector<N, T> direction = sample_location - point;
+        const Vector<N, T> direction = sample_location(engine) - point;
         const T distance = direction.norm();
         const Vector<N, T> l = direction / distance;
 
@@ -67,7 +76,7 @@ LightSourceSample<N, T, Color> ParallelotopeLight<N, T, Color>::sample(PCG& engi
 template <std::size_t N, typename T, typename Color>
 LightSourceInfo<T, Color> ParallelotopeLight<N, T, Color>::info(const Vector<N, T>& point, const Vector<N, T>& l) const
 {
-        if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
+        if (!visible(point))
         {
                 LightSourceInfo<T, Color> info;
                 info.pdf = 0;
@@ -103,9 +112,7 @@ template <std::size_t N, typename T, typename Color>
 LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(PCG& engine) const
 {
         LightSourceSampleEmit<N, T, Color> s;
-        s.ray = Ray<N, T>(
-                parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine),
-                sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
+        s.ray = Ray<N, T>(sample_location(engine), sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
         s.n = parallelotope_.normal();
         s.pdf_pos = pdf_;
         s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(dot(s.n, s.ray.dir()));
