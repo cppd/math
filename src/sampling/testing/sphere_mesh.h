@@ -30,66 +30,71 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling::testing
 {
-template <std::size_t N, typename T>
-class SphereMesh final
+namespace sphere_mesh_implementation
 {
-        static std::array<Vector<N, T>, N> vertices_to_array(
-                const std::vector<Vector<N, T>>& vertices,
-                const std::array<int, N>& indices)
+template <std::size_t N, typename T>
+std::array<Vector<N, T>, N> vertices_to_array(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::array<int, N>& indices)
+{
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
         {
-                std::array<Vector<N, T>, N> res;
-                for (std::size_t i = 0; i < N; ++i)
+                res[i] = vertices[indices[i]];
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+class Sphere final
+{
+        std::vector<Vector<N, T>> vertices_;
+        std::vector<std::array<int, N>> facets_;
+        std::vector<geometry::HyperplaneSimplex<N, T>> simplices_;
+
+public:
+        explicit Sphere(const unsigned facet_min_count)
+        {
+                geometry::create_sphere(facet_min_count, &vertices_, &facets_);
+                ASSERT(facets_.size() >= facet_min_count);
+
+                simplices_.reserve(facets_.size());
+                for (const std::array<int, N>& indices : facets_)
                 {
-                        res[i] = vertices[indices[i]];
+                        simplices_.emplace_back(vertices_to_array(vertices_, indices));
+                }
+        }
+
+        [[nodiscard]] const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
+        {
+                return simplices_;
+        }
+
+        [[nodiscard]] std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
+        {
+                ASSERT(index < facets_.size());
+                return vertices_to_array(vertices_, facets_[index]);
+        }
+
+        [[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects() const
+        {
+                ASSERT(facets_.size() == simplices_.size());
+                const auto intersection_cost = decltype(simplices_)::value_type::intersection_cost();
+                std::vector<geometry::BvhObject<N, T>> res;
+                res.reserve(simplices_.size());
+                for (std::size_t i = 0; i < simplices_.size(); ++i)
+                {
+                        res.emplace_back(geometry::BoundingBox(vertices_, facets_[i]), intersection_cost, i);
                 }
                 return res;
         }
+};
+}
 
-        class Sphere final
-        {
-                std::vector<Vector<N, T>> vertices_;
-                std::vector<std::array<int, N>> facets_;
-                std::vector<geometry::HyperplaneSimplex<N, T>> simplices_;
-
-        public:
-                explicit Sphere(const unsigned facet_min_count)
-                {
-                        geometry::create_sphere(facet_min_count, &vertices_, &facets_);
-                        ASSERT(facets_.size() >= facet_min_count);
-
-                        simplices_.reserve(facets_.size());
-                        for (const std::array<int, N>& indices : facets_)
-                        {
-                                simplices_.emplace_back(vertices_to_array(vertices_, indices));
-                        }
-                }
-
-                [[nodiscard]] const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
-                {
-                        return simplices_;
-                }
-
-                [[nodiscard]] std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
-                {
-                        ASSERT(index < facets_.size());
-                        return vertices_to_array(vertices_, facets_[index]);
-                }
-
-                [[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects() const
-                {
-                        ASSERT(facets_.size() == simplices_.size());
-                        const auto intersection_cost = decltype(simplices_)::value_type::intersection_cost();
-                        std::vector<geometry::BvhObject<N, T>> res;
-                        res.reserve(simplices_.size());
-                        for (std::size_t i = 0; i < simplices_.size(); ++i)
-                        {
-                                res.emplace_back(geometry::BoundingBox(vertices_, facets_[i]), intersection_cost, i);
-                        }
-                        return res;
-                }
-        };
-
-        Sphere sphere_;
+template <std::size_t N, typename T>
+class SphereMesh final
+{
+        sphere_mesh_implementation::Sphere<N, T> sphere_;
         geometry::Bvh<N, T> bvh_;
 
 public:
