@@ -23,12 +23,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
+#include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
 #include <cmath>
 
 namespace ns::painter::lights
 {
+template <std::size_t N, typename T, typename Color>
+Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, const T distance) const
+{
+        const T spotlight_coef = spotlight_.coef(cos);
+        if (spotlight_coef <= 0)
+        {
+                return Color(0);
+        }
+        return color_ * (spotlight_coef / com::power_n1<N>(squared_distance, distance));
+}
+
 template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
 {
@@ -39,29 +51,10 @@ LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, c
         const T cos = -dot(l, direction_);
 
         LightSourceSample<N, T, Color> s;
-
         s.distance = distance;
         s.l = l;
         s.pdf = 1;
-
-        const T spotlight_coef = spotlight_.coef(cos);
-
-        if (spotlight_coef <= 0)
-        {
-                s.radiance = Color(0);
-                return s;
-        }
-
-        const T coef = coef_ / com::power_n1<N>(squared_distance, distance);
-        if (spotlight_coef >= 1)
-        {
-                s.radiance = color_ * coef;
-        }
-        else
-        {
-                s.radiance = color_ * (coef * spotlight_coef);
-        }
-
+        s.radiance = radiance(cos, squared_distance, distance);
         return s;
 }
 
@@ -74,9 +67,18 @@ LightSourceInfo<T, Color> SpotLight<N, T, Color>::info(const Vector<N, T>& /*poi
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& engine) const
 {
-        error("not implemented");
+        const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
+        const T cos = dot(direction_, ray.dir());
+
+        LightSourceSampleEmit<N, T, Color> s;
+        s.ray = ray;
+        s.n = ray.dir();
+        s.pdf_pos = 1;
+        s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
+        s.radiance = spotlight_.color(color_, cos);
+        return s;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -95,8 +97,7 @@ SpotLight<N, T, Color>::SpotLight(
         const std::type_identity_t<T> width)
         : location_(location),
           direction_(direction.normalized()),
-          color_(color),
-          coef_(power<N - 1>(unit_intensity_distance)),
+          color_(color * power<N - 1>(unit_intensity_distance)),
           spotlight_(falloff_start, width)
 {
         if (!(unit_intensity_distance > 0))
