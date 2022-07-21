@@ -42,6 +42,7 @@ class BallLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] bool visible(const Vector<N, T>& point) const;
         [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;
+        [[nodiscard]] Color radiance(T cos) const;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 

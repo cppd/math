@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
-#include <cmath>
-
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
@@ -40,6 +38,16 @@ template <std::size_t N, typename T, typename Color>
 Vector<N, T> BallLight<N, T, Color>::sample_location(PCG& engine) const
 {
         return ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
+}
+
+template <std::size_t N, typename T, typename Color>
+Color BallLight<N, T, Color>::radiance(const T cos) const
+{
+        if (!spotlight_)
+        {
+                return color_;
+        }
+        return spotlight_->color(color_, cos);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -56,19 +64,12 @@ LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const
         const T distance = direction.norm();
         const Vector<N, T> l = direction / distance;
 
-        const T cos = std::abs(dot(l, ball_.normal()));
+        const T cos = -dot(l, ball_.normal());
 
         LightSourceSample<N, T, Color> s;
         s.l = l;
         s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-        if (!spotlight_)
-        {
-                s.radiance = color_;
-        }
-        else
-        {
-                s.radiance = spotlight_->color(color_, cos);
-        }
+        s.radiance = radiance(cos);
         s.distance = distance;
         return s;
 }
@@ -92,18 +93,11 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
                 return info;
         }
 
-        const T cos = std::abs(dot(ray.dir(), ball_.normal()));
+        const T cos = -dot(ray.dir(), ball_.normal());
 
         LightSourceInfo<T, Color> info;
         info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-        if (!spotlight_)
-        {
-                info.radiance = color_;
-        }
-        else
-        {
-                info.radiance = spotlight_->color(color_, cos);
-        }
+        info.radiance = radiance(cos);
         info.distance = *intersection;
         return info;
 }
@@ -111,12 +105,15 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
 template <std::size_t N, typename T, typename Color>
 LightSourceSampleEmit<N, T, Color> BallLight<N, T, Color>::sample_emit(PCG& engine) const
 {
+        const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
+        const T cos = dot(ball_.normal(), ray.dir());
+
         LightSourceSampleEmit<N, T, Color> s;
-        s.ray = Ray<N, T>(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
+        s.ray = ray;
         s.n = ball_.normal();
         s.pdf_pos = pdf_;
-        s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(dot(s.n, s.ray.dir()));
-        s.radiance = color_;
+        s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
+        s.radiance = radiance(cos);
         return s;
 }
 
