@@ -31,7 +31,6 @@ class PointLight final : public LightSource<N, T, Color>
 
         Vector<N, T> location_;
         Color color_;
-        T coef_;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 

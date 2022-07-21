@@ -36,13 +36,12 @@ LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, 
         const Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();
         const T distance = std::sqrt(squared_distance);
-        const T coef = coef_ / com::power_n1<N>(squared_distance, distance);
 
         LightSourceSample<N, T, Color> s;
         s.distance = distance;
         s.l = direction / distance;
         s.pdf = 1;
-        s.radiance = color_ * coef;
+        s.radiance = color_ * (1 / com::power_n1<N>(squared_distance, distance));
         return s;
 }
 
@@ -57,9 +56,11 @@ LightSourceInfo<T, Color> PointLight<N, T, Color>::info(const Vector<N, T>& /*po
 template <std::size_t N, typename T, typename Color>
 LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& engine) const
 {
+        const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
+
         LightSourceSampleEmit<N, T, Color> s;
-        s.ray = Ray<N, T>(location_, sampling::uniform_on_sphere<N, T>(engine));
-        s.n = s.ray.dir();
+        s.ray = ray;
+        s.n = ray.dir();
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
         s.radiance = color_;
@@ -78,8 +79,7 @@ PointLight<N, T, Color>::PointLight(
         const Color& color,
         const std::type_identity_t<T> unit_intensity_distance)
         : location_(location),
-          color_(color),
-          coef_(power<N - 1>(unit_intensity_distance))
+          color_(color * power<N - 1>(unit_intensity_distance))
 {
         if (!(unit_intensity_distance > 0))
         {
