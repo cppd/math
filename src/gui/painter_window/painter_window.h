@@ -90,7 +90,7 @@ void create_painter_window(
                 [=, scene = std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
-                                name, std::make_unique<PainterPixels<N>>(
+                                name, std::make_unique<PainterPixels<N, T, Color>>(
                                               scene, thread_count, samples_per_pixel, flat_shading));
                 });
 }

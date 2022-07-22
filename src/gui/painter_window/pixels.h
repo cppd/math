@@ -75,7 +75,7 @@ struct Pixels
         [[nodiscard]] virtual std::optional<Images> pixels() const = 0;
 };
 
-template <std::size_t N>
+template <std::size_t N, typename T, typename Color>
 class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 {
         static_assert(N >= 3);
@@ -90,6 +90,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr std::uint8_t ALPHA = Limits<std::uint8_t>::max();
 
         static constexpr float MIN = Limits<float>::lowest();
+
+        const std::shared_ptr<const painter::Scene<N, T, Color>> scene_;
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -363,26 +365,26 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         }
 
 public:
-        template <typename T, typename Color>
         PainterPixels(
                 std::shared_ptr<const painter::Scene<N, T, Color>> scene,
                 const unsigned thread_count,
                 const int samples_per_pixel,
                 const bool flat_shading)
-                : floating_point_name_(type_bit_name<T>()),
+                : scene_(std::move(scene)),
+                  floating_point_name_(type_bit_name<T>()),
                   color_name_(Color::name()),
-                  global_index_(scene->projector().screen_size()),
+                  global_index_(scene_->projector().screen_size()),
                   screen_size_(
                           [](const auto& array)
                           {
                                   return std::vector(array.cbegin(), array.cend());
-                          }(scene->projector().screen_size())),
+                          }(scene_->projector().screen_size())),
                   busy_indices_2d_(thread_count, NULL_INDEX),
                   painter_(painter::create_painter(
                           this,
                           samples_per_pixel,
                           MAX_PASS_COUNT,
-                          std::move(scene),
+                          scene_.get(),
                           thread_count,
                           flat_shading))
         {

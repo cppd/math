@@ -335,7 +335,7 @@ public:
         Impl(Notifier<N - 1>* const notifier,
              const int samples_per_pixel,
              const std::optional<int> max_pass_count,
-             std::shared_ptr<const Scene<N, T, Color>> scene,
+             const Scene<N, T, Color>* const scene,
              const int thread_count,
              std::bool_constant<FLAT_SHADING>)
         {
@@ -369,7 +369,7 @@ public:
                         std::make_unique<PaintingStatistics>(multiply_all<long long>(scene->projector().screen_size()));
 
                 thread_ = std::thread(
-                        [=, stop = &stop_, statistics = statistics_.get(), scene = std::move(scene)]() noexcept
+                        [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
                         {
                                 painter_thread<FLAT_SHADING>(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
@@ -392,22 +392,22 @@ std::unique_ptr<Painter> create_painter(
         Notifier<N - 1>* const notifier,
         const int samples_per_pixel,
         const std::optional<int> max_pass_count,
-        std::shared_ptr<const Scene<N, T, Color>> scene,
+        const Scene<N, T, Color>* const scene,
         const int thread_count,
         const bool flat_shading)
 {
         if (!flat_shading)
         {
                 return std::make_unique<Impl>(
-                        notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, std::false_type());
+                        notifier, samples_per_pixel, max_pass_count, scene, thread_count, std::false_type());
         }
         return std::make_unique<Impl>(
-                notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, std::true_type());
+                notifier, samples_per_pixel, max_pass_count, scene, thread_count, std::true_type());
 }
 
 #define TEMPLATE(N, T, C)                                 \
         template std::unique_ptr<Painter> create_painter( \
-                Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T, C>>, int, bool);
+                Notifier<(N)-1>*, int, std::optional<int>, const Scene<(N), T, C>*, int, bool);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

@@ -142,7 +142,7 @@ std::unique_ptr<Painter> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
         std::optional<int> max_pass_count,
-        std::shared_ptr<const Scene<N, T, Color>> scene,
+        const Scene<N, T, Color>* scene,
         int thread_count,
         bool flat_shading);
 }

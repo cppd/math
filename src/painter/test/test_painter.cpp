@@ -189,9 +189,7 @@ void test_painter_file(
         const Clock::time_point start_time = Clock::now();
         {
                 std::unique_ptr<Painter> painter = create_painter(
-                        &image, samples_per_pixel, MAX_PASS_COUNT,
-                        std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene)), thread_count,
-                        FLAT_SHADING);
+                        &image, samples_per_pixel, MAX_PASS_COUNT, scene.get(), thread_count, FLAT_SHADING);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
