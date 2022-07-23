@@ -115,7 +115,7 @@ void test_intersections(
                 const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
                 for (; i < c; ++i)
                 {
-                        if (!intersections(*mesh.scene, rays[i]))
+                        if (!intersections(*mesh.scene.scene, rays[i]))
                         {
                                 ++miss_count;
                         }
@@ -155,7 +155,7 @@ void test_surface_ratio(
                 const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
                 for (; i < c; ++i)
                 {
-                        if (mesh.scene->intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, rays[i]))
+                        if (mesh.scene.scene->intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, rays[i]))
                         {
                                 ++mesh_intersections;
                         }

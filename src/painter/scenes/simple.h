@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "storage.h"
+
 #include "../objects.h"
 
 #include <src/progress/progress.h>
@@ -27,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::scenes
 {
 template <typename T, typename Color>
-std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
+StorageScene<3, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<3, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -43,7 +45,7 @@ std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
         progress::Ratio* progress);
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+StorageScene<N, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,

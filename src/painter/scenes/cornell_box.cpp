@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cornell_box.h"
 
-#include "scene.h"
+#include "storage.h"
 
 #include "../lights/parallelotope_light.h"
 #include "../lights/point_light.h"
@@ -200,7 +200,7 @@ void create_light_sources(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+StorageScene<N, T, Color> create_cornell_box_scene(
         const Color& light,
         const Color& background_light,
         const std::array<int, N - 1>& screen_size,
@@ -223,7 +223,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
-        return create_scene<N, T>(
+        return create_storage_scene<N, T>(
                 background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
                 std::move(shapes), progress);
 }
@@ -252,7 +252,7 @@ std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const ge
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+StorageScene<N, T, Color> create_cornell_box_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -268,7 +268,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 }
 
 #define TEMPLATE(N, T, C)                                                                                     \
-        template std::unique_ptr<const Scene<(N), T, C>> create_cornell_box_scene(                            \
+        template StorageScene<(N), T, C> create_cornell_box_scene(                                            \
                 std::unique_ptr<const Shape<(N), T, C>>&&, const C&, const C&, const std::array<int, (N)-1>&, \
                 progress::Ratio*);
 

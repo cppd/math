@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_painter_window.h"
 
 #include <src/painter/painter.h>
+#include <src/painter/scenes/storage.h>
 
 #include <QTimer>
 #include <memory>
@@ -84,14 +85,14 @@ void create_painter_window(
         const unsigned thread_count,
         const int samples_per_pixel,
         const bool flat_shading,
-        std::unique_ptr<const painter::Scene<N, T, Color>>&& scene)
+        painter::scenes::StorageScene<N, T, Color>&& scene)
 {
         Application::run(
-                [=, scene = std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene))]()
+                [=, scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
                                 name, std::make_unique<PainterPixels<N, T, Color>>(
-                                              scene, thread_count, samples_per_pixel, flat_shading));
+                                              std::move(*scene), thread_count, samples_per_pixel, flat_shading));
                 });
 }
 }

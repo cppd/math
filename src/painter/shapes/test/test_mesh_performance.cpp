@@ -73,12 +73,12 @@ void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<Ray<N,
                         const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
                         for (; i < c; ++i)
                         {
-                                do_not_optimize(intersections<ANY>(*mesh.scene, rays[i]));
+                                do_not_optimize(intersections<ANY>(*mesh.scene.scene, rays[i]));
                         }
                 }
         };
 
-        const long long start_ray_count = mesh.scene->thread_ray_count();
+        const long long start_ray_count = mesh.scene.scene->thread_ray_count();
         const Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < 10; ++i)
@@ -87,7 +87,7 @@ void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<Ray<N,
         }
 
         const double duration = duration_from(start_time);
-        const long long ray_count = mesh.scene->thread_ray_count() - start_ray_count;
+        const long long ray_count = mesh.scene.scene->thread_ray_count() - start_ray_count;
 
         std::string s;
         s += "Mesh intersections <" + space_name(N) + ", " + type_name<T>() + ">";

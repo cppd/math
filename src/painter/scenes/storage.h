@@ -17,22 +17,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "storage.h"
-
 #include "../objects.h"
 
 #include <src/progress/progress.h>
 
-#include <array>
 #include <memory>
+#include <vector>
 
 namespace ns::painter::scenes
 {
 template <std::size_t N, typename T, typename Color>
-StorageScene<N, T, Color> create_cornell_box_scene(
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
-        const Color& light,
+struct StorageScene final
+{
+        std::unique_ptr<const Projector<N, T>> projector;
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
+        std::unique_ptr<const Scene<N, T, Color>> scene;
+};
+
+template <std::size_t N, typename T, typename Color>
+StorageScene<N, T, Color> create_storage_scene(
         const Color& background_light,
-        const std::array<int, N - 1>& screen_size,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        std::unique_ptr<const Projector<N, T>>&& projector,
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
         progress::Ratio* progress);
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simple.h"
 
-#include "scene.h"
+#include "storage.h"
 
 #include "../lights/ball_light.h"
 #include "../painter/pixel_filter.h"
@@ -222,7 +222,7 @@ std::optional<Vector<N + 1, T>> create_clip_plane(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+StorageScene<N, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -243,14 +243,14 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return create_scene<N, T, Color>(
+        return create_storage_scene<N, T, Color>(
                 background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
                 std::move(shapes), progress);
 }
 }
 
 template <typename T, typename Color>
-std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
+StorageScene<3, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<3, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -277,7 +277,7 @@ std::unique_ptr<const Scene<3, T, Color>> create_simple_scene(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+StorageScene<N, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
@@ -302,13 +302,13 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
 }
 
 #define TEMPLATE_3(T, C)                                                                                          \
-        template std::unique_ptr<const Scene<3, T, C>> create_simple_scene(                                       \
+        template StorageScene<3, T, C> create_simple_scene(                                                       \
                 std::unique_ptr<const Shape<3, T, C>>&&, const C&, const C&, const std::optional<Vector<4, T>>&,  \
                 std::type_identity_t<T>, int, int, const Vector<3, T>&, const Vector<3, T>&, const Vector<3, T>&, \
                 const Vector<3, T>&, std::type_identity_t<T>, progress::Ratio*);
 
 #define TEMPLATE(N, T, C)                                                                                              \
-        template std::unique_ptr<const Scene<(N), T, C>> create_simple_scene(                                          \
+        template StorageScene<N, T, C> create_simple_scene(                                                            \
                 std::unique_ptr<const Shape<(N), T, C>>&&, const C&, const C&, std::optional<std::type_identity_t<T>>, \
                 std::type_identity_t<T>, int, progress::Ratio*);
 

@@ -175,10 +175,7 @@ std::unique_ptr<const model::mesh::Mesh<N>> file_mesh(const std::string& file_na
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_painter_file(
-        const int samples_per_pixel,
-        const int thread_count,
-        std::unique_ptr<const Scene<N, T, Color>>&& scene)
+void test_painter_file(const int samples_per_pixel, const int thread_count, scenes::StorageScene<N, T, Color>&& scene)
 {
         constexpr int MAX_PASS_COUNT = 1;
         constexpr bool FLAT_SHADING = false;
@@ -189,7 +186,7 @@ void test_painter_file(
         const Clock::time_point start_time = Clock::now();
         {
                 std::unique_ptr<Painter> painter = create_painter(
-                        &image, samples_per_pixel, MAX_PASS_COUNT, scene.get(), thread_count, FLAT_SHADING);
+                        &image, samples_per_pixel, MAX_PASS_COUNT, scene.scene.get(), thread_count, FLAT_SHADING);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
@@ -201,10 +198,7 @@ void test_painter_file(
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_painter_window(
-        const int samples_per_pixel,
-        const int thread_count,
-        std::unique_ptr<const Scene<N, T, Color>>&& scene)
+void test_painter_window(const int samples_per_pixel, const int thread_count, scenes::StorageScene<N, T, Color>&& scene)
 {
         constexpr bool FLAT_SHADING = false;
 
@@ -246,7 +240,7 @@ void test_painter(
                 painter_mesh = shapes::create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, WRITE_LOG, progress);
         }
 
-        std::unique_ptr<const Scene<N, T, Color>> scene = scenes::create_simple_scene(
+        scenes::StorageScene<N, T, Color> scene = scenes::create_simple_scene(
                 std::move(painter_mesh), Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
                 Color::illuminant(BACKGROUND_LIGHT), std::nullopt, FRONT_LIGHT_PROPORTION, max_screen_size, progress);
 

@@ -35,18 +35,6 @@ namespace ns::painter::scenes
 {
 namespace
 {
-template <typename P>
-[[nodiscard]] std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
-{
-        std::vector<P*> result;
-        result.reserve(objects.size());
-        for (const std::unique_ptr<P>& p : objects)
-        {
-                result.push_back(p.get());
-        }
-        return result;
-}
-
 template <std::size_t N, typename T>
 [[nodiscard]] std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
         const std::optional<Vector<N, T>>& clip_plane_equation)
@@ -63,13 +51,11 @@ class Impl final : public Scene<N, T, Color>
 {
         inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
 
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes_;
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources_;
-        std::unique_ptr<const Projector<N, T>> projector_;
+        std::vector<const Shape<N, T, Color>*> shapes_;
+        std::vector<const LightSource<N, T, Color>*> light_sources_;
+        const Projector<N, T>* projector_;
         Color background_light_;
         std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
-
-        std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
         geometry::Bvh<N, T> bvh_;
 
@@ -190,7 +176,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
         {
-                return light_source_pointers_;
+                return light_sources_;
         }
 
         [[nodiscard]] const Projector<N, T>& projector() const override
@@ -211,16 +197,15 @@ class Impl final : public Scene<N, T, Color>
 public:
         Impl(const Color& background_light,
              const std::optional<Vector<N + 1, T>>& clip_plane_equation,
-             std::unique_ptr<const Projector<N, T>>&& projector,
-             std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
+             const Projector<N, T>* const projector,
+             std::vector<const LightSource<N, T, Color>*>&& light_sources,
+             std::vector<const Shape<N, T, Color>*>&& shapes,
              progress::Ratio* const progress)
                 : shapes_(std::move(shapes)),
                   light_sources_(std::move(light_sources)),
-                  projector_(std::move(projector)),
+                  projector_(projector),
                   background_light_(background_light),
                   clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
-                  light_source_pointers_(to_pointers(light_sources_)),
                   bvh_(geometry::bvh_objects(shapes_), progress)
         {
         }
@@ -228,30 +213,30 @@ public:
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<Scene<N, T, Color>> create_scene(
+std::unique_ptr<const Scene<N, T, Color>> create_scene(
         const Color& background_light,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
-        std::unique_ptr<const Projector<N, T>>&& projector,
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
+        const Projector<N, T>* const projector,
+        std::vector<const LightSource<N, T, Color>*>&& light_sources,
+        std::vector<const Shape<N, T, Color>*>&& shapes,
         progress::Ratio* const progress)
 {
         if (clip_plane_equation)
         {
                 return std::make_unique<Impl<N, T, Color, true>>(
-                        background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
-                        std::move(shapes), progress);
+                        background_light, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
+                        progress);
         }
         return std::make_unique<Impl<N, T, Color, false>>(
-                background_light, clip_plane_equation, std::move(projector), std::move(light_sources),
-                std::move(shapes), progress);
+                background_light, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
+                progress);
 }
 
-#define TEMPLATE(N, T, C)                                                                                       \
-        template std::unique_ptr<Scene<(N), T, C>> create_scene(                                                \
-                const C&, const std::optional<Vector<(N) + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
-                std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&,                                   \
-                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);
+#define TEMPLATE(N, T, C)                                                                             \
+        template std::unique_ptr<const Scene<(N), T, C>> create_scene(                                \
+                const C&, const std::optional<Vector<(N) + 1, T>>&, const Projector<(N), T>*,         \
+                std::vector<const LightSource<(N), T, C>*>&&, std::vector<const Shape<(N), T, C>*>&&, \
+                progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

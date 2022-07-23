@@ -121,7 +121,7 @@ std::unique_ptr<const painter::Shape<N, T, Color>> make_shape(
 }
 
 template <std::size_t N, typename T, typename Color, typename Parameters>
-std::unique_ptr<const painter::Scene<N, T, Color>> make_scene(
+painter::scenes::StorageScene<N, T, Color> make_scene(
         std::unique_ptr<const painter::Shape<N, T, Color>> shape,
         const view::info::Camera& camera,
         const view::info::ClipPlane& clip_plane,
@@ -189,11 +189,9 @@ void thread_function(
                 return;
         }
 
-        std::unique_ptr<const painter::Scene<N, T, Color>> scene = make_scene(
+        painter::scenes::StorageScene<N, T, Color> scene = make_scene(
                 std::move(shape), camera, clip_plane, front_light_proportion, light, background_light, parameters,
                 dimension_parameters, clip_plane_equation);
-
-        ASSERT(scene);
 
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 

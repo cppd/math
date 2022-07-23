@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/image/format.h>
 #include <src/painter/painter.h>
+#include <src/painter/scenes/storage.h>
 
 #include <algorithm>
 #include <atomic>
@@ -91,7 +92,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr float MIN = Limits<float>::lowest();
 
-        const std::shared_ptr<const painter::Scene<N, T, Color>> scene_;
+        const painter::scenes::StorageScene<N, T, Color> scene_;
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -366,25 +367,25 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
 public:
         PainterPixels(
-                std::shared_ptr<const painter::Scene<N, T, Color>> scene,
+                painter::scenes::StorageScene<N, T, Color>&& scene,
                 const unsigned thread_count,
                 const int samples_per_pixel,
                 const bool flat_shading)
                 : scene_(std::move(scene)),
                   floating_point_name_(type_bit_name<T>()),
                   color_name_(Color::name()),
-                  global_index_(scene_->projector().screen_size()),
+                  global_index_(scene_.scene->projector().screen_size()),
                   screen_size_(
                           [](const auto& array)
                           {
                                   return std::vector(array.cbegin(), array.cend());
-                          }(scene_->projector().screen_size())),
+                          }(scene_.scene->projector().screen_size())),
                   busy_indices_2d_(thread_count, NULL_INDEX),
                   painter_(painter::create_painter(
                           this,
                           samples_per_pixel,
                           MAX_PASS_COUNT,
-                          scene_.get(),
+                          scene_.scene.get(),
                           thread_count,
                           flat_shading))
         {
