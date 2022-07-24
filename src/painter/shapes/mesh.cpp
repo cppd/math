@@ -195,7 +195,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                 return bvh_.intersect_root(ray, max_distance);
         }
 
-        [[nodiscard]] std::tuple<T, const Surface<N, T, Color>*> intersect(
+        [[nodiscard]] ShapeIntersection<N, T, Color> intersect(
                 const Ray<N, T>& ray,
                 const T max_distance,
                 const T /*bounding_distance*/) const override

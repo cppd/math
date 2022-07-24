@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/com/error.h>
-#include <src/com/reference.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 
@@ -29,13 +30,13 @@ namespace ns::painter::scenes
 {
 namespace ray_intersection_implementation
 {
-template <typename T, typename Shape>
+template <std::size_t N, typename T, typename Color>
 struct BoundingIntersection final
 {
         T distance;
-        const Shape* shape;
+        const Shape<N, T, Color>* shape;
 
-        BoundingIntersection(const T distance, const Shape* const shape)
+        BoundingIntersection(const T distance, const Shape<N, T, Color>* const shape)
                 : distance(distance),
                   shape(shape)
         {
@@ -47,21 +48,25 @@ struct BoundingIntersection final
         }
 };
 
-template <typename T, typename Shape>
+template <std::size_t N, typename T, typename Color>
 class BoundingIntersectionHeap final
 {
-        std::vector<BoundingIntersection<T, Shape>> intersections_;
+        std::vector<BoundingIntersection<N, T, Color>> intersections_;
 
 public:
-        template <std::size_t N, typename Shapes, typename Indices>
-        void make(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
+        template <typename Indices>
+        void make(
+                const std::vector<const Shape<N, T, Color>*>& shapes,
+                const Indices& indices,
+                const Ray<N, T>& ray,
+                const T max_distance)
         {
                 intersections_.clear();
                 intersections_.reserve(indices.size());
 
                 for (const auto index : indices)
                 {
-                        const auto& shape = to_ref(shapes[index]);
+                        const Shape<N, T, Color>& shape = *shapes[index];
                         const auto distance = shape.intersect_bounds(ray, max_distance);
                         if (distance)
                         {
@@ -78,7 +83,7 @@ public:
                 return intersections_.empty();
         }
 
-        [[nodiscard]] const BoundingIntersection<T, Shape>& front() const
+        [[nodiscard]] const BoundingIntersection<N, T, Color>& front() const
         {
                 return intersections_.front();
         }
@@ -90,59 +95,52 @@ public:
         }
 };
 
-template <typename Object, std::size_t N, typename T, typename Shapes, typename Indices>
-std::tuple<T, const Object*> ray_intersection(
-        const Shapes& shapes,
+template <std::size_t N, typename T, typename Color, typename Indices>
+ShapeIntersection<N, T, Color> ray_intersection(
+        const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
         const Ray<N, T>& ray,
         const T max_distance)
 {
-        using Shape = std::remove_reference_t<decltype(to_ref(shapes.front()))>;
+        thread_local BoundingIntersectionHeap<N, T, Color> heap;
 
-        thread_local BoundingIntersectionHeap<T, Shape> heap;
-
-        T min_distance = Limits<T>::infinity();
-        const Object* closest_object = nullptr;
+        ShapeIntersection<N, T, Color> res{Limits<T>::infinity(), nullptr};
 
         for (heap.make(shapes, indices, ray, max_distance); !heap.empty(); heap.pop())
         {
-                const BoundingIntersection<T, Shape>& bound = heap.front();
+                const BoundingIntersection<N, T, Color>& bounding = heap.front();
 
-                if (min_distance < bound.distance)
+                if (res.distance < bounding.distance)
                 {
                         break;
                 }
 
-                const auto [distance, object] = bound.shape->intersect(ray, min_distance, bound.distance);
-                if (object)
+                const ShapeIntersection<N, T, Color> intersection =
+                        bounding.shape->intersect(ray, res.distance, bounding.distance);
+
+                if (intersection.surface)
                 {
-                        ASSERT(distance < min_distance);
-                        min_distance = distance;
-                        closest_object = object;
+                        ASSERT(intersection.distance < res.distance);
+                        res = intersection;
                 }
         }
 
-        return {min_distance, closest_object};
+        return res;
 }
 }
 
-template <std::size_t N, typename T, typename Shapes, typename Indices>
-[[nodiscard]] auto ray_intersection(
-        const Shapes& shapes,
+template <std::size_t N, typename T, typename Color, typename Indices>
+[[nodiscard]] ShapeIntersection<N, T, Color> ray_intersection(
+        const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
         const Ray<N, T>& ray,
-        const T max_distance) -> decltype(to_ref(shapes.front()).intersect(ray, T(), T()))
+        const T max_distance)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        using Tuple = decltype(to_ref(shapes.front()).intersect(ray, T(), T()));
-        static_assert(2 == std::tuple_size_v<Tuple>);
-        static_assert(std::is_same_v<T, std::tuple_element_t<0, Tuple>>);
-        static_assert(std::is_pointer_v<std::tuple_element_t<1, Tuple>>);
-
         if (indices.size() == 1)
         {
-                const auto& shape = to_ref(shapes[indices.front()]);
+                const Shape<N, T, Color>& shape = *shapes[indices.front()];
                 const auto distance = shape.intersect_bounds(ray, max_distance);
                 if (distance)
                 {
@@ -151,21 +149,19 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
                 return {Limits<T>::infinity(), nullptr};
         }
 
-        using Object = std::remove_pointer_t<std::tuple_element_t<1, Tuple>>;
-
-        return ray_intersection_implementation::ray_intersection<Object>(shapes, indices, ray, max_distance);
+        return ray_intersection_implementation::ray_intersection(shapes, indices, ray, max_distance);
 }
 
-template <std::size_t N, typename T, typename Shapes, typename Indices>
+template <std::size_t N, typename T, typename Color, typename Indices>
 [[nodiscard]] bool ray_intersection_any(
-        const Shapes& shapes,
+        const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
         const Ray<N, T>& ray,
         const T max_distance)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        const auto any_intersection = [&ray, max_distance](const auto& shape)
+        const auto any_intersection = [&ray, max_distance](const Shape<N, T, Color>& shape)
         {
                 const auto distance = shape.intersect_bounds(ray, max_distance);
                 if (distance)
@@ -177,12 +173,12 @@ template <std::size_t N, typename T, typename Shapes, typename Indices>
 
         if (indices.size() == 1)
         {
-                return any_intersection(to_ref(shapes[indices.front()]));
+                return any_intersection(*shapes[indices.front()]);
         }
 
         for (const auto index : indices)
         {
-                if (any_intersection(to_ref(shapes[index])))
+                if (any_intersection(*shapes[index]))
                 {
                         return true;
                 }

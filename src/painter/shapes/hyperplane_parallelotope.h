@@ -38,7 +38,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
 
         std::optional<T> intersect_bounds(const Ray<N, T>& r, T max_distance) const override;
 
-        std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
+        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
                 const override;
 
         bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;

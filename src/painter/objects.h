@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <functional>
 #include <optional>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter
@@ -225,6 +224,21 @@ struct Projector
 };
 
 template <std::size_t N, typename T, typename Color>
+struct ShapeIntersection final
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        T distance;
+        const Surface<N, T, Color>* surface;
+
+        ShapeIntersection(const T distance, const Surface<N, T, Color>* const surface)
+                : distance(distance),
+                  surface(surface)
+        {
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
 struct Shape
 {
         static_assert(std::is_floating_point_v<T>);
@@ -235,7 +249,7 @@ struct Shape
 
         [[nodiscard]] virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
 
-        [[nodiscard]] virtual std::tuple<T, const Surface<N, T, Color>*> intersect(
+        [[nodiscard]] virtual ShapeIntersection<N, T, Color> intersect(
                 const Ray<N, T>& ray,
                 T max_distance,
                 T bounding_distance) const = 0;

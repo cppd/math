@@ -117,7 +117,7 @@ std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& r
 }
 
 template <std::size_t N, typename T, typename Color>
-std::tuple<T, const Surface<N, T, Color>*> Parallelotope<N, T, Color>::intersect(
+ShapeIntersection<N, T, Color> Parallelotope<N, T, Color>::intersect(
         const Ray<N, T>& /*ray*/,
         const T /*max_distance*/,
         const T bounding_distance) const

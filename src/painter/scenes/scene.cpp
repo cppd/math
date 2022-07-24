@@ -91,11 +91,11 @@ class Impl final : public Scene<N, T, Color>
                         [shapes = &shapes_, &ray](const auto& indices, const auto& max)
                                 -> std::optional<std::tuple<T, const Surface<N, T, Color>*>>
                         {
-                                const std::tuple<T, const Surface<N, T, Color>*> info =
+                                const ShapeIntersection<N, T, Color> info =
                                         ray_intersection(*shapes, indices, ray, max);
-                                if (std::get<1>(info))
+                                if (info.surface)
                                 {
-                                        return info;
+                                        return std::tuple{info.distance, info.surface};
                                 }
                                 return {};
                         });
