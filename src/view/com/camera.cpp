@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include <src/com/constant.h>
+#include <src/com/conversion.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/transform.h>
 
@@ -29,19 +29,12 @@ constexpr double SCALE_BASE = 1.1;
 constexpr double SCALE_EXP_MIN = -50;
 constexpr double SCALE_EXP_MAX = 100;
 
-constexpr double PI_DIV_180 = PI<double> / 180;
-
 constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME =
         {.left = -1, .right = 1, .bottom = -1, .top = 1, .near = 1, .far = -1};
 
-constexpr double to_radians(const double angle)
+Vector3d rotate_vector_degree(const Vector3d& axis, const double angle_degrees, const Vector3d& v)
 {
-        return angle * PI_DIV_180;
-}
-
-Vector3d rotate_vector_degree(const Vector3d& axis, const double angle_degree, const Vector3d& v)
-{
-        return rotate_vector(axis, to_radians(angle_degree), v);
+        return rotate_vector(axis, degrees_to_radians(angle_degrees), v);
 }
 
 double default_scale(const int width, const int height)

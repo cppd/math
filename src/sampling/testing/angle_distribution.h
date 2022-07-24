@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -43,11 +44,6 @@ class AngleDistribution
         static constexpr int BUCKET_COUNT = 90;
         static constexpr T BUCKET_SIZE = PI<T> / BUCKET_COUNT;
         static constexpr T BUCKETS_PER_RADIAN = BUCKET_COUNT / PI<T>;
-
-        static T to_degrees(const T angle)
-        {
-                return angle * (180 / PI<T>);
-        }
 
         struct Distribution final
         {
@@ -274,7 +270,7 @@ public:
                                 new_line = true;
                         }
 
-                        oss << std::fixed << std::setprecision(1) << std::setw(5) << to_degrees(d.angle_from);
+                        oss << std::fixed << std::setprecision(1) << std::setw(5) << radians_to_degrees(d.angle_from);
                         oss << ": ";
                         oss << std::scientific << std::setprecision(2) << distribution_value;
                         oss << " (" << pdf_mean_value << ")";
@@ -326,8 +322,8 @@ public:
                                 continue;
                         }
 
-                        error("Angle interval = [" + to_string(to_degrees(d.angle_from), 5) + ", "
-                              + to_string(to_degrees(d.angle_to), 5) + "], distribution = "
+                        error("Angle interval = [" + to_string(radians_to_degrees(d.angle_from), 5) + ", "
+                              + to_string(radians_to_degrees(d.angle_to), 5) + "], distribution = "
                               + to_string(distribution_value, 5) + ", PDF = " + to_string(pdf_mean_value, 5));
                 }
         }

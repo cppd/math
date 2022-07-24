@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/functions.h"
 
 #include <src/com/constant.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
@@ -41,7 +42,7 @@ Vector<N, T> make_camera_dir(
                 error("Perspective projection: error view angle " + to_string(width_view_angle_degrees));
         }
 
-        const T half_angle = width_view_angle_degrees * T{0.5} * PI<T> / 180;
+        const T half_angle = degrees_to_radians(width_view_angle_degrees * T{0.5});
         const T dir_length = screen_size[0] * T{0.5} * std::tan(PI<T> / 2 - half_angle);
 
         return camera_dir.normalized() * dir_length;

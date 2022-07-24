@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/functions.h"
 
-#include <src/com/constant.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
@@ -39,7 +39,7 @@ T make_square_radius(const std::type_identity_t<T> width_view_angle_degrees, con
                 error("Spherical projection view angle " + to_string(width_view_angle_degrees) + " is not positive");
         }
 
-        const T half_angle = width_view_angle_degrees * T{0.5} * PI<T> / 180;
+        const T half_angle = degrees_to_radians(width_view_angle_degrees * T{0.5});
         const T sin_alpha = std::sin(half_angle);
 
         const T k = sin_alpha / screen_size[0];
