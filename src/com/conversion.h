@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constant.h"
+
 #include <cmath>
 
 namespace ns
@@ -39,5 +41,21 @@ constexpr double pixels_to_millimeters(const double pixels, const double pixels_
 constexpr double size_to_ppi(const double size_in_mm, const unsigned size_in_pixels)
 {
         return size_in_pixels / size_in_mm * 25.4;
+}
+
+template <typename T>
+constexpr T radians_to_degrees(const T angle)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return angle * (180 / PI<T>);
+}
+
+template <typename T>
+constexpr T degrees_to_radians(const T angle)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return angle * (PI<T> / 180);
 }
 }

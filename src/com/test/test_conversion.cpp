@@ -33,6 +33,17 @@ static_assert(25.4 / 15 == size_to_ppi(150, 10));
 static_assert(25.4 / 15 == pixels_to_millimeters(10, 150));
 static_assert(381 == pixels_to_millimeters(150, 10));
 
+template <typename T>
+struct Test final
+{
+        static_assert(radians_to_degrees(2 * PI<T>) == 360);
+        static_assert(degrees_to_radians(T{360}) == 2 * PI<T>);
+};
+
+template struct Test<float>;
+template struct Test<double>;
+template struct Test<long double>;
+
 void compare(const double a, const double b)
 {
         const double abs = std::abs(a - b);
