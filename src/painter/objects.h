@@ -195,10 +195,11 @@ struct LightSourceSampleEmit final
 };
 
 template <std::size_t N, typename T, typename Color>
-struct LightSource
+class LightSource
 {
         static_assert(std::is_floating_point_v<T>);
 
+public:
         virtual ~LightSource() = default;
 
         [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
@@ -212,10 +213,11 @@ struct LightSource
 };
 
 template <std::size_t N, typename T>
-struct Projector
+class Projector
 {
         static_assert(std::is_floating_point_v<T>);
 
+public:
         virtual ~Projector() = default;
 
         [[nodiscard]] virtual const std::array<int, N - 1>& screen_size() const = 0;
@@ -239,10 +241,11 @@ struct ShapeIntersection final
 };
 
 template <std::size_t N, typename T, typename Color>
-struct Shape
+class Shape
 {
         static_assert(std::is_floating_point_v<T>);
 
+public:
         virtual ~Shape() = default;
 
         [[nodiscard]] virtual T intersection_cost() const = 0;
@@ -263,10 +266,11 @@ struct Shape
 };
 
 template <std::size_t N, typename T, typename Color>
-struct Scene
+class Scene
 {
         static_assert(std::is_floating_point_v<T>);
 
+public:
         virtual ~Scene() = default;
 
         [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(

@@ -25,8 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-struct Compute
+class Compute
 {
+public:
         virtual ~Compute() = default;
 
         virtual VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) = 0;

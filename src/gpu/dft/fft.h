@@ -25,8 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-struct Fft
+class Fft
 {
+public:
         virtual ~Fft() = default;
 
         virtual void set_data(const ComplexNumberBuffer& data) = 0;

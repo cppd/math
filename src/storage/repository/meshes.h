@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::storage
 {
 template <std::size_t N>
-struct MeshObjectRepository
+class MeshObjectRepository
 {
+public:
         virtual ~MeshObjectRepository() = default;
 
         [[nodiscard]] virtual std::vector<std::string> point_object_names() const = 0;

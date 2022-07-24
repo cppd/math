@@ -27,8 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::pencil_sketch
 {
-struct View
+class View
 {
+public:
         static vulkan::DeviceFunctionality device_functionality();
 
         virtual ~View() = default;

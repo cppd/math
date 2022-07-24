@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct VolumeObject
+class VolumeObject
 {
+public:
         virtual ~VolumeObject() = default;
 
         [[nodiscard]] virtual const VkDescriptorSet& descriptor_set(

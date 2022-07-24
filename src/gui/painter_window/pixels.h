@@ -44,8 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-struct Pixels
+class Pixels
 {
+public:
         struct Image final
         {
                 image::ColorFormat color_format;

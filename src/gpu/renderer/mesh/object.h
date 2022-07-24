@@ -27,8 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct MeshObject
+class MeshObject
 {
+public:
         virtual ~MeshObject() = default;
 
         [[nodiscard]] virtual bool transparent() const = 0;

@@ -27,8 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-struct ManifoldConstructorCocone
+class ManifoldConstructorCocone
 {
+public:
         virtual ~ManifoldConstructorCocone() = default;
 
         [[nodiscard]] virtual const std::vector<Vector<N, float>>& points() const = 0;
@@ -41,8 +42,9 @@ struct ManifoldConstructorCocone
 };
 
 template <std::size_t N>
-struct ManifoldConstructor
+class ManifoldConstructor
 {
+public:
         virtual ~ManifoldConstructor() = default;
 
         [[nodiscard]] virtual const std::vector<Vector<N, float>>& points() const = 0;

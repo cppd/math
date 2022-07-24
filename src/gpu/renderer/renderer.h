@@ -31,8 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct Renderer
+class Renderer
 {
+public:
         static vulkan::DeviceFunctionality device_functionality();
 
         virtual ~Renderer() = default;

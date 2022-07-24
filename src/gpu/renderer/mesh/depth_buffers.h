@@ -25,8 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct DepthBuffers
+class DepthBuffers
 {
+public:
         virtual ~DepthBuffers() = default;
 
         [[nodiscard]] virtual const vulkan::ImageView& image_view(unsigned index) const = 0;

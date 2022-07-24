@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::storage
 {
 template <std::size_t N>
-struct VolumeObjectRepository
+class VolumeObjectRepository
 {
+public:
         virtual ~VolumeObjectRepository() = default;
 
         [[nodiscard]] virtual std::vector<std::string> object_names() const = 0;

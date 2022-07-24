@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-struct Dft
+class Dft
 {
+public:
         virtual ~Dft() = default;
 
         virtual void create_buffers(unsigned width, unsigned height, std::uint32_t family_index) = 0;

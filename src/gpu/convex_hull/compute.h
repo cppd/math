@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::convex_hull
 {
-struct Compute
+class Compute
 {
+public:
         virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;

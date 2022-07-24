@@ -28,8 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-struct ComputeImage
+class ComputeImage
 {
+public:
         virtual ~ComputeImage() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
@@ -42,8 +43,9 @@ struct ComputeImage
         virtual void delete_buffers() = 0;
 };
 
-struct ComputeVector
+class ComputeVector
 {
+public:
         virtual ~ComputeVector() = default;
 
         virtual void create_buffers(unsigned width, unsigned height) = 0;

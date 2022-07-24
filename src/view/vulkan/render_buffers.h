@@ -28,8 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-struct RenderBuffers
+class RenderBuffers
 {
+public:
         virtual ~RenderBuffers() = default;
 
         [[nodiscard]] virtual gpu::RenderBuffers3D& buffers_3d() = 0;

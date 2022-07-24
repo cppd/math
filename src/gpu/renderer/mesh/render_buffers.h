@@ -29,8 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct RenderBuffers
+class RenderBuffers
 {
+public:
         virtual ~RenderBuffers() = default;
 
         [[nodiscard]] virtual unsigned width() const = 0;

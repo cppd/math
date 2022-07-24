@@ -27,7 +27,7 @@ template <typename T>
 struct Test;
 
 template <std::size_t N, typename T>
-struct Test<std140::Matrix<N, T>>
+struct Test<std140::Matrix<N, T>> final
 {
         static constexpr std::size_t ALIGNMENT = (N != 3 ? N : 4) * sizeof(T);
         static_assert(sizeof(std140::Matrix<N, T>) == N * round_up(ALIGNMENT, 4 * sizeof(float)));

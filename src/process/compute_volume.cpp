@@ -30,7 +30,7 @@ namespace ns::process
 namespace
 {
 template <std::size_t DIMENSION, std::size_t N>
-struct Slices
+struct Slices final
 {
         std::string object_name;
         std::array<image::Slice, N - DIMENSION> slices;

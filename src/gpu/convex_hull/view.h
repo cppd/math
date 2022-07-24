@@ -27,8 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::convex_hull
 {
-struct View
+class View
 {
+public:
         static vulkan::DeviceFunctionality device_functionality();
 
         virtual ~View() = default;

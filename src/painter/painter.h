@@ -100,7 +100,7 @@ public:
 };
 
 template <std::size_t N>
-struct Notifier
+class Notifier
 {
 protected:
         ~Notifier() = default;
@@ -129,8 +129,9 @@ struct Statistics final
         }
 };
 
-struct Painter
+class Painter
 {
+public:
         virtual ~Painter() = default;
 
         virtual void wait() noexcept = 0;

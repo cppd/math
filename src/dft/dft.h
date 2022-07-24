@@ -22,8 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::dft
 {
-struct DFT
+class DFT
 {
+public:
         virtual ~DFT() = default;
 
         virtual void exec(bool inverse, std::vector<std::complex<float>>* data) = 0;
