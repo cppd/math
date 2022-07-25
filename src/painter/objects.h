@@ -184,7 +184,7 @@ struct LightSourceSampleEmit final
         static_assert(std::is_floating_point_v<T>);
 
         Ray<N, T> ray;
-        Vector<N, T> n;
+        std::optional<Vector<N, T>> n;
         T pdf_pos;
         T pdf_dir;
         Color radiance;

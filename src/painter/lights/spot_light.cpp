@@ -74,7 +74,6 @@ LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& engi
 
         LightSourceSampleEmit<N, T, Color> s;
         s.ray = ray;
-        s.n = ray.dir();
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
         s.radiance = spotlight_.color(color_, cos);
