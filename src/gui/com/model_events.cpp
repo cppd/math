@@ -101,13 +101,13 @@ public:
 template <std::size_t N>
 void ModelEvents::Events<N>::send(model::mesh::MeshEvent<N>&& event) const
 {
-        std::visit(Visitor<N>(tree, view), event);
+        std::visit(Visitor<N>(tree_, view_), event);
 }
 
 template <std::size_t N>
 void ModelEvents::Events<N>::send(model::volume::VolumeEvent<N>&& event) const
 {
-        std::visit(Visitor<N>(tree, view), event);
+        std::visit(Visitor<N>(tree_, view_), event);
 }
 
 ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
@@ -117,8 +117,7 @@ ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
 
         const auto f = [&]<std::size_t N>(Events<N>& events)
         {
-                events.tree = tree;
-                events.view = view;
+                events.set(tree, view);
                 model::mesh::MeshObject<N>::set_events(&events);
                 model::volume::VolumeObject<N>::set_events(&events);
         };
