@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::text
 {
-class Fonts
+class Fonts final
 {
         std::map<std::string_view, std::vector<unsigned char> (*)()> fonts_;
 

@@ -82,7 +82,7 @@ Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n
 namespace sphere_power_cosine_implementation
 {
 template <std::size_t N, typename T>
-class PowerCosineOnHemisphere
+class PowerCosineOnHemisphere final
 {
         static_assert(N > 3);
 

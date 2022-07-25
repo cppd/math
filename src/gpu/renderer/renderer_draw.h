@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class RendererDraw
+class RendererDraw final
 {
         const std::uint32_t transparency_node_buffer_max_size_;
 

@@ -39,7 +39,7 @@ Elsevier, 2017.
 namespace ns::sampling
 {
 template <std::size_t N, typename T>
-class StratifiedJitteredSampler
+class StratifiedJitteredSampler final
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);

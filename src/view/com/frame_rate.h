@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-class FrameRate
+class FrameRate final
 {
         Frequency frequency_;
         text::TextData text_data_;

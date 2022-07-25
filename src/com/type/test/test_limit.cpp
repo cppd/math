@@ -50,7 +50,7 @@ static_assert(std::numeric_limits<double>::min() == binary_exponent<double>(-102
 namespace
 {
 template <typename T>
-class CompareWithNumericLimits
+class CompareWithNumericLimits final
 {
         static_assert(Limits<T>::epsilon() == std::numeric_limits<T>::epsilon());
         static_assert(Limits<T>::max() == std::numeric_limits<T>::max());

@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::shapes
 {
 template <std::size_t N, typename T>
-class MeshFacet
+class MeshFacet final
 {
         static_assert(N >= 3);
 

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer::test
 {
-class RayTracingImage
+class RayTracingImage final
 {
         const vulkan::CommandPool* compute_command_pool_;
         const vulkan::Queue* compute_queue_;

@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-class ImageProcess
+class ImageProcess final
 {
         bool convex_hull_active_ = false;
         bool pencil_sketch_active_ = false;

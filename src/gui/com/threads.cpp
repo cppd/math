@@ -34,7 +34,7 @@ namespace ns::gui
 {
 namespace
 {
-class ThreadData
+class ThreadData final
 {
         progress::RatioList progress_list_;
         std::list<QProgressBar> progress_bars_;

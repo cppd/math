@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-class Swapchain
+class Swapchain final
 {
         const std::uint32_t family_index_;
         const vulkan::RenderPass render_pass_;

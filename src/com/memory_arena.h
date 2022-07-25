@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class MemoryArena
+class MemoryArena final
 {
         static constexpr std::size_t ALIGN = alignof(std::max_align_t);
         static constexpr std::size_t BLOCK_SIZE = 1 << 18;

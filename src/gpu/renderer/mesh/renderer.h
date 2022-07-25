@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class MeshRenderer
+class MeshRenderer final
 {
         struct Pipelines final
         {

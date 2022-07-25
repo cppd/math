@@ -32,7 +32,7 @@ namespace ns
 // index = ((x[3] * s[2] + x[2]) * s[1] + x[1]) * s[0] + x[0]
 // index = x[3] * (s[2] * s[1] * s[0]) + x[2] * (s[1] * s[0]) + x[1] * (s[0]) + x[0]
 template <std::size_t N, typename IndexType>
-class GlobalIndex
+class GlobalIndex final
 {
         static_assert(N > 0);
         static_assert(Integral<IndexType>);

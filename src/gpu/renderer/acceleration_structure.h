@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class AccelerationStructure
+class AccelerationStructure final
 {
         std::vector<std::uint32_t> family_indices_;
         std::optional<vulkan::TopLevelAccelerationStructure> acceleration_structure_;

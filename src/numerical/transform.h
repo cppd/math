@@ -100,7 +100,7 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 }
 
 template <std::size_t N, typename T>
-class MatrixVectorMultiplier
+class MatrixVectorMultiplier final
 {
         Matrix<N, N, T> matrix_;
 

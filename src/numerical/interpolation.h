@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <std::size_t N, typename DataType, typename InterpolationType>
-class Interpolation
+class Interpolation final
 {
         enum class Wrap
         {

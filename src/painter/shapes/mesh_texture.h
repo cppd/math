@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::shapes
 {
 template <std::size_t N>
-class MeshTexture
+class MeshTexture final
 {
         [[nodiscard]] static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class RendererObject
+class RendererObject final
 {
         StorageMesh* mesh_storage_;
         StorageVolume* volume_storage_;

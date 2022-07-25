@@ -105,7 +105,7 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
         }
 }
 
-class WindowCounter
+class WindowCounter final
 {
         inline static std::atomic_int counter_ = 0;
 

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-class PaintingStatistics
+class PaintingStatistics final
 {
         static_assert(std::atomic<long long>::is_always_lock_free);
 

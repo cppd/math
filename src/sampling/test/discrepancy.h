@@ -37,7 +37,7 @@ Elsevier, 2017.
 namespace ns::sampling::test
 {
 template <std::size_t N, typename T>
-class PointSearch
+class PointSearch final
 {
         static bool inside(const Vector<N, T>& p, const std::array<std::array<T, 2>, N>& box)
         {

@@ -34,7 +34,7 @@ namespace ns
 {
 // Weighted quick-union with path compression
 template <typename T>
-class UnionFind
+class UnionFind final
 {
         static_assert(std::is_integral_v<T>);
 

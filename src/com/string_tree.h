@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class StringTree
+class StringTree final
 {
         struct Node final
         {

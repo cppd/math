@@ -48,7 +48,7 @@ using RidgeSet = std::unordered_set<Ridge<N>>;
 
 // orthonormal orthogonal complement of a ridge
 template <std::size_t N, typename T>
-class RidgeComplement
+class RidgeComplement final
 {
         static_assert(N >= 2);
 

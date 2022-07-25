@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class Frequency
+class Frequency final
 {
         struct Events final
         {

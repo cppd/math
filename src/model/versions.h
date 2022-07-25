@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model
 {
 template <std::size_t N>
-class Versions
+class Versions final
 {
         static constexpr std::size_t MAX_VERSION_COUNT = 10;
 

@@ -50,7 +50,7 @@ constexpr T last_axis(const Vector<N, T>& v)
 }
 
 template <std::size_t N>
-class DiscretePoints
+class DiscretePoints final
 {
         std::vector<Vector<N, float>> points_;
         std::unordered_set<Vector<N, int>> integer_points_;

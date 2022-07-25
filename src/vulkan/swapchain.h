@@ -31,7 +31,7 @@ enum class PresentMode
         PREFER_FAST
 };
 
-class Swapchain
+class Swapchain final
 {
         VkSurfaceFormatKHR surface_format_;
         VkExtent2D extent_;
