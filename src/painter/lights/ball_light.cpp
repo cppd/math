@@ -37,7 +37,7 @@ bool BallLight<N, T, Color>::visible(const Vector<N, T>& point) const
 template <std::size_t N, typename T, typename Color>
 Vector<N, T> BallLight<N, T, Color>::sample_location(PCG& engine) const
 {
-        return ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
+        return ball_.center() + sampling::uniform_in_sphere(engine, vectors_);
 }
 
 template <std::size_t N, typename T, typename Color>

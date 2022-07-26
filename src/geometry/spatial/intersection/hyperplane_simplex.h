@@ -106,7 +106,7 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
         rays.reserve(ray_count);
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = sampling::uniform_in_simplex(simplex.vertices, engine);
+                const Vector<N, T> point = sampling::uniform_in_simplex(engine, simplex.vertices);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());

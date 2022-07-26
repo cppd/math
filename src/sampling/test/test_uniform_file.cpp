@@ -131,7 +131,7 @@ void write_samples_to_files()
                                 res[N] = Vector<N, T>(1 / std::sqrt(T{N}));
                                 return res;
                         }();
-                        return uniform_in_simplex(vertices, engine);
+                        return uniform_in_simplex(engine, vertices);
                 });
 
         constexpr std::array<Vector<N, T>, N> VECTORS = []
@@ -149,7 +149,7 @@ void write_samples_to_files()
                 "in parallelotope", COUNT,
                 [&]()
                 {
-                        return uniform_in_parallelotope(VECTORS, engine);
+                        return uniform_in_parallelotope(engine, VECTORS);
                 });
 
         std::vector<Vector<N, T>> samples;

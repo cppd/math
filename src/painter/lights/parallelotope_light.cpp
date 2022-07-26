@@ -38,7 +38,7 @@ bool ParallelotopeLight<N, T, Color>::visible(const Vector<N, T>& point) const
 template <std::size_t N, typename T, typename Color>
 Vector<N, T> ParallelotopeLight<N, T, Color>::sample_location(PCG& engine) const
 {
-        return parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine);
+        return parallelotope_.org() + sampling::uniform_in_parallelotope(engine, parallelotope_.vectors());
 }
 
 template <std::size_t N, typename T, typename Color>

@@ -39,7 +39,7 @@ Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors
 }
 
 template <std::size_t N, typename T, std::size_t M, std::uniform_random_bit_generator RandomEngine>
-Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors, RandomEngine& engine)
+Vector<N, T> uniform_in_parallelotope(RandomEngine& engine, const std::array<Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
