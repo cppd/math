@@ -17,32 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "samples.h"
+#include "sample/background.h"
+#include "sample/color.h"
+#include "sample/merge.h"
 
 #include <optional>
 #include <tuple>
 
-namespace ns::painter::pixel
+namespace ns::painter
 {
 template <typename Color>
 class Pixel final
 {
         using T = typename Color::DataType;
 
-        ColorSamples<Color> color_;
-        BackgroundSamples<Color> background_;
+        sample::ColorSamples<Color> color_;
+        sample::BackgroundSamples<Color> background_;
 
 public:
         Pixel()
         {
         }
 
-        void merge(const ColorSamples<Color>& samples)
+        void merge(const sample::ColorSamples<Color>& samples)
         {
                 color_.merge(samples);
         }
 
-        void merge(const BackgroundSamples<Color>& samples)
+        void merge(const sample::BackgroundSamples<Color>& samples)
         {
                 background_.merge(samples);
         }
@@ -59,7 +61,8 @@ public:
                         return color_.sum() / color_.sum_weight();
                 }
 
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
+                const sample::PixelSamples<Color> p =
+                        sample::merge_color_and_background(color_, background_, background_contribution);
 
                 const T sum = p.color_weight + p.background_weight;
 
@@ -83,7 +86,8 @@ public:
                         return std::tuple<Color, T>(color_.sum() / color_.sum_weight(), 1);
                 }
 
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
+                const sample::PixelSamples<Color> p =
+                        sample::merge_color_and_background(color_, background_, background_contribution);
 
                 const T sum = p.color_weight + p.background_weight;
 
