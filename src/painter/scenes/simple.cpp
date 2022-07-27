@@ -72,7 +72,7 @@ Info<3, T> create_info(
 template <std::size_t N, typename T>
 Info<N, T> create_info(const geometry::BoundingBox<N, T>& bounding_box, const int max_screen_size)
 {
-        static constexpr int BORDER_SIZE = pixel::PixelFilter<N, T>::integer_radius();
+        static constexpr int BORDER_SIZE = pixel::Filter<N, T>::integer_radius();
 
         if (max_screen_size <= 2 * BORDER_SIZE)
         {

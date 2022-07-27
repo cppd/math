@@ -34,7 +34,7 @@ Elsevier, 2017.
 namespace ns::painter::pixel
 {
 template <typename T>
-class GaussianFilter final
+class Gaussian final
 {
         static T gaussian(T alpha, T v)
         {
@@ -45,7 +45,7 @@ class GaussianFilter final
         T exp_;
 
 public:
-        GaussianFilter(const std::type_identity_t<T> width, const std::type_identity_t<T> radius)
+        Gaussian(const std::type_identity_t<T> width, const std::type_identity_t<T> radius)
         {
                 if (!(width > 0))
                 {

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixel
 {
 template <typename Color>
-[[nodiscard]] auto pixel_samples_color_contribution(const Color& color)
+[[nodiscard]] decltype(auto) sample_color_contribution(const Color& color)
 {
         return color.luminance();
 }
@@ -309,7 +309,7 @@ template <typename Color, typename Weight>
                 }
 
                 samples.push_back(weight * (*colors[i]));
-                contributions.push_back(weight * pixel_samples_color_contribution(*colors[i]));
+                contributions.push_back(weight * sample_color_contribution(*colors[i]));
                 weights.push_back(weight);
 
                 if (contributions.back() < min)

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "gaussian_filter.h"
+#include "gaussian.h"
 
 #include <src/com/error.h>
 #include <src/com/math.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixel
 {
 template <std::size_t N, typename T>
-class PixelFilter final
+class Filter final
 {
         // radius=1.5;
         // width=radius/2.5;
@@ -43,10 +43,10 @@ class PixelFilter final
         static constexpr int INTEGER_RADIUS = integral_ceil<int>(std::max(T{0}, FILTER_RADIUS - T{0.5}));
         static_assert(INTEGER_RADIUS == 1);
 
-        const GaussianFilter<T> filter_{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
+        const Gaussian<T> filter_{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
 public:
-        static constexpr int integer_radius()
+        [[nodiscard]] static constexpr int integer_radius()
         {
                 return INTEGER_RADIUS;
         }

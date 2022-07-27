@@ -64,15 +64,15 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const pixel::PixelFilter<N, T> filter_;
+        const pixel::Filter<N, T> filter_;
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
-        const pixel::PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
+        const pixel::Region<N> pixel_region_{screen_size_, filter_.integer_radius()};
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const T background_contribution_ = pixel::pixel_samples_color_contribution(background_);
+        const T background_contribution_ = pixel::sample_color_contribution(background_);
 
         Notifier<N>* const notifier_;
 

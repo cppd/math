@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../gaussian_filter.h"
+#include "../gaussian.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -43,7 +43,7 @@ void compare(const T a, const T b, const T precision)
 template <typename T, std::size_t N>
 void compare(const T width, const T radius, const Vector<N, T>& p, const T value, const T precision)
 {
-        compare(GaussianFilter<T>(width, radius).compute(p), value, precision);
+        compare(Gaussian<T>(width, radius).compute(p), value, precision);
 }
 
 template <typename T>

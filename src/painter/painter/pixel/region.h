@@ -22,46 +22,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixel
 {
-template <std::size_t N>
-class PixelRegion final
+namespace region_implementation
 {
-        static std::array<int, N> max_values_for_size(const std::array<int, N>& size)
+template <std::size_t N>
+std::array<int, N> max_values_for_size(const std::array<int, N>& size)
+{
+        std::array<int, N> max;
+        for (std::size_t i = 0; i < N; ++i)
         {
-                std::array<int, N> max;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        max[i] = size[i] - 1;
-                }
-                return max;
+                max[i] = size[i] - 1;
         }
+        return max;
+}
 
-        template <std::size_t I, typename F>
-        static void traverse(
-                const std::array<int, N>& min,
-                const std::array<int, N>& max,
-                std::array<int, N>& p,
-                const F& f)
+template <std::size_t I, std::size_t N, typename F>
+void traverse(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p, const F& f)
+{
+        for (int i = min[I]; i <= max[I]; ++i)
         {
-                for (int i = min[I]; i <= max[I]; ++i)
+                p[I] = i;
+                if constexpr (I + 1 < N)
                 {
-                        p[I] = i;
-                        if constexpr (I + 1 < N)
-                        {
-                                traverse<I + 1>(min, max, p, f);
-                        }
-                        else
-                        {
-                                f(p);
-                        }
+                        traverse<I + 1>(min, max, p, f);
+                }
+                else
+                {
+                        f(p);
                 }
         }
+}
+}
 
+template <std::size_t N>
+class Region final
+{
         std::array<int, N> max_;
         int integer_radius_;
 
 public:
-        PixelRegion(const std::array<int, N>& size, const int integer_radius)
-                : max_(max_values_for_size(size)),
+        Region(const std::array<int, N>& size, const int integer_radius)
+                : max_(region_implementation::max_values_for_size(size)),
                   integer_radius_(integer_radius)
         {
         }
@@ -77,7 +77,7 @@ public:
                         max[i] = std::min(max_[i], pixel[i] + integer_radius_);
                 }
                 std::array<int, N> p;
-                traverse<0>(min, max, p, f);
+                region_implementation::traverse<0>(min, max, p, f);
         }
 };
 }
