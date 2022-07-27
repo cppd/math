@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::painter
+namespace ns::painter::pixel
 {
 template <typename Color>
 [[nodiscard]] auto pixel_samples_color_contribution(const Color& color)

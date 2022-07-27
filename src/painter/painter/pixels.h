@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "paintbrush.h"
-#include "pixel.h"
-#include "pixel_filter.h"
-#include "pixel_region.h"
-#include "pixel_samples.h"
 
 #include "../painter.h"
+#include "pixel/filter.h"
+#include "pixel/pixel.h"
+#include "pixel/region.h"
+#include "pixel/samples.h"
 
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -64,25 +64,25 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const PixelFilter<N, T> filter_;
+        const pixel::PixelFilter<N, T> filter_;
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
-        const PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
+        const pixel::PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const T background_contribution_ = pixel_samples_color_contribution(background_);
+        const T background_contribution_ = pixel::pixel_samples_color_contribution(background_);
 
         Notifier<N>* const notifier_;
 
-        std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
+        std::vector<pixel::Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
         mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
 
         Paintbrush<N, PaintbrushType> paintbrush_{screen_size_, PANTBRUSH_WIDTH};
         mutable std::mutex paintbrush_lock_;
 
-        Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
+        Vector<4, float> rgba_color(const pixel::Pixel<Color>& pixel) const
         {
                 const auto color_alpha = pixel.color_alpha(background_contribution_);
                 if (color_alpha)
@@ -102,7 +102,7 @@ class Pixels final
                 return Vector<4, float>(0);
         }
 
-        Vector<3, float> rgb_color(const Pixel<Color>& pixel) const
+        Vector<3, float> rgb_color(const pixel::Pixel<Color>& pixel) const
         {
                 const auto color = pixel.color(background_, background_contribution_);
                 if (color)
@@ -137,11 +137,11 @@ class Pixels final
 
                 filter_.compute_weights(center, points, &weights);
 
-                const auto color_samples = make_color_samples(colors, weights);
-                const auto background_samples = make_background_samples(colors, weights);
+                const auto color_samples = pixel::make_color_samples(colors, weights);
+                const auto background_samples = pixel::make_background_samples(colors, weights);
 
                 const long long index = global_index_.compute(region_pixel);
-                Pixel<Color>& p = pixels_[index];
+                pixel::Pixel<Color>& p = pixels_[index];
 
                 const std::lock_guard lg(pixel_locks_[index]);
                 if (color_samples)
@@ -234,7 +234,7 @@ public:
                         Vector<3, float> rgb;
 
                         {
-                                const Pixel<Color>& pixel = pixels_[i];
+                                const pixel::Pixel<Color>& pixel = pixels_[i];
                                 const std::lock_guard lg(pixel_locks_[i]);
                                 rgba = rgba_color(pixel);
                                 rgb = rgb_color(pixel);

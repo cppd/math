@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "pixel_samples.h"
+#include "samples.h"
 
 #include <optional>
 #include <tuple>
 
-namespace ns::painter
+namespace ns::painter::pixel
 {
 template <typename Color>
 class Pixel final

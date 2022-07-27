@@ -31,7 +31,7 @@ Elsevier, 2017.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::painter::pixel
 {
 template <typename T>
 class GaussianFilter final
