@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 
-namespace ns::painter::pixel
+namespace ns::painter::pixels
 {
-namespace region_implementation
+namespace pixel_region_implementation
 {
 template <std::size_t N>
 std::array<int, N> max_values_for_size(const std::array<int, N>& size)
@@ -54,14 +54,14 @@ void traverse(const std::array<int, N>& min, const std::array<int, N>& max, std:
 }
 
 template <std::size_t N>
-class Region final
+class PixelRegion final
 {
         std::array<int, N> max_;
         int integer_radius_;
 
 public:
-        Region(const std::array<int, N>& size, const int integer_radius)
-                : max_(region_implementation::max_values_for_size(size)),
+        PixelRegion(const std::array<int, N>& size, const int integer_radius)
+                : max_(pixel_region_implementation::max_values_for_size(size)),
                   integer_radius_(integer_radius)
         {
         }
@@ -77,7 +77,7 @@ public:
                         max[i] = std::min(max_[i], pixel[i] + integer_radius_);
                 }
                 std::array<int, N> p;
-                region_implementation::traverse<0>(min, max, p, f);
+                pixel_region_implementation::traverse<0>(min, max, p, f);
         }
 };
 }

@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "painter/pixels.h"
 #include "painter/sampler.h"
 #include "painter/statistics.h"
 #include "painter/trace.h"
+#include "pixels/pixels.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -73,7 +73,7 @@ class Painting final
         Notifier<N - 1>* const notifier_;
         const SamplerStratifiedJittered<N - 1, T> sampler_;
 
-        Pixels<N - 1, T, Color> pixels_;
+        pixels::Pixels<N - 1, T, Color> pixels_;
         std::optional<int> pass_count_;
 
         void paint_pixels(unsigned thread_number);

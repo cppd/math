@@ -31,7 +31,7 @@ Elsevier, 2017.
 
 #include <cmath>
 
-namespace ns::painter::pixel
+namespace ns::painter::pixels
 {
 template <typename T>
 class Gaussian final

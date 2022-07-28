@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ns::painter::pixel
+namespace ns::painter::pixels
 {
 template <std::size_t N, typename T>
-class Filter final
+class PixelFilter final
 {
         // radius=1.5;
         // width=radius/2.5;

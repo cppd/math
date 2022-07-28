@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::painter::sample
+namespace ns::painter::pixels
 {
 template <typename Color>
 [[nodiscard]] decltype(auto) sample_color_contribution(const Color& color)

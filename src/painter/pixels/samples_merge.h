@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "background.h"
-#include "color.h"
+#include "samples_background.h"
+#include "samples_color.h"
 
 #include <src/com/error.h>
 
-namespace ns::painter::sample
+namespace ns::painter::pixels
 {
 template <typename Color>
 struct PixelSamples final

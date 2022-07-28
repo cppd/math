@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "storage.h"
 
 #include "../lights/ball_light.h"
-#include "../painter/pixel/filter.h"
+#include "../pixels/pixel_filter.h"
 #include "../projectors/parallel_projector.h"
 
 #include <src/color/color.h>
@@ -72,7 +72,7 @@ Info<3, T> create_info(
 template <std::size_t N, typename T>
 Info<N, T> create_info(const geometry::BoundingBox<N, T>& bounding_box, const int max_screen_size)
 {
-        static constexpr int BORDER_SIZE = pixel::Filter<N, T>::integer_radius();
+        static constexpr int BORDER_SIZE = pixels::PixelFilter<N, T>::integer_radius();
 
         if (max_screen_size <= 2 * BORDER_SIZE)
         {

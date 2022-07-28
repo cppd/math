@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "paintbrush.h"
+#include "color_contribution.h"
 #include "pixel.h"
+#include "pixel_filter.h"
+#include "pixel_region.h"
+#include "samples_background.h"
+#include "samples_color.h"
 
 #include "../painter.h"
-#include "pixel/filter.h"
-#include "pixel/region.h"
-#include "sample/background.h"
-#include "sample/color.h"
-#include "sample/contribution.h"
+#include "../painter/paintbrush.h"
 
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::painter
+namespace ns::painter::pixels
 {
 namespace pixels_implementation
 {
@@ -66,15 +66,15 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const pixel::Filter<N, T> filter_;
+        const PixelFilter<N, T> filter_;
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
-        const pixel::Region<N> pixel_region_{screen_size_, filter_.integer_radius()};
+        const PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const T background_contribution_ = sample::sample_color_contribution(background_);
+        const T background_contribution_ = sample_color_contribution(background_);
 
         Notifier<N>* const notifier_;
 
@@ -139,8 +139,8 @@ class Pixels final
 
                 filter_.compute_weights(center, points, &weights);
 
-                const auto color_samples = sample::make_color_samples(colors, weights);
-                const auto background_samples = sample::make_background_samples(colors, weights);
+                const auto color_samples = make_color_samples(colors, weights);
+                const auto background_samples = make_background_samples(colors, weights);
 
                 const long long index = global_index_.compute(region_pixel);
                 Pixel<Color>& p = pixels_[index];
