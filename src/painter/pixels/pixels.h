@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "samples_color.h"
 
 #include "../painter.h"
-#include "../painter/paintbrush.h"
 
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -34,38 +33,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 
 #include <array>
-#include <mutex>
 #include <optional>
 #include <vector>
 
 namespace ns::painter::pixels
 {
-namespace pixels_implementation
-{
-template <typename Dst, std::size_t N, typename T>
-std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
-{
-        static_assert(!std::is_same_v<Dst, T>);
-        if (p)
-        {
-                std::array<Dst, N> result;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        result[i] = (*p)[i];
-                }
-                return result;
-        }
-        return std::nullopt;
-}
-}
-
 template <std::size_t N, typename T, typename Color>
 class Pixels final
 {
-        using PaintbrushType = std::uint_least16_t;
-
-        static constexpr int PANTBRUSH_WIDTH = 20;
-
         const PixelFilter<N, T> filter_;
 
         const std::array<int, N> screen_size_;
@@ -80,9 +55,6 @@ class Pixels final
 
         std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
         mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
-
-        Paintbrush<N, PaintbrushType> paintbrush_{screen_size_, PANTBRUSH_WIDTH};
-        mutable std::mutex paintbrush_lock_;
 
         Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
         {
@@ -173,22 +145,6 @@ public:
                 {
                         error("Not finite background RGB " + to_string(background_rgb32_));
                 }
-        }
-
-        std::optional<std::array<int, N>> next_pixel()
-        {
-                return pixels_implementation::to_type<int>(
-                        [&]
-                        {
-                                const std::lock_guard lg(paintbrush_lock_);
-                                return paintbrush_.next_pixel();
-                        }());
-        }
-
-        void next_pass()
-        {
-                const std::lock_guard lg(paintbrush_lock_);
-                paintbrush_.reset();
         }
 
         void add_samples(

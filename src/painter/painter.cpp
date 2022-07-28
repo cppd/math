@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
+#include "painter/paintbrush.h"
 #include "painter/sampler.h"
 #include "painter/statistics.h"
 #include "painter/trace.h"
@@ -40,6 +41,8 @@ namespace ns::painter
 {
 namespace
 {
+constexpr int PANTBRUSH_WIDTH = 20;
+
 template <std::size_t N>
 class ThreadBusy final
 {
@@ -74,6 +77,7 @@ class Painting final
         const SamplerStratifiedJittered<N - 1, T> sampler_;
 
         pixels::Pixels<N - 1, T, Color> pixels_;
+        Paintbrush<N - 1> paintbrush_;
         std::optional<int> pass_count_;
 
         void paint_pixels(unsigned thread_number);
@@ -107,6 +111,7 @@ Painting<FLAT_SHADING, N, T, Color>::Painting(
           notifier_(notifier),
           sampler_(samples_per_pixel),
           pixels_(projector_->screen_size(), scene->background_light(), notifier),
+          paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH),
           pass_count_(max_pass_count)
 {
         ASSERT(scene_);
@@ -133,7 +138,7 @@ void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_num
                         return;
                 }
 
-                const std::optional<std::array<int, N - 1>> pixel = pixels_.next_pixel();
+                const std::optional<std::array<int, N - 1>> pixel = paintbrush_.next_pixel();
                 if (!pixel)
                 {
                         return;
@@ -181,7 +186,7 @@ void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned threa
         if (!pass_count_ || --*pass_count_ > 0)
         {
                 statistics_->next_pass();
-                pixels_.next_pass();
+                paintbrush_.next_pass();
                 sampler_.next_pass();
         }
         else

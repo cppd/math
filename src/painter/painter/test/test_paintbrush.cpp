@@ -57,10 +57,9 @@ void check(const std::optional<std::array<T, N>>& p, const std::nullopt_t& c)
         check_impl<N, T>(p, c);
 }
 
-template <typename T>
-void test_paintbrush()
+void test()
 {
-        Paintbrush<2, T> paintbrush({4, 4}, 3);
+        Paintbrush<2> paintbrush({4, 4}, 3);
         for (int i = 0; i < 2; ++i)
         {
                 check(paintbrush.next_pixel(), {0, 3});
@@ -80,14 +79,8 @@ void test_paintbrush()
                 check(paintbrush.next_pixel(), {2, 0});
                 check(paintbrush.next_pixel(), {3, 0});
                 check(paintbrush.next_pixel(), std::nullopt);
-                paintbrush.reset();
+                paintbrush.next_pass();
         }
-}
-
-void test()
-{
-        test_paintbrush<std::uint_least16_t>();
-        test_paintbrush<unsigned>();
 }
 
 TEST_SMALL("Paintbrush", test)
