@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/memory_arena.h>
 #include <src/com/random/pcg.h>
+#include <src/com/thread.h>
 
 #include <array>
 #include <atomic>
@@ -36,33 +37,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-namespace painter_implementation
+namespace painting_implementation
 {
 inline constexpr int PANTBRUSH_WIDTH = 20;
 
 template <std::size_t N>
-class ThreadBusy final
+class ThreadNotifier final
 {
         Notifier<N>* notifier_;
         unsigned thread_;
 
 public:
-        ThreadBusy(Notifier<N>* const notifier, const unsigned thread, const std::array<int, N>& pixel)
+        ThreadNotifier(Notifier<N>* const notifier, const unsigned thread, const std::array<int, N>& pixel)
                 : notifier_(notifier),
                   thread_(thread)
         {
                 notifier_->thread_busy(thread_, pixel);
         }
 
-        ~ThreadBusy()
+        ~ThreadNotifier()
         {
                 notifier_->thread_free(thread_);
         }
 
-        ThreadBusy(const ThreadBusy&) = delete;
-        ThreadBusy& operator=(const ThreadBusy&) = delete;
+        ThreadNotifier(const ThreadNotifier&) = delete;
+        ThreadNotifier& operator=(const ThreadNotifier&) = delete;
 };
-}
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 class Painting final
@@ -72,15 +72,19 @@ class Painting final
         std::atomic_bool* const stop_;
         PaintingStatistics* const statistics_;
         Notifier<N - 1>* const notifier_;
-        const SamplerStratifiedJittered<N - 1, T> sampler_;
 
+        const SamplerStratifiedJittered<N - 1, T> sampler_;
         pixels::Pixels<N - 1, T, Color> pixels_;
         Paintbrush<N - 1> paintbrush_;
+
         std::optional<int> pass_count_;
+
+        std::atomic_int call_counter_ = 0;
 
         void paint_pixels(unsigned thread_number);
         void prepare_next_pass(unsigned thread_number);
         [[nodiscard]] bool paint_pass(unsigned thread_number, std::barrier<>* barrier);
+        void paint(unsigned thread_number, std::barrier<>* barrier) noexcept;
 
 public:
         Painting(
@@ -91,7 +95,7 @@ public:
                 int samples_per_pixel,
                 std::optional<int> max_pass_count);
 
-        void paint(unsigned thread_number, std::barrier<>* barrier);
+        void paint(unsigned thread_count);
 };
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -109,7 +113,7 @@ Painting<FLAT_SHADING, N, T, Color>::Painting(
           notifier_(notifier),
           sampler_(samples_per_pixel),
           pixels_(projector_->screen_size(), scene->background_light(), notifier),
-          paintbrush_(projector_->screen_size(), painter_implementation::PANTBRUSH_WIDTH),
+          paintbrush_(projector_->screen_size(), painting_implementation::PANTBRUSH_WIDTH),
           pass_count_(max_pass_count)
 {
         ASSERT(scene_);
@@ -142,7 +146,7 @@ void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_num
                         return;
                 }
 
-                painter_implementation::ThreadBusy thread_busy(notifier_, thread_number, *pixel);
+                painting_implementation::ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
 
                 const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
@@ -239,7 +243,7 @@ bool Painting<FLAT_SHADING, N, T, Color>::paint_pass(const unsigned thread_numbe
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, std::barrier<>* const barrier)
+void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, std::barrier<>* const barrier) noexcept
 {
         try
         {
@@ -250,6 +254,68 @@ void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, st
         catch (...)
         {
                 error_fatal("Exception in painting function");
+        }
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_count)
+{
+        ASSERT(++call_counter_ == 1);
+
+        statistics_->init();
+
+        std::barrier barrier(thread_count);
+
+        std::vector<std::thread> threads;
+        threads.reserve(thread_count);
+
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+                threads.emplace_back(
+                        [this, &barrier, i]() noexcept
+                        {
+                                paint(i, &barrier);
+                        });
+        }
+
+        for (std::thread& t : threads)
+        {
+                join_thread(&t);
+        }
+}
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+void painting(
+        Notifier<N - 1>* const notifier,
+        PaintingStatistics* const statistics,
+        const int samples_per_pixel,
+        const std::optional<int> max_pass_count,
+        const Scene<N, T, Color>& scene,
+        const int thread_count,
+        std::atomic_bool* const stop) noexcept
+{
+        try
+        {
+                try
+                {
+                        using Painting = painting_implementation::Painting<FLAT_SHADING, N, T, Color>;
+
+                        Painting p(&scene, stop, statistics, notifier, samples_per_pixel, max_pass_count);
+                        p.paint(thread_count);
+                }
+                catch (const std::exception& e)
+                {
+                        notifier->error_message(std::string("Painter error:\n") + e.what());
+                }
+                catch (...)
+                {
+                        notifier->error_message("Unknown painter error");
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in painter thread function");
         }
 }
 }

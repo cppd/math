@@ -26,71 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <atomic>
-#include <barrier>
 
 namespace ns::painter
 {
 namespace
 {
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void worker_threads(const int thread_count, Painting<FLAT_SHADING, N, T, Color>& painting)
-{
-        std::barrier barrier(thread_count);
-
-        std::vector<std::thread> threads;
-        threads.reserve(thread_count);
-
-        for (int i = 0; i < thread_count; ++i)
-        {
-                threads.emplace_back(
-                        [&painting, &barrier, i]() noexcept
-                        {
-                                painting.paint(i, &barrier);
-                        });
-        }
-
-        for (std::thread& t : threads)
-        {
-                join_thread(&t);
-        }
-}
-
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void painter_thread(
-        Notifier<N - 1>* const notifier,
-        PaintingStatistics* const statistics,
-        const int samples_per_pixel,
-        const std::optional<int> max_pass_count,
-        const Scene<N, T, Color>& scene,
-        const int thread_count,
-        std::atomic_bool* const stop) noexcept
-{
-        try
-        {
-                try
-                {
-                        Painting<FLAT_SHADING, N, T, Color> painting(
-                                &scene, stop, statistics, notifier, samples_per_pixel, max_pass_count);
-
-                        statistics->init();
-
-                        worker_threads(thread_count, painting);
-                }
-                catch (const std::exception& e)
-                {
-                        notifier->error_message(std::string("Painter error:\n") + e.what());
-                }
-                catch (...)
-                {
-                        notifier->error_message("Unknown painter error");
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in painter thread function");
-        }
-}
-
 class Impl final : public Painter
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -153,7 +93,7 @@ public:
                 thread_ = std::thread(
                         [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
                         {
-                                painter_thread<FLAT_SHADING>(
+                                painting<FLAT_SHADING>(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
                                         stop);
                         });
