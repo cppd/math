@@ -20,8 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "paintbrush.h"
 #include "sampler.h"
 #include "statistics.h"
+#include "thread_notifier.h"
 
 #include "../integrator/trace.h"
+#include "../painter.h"
 #include "../pixels/pixels.h"
 
 #include <src/com/error.h>
@@ -40,29 +42,6 @@ namespace ns::painter
 namespace painting_implementation
 {
 inline constexpr int PANTBRUSH_WIDTH = 20;
-
-template <std::size_t N>
-class ThreadNotifier final
-{
-        Notifier<N>* notifier_;
-        unsigned thread_;
-
-public:
-        ThreadNotifier(Notifier<N>* const notifier, const unsigned thread, const std::array<int, N>& pixel)
-                : notifier_(notifier),
-                  thread_(thread)
-        {
-                notifier_->thread_busy(thread_, pixel);
-        }
-
-        ~ThreadNotifier()
-        {
-                notifier_->thread_free(thread_);
-        }
-
-        ThreadNotifier(const ThreadNotifier&) = delete;
-        ThreadNotifier& operator=(const ThreadNotifier&) = delete;
-};
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 class Painting final
@@ -113,7 +92,7 @@ Painting<FLAT_SHADING, N, T, Color>::Painting(
           notifier_(notifier),
           sampler_(samples_per_pixel),
           pixels_(projector_->screen_size(), scene->background_light(), notifier),
-          paintbrush_(projector_->screen_size(), painting_implementation::PANTBRUSH_WIDTH),
+          paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH),
           pass_count_(max_pass_count)
 {
         ASSERT(scene_);
@@ -146,7 +125,7 @@ void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_num
                         return;
                 }
 
-                painting_implementation::ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
+                ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
 
                 const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
@@ -285,8 +264,9 @@ void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_count)
 }
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 void painting(
+        const bool flat_shading,
         Notifier<N - 1>* const notifier,
         PaintingStatistics* const statistics,
         const int samples_per_pixel,
@@ -299,10 +279,20 @@ void painting(
         {
                 try
                 {
-                        using Painting = painting_implementation::Painting<FLAT_SHADING, N, T, Color>;
+                        namespace impl = painting_implementation;
 
-                        Painting p(&scene, stop, statistics, notifier, samples_per_pixel, max_pass_count);
-                        p.paint(thread_count);
+                        if (flat_shading)
+                        {
+                                impl::Painting<true, N, T, Color>(
+                                        &scene, stop, statistics, notifier, samples_per_pixel, max_pass_count)
+                                        .paint(thread_count);
+                        }
+                        else
+                        {
+                                impl::Painting<false, N, T, Color>(
+                                        &scene, stop, statistics, notifier, samples_per_pixel, max_pass_count)
+                                        .paint(thread_count);
+                        }
                 }
                 catch (const std::exception& e)
                 {

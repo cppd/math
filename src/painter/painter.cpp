@@ -53,13 +53,13 @@ class Impl final : public Painter
         }
 
 public:
-        template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+        template <std::size_t N, typename T, typename Color>
         Impl(Notifier<N - 1>* const notifier,
              const int samples_per_pixel,
              const std::optional<int> max_pass_count,
              const Scene<N, T, Color>* const scene,
              const int thread_count,
-             std::bool_constant<FLAT_SHADING>)
+             const bool flat_shading)
         {
                 if (!notifier)
                 {
@@ -93,9 +93,9 @@ public:
                 thread_ = std::thread(
                         [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
                         {
-                                painting<FLAT_SHADING>(
-                                        notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
-                                        stop);
+                                painting(
+                                        flat_shading, notifier, statistics, samples_per_pixel, max_pass_count, *scene,
+                                        thread_count, stop);
                         });
         }
 
@@ -118,13 +118,7 @@ std::unique_ptr<Painter> create_painter(
         const int thread_count,
         const bool flat_shading)
 {
-        if (!flat_shading)
-        {
-                return std::make_unique<Impl>(
-                        notifier, samples_per_pixel, max_pass_count, scene, thread_count, std::false_type());
-        }
-        return std::make_unique<Impl>(
-                notifier, samples_per_pixel, max_pass_count, scene, thread_count, std::true_type());
+        return std::make_unique<Impl>(notifier, samples_per_pixel, max_pass_count, scene, thread_count, flat_shading);
 }
 
 #define TEMPLATE(N, T, C)                                 \
