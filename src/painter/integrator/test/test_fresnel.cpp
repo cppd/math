@@ -47,7 +47,7 @@ std::vector<Vector<N, T>> random_data(const int count, RandomEngine& engine)
 }
 
 template <int COUNT, std::size_t N, typename T, typename F>
-long long test(const std::vector<Vector<N, T>> data, const F& f)
+long long test(const std::vector<Vector<N, T>>& data, const F& f)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)

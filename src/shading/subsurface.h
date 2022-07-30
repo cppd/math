@@ -58,7 +58,7 @@ namespace ns::shading
 //
 //         const T l = power<5>(1 - n_l);
 //         const T v = power<5>(1 - n_v);
-//         const T f_d90 = T(0.5) + 2 * roughness * square(h_l);
+//         const T f_d90 = T{0.5} + 2 * roughness * square(h_l);
 //         const T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
 //         return (c * K) * rho_ss;
 // }
@@ -84,10 +84,10 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
 //         const T l = power<5>(1 - n_l);
 //         const T v = power<5>(1 - n_v);
 //         const T f_ss90 = roughness * square(h_l);
-//         const T f_d90 = T(0.5) + 2 * f_ss90;
+//         const T f_d90 = T{0.5} + 2 * f_ss90;
 //         const T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//         const T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
-//         const T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
+//         const T f_ss = (1 / (n_l * n_v) - T{0.5}) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T{0.5};
+//         const T c = interpolation(f_d, T{1.25} * f_ss, k_ss);
 //         return (c * K) * rho_ss;
 // }
 }
