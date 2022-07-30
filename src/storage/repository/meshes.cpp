@@ -123,31 +123,30 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
         return v;
 }
 
-#if 0
-std::vector<Vector<2, float>> generate_points_semicircle(const unsigned point_count)
-{
-        if (point_count < 3)
-        {
-                error("point count out of range");
-        }
-
-        DiscretePoints<2> points(point_count);
-
-        for (unsigned i = 0; i < point_count; ++i)
-        {
-                points.add(Vector<2, double>(-std::cos(PI<double> * i / (point_count - 1)),
-                                             std::sin(PI<double> * i / (point_count - 1))));
-        }
-
-        if (points.size() != point_count)
-        {
-                error("Error semicircle point count: requested " + to_string(point_count) + ", generated " +
-                      to_string(points.size()));
-        }
-
-        return points.release();
-}
-#endif
+// std::vector<Vector<2, float>> generate_points_semicircle(const unsigned point_count)
+// {
+//         if (point_count < 3)
+//         {
+//                 error("point count out of range");
+//         }
+//
+//         DiscretePoints<2> points(point_count);
+//
+//         for (unsigned i = 0; i < point_count; ++i)
+//         {
+//                 points.add(Vector<2, double>(
+//                         -std::cos(PI<double> * i / (point_count - 1)), std::sin(PI<double> * i / (point_count -
+//                         1))));
+//         }
+//
+//         if (points.size() != point_count)
+//         {
+//                 error("Error semicircle point count: requested " + to_string(point_count) + ", generated "
+//                       + to_string(points.size()));
+//         }
+//
+//         return points.release();
+// }
 
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_count, const bool bound)

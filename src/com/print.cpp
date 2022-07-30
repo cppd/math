@@ -17,21 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "print.h"
 
-#if 0 && !defined(__clang__)
-#include <array>
-#include <quadmath.h>
+#if !defined(__clang__)
+// #include <array>
+// #include <quadmath.h>
+//
+// namespace ns
+// {
+// std::string to_string(const __float128 value)
+// {
+//         constexpr const char* QUAD_MATH_FORMAT = "%.36Qe"; // "%+-#*.36Qe"
+//
+//         std::array<char, 1000> buf;
+//         quadmath_snprintf(buf.data(), buf.size(), QUAD_MATH_FORMAT, value);
+//         return buf.data();
+// }
+// }
 #endif
-
-namespace ns
-{
-#if 0 && !defined(__clang__)
-std::string to_string(const __float128 value)
-{
-        constexpr const char* QUAD_MATH_FORMAT = "%.36Qe"; // "%+-#*.36Qe"
-
-        std::array<char, 1000> buf;
-        quadmath_snprintf(buf.data(), buf.size(), QUAD_MATH_FORMAT, value);
-        return buf.data();
-}
-#endif
-}

@@ -72,15 +72,6 @@ class Face final
         FT_Face face_;
 
 public:
-#if 0
-        Face(const FT_Library library, const std::string& font_file)
-        {
-                if (FT_New_Face(library, font_file.c_str(), 0, &face_))
-                {
-                        error("Error FreeType new face, file " + font_file);
-                }
-        }
-#endif
         template <typename T>
         Face(const FT_Library library, T&& font_data)
                 : font_data_(std::forward<T>(font_data))
