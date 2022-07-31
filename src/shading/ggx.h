@@ -97,6 +97,62 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
         return ne;
 }
 #else
+
+// Section 4.1: orthonormal basis
+template <std::size_t N, typename T>
+std::array<Vector<N, T>, N - 1> compute_orthonormal_basis(const Vector<N, T>& vh)
+{
+        std::array<Vector<N, T>, N - 1> res;
+
+        const T length_square = [&]
+        {
+                T l = 0;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        l += square(vh[i]);
+                }
+                return l;
+        }();
+
+        if (length_square > 0)
+        {
+                const T length = std::sqrt(length_square);
+                Vector<N - 1, T> plane_v;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        plane_v[i] = vh[i] / length;
+                }
+
+                const std::array<Vector<N - 1, T>, N - 2> plane_basis =
+                        numerical::orthogonal_complement_of_unit_vector(plane_v);
+
+                for (std::size_t i = 0; i < N - 2; ++i)
+                {
+                        for (std::size_t j = 0; j < N - 1; ++j)
+                        {
+                                res[i][j] = plane_basis[i][j];
+                        }
+                        res[i][N - 1] = 0;
+                }
+        }
+        else
+        {
+                for (std::size_t i = 0; i < N - 2; ++i)
+                {
+                        res[i] = numerical::IDENTITY_ARRAY<N, T>[i];
+                }
+        }
+
+        res[N - 2] = vh;
+        res[N - 2] = numerical::orthogonal_complement(res);
+        if (res[N - 2][N - 1] < 0)
+        {
+                res[N - 2] = -res[N - 2];
+        }
+
+        return res;
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
 {
@@ -115,50 +171,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         }();
 
         // Section 4.1: orthonormal basis
-        std::array<Vector<N, T>, N - 1> orthonormal_basis;
-        {
-                const T length_square = [&]
-                {
-                        T res = 0;
-                        for (std::size_t i = 0; i < N - 1; ++i)
-                        {
-                                res += square(vh[i]);
-                        }
-                        return res;
-                }();
-                if (length_square > 0)
-                {
-                        const T length = std::sqrt(length_square);
-                        Vector<N - 1, T> plane_v;
-                        for (std::size_t i = 0; i < N - 1; ++i)
-                        {
-                                plane_v[i] = vh[i] / length;
-                        }
-                        const std::array<Vector<N - 1, T>, N - 2> plane_basis =
-                                numerical::orthogonal_complement_of_unit_vector(plane_v);
-                        for (std::size_t i = 0; i < N - 2; ++i)
-                        {
-                                for (std::size_t j = 0; j < N - 1; ++j)
-                                {
-                                        orthonormal_basis[i][j] = plane_basis[i][j];
-                                }
-                                orthonormal_basis[i][N - 1] = 0;
-                        }
-                }
-                else
-                {
-                        for (std::size_t i = 0; i < N - 2; ++i)
-                        {
-                                orthonormal_basis[i] = numerical::IDENTITY_ARRAY<N, T>[i];
-                        }
-                }
-        }
-        orthonormal_basis[N - 2] = vh;
-        orthonormal_basis[N - 2] = numerical::orthogonal_complement(orthonormal_basis);
-        if (orthonormal_basis[N - 2][N - 1] < 0)
-        {
-                orthonormal_basis[N - 2] = -orthonormal_basis[N - 2];
-        }
+        const std::array<Vector<N, T>, N - 1> orthonormal_basis = compute_orthonormal_basis(vh);
 
         // Section 4.2: parameterization of the projected area
         Vector<N - 1, T> t = [&engine]
@@ -201,6 +214,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
 
         return ne.normalized();
 }
+
 #endif
 
 // (2), (9.37), (9.42)
