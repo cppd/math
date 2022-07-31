@@ -55,7 +55,7 @@ class UnionFind final
         {
                 while (parent_[p] != root)
                 {
-                        T next = parent_[p];
+                        const T next = parent_[p];
                         parent_[p] = root;
                         p = next;
                 }

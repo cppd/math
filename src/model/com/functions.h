@@ -40,8 +40,8 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
                 }
         }
 
-        Vector<N, T> center = min + (max - min) / static_cast<T>(2);
-        T len = (max - min).norm_stable();
+        const Vector<N, T> center = min + (max - min) / T{2};
+        const T len = (max - min).norm_stable();
 
         if (!is_finite(center))
         {

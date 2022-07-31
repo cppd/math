@@ -51,13 +51,13 @@ Vector<N, T> reflect_vn(const Vector<N, T>& v, const Vector<N, T>& normal)
 
 // The OpenGL® Shading Language, Geometric Functions, Description.
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
+std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        T cos1 = dot(normal, v);
+        const T cos1 = dot(normal, v);
         // sin2 = eta * sin1
-        T cos2_squared = 1 - square(eta) * (1 - square(cos1));
+        const T cos2_squared = 1 - square(eta) * (1 - square(cos1));
         if (cos2_squared > 0)
         {
                 return v * eta - normal * (eta * cos1 + std::sqrt(cos2_squared));
@@ -68,12 +68,12 @@ std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& n
 
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
+std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> t_lat = eta * (v - normal * dot(v, normal));
-        T sin_square = dot(t_lat, t_lat);
+        const Vector<N, T> t_lat = eta * (v - normal * dot(v, normal));
+        const T sin_square = dot(t_lat, t_lat);
         if (sin_square < 1)
         {
                 return t_lat - normal * std::sqrt(1 - sin_square);

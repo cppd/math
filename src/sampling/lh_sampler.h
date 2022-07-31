@@ -70,8 +70,8 @@ class LatinHypercubeSampler final
 
                 for (std::size_t i = 1; i < offsets.size(); ++i)
                 {
-                        T prev = offsets[i - 1];
-                        T next = offsets[i];
+                        const T prev = offsets[i - 1];
+                        const T next = offsets[i];
                         if (!(prev < next))
                         {
                                 error("Latin hypercube sampler: error creating offset values " + to_string(prev)

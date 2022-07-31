@@ -46,28 +46,28 @@ constexpr T power([[maybe_unused]] T base)
         }
         if constexpr (EXPONENT == 4)
         {
-                T t = base * base;
+                const T t = base * base;
                 return t * t;
         }
         if constexpr (EXPONENT == 5)
         {
-                T t = base * base;
+                const T t = base * base;
                 return t * t * base;
         }
         if constexpr (EXPONENT == 6)
         {
-                T t = base * base;
+                const T t = base * base;
                 return t * t * t;
         }
         if constexpr (EXPONENT == 7)
         {
-                T t = base * base;
+                const T t = base * base;
                 return t * t * t * base;
         }
         if constexpr (EXPONENT == 8)
         {
-                T t = base * base;
-                T t2 = t * t;
+                const T t = base * base;
+                const T t2 = t * t;
                 return t2 * t2;
         }
         if constexpr (EXPONENT >= 9)

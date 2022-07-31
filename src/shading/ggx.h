@@ -58,20 +58,20 @@ template <typename T, typename RandomEngine>
 Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
 {
         // Section 3.2: transforming the view direction to the hemisphere configuration
-        Vector<3, T> vh = Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
+        const Vector<3, T> vh = Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
 
         // Section 4.1: orthonormal basis (with special case if cross product is zero)
-        Vector<3, T> t0 = [&]
+        const Vector<3, T> t0 = [&]
         {
-                T length_square = square(vh[0]) + square(vh[1]);
+                const T length_square = square(vh[0]) + square(vh[1]);
                 if (length_square > 0)
                 {
-                        T length = std::sqrt(length_square);
+                        const T length = std::sqrt(length_square);
                         return Vector<3, T>(-vh[1] / length, vh[0] / length, 0);
                 }
                 return Vector<3, T>(1, 0, 0);
         }();
-        Vector<3, T> t1 = cross(vh, t0);
+        const Vector<3, T> t1 = cross(vh, t0);
 
         // Section 4.2: parameterization of the projected area
         Vector<2, T> t = [&engine]
@@ -81,11 +81,11 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
-        T s = T{0.5} * (1 + vh[2]);
+        const T s = T{0.5} * (1 + vh[2]);
         t[1] = interpolation(std::sqrt(1 - square(t[0])), t[1], s);
 
         // Section 4.3: reprojection onto hemisphere
-        Vector<3, T> nh = [&]
+        const Vector<3, T> nh = [&]
         {
                 T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 return t[0] * t0 + t[1] * t1 + z * vh;
@@ -117,20 +117,24 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         // Section 4.1: orthonormal basis
         std::array<Vector<N, T>, N - 1> orthonormal_basis;
         {
-                T length_square = 0;
-                for (std::size_t i = 0; i < N - 1; ++i)
+                const T length_square = [&]
                 {
-                        length_square += square(vh[i]);
-                }
+                        T res = 0;
+                        for (std::size_t i = 0; i < N - 1; ++i)
+                        {
+                                res += square(vh[i]);
+                        }
+                        return res;
+                }();
                 if (length_square > 0)
                 {
-                        T length = std::sqrt(length_square);
+                        const T length = std::sqrt(length_square);
                         Vector<N - 1, T> plane_v;
                         for (std::size_t i = 0; i < N - 1; ++i)
                         {
                                 plane_v[i] = vh[i] / length;
                         }
-                        std::array<Vector<N - 1, T>, N - 2> plane_basis =
+                        const std::array<Vector<N - 1, T>, N - 2> plane_basis =
                                 numerical::orthogonal_complement_of_unit_vector(plane_v);
                         for (std::size_t i = 0; i < N - 2; ++i)
                         {

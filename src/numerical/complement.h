@@ -188,7 +188,7 @@ std::size_t closest_axis(const Vector<N, T>& v)
         T max_value = std::abs(v[0]);
         for (std::size_t i = 1; i < N; ++i)
         {
-                T value = std::abs(v[i]);
+                const T value = std::abs(v[i]);
                 if (value > max_value)
                 {
                         max_index = i;

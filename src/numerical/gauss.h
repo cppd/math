@@ -49,7 +49,7 @@ constexpr int find_pivot(const Matrix<N, N, T>& a, const int column, const int f
         int pivot = from_row;
         for (int r = from_row + 1, max_r = N; r < max_r; ++r)
         {
-                T v = absolute(a(r, column));
+                const T v = absolute(a(r, column));
                 if (v > max)
                 {
                         max = v;
@@ -112,7 +112,7 @@ constexpr bool solve_u(RowMatrix<UN, UN, T>& m)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = m(i, k) / m(k, k);
+                        const T l_ik = m(i, k) / m(k, k);
                         for (int j = k + 1; j < N; ++j)
                         {
                                 m(i, j) -= l_ik * m(k, j);
@@ -139,7 +139,7 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, Vector<UN, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = a(i, k) / a(k, k);
+                        const T l_ik = a(i, k) / a(k, k);
                         for (int j = k; j < N; ++j)
                         {
                                 a(i, j) -= l_ik * a(k, j);
@@ -166,7 +166,7 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = a(i, k) / a(k, k);
+                        const T l_ik = a(i, k) / a(k, k);
                         for (int j = k; j < N; ++j)
                         {
                                 a(i, j) -= l_ik * a(k, j);

@@ -36,7 +36,7 @@ template <typename T, typename F>
         T sum = 0;
         for (int i = 1; i < count; ++i)
         {
-                T x = from + (i / t_count) * distance;
+                const T x = from + (i / t_count) * distance;
                 sum += f(x);
         }
         const T h_2 = distance / (2 * t_count);

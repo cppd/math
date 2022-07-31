@@ -96,9 +96,9 @@ public:
 
         [[nodiscard]] constexpr T luminance() const
         {
-                T r = std::max(T{0}, Base::data()[0]);
-                T g = std::max(T{0}, Base::data()[1]);
-                T b = std::max(T{0}, Base::data()[2]);
+                const T r = std::max(T{0}, Base::data()[0]);
+                const T g = std::max(T{0}, Base::data()[1]);
+                const T b = std::max(T{0}, Base::data()[2]);
                 return linear_float_to_linear_luminance(r, g, b);
         }
 

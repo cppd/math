@@ -106,7 +106,7 @@ Vector<N, T> compute_normal(
         for (const VertexFacet& f : vertex_facets)
         {
                 const std::array<int, N>& facet_vertices = mesh_facets[f.facet_index].vertices;
-                T weight = facet_normat_weight_at_vertex(vertices, facet_vertices, f.facet_vertex);
+                const T weight = facet_normat_weight_at_vertex(vertices, facet_vertices, f.facet_vertex);
                 weighted_normals.push_back(weight * facet_normals[f.facet_index]);
 
                 for (unsigned fv = 0; fv < f.facet_vertex; ++fv)

@@ -65,8 +65,8 @@ void rotate(
         T t;
         {
                 const T diff = a(l, l) - a(k, k);
-                T phi = diff / (2 * a(k, l));
-                T phi_s = phi * phi + 1;
+                const T phi = diff / (2 * a(k, l));
+                const T phi_s = phi * phi + 1;
                 if (phi_s <= Limits<T>::max())
                 {
                         t = 1 / (std::abs(phi) + std::sqrt(phi_s));
@@ -89,32 +89,32 @@ void rotate(
 
         for (unsigned i = 0; i < k; ++i)
         {
-                T a_ik = a(i, k);
-                T a_il = a(i, l);
+                const T a_ik = a(i, k);
+                const T a_il = a(i, l);
                 a(i, k) = a_ik - s * (a_il + tau * a_ik);
                 a(i, l) = a_il + s * (a_ik - tau * a_il);
         }
 
         for (unsigned i = k + 1; i < l; ++i)
         {
-                T a_ki = a(k, i);
-                T a_il = a(i, l);
+                const T a_ki = a(k, i);
+                const T a_il = a(i, l);
                 a(k, i) = a_ki - s * (a_il + tau * a_ki);
                 a(i, l) = a_il + s * (a_ki - tau * a_il);
         }
 
         for (unsigned i = l + 1; i < N; ++i)
         {
-                T a_ki = a(k, i);
-                T a_li = a(l, i);
+                const T a_ki = a(k, i);
+                const T a_li = a(l, i);
                 a(k, i) = a_ki - s * (a_li + tau * a_ki);
                 a(l, i) = a_li + s * (a_ki - tau * a_li);
         }
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T p_ik = (*eigenvectors)[k][i];
-                T p_il = (*eigenvectors)[l][i];
+                const T p_ik = (*eigenvectors)[k][i];
+                const T p_il = (*eigenvectors)[l][i];
                 (*eigenvectors)[k][i] = p_ik - s * (p_il + tau * p_ik);
                 (*eigenvectors)[l][i] = p_il + s * (p_ik - tau * p_il);
         }

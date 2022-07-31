@@ -126,7 +126,7 @@ bool all_vertices_are_only_on_one_side(const std::array<Vector<N, T>, V>& vertic
         bool non_negative = false;
         for (const Vector<N, T>& v : vertices)
         {
-                T p = dot(v, c.a) + c.b;
+                const T p = dot(v, c.a) + c.b;
                 non_positive = non_positive || p <= 0;
                 non_negative = non_negative || p >= 0;
                 if (non_negative && non_positive)

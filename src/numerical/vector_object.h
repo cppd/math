@@ -210,7 +210,7 @@ public:
 
         void normalize()
         {
-                T n = norm();
+                const T n = norm();
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         data_[i] /= n;
@@ -219,7 +219,7 @@ public:
 
         [[nodiscard]] Vector<N, T> normalized() const
         {
-                T n = norm();
+                const T n = norm();
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {

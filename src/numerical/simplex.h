@@ -208,7 +208,7 @@ void make_aux_and_maps(
 
                 max = (max != 0) ? max : 1;
 
-                T max_reciprocal = 1 / max;
+                const T max_reciprocal = 1 / max;
 
                 (*b)[m] *= max_reciprocal;
                 (*a)[m][0] = 1;
@@ -360,7 +360,7 @@ std::optional<ConstraintSolution> simplex_iterations(
 
                         if (a[i][*e] < 0)
                         {
-                                T delta = b[i] / a[i][*e];
+                                const T delta = b[i] / a[i][*e];
 
                                 if (delta > max_delta || l == Limits<unsigned>::max())
                                 {

@@ -99,20 +99,21 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
         }
 
         const auto luminance = beta->luminance();
-        if (luminance > 0)
+        if (!(luminance > 0))
         {
-                using T = decltype(luminance);
-                static constexpr T MIN = 0.05;
-                static constexpr T MAX = 0.95;
-                const T p = std::clamp(1 - luminance, MIN, MAX);
-                if (std::bernoulli_distribution(p)(engine))
-                {
-                        return true;
-                }
-                *beta /= 1 - p;
-                return false;
+                return true;
         }
-        return true;
+
+        using T = decltype(luminance);
+        static constexpr T MIN = 0.05;
+        static constexpr T MAX = 0.95;
+        const T p = std::clamp(1 - luminance, MIN, MAX);
+        if (std::bernoulli_distribution(p)(engine))
+        {
+                return true;
+        }
+        *beta /= 1 - p;
+        return false;
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>

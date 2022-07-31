@@ -86,7 +86,7 @@ void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& 
         {
                 std::array<T, 3> rgb;
                 std::memcpy(rgb.data(), ptr, 3 * sizeof(T));
-                T grayscale = rgb_to_grayscale(rgb);
+                const T grayscale = rgb_to_grayscale(rgb);
                 rgb[0] = grayscale;
                 rgb[1] = grayscale;
                 rgb[2] = grayscale;

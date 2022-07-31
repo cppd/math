@@ -122,10 +122,10 @@ Vector<N, T> uniform_on_sphere_by_rejection(RandomEngine& engine)
         while (true)
         {
                 v = random_vector<N, T>(engine, urd);
-                T length_square = dot(v, v);
+                const T length_square = dot(v, v);
                 if (length_square <= 1)
                 {
-                        T length = std::sqrt(length_square);
+                        const T length = std::sqrt(length_square);
                         if (length > 0)
                         {
                                 v /= length;
