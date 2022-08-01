@@ -36,13 +36,6 @@ struct BoundingBox final
 namespace bounding_box_implementation
 {
 template <std::size_t N, typename T>
-void init_min_max(Vector<N, T>* const min, Vector<N, T>* const max)
-{
-        *min = Vector<N, T>(Limits<T>::max());
-        *max = Vector<N, T>(Limits<T>::lowest());
-}
-
-template <std::size_t N, typename T>
 bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -55,7 +48,7 @@ bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
                 {
                         error("Volume max is not finite");
                 }
-                if (min[i] > max[i])
+                if (!(min[i] <= max[i]))
                 {
                         return false;
                 }
@@ -68,13 +61,12 @@ template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
 {
         namespace impl = bounding_box_implementation;
+        using T = double;
 
-        Vector<N, double> min;
-        Vector<N, double> max;
+        Vector<N, T> min = Vector<N, T>(Limits<T>::infinity());
+        Vector<N, T> max = Vector<N, T>(-Limits<T>::infinity());
 
-        impl::init_min_max(&min, &max);
-
-        for (const Vector<N, double>& v : vertices(volume))
+        for (const Vector<N, T>& v : vertices(volume))
         {
                 min = ::ns::min(min, v);
                 max = ::ns::max(max, v);
