@@ -35,57 +35,71 @@ Elsevier, 2017.
 
 namespace ns::geometry
 {
+namespace bounding_box_implementation
+{
+template <std::size_t M, std::size_t N, typename T>
+[[nodiscard]] constexpr T volume_impl(const Vector<N, T>& d)
+{
+        static_assert(M <= N);
+        static_assert(M >= 1);
+        if constexpr (M == 1)
+        {
+                return d[0];
+        }
+        else if constexpr (M == 2)
+        {
+                return d[0] * d[1];
+        }
+        else if constexpr (M == 3)
+        {
+                return d[0] * d[1] * d[2];
+        }
+        else
+        {
+                return d[M - 1] * volume_impl<M - 1>(d);
+        }
+}
+
+template <std::size_t M, std::size_t N, typename T>
+[[nodiscard]] constexpr T surface_impl(const Vector<N, T>& d)
+{
+        static_assert(M <= N);
+        static_assert(M >= 2);
+        if constexpr (M == 2)
+        {
+                return d[0] + d[1];
+        }
+        else if constexpr (M == 3)
+        {
+                return d[0] * d[1] + d[2] * (d[0] + d[1]);
+        }
+        else
+        {
+                return volume_impl<M - 1>(d) + d[M - 1] * surface_impl<M - 1>(d);
+        }
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr T volume(const Vector<N, T>& d)
+{
+        return volume_impl<N>(d);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr T surface(const Vector<N, T>& d)
+{
+        return 2 * surface_impl<N>(d);
+}
+}
+
 template <std::size_t N, typename T>
 class BoundingBox final
 {
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
-
-        template <std::size_t M>
-        [[nodiscard]] static constexpr T volume(const Vector<N, T>& d)
-        {
-                static_assert(M <= N);
-                static_assert(M >= 1);
-                if constexpr (M == 1)
-                {
-                        return d[0];
-                }
-                else if constexpr (M == 2)
-                {
-                        return d[0] * d[1];
-                }
-                else if constexpr (M == 3)
-                {
-                        return d[0] * d[1] * d[2];
-                }
-                else
-                {
-                        return d[M - 1] * volume<M - 1>(d);
-                }
-        }
-
-        template <std::size_t M>
-        [[nodiscard]] static constexpr T surface(const Vector<N, T>& d)
-        {
-                static_assert(M <= N);
-                static_assert(M >= 2);
-                if constexpr (M == 2)
-                {
-                        return d[0] + d[1];
-                }
-                else if constexpr (M == 3)
-                {
-                        return d[0] * d[1] + d[2] * (d[0] + d[1]);
-                }
-                else
-                {
-                        return volume<M - 1>(d) + d[M - 1] * surface<M - 1>(d);
-                }
-        }
+        static_assert(Limits<T>::is_iec559());
 
         std::array<Vector<N, T>, 2> bounds_;
-
-        static_assert(Limits<T>::is_iec559());
 
         [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
         {
@@ -226,12 +240,12 @@ public:
 
         [[nodiscard]] constexpr T volume() const
         {
-                return volume<N>(diagonal());
+                return bounding_box_implementation::volume(diagonal());
         }
 
         [[nodiscard]] constexpr T surface() const requires(N >= 2)
         {
-                return 2 * surface<N>(diagonal());
+                return bounding_box_implementation::surface(diagonal());
         }
 
         [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r, const T max_distance = Limits<T>::max()) const
