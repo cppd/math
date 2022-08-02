@@ -31,7 +31,7 @@ Elsevier, 2017.
 #include <array>
 #include <optional>
 
-namespace ns::painter
+namespace ns::shading::specular
 {
 namespace fresnel_implementation
 {
