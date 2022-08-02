@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 
-namespace ns::shading::test
+namespace ns::shading
 {
 namespace
 {

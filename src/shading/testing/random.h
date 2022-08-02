@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::shading::test
+namespace ns::shading::testing
 {
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<Vector<N, T>, 2> random_n_v(RandomEngine& engine)

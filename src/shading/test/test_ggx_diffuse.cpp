@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "color.h"
-#include "random.h"
-
 #include "../compute/brdf.h"
 #include "../ggx_diffuse.h"
 #include "../metalness.h"
+#include "../testing/color.h"
+#include "../testing/random.h"
 
 #include <src/color/color.h>
 #include <src/com/log.h>
@@ -33,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::shading::test
+namespace ns::shading
 {
 namespace
 {
@@ -88,20 +87,20 @@ void test_brdf_white(const unsigned sample_count, RandomEngine& engine)
 {
         const TestBRDF<N, T, Color> brdf(Color(1), engine);
 
-        const auto [n, v] = random_n_v<N, T>(engine);
+        const auto [n, v] = testing::random_n_v<N, T>(engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
         const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count, engine);
-        check_color_less(color_uniform, brdf.color());
+        testing::check_color_less(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
         const Color color_importance =
                 compute::directional_albedo_importance_sampling(brdf, n, v, sample_count, engine);
-        check_color_less(color_importance, brdf.color());
+        testing::check_color_less(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.25;
 
-        check_uniform_importance_equal(
+        testing::check_uniform_importance_equal(
                 color_uniform, color_importance, RELATIVE_ERROR,
                 [&]
                 {
@@ -112,22 +111,22 @@ void test_brdf_white(const unsigned sample_count, RandomEngine& engine)
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 void test_brdf_random(const unsigned sample_count, RandomEngine& engine)
 {
-        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>(engine), engine);
+        const TestBRDF<N, T, Color> brdf(testing::random_non_black_color<Color>(engine), engine);
 
-        const auto [n, v] = random_n_v<N, T>(engine);
+        const auto [n, v] = testing::random_n_v<N, T>(engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
         const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count, engine);
-        check_color_range(color_uniform);
+        testing::check_color_range(color_uniform);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
         const Color color_importance =
                 compute::directional_albedo_importance_sampling(brdf, n, v, sample_count, engine);
-        check_color_range(color_importance);
+        testing::check_color_range(color_importance);
 
         constexpr double RELATIVE_ERROR = 0.25;
 
-        check_uniform_importance_equal(
+        testing::check_uniform_importance_equal(
                 color_uniform, color_importance, RELATIVE_ERROR,
                 [&]
                 {
@@ -142,7 +141,7 @@ void test_brdf_pdf(const unsigned sample_count, RandomEngine& engine)
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         {
-                const auto [n, v] = random_n_v<N, T>(engine);
+                const auto [n, v] = testing::random_n_v<N, T>(engine);
                 const T integral = compute::directional_pdf_integral(brdf, n, v, sample_count, engine);
                 if (!(std::abs(integral - 1) <= T{0.05}))
                 {
@@ -253,7 +252,7 @@ void test_sampling(progress::Ratio* const progress, RandomEngine& engine)
         LOG("GGX Diffuse Sampling, " + space_name(N) + ", " + type_name<T>());
 
         const TestBRDF<N, T, Color> brdf(Color(1), engine);
-        const auto [n, v] = random_n_v<N, T>(engine);
+        const auto [n, v] = testing::random_n_v<N, T>(engine);
 
         test_distribution(brdf, n, v, progress);
 }

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::shading::test
+namespace ns::shading::testing
 {
 template <typename Color>
 void check_color(const Color& color, const char* const description)
