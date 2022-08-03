@@ -108,7 +108,7 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
                 [&](const T angle)
                 {
                         const T n_h = std::cos(angle);
-                        return n_h * ggx_pdf<N>(n_h, alpha);
+                        return n_h * ggx_d<N>(n_h, alpha);
                 },
                 progress);
 
@@ -121,7 +121,7 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
                 [&](const Vector<N, T>& h)
                 {
                         const T n_h = dot(n, h);
-                        return n_h * ggx_pdf<N>(n_h, alpha);
+                        return n_h * ggx_d<N>(n_h, alpha);
                 },
                 progress);
 

@@ -287,7 +287,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
 
 // (1), (9.41)
 template <std::size_t N, typename T>
-T ggx_pdf(const T n_h, const T alpha)
+T ggx_d(const T n_h, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -324,7 +324,7 @@ T ggx_visible_normals_h_pdf(const T n_v, const T n_h, const T h_v, const T alpha
 
         if (n_v > 0 && n_h > 0 && h_v > 0)
         {
-                return impl::ggx_g1(n_v, alpha) * h_v * ggx_pdf<N>(n_h, alpha) / n_v;
+                return impl::ggx_g1(n_v, alpha) * h_v * ggx_d<N>(n_h, alpha) / n_v;
         }
         return 0;
 }
@@ -352,11 +352,11 @@ Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, con
         {
                 const T alpha = square(roughness);
 
-                const T pdf = ggx_pdf<N>(n_h, alpha);
+                const T d = ggx_d<N>(n_h, alpha);
                 const T g2 = impl::ggx_g2(n_v, n_l, alpha);
                 const T divisor = (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
 
-                return fresnel(f0, h_l) * (pdf * g2 / divisor);
+                return fresnel(f0, h_l) * (d * g2 / divisor);
         }
 
         return Color(0);
