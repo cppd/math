@@ -15,11 +15,31 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+Real-Time Rendering. Fourth Edition.
+CRC Press, 2018.
+
+9.5.2 Typical Fresnel Reflectance Values
+Parameterizing Fresnel Values
+*/
+
 #pragma once
 
-#include <string>
+#include "../objects.h"
 
-namespace ns::shading::compute
+namespace ns::shading::ggx
 {
-std::string ggx_f1_albedo();
+template <typename Color, typename T>
+Colors<Color> compute_metalness(const Color& surface_color, const T metalness)
+{
+        static constexpr Color F0(0.05);
+        static constexpr Color BLACK(0);
+
+        Colors<Color> colors;
+        colors.f0 = interpolation(F0, surface_color, metalness);
+        colors.rho_ss = interpolation(surface_color, BLACK, metalness);
+        return colors;
+}
 }

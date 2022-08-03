@@ -26,12 +26,12 @@ CRC Press, 2018.
 
 #pragma once
 
+#include "f1_albedo.h"
 #include "fresnel.h"
-#include "ggx_f1_albedo.h"
 
 #include <src/geometry/shapes/sphere_integral.h>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 namespace multiple_bounce_implementation
 {
@@ -50,13 +50,13 @@ Color multiple_bounce_surface_reflection(const Color& f0, const T rs_f1, const T
 }
 
 template <std::size_t N, typename T, typename Color>
-Color ggx_multiple_bounce_surface_reflection(const Color& f0, const T roughness, const T n_l, const T n_v)
+Color multiple_bounce_surface_reflection(const Color& f0, const T roughness, const T n_l, const T n_v)
 {
         namespace impl = multiple_bounce_implementation;
 
-        const T rs_f1 = ggx_f1_albedo_cosine_weighted_average<N>(roughness);
-        const T rs_f1_l = ggx_f1_albedo<N>(roughness, n_l);
-        const T rs_f1_v = ggx_f1_albedo<N>(roughness, n_v);
+        const T rs_f1 = f1_albedo_cosine_weighted_average<N>(roughness);
+        const T rs_f1_l = f1_albedo<N>(roughness, n_l);
+        const T rs_f1_v = f1_albedo<N>(roughness, n_v);
 
         return impl::multiple_bounce_surface_reflection<N>(f0, rs_f1, rs_f1_l, rs_f1_v);
 }

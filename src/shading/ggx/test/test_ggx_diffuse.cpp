@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../compute/brdf.h"
+#include "../../compute/brdf.h"
+#include "../../testing/color.h"
+#include "../../testing/random.h"
 #include "../ggx_diffuse.h"
 #include "../metalness.h"
-#include "../testing/color.h"
-#include "../testing/random.h"
 
 #include <src/color/color.h>
 #include <src/com/log.h>
@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 namespace
 {

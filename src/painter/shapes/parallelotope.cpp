@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/memory_arena.h>
 #include <src/settings/instantiation.h>
-#include <src/shading/ggx_diffuse.h>
-#include <src/shading/metalness.h>
+#include <src/shading/ggx/ggx_diffuse.h>
+#include <src/shading/ggx/metalness.h>
 
 namespace ns::painter::shapes
 {
@@ -58,7 +58,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return shading::ggx_diffuse::f(obj_->roughness(), obj_->colors(), n, v, l);
+                return shading::ggx::ggx_diffuse::f(obj_->roughness(), obj_->colors(), n, v, l);
         }
 
         [[nodiscard]] T pdf(
@@ -67,7 +67,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return shading::ggx_diffuse::pdf(obj_->roughness(), n, v, l);
+                return shading::ggx::ggx_diffuse::pdf(obj_->roughness(), n, v, l);
         }
 
         [[nodiscard]] SurfaceSample<N, T, Color> sample(
@@ -77,7 +77,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v) const override
         {
                 const shading::Sample<N, T, Color>& sample =
-                        shading::ggx_diffuse::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
+                        shading::ggx::ggx_diffuse::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
 
                 SurfaceSample<N, T, Color> s;
                 s.l = sample.l;
@@ -157,7 +157,7 @@ Parallelotope<N, T, Color>::Parallelotope(
         const std::array<Vector<N, T>, N>& vectors)
         : parallelotope_(org, vectors),
           roughness_(std::clamp(roughness, T{0}, T{1})),
-          colors_(shading::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T{0}, T{1}))),
+          colors_(shading::ggx::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T{0}, T{1}))),
           alpha_(std::clamp(alpha, T{0}, T{1}))
 {
 }

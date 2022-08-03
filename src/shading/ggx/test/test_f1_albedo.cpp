@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../ggx_f1_albedo.h"
+#include "../f1_albedo.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 namespace
 {
@@ -35,7 +35,7 @@ void test()
         {
                 constexpr T ROUGHNESS = 0;
                 const T cosine = static_cast<T>(i) / MAX;
-                const T albedo = ggx_f1_albedo<N, T>(ROUGHNESS, cosine);
+                const T albedo = f1_albedo<N, T>(ROUGHNESS, cosine);
                 if (!(albedo == 1))
                 {
                         error("GGX F1 albedo " + to_string(albedo) + " is not equal to 1 for roughness "
@@ -47,7 +47,7 @@ void test()
         {
                 const T roughness = static_cast<T>(i) / MAX;
                 constexpr T COSINE = 0;
-                const T albedo = ggx_f1_albedo<N, T>(roughness, COSINE);
+                const T albedo = f1_albedo<N, T>(roughness, COSINE);
                 if (!(albedo < 1))
                 {
                         error("GGX F1 albedo " + to_string(albedo) + " is not less than 1 for roughness "
@@ -60,7 +60,7 @@ void test()
                 const T roughness = static_cast<T>(i) / MAX;
 
                 {
-                        const T average = ggx_f1_albedo_cosine_weighted_average<N, T>(roughness);
+                        const T average = f1_albedo_cosine_weighted_average<N, T>(roughness);
                         if (!(average > 0 && average <= 1))
                         {
                                 error("GGX F1 cosine-weighted average " + to_string(average)
@@ -72,7 +72,7 @@ void test()
                 {
                         const T cosine = static_cast<T>(j) / MAX;
 
-                        const T albedo = ggx_f1_albedo<N, T>(roughness, cosine);
+                        const T albedo = f1_albedo<N, T>(roughness, cosine);
                         if (!(albedo >= 0 && albedo <= 1))
                         {
                                 error("GGX F1 albedo " + to_string(albedo)

@@ -15,30 +15,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ggx_f1_albedo.h"
+#include "f1_albedo.h"
 
 #include <src/numerical/interpolation.h>
 #include <src/settings/instantiation.h>
 
 #include <array>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 namespace
 {
 // clang-format off
 
-constexpr std::array<int, 2> GGX_F1_ALBEDO_COSINE_ROUGHNESS_SIZE = {32, 32};
-constexpr std::array<int, 1> GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE = {32};
+constexpr std::array<int, 2> F1_ALBEDO_COSINE_ROUGHNESS_SIZE = {32, 32};
+constexpr std::array<int, 1> F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE = {32};
 
 template <std::size_t N, typename T>
-constexpr std::array<T, 0> GGX_F1_ALBEDO_COSINE_ROUGHNESS;
+constexpr std::array<T, 0> F1_ALBEDO_COSINE_ROUGHNESS;
 
 template <std::size_t N, typename T>
-constexpr std::array<T, 0> GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE;
+constexpr std::array<T, 0> F1_ALBEDO_COSINE_WEIGHTED_AVERAGE;
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<3, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_ROUGHNESS<3, T> = std::to_array<T>
 ({
         0.998792, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
@@ -171,7 +171,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<3, T> = std::to_array<T>
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<3, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<3, T> = std::to_array<T>
 ({
         0.999998, 0.999945, 0.999940, 0.999755, 0.999306, 0.998515, 0.997274, 0.995464,
         0.992974, 0.989691, 0.985517, 0.980358, 0.974127, 0.966741, 0.958128, 0.948281,
@@ -180,7 +180,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<3, T> = std::to_array
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<4, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_ROUGHNESS<4, T> = std::to_array<T>
 ({
         0.999835, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
@@ -313,7 +313,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<4, T> = std::to_array<T>
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<4, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<4, T> = std::to_array<T>
 ({
         0.999999, 0.999918, 0.999912, 0.999643, 0.998988, 0.997844, 0.996057, 0.993465,
         0.989916, 0.985260, 0.979380, 0.972139, 0.963468, 0.953281, 0.941527, 0.928194,
@@ -322,7 +322,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<4, T> = std::to_array
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<5, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_ROUGHNESS<5, T> = std::to_array<T>
 ({
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
@@ -455,7 +455,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<5, T> = std::to_array<T>
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<5, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<5, T> = std::to_array<T>
 ({
         0.999999, 0.999891, 0.999885, 0.999534, 0.998682, 0.997200, 0.994898, 0.991575,
         0.987036, 0.981116, 0.973667, 0.964563, 0.953716, 0.941086, 0.926620, 0.910369,
@@ -464,7 +464,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<5, T> = std::to_array
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<6, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_ROUGHNESS<6, T> = std::to_array<T>
 ({
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
         1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
@@ -597,7 +597,7 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_ROUGHNESS<6, T> = std::to_array<T>
 });
 
 template <typename T>
-constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<6, T> = std::to_array<T>
+constexpr std::array F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<6, T> = std::to_array<T>
 ({
         0.999999, 0.999864, 0.999858, 0.999427, 0.998385, 0.996578, 0.993783, 0.989762,
         0.984300, 0.977195, 0.968305, 0.957495, 0.944695, 0.929863, 0.913027, 0.894268,
@@ -609,45 +609,44 @@ constexpr std::array GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<6, T> = std::to_array
 
 template <std::size_t N, typename T>
 constexpr numerical::Interpolation<2, T, T> INTERPOLATION_ALBEDO_COSINE_ROUGHNESS(
-        GGX_F1_ALBEDO_COSINE_ROUGHNESS_SIZE,
-        GGX_F1_ALBEDO_COSINE_ROUGHNESS<N, T>);
+        F1_ALBEDO_COSINE_ROUGHNESS_SIZE,
+        F1_ALBEDO_COSINE_ROUGHNESS<N, T>);
 
 template <std::size_t N, typename T>
 constexpr numerical::Interpolation<1, T, T> INTERPOLATION_COSINE(
-        GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE,
-        GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>);
+        F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE,
+        F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>);
 }
 
 template <std::size_t N, typename T>
-T ggx_f1_albedo(const T roughness, const T cosine)
+T f1_albedo(const T roughness, const T cosine)
 {
         return INTERPOLATION_ALBEDO_COSINE_ROUGHNESS<N, T>.compute(Vector<2, T>(cosine, roughness));
 }
 
 template <std::size_t N, typename T>
-T ggx_f1_albedo_cosine_weighted_average(const T roughness)
+T f1_albedo_cosine_weighted_average(const T roughness)
 {
         return INTERPOLATION_COSINE<N, T>.compute(Vector<1, T>(roughness));
 }
 
 template <std::size_t N, typename T>
-std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data()
+std::tuple<std::array<int, 2>, std::span<const T>> f1_albedo_cosine_roughness_data()
 {
-        return {GGX_F1_ALBEDO_COSINE_ROUGHNESS_SIZE, GGX_F1_ALBEDO_COSINE_ROUGHNESS<N, T>};
+        return {F1_ALBEDO_COSINE_ROUGHNESS_SIZE, F1_ALBEDO_COSINE_ROUGHNESS<N, T>};
 }
 
 template <std::size_t N, typename T>
-std::tuple<std::array<int, 1>, std::span<const T>> ggx_f1_albedo_cosine_weighted_average_data()
+std::tuple<std::array<int, 1>, std::span<const T>> f1_albedo_cosine_weighted_average_data()
 {
-        return {GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE, GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>};
+        return {F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE, F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>};
 }
 
-#define TEMPLATE(N, T)                                                                                             \
-        template T ggx_f1_albedo<(N)>(T, T);                                                                       \
-        template T ggx_f1_albedo_cosine_weighted_average<(N)>(T);                                                  \
-        template std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data<(N), T>(); \
-        template std::tuple<std::array<int, 1>, std::span<const T>>                                                \
-                ggx_f1_albedo_cosine_weighted_average_data<(N), T>();
+#define TEMPLATE(N, T)                                                                                         \
+        template T f1_albedo<(N)>(T, T);                                                                       \
+        template T f1_albedo_cosine_weighted_average<(N)>(T);                                                  \
+        template std::tuple<std::array<int, 2>, std::span<const T>> f1_albedo_cosine_roughness_data<(N), T>(); \
+        template std::tuple<std::array<int, 1>, std::span<const T>> f1_albedo_cosine_weighted_average_data<(N), T>();
 
 TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

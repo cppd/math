@@ -49,7 +49,7 @@ CRC Press, 2018.
 
 #include <cmath>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 namespace ggx_implementation
 {

@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ggx_f1_albedo.h"
+#include "compute_f1_albedo.h"
 
-#include "brdf.h"
+#include "ggx_diffuse.h"
 
-#include "../ggx_diffuse.h"
+#include "../compute/brdf.h"
 
 #include <src/color/color.h>
 #include <src/com/exponent.h>
@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <sstream>
 
-namespace ns::shading::compute
+namespace ns::shading::ggx
 {
 namespace
 {
@@ -47,11 +47,11 @@ constexpr std::string_view INDENT = "        ";
 
 static_assert(INDENT.size() == 8);
 
-constexpr std::string_view ALBEDO_NAME = "GGX_F1_ALBEDO_COSINE_ROUGHNESS";
-constexpr std::string_view ALBEDO_COSINE_NAME = "GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE";
+constexpr std::string_view ALBEDO_NAME = "F1_ALBEDO_COSINE_ROUGHNESS";
+constexpr std::string_view ALBEDO_COSINE_NAME = "F1_ALBEDO_COSINE_WEIGHTED_AVERAGE";
 
 template <std::size_t N, typename T, typename Color>
-class ComputeBRDF final : public BRDF<N, T, Color>
+class ComputeBRDF final : public compute::BRDF<N, T, Color>
 {
         static constexpr bool GGX_ONLY = true;
         static constexpr Color F0 = Color(1);
@@ -270,7 +270,7 @@ void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostrin
 }
 
 template <std::size_t N>
-void ggx_f1_albedo(std::ostringstream& oss)
+void f1_albedo(std::ostringstream& oss)
 {
         static_assert(N >= 2);
 
@@ -283,7 +283,7 @@ void ggx_f1_albedo(std::ostringstream& oss)
 }
 }
 
-std::string ggx_f1_albedo()
+std::string compute_f1_albedo()
 {
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;
@@ -301,13 +301,13 @@ std::string ggx_f1_albedo()
         oss << "constexpr std::array<T, 0> " << ALBEDO_COSINE_NAME << ";\n";
         oss << "\n";
 
-        ggx_f1_albedo<3>(oss);
+        f1_albedo<3>(oss);
         oss << "\n";
-        ggx_f1_albedo<4>(oss);
+        f1_albedo<4>(oss);
         oss << "\n";
-        ggx_f1_albedo<5>(oss);
+        f1_albedo<5>(oss);
         oss << "\n";
-        ggx_f1_albedo<6>(oss);
+        f1_albedo<6>(oss);
 
         oss << "\n";
         oss << "// clang-format on\n";

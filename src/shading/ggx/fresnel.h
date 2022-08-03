@@ -30,7 +30,7 @@ CRC Press, 2018.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 // (9.16)
 // Schlick approximation of Fresnel reflectance

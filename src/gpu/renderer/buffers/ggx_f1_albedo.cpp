@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ggx_f1_albedo.h"
 
 #include <src/com/merge.h>
-#include <src/shading/ggx_f1_albedo.h>
+#include <src/shading/ggx/f1_albedo.h>
 
 namespace ns::gpu::renderer
 {
@@ -56,7 +56,7 @@ vulkan::ImageWithMemory create_cosine_roughness_image(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue)
 {
-        const auto [size, data] = shading::ggx_f1_albedo_cosine_roughness_data<3, float>();
+        const auto [size, data] = shading::ggx::f1_albedo_cosine_roughness_data<3, float>();
 
         static_assert(std::tuple_size_v<decltype(size)> == 2);
         static_assert(std::is_same_v<decltype(data)::value_type, float>);
@@ -80,7 +80,7 @@ vulkan::ImageWithMemory create_cosine_weighted_average_image(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue)
 {
-        const auto [size, data] = shading::ggx_f1_albedo_cosine_weighted_average_data<3, float>();
+        const auto [size, data] = shading::ggx::f1_albedo_cosine_weighted_average_data<3, float>();
 
         static_assert(std::tuple_size_v<decltype(size)> == 1);
         static_assert(std::is_same_v<decltype(data)::value_type, float>);

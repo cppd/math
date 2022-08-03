@@ -29,7 +29,7 @@ CRC Press, 2018.
 #include <src/com/exponent.h>
 #include <src/geometry/shapes/sphere_integral.h>
 
-namespace ns::shading
+namespace ns::shading::ggx
 {
 // (9.64)
 // template <std::size_t N, typename T, typename Color>

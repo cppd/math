@@ -28,8 +28,9 @@ Elsevier, 2017.
 
 #include "ggx.h"
 #include "multiple_bounce.h"
-#include "objects.h"
 #include "subsurface.h"
+
+#include "../objects.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -39,7 +40,7 @@ Elsevier, 2017.
 #include <random>
 #include <tuple>
 
-namespace ns::shading::ggx_diffuse
+namespace ns::shading::ggx::ggx_diffuse
 {
 namespace implementation
 {
@@ -65,7 +66,7 @@ Color f(const T roughness,
                 return ggx;
         }
 
-        const Color multiple_bounce = ggx_multiple_bounce_surface_reflection<N>(f0, roughness, n_l, n_v);
+        const Color multiple_bounce = multiple_bounce_surface_reflection<N>(f0, roughness, n_l, n_v);
 
         const Color diffuse = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
