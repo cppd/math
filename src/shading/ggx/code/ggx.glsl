@@ -26,11 +26,11 @@ CRC Press, 2018.
 9.8 BRDF Models for Surface Reflection
 */
 
-#ifndef SHADING_GGX_GLSL
-#define SHADING_GGX_GLSL
+#ifndef SHADING_GGX_GGX_GLSL
+#define SHADING_GGX_GGX_GLSL
 
-#include "shading_constants.glsl"
-#include "shading_fresnel.glsl"
+#include "constants.glsl"
+#include "fresnel.glsl"
 
 // (9.41)
 // GGX distribution

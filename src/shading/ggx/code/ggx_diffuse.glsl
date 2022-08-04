@@ -15,12 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SHADING_GGX_DIFFUSE_GLSL
-#define SHADING_GGX_DIFFUSE_GLSL
+#ifndef SHADING_GGX_GGX_DIFFUSE_GLSL
+#define SHADING_GGX_GGX_DIFFUSE_GLSL
 
-#include "shading_ggx.glsl"
-#include "shading_multiple_bounce.glsl"
-#include "shading_subsurface.glsl"
+#include "ggx.glsl"
+#include "multiple_bounce.glsl"
+#include "subsurface.glsl"
 
 vec3 shading_ggx_diffuse(
         const float roughness,
