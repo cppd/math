@@ -43,16 +43,28 @@ function(add_shader_file)
         cmake_parse_arguments(PARSE_ARGV 0 ARG
                 ""
                 "INPUT_FILE;OUTPUT_FILE;SHADER_ENVIRONMENT;CREATE_STR;GLSL_COMPILER"
-                "GLOBAL_INCLUDE_DIRECTORIES;GLOBAL_INCLUDE_FILES;INCLUDE_EXTENSIONS;MACROS")
+                "INCLUDE_DIRECTORIES;INCLUDE_EXTENSIONS;MACROS")
 
-        unset(include_directory)
-        unset(include_files)
         get_filename_component(include_directory "${ARG_INPUT_FILE}" DIRECTORY)
+        unset(include_directories)
+        list(APPEND include_directories "${include_directory}")
+        if(ARG_INCLUDE_DIRECTORIES)
+                foreach(dir ${ARG_INCLUDE_DIRECTORIES})
+                        list(APPEND include_directories "${dir}")
+                endforeach()
+        endif()
+        list(REMOVE_DUPLICATES include_directories)
+
         unset(globbing_expressions_include)
-        foreach(ext ${ARG_INCLUDE_EXTENSIONS})
-                list(APPEND globbing_expressions_include "${include_directory}/*.${ext}")
+        foreach(dir ${include_directories})
+                foreach(ext ${ARG_INCLUDE_EXTENSIONS})
+                        list(APPEND globbing_expressions_include "${dir}/*.${ext}")
+                endforeach()
         endforeach()
+        unset(include_files)
         file(GLOB_RECURSE include_files LIST_DIRECTORIES false ${globbing_expressions_include})
+        list(REMOVE_DUPLICATES include_files)
+        list(REMOVE_ITEM include_files ${ARG_INPUT_FILE})
 
         unset(macro_list)
         foreach(macro ${ARG_MACROS})
@@ -60,8 +72,7 @@ function(add_shader_file)
         endforeach()
 
         unset(include_directories_list)
-        list(APPEND include_directories_list "-I${include_directory}")
-        foreach(dir ${ARG_GLOBAL_INCLUDE_DIRECTORIES})
+        foreach(dir ${include_directories})
                 list(APPEND include_directories_list "-I${dir}")
         endforeach()
 
@@ -92,7 +103,6 @@ function(add_shader_file)
                         "${ARG_INPUT_FILE}"
                         "${ARG_CREATE_STR}"
                         ${include_files}
-                        ${ARG_GLOBAL_INCLUDE_FILES}
                 WORKING_DIRECTORY
                         "${PROJECT_BINARY_DIR}"
                 VERBATIM
@@ -186,23 +196,13 @@ function(add_include_files FILE_TYPE)
 
         #
 
-        unset(global_include_directories)
-        unset(global_include_files)
+        unset(include_directories)
         if(ARG_INCLUDE_DIRECTORIES)
-                unset(globbing_expressions_include)
                 foreach(dir ${ARG_INCLUDE_DIRECTORIES})
-                        set(dir "${PROJECT_SOURCE_DIR}/${dir}")
                         if(NOT IS_DIRECTORY "${dir}")
                                 message(FATAL_ERROR "Include directory ${dir} is not a directory")
                         endif()
-                        foreach(ext ${ARG_INCLUDE_EXTENSIONS})
-                                list(APPEND globbing_expressions_include "${dir}/*.${ext}")
-                        endforeach()
-                endforeach()
-                file(GLOB_RECURSE global_include_files LIST_DIRECTORIES false ${globbing_expressions_include})
-                foreach(include_file ${global_include_files})
-                        get_filename_component(dir "${include_file}" DIRECTORY)
-                        list(APPEND global_include_directories "${dir}")
+                        list(APPEND include_directories "${dir}")
                 endforeach()
         endif()
 
@@ -210,7 +210,6 @@ function(add_include_files FILE_TYPE)
 
         foreach(source ${ARG_SOURCE})
 
-                set(source "${PROJECT_SOURCE_DIR}/${source}")
                 if(IS_DIRECTORY "${source}")
                         if(NOT ARG_EXTENSIONS)
                                 message(FATAL_ERROR "No extensions")
@@ -249,9 +248,8 @@ function(add_include_files FILE_TYPE)
                                         OUTPUT_FILE ${output_file}
                                         CREATE_STR ${ARG_CREATE_STR}
                                         GLSL_COMPILER ${ARG_GLSL_COMPILER}
-                                        GLOBAL_INCLUDE_DIRECTORIES ${global_include_directories}
-                                        GLOBAL_INCLUDE_FILES ${global_include_files}
                                         SHADER_ENVIRONMENT ${ARG_SHADER_ENVIRONMENT}
+                                        INCLUDE_DIRECTORIES ${include_directories}
                                         INCLUDE_EXTENSIONS ${ARG_INCLUDE_EXTENSIONS}
                                         MACROS ${ARG_MACROS})
 

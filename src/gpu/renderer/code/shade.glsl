@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SHADE_GLSL
 #define SHADE_GLSL
 
-#include "shading_ggx_diffuse.glsl"
-#include "shading_metalness.glsl"
+#include "src/shading/ggx/code/shading_ggx_diffuse.glsl"
+#include "src/shading/ggx/code/shading_metalness.glsl"
 
 vec3 shade(
         const vec3 surface_color,

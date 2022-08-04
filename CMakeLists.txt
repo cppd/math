@@ -93,7 +93,7 @@ add_include_files(
         CREATE_STR "${PROJECT_BINARY_DIR}/create_str"
         OUTPUT_DIRECTORY "${output_headers_directory}/fonts"
         OUTPUT_EXTENSION "bin"
-        SOURCE "font"
+        SOURCE "${PROJECT_SOURCE_DIR}/font"
         EXTENSIONS "ttf")
 
 function(add_shaders)
@@ -106,14 +106,14 @@ function(add_shaders)
                 OUTPUT_EXTENSION "spr"
                 SOURCE ${ARG_SOURCE}
                 MACROS ${ARG_MACROS}
-                INCLUDE_DIRECTORIES "src/shading"
+                INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}"
                 INCLUDE_EXTENSIONS ${extensions_shaders_include}
                 SHADER_ENVIRONMENT ${shader_environment}
                 EXTENSIONS ${extensions_shaders})
 endfunction()
 
-add_shaders(SOURCE "src/gpu")
-add_shaders(SOURCE "src/gpu/renderer" MACROS RAY_TRACING)
+add_shaders(SOURCE "${PROJECT_SOURCE_DIR}/src/gpu")
+add_shaders(SOURCE "${PROJECT_SOURCE_DIR}/src/gpu/renderer" MACROS RAY_TRACING)
 
 # CMake uses -I
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
