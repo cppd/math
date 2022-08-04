@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "multiple_bounce.glsl"
 #include "subsurface.glsl"
 
-vec3 shading_ggx_diffuse(
+vec3 shading_ggx_ggx_diffuse(
         const float roughness,
         const vec3 f0,
         const vec3 rho_ss,
@@ -53,7 +53,7 @@ vec3 shading_ggx_diffuse(
         const vec3 multiple_bounce = shading_ggx_multiple_bounce_surface_reflection(
                 f0, roughness, n_l, n_v, ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average);
 
-        const vec3 diffuse = shading_diffuse_disney_ws(f0, rho_ss, roughness, n_l, n_v, h_l);
+        const vec3 diffuse = shading_ggx_diffuse_disney_ws(f0, rho_ss, roughness, n_l, n_v, h_l);
 
         return n_l * (ggx + multiple_bounce + diffuse);
 }

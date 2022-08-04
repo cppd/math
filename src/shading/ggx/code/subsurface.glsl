@@ -30,16 +30,16 @@ CRC Press, 2018.
 #include "constants.glsl"
 
 // (9.64)
-// vec3 shading_diffuse(const vec3 f0, const vec3 rho_ss, const float n_l, const float n_v)
+// vec3 shading_ggx_diffuse(const vec3 f0, const vec3 rho_ss, const float n_l, const float n_v)
 // {
 //         const float l = (1 - pow(1 - n_l, 5));
 //         const float v = (1 - pow(1 - n_v, 5));
-//         const float c = (21 / (20 * SHADING_PI)) * l * v;
+//         const float c = (21 / (20 * SHADING_GGX_PI)) * l * v;
 //         return c * (1 - f0) * rho_ss;
 // }
 
 // (9.66), (9.67) without the subsurface term
-// vec3 shading_diffuse_disney_ws(
+// vec3 shading_ggx_diffuse_disney_ws(
 //         const vec3 /*f0*/,
 //         const vec3 rho_ss,
 //         const float roughness,
@@ -51,9 +51,9 @@ CRC Press, 2018.
 //         float v = pow(1 - n_v, 5);
 //         float f_d90 = 0.5 + 2 * roughness * pow(h_l, 2);
 //         float c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//         return (c * SHADING_PI_R) * rho_ss;
+//         return (c * SHADING_GGX_PI_R) * rho_ss;
 // }
-vec3 shading_diffuse_disney_ws(
+vec3 shading_ggx_diffuse_disney_ws(
         const vec3 f0,
         const vec3 rho_ss,
         const float roughness,
@@ -65,11 +65,11 @@ vec3 shading_diffuse_disney_ws(
         const float v = pow(1 - n_v, 5);
         const float f_d90 = 2 * roughness * pow(h_l, 2);
         const float c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-        return (c * SHADING_PI_R) * (1 - f0) * rho_ss;
+        return (c * SHADING_GGX_PI_R) * (1 - f0) * rho_ss;
 }
 
 // (9.66), (9.67)
-// vec3 shading_diffuse_disney(
+// vec3 shading_ggx_diffuse_disney(
 //         const vec3 rho_ss,
 //         const float roughness,
 //         const float n_l,
@@ -84,7 +84,7 @@ vec3 shading_diffuse_disney_ws(
 //         const float f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
 //         const float f_ss = (1 / (n_l * n_v) - 0.5) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + 0.5;
 //         const float c = mix(f_d, 1.25 * f_ss, k_ss);
-//         return (c * SHADING_PI_R) * rho_ss;
+//         return (c * SHADING_GGX_PI_R) * rho_ss;
 // }
 
 #endif

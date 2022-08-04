@@ -29,12 +29,12 @@ CRC Press, 2018.
 
 // (9.16)
 // Schlick approximation of Fresnel reflectance
-vec3 shading_fresnel(const vec3 f0, const float h_l)
+vec3 shading_ggx_fresnel(const vec3 f0, const float h_l)
 {
         return mix(f0, vec3(1), pow(1 - h_l, 5));
 }
 
-vec3 shading_fresnel_cosine_weighted_average(const vec3 f0)
+vec3 shading_ggx_fresnel_cosine_weighted_average(const vec3 f0)
 {
         return f0 * (20.0 / 21.0) + vec3(1.0 / 21.0);
 }

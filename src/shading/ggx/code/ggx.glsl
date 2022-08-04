@@ -38,7 +38,7 @@ float shading_ggx_d(const float alpha_2, const float n_h)
 {
         const float v = 1 + pow(n_h, 2) * (alpha_2 - 1);
 
-        return alpha_2 / (SHADING_PI * pow(v, 2));
+        return alpha_2 / (SHADING_GGX_PI * pow(v, 2));
 }
 
 // (9.43)
@@ -67,7 +67,7 @@ vec3 shading_ggx_brdf(
         const float alpha = pow(roughness, 2);
         const float alpha_2 = pow(alpha, 2);
 
-        return shading_fresnel(f0, h_l) * shading_ggx_g2_combined(alpha_2, n_l, n_v) * shading_ggx_d(alpha_2, n_h);
+        return shading_ggx_fresnel(f0, h_l) * shading_ggx_g2_combined(alpha_2, n_l, n_v) * shading_ggx_d(alpha_2, n_h);
 }
 
 #endif

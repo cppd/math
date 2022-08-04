@@ -34,14 +34,14 @@ vec3 shade(
         const float front_lighting_intensity,
         const float side_lighting_intensity)
 {
-        const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
-        const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
+        const vec3 f0 = shading_ggx_compute_metalness_f0(surface_color, metalness);
+        const vec3 rho_ss = shading_ggx_compute_metalness_rho_ss(surface_color, metalness);
 
         vec3 color = vec3(0);
 
         if (front_lighting_intensity > 0)
         {
-                const vec3 shade = shading_ggx_diffuse(
+                const vec3 shade = shading_ggx_ggx_diffuse(
                         roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
                         ggx_f1_albedo_cosine_weighted_average);
 
@@ -50,7 +50,7 @@ vec3 shade(
 
         if (side_lighting_intensity > 0)
         {
-                const vec3 shade = shading_ggx_diffuse(
+                const vec3 shade = shading_ggx_ggx_diffuse(
                         roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
                         ggx_f1_albedo_cosine_weighted_average);
 
