@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sampler.h"
 #include "thread_notifier.h"
 
-#include "../integrator/trace.h"
+#include "../integrators/path_tracing.h"
 #include "../pixels/pixels.h"
 
 #include <src/color/color.h>
@@ -124,7 +124,7 @@ void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_num
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = trace_path<FLAT_SHADING>(*scene_, ray, engine);
+                        sample_colors[i] = integrators::path_tracing<FLAT_SHADING>(*scene_, ray, engine);
                 }
 
                 pixels_.add_samples(*pixel, sample_points, sample_colors);

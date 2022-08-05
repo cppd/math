@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <tuple>
 
-namespace ns::painter
+namespace ns::painter::integrators
 {
 template <std::size_t N, typename T, typename Color>
 bool light_source_occluded(

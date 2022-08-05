@@ -47,7 +47,7 @@ Elsevier, 2017.
 
 #include <optional>
 
-namespace ns::painter
+namespace ns::painter::integrators
 {
 namespace direct_lighting_implementation
 {

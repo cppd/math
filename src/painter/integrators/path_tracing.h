@@ -46,9 +46,9 @@ Elsevier, 2017.
 #include <optional>
 #include <random>
 
-namespace ns::painter
+namespace ns::painter::integrators
 {
-namespace trace_implementation
+namespace path_tracing_implementation
 {
 template <std::size_t N, typename T, typename Color>
 struct BrdfSample final
@@ -117,7 +117,7 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, RandomEngine& engine)
+std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray, RandomEngine& engine)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -193,8 +193,8 @@ std::optional<Color> trace_path(const Scene<N, T, Color>& scene, Ray<N, T> ray, 
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<Color> trace_path(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, RandomEngine& engine)
+std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, RandomEngine& engine)
 {
-        return trace_implementation::trace_path<FLAT_SHADING>(scene, ray, engine);
+        return path_tracing_implementation::path_tracing<FLAT_SHADING>(scene, ray, engine);
 }
 }

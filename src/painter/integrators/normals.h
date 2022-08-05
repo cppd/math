@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::painter
+namespace ns::painter::integrators
 {
 template <std::size_t N, typename T>
 struct Normals final
