@@ -40,7 +40,7 @@ Elsevier, 2017.
 #include <random>
 #include <tuple>
 
-namespace ns::shading::ggx::ggx_diffuse
+namespace ns::shading::ggx::brdf
 {
 namespace implementation
 {

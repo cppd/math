@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/memory_arena.h>
 #include <src/settings/instantiation.h>
-#include <src/shading/ggx/ggx_diffuse.h>
+#include <src/shading/ggx/brdf.h>
 #include <src/shading/ggx/metalness.h>
 
 namespace ns::painter::shapes
@@ -58,7 +58,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return shading::ggx::ggx_diffuse::f(obj_->roughness(), obj_->colors(), n, v, l);
+                return shading::ggx::brdf::f(obj_->roughness(), obj_->colors(), n, v, l);
         }
 
         [[nodiscard]] T pdf(
@@ -67,7 +67,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return shading::ggx::ggx_diffuse::pdf(obj_->roughness(), n, v, l);
+                return shading::ggx::brdf::pdf(obj_->roughness(), n, v, l);
         }
 
         [[nodiscard]] SurfaceSample<N, T, Color> sample(
@@ -77,7 +77,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const Vector<N, T>& v) const override
         {
                 const shading::Sample<N, T, Color>& sample =
-                        shading::ggx::ggx_diffuse::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
+                        shading::ggx::brdf::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
 
                 SurfaceSample<N, T, Color> s;
                 s.l = sample.l;

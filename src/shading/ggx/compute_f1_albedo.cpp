@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_f1_albedo.h"
 
-#include "ggx_diffuse.h"
+#include "brdf.h"
 
 #include "../compute/brdf.h"
 
@@ -63,18 +63,18 @@ class ComputeBRDF final : public compute::BRDF<N, T, Color>
 public:
         [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::f<GGX_ONLY>(roughness_, COLORS, n, v, l);
+                return brdf::f<GGX_ONLY>(roughness_, COLORS, n, v, l);
         }
 
         [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::pdf<GGX_ONLY>(roughness_, n, v, l);
+                return brdf::pdf<GGX_ONLY>(roughness_, n, v, l);
         }
 
         [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
-                return ggx_diffuse::sample_f<GGX_ONLY>(engine, roughness_, COLORS, n, v);
+                return brdf::sample_f<GGX_ONLY>(engine, roughness_, COLORS, n, v);
         }
 
         void set_roughness(const T roughness)

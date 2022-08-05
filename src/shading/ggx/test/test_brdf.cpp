@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../compute/brdf.h"
 #include "../../testing/color.h"
 #include "../../testing/random.h"
-#include "../ggx_diffuse.h"
+#include "../brdf.h"
 #include "../metalness.h"
 
 #include <src/color/color.h>
@@ -57,18 +57,18 @@ public:
 
         [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::f(roughness_, colors_, n, v, l);
+                return brdf::f(roughness_, colors_, n, v, l);
         }
 
         [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::pdf(roughness_, n, v, l);
+                return brdf::pdf(roughness_, n, v, l);
         }
 
         [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
-                return ggx_diffuse::sample_f(engine, roughness_, colors_, n, v);
+                return brdf::sample_f(engine, roughness_, colors_, n, v);
         }
 
         [[nodiscard]] const Color& color() const

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SHADE_GLSL
 #define SHADE_GLSL
 
-#include "src/shading/ggx/code/ggx_diffuse.glsl"
+#include "src/shading/ggx/code/brdf.glsl"
 #include "src/shading/ggx/code/metalness.glsl"
 
 vec3 shade(
@@ -41,7 +41,7 @@ vec3 shade(
 
         if (front_lighting_intensity > 0)
         {
-                const vec3 shade = shading_ggx_ggx_diffuse(
+                const vec3 shade = shading_ggx_brdf(
                         roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
                         ggx_f1_albedo_cosine_weighted_average);
 
@@ -50,7 +50,7 @@ vec3 shade(
 
         if (side_lighting_intensity > 0)
         {
-                const vec3 shade = shading_ggx_ggx_diffuse(
+                const vec3 shade = shading_ggx_brdf(
                         roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
                         ggx_f1_albedo_cosine_weighted_average);
 

@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/settings/instantiation.h>
-#include <src/shading/ggx/ggx_diffuse.h>
+#include <src/shading/ggx/brdf.h>
 #include <src/shading/ggx/metalness.h>
 
 namespace ns::painter::shapes
@@ -92,7 +92,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
 
-                return shading::ggx::ggx_diffuse::f(material.roughness(), surface_color(point, material), n, v, l);
+                return shading::ggx::brdf::f(material.roughness(), surface_color(point, material), n, v, l);
         }
 
         [[nodiscard]] T pdf(
@@ -105,7 +105,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
 
-                return shading::ggx::ggx_diffuse::pdf(material.roughness(), n, v, l);
+                return shading::ggx::brdf::pdf(material.roughness(), n, v, l);
         }
 
         [[nodiscard]] SurfaceSample<N, T, Color> sample(
@@ -118,7 +118,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
 
-                const shading::Sample<N, T, Color>& sample = shading::ggx::ggx_diffuse::sample_f(
+                const shading::Sample<N, T, Color>& sample = shading::ggx::brdf::sample_f(
                         engine, material.roughness(), surface_color(point, material), n, v);
 
                 SurfaceSample<N, T, Color> s;
