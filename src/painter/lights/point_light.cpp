@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
+#include <src/geometry/shapes/sphere_area.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
@@ -69,7 +70,7 @@ LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& eng
 template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::power() const
 {
-        error("not implemented");
+        return geometry::SPHERE_AREA<N, T> * color_;
 }
 
 template <std::size_t N, typename T, typename Color>
