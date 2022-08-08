@@ -37,6 +37,7 @@ Elsevier, 2017.
 
 #include "direct_lighting.h"
 #include "normals.h"
+#include "surface_sample.h"
 #include "visibility.h"
 
 #include <src/color/color.h>
@@ -49,46 +50,6 @@ namespace ns::painter::integrators
 {
 namespace
 {
-template <std::size_t N, typename T, typename Color>
-struct BrdfSample final
-{
-        Color beta;
-        Vector<N, T> l;
-};
-
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-std::optional<BrdfSample<N, T, Color>> sample_surface(
-        const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
-        const Normals<N, T>& normals,
-        RandomEngine& engine)
-{
-        const Vector<N, T>& n = normals.shading;
-
-        const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
-
-        if (sample.pdf <= 0 || sample.brdf.is_black())
-        {
-                return {};
-        }
-
-        const Vector<N, T>& l = sample.l;
-        ASSERT(l.is_unit());
-
-        if (dot(l, normals.geometric) <= 0)
-        {
-                return {};
-        }
-
-        const T n_l = dot(n, l);
-        if (n_l <= 0)
-        {
-                return {};
-        }
-
-        return BrdfSample<N, T, Color>{.beta = sample.brdf * (n_l / sample.pdf), .l = l};
-}
-
 template <typename Color, typename RandomEngine>
 bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 {
@@ -165,7 +126,7 @@ std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray
                         color.multiply_add(beta, *c);
                 }
 
-                const auto sample = sample_surface(surface, v, normals, engine);
+                const auto sample = surface_sample(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;
