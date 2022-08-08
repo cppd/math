@@ -81,6 +81,12 @@ LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
+Color SpotLight<N, T, Color>::power() const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool SpotLight<N, T, Color>::is_delta() const
 {
         return true;
@@ -96,7 +102,7 @@ SpotLight<N, T, Color>::SpotLight(
         const std::type_identity_t<T> width)
         : location_(location),
           direction_(direction.normalized()),
-          color_(color * power<N - 1>(unit_intensity_distance)),
+          color_(color * ns::power<N - 1>(unit_intensity_distance)),
           spotlight_(falloff_start, width)
 {
         if (!(unit_intensity_distance > 0))

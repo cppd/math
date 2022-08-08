@@ -43,6 +43,8 @@ class SpotLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] LightSourceSampleEmit<N, T, Color> sample_emit(PCG& engine) const override;
 
+        [[nodiscard]] Color power() const override;
+
         [[nodiscard]] bool is_delta() const override;
 
 public:

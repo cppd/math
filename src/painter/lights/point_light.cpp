@@ -67,6 +67,12 @@ LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& eng
 }
 
 template <std::size_t N, typename T, typename Color>
+Color PointLight<N, T, Color>::power() const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool PointLight<N, T, Color>::is_delta() const
 {
         return true;
@@ -78,7 +84,7 @@ PointLight<N, T, Color>::PointLight(
         const Color& color,
         const std::type_identity_t<T> unit_intensity_distance)
         : location_(location),
-          color_(color * power<N - 1>(unit_intensity_distance))
+          color_(color * ns::power<N - 1>(unit_intensity_distance))
 {
         if (!(unit_intensity_distance > 0))
         {

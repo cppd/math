@@ -209,6 +209,8 @@ public:
 
         [[nodiscard]] virtual LightSourceSampleEmit<N, T, Color> sample_emit(PCG& engine) const = 0;
 
+        [[nodiscard]] virtual Color power() const = 0;
+
         [[nodiscard]] virtual bool is_delta() const = 0;
 };
 

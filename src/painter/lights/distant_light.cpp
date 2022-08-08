@@ -45,6 +45,12 @@ LightSourceSampleEmit<N, T, Color> DistantLight<N, T, Color>::sample_emit(PCG& /
 }
 
 template <std::size_t N, typename T, typename Color>
+Color DistantLight<N, T, Color>::power() const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool DistantLight<N, T, Color>::is_delta() const
 {
         return true;

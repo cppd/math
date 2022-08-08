@@ -119,6 +119,12 @@ LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(
 }
 
 template <std::size_t N, typename T, typename Color>
+Color ParallelotopeLight<N, T, Color>::power() const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 bool ParallelotopeLight<N, T, Color>::is_delta() const
 {
         return false;
