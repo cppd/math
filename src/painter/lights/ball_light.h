@@ -35,7 +35,7 @@ class BallLight final : public LightSource<N, T, Color>
         static_assert(std::is_floating_point_v<T>);
 
         geometry::HyperplaneBall<N, T> ball_;
-        Color color_;
+        Color radiance_;
         T pdf_;
         std::array<Vector<N, T>, N - 1> vectors_;
         std::optional<com::SpotLight<T>> spotlight_;
@@ -59,16 +59,16 @@ public:
                 const Vector<N, T>& center,
                 const Vector<N, T>& direction,
                 std::type_identity_t<T> radius,
-                const Color& color);
+                const Color& radiance);
 
         BallLight(
                 const Vector<N, T>& center,
                 const Vector<N, T>& direction,
                 std::type_identity_t<T> radius,
-                const Color& color,
+                const Color& radiance,
                 std::type_identity_t<T> spotlight_falloff_start,
                 std::type_identity_t<T> spotlight_width);
 
-        void set_color_for_distance(T distance);
+        void set_radiance_for_distance(T distance);
 };
 }

@@ -42,6 +42,6 @@ class DistantLight final : public LightSource<N, T, Color>
         [[nodiscard]] bool is_delta() const override;
 
 public:
-        DistantLight(const Vector<N, T>& direction, const Color& color);
+        DistantLight(const Vector<N, T>& direction, const Color& radiance);
 };
 }

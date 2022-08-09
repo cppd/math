@@ -57,11 +57,11 @@ bool DistantLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
-DistantLight<N, T, Color>::DistantLight(const Vector<N, T>& direction, const Color& color)
+DistantLight<N, T, Color>::DistantLight(const Vector<N, T>& direction, const Color& radiance)
 {
         sample_.l = -direction.normalized();
         sample_.pdf = 1;
-        sample_.radiance = color;
+        sample_.radiance = radiance;
 }
 
 #define TEMPLATE(N, T, C) template class DistantLight<(N), T, C>;

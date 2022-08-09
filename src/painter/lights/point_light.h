@@ -30,7 +30,9 @@ class PointLight final : public LightSource<N, T, Color>
         static_assert(std::is_floating_point_v<T>);
 
         Vector<N, T> location_;
-        Color color_;
+        Color intensity_;
+
+        [[nodiscard]] Color radiance(T squared_distance, T distance) const;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
 
@@ -43,6 +45,6 @@ class PointLight final : public LightSource<N, T, Color>
         [[nodiscard]] bool is_delta() const override;
 
 public:
-        PointLight(const Vector<N, T>& location, const Color& color, std::type_identity_t<T> unit_intensity_distance);
+        PointLight(const Vector<N, T>& location, const Color& radiance, std::type_identity_t<T> radiance_distance);
 };
 }

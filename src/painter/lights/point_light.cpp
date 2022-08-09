@@ -32,6 +32,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+Color PointLight<N, T, Color>::radiance(const T squared_distance, const T distance) const
+{
+        return intensity_ * (1 / com::power_n1<N>(squared_distance, distance));
+}
+
+template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
 {
         const Vector<N, T> direction = location_ - point;
@@ -42,7 +48,7 @@ LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, 
         s.distance = distance;
         s.l = direction / distance;
         s.pdf = 1;
-        s.radiance = color_ * (1 / com::power_n1<N>(squared_distance, distance));
+        s.radiance = radiance(squared_distance, distance);
         return s;
 }
 
@@ -63,14 +69,14 @@ LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& eng
         s.ray = ray;
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
-        s.radiance = color_;
+        s.radiance = intensity_;
         return s;
 }
 
 template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::power() const
 {
-        return geometry::SPHERE_AREA<N, T> * color_;
+        return geometry::SPHERE_AREA<N, T> * intensity_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -82,14 +88,14 @@ bool PointLight<N, T, Color>::is_delta() const
 template <std::size_t N, typename T, typename Color>
 PointLight<N, T, Color>::PointLight(
         const Vector<N, T>& location,
-        const Color& color,
-        const std::type_identity_t<T> unit_intensity_distance)
+        const Color& radiance,
+        const std::type_identity_t<T> radiance_distance)
         : location_(location),
-          color_(color * ns::power<N - 1>(unit_intensity_distance))
+          intensity_(radiance * ns::power<N - 1>(radiance_distance))
 {
-        if (!(unit_intensity_distance > 0))
+        if (!(radiance_distance > 0))
         {
-                error("Error unit intensity distance " + to_string(unit_intensity_distance));
+                error("Error radiance distance " + to_string(radiance_distance));
         }
 }
 

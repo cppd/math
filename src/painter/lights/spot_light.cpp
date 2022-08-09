@@ -38,7 +38,7 @@ Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, co
         {
                 return Color(0);
         }
-        return color_ * (spotlight_coef / com::power_n1<N>(squared_distance, distance));
+        return intensity_ * (spotlight_coef / com::power_n1<N>(squared_distance, distance));
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -76,7 +76,7 @@ LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& engi
         s.ray = ray;
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
-        s.radiance = spotlight_.color(color_, cos);
+        s.radiance = spotlight_.color(intensity_, cos);
         return s;
 }
 
@@ -96,18 +96,18 @@ template <std::size_t N, typename T, typename Color>
 SpotLight<N, T, Color>::SpotLight(
         const Vector<N, T>& location,
         const Vector<N, T>& direction,
-        const Color& color,
-        const std::type_identity_t<T> unit_intensity_distance,
+        const Color& radiance,
+        const std::type_identity_t<T> radiance_distance,
         const std::type_identity_t<T> falloff_start,
         const std::type_identity_t<T> width)
         : location_(location),
           direction_(direction.normalized()),
-          color_(color * ns::power<N - 1>(unit_intensity_distance)),
+          intensity_(radiance * ns::power<N - 1>(radiance_distance)),
           spotlight_(falloff_start, width)
 {
-        if (!(unit_intensity_distance > 0))
+        if (!(radiance_distance > 0))
         {
-                error("Error unit intensity distance " + to_string(unit_intensity_distance));
+                error("Error radiance distance " + to_string(radiance_distance));
         }
 }
 

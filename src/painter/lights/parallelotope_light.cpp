@@ -46,9 +46,9 @@ Color ParallelotopeLight<N, T, Color>::radiance(const T cos) const
 {
         if (!spotlight_)
         {
-                return color_;
+                return radiance_;
         }
-        return spotlight_->color(color_, cos);
+        return spotlight_->color(radiance_, cos);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -135,9 +135,9 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors,
         const Vector<N, T>& direction,
-        const Color& color)
+        const Color& radiance)
         : parallelotope_(org, vectors),
-          color_(color),
+          radiance_(radiance),
           pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
 {
         if (!std::all_of(
@@ -158,10 +158,10 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors,
         const Vector<N, T>& direction,
-        const Color& color,
+        const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,
         const std::type_identity_t<T> spotlight_width)
-        : ParallelotopeLight(org, vectors, direction, color)
+        : ParallelotopeLight(org, vectors, direction, radiance)
 {
         if (!(spotlight_width <= 90))
         {

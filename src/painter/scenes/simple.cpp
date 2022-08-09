@@ -144,7 +144,7 @@ std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
 {
         const Vector<N, T> position = center - direction.normalized() * distance;
         auto ptr = std::make_unique<lights::BallLight<N, T, Color>>(position, direction, radius, color * proportion);
-        ptr->set_color_for_distance(distance);
+        ptr->set_radiance_for_distance(distance);
         return ptr;
 }
 

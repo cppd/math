@@ -45,9 +45,9 @@ Color BallLight<N, T, Color>::radiance(const T cos) const
 {
         if (!spotlight_)
         {
-                return color_;
+                return radiance_;
         }
-        return spotlight_->color(color_, cos);
+        return spotlight_->color(radiance_, cos);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -134,9 +134,9 @@ BallLight<N, T, Color>::BallLight(
         const Vector<N, T>& center,
         const Vector<N, T>& direction,
         const std::type_identity_t<T> radius,
-        const Color& color)
+        const Color& radiance)
         : ball_(center, direction, radius),
-          color_(color),
+          radiance_(radiance),
           pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
           vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
 {
@@ -156,10 +156,10 @@ BallLight<N, T, Color>::BallLight(
         const Vector<N, T>& center,
         const Vector<N, T>& direction,
         const std::type_identity_t<T> radius,
-        const Color& color,
+        const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,
         const std::type_identity_t<T> spotlight_width)
-        : BallLight(center, direction, radius, color)
+        : BallLight(center, direction, radius, radiance)
 {
         if (!(spotlight_width <= 90))
         {
@@ -170,14 +170,14 @@ BallLight<N, T, Color>::BallLight(
 }
 
 template <std::size_t N, typename T, typename Color>
-void BallLight<N, T, Color>::set_color_for_distance(const T distance)
+void BallLight<N, T, Color>::set_radiance_for_distance(const T distance)
 {
         if (!(distance > 0))
         {
                 error("Ball light distance " + to_string(distance) + " must be positive");
         }
 
-        color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
+        radiance_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T{1} /*cosine*/, distance);
 }
 
 #define TEMPLATE(N, T, C) template class BallLight<(N), T, C>;
