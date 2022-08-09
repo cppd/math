@@ -37,7 +37,7 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         geometry::HyperplaneParallelotope<N, T> parallelotope_;
         Color radiance_;
         T pdf_;
-        std::optional<com::SpotLight<T>> spotlight_;
+        std::optional<com::SpotLight<N, T>> spotlight_;
 
         [[nodiscard]] bool visible(const Vector<N, T>& point) const;
         [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;

@@ -33,7 +33,7 @@ class SpotLight final : public LightSource<N, T, Color>
         Vector<N, T> location_;
         Vector<N, T> direction_;
         Color intensity_;
-        com::SpotLight<T> spotlight_;
+        com::SpotLight<N, T> spotlight_;
 
         [[nodiscard]] Color radiance(T cos, T squared_distance, T distance) const;
 
