@@ -28,6 +28,7 @@ template <std::size_t N, typename T>
 [[nodiscard]] T power_n1(const T squared_distance, const T distance)
 {
         static_assert(std::is_floating_point_v<T>);
+        static_assert(N >= 1);
 
         if constexpr ((N & 1) == 1)
         {

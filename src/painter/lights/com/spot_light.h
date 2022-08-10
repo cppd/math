@@ -28,23 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::lights::com
 {
-namespace spot_light_implementation
-{
-template <std::size_t N, typename T>
-T cone_solid_angle(const std::type_identity_t<T> angle)
-{
-        const T ratio =
-                geometry::sphere_relative_area<N, T>(0, angle) / geometry::sphere_relative_area<N, T>(0, PI<T> / 2);
-        return (geometry::SPHERE_AREA<N, T> / 2) * ratio;
-}
-
-template <std::size_t N, typename T>
-T cone_solid_angle(const std::type_identity_t<T> start_degrees, const std::type_identity_t<T> width_degrees)
-{
-        return cone_solid_angle<N, T>(degrees_to_radians((start_degrees + width_degrees) / 2));
-}
-}
-
 template <std::size_t N, typename T>
 class SpotLight final
 {
@@ -53,7 +36,6 @@ class SpotLight final
         T falloff_start_;
         T width_;
         T falloff_width_;
-        T cone_solid_angle_;
 
         [[nodiscard]] T falloff_coef(const T cosine) const
         {
@@ -64,12 +46,10 @@ public:
         SpotLight(const std::type_identity_t<T> falloff_start_degrees, const std::type_identity_t<T> width_degrees)
                 : falloff_start_(std::cos(degrees_to_radians(falloff_start_degrees))),
                   width_(std::cos(degrees_to_radians(width_degrees))),
-                  falloff_width_(falloff_start_ - width_),
-                  cone_solid_angle_(
-                          spot_light_implementation::cone_solid_angle<N, T>(falloff_start_degrees, width_degrees))
+                  falloff_width_(falloff_start_ - width_)
         {
                 if (!(falloff_start_degrees >= 0 && width_degrees > 0 && falloff_start_degrees <= width_degrees
-                      && width_degrees <= 180))
+                      && width_degrees <= 90))
                 {
                         error("Error falloff start " + to_string(falloff_start_degrees) + " and width "
                               + to_string(width_degrees));
@@ -104,11 +84,6 @@ public:
                         return Color(0);
                 }
                 return color * falloff_coef(cosine);
-        }
-
-        T solid_angle() const
-        {
-                return cone_solid_angle_;
         }
 };
 }

@@ -34,6 +34,7 @@ class SpotLight final : public LightSource<N, T, Color>
         Vector<N, T> direction_;
         Color intensity_;
         com::SpotLight<N, T> spotlight_;
+        T cone_solid_angle_;
 
         [[nodiscard]] Color radiance(T cos, T squared_distance, T distance) const;
 
