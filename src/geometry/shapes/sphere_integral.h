@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_area.h"
 
 #include <src/com/constant.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/integrate.h>
 
@@ -161,6 +162,35 @@ inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
         }
         return 2.0L;
 }();
+
+/*
+Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],x]]
+pow(sin(x), n - 1) / (n - 1)
+*/
+template <unsigned N, typename T>
+        requires(N >= 3)
+T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
+{
+        static_assert(std::is_floating_point_v<T>);
+        ASSERT(a >= 0 && a < b);
+        if (a == 0)
+        {
+                return SPHERE_AREA<N - 1, T> * power<N - 1>(std::sin(b)) / (N - 1);
+        }
+        return SPHERE_AREA<N - 1, T> * (power<N - 1>(std::sin(b)) - power<N - 1>(std::sin(a))) / (N - 1);
+}
+template <unsigned N, typename T>
+        requires(N == 2)
+T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
+{
+        static_assert(std::is_floating_point_v<T>);
+        ASSERT(a >= 0 && a < b);
+        if (a == 0)
+        {
+                return 2 * std::sin(b);
+        }
+        return 2 * (std::sin(b) - std::sin(a));
+}
 
 /*
 Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],{x,0,Pi/2}]]

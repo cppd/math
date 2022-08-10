@@ -110,6 +110,90 @@ template struct Test<long double>;
 //
 
 template <typename T>
+void test_integrate_cosine(const T& precision)
+{
+        const std::string name = std::string("Test integrate cosine <") + type_name<T>() + ">";
+
+        LOG(name);
+
+        const auto cmp = [&]<std::size_t N>(std::in_place_index_t<N>, const T v1, const T v2, const T v3)
+        {
+                compare("Test integrate cosine", sphere_integrate_cosine_factor<N, T>(v1, v2), v3, precision);
+        };
+
+        // sphereArea[n_] := 2*Power[\[Pi], n/2]/Gamma[n/2];
+        // cosineIntegral[n_, a_, b_] :=
+        //   sphereArea[n - 1]*
+        //    Assuming[n >= 2, Integrate[(Sin[x]^(n - 2))*Cos[x], {x, a, b}]];
+        // toString[x_] := If[x == 0, "0.0",
+        //    ToString[NumberForm[N[x, 20], {20, 19},
+        //      NumberFormat -> (Row[{#1, "e", #3}] &),
+        //      ExponentFunction -> (# &)]]];
+        // For[n = 2, n <= 10, ++n,
+        //  For[i = 0, i <= 3, ++i,
+        //   For[j = i + 1, j <= 3, ++j, a = (i/3)*Pi/2; b = (j/3)*Pi/2;
+        //    v = cosineIntegral[n, a, b];
+        //    Print[StringTemplate[
+        //       "cmp(std::in_place_index<``>, ``L, ``L, ``L);"][n, toString[a],
+        //      toString[b], toString[v]]]]]]
+
+        cmp(std::in_place_index<2>, 0.0L, 5.2359877559829887308e-1L, 1.0000000000000000000e0L);
+        cmp(std::in_place_index<2>, 0.0L, 1.0471975511965977462e0L, 1.7320508075688772935e0L);
+        cmp(std::in_place_index<2>, 0.0L, 1.5707963267948966192e0L, 2.0000000000000000000e0L);
+        cmp(std::in_place_index<2>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 7.3205080756887729353e-1L);
+        cmp(std::in_place_index<2>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 1.0000000000000000000e0L);
+        cmp(std::in_place_index<2>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.6794919243112270647e-1L);
+        cmp(std::in_place_index<3>, 0.0L, 5.2359877559829887308e-1L, 7.8539816339744830962e-1L);
+        cmp(std::in_place_index<3>, 0.0L, 1.0471975511965977462e0L, 2.3561944901923449288e0L);
+        cmp(std::in_place_index<3>, 0.0L, 1.5707963267948966192e0L, 3.1415926535897932385e0L);
+        cmp(std::in_place_index<3>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 1.5707963267948966192e0L);
+        cmp(std::in_place_index<3>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 2.3561944901923449288e0L);
+        cmp(std::in_place_index<3>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 7.8539816339744830962e-1L);
+        cmp(std::in_place_index<4>, 0.0L, 5.2359877559829887308e-1L, 5.2359877559829887308e-1L);
+        cmp(std::in_place_index<4>, 0.0L, 1.0471975511965977462e0L, 2.7206990463513267759e0L);
+        cmp(std::in_place_index<4>, 0.0L, 1.5707963267948966192e0L, 4.1887902047863909846e0L);
+        cmp(std::in_place_index<4>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 2.1971002707530279028e0L);
+        cmp(std::in_place_index<4>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 3.6651914291880921115e0L);
+        cmp(std::in_place_index<4>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 1.4680911584350642087e0L);
+        cmp(std::in_place_index<5>, 0.0L, 5.2359877559829887308e-1L, 3.0842513753404245684e-1L);
+        cmp(std::in_place_index<5>, 0.0L, 1.0471975511965977462e0L, 2.7758262378063821115e0L);
+        cmp(std::in_place_index<5>, 0.0L, 1.5707963267948966192e0L, 4.9348022005446793094e0L);
+        cmp(std::in_place_index<5>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 2.4674011002723396547e0L);
+        cmp(std::in_place_index<5>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 4.6263770630106368526e0L);
+        cmp(std::in_place_index<5>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.1589759627382971979e0L);
+        cmp(std::in_place_index<6>, 0.0L, 5.2359877559829887308e-1L, 1.6449340668482264365e-1L);
+        cmp(std::in_place_index<6>, 0.0L, 1.0471975511965977462e0L, 2.5641984409938253672e0L);
+        cmp(std::in_place_index<6>, 0.0L, 1.5707963267948966192e0L, 5.2637890139143245967e0L);
+        cmp(std::in_place_index<6>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 2.3997050343090027236e0L);
+        cmp(std::in_place_index<6>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 5.0992956072295019531e0L);
+        cmp(std::in_place_index<6>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.6995905729204992295e0L);
+        cmp(std::in_place_index<7>, 0.0L, 5.2359877559829887308e-1L, 8.0745512188280781707e-2L);
+        cmp(std::in_place_index<7>, 0.0L, 1.0471975511965977462e0L, 2.1801288290835811061e0L);
+        cmp(std::in_place_index<7>, 0.0L, 1.5707963267948966192e0L, 5.1677127800499700292e0L);
+        cmp(std::in_place_index<7>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 2.0993833168953003244e0L);
+        cmp(std::in_place_index<7>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 5.0869672678616892475e0L);
+        cmp(std::in_place_index<7>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.9875839509663889232e0L);
+        cmp(std::in_place_index<8>, 0.0L, 5.2359877559829887308e-1L, 3.6912234143214071637e-2L);
+        cmp(std::in_place_index<8>, 0.0L, 1.0471975511965977462e0L, 1.7262143538369862917e0L);
+        cmp(std::in_place_index<8>, 0.0L, 1.5707963267948966192e0L, 4.7247659703314011696e0L);
+        cmp(std::in_place_index<8>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 1.6893021196937722201e0L);
+        cmp(std::in_place_index<8>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 4.6878537361881870980e0L);
+        cmp(std::in_place_index<8>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.9985516164944148779e0L);
+        cmp(std::in_place_index<9>, 0.0L, 5.2359877559829887308e-1L, 1.5854344243815500852e-2L);
+        cmp(std::in_place_index<9>, 0.0L, 1.0471975511965977462e0L, 1.2842018837490555690e0L);
+        cmp(std::in_place_index<9>, 0.0L, 1.5707963267948966192e0L, 4.0587121264167682182e0L);
+        cmp(std::in_place_index<9>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 1.2683475395052400682e0L);
+        cmp(std::in_place_index<9>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 4.0428577821729527173e0L);
+        cmp(std::in_place_index<9>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.7745102426677126491e0L);
+        cmp(std::in_place_index<10>, 0.0L, 5.2359877559829887308e-1L, 6.4424002006615368543e-3L);
+        cmp(std::in_place_index<10>, 0.0L, 1.0471975511965977462e0L, 9.0384372208925467461e-1L);
+        cmp(std::in_place_index<10>, 0.0L, 1.5707963267948966192e0L, 3.2985089027387068694e0L);
+        cmp(std::in_place_index<10>, 5.2359877559829887308e-1L, 1.0471975511965977462e0L, 8.9740132188859313776e-1L);
+        cmp(std::in_place_index<10>, 5.2359877559829887308e-1L, 1.5707963267948966192e0L, 3.2920665025380453325e0L);
+        cmp(std::in_place_index<10>, 1.0471975511965977462e0L, 1.5707963267948966192e0L, 2.3946651806494521948e0L);
+}
+
+template <typename T>
 void test_integrate_power_cosine(const T& precision)
 {
         const std::string name = std::string("Test integrate power cosine <") + type_name<T>() + ">";
@@ -365,6 +449,10 @@ void test_cosine()
 
 void test_sphere_integral()
 {
+        test_integrate_cosine<float>(6e-7);
+        test_integrate_cosine<double>(2e-15);
+        test_integrate_cosine<long double>(7e-19);
+
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
         test_integrate_power_cosine<long double>(1e-15);
