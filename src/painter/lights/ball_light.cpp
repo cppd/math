@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/geometry/shapes/ball_volume.h>
+#include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_cosine.h>
@@ -120,7 +122,10 @@ LightSourceSampleEmit<N, T, Color> BallLight<N, T, Color>::sample_emit(PCG& engi
 template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
-        error("not implemented");
+        const T area = geometry::ball_volume<N - 1, T>(radius_);
+        const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()
+                                             : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+        return (area * cosine_integral) * radiance_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -138,7 +143,8 @@ BallLight<N, T, Color>::BallLight(
         : ball_(center, direction, radius),
           radiance_(radiance),
           pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
-          vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
+          vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal())),
+          radius_(radius)
 {
         if (!(radius > 0))
         {
