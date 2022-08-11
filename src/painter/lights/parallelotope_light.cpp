@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/geometry/shapes/parallelotope_volume.h>
+#include <src/geometry/shapes/sphere_integral.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_cosine.h>
@@ -121,7 +123,10 @@ LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(
 template <std::size_t N, typename T, typename Color>
 Color ParallelotopeLight<N, T, Color>::power() const
 {
-        error("not implemented");
+        const T area = geometry::parallelotope_volume(parallelotope_.vectors());
+        const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()
+                                             : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+        return (area * cosine_integral) * radiance_;
 }
 
 template <std::size_t N, typename T, typename Color>
