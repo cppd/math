@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights::com
 {
 template <std::size_t N, typename T>
-class SpotLight final
+class Spotlight final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -46,7 +46,7 @@ class SpotLight final
         }
 
 public:
-        SpotLight(const std::type_identity_t<T> falloff_start_degrees, const std::type_identity_t<T> width_degrees)
+        Spotlight(const std::type_identity_t<T> falloff_start_degrees, const std::type_identity_t<T> width_degrees)
                 : falloff_start_(std::cos(degrees_to_radians(falloff_start_degrees))),
                   width_(std::cos(degrees_to_radians(width_degrees))),
                   falloff_width_(falloff_start_ - width_),

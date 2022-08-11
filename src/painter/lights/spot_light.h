@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../objects.h"
-#include "com/spot_light.h"
+#include "com/spotlight.h"
 
 #include <type_traits>
 
@@ -33,8 +33,7 @@ class SpotLight final : public LightSource<N, T, Color>
         Vector<N, T> location_;
         Vector<N, T> direction_;
         Color intensity_;
-        com::SpotLight<N, T> spotlight_;
-        T cone_solid_angle_;
+        com::Spotlight<N, T> spotlight_;
 
         [[nodiscard]] Color radiance(T cos, T squared_distance, T distance) const;
 

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../objects.h"
-#include "com/spot_light.h"
+#include "com/spotlight.h"
 
 #include <src/geometry/spatial/hyperplane_ball.h>
 
@@ -38,7 +38,7 @@ class BallLight final : public LightSource<N, T, Color>
         Color radiance_;
         T pdf_;
         std::array<Vector<N, T>, N - 1> vectors_;
-        std::optional<com::SpotLight<N, T>> spotlight_;
+        std::optional<com::Spotlight<N, T>> spotlight_;
         T radius_;
 
         [[nodiscard]] bool visible(const Vector<N, T>& point) const;
