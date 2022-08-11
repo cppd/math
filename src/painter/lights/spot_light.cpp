@@ -30,27 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::lights
 {
-namespace
-{
-template <std::size_t N, typename T>
-T cone_solid_angle(const std::type_identity_t<T> angle)
-{
-        const T ratio =
-                geometry::sphere_relative_area<N, T>(0, angle) / geometry::sphere_relative_area<N, T>(0, PI<T> / 2);
-        return (geometry::SPHERE_AREA<N, T> / 2) * ratio;
-}
-
-template <std::size_t N, typename T>
-T cone_solid_angle(const std::type_identity_t<T> start_degrees, const std::type_identity_t<T> width_degrees)
-{
-        if (!(start_degrees >= 0 && width_degrees > 0 && start_degrees <= width_degrees && width_degrees <= 90))
-        {
-                error("Error start " + to_string(start_degrees) + " and width " + to_string(width_degrees));
-        }
-        return cone_solid_angle<N, T>(degrees_to_radians((start_degrees + width_degrees) / 2));
-}
-}
-
 template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, const T distance) const
 {
@@ -104,7 +83,7 @@ LightSourceSampleEmit<N, T, Color> SpotLight<N, T, Color>::sample_emit(PCG& engi
 template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::power() const
 {
-        return cone_solid_angle_ * intensity_;
+        return spotlight_.area() * intensity_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -124,8 +103,7 @@ SpotLight<N, T, Color>::SpotLight(
         : location_(location),
           direction_(direction.normalized()),
           intensity_(radiance * ns::power<N - 1>(radiance_distance)),
-          spotlight_(falloff_start, width),
-          cone_solid_angle_(cone_solid_angle<N, T>(falloff_start, width))
+          spotlight_(falloff_start, width)
 {
         if (!(radiance_distance > 0))
         {

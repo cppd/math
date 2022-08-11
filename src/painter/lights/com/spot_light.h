@@ -23,7 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/print.h>
 #include <src/geometry/shapes/sphere_area.h>
+#include <src/geometry/shapes/sphere_integral.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace ns::painter::lights::com
@@ -36,6 +38,7 @@ class SpotLight final
         T falloff_start_;
         T width_;
         T falloff_width_;
+        T angle_;
 
         [[nodiscard]] T falloff_coef(const T cosine) const
         {
@@ -46,7 +49,8 @@ public:
         SpotLight(const std::type_identity_t<T> falloff_start_degrees, const std::type_identity_t<T> width_degrees)
                 : falloff_start_(std::cos(degrees_to_radians(falloff_start_degrees))),
                   width_(std::cos(degrees_to_radians(width_degrees))),
-                  falloff_width_(falloff_start_ - width_)
+                  falloff_width_(falloff_start_ - width_),
+                  angle_(std::min(std::acos((falloff_start_ + width_) / 2), PI<T> / 2))
         {
                 if (!(falloff_start_degrees >= 0 && width_degrees > 0 && falloff_start_degrees <= width_degrees
                       && width_degrees <= 90))
@@ -84,6 +88,18 @@ public:
                         return Color(0);
                 }
                 return color * falloff_coef(cosine);
+        }
+
+        [[nodiscard]] T area() const
+        {
+                const T ratio = geometry::sphere_relative_area<N, T>(0, angle_)
+                                / geometry::sphere_relative_area<N, T>(0, PI<T> / 2);
+                return (geometry::SPHERE_AREA<N, T> / 2) * ratio;
+        }
+
+        [[nodiscard]] T cosine_integral() const
+        {
+                return geometry::sphere_integrate_cosine_factor<N, T>(0, angle_);
         }
 };
 }
