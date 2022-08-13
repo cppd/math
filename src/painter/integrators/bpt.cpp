@@ -77,15 +77,21 @@ void walk(const int max_depth, const Scene<N, T, Color>& scene, Ray<N, T> ray, P
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> bpt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
+std::optional<Color> bpt(
+        const Scene<N, T, Color>& scene,
+        Ray<N, T> ray,
+        PCG& engine,
+        LightDistribution<T>& /*light_distribution*/)
 {
         walk<FLAT_SHADING>(1, scene, ray, engine);
         return {};
 }
 
-#define TEMPLATE(N, T, C)                                                                           \
-        template std::optional<C> bpt<true, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&); \
-        template std::optional<C> bpt<false, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&);
+#define TEMPLATE(N, T, C)                                                           \
+        template std::optional<C> bpt<true, (N), T, C>(                             \
+                const Scene<(N), T, C>&, Ray<(N), T>, PCG&, LightDistribution<T>&); \
+        template std::optional<C> bpt<false, (N), T, C>(                            \
+                const Scene<(N), T, C>&, Ray<(N), T>, PCG&, LightDistribution<T>&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

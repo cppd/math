@@ -72,13 +72,14 @@ struct LightDistributionInfo final
         T pdf;
 };
 
-template <std::size_t N, typename T, typename Color>
+template <typename T>
 class LightDistribution final
 {
         std::discrete_distribution<int> distribution_;
         std::vector<T> probabilities_;
 
 public:
+        template <std::size_t N, typename Color>
         explicit LightDistribution(const Scene<N, T, Color>& scene)
                 : distribution_(light_distribution_implementation::create_distribution(scene)),
                   probabilities_(light_distribution_implementation::create_probabilities<T>(distribution_))

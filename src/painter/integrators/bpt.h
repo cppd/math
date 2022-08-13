@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "light_distribution.h"
+
 #include "../objects.h"
 
 #include <src/com/random/pcg.h>
@@ -26,5 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> bpt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine);
+std::optional<Color> bpt(
+        const Scene<N, T, Color>& scene,
+        Ray<N, T> ray,
+        PCG& engine,
+        LightDistribution<T>& light_distribution);
 }
