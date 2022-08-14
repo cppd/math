@@ -29,8 +29,10 @@ namespace ns::painter::integrators
 {
 namespace
 {
+constexpr int MAX_DEPTH = 5;
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void walk(const int max_depth, const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
+void walk(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -48,7 +50,7 @@ void walk(const int max_depth, const Scene<N, T, Color>& scene, Ray<N, T> ray, P
 
         Color beta(1);
 
-        for (int depth = 0; depth < max_depth; ++depth)
+        for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
                 const Vector<N, T> v = -ray.dir();
 
@@ -74,24 +76,40 @@ void walk(const int max_depth, const Scene<N, T, Color>& scene, Ray<N, T> ray, P
                 }
         }
 }
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+void camera_path(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine)
+{
+        walk<FLAT_SHADING>(scene, ray, engine);
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+void light_path(const Scene<N, T, Color>& scene, LightDistribution<T>& light_distribution, PCG& engine)
+{
+        const LightDistributionSample light_distribution_sample = light_distribution.sample(engine);
+        const LightSource<N, T, Color>* const light = scene.light_sources()[light_distribution_sample.index];
+        const LightSourceSampleEmit light_sample = light->sample_emit(engine);
+        walk<FLAT_SHADING>(scene, light_sample.ray, engine);
+}
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
-        Ray<N, T> ray,
-        PCG& engine,
-        LightDistribution<T>& /*light_distribution*/)
+        const Ray<N, T>& ray,
+        LightDistribution<T>& light_distribution,
+        PCG& engine)
 {
-        walk<FLAT_SHADING>(1, scene, ray, engine);
+        light_path<FLAT_SHADING>(scene, light_distribution, engine);
+        camera_path<FLAT_SHADING>(scene, ray, engine);
         return {};
 }
 
-#define TEMPLATE(N, T, C)                                                           \
-        template std::optional<C> bpt<true, (N), T, C>(                             \
-                const Scene<(N), T, C>&, Ray<(N), T>, PCG&, LightDistribution<T>&); \
-        template std::optional<C> bpt<false, (N), T, C>(                            \
-                const Scene<(N), T, C>&, Ray<(N), T>, PCG&, LightDistribution<T>&);
+#define TEMPLATE(N, T, C)                                                                  \
+        template std::optional<C> bpt<true, (N), T, C>(                                    \
+                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<T>&, PCG&); \
+        template std::optional<C> bpt<false, (N), T, C>(                                   \
+                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<T>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

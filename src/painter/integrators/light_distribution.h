@@ -66,7 +66,7 @@ template <typename T>
 }
 
 template <typename T>
-struct LightDistributionInfo final
+struct LightDistributionSample final
 {
         int index;
         T pdf;
@@ -88,7 +88,7 @@ public:
         }
 
         template <typename RandomEngine>
-        [[nodiscard]] LightDistributionInfo<T> sample(RandomEngine& engine)
+        [[nodiscard]] LightDistributionSample<T> sample(RandomEngine& engine)
         {
                 const int index = distribution_(engine);
                 return {.index = index, .pdf = probabilities_[index]};
