@@ -32,7 +32,7 @@ namespace
 constexpr int MAX_DEPTH = 5;
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void walk(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
+void walk(const Scene<N, T, Color>& scene, Color beta, Ray<N, T> ray, PCG& engine)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -47,8 +47,6 @@ void walk(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
         {
                 return;
         }
-
-        Color beta(1);
 
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
@@ -80,16 +78,24 @@ void walk(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void camera_path(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine)
 {
-        walk<FLAT_SHADING>(scene, ray, engine);
+        const Color beta(1);
+        walk<FLAT_SHADING>(scene, beta, ray, engine);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void light_path(const Scene<N, T, Color>& scene, LightDistribution<T>& light_distribution, PCG& engine)
 {
-        const LightDistributionSample light_distribution_sample = light_distribution.sample(engine);
-        const LightSource<N, T, Color>* const light = scene.light_sources()[light_distribution_sample.index];
+        const LightDistributionSample distribution_sample = light_distribution.sample(engine);
+        const LightSource<N, T, Color>* const light = scene.light_sources()[distribution_sample.index];
         const LightSourceSampleEmit light_sample = light->sample_emit(engine);
-        walk<FLAT_SHADING>(scene, light_sample.ray, engine);
+        if (!(light_sample.pdf_pos > 0 && light_sample.pdf_dir > 0 && !light_sample.radiance.is_black()))
+        {
+                return;
+        }
+        const T pdf = distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
+        const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
+        const Color beta = light_sample.radiance * (k / pdf);
+        walk<FLAT_SHADING>(scene, beta, light_sample.ray, engine);
 }
 }
 
