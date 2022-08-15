@@ -64,4 +64,52 @@ std::optional<Sample<N, T, Color>> surface_sample(
 
         return Sample<N, T, Color>{.beta = sample.brdf * (n_l / sample.pdf), .l = l};
 }
+
+template <std::size_t N, typename T, typename Color>
+struct SampleBD final
+{
+        Color beta;
+        Vector<N, T> l;
+        T pdf_forward;
+        T pdf_reversed;
+};
+
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+std::optional<SampleBD<N, T, Color>> surface_sample_bd(
+        const SurfaceIntersection<N, T, Color>& surface,
+        const Vector<N, T>& v,
+        const Normals<N, T>& normals,
+        RandomEngine& engine)
+{
+        const Vector<N, T>& n = normals.shading;
+
+        const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
+
+        if (sample.pdf <= 0 || sample.brdf.is_black())
+        {
+                return {};
+        }
+
+        const Vector<N, T>& l = sample.l;
+        ASSERT(l.is_unit());
+
+        if (dot(l, normals.geometric) <= 0)
+        {
+                return {};
+        }
+
+        const T n_l = dot(n, l);
+        if (n_l <= 0)
+        {
+                return {};
+        }
+
+        const T pdf_reversed = surface.pdf(n, l, v);
+
+        return SampleBD<N, T, Color>{
+                .beta = sample.brdf * (n_l / sample.pdf),
+                .l = l,
+                .pdf_forward = sample.pdf,
+                .pdf_reversed = pdf_reversed};
+}
 }

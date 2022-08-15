@@ -57,13 +57,18 @@ void walk(const Scene<N, T, Color>& scene, Color beta, Ray<N, T> ray, PCG& engin
                         break;
                 }
 
-                const auto sample = surface_sample(surface, v, normals, engine);
+                const auto sample = surface_sample_bd(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;
                 }
 
                 beta *= sample->beta;
+
+                if (beta.is_black())
+                {
+                        return;
+                }
 
                 ray = Ray<N, T>(surface.point(), sample->l);
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
