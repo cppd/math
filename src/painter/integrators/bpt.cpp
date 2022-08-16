@@ -31,8 +31,24 @@ namespace
 {
 constexpr int MAX_DEPTH = 5;
 
+template <typename Color>
+struct Vertex final
+{
+        Color beta;
+
+        explicit Vertex(const Color& beta)
+                : beta(beta)
+        {
+        }
+};
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void walk(const Scene<N, T, Color>& scene, Color beta, Ray<N, T> ray, PCG& engine)
+void walk(
+        const Scene<N, T, Color>& scene,
+        Color beta,
+        Ray<N, T> ray,
+        PCG& engine,
+        std::vector<Vertex<Color>>* const path)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -70,6 +86,8 @@ void walk(const Scene<N, T, Color>& scene, Color beta, Ray<N, T> ray, PCG& engin
                         return;
                 }
 
+                path->emplace_back(beta);
+
                 ray = Ray<N, T>(surface.point(), sample->l);
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
 
@@ -81,26 +99,43 @@ void walk(const Scene<N, T, Color>& scene, Color beta, Ray<N, T> ray, PCG& engin
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void camera_path(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine)
+void generate_camera_path(
+        const Scene<N, T, Color>& scene,
+        const Ray<N, T>& ray,
+        PCG& engine,
+        std::vector<Vertex<Color>>* const path)
 {
+        path->clear();
+
         const Color beta(1);
-        walk<FLAT_SHADING>(scene, beta, ray, engine);
+        path->emplace_back(beta);
+        walk<FLAT_SHADING>(scene, beta, ray, engine, path);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void light_path(const Scene<N, T, Color>& scene, LightDistribution<T>& light_distribution, PCG& engine)
+void generate_light_path(
+        const Scene<N, T, Color>& scene,
+        LightDistribution<T>& light_distribution,
+        PCG& engine,
+        std::vector<Vertex<Color>>* const path)
 {
+        path->clear();
+
         const LightDistributionSample distribution_sample = light_distribution.sample(engine);
         const LightSource<N, T, Color>* const light = scene.light_sources()[distribution_sample.index];
         const LightSourceSampleEmit light_sample = light->sample_emit(engine);
+
         if (!(light_sample.pdf_pos > 0 && light_sample.pdf_dir > 0 && !light_sample.radiance.is_black()))
         {
                 return;
         }
+
+        path->emplace_back(light_sample.radiance);
+
         const T pdf = distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
         const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
         const Color beta = light_sample.radiance * (k / pdf);
-        walk<FLAT_SHADING>(scene, beta, light_sample.ray, engine);
+        walk<FLAT_SHADING>(scene, beta, light_sample.ray, engine, path);
 }
 }
 
@@ -111,8 +146,12 @@ std::optional<Color> bpt(
         LightDistribution<T>& light_distribution,
         PCG& engine)
 {
-        light_path<FLAT_SHADING>(scene, light_distribution, engine);
-        camera_path<FLAT_SHADING>(scene, ray, engine);
+        thread_local std::vector<Vertex<Color>> camera_path;
+        thread_local std::vector<Vertex<Color>> light_path;
+
+        generate_camera_path<FLAT_SHADING>(scene, ray, engine, &camera_path);
+        generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
+
         return {};
 }
 
