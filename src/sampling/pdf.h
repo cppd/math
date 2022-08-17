@@ -59,4 +59,17 @@ T area_pdf_to_solid_angle_pdf(const T pdf, const T cosine, const T distance)
         }
         return 0;
 }
+
+template <std::size_t N, typename T>
+T solid_angle_pdf_to_area_pdf(const T pdf, const T cosine, const T distance)
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        if (cosine > 0)
+        {
+                return pdf * cosine / power<N - 1>(distance);
+        }
+        return 0;
+}
 }
