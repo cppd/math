@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/sampling/pdf.h>
 #include <src/settings/instantiation.h>
 
 namespace ns::painter::integrators
@@ -31,21 +32,45 @@ namespace
 {
 constexpr int MAX_DEPTH = 5;
 
-template <typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 struct Vertex final
 {
+        Vector<N, T> pos;
         Color beta;
         T pdf_forward;
         T pdf_reversed;
 };
 
+template <std::size_t N, typename T, typename Color>
+Vertex<N, T, Color> create_vertex(
+        const Vertex<N, T, Color>& prev,
+        const Color& beta,
+        const T pdf,
+        const SurfaceIntersection<N, T, Color>& surface,
+        const Normals<N, T>& normals)
+{
+        const Vector<N, T> to_prev = prev.pos - surface.point();
+        const T to_prev_distance = to_prev.norm();
+        const T to_prev_cosine = std::abs(dot(to_prev, normals.shading)) / to_prev_distance;
+        const T to_prev_pdf = sampling::solid_angle_pdf_to_area_pdf<N, T>(pdf, to_prev_cosine, to_prev_distance);
+
+        return {.pos = surface.point(), .beta = beta, .pdf_forward = to_prev_pdf, .pdf_reversed = 0};
+}
+
+template <std::size_t N, typename T, typename Color>
+bool surface_found(const Ray<N, T>& ray, const SurfaceIntersection<N, T, Color>& surface, const Normals<N, T>& normals)
+{
+        return surface && dot(normals.shading, -ray.dir()) > 0;
+}
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void walk(
         const Scene<N, T, Color>& scene,
         Color beta,
+        const T pdf,
         Ray<N, T> ray,
         PCG& engine,
-        std::vector<Vertex<T, Color>>* const path)
+        std::vector<Vertex<N, T, Color>>* const path)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -56,19 +81,18 @@ void walk(
                 return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
-        if (!surface)
+        if (!surface_found(ray, surface, normals))
         {
                 return;
         }
 
+        T pdf_forward = pdf;
+
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
-                const Vector<N, T> v = -ray.dir();
+                path->push_back(create_vertex(path->back(), beta, pdf_forward, surface, normals));
 
-                if (dot(normals.shading, v) <= 0)
-                {
-                        break;
-                }
+                const Vector<N, T> v = -ray.dir();
 
                 const auto sample = surface_sample_bd(surface, v, normals, engine);
                 if (!sample)
@@ -80,15 +104,13 @@ void walk(
 
                 if (beta.is_black())
                 {
-                        return;
+                        break;
                 }
-
-                path->push_back({.beta = beta, .pdf_forward = 0, .pdf_reversed = 0});
 
                 ray = Ray<N, T>(surface.point(), sample->l);
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
 
-                if (!surface)
+                if (!surface_found(ray, surface, normals))
                 {
                         break;
                 }
@@ -100,15 +122,15 @@ void generate_camera_path(
         const Scene<N, T, Color>& scene,
         const Ray<N, T>& ray,
         PCG& engine,
-        std::vector<Vertex<T, Color>>* const path)
+        std::vector<Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
         const Color beta(1);
 
-        path->push_back({.beta = beta, .pdf_forward = 0, .pdf_reversed = 0});
+        path->push_back({.pos = ray.org(), .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
 
-        walk<FLAT_SHADING>(scene, beta, ray, engine, path);
+        walk<FLAT_SHADING>(scene, beta, T{1}, ray, engine, path);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -116,7 +138,7 @@ void generate_light_path(
         const Scene<N, T, Color>& scene,
         LightDistribution<T>& light_distribution,
         PCG& engine,
-        std::vector<Vertex<T, Color>>* const path)
+        std::vector<Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
@@ -130,14 +152,16 @@ void generate_light_path(
         }
 
         path->push_back(
-                {.beta = light_sample.radiance,
+                {.pos = light_sample.ray.org(),
+                 .beta = light_sample.radiance,
                  .pdf_forward = light_distribution_sample.pdf * light_sample.pdf_pos,
                  .pdf_reversed = 0});
 
         const T pdf = light_distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
         const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
         const Color beta = light_sample.radiance * (k / pdf);
-        walk<FLAT_SHADING>(scene, beta, light_sample.ray, engine, path);
+
+        walk<FLAT_SHADING>(scene, beta, light_sample.pdf_dir, light_sample.ray, engine, path);
 }
 }
 
@@ -148,8 +172,8 @@ std::optional<Color> bpt(
         LightDistribution<T>& light_distribution,
         PCG& engine)
 {
-        thread_local std::vector<Vertex<T, Color>> camera_path;
-        thread_local std::vector<Vertex<T, Color>> light_path;
+        thread_local std::vector<Vertex<N, T, Color>> camera_path;
+        thread_local std::vector<Vertex<N, T, Color>> light_path;
 
         generate_camera_path<FLAT_SHADING>(scene, ray, engine, &camera_path);
         generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
