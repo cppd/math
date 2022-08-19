@@ -34,6 +34,16 @@ namespace
 {
 constexpr int MAX_DEPTH = 5;
 
+template <std::size_t N, typename T, typename Color>
+struct Vertex final
+{
+        Vector<N, T> pos;
+        Vector<N, T> normal;
+        Color beta;
+        T pdf_forward = 0;
+        T pdf_reversed = 0;
+};
+
 template <std::size_t N, typename T>
 T solid_angle_pdf_to_area_pdf(
         const Vector<N, T>& prev_pos,
@@ -45,29 +55,6 @@ T solid_angle_pdf_to_area_pdf(
         const T distance = v.norm();
         const T cosine = std::abs(dot(v, next_normal)) / distance;
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
-}
-
-template <std::size_t N, typename T, typename Color>
-struct Vertex final
-{
-        Vector<N, T> pos;
-        Color beta;
-        T pdf_forward;
-        T pdf_reversed;
-};
-
-template <std::size_t N, typename T, typename Color>
-Vertex<N, T, Color> create_vertex(
-        const Vertex<N, T, Color>& prev,
-        const Color& beta,
-        const T pdf,
-        const SurfaceIntersection<N, T, Color>& surface,
-        const Normals<N, T>& normals)
-{
-        return {.pos = surface.point(),
-                .beta = beta,
-                .pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, pdf, surface.point(), normals.shading),
-                .pdf_reversed = 0};
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -85,6 +72,8 @@ void walk(
         PCG& engine,
         std::vector<Vertex<N, T, Color>>* const path)
 {
+        ASSERT(!path->empty());
+
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
 
@@ -103,16 +92,22 @@ void walk(
 
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
-                path->push_back(create_vertex(path->back(), beta, pdf_forward, surface, normals));
+                path->push_back({.pos = surface.point(), .normal = normals.shading, .beta = beta});
 
-                const Vector<N, T> v = -ray.dir();
+                Vertex<N, T, Color>& prev = *(path->end() - 2);
+                Vertex<N, T, Color>& next = *(path->end() - 1);
 
-                const auto sample = surface_sample_bd(surface, v, normals, engine);
+                next.pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, pdf_forward, next.pos, next.normal);
+
+                const auto sample = surface_sample_bd(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
                         break;
                 }
 
+                prev.pdf_reversed = solid_angle_pdf_to_area_pdf(next.pos, sample->pdf_reversed, prev.pos, prev.normal);
+
+                pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
 
                 if (beta.is_black())
@@ -141,7 +136,7 @@ void generate_camera_path(
 
         const Color beta(1);
 
-        path->push_back({.pos = ray.org(), .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
+        path->push_back({.pos = ray.org(), .normal = ray.dir(), .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
 
         walk<FLAT_SHADING>(scene, beta, T{1}, ray, engine, path);
 }
@@ -166,6 +161,7 @@ void generate_light_path(
 
         path->push_back(
                 {.pos = light_sample.ray.org(),
+                 .normal = light_sample.n ? *light_sample.n : Vector<N, T>(0),
                  .beta = light_sample.radiance,
                  .pdf_forward = light_distribution_sample.pdf * light_sample.pdf_pos,
                  .pdf_reversed = 0});
