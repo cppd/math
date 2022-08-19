@@ -26,11 +26,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/pdf.h>
 #include <src/settings/instantiation.h>
 
+#include <cmath>
+
 namespace ns::painter::integrators
 {
 namespace
 {
 constexpr int MAX_DEPTH = 5;
+
+template <std::size_t N, typename T>
+T solid_angle_pdf_to_area_pdf(
+        const Vector<N, T>& prev_pos,
+        const T angle_pdf,
+        const Vector<N, T>& next_pos,
+        const Vector<N, T>& next_normal)
+{
+        const Vector<N, T> v = prev_pos - next_pos;
+        const T distance = v.norm();
+        const T cosine = std::abs(dot(v, next_normal)) / distance;
+        return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
+}
 
 template <std::size_t N, typename T, typename Color>
 struct Vertex final
@@ -49,12 +64,10 @@ Vertex<N, T, Color> create_vertex(
         const SurfaceIntersection<N, T, Color>& surface,
         const Normals<N, T>& normals)
 {
-        const Vector<N, T> to_prev = prev.pos - surface.point();
-        const T to_prev_distance = to_prev.norm();
-        const T to_prev_cosine = std::abs(dot(to_prev, normals.shading)) / to_prev_distance;
-        const T to_prev_pdf = sampling::solid_angle_pdf_to_area_pdf<N, T>(pdf, to_prev_cosine, to_prev_distance);
-
-        return {.pos = surface.point(), .beta = beta, .pdf_forward = to_prev_pdf, .pdf_reversed = 0};
+        return {.pos = surface.point(),
+                .beta = beta,
+                .pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, pdf, surface.point(), normals.shading),
+                .pdf_reversed = 0};
 }
 
 template <std::size_t N, typename T, typename Color>
