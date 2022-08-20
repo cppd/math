@@ -38,7 +38,7 @@ template <std::size_t N, typename T, typename Color>
 struct Vertex final
 {
         Vector<N, T> pos;
-        Vector<N, T> normal;
+        std::optional<Vector<N, T>> normal;
         Color beta;
         T pdf_forward = 0;
         T pdf_reversed = 0;
@@ -49,11 +49,11 @@ T solid_angle_pdf_to_area_pdf(
         const Vector<N, T>& prev_pos,
         const T angle_pdf,
         const Vector<N, T>& next_pos,
-        const Vector<N, T>& next_normal)
+        const std::optional<Vector<N, T>>& next_normal)
 {
         const Vector<N, T> v = prev_pos - next_pos;
         const T distance = v.norm();
-        const T cosine = std::abs(dot(v, next_normal)) / distance;
+        const T cosine = next_normal ? (std::abs(dot(v, *next_normal)) / distance) : 1;
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
 }
 
@@ -136,7 +136,7 @@ void generate_camera_path(
 
         const Color beta(1);
 
-        path->push_back({.pos = ray.org(), .normal = ray.dir(), .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
+        path->push_back({.pos = ray.org(), .normal = {}, .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
 
         walk<FLAT_SHADING>(scene, beta, T{1}, ray, engine, path);
 }
@@ -161,7 +161,7 @@ void generate_light_path(
 
         path->push_back(
                 {.pos = light_sample.ray.org(),
-                 .normal = light_sample.n ? *light_sample.n : Vector<N, T>(0),
+                 .normal = light_sample.n,
                  .beta = light_sample.radiance,
                  .pdf_forward = light_distribution_sample.pdf * light_sample.pdf_pos,
                  .pdf_reversed = 0});
