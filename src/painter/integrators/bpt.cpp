@@ -34,16 +34,6 @@ namespace
 {
 constexpr int MAX_DEPTH = 5;
 
-template <std::size_t N, typename T, typename Color>
-struct Vertex final
-{
-        Vector<N, T> pos;
-        std::optional<Vector<N, T>> normal;
-        Color beta;
-        T pdf_forward = 0;
-        T pdf_reversed = 0;
-};
-
 template <std::size_t N, typename T>
 T solid_angle_pdf_to_area_pdf(
         const Vector<N, T>& prev_pos,
@@ -55,6 +45,28 @@ T solid_angle_pdf_to_area_pdf(
         const T distance = v.norm();
         const T cosine = next_normal ? (std::abs(dot(v, *next_normal)) / distance) : 1;
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
+}
+
+template <std::size_t N, typename T, typename Color>
+struct Vertex final
+{
+        Vector<N, T> pos;
+        std::optional<Vector<N, T>> normal;
+        Color beta;
+        T pdf_forward = 0;
+        T pdf_reversed = 0;
+};
+
+template <std::size_t N, typename T, typename Color>
+void set_forward_pdf(const Vertex<N, T, Color>& prev, Vertex<N, T, Color>* const next, const T forward_angle_pdf)
+{
+        next->pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, forward_angle_pdf, next->pos, next->normal);
+}
+
+template <std::size_t N, typename T, typename Color>
+void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>& next, const T reversed_angle_pdf)
+{
+        prev->pdf_reversed = solid_angle_pdf_to_area_pdf(next.pos, reversed_angle_pdf, prev->pos, prev->normal);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -97,7 +109,7 @@ void walk(
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
                 Vertex<N, T, Color>& next = *(path->end() - 1);
 
-                next.pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, pdf_forward, next.pos, next.normal);
+                set_forward_pdf(prev, &next, pdf_forward);
 
                 const auto sample = surface_sample_bd(surface, -ray.dir(), normals, engine);
                 if (!sample)
@@ -105,7 +117,7 @@ void walk(
                         break;
                 }
 
-                prev.pdf_reversed = solid_angle_pdf_to_area_pdf(next.pos, sample->pdf_reversed, prev.pos, prev.normal);
+                set_reversed_pdf(&prev, next, sample->pdf_reversed);
 
                 pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
