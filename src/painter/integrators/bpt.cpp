@@ -35,7 +35,7 @@ namespace
 constexpr int MAX_DEPTH = 5;
 
 template <std::size_t N, typename T>
-T solid_angle_pdf_to_area_pdf(
+[[nodiscard]] T solid_angle_pdf_to_area_pdf(
         const Vector<N, T>& prev_pos,
         const T angle_pdf,
         const Vector<N, T>& next_pos,
@@ -48,29 +48,49 @@ T solid_angle_pdf_to_area_pdf(
 }
 
 template <std::size_t N, typename T, typename Color>
-struct Vertex final
+class Vertex final
 {
-        Vector<N, T> pos;
-        std::optional<Vector<N, T>> normal;
-        Color beta;
-        T pdf_forward = 0;
-        T pdf_reversed = 0;
+        Vector<N, T> pos_;
+        std::optional<Vector<N, T>> normal_;
+        Color beta_;
+        T pdf_forward_ = 0;
+        T pdf_reversed_ = 0;
+
+public:
+        Vertex(const Vector<N, T>& pos,
+               const std::optional<Vector<N, T>>& normal,
+               const Color& beta,
+               const T pdf_forward = 0,
+               const T pdf_reversed = 0)
+                : pos_(pos),
+                  normal_(normal),
+                  beta_(beta),
+                  pdf_forward_(pdf_forward),
+                  pdf_reversed_(pdf_reversed)
+        {
+        }
+
+        [[nodiscard]] const Vector<N, T>& pos() const
+        {
+                return pos_;
+        }
+
+        void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
+        {
+                pdf_forward_ = solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, pos_, normal_);
+        }
+
+        void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
+        {
+                pdf_reversed_ = solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, pos_, normal_);
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
-void set_forward_pdf(const Vertex<N, T, Color>& prev, Vertex<N, T, Color>* const next, const T forward_angle_pdf)
-{
-        next->pdf_forward = solid_angle_pdf_to_area_pdf(prev.pos, forward_angle_pdf, next->pos, next->normal);
-}
-
-template <std::size_t N, typename T, typename Color>
-void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>& next, const T reversed_angle_pdf)
-{
-        prev->pdf_reversed = solid_angle_pdf_to_area_pdf(next.pos, reversed_angle_pdf, prev->pos, prev->normal);
-}
-
-template <std::size_t N, typename T, typename Color>
-bool surface_found(const Ray<N, T>& ray, const SurfaceIntersection<N, T, Color>& surface, const Normals<N, T>& normals)
+[[nodiscard]] bool surface_found(
+        const Ray<N, T>& ray,
+        const SurfaceIntersection<N, T, Color>& surface,
+        const Normals<N, T>& normals)
 {
         return surface && dot(normals.shading, -ray.dir()) > 0;
 }
@@ -104,12 +124,12 @@ void walk(
 
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
-                path->push_back({.pos = surface.point(), .normal = normals.shading, .beta = beta});
+                path->emplace_back(surface.point(), normals.shading, beta);
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
                 Vertex<N, T, Color>& next = *(path->end() - 1);
 
-                set_forward_pdf(prev, &next, pdf_forward);
+                next.set_forward_pdf(prev.pos(), pdf_forward);
 
                 const auto sample = surface_sample_bd(surface, -ray.dir(), normals, engine);
                 if (!sample)
@@ -117,7 +137,7 @@ void walk(
                         break;
                 }
 
-                set_reversed_pdf(&prev, next, sample->pdf_reversed);
+                prev.set_reversed_pdf(next.pos(), sample->pdf_reversed);
 
                 pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
@@ -148,7 +168,7 @@ void generate_camera_path(
 
         const Color beta(1);
 
-        path->push_back({.pos = ray.org(), .normal = {}, .beta = beta, .pdf_forward = 1, .pdf_reversed = 0});
+        path->emplace_back(ray.org(), std::nullopt, beta, /*pdf_forward=*/1, /*pdf_reversed=*/0);
 
         walk<FLAT_SHADING>(scene, beta, T{1}, ray, engine, path);
 }
@@ -171,12 +191,9 @@ void generate_light_path(
                 return;
         }
 
-        path->push_back(
-                {.pos = light_sample.ray.org(),
-                 .normal = light_sample.n,
-                 .beta = light_sample.radiance,
-                 .pdf_forward = light_distribution_sample.pdf * light_sample.pdf_pos,
-                 .pdf_reversed = 0});
+        path->emplace_back(
+                light_sample.ray.org(), light_sample.n, light_sample.radiance,
+                light_distribution_sample.pdf * light_sample.pdf_pos, /*pdf_reversed=*/0);
 
         const T pdf = light_distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
         const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
