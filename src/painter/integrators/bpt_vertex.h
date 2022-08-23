@@ -52,7 +52,27 @@ template <std::size_t N, typename T, typename Normal>
 }
 
 template <std::size_t N, typename T, typename Color>
-class Surface final
+class VertexBase
+{
+        Vector<N, T> pos_;
+
+protected:
+        ~VertexBase() = default;
+
+public:
+        explicit VertexBase(const Vector<N, T>& pos)
+                : pos_(pos)
+        {
+        }
+
+        [[nodiscard]] const Vector<N, T>& pos() const
+        {
+                return pos_;
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
+class Surface final : public VertexBase<N, T, Color>
 {
         SurfaceIntersection<N, T, Color> surface_;
         Vector<N, T> normal_;
@@ -62,15 +82,11 @@ class Surface final
 
 public:
         Surface(const SurfaceIntersection<N, T, Color>& surface, const Vector<N, T>& normal, const Color& beta)
-                : surface_(surface),
+                : VertexBase<N, T, Color>(surface.point()),
+                  surface_(surface),
                   normal_(normal),
                   beta_(beta)
         {
-        }
-
-        [[nodiscard]] const Vector<N, T>& pos() const
-        {
-                return surface_.point();
         }
 
         void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
@@ -89,9 +105,8 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-class Camera final
+class Camera final : public VertexBase<N, T, Color>
 {
-        Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
         T pdf_forward_ = 1;
@@ -99,33 +114,27 @@ class Camera final
 
 public:
         Camera(const Vector<N, T>& pos, const Color& beta)
-                : pos_(pos),
+                : VertexBase<N, T, Color>(pos),
                   beta_(beta)
         {
-        }
-
-        [[nodiscard]] const Vector<N, T>& pos() const
-        {
-                return pos_;
         }
 
         void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, pos_, normal_);
+                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, this->pos(), normal_);
         }
 
         void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, pos_, normal_);
+                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, this->pos(), normal_);
         }
 };
 
 template <std::size_t N, typename T, typename Color>
-class Light final
+class Light final : public VertexBase<N, T, Color>
 {
-        Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
         T pdf_forward_;
@@ -136,28 +145,23 @@ public:
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
               const T pdf_forward)
-                : pos_(pos),
+                : VertexBase<N, T, Color>(pos),
                   normal_(normal),
                   beta_(beta),
                   pdf_forward_(pdf_forward)
         {
         }
 
-        [[nodiscard]] const Vector<N, T>& pos() const
-        {
-                return pos_;
-        }
-
         void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, pos_, normal_);
+                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, this->pos(), normal_);
         }
 
         void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, pos_, normal_);
+                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, this->pos(), normal_);
         }
 };
 
