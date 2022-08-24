@@ -49,30 +49,21 @@ template <std::size_t N, typename T, typename Normal>
         }();
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
 }
+
+template <typename Vertex, typename Normal, std::size_t N, typename T>
+T compute_pdf(const Vertex& prev, const T angle_pdf, const Vector<N, T>& next_pos, const Normal& next_normal)
+{
+        return std::visit(
+                [&](const auto& v)
+                {
+                        return solid_angle_pdf_to_area_pdf(v.pos(), angle_pdf, next_pos, next_normal);
+                },
+                prev);
+}
 }
 
 template <std::size_t N, typename T, typename Color>
-class VertexBase
-{
-        Vector<N, T> pos_;
-
-protected:
-        ~VertexBase() = default;
-
-public:
-        explicit VertexBase(const Vector<N, T>& pos)
-                : pos_(pos)
-        {
-        }
-
-        [[nodiscard]] const Vector<N, T>& pos() const
-        {
-                return pos_;
-        }
-};
-
-template <std::size_t N, typename T, typename Color>
-class Surface final : public VertexBase<N, T, Color>
+class Surface final
 {
         SurfaceIntersection<N, T, Color> surface_;
         Vector<N, T> normal_;
@@ -82,31 +73,36 @@ class Surface final : public VertexBase<N, T, Color>
 
 public:
         Surface(const SurfaceIntersection<N, T, Color>& surface, const Vector<N, T>& normal, const Color& beta)
-                : VertexBase<N, T, Color>(surface.point()),
-                  surface_(surface),
+                : surface_(surface),
                   normal_(normal),
                   beta_(beta)
         {
         }
 
-        void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
+        const Vector<N, T>& pos() const
         {
-                namespace impl = bpt_vertex_implementation;
-                pdf_forward_ =
-                        impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, surface_.point(), normal_);
+                return surface_.point();
         }
 
-        void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
+        template <typename Vertex>
+        void set_forward_pdf(const Vertex& prev, const T forward_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_reversed_ =
-                        impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, surface_.point(), normal_);
+                pdf_forward_ = impl::compute_pdf(prev, forward_angle_pdf, surface_.point(), normal_);
+        }
+
+        template <typename Vertex>
+        void set_reversed_pdf(const Vertex& next, const T reversed_angle_pdf)
+        {
+                namespace impl = bpt_vertex_implementation;
+                pdf_reversed_ = impl::compute_pdf(next, reversed_angle_pdf, surface_.point(), normal_);
         }
 };
 
 template <std::size_t N, typename T, typename Color>
-class Camera final : public VertexBase<N, T, Color>
+class Camera final
 {
+        Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
         T pdf_forward_ = 1;
@@ -114,27 +110,35 @@ class Camera final : public VertexBase<N, T, Color>
 
 public:
         Camera(const Vector<N, T>& pos, const Color& beta)
-                : VertexBase<N, T, Color>(pos),
+                : pos_(pos),
                   beta_(beta)
         {
         }
 
-        void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
+        const Vector<N, T>& pos() const
         {
-                namespace impl = bpt_vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, this->pos(), normal_);
+                return pos_;
         }
 
-        void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
+        template <typename Vertex>
+        void set_forward_pdf(const Vertex& prev, const T forward_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, this->pos(), normal_);
+                pdf_forward_ = impl::compute_pdf(prev, forward_angle_pdf, pos_, normal_);
+        }
+
+        template <typename Vertex>
+        void set_reversed_pdf(const Vertex& next, const T reversed_angle_pdf)
+        {
+                namespace impl = bpt_vertex_implementation;
+                pdf_reversed_ = impl::compute_pdf(next, reversed_angle_pdf, pos_, normal_);
         }
 };
 
 template <std::size_t N, typename T, typename Color>
-class Light final : public VertexBase<N, T, Color>
+class Light final
 {
+        Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
         T pdf_forward_;
@@ -145,59 +149,55 @@ public:
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
               const T pdf_forward)
-                : VertexBase<N, T, Color>(pos),
+                : pos_(pos),
                   normal_(normal),
                   beta_(beta),
                   pdf_forward_(pdf_forward)
         {
         }
 
-        void set_forward_pdf(const Vector<N, T>& prev_pos, const T forward_angle_pdf)
+        const Vector<N, T>& pos() const
         {
-                namespace impl = bpt_vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev_pos, forward_angle_pdf, this->pos(), normal_);
+                return pos_;
         }
 
-        void set_reversed_pdf(const Vector<N, T>& next_pos, const T reversed_angle_pdf)
+        template <typename Vertex>
+        void set_forward_pdf(const Vertex& prev, const T forward_angle_pdf)
         {
                 namespace impl = bpt_vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next_pos, reversed_angle_pdf, this->pos(), normal_);
+                pdf_forward_ = impl::compute_pdf(prev, forward_angle_pdf, pos_, normal_);
+        }
+
+        template <typename Vertex>
+        void set_reversed_pdf(const Vertex& next, const T reversed_angle_pdf)
+        {
+                namespace impl = bpt_vertex_implementation;
+                pdf_reversed_ = impl::compute_pdf(next, reversed_angle_pdf, pos_, normal_);
         }
 };
 
-template <std::size_t N, typename T, typename Color>
-using Vertex = std::variant<Camera<N, T, Color>, Light<N, T, Color>, Surface<N, T, Color>>;
-
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] const Vector<N, T>& vertex_pos(const Vertex<N, T, Color>& vertex)
-{
-        return std::visit(
-                [&](const auto& v) -> const Vector<N, T>&
-                {
-                        return v.pos();
-                },
-                vertex);
-}
-
-template <std::size_t N, typename T, typename Color>
-void set_forward_pdf(const Vertex<N, T, Color>& prev, Vertex<N, T, Color>* const next, const T pdf_forward)
+template <typename Vertex, typename T>
+void set_forward_pdf(const Vertex& prev, Vertex* const next, const T pdf_forward)
 {
         std::visit(
                 [&](auto& v)
                 {
-                        v.set_forward_pdf(vertex_pos(prev), pdf_forward);
+                        v.set_forward_pdf(prev, pdf_forward);
                 },
                 *next);
 }
 
-template <std::size_t N, typename T, typename Color>
-void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>& next, const T pdf_reversed)
+template <typename Vertex, typename T>
+void set_reversed_pdf(Vertex* const prev, const Vertex& next, const T pdf_reversed)
 {
         std::visit(
                 [&](auto& v)
                 {
-                        v.set_reversed_pdf(vertex_pos(next), pdf_reversed);
+                        v.set_reversed_pdf(next, pdf_reversed);
                 },
                 *prev);
 }
+
+template <std::size_t N, typename T, typename Color>
+using Vertex = std::variant<Camera<N, T, Color>, Light<N, T, Color>, Surface<N, T, Color>>;
 }
