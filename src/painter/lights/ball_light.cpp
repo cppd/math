@@ -105,12 +105,12 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> BallLight<N, T, Color>::sample_emit(PCG& engine) const
+LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engine) const
 {
         const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
         const T cos = dot(ball_.normal(), ray.dir());
 
-        LightSourceSampleEmit<N, T, Color> s;
+        LightSourceEmitSample<N, T, Color> s;
         s.ray = ray;
         s.n = ball_.normal();
         s.pdf_pos = pdf_;

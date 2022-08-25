@@ -39,7 +39,7 @@ LightSourceInfo<T, Color> DistantLight<N, T, Color>::info(const Vector<N, T>& /*
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> DistantLight<N, T, Color>::sample_emit(PCG& /*engine*/) const
+LightSourceEmitSample<N, T, Color> DistantLight<N, T, Color>::emit_sample(PCG& /*engine*/) const
 {
         error("not implemented");
 }

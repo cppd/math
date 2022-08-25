@@ -132,7 +132,7 @@ void generate_light_path(
 
         const LightDistributionSample light_distribution_sample = light_distribution.sample(engine);
         const LightSource<N, T, Color>* const light = scene.light_sources()[light_distribution_sample.index];
-        const LightSourceSampleEmit light_sample = light->sample_emit(engine);
+        const LightSourceEmitSample light_sample = light->emit_sample(engine);
 
         if (!(light_sample.pdf_pos > 0 && light_sample.pdf_dir > 0 && !light_sample.radiance.is_black()))
         {

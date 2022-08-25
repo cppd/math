@@ -61,11 +61,11 @@ LightSourceInfo<T, Color> PointLight<N, T, Color>::info(const Vector<N, T>& /*po
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> PointLight<N, T, Color>::sample_emit(PCG& engine) const
+LightSourceEmitSample<N, T, Color> PointLight<N, T, Color>::emit_sample(PCG& engine) const
 {
         const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
 
-        LightSourceSampleEmit<N, T, Color> s;
+        LightSourceEmitSample<N, T, Color> s;
         s.ray = ray;
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();

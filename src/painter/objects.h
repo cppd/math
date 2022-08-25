@@ -179,7 +179,7 @@ struct LightSourceSample final
 };
 
 template <std::size_t N, typename T, typename Color>
-struct LightSourceSampleEmit final
+struct LightSourceEmitSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -189,7 +189,7 @@ struct LightSourceSampleEmit final
         T pdf_dir;
         Color radiance;
 
-        LightSourceSampleEmit()
+        LightSourceEmitSample()
         {
         }
 };
@@ -207,7 +207,7 @@ public:
         [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)
                 const = 0;
 
-        [[nodiscard]] virtual LightSourceSampleEmit<N, T, Color> sample_emit(PCG& engine) const = 0;
+        [[nodiscard]] virtual LightSourceEmitSample<N, T, Color> emit_sample(PCG& engine) const = 0;
 
         [[nodiscard]] virtual Color power() const = 0;
 

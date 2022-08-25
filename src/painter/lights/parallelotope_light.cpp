@@ -106,12 +106,12 @@ LightSourceInfo<T, Color> ParallelotopeLight<N, T, Color>::info(const Vector<N, 
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSampleEmit<N, T, Color> ParallelotopeLight<N, T, Color>::sample_emit(PCG& engine) const
+LightSourceEmitSample<N, T, Color> ParallelotopeLight<N, T, Color>::emit_sample(PCG& engine) const
 {
         const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
         const T cos = dot(parallelotope_.normal(), ray.dir());
 
-        LightSourceSampleEmit<N, T, Color> s;
+        LightSourceEmitSample<N, T, Color> s;
         s.ray = ray;
         s.n = parallelotope_.normal();
         s.pdf_pos = pdf_;
