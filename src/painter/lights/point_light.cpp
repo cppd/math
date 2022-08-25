@@ -76,13 +76,13 @@ LightSourceEmitSample<N, T, Color> PointLight<N, T, Color>::emit_sample(PCG& eng
 template <std::size_t N, typename T, typename Color>
 T PointLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
 {
-        error("not implemented");
+        return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
 T PointLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
 {
-        error("not implemented");
+        return sampling::uniform_on_sphere_pdf<N, T>();
 }
 
 template <std::size_t N, typename T, typename Color>
