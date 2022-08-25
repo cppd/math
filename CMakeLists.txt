@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.24)
 
 ##################################################
 
@@ -142,8 +142,8 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         target_link_libraries(${PROJECT_NAME} PRIVATE X11::xcb)
 endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
-target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x060200)
-find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets)
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x060300)
+find_package(Qt6 6.3 REQUIRED COMPONENTS Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 
 find_package(Freetype REQUIRED)
