@@ -51,6 +51,9 @@ class BallLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] LightSourceEmitSample<N, T, Color> emit_sample(PCG& engine) const override;
 
+        [[nodiscard]] T emit_pdf_pos(const Ray<N, T>& ray) const override;
+        [[nodiscard]] T emit_pdf_dir(const Ray<N, T>& ray) const override;
+
         [[nodiscard]] Color power() const override;
 
         [[nodiscard]] bool is_delta() const override;

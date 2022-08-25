@@ -81,6 +81,18 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
+T SpotLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
+T SpotLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::power() const
 {
         return spotlight_.area() * intensity_;

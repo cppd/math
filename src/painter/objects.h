@@ -209,6 +209,9 @@ public:
 
         [[nodiscard]] virtual LightSourceEmitSample<N, T, Color> emit_sample(PCG& engine) const = 0;
 
+        [[nodiscard]] virtual T emit_pdf_pos(const Ray<N, T>& ray) const = 0;
+        [[nodiscard]] virtual T emit_pdf_dir(const Ray<N, T>& ray) const = 0;
+
         [[nodiscard]] virtual Color power() const = 0;
 
         [[nodiscard]] virtual bool is_delta() const = 0;

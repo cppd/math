@@ -74,6 +74,18 @@ LightSourceEmitSample<N, T, Color> PointLight<N, T, Color>::emit_sample(PCG& eng
 }
 
 template <std::size_t N, typename T, typename Color>
+T PointLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
+T PointLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::power() const
 {
         return geometry::SPHERE_AREA<N, T> * intensity_;

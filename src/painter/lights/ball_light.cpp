@@ -120,6 +120,18 @@ LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
+T BallLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
+T BallLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
         const T area = geometry::ball_volume<N - 1, T>(radius_);

@@ -121,6 +121,18 @@ LightSourceEmitSample<N, T, Color> ParallelotopeLight<N, T, Color>::emit_sample(
 }
 
 template <std::size_t N, typename T, typename Color>
+T ParallelotopeLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
+T ParallelotopeLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color ParallelotopeLight<N, T, Color>::power() const
 {
         const T area = geometry::parallelotope_volume(parallelotope_.vectors());

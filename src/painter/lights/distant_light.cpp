@@ -45,6 +45,18 @@ LightSourceEmitSample<N, T, Color> DistantLight<N, T, Color>::emit_sample(PCG& /
 }
 
 template <std::size_t N, typename T, typename Color>
+T DistantLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
+T DistantLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color DistantLight<N, T, Color>::power() const
 {
         error("not implemented");
