@@ -123,13 +123,14 @@ LightSourceEmitSample<N, T, Color> ParallelotopeLight<N, T, Color>::emit_sample(
 template <std::size_t N, typename T, typename Color>
 T ParallelotopeLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
 {
-        error("not implemented");
+        return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T ParallelotopeLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+T ParallelotopeLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& ray) const
 {
-        error("not implemented");
+        const T cos = dot(parallelotope_.normal(), ray.dir());
+        return sampling::cosine_on_hemisphere_pdf<N, T>(cos);
 }
 
 template <std::size_t N, typename T, typename Color>
