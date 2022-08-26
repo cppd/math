@@ -122,13 +122,14 @@ LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engi
 template <std::size_t N, typename T, typename Color>
 T BallLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
 {
-        error("not implemented");
+        return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+T BallLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& ray) const
 {
-        error("not implemented");
+        const T cos = dot(ball_.normal(), ray.dir());
+        return sampling::cosine_on_hemisphere_pdf<N, T>(cos);
 }
 
 template <std::size_t N, typename T, typename Color>
