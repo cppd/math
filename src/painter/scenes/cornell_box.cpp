@@ -30,6 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
+#include <src/com/enum.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
 #include <tuple>
@@ -38,6 +41,22 @@ namespace ns::painter::scenes
 {
 namespace
 {
+enum class ProjectorType
+{
+        PERSPECTIVE,
+        SPHERICAL
+};
+
+enum class LightType
+{
+        PARALLELOTOPE,
+        SPOTLIGHT,
+        POINT
+};
+
+constexpr ProjectorType PROJECTOR_TYPE = ProjectorType::PERSPECTIVE;
+constexpr LightType LIGHT_TYPE = LightType::PARALLELOTOPE;
+
 template <std::size_t N, typename T, typename Color>
 void create_shapes(
         const std::array<Vector<N, T>, N>& camera,
@@ -119,19 +138,20 @@ std::unique_ptr<Projector<N, T>> create_projector(
         const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
         const Vector<N, T> view_point = center - POSITION * camera[N - 1];
 
-        switch (0)
+        switch (PROJECTOR_TYPE)
         {
-        case 0:
+        case ProjectorType::PERSPECTIVE:
         {
                 return std::make_unique<projectors::PerspectiveProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 60, screen_size);
         }
-        case 1:
+        case ProjectorType::SPHERICAL:
         {
                 return std::make_unique<projectors::SphericalProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 70, screen_size);
         }
         }
+        error_fatal("Unknown projector type " + to_string(enum_to_int(PROJECTOR_TYPE)));
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -144,9 +164,9 @@ void create_light_sources(
         constexpr T FALLOFF_START = 60;
         constexpr T WIDTH = 72;
 
-        switch (0)
+        switch (LIGHT_TYPE)
         {
-        case 0:
+        case LightType::PARALLELOTOPE:
         {
                 constexpr T SIZE = 0.1;
                 constexpr T INTENSITY = power<N - 1>(T{8});
@@ -171,9 +191,9 @@ void create_light_sources(
                 light_sources->push_back(std::make_unique<const lights::ParallelotopeLight<N, T, Color>>(
                         org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
-                break;
+                return;
         }
-        case 1:
+        case LightType::SPOTLIGHT:
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
 
@@ -183,9 +203,9 @@ void create_light_sources(
                 light_sources->push_back(std::make_unique<const lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
-                break;
+                return;
         }
-        case 2:
+        case LightType::POINT:
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1;
 
@@ -194,9 +214,10 @@ void create_light_sources(
                 light_sources->push_back(
                         std::make_unique<const lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
 
-                break;
+                return;
         }
         }
+        error_fatal("Unknown light type " + to_string(enum_to_int(LIGHT_TYPE)));
 }
 
 template <std::size_t N, typename T, typename Color>
