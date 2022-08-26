@@ -30,6 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::lights
 {
+namespace
+{
+template <std::size_t N, typename T>
+constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
+}
+
 template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, const T distance) const
 {
@@ -69,13 +75,17 @@ LightSourceInfo<T, Color> SpotLight<N, T, Color>::info(const Vector<N, T>& /*poi
 template <std::size_t N, typename T, typename Color>
 LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engine) const
 {
-        const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
+        const Ray<N, T> ray = [&]
+        {
+                const Ray<N, T> r(location_, sampling::uniform_on_sphere<N, T>(engine));
+                return (dot(r.dir(), direction_) >= 0) ? r : r.reversed();
+        }();
         const T cos = dot(direction_, ray.dir());
 
         LightSourceEmitSample<N, T, Color> s;
         s.ray = ray;
         s.pdf_pos = 1;
-        s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
+        s.pdf_dir = UNIFORM_ON_HEMISPHERE_PDF<N, T>;
         s.radiance = spotlight_.color(intensity_, cos);
         return s;
 }
@@ -83,13 +93,13 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
 template <std::size_t N, typename T, typename Color>
 T SpotLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
 {
-        error("not implemented");
+        return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& /*ray*/) const
+T SpotLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& ray) const
 {
-        error("not implemented");
+        return dot(ray.dir(), direction_) >= 0 ? UNIFORM_ON_HEMISPHERE_PDF<N, T> : 0;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -120,6 +130,11 @@ SpotLight<N, T, Color>::SpotLight(
         if (!(radiance_distance > 0))
         {
                 error("Error radiance distance " + to_string(radiance_distance));
+        }
+
+        if (!(falloff_start >= 0 && width > 0 && falloff_start <= width && width <= 90))
+        {
+                error("Error falloff start " + to_string(falloff_start) + " and width " + to_string(width));
         }
 }
 
