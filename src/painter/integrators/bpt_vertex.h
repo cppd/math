@@ -63,11 +63,11 @@ template <std::size_t N, typename T, typename Normal>
         {
                 if constexpr (requires { dot(next_dir, *next_normal); })
                 {
-                        return next_normal ? (std::abs(dot(next_dir, *next_normal)) / next_distance) : 1;
+                        return next_normal ? std::abs(dot(next_dir, *next_normal)) : 1;
                 }
                 else
                 {
-                        return std::abs(dot(next_dir, next_normal)) / next_distance;
+                        return std::abs(dot(next_dir, next_normal));
                 }
         }();
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, next_distance);
@@ -128,6 +128,12 @@ public:
                 const T pdf = surface_.pdf(normal_, v, l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
+
+        template <typename Next>
+        [[nodiscard]] T compute_pdf(const Next& /*next*/) const
+        {
+                error("not implemented");
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -175,11 +181,18 @@ public:
         {
                 error("not implemented");
         }
+
+        template <typename Next>
+        [[nodiscard]] T compute_pdf(const Next& /*next*/) const
+        {
+                error("not implemented");
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
 class Light final
 {
+        const LightSource<N, T, Color>* light_;
         Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
@@ -187,11 +200,13 @@ class Light final
         T pdf_reversed_ = 0;
 
 public:
-        Light(const Vector<N, T>& pos,
+        Light(const LightSource<N, T, Color>* const light,
+              const Vector<N, T>& pos,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
               const T pdf_forward)
-                : pos_(pos),
+                : light_(light),
+                  pos_(pos),
                   normal_(normal),
                   beta_(beta),
                   pdf_forward_(pdf_forward)
@@ -226,6 +241,17 @@ public:
         [[nodiscard]] T compute_pdf(const Prev& /*prev*/, const Next& /*next*/) const
         {
                 error("not implemented");
+        }
+
+        template <typename Next>
+        [[nodiscard]] T compute_pdf(const Next& next) const
+        {
+                namespace impl = bpt_vertex_implementation;
+                const Vector<N, T> next_dir = (next.pos() - pos_);
+                const T next_distance = next_dir.norm();
+                const Ray<N, T> ray(pos_, next_dir);
+                const T pdf = light_->emit_pdf_dir(ray);
+                return impl::solid_angle_pdf_to_area_pdf(pdf, ray.dir(), next_distance, next.normal());
         }
 };
 
@@ -280,6 +306,22 @@ template <typename Vertex>
                                 next);
                 },
                 prev);
+}
+
+template <typename Vertex>
+[[nodiscard]] decltype(auto) compute_pdf(const Vertex& vertex, const Vertex& next)
+{
+        return std::visit(
+                [&](const auto& v_next)
+                {
+                        return std::visit(
+                                [&](const auto& v_vertex)
+                                {
+                                        return v_vertex.compute_pdf(v_next);
+                                },
+                                vertex);
+                },
+                next);
 }
 
 template <std::size_t N, typename T, typename Color>

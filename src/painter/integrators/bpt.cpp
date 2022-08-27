@@ -140,8 +140,8 @@ void generate_light_path(
         }
 
         path->emplace_back(
-                std::in_place_type<Light<N, T, Color>>, light_sample.ray.org(), light_sample.n, light_sample.radiance,
-                light_distribution_sample.pdf * light_sample.pdf_pos);
+                std::in_place_type<Light<N, T, Color>>, light, light_sample.ray.org(), light_sample.n,
+                light_sample.radiance, light_distribution_sample.pdf * light_sample.pdf_pos);
 
         const T pdf = light_distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
         const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
