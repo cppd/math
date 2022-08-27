@@ -249,9 +249,9 @@ public:
                 namespace impl = bpt_vertex_implementation;
                 const Vector<N, T> next_dir = (next.pos() - pos_);
                 const T next_distance = next_dir.norm();
-                const Ray<N, T> ray(pos_, next_dir);
-                const T pdf = light_->emit_pdf_dir(ray);
-                return impl::solid_angle_pdf_to_area_pdf(pdf, ray.dir(), next_distance, next.normal());
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf = light_->emit_pdf_dir(pos_, l);
+                return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 };
 

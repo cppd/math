@@ -91,15 +91,16 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+T SpotLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& ray) const
+T SpotLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
 {
-        return dot(ray.dir(), direction_) >= 0 ? UNIFORM_ON_HEMISPHERE_PDF<N, T> : 0;
+        ASSERT(dir.is_unit());
+        return dot(dir, direction_) >= 0 ? UNIFORM_ON_HEMISPHERE_PDF<N, T> : 0;
 }
 
 template <std::size_t N, typename T, typename Color>

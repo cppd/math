@@ -120,15 +120,16 @@ LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::emit_pdf_pos(const Ray<N, T>& /*ray*/) const
+T BallLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::emit_pdf_dir(const Ray<N, T>& ray) const
+T BallLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
 {
-        const T cos = dot(ball_.normal(), ray.dir());
+        ASSERT(dir.is_unit());
+        const T cos = dot(ball_.normal(), dir);
         return sampling::cosine_on_hemisphere_pdf<N, T>(cos);
 }
 
