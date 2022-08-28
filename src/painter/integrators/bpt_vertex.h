@@ -134,6 +134,11 @@ public:
         {
                 error("not implemented");
         }
+
+        [[nodiscard]] bool is_connectible() const
+        {
+                return !surface_.is_specular();
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -186,6 +191,11 @@ public:
         [[nodiscard]] T compute_pdf(const Next& /*next*/) const
         {
                 error("not implemented");
+        }
+
+        [[nodiscard]] bool is_connectible() const
+        {
+                return false;
         }
 };
 
@@ -252,6 +262,11 @@ public:
                 const Vector<N, T> l = next_dir / next_distance;
                 const T pdf = light_->emit_pdf_dir(pos_, l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
+        }
+
+        [[nodiscard]] bool is_connectible() const
+        {
+                return !light_->is_delta();
         }
 };
 
@@ -322,6 +337,17 @@ template <typename Vertex>
                                 vertex);
                 },
                 next);
+}
+
+template <typename Vertex>
+[[nodiscard]] decltype(auto) is_connectible(const Vertex& vertex)
+{
+        return std::visit(
+                [&](const auto& v)
+                {
+                        return v.is_connectible();
+                },
+                vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
