@@ -39,7 +39,6 @@ struct SurfaceSample final
         Vector<N, T> l;
         T pdf;
         Color brdf;
-        bool specular;
 
         SurfaceSample()
         {
@@ -80,6 +79,8 @@ public:
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
+
+        [[nodiscard]] virtual bool is_specular(const Vector<N, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -146,6 +147,11 @@ public:
         [[nodiscard]] decltype(auto) sample(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
         {
                 return surface_->sample(engine, point_, n, v);
+        }
+
+        [[nodiscard]] decltype(auto) is_specular() const
+        {
+                return surface_->is_specular(point_);
         }
 };
 

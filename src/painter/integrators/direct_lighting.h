@@ -147,7 +147,7 @@ std::optional<Color> sample_surface_with_mis(
                 return {};
         }
 
-        if (sample.specular)
+        if (surface.is_specular())
         {
                 return sample.brdf * light_info.radiance * (n_l / sample.pdf);
         }

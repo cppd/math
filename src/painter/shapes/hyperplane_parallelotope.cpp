@@ -83,8 +83,12 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 s.l = sample.l;
                 s.pdf = sample.pdf;
                 s.brdf = sample.brdf;
-                s.specular = false;
                 return s;
+        }
+
+        [[nodiscard]] bool is_specular(const Vector<N, T>& /*point*/) const override
+        {
+                return false;
         }
 
 public:
