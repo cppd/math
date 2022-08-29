@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "light_distribution.h"
+
 #include "../objects.h"
 
 #include <src/com/error.h>
@@ -129,12 +131,6 @@ public:
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
-        template <typename Next>
-        [[nodiscard]] T compute_pdf(const Next& /*next*/) const
-        {
-                error("not implemented");
-        }
-
         [[nodiscard]] bool is_connectible() const
         {
                 return !surface_.is_specular();
@@ -184,13 +180,7 @@ public:
         template <typename Prev, typename Next>
         [[nodiscard]] T compute_pdf(const Prev& /*prev*/, const Next& /*next*/) const
         {
-                error("not implemented");
-        }
-
-        template <typename Next>
-        [[nodiscard]] T compute_pdf(const Next& /*next*/) const
-        {
-                error("not implemented");
+                error("not supported");
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -250,7 +240,7 @@ public:
         template <typename Prev, typename Next>
         [[nodiscard]] T compute_pdf(const Prev& /*prev*/, const Next& /*next*/) const
         {
-                error("not implemented");
+                error("not supported");
         }
 
         template <typename Next>
@@ -262,6 +252,17 @@ public:
                 const Vector<N, T> l = next_dir / next_distance;
                 const T pdf = light_->emit_pdf_dir(pos_, l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
+        }
+
+        template <typename Next>
+        [[nodiscard]] T compute_pdf_spatial(const LightDistribution<N, T, Color>& distribution, const Next& next) const
+        {
+                const Vector<N, T> next_dir = (next.pos() - pos_);
+                const T next_distance = next_dir.norm();
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf_pos = light_->emit_pdf_pos(pos_, l);
+                const T distribution_pdf = distribution.pdf(light_);
+                return pdf_pos * distribution_pdf;
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -321,22 +322,6 @@ template <typename Vertex>
                                 next);
                 },
                 prev);
-}
-
-template <typename Vertex>
-[[nodiscard]] decltype(auto) compute_pdf(const Vertex& vertex, const Vertex& next)
-{
-        return std::visit(
-                [&](const auto& v_next)
-                {
-                        return std::visit(
-                                [&](const auto& v_vertex)
-                                {
-                                        return v_vertex.compute_pdf(v_next);
-                                },
-                                vertex);
-                },
-                next);
 }
 
 template <typename Vertex>
