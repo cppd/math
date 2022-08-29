@@ -31,6 +31,6 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
         const Ray<N, T>& ray,
-        LightDistribution<T>& light_distribution,
+        LightDistribution<N, T, Color>& light_distribution,
         PCG& engine);
 }

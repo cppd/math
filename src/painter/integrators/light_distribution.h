@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <random>
+#include <unordered_map>
 
 namespace ns::painter::integrators
 {
@@ -65,33 +66,86 @@ template <typename T>
 }
 }
 
-template <typename T>
+template <std::size_t N, typename T, typename Color>
 struct LightDistributionSample final
 {
-        int index;
+        const LightSource<N, T, Color>* light;
         T pdf;
 };
 
-template <typename T>
-class LightDistribution final
+template <std::size_t N, typename T, typename Color>
+class LightDistributionBase final
 {
+        template <std::size_t, typename, typename>
+        friend class LightDistribution;
+
+        const Scene<N, T, Color>* scene_;
         std::discrete_distribution<int> distribution_;
         std::vector<T> probabilities_;
+        std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf_;
 
-public:
-        template <std::size_t N, typename Color>
-        explicit LightDistribution(const Scene<N, T, Color>& scene)
-                : distribution_(light_distribution_implementation::create_distribution(scene)),
-                  probabilities_(light_distribution_implementation::create_probabilities<T>(distribution_))
+        [[nodiscard]] const std::discrete_distribution<int>& distribution() const
         {
-                ASSERT(probabilities_.size() == scene.light_sources().size());
+                return distribution_;
         }
 
         template <typename RandomEngine>
-        [[nodiscard]] LightDistributionSample<T> sample(RandomEngine& engine)
+        [[nodiscard]] LightDistributionSample<N, T, Color> sample(
+                std::discrete_distribution<int>& distribution,
+                RandomEngine& engine) const
         {
-                const int index = distribution_(engine);
-                return {.index = index, .pdf = probabilities_[index]};
+                const int index = distribution(engine);
+                return {.light = scene_->light_sources()[index], .pdf = probabilities_[index]};
+        }
+
+        [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
+        {
+                const auto iter = light_pdf_.find(light);
+                if (iter != light_pdf_.cend())
+                {
+                        return iter->second;
+                }
+                error("Light not found in light distribution");
+        }
+
+public:
+        explicit LightDistributionBase(const Scene<N, T, Color>* const scene)
+                : scene_(scene),
+                  distribution_(light_distribution_implementation::create_distribution(*scene)),
+                  probabilities_(light_distribution_implementation::create_probabilities<T>(distribution_))
+        {
+                const auto& lights = scene->light_sources();
+                ASSERT(probabilities_.size() == lights.size());
+                light_pdf_.reserve(lights.size());
+                for (std::size_t i = 0; i < lights.size(); ++i)
+                {
+                        light_pdf_[lights[i]] = probabilities_[i];
+                }
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
+class LightDistribution final
+{
+        LightDistributionBase<N, T, Color>* base_;
+        std::discrete_distribution<int> distribution_;
+
+public:
+        explicit LightDistribution(LightDistributionBase<N, T, Color>* const base)
+                : base_(base),
+                  distribution_(base->distribution())
+        {
+        }
+
+        template <typename RandomEngine>
+        [[nodiscard]] LightDistributionSample<N, T, Color> sample(RandomEngine& engine)
+        {
+                return base_->sample(distribution_, engine);
+        }
+
+        [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
+        {
+                return base_->pdf(light);
         }
 };
 }

@@ -124,30 +124,29 @@ void generate_camera_path(
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void generate_light_path(
         const Scene<N, T, Color>& scene,
-        LightDistribution<T>& light_distribution,
+        LightDistribution<N, T, Color>& light_distribution,
         PCG& engine,
         std::vector<Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
-        const LightDistributionSample light_distribution_sample = light_distribution.sample(engine);
-        const LightSource<N, T, Color>* const light = scene.light_sources()[light_distribution_sample.index];
-        const LightSourceEmitSample light_sample = light->emit_sample(engine);
+        const LightDistributionSample distribution = light_distribution.sample(engine);
+        const LightSourceEmitSample sample = distribution.light->emit_sample(engine);
 
-        if (!(light_sample.pdf_pos > 0 && light_sample.pdf_dir > 0 && !light_sample.radiance.is_black()))
+        if (!(sample.pdf_pos > 0 && sample.pdf_dir > 0 && !sample.radiance.is_black()))
         {
                 return;
         }
 
         path->emplace_back(
-                std::in_place_type<Light<N, T, Color>>, light, light_sample.ray.org(), light_sample.n,
-                light_sample.radiance, light_distribution_sample.pdf * light_sample.pdf_pos);
+                std::in_place_type<Light<N, T, Color>>, distribution.light, sample.ray.org(), sample.n, sample.radiance,
+                distribution.pdf * sample.pdf_pos);
 
-        const T pdf = light_distribution_sample.pdf * light_sample.pdf_pos * light_sample.pdf_dir;
-        const T k = light_sample.n ? std::abs(dot(*light_sample.n, light_sample.ray.dir())) : 1;
-        const Color beta = light_sample.radiance * (k / pdf);
+        const T pdf = distribution.pdf * sample.pdf_pos * sample.pdf_dir;
+        const T k = sample.n ? std::abs(dot(*sample.n, sample.ray.dir())) : 1;
+        const Color beta = sample.radiance * (k / pdf);
 
-        walk<FLAT_SHADING>(scene, beta, light_sample.pdf_dir, light_sample.ray, engine, path);
+        walk<FLAT_SHADING>(scene, beta, sample.pdf_dir, sample.ray, engine, path);
 }
 }
 
@@ -155,7 +154,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
         const Ray<N, T>& ray,
-        LightDistribution<T>& light_distribution,
+        LightDistribution<N, T, Color>& light_distribution,
         PCG& engine)
 {
         thread_local std::vector<Vertex<N, T, Color>> camera_path;
@@ -167,11 +166,11 @@ std::optional<Color> bpt(
         return {};
 }
 
-#define TEMPLATE(N, T, C)                                                                  \
-        template std::optional<C> bpt<true, (N), T, C>(                                    \
-                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<T>&, PCG&); \
-        template std::optional<C> bpt<false, (N), T, C>(                                   \
-                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<T>&, PCG&);
+#define TEMPLATE(N, T, C)                                                                        \
+        template std::optional<C> bpt<true, (N), T, C>(                                          \
+                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&); \
+        template std::optional<C> bpt<false, (N), T, C>(                                         \
+                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }
