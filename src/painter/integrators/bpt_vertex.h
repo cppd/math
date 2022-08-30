@@ -177,12 +177,6 @@ public:
                 pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
         }
 
-        template <typename Prev, typename Next>
-        [[nodiscard]] T compute_pdf(const Prev& /*prev*/, const Next& /*next*/) const
-        {
-                error("not supported");
-        }
-
         [[nodiscard]] bool is_connectible() const
         {
                 return false;
@@ -237,12 +231,6 @@ public:
                 pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
         }
 
-        template <typename Prev, typename Next>
-        [[nodiscard]] T compute_pdf(const Prev& /*prev*/, const Next& /*next*/) const
-        {
-                error("not supported");
-        }
-
         template <typename Next>
         [[nodiscard]] T compute_pdf(const Next& next) const
         {
@@ -271,8 +259,11 @@ public:
         }
 };
 
-template <typename Vertex, typename T>
-void set_forward_pdf(const Vertex& prev, Vertex* const next, const T pdf_forward)
+template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
+void set_forward_pdf(
+        const std::variant<Vertex<N, T, Color>...>& prev,
+        std::variant<Vertex<N, T, Color>...>* const next,
+        const T pdf_forward)
 {
         std::visit(
                 [&](auto& v_next)
@@ -287,8 +278,11 @@ void set_forward_pdf(const Vertex& prev, Vertex* const next, const T pdf_forward
                 *next);
 }
 
-template <typename Vertex, typename T>
-void set_reversed_pdf(Vertex* const prev, const Vertex& next, const T pdf_reversed)
+template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
+void set_reversed_pdf(
+        std::variant<Vertex<N, T, Color>...>* const prev,
+        const std::variant<Vertex<N, T, Color>...>& next,
+        const T pdf_reversed)
 {
         std::visit(
                 [&](auto& v_prev)
@@ -303,8 +297,11 @@ void set_reversed_pdf(Vertex* const prev, const Vertex& next, const T pdf_revers
                 *prev);
 }
 
-template <typename Vertex>
-[[nodiscard]] decltype(auto) compute_pdf(const Vertex& vertex, const Vertex& prev, const Vertex& next)
+template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
+[[nodiscard]] decltype(auto) compute_pdf(
+        const std::variant<Vertex<N, T, Color>...>& vertex,
+        const std::variant<Vertex<N, T, Color>...>& prev,
+        const std::variant<Vertex<N, T, Color>...>& next)
 {
         return std::visit(
                 [&](const auto& v_prev)
@@ -312,12 +309,8 @@ template <typename Vertex>
                         return std::visit(
                                 [&](const auto& v_next)
                                 {
-                                        return std::visit(
-                                                [&](const auto& v_vertex)
-                                                {
-                                                        return v_vertex.compute_pdf(v_prev, v_next);
-                                                },
-                                                vertex);
+                                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(vertex)));
+                                        return std::get<Surface<N, T, Color>>(vertex).compute_pdf(v_prev, v_next);
                                 },
                                 next);
                 },
