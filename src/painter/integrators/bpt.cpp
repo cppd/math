@@ -72,19 +72,22 @@ void walk(
 
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
-                path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals.shading, beta);
+                Vertex<N, T, Color>& next =
+                        path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals.shading, beta);
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
-                Vertex<N, T, Color>& next = *(path->end() - 1);
-
-                set_forward_pdf(prev, &next, pdf_forward);
 
                 const auto sample = surface_sample_bd(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
+                        set_forward_pdf(prev, &next, pdf_forward);
                         break;
                 }
 
+                if (!surface.is_specular())
+                {
+                        set_forward_pdf(prev, &next, pdf_forward);
+                }
                 set_reversed_pdf(&prev, next, sample->pdf_reversed);
 
                 pdf_forward = sample->pdf_forward;
