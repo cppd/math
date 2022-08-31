@@ -37,6 +37,7 @@ Elsevier, 2017.
 
 #pragma once
 
+#include "functions.h"
 #include "normals.h"
 
 #include "../objects.h"
@@ -155,34 +156,6 @@ std::optional<Color> sample_surface_with_mis(
         const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
         return sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
 }
-
-template <typename Dst, typename Src>
-void add(std::optional<Dst>* const dst, Src&& src) requires requires
-{
-        **dst = src;
-}
-{
-        if (*dst)
-        {
-                **dst += std::forward<Src>(src);
-        }
-        else
-        {
-                *dst = std::forward<Src>(src);
-        }
-}
-
-template <typename Dst, typename Src>
-void add(std::optional<Dst>* const dst, Src&& src) requires requires
-{
-        **dst = *src;
-}
-{
-        if (src)
-        {
-                add(dst, *std::forward<Src>(src));
-        }
-}
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
@@ -198,8 +171,8 @@ std::optional<Color> direct_lighting(
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                impl::add(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
-                impl::add(&res, impl::sample_surface_with_mis(*light, scene, surface, v, normals, engine));
+                add_optional(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
+                add_optional(&res, impl::sample_surface_with_mis(*light, scene, surface, v, normals, engine));
         }
         return res;
 }
@@ -215,7 +188,7 @@ std::optional<Color> directly_visible_light_sources(const Scene<N, T, Color>& sc
                 const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
                 if (impl::use_pdf_color(info.pdf, info.radiance))
                 {
-                        impl::add(&res, info.radiance);
+                        add_optional(&res, info.radiance);
                 }
         }
         return res;
@@ -252,7 +225,7 @@ std::optional<Color> directly_visible_light_sources(
                         continue;
                 }
 
-                impl::add(&res, info.radiance);
+                add_optional(&res, info.radiance);
         }
 
         return res;
