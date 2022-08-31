@@ -166,7 +166,27 @@ std::optional<Color> bpt(
         generate_camera_path<FLAT_SHADING>(scene, ray, engine, &camera_path);
         generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
 
-        return {};
+        const int camera_size = camera_path.size();
+        const int light_size = light_path.size();
+
+        ASSERT(camera_size - 1 <= MAX_DEPTH);
+        ASSERT(light_size - 1 <= MAX_DEPTH);
+
+        std::optional<Color> color;
+
+        for (int t = 2; t <= camera_size; ++t)
+        {
+                for (int s = 1; s <= light_size; ++s)
+                {
+                        const int depth = t + s - 2;
+                        if (depth > MAX_DEPTH)
+                        {
+                                continue;
+                        }
+                }
+        }
+
+        return color;
 }
 
 #define TEMPLATE(N, T, C)                                                                        \
