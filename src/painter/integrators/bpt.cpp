@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "bpt_vertex.h"
 #include "functions.h"
 #include "normals.h"
-#include "surface_sample.h"
 #include "visibility.h"
 
 #include <src/color/color.h>
@@ -35,6 +34,54 @@ namespace ns::painter::integrators
 namespace
 {
 constexpr int MAX_DEPTH = 5;
+
+template <std::size_t N, typename T, typename Color>
+struct SurfaceSample final
+{
+        Color beta;
+        Vector<N, T> l;
+        T pdf_forward;
+        T pdf_reversed;
+};
+
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+std::optional<SurfaceSample<N, T, Color>> surface_sample(
+        const SurfaceIntersection<N, T, Color>& surface,
+        const Vector<N, T>& v,
+        const Normals<N, T>& normals,
+        RandomEngine& engine)
+{
+        const Vector<N, T>& n = normals.shading;
+
+        const painter::SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
+
+        if (sample.pdf <= 0 || sample.brdf.is_black())
+        {
+                return {};
+        }
+
+        const Vector<N, T>& l = sample.l;
+        ASSERT(l.is_unit());
+
+        if (dot(l, normals.geometric) <= 0)
+        {
+                return {};
+        }
+
+        const T n_l = dot(n, l);
+        if (n_l <= 0)
+        {
+                return {};
+        }
+
+        const T pdf_reversed = surface.pdf(n, l, v);
+
+        return SurfaceSample<N, T, Color>{
+                .beta = sample.brdf * (n_l / sample.pdf),
+                .l = l,
+                .pdf_forward = sample.pdf,
+                .pdf_reversed = pdf_reversed};
+}
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] bool surface_found(
@@ -79,7 +126,7 @@ void walk(
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
 
-                const auto sample = surface_sample_bd(surface, -ray.dir(), normals, engine);
+                const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
                         set_forward_pdf(prev, &next, pdf_forward);
