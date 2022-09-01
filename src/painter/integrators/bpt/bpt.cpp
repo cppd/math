@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bpt.h"
 
-#include "bpt_connect.h"
-#include "bpt_vertex.h"
-#include "functions.h"
-#include "normals.h"
-#include "visibility.h"
+#include "connect.h"
+#include "vertex.h"
+
+#include "../functions.h"
+#include "../normals.h"
+#include "../visibility.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -29,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::bpt
 {
 namespace
 {
@@ -233,7 +234,7 @@ std::optional<Color> bpt(
                                 continue;
                         }
 
-                        add_optional(&color, bpt_connect<FLAT_SHADING>(scene, light_path, camera_path, s, t));
+                        add_optional(&color, connect<FLAT_SHADING>(scene, light_path, camera_path, s, t));
                 }
         }
 

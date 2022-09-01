@@ -17,14 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
+#include "vertex.h"
 
-#include <src/com/random/pcg.h>
+#include "../../objects.h"
 
 #include <optional>
+#include <vector>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::bpt
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine);
+std::optional<Color> connect(
+        const Scene<N, T, Color>& /*scene*/,
+        const std::vector<Vertex<N, T, Color>>& /*light_path*/,
+        const std::vector<Vertex<N, T, Color>>& /*camera_path*/,
+        const int /*s*/,
+        const int /*t*/)
+{
+        return {};
+}
 }

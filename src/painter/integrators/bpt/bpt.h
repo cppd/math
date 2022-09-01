@@ -17,15 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "light_distribution.h"
-
-#include "../objects.h"
+#include "../../objects.h"
+#include "../light_distribution.h"
 
 #include <src/com/random/pcg.h>
 
 #include <optional>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::bpt
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> bpt(

@@ -35,9 +35,9 @@ Elsevier, 2017.
 
 #include "path_tracing.h"
 
-#include "direct_lighting.h"
-#include "normals.h"
-#include "visibility.h"
+#include "../direct_lighting.h"
+#include "../normals.h"
+#include "../visibility.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -45,7 +45,7 @@ Elsevier, 2017.
 
 #include <optional>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::path_tracing
 {
 namespace
 {

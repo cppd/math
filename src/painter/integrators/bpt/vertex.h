@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "light_distribution.h"
-
-#include "../objects.h"
+#include "../../objects.h"
+#include "../light_distribution.h"
 
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
@@ -28,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <variant>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::bpt
 {
-namespace bpt_vertex_implementation
+namespace vertex_implementation
 {
 template <std::size_t N, typename T, typename Normal>
 [[nodiscard]] T solid_angle_pdf_to_area_pdf(
@@ -108,7 +107,7 @@ public:
         template <typename Prev>
         void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_forward_ =
                         impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, surface_.point(), normal_);
         }
@@ -116,7 +115,7 @@ public:
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_reversed_ =
                         impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, surface_.point(), normal_);
         }
@@ -124,7 +123,7 @@ public:
         template <typename Prev, typename Next>
         [[nodiscard]] T compute_pdf(const Prev& prev, const Next& next) const
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 const Vector<N, T> v = (prev.pos() - surface_.point()).normalized();
                 const Vector<N, T> next_dir = (next.pos() - surface_.point());
                 const T next_distance = next_dir.norm();
@@ -168,14 +167,14 @@ public:
         template <typename Prev>
         void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, pos_, normal_);
         }
 
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
         }
 
@@ -222,21 +221,21 @@ public:
         template <typename Prev>
         void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, pos_, normal_);
         }
 
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
         }
 
         template <typename Next>
         [[nodiscard]] T compute_pdf(const Next& next) const
         {
-                namespace impl = bpt_vertex_implementation;
+                namespace impl = vertex_implementation;
                 const Vector<N, T> next_dir = (next.pos() - pos_);
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
