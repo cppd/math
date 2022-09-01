@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bpt.h"
 
+#include "bpt_connect.h"
 #include "bpt_vertex.h"
+#include "functions.h"
 #include "normals.h"
 #include "surface_sample.h"
 #include "visibility.h"
@@ -183,6 +185,8 @@ std::optional<Color> bpt(
                         {
                                 continue;
                         }
+
+                        add_optional(&color, bpt_connect<FLAT_SHADING>(scene, light_path, camera_path, s, t));
                 }
         }
 
