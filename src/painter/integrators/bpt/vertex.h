@@ -132,6 +132,14 @@ public:
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
+        template <typename Prev, typename Next>
+        [[nodiscard]] Color brdf(const Prev& prev, const Next& next) const
+        {
+                const Vector<N, T> v = (prev.pos() - surface_.point()).normalized();
+                const Vector<N, T> l = (next.pos() - surface_.point()).normalized();
+                return surface_.brdf(normal_, v, l);
+        }
+
         [[nodiscard]] bool is_connectible() const
         {
                 return !surface_.is_specular();
