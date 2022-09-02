@@ -187,7 +187,10 @@ std::optional<Color> bpt(
                                 continue;
                         }
 
-                        add_optional(&color, connect<FLAT_SHADING>(scene, light_path, camera_path, s, t));
+                        const auto c =
+                                connect<FLAT_SHADING>(scene, light_distribution, engine, light_path, camera_path, s, t);
+
+                        add_optional(&color, c);
                 }
         }
 

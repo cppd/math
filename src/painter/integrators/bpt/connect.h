@@ -29,6 +29,8 @@ namespace ns::painter::integrators::bpt
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& /*scene*/,
+        LightDistribution<N, T, Color>& /*light_distribution*/,
+        PCG& /*engine*/,
         const std::vector<Vertex<N, T, Color>>& /*light_path*/,
         const std::vector<Vertex<N, T, Color>>& /*camera_path*/,
         const int /*s*/,
