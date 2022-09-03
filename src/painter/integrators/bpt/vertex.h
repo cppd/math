@@ -195,6 +195,21 @@ public:
 template <std::size_t N, typename T, typename Color>
 class Light final
 {
+        template <typename Next>
+        [[nodiscard]] static T compute_pdf_spatial(
+                const LightDistribution<N, T, Color>& distribution,
+                const Next& next,
+                const LightSource<N, T, Color>* const light,
+                const Vector<N, T>& pos)
+        {
+                const Vector<N, T> next_dir = (next.pos() - pos);
+                const T next_distance = next_dir.norm();
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf_pos = light->emit_pdf_pos(pos, l);
+                const T distribution_pdf = distribution.pdf(light);
+                return pdf_pos * distribution_pdf;
+        }
+
         const LightSource<N, T, Color>* light_;
         Vector<N, T> pos_;
         std::optional<Vector<N, T>> normal_;
@@ -213,6 +228,21 @@ public:
                   normal_(normal),
                   beta_(beta),
                   pdf_forward_(pdf_forward)
+        {
+        }
+
+        template <typename Next>
+        Light(const LightSource<N, T, Color>* const light,
+              const Vector<N, T>& pos,
+              const std::optional<Vector<N, T>>& normal,
+              const Color& beta,
+              const LightDistribution<N, T, Color>& distribution,
+              const Next& next)
+                : light_(light),
+                  pos_(pos),
+                  normal_(normal),
+                  beta_(beta),
+                  pdf_forward_(compute_pdf_spatial(distribution, next, light_, pos_))
         {
         }
 
@@ -249,17 +279,6 @@ public:
                 const Vector<N, T> l = next_dir / next_distance;
                 const T pdf = light_->emit_pdf_dir(pos_, l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
-        }
-
-        template <typename Next>
-        [[nodiscard]] T compute_pdf_spatial(const LightDistribution<N, T, Color>& distribution, const Next& next) const
-        {
-                const Vector<N, T> next_dir = (next.pos() - pos_);
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
-                const T pdf_pos = light_->emit_pdf_pos(pos_, l);
-                const T distribution_pdf = distribution.pdf(light_);
-                return pdf_pos * distribution_pdf;
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -324,17 +343,6 @@ template <std::size_t N, typename T, typename Color, template <std::size_t, type
                                 next);
                 },
                 prev);
-}
-
-template <typename Vertex>
-[[nodiscard]] decltype(auto) is_connectible(const Vertex& vertex)
-{
-        return std::visit(
-                [&](const auto& v)
-                {
-                        return v.is_connectible();
-                },
-                vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
