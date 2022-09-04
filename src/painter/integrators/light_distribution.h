@@ -127,11 +127,11 @@ public:
 template <std::size_t N, typename T, typename Color>
 class LightDistribution final
 {
-        LightDistributionBase<N, T, Color>* base_;
+        const LightDistributionBase<N, T, Color>* base_;
         std::discrete_distribution<int> distribution_;
 
 public:
-        explicit LightDistribution(LightDistributionBase<N, T, Color>* const base)
+        explicit LightDistribution(const LightDistributionBase<N, T, Color>* const base)
                 : base_(base),
                   distribution_(base->distribution())
         {
