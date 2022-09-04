@@ -43,6 +43,11 @@ struct SurfaceSample final
         SurfaceSample()
         {
         }
+
+        [[nodiscard]] bool usable() const
+        {
+                return pdf > 0 && !brdf.is_black();
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -167,6 +172,11 @@ struct LightSourceInfo final
         LightSourceInfo()
         {
         }
+
+        [[nodiscard]] bool usable() const
+        {
+                return pdf > 0 && !radiance.is_black();
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -181,6 +191,11 @@ struct LightSourceSample final
 
         LightSourceSample()
         {
+        }
+
+        [[nodiscard]] bool usable() const
+        {
+                return pdf > 0 && !radiance.is_black();
         }
 };
 

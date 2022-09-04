@@ -30,12 +30,6 @@ namespace ns::painter::integrators::bpt
 {
 namespace connect_implementation
 {
-template <typename T, typename Color>
-bool use_pdf_color(const T pdf, const Color& color)
-{
-        return pdf > 0 && !color.is_black();
-}
-
 template <std::size_t N, typename T, typename Color>
 struct ConnectS1 final
 {
@@ -64,7 +58,7 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const LightDistributionSample distribution = light_distribution.sample(engine);
 
         const LightSourceSample<N, T, Color> sample = distribution.light->sample(engine, camera_path_vertex.pos());
-        if (!use_pdf_color(sample.pdf, sample.radiance))
+        if (!sample.usable())
         {
                 return {};
         }

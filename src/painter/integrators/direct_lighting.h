@@ -58,12 +58,6 @@ T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
         return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
 }
 
-template <typename T, typename Color>
-bool use_pdf_color(const T pdf, const Color& color)
-{
-        return pdf > 0 && !color.is_black();
-}
-
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_light_with_mis(
         const LightSource<N, T, Color>& light,
@@ -76,7 +70,7 @@ std::optional<Color> sample_light_with_mis(
         const Vector<N, T>& n = normals.shading;
 
         const LightSourceSample<N, T, Color> sample = light.sample(engine, surface.point());
-        if (!use_pdf_color(sample.pdf, sample.radiance))
+        if (!sample.usable())
         {
                 return {};
         }
@@ -123,7 +117,7 @@ std::optional<Color> sample_surface_with_mis(
         const Vector<N, T>& n = normals.shading;
 
         const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
-        if (!use_pdf_color(sample.pdf, sample.brdf))
+        if (!sample.usable())
         {
                 return {};
         }
@@ -138,7 +132,7 @@ std::optional<Color> sample_surface_with_mis(
         }
 
         const LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
-        if (!use_pdf_color(light_info.pdf, light_info.radiance))
+        if (!light_info.usable())
         {
                 return {};
         }
@@ -180,13 +174,11 @@ std::optional<Color> direct_lighting(
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> directly_visible_light_sources(const Scene<N, T, Color>& scene, const Ray<N, T>& ray)
 {
-        namespace impl = direct_lighting_implementation;
-
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
                 const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
-                if (impl::use_pdf_color(info.pdf, info.radiance))
+                if (info.usable())
                 {
                         add_optional(&res, info.radiance);
                 }
@@ -200,8 +192,6 @@ std::optional<Color> directly_visible_light_sources(
         const SurfaceIntersection<N, T, Color>& surface,
         const Ray<N, T>& ray)
 {
-        namespace impl = direct_lighting_implementation;
-
         ASSERT(surface);
 
         std::optional<Color> res;
@@ -210,7 +200,7 @@ std::optional<Color> directly_visible_light_sources(
         {
                 const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
 
-                if (!impl::use_pdf_color(info.pdf, info.radiance))
+                if (!info.usable())
                 {
                         continue;
                 }
