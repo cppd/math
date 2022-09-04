@@ -48,7 +48,8 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const Scene<N, T, Color>& /*scene*/,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine,
-        const CameraPathVertex<N, T, Color>& camera_path_vertex)
+        const CameraPathVertex<N, T, Color>& camera_path_prev_vertex,
+        const Surface<N, T, Color>& camera_path_vertex)
 {
         if (!camera_path_vertex.is_connectible())
         {
@@ -68,7 +69,16 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
                 distribution.light, camera_path_vertex.pos() + sample.l * (*sample.distance), std::nullopt,
                 sample.radiance / (sample.pdf * distribution.pdf), light_distribution, camera_path_vertex);
 
-        return ConnectS1<N, T, Color>{.color = Color(0), .light_vertex = std::move(light_vertex)};
+        const Vector<N, T>& p = camera_path_vertex.pos();
+        const Vector<N, T>& n = camera_path_vertex.normal();
+        const Vector<N, T>& prev = camera_path_prev_vertex.pos();
+        const Vector<N, T>& next = light_vertex.pos();
+        const Vector<N, T> v = (prev - p).normalized();
+        const Vector<N, T> l = (next - p).normalized();
+        const T n_l = std::abs(dot(n, l));
+        Color color = camera_path_vertex.beta() * camera_path_vertex.brdf(v, l) * light_vertex.beta() * n_l;
+
+        return ConnectS1<N, T, Color>{.color = std::move(color), .light_vertex = std::move(light_vertex)};
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -76,14 +86,18 @@ decltype(auto) connect_s_1(
         const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine,
+        const Vertex<N, T, Color>& camera_path_prev_vertex,
         const Vertex<N, T, Color>& camera_path_vertex)
 {
         return std::visit(
-                [&](const auto& cpv)
+                [&](const auto& prev_vertex)
                 {
-                        return connect_s_1<FLAT_SHADING>(scene, light_distribution, engine, cpv);
+                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+                        return connect_s_1<FLAT_SHADING>(
+                                scene, light_distribution, engine, prev_vertex,
+                                std::get<Surface<N, T, Color>>(camera_path_vertex));
                 },
-                camera_path_vertex);
+                camera_path_prev_vertex);
 }
 
 //
@@ -151,8 +165,8 @@ std::optional<Color> connect(
 
         if (s == 1)
         {
-                auto connection =
-                        impl::connect_s_1<FLAT_SHADING>(scene, light_distribution, engine, camera_path[t - 1]);
+                auto connection = impl::connect_s_1<FLAT_SHADING>(
+                        scene, light_distribution, engine, camera_path[t - 2], camera_path[t - 1]);
                 if (connection)
                 {
                         color = std::move(connection->color);

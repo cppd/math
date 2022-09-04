@@ -104,6 +104,11 @@ public:
                 return normal_;
         }
 
+        [[nodiscard]] const Color& beta() const
+        {
+                return beta_;
+        }
+
         template <typename Prev>
         void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
         {
@@ -132,11 +137,10 @@ public:
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
-        template <typename Prev, typename Next>
-        [[nodiscard]] Color brdf(const Prev& prev, const Next& next) const
+        [[nodiscard]] Color brdf(const Vector<N, T>& v, const Vector<N, T>& l) const
         {
-                const Vector<N, T> v = (prev.pos() - surface_.point()).normalized();
-                const Vector<N, T> l = (next.pos() - surface_.point()).normalized();
+                ASSERT(v.is_unit());
+                ASSERT(l.is_unit());
                 return surface_.brdf(normal_, v, l);
         }
 
@@ -170,6 +174,11 @@ public:
         [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
         {
                 return normal_;
+        }
+
+        [[nodiscard]] const Color& beta() const
+        {
+                return beta_;
         }
 
         template <typename Prev>
@@ -254,6 +263,11 @@ public:
         [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
         {
                 return normal_;
+        }
+
+        [[nodiscard]] const Color& beta() const
+        {
+                return beta_;
         }
 
         template <typename Prev>
