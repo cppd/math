@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex.h"
 
 #include "../../objects.h"
+#include "../visibility.h"
 
 #include <src/com/error.h>
 
@@ -45,7 +46,7 @@ template <
         template <std::size_t, typename, typename>
         typename CameraPathVertex>
 std::optional<ConnectS1<N, T, Color>> connect_s_1(
-        const Scene<N, T, Color>& /*scene*/,
+        const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine,
         const CameraPathVertex<N, T, Color>& camera_path_prev_vertex,
@@ -65,20 +66,29 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         }
 
         ASSERT(sample.distance);
-        Light<N, T, Color> light_vertex(
+        const Light<N, T, Color> light_vertex(
                 distribution.light, camera_path_vertex.pos() + sample.l * (*sample.distance), std::nullopt,
                 sample.radiance / (sample.pdf * distribution.pdf), light_distribution, camera_path_vertex);
 
         const Vector<N, T>& p = camera_path_vertex.pos();
         const Vector<N, T>& n = camera_path_vertex.normal();
-        const Vector<N, T>& prev = camera_path_prev_vertex.pos();
-        const Vector<N, T>& next = light_vertex.pos();
-        const Vector<N, T> v = (prev - p).normalized();
-        const Vector<N, T> l = (next - p).normalized();
-        const T n_l = std::abs(dot(n, l));
-        Color color = camera_path_vertex.beta() * camera_path_vertex.brdf(v, l) * light_vertex.beta() * n_l;
+        const Ray<N, T> l(p, light_vertex.pos() - p);
+        const Ray<N, T> v(p, camera_path_prev_vertex.pos() - p);
+        const T n_l = std::abs(dot(n, l.dir()));
+        const Color color =
+                camera_path_vertex.beta() * camera_path_vertex.brdf(v.dir(), l.dir()) * light_vertex.beta() * n_l;
 
-        return ConnectS1<N, T, Color>{.color = std::move(color), .light_vertex = std::move(light_vertex)};
+        if (color.is_black())
+        {
+                return {};
+        }
+
+        if (light_source_occluded(scene, camera_path_vertex.normals(), l, sample.distance))
+        {
+                return {};
+        }
+
+        return ConnectS1<N, T, Color>{.color = color, .light_vertex = light_vertex};
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
