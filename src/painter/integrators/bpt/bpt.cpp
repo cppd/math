@@ -76,7 +76,7 @@ void walk(
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
                 Vertex<N, T, Color>& next =
-                        path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals.shading, beta);
+                        path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals, beta);
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
 

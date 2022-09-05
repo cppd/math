@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../objects.h"
 #include "../light_distribution.h"
+#include "../normals.h"
 
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
@@ -81,15 +82,15 @@ template <std::size_t N, typename T, typename Color>
 class Surface final
 {
         SurfaceIntersection<N, T, Color> surface_;
-        Vector<N, T> normal_;
+        Normals<N, T> normals_;
         Color beta_;
         T pdf_forward_ = 0;
         T pdf_reversed_ = 0;
 
 public:
-        Surface(const SurfaceIntersection<N, T, Color>& surface, const Vector<N, T>& normal, const Color& beta)
+        Surface(const SurfaceIntersection<N, T, Color>& surface, const Normals<N, T>& normals, const Color& beta)
                 : surface_(surface),
-                  normal_(normal),
+                  normals_(normals),
                   beta_(beta)
         {
         }
@@ -101,7 +102,12 @@ public:
 
         [[nodiscard]] const Vector<N, T>& normal() const
         {
-                return normal_;
+                return normals_.shading;
+        }
+
+        [[nodiscard]] const Normals<N, T>& normals() const
+        {
+                return normals_;
         }
 
         [[nodiscard]] const Color& beta() const
@@ -113,16 +119,16 @@ public:
         void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
         {
                 namespace impl = vertex_implementation;
-                pdf_forward_ =
-                        impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, surface_.point(), normal_);
+                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(
+                        prev.pos(), forward_angle_pdf, surface_.point(), normals_.shading);
         }
 
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
                 namespace impl = vertex_implementation;
-                pdf_reversed_ =
-                        impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, surface_.point(), normal_);
+                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(
+                        next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
         }
 
         template <typename Prev, typename Next>
@@ -133,7 +139,7 @@ public:
                 const Vector<N, T> next_dir = (next.pos() - surface_.point());
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = surface_.pdf(normal_, v, l);
+                const T pdf = surface_.pdf(normals_.shading, v, l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
@@ -141,7 +147,7 @@ public:
         {
                 ASSERT(v.is_unit());
                 ASSERT(l.is_unit());
-                return surface_.brdf(normal_, v, l);
+                return surface_.brdf(normals_.shading, v, l);
         }
 
         [[nodiscard]] bool is_connectible() const
