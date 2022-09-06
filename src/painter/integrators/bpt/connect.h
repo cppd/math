@@ -70,20 +70,24 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
                 distribution.light, camera_path_vertex.pos() + sample.l * (*sample.distance), std::nullopt,
                 sample.radiance / (sample.pdf * distribution.pdf), light_distribution, camera_path_vertex);
 
-        const Vector<N, T>& p = camera_path_vertex.pos();
-        const Vector<N, T>& n = camera_path_vertex.normal();
-        const Ray<N, T> l(p, light_vertex.pos() - p);
-        const Ray<N, T> v(p, camera_path_prev_vertex.pos() - p);
-        const T n_l = std::abs(dot(n, l.dir()));
-        const Color color =
-                camera_path_vertex.beta() * camera_path_vertex.brdf(v.dir(), l.dir()) * light_vertex.beta() * n_l;
+        const auto [color, to_light] = [&]
+        {
+                const Vector<N, T>& p = camera_path_vertex.pos();
+                const Vector<N, T>& n = camera_path_vertex.normal();
+                const Ray<N, T> l(p, light_vertex.pos() - p);
+                const Ray<N, T> v(p, camera_path_prev_vertex.pos() - p);
+                const T n_l = std::abs(dot(n, l.dir()));
+                const Color brdf = camera_path_vertex.brdf(v.dir(), l.dir());
+
+                return std::make_tuple(camera_path_vertex.beta() * brdf * light_vertex.beta() * n_l, l);
+        }();
 
         if (color.is_black())
         {
                 return {};
         }
 
-        if (light_source_occluded(scene, camera_path_vertex.normals(), l, sample.distance))
+        if (light_source_occluded(scene, camera_path_vertex.normals(), to_light, sample.distance))
         {
                 return {};
         }
@@ -91,16 +95,60 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         return ConnectS1<N, T, Color>{.color = color, .light_vertex = light_vertex};
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <
+        bool FLAT_SHADING,
+        std::size_t N,
+        typename T,
+        typename Color,
+        template <std::size_t, typename, typename>
+        typename LightPathVertex,
+        template <std::size_t, typename, typename>
+        typename CameraPathVertex>
 std::optional<Color> connect(
-        const Scene<N, T, Color>& /*scene*/,
-        PCG& /*engine*/,
-        const Surface<N, T, Color>& /*light_path_vertex*/,
-        const Surface<N, T, Color>& /*camera_path_vertex*/,
-        const int /*s*/,
-        const int /*t*/)
+        const Scene<N, T, Color>& scene,
+        const LightPathVertex<N, T, Color>& light_path_prev_vertex,
+        const Surface<N, T, Color>& light_path_vertex,
+        const CameraPathVertex<N, T, Color>& camera_path_prev_vertex,
+        const Surface<N, T, Color>& camera_path_vertex)
 {
-        return {};
+        if (!light_path_vertex.is_connectible() || !camera_path_vertex.is_connectible())
+        {
+                return {};
+        }
+
+        const Color color = [&]
+        {
+                const Vector<N, T>& p_0 = camera_path_vertex.pos();
+                const Vector<N, T>& n_0 = camera_path_vertex.normal();
+                const Vector<N, T> l_0 = (light_path_vertex.pos() - p_0).normalized();
+                const Vector<N, T> v_0 = (camera_path_prev_vertex.pos() - p_0).normalized();
+
+                const Vector<N, T>& p_1 = light_path_vertex.pos();
+                const Vector<N, T>& n_1 = light_path_vertex.normal();
+                const Vector<N, T> l_1 = -l_0;
+                const Vector<N, T> v_1 = (light_path_prev_vertex.pos() - p_1).normalized();
+
+                const T n_l_0 = std::abs(dot(n_0, l_0));
+                const T n_l_1 = std::abs(dot(n_1, l_1));
+
+                const Color brdf = camera_path_vertex.brdf(v_0, l_0) * light_path_vertex.brdf(v_1, l_1);
+
+                return camera_path_vertex.beta() * brdf * light_path_vertex.beta() * (n_l_0 * n_l_1);
+        }();
+
+        if (color.is_black())
+        {
+                return {};
+        }
+
+        if (occluded(
+                    scene, camera_path_vertex.pos(), camera_path_vertex.normals(), light_path_vertex.pos(),
+                    light_path_vertex.normals()))
+        {
+                return {};
+        }
+
+        return color;
 }
 
 //
@@ -113,14 +161,14 @@ decltype(auto) connect_s_1(
         const Vertex<N, T, Color>& camera_path_prev_vertex,
         const Vertex<N, T, Color>& camera_path_vertex)
 {
-        return std::visit(
-                [&](const auto& prev_vertex)
-                {
-                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+        const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
 
+        return std::visit(
+                [&](const auto& camera_prev_vertex)
+                {
                         return connect_s_1<FLAT_SHADING>(
-                                scene, light_distribution, engine, prev_vertex,
-                                std::get<Surface<N, T, Color>>(camera_path_vertex));
+                                scene, light_distribution, engine, camera_prev_vertex, camera_vertex);
                 },
                 camera_path_prev_vertex);
 }
@@ -128,18 +176,30 @@ decltype(auto) connect_s_1(
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 decltype(auto) connect(
         const Scene<N, T, Color>& scene,
-        PCG& engine,
+        const Vertex<N, T, Color>& light_path_prev_vertex,
         const Vertex<N, T, Color>& light_path_vertex,
-        const Vertex<N, T, Color>& camera_path_vertex,
-        const int s,
-        const int t)
+        const Vertex<N, T, Color>& camera_path_prev_vertex,
+        const Vertex<N, T, Color>& camera_path_vertex)
 {
         ASSERT((std::holds_alternative<Surface<N, T, Color>>(light_path_vertex)));
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+        const auto& light_vertex = std::get<Surface<N, T, Color>>(light_path_vertex);
 
-        return connect<FLAT_SHADING>(
-                scene, engine, std::get<Surface<N, T, Color>>(light_path_vertex),
-                std::get<Surface<N, T, Color>>(camera_path_vertex), s, t);
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+        const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
+
+        return std::visit(
+                [&](const auto& light_prev_vertex)
+                {
+                        return std::visit(
+                                [&](const auto& camera_prev_vertex)
+                                {
+                                        return connect<FLAT_SHADING>(
+                                                scene, light_prev_vertex, light_vertex, camera_prev_vertex,
+                                                camera_vertex);
+                                },
+                                camera_path_prev_vertex);
+                },
+                light_path_prev_vertex);
 }
 }
 
@@ -163,8 +223,10 @@ std::optional<Color> connect(
 
         if (s == 1)
         {
-                auto connection = impl::connect_s_1<FLAT_SHADING>(
-                        scene, light_distribution, engine, camera_path[t - 2], camera_path[t - 1]);
+                const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
+                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
+
+                auto connection = impl::connect_s_1<FLAT_SHADING>(scene, light_distribution, engine, t_2, t_1);
                 if (connection)
                 {
                         color = std::move(connection->color);
@@ -173,7 +235,12 @@ std::optional<Color> connect(
         }
         else
         {
-                color = impl::connect<FLAT_SHADING>(scene, engine, light_path[s - 1], camera_path[t - 1], s, t);
+                const Vertex<N, T, Color>& s_2 = light_path[t - 2];
+                const Vertex<N, T, Color>& s_1 = light_path[t - 1];
+                const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
+                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
+
+                color = impl::connect<FLAT_SHADING>(scene, s_2, s_1, t_2, t_1);
         }
 
         return color;
