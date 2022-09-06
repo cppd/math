@@ -92,6 +92,20 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+std::optional<Color> connect(
+        const Scene<N, T, Color>& /*scene*/,
+        PCG& /*engine*/,
+        const Surface<N, T, Color>& /*light_path_vertex*/,
+        const Surface<N, T, Color>& /*camera_path_vertex*/,
+        const int /*s*/,
+        const int /*t*/)
+{
+        return {};
+}
+
+//
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 decltype(auto) connect_s_1(
         const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
@@ -103,33 +117,12 @@ decltype(auto) connect_s_1(
                 [&](const auto& prev_vertex)
                 {
                         ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+
                         return connect_s_1<FLAT_SHADING>(
                                 scene, light_distribution, engine, prev_vertex,
                                 std::get<Surface<N, T, Color>>(camera_path_vertex));
                 },
                 camera_path_prev_vertex);
-}
-
-//
-
-template <
-        bool FLAT_SHADING,
-        std::size_t N,
-        typename T,
-        typename Color,
-        template <std::size_t, typename, typename>
-        typename LightPathVertex,
-        template <std::size_t, typename, typename>
-        typename CameraPathVertex>
-std::optional<Color> connect(
-        const Scene<N, T, Color>& /*scene*/,
-        PCG& /*engine*/,
-        const LightPathVertex<N, T, Color>& /*light_path_vertex*/,
-        const CameraPathVertex<N, T, Color>& /*camera_path_vertex*/,
-        const int /*s*/,
-        const int /*t*/)
-{
-        return {};
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -141,17 +134,12 @@ decltype(auto) connect(
         const int s,
         const int t)
 {
-        return std::visit(
-                [&](const auto& lpv)
-                {
-                        return std::visit(
-                                [&](const auto& cpv)
-                                {
-                                        return connect<FLAT_SHADING>(scene, engine, lpv, cpv, s, t);
-                                },
-                                camera_path_vertex);
-                },
-                light_path_vertex);
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(light_path_vertex)));
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
+
+        return connect<FLAT_SHADING>(
+                scene, engine, std::get<Surface<N, T, Color>>(light_path_vertex),
+                std::get<Surface<N, T, Color>>(camera_path_vertex), s, t);
 }
 }
 
@@ -167,8 +155,8 @@ std::optional<Color> connect(
 {
         namespace impl = connect_implementation;
 
-        ASSERT(t >= 2);
         ASSERT(s >= 1);
+        ASSERT(t >= 2);
 
         std::optional<Color> color;
         std::optional<Vertex<N, T, Color>> vertex;
