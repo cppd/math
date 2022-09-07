@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "mis.h"
 #include "vertex.h"
 
 #include "../../objects.h"
@@ -216,7 +217,7 @@ std::optional<Color> connect(
         ASSERT(t >= 2);
 
         std::optional<Color> color;
-        std::optional<Vertex<N, T, Color>> vertex;
+        std::optional<Light<N, T, Color>> vertex;
 
         if (s == 1)
         {
@@ -244,6 +245,8 @@ std::optional<Color> connect(
         {
                 return {};
         }
+
+        *color *= mis_weight(light_path, camera_path, s, t, vertex);
 
         return color;
 }
