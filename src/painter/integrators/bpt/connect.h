@@ -39,7 +39,6 @@ struct ConnectS1 final
 };
 
 template <
-        bool FLAT_SHADING,
         std::size_t N,
         typename T,
         typename Color,
@@ -96,7 +95,6 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 }
 
 template <
-        bool FLAT_SHADING,
         std::size_t N,
         typename T,
         typename Color,
@@ -153,7 +151,7 @@ std::optional<Color> connect(
 
 //
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 decltype(auto) connect_s_1(
         const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
@@ -167,13 +165,12 @@ decltype(auto) connect_s_1(
         return std::visit(
                 [&](const auto& camera_prev_vertex)
                 {
-                        return connect_s_1<FLAT_SHADING>(
-                                scene, light_distribution, engine, camera_prev_vertex, camera_vertex);
+                        return connect_s_1(scene, light_distribution, engine, camera_prev_vertex, camera_vertex);
                 },
                 camera_path_prev_vertex);
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 decltype(auto) connect(
         const Scene<N, T, Color>& scene,
         const Vertex<N, T, Color>& light_path_prev_vertex,
@@ -193,7 +190,7 @@ decltype(auto) connect(
                         return std::visit(
                                 [&](const auto& camera_prev_vertex)
                                 {
-                                        return connect<FLAT_SHADING>(
+                                        return connect(
                                                 scene, light_prev_vertex, light_vertex, camera_prev_vertex,
                                                 camera_vertex);
                                 },
@@ -203,7 +200,7 @@ decltype(auto) connect(
 }
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
@@ -226,7 +223,7 @@ std::optional<Color> connect(
                 const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
 
-                auto connection = impl::connect_s_1<FLAT_SHADING>(scene, light_distribution, engine, t_2, t_1);
+                auto connection = impl::connect_s_1(scene, light_distribution, engine, t_2, t_1);
                 if (connection)
                 {
                         color = std::move(connection->color);
@@ -240,7 +237,12 @@ std::optional<Color> connect(
                 const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
 
-                color = impl::connect<FLAT_SHADING>(scene, s_2, s_1, t_2, t_1);
+                color = impl::connect(scene, s_2, s_1, t_2, t_1);
+        }
+
+        if (!color || color->is_black())
+        {
+                return {};
         }
 
         return color;
