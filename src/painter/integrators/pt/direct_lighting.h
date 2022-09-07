@@ -37,10 +37,9 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "functions.h"
-#include "normals.h"
-
-#include "../objects.h"
+#include "../../objects.h"
+#include "../com/functions.h"
+#include "../com/normals.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -48,7 +47,7 @@ Elsevier, 2017.
 
 #include <optional>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::pt
 {
 namespace direct_lighting_implementation
 {

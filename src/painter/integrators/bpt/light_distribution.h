@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
+#include "../../objects.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <unordered_map>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::bpt
 {
 namespace light_distribution_implementation
 {

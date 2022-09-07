@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "light_distribution.h"
+
 #include "../../objects.h"
-#include "../light_distribution.h"
-#include "../normals.h"
+#include "../com/normals.h"
 
 #include <src/com/error.h>
 #include <src/numerical/vector.h>

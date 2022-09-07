@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../../objects.h"
-#include "../normals.h"
+#include "../com/normals.h"
 
 #include <src/com/error.h>
 
-namespace ns::painter::integrators::path_tracing
+namespace ns::painter::integrators::pt
 {
 template <std::size_t N, typename T, typename Color>
 struct SurfaceSample final

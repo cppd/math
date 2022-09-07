@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "normals.h"
 
-#include "../objects.h"
+#include "../../objects.h"
 
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>

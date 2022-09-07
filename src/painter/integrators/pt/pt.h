@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::painter::integrators::path_tracing
+namespace ns::painter::integrators::pt
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine);
+std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine);
 }

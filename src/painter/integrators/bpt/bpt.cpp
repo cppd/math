@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "surface_sample.h"
 #include "vertex.h"
 
-#include "../functions.h"
-#include "../normals.h"
-#include "../visibility.h"
+#include "../com/functions.h"
+#include "../com/normals.h"
+#include "../com/visibility.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>

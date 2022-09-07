@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex.h"
 
 #include "../../objects.h"
-#include "../visibility.h"
+#include "../com/visibility.h"
 
 #include <src/com/error.h>
 

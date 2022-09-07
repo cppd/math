@@ -33,13 +33,13 @@ Elsevier, 2017.
 14.5 Path tracing
 */
 
-#include "path_tracing.h"
+#include "pt.h"
 
+#include "direct_lighting.h"
 #include "surface_sample.h"
 
-#include "../direct_lighting.h"
-#include "../normals.h"
-#include "../visibility.h"
+#include "../com/normals.h"
+#include "../com/visibility.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -47,7 +47,7 @@ Elsevier, 2017.
 
 #include <optional>
 
-namespace ns::painter::integrators::path_tracing
+namespace ns::painter::integrators::pt
 {
 namespace
 {
@@ -79,7 +79,7 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
+std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
 {
         SurfaceIntersection<N, T, Color> surface;
         Normals<N, T> normals;
@@ -153,9 +153,9 @@ std::optional<Color> path_tracing(const Scene<N, T, Color>& scene, Ray<N, T> ray
         return color;
 }
 
-#define TEMPLATE(N, T, C)                                                                                    \
-        template std::optional<C> path_tracing<true, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&); \
-        template std::optional<C> path_tracing<false, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&);
+#define TEMPLATE(N, T, C)                                                                          \
+        template std::optional<C> pt<true, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&); \
+        template std::optional<C> pt<false, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }
