@@ -79,9 +79,9 @@ class LightDistributionBase final
         template <std::size_t, typename, typename>
         friend class LightDistribution;
 
-        const Scene<N, T, Color>* scene_;
         std::discrete_distribution<int> distribution_;
-        std::vector<T> probabilities_;
+
+        std::vector<LightDistributionSample<N, T, Color>> samples_;
         std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf_;
 
         [[nodiscard]] const std::discrete_distribution<int>& distribution() const
@@ -94,8 +94,7 @@ class LightDistributionBase final
                 std::discrete_distribution<int>& distribution,
                 RandomEngine& engine) const
         {
-                const int index = distribution(engine);
-                return {.light = scene_->light_sources()[index], .pdf = probabilities_[index]};
+                return samples_[distribution(engine)];
         }
 
         [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
@@ -109,17 +108,21 @@ class LightDistributionBase final
         }
 
 public:
-        explicit LightDistributionBase(const Scene<N, T, Color>* const scene)
-                : scene_(scene),
-                  distribution_(light_distribution_implementation::create_distribution(*scene)),
-                  probabilities_(light_distribution_implementation::create_probabilities<T>(distribution_))
+        explicit LightDistributionBase(const Scene<N, T, Color>& scene)
+                : distribution_(light_distribution_implementation::create_distribution(scene))
         {
-                const auto& lights = scene->light_sources();
-                ASSERT(probabilities_.size() == lights.size());
+                const std::vector<T> probabilities =
+                        light_distribution_implementation::create_probabilities<T>(distribution_);
+
+                const auto& lights = scene.light_sources();
+                ASSERT(probabilities.size() == lights.size());
+
+                samples_.reserve(lights.size());
                 light_pdf_.reserve(lights.size());
                 for (std::size_t i = 0; i < lights.size(); ++i)
                 {
-                        light_pdf_[lights[i]] = probabilities_[i];
+                        samples_.emplace_back(lights[i], probabilities[i]);
+                        light_pdf_[lights[i]] = probabilities[i];
                 }
         }
 };
