@@ -94,9 +94,18 @@ public:
                 thread_ = std::thread(
                         [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
                         {
-                                painting(
-                                        flat_shading, notifier, statistics, samples_per_pixel, max_pass_count, *scene,
-                                        thread_count, stop);
+                                if (flat_shading)
+                                {
+                                        painting<true>(
+                                                notifier, statistics, samples_per_pixel, max_pass_count, *scene,
+                                                thread_count, stop);
+                                }
+                                else
+                                {
+                                        painting<false>(
+                                                notifier, statistics, samples_per_pixel, max_pass_count, *scene,
+                                                thread_count, stop);
+                                }
                         });
         }
 

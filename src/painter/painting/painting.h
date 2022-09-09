@@ -27,9 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename Color>
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
-        bool flat_shading,
         Notifier<N - 1>* notifier,
         PaintingStatistics* statistics,
         int samples_per_pixel,

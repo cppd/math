@@ -216,9 +216,8 @@ void painting_impl(
 }
 }
 
-template <std::size_t N, typename T, typename Color>
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
-        const bool flat_shading,
         Notifier<N - 1>* const notifier,
         PaintingStatistics* const statistics,
         const int samples_per_pixel,
@@ -231,18 +230,8 @@ void painting(
         {
                 try
                 {
-                        if (flat_shading)
-                        {
-                                painting_impl<true>(
-                                        notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count,
-                                        stop);
-                        }
-                        else
-                        {
-                                painting_impl<false>(
-                                        notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count,
-                                        stop);
-                        }
+                        painting_impl<FLAT_SHADING>(
+                                notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count, stop);
                 }
                 catch (const std::exception& e)
                 {
@@ -259,9 +248,12 @@ void painting(
         }
 }
 
-#define TEMPLATE(N, T, C)                                                                                           \
-        template void painting(                                                                                     \
-                bool, Notifier<(N)-1>*, PaintingStatistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+#define TEMPLATE(N, T, C)                                                                                     \
+        template void painting<true, (N), T, C>(                                                              \
+                Notifier<(N)-1>*, PaintingStatistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+                std::atomic_bool*) noexcept;                                                                  \
+        template void painting<false, (N), T, C>(                                                             \
+                Notifier<(N)-1>*, PaintingStatistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
                 std::atomic_bool*) noexcept;
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
