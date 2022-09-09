@@ -42,95 +42,163 @@ namespace
 constexpr int PANTBRUSH_WIDTH = 20;
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-class Painting final
+class Integrator
 {
-        const Scene<N, T, Color>* const scene_;
-        const Projector<N, T>* const projector_;
-        std::atomic_bool* const stop_;
-        PaintingStatistics* const statistics_;
-        Notifier<N - 1>* const notifier_;
-
-        const SamplerStratifiedJittered<N - 1, T> sampler_;
-        pixels::Pixels<N - 1, T, Color> pixels_{projector_->screen_size(), scene_->background_light(), notifier_};
-        Paintbrush<N - 1> paintbrush_{projector_->screen_size(), PANTBRUSH_WIDTH};
-
-        std::optional<int> pass_count_;
-
-        std::atomic_int call_counter_ = 0;
-
-        void paint_pixels(unsigned thread_number);
-        void prepare_next_pass(unsigned thread_number);
-        [[nodiscard]] bool paint_pass(unsigned thread_number, std::barrier<>* barrier);
-        void paint(unsigned thread_number, std::barrier<>* barrier) noexcept;
+protected:
+        ~Integrator() = default;
 
 public:
-        Painting(
+        virtual void init(
+                const Scene<N, T, Color>* scene,
+                std::atomic_bool* stop,
+                PaintingStatistics* statistics,
+                Notifier<N - 1>* notifier,
+                pixels::Pixels<N - 1, T, Color>* pixels,
+                unsigned thread_count) = 0;
+
+        virtual void integrate(unsigned thread_number) = 0;
+
+        virtual void next_pass() = 0;
+};
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+class IntegratorPT final : public Integrator<FLAT_SHADING, N, T, Color>
+{
+        const Scene<N, T, Color>* scene_ = nullptr;
+        const Projector<N, T>* projector_ = nullptr;
+        std::atomic_bool* stop_ = nullptr;
+        PaintingStatistics* statistics_ = nullptr;
+        Notifier<N - 1>* notifier_ = nullptr;
+        pixels::Pixels<N - 1, T, Color>* pixels_ = nullptr;
+
+        const SamplerStratifiedJittered<N - 1, T> sampler_;
+        std::optional<Paintbrush<N - 1>> paintbrush_;
+
+public:
+        explicit IntegratorPT(const int samples_per_pixel)
+                : sampler_(samples_per_pixel)
+        {
+        }
+
+        void init(
                 const Scene<N, T, Color>* const scene,
                 std::atomic_bool* const stop,
                 PaintingStatistics* const statistics,
                 Notifier<N - 1>* const notifier,
-                const int samples_per_pixel,
-                const std::optional<int> max_pass_count)
-                : scene_(scene),
-                  projector_(&scene->projector()),
-                  stop_(stop),
-                  statistics_(statistics),
-                  notifier_(notifier),
-                  sampler_(samples_per_pixel),
-                  pass_count_(max_pass_count)
+                pixels::Pixels<N - 1, T, Color>* const pixels,
+                const unsigned /*thread_count*/) override
+        {
+                ASSERT(scene);
+
+                scene_ = scene;
+                projector_ = &scene->projector();
+                stop_ = stop;
+                statistics_ = statistics;
+                notifier_ = notifier;
+                pixels_ = pixels;
+
+                paintbrush_.emplace(projector_->screen_size(), PANTBRUSH_WIDTH);
+        }
+
+        void integrate(const unsigned thread_number) override
         {
                 ASSERT(scene_);
                 ASSERT(projector_);
                 ASSERT(stop_);
                 ASSERT(statistics_);
                 ASSERT(notifier_);
-                ASSERT(!pass_count_ || *pass_count_ > 0);
+                ASSERT(pixels_);
+
+                thread_local PCG engine;
+                thread_local std::vector<Vector<N - 1, T>> sample_points;
+                thread_local std::vector<std::optional<Color>> sample_colors;
+
+                while (true)
+                {
+                        MemoryArena::thread_local_instance().clear();
+
+                        if (*stop_)
+                        {
+                                return;
+                        }
+
+                        const std::optional<std::array<int, N - 1>> pixel = paintbrush_->next_pixel();
+                        if (!pixel)
+                        {
+                                return;
+                        }
+
+                        ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
+
+                        const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
+
+                        sampler_.generate(engine, &sample_points);
+                        sample_colors.resize(sample_points.size());
+
+                        const long long ray_count = scene_->thread_ray_count();
+
+                        for (std::size_t i = 0; i < sample_points.size(); ++i)
+                        {
+                                const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
+                                sample_colors[i] = integrators::pt::pt<FLAT_SHADING>(*scene_, ray, engine);
+                        }
+
+                        pixels_->add_samples(*pixel, sample_points, sample_colors);
+                        statistics_->pixel_done(scene_->thread_ray_count() - ray_count, sample_points.size());
+                }
         }
 
-        void paint(unsigned thread_count);
+        void next_pass() override
+        {
+                ASSERT(paintbrush_);
+
+                paintbrush_->next_pass();
+                sampler_.next_pass();
+        }
 };
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::paint_pixels(const unsigned thread_number)
+class Painting final
 {
-        thread_local PCG engine;
-        thread_local std::vector<Vector<N - 1, T>> sample_points;
-        thread_local std::vector<std::optional<Color>> sample_colors;
+        std::atomic_bool* const stop_;
+        PaintingStatistics* const statistics_;
+        Notifier<N - 1>* const notifier_;
+        pixels::Pixels<N - 1, T, Color>* const pixels_;
+        Integrator<FLAT_SHADING, N, T, Color>* const integrator_;
 
-        while (true)
+        std::optional<int> pass_count_;
+        std::atomic_int call_counter_ = 0;
+
+        void prepare_next_pass(unsigned thread_number);
+        [[nodiscard]] bool paint_pass(unsigned thread_number, std::barrier<>* barrier);
+        void paint(unsigned thread_number, std::barrier<>* barrier) noexcept;
+
+public:
+        Painting(
+                std::atomic_bool* const stop,
+                PaintingStatistics* const statistics,
+                Notifier<N - 1>* const notifier,
+                pixels::Pixels<N - 1, T, Color>* const pixels,
+                Integrator<FLAT_SHADING, N, T, Color>* const integrator,
+                const std::optional<int> max_pass_count)
+                : stop_(stop),
+                  statistics_(statistics),
+                  notifier_(notifier),
+                  pixels_(pixels),
+                  integrator_(integrator),
+                  pass_count_(max_pass_count)
         {
-                MemoryArena::thread_local_instance().clear();
+                ASSERT(stop_);
+                ASSERT(statistics_);
+                ASSERT(notifier_);
+                ASSERT(pixels_);
+                ASSERT(integrator_);
 
-                if (*stop_)
-                {
-                        return;
-                }
-
-                const std::optional<std::array<int, N - 1>> pixel = paintbrush_.next_pixel();
-                if (!pixel)
-                {
-                        return;
-                }
-
-                ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
-
-                const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
-
-                sampler_.generate(engine, &sample_points);
-                sample_colors.resize(sample_points.size());
-
-                const long long ray_count = scene_->thread_ray_count();
-
-                for (std::size_t i = 0; i < sample_points.size(); ++i)
-                {
-                        const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = integrators::pt::pt<FLAT_SHADING>(*scene_, ray, engine);
-                }
-
-                pixels_.add_samples(*pixel, sample_points, sample_colors);
-                statistics_->pixel_done(scene_->thread_ray_count() - ray_count, sample_points.size());
+                ASSERT(!pass_count_ || *pass_count_ > 0);
         }
-}
+
+        void paint(const Scene<N, T, Color>* scene, unsigned thread_count);
+};
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned thread_number)
@@ -146,7 +214,7 @@ void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned threa
 
         {
                 ImagesWriting lock(notifier_->images(pass_number));
-                pixels_.images(&lock.image_with_background(), &lock.image_without_background());
+                pixels_->images(&lock.image_with_background(), &lock.image_without_background());
         }
 
         notifier_->pass_done(pass_number);
@@ -154,8 +222,7 @@ void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned threa
         if (!pass_count_ || --*pass_count_ > 0)
         {
                 statistics_->next_pass();
-                paintbrush_.next_pass();
-                sampler_.next_pass();
+                integrator_->next_pass();
         }
         else
         {
@@ -168,7 +235,7 @@ bool Painting<FLAT_SHADING, N, T, Color>::paint_pass(const unsigned thread_numbe
 {
         try
         {
-                paint_pixels(thread_number);
+                integrator_->integrate(thread_number);
         }
         catch (const std::exception& e)
         {
@@ -224,11 +291,13 @@ void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, st
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_count)
+void Painting<FLAT_SHADING, N, T, Color>::paint(const Scene<N, T, Color>* const scene, const unsigned thread_count)
 {
         ASSERT(++call_counter_ == 1);
 
         statistics_->init();
+
+        integrator_->init(scene, stop_, statistics_, notifier_, pixels_, thread_count);
 
         std::barrier barrier(thread_count);
 
@@ -250,9 +319,8 @@ void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_count)
         }
 }
 
-template <std::size_t N, typename T, typename Color>
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting_impl(
-        const bool flat_shading,
         Notifier<N - 1>* const notifier,
         PaintingStatistics* const statistics,
         const int samples_per_pixel,
@@ -261,16 +329,13 @@ void painting_impl(
         const int thread_count,
         std::atomic_bool* const stop)
 {
-        if (flat_shading)
-        {
-                Painting<true, N, T, Color>(&scene, stop, statistics, notifier, samples_per_pixel, max_pass_count)
-                        .paint(thread_count);
-        }
-        else
-        {
-                Painting<false, N, T, Color>(&scene, stop, statistics, notifier, samples_per_pixel, max_pass_count)
-                        .paint(thread_count);
-        }
+        IntegratorPT<FLAT_SHADING, N, T, Color> integrator(samples_per_pixel);
+
+        pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_light(), notifier);
+
+        Painting<FLAT_SHADING, N, T, Color> painting(stop, statistics, notifier, &pixels, &integrator, max_pass_count);
+
+        painting.paint(&scene, thread_count);
 }
 }
 
@@ -289,9 +354,18 @@ void painting(
         {
                 try
                 {
-                        painting_impl(
-                                flat_shading, notifier, statistics, samples_per_pixel, max_pass_count, scene,
-                                thread_count, stop);
+                        if (flat_shading)
+                        {
+                                painting_impl<true>(
+                                        notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count,
+                                        stop);
+                        }
+                        else
+                        {
+                                painting_impl<false>(
+                                        notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count,
+                                        stop);
+                        }
                 }
                 catch (const std::exception& e)
                 {
