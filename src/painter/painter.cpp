@@ -36,7 +36,7 @@ class Impl final : public Painter
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        std::unique_ptr<PaintingStatistics> statistics_;
+        std::unique_ptr<painting::Statistics> statistics_;
 
         std::atomic_bool stop_ = false;
         std::thread thread_;
@@ -88,21 +88,21 @@ public:
                         error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
                 }
 
-                statistics_ =
-                        std::make_unique<PaintingStatistics>(multiply_all<long long>(scene->projector().screen_size()));
+                statistics_ = std::make_unique<painting::Statistics>(
+                        multiply_all<long long>(scene->projector().screen_size()));
 
                 thread_ = std::thread(
                         [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
                         {
                                 if (flat_shading)
                                 {
-                                        painting<true>(
+                                        painting::painting<true>(
                                                 notifier, statistics, samples_per_pixel, max_pass_count, *scene,
                                                 thread_count, stop);
                                 }
                                 else
                                 {
-                                        painting<false>(
+                                        painting::painting<false>(
                                                 notifier, statistics, samples_per_pixel, max_pass_count, *scene,
                                                 thread_count, stop);
                                 }

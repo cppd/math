@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <mutex>
 
-namespace ns::painter
+namespace ns::painter::painting
 {
-class PaintingStatistics final
+class Statistics final
 {
         static_assert(std::atomic<long long>::is_always_lock_free);
 
@@ -56,7 +56,7 @@ class PaintingStatistics final
         }
 
 public:
-        explicit PaintingStatistics(const long long screen_pixel_count)
+        explicit Statistics(const long long screen_pixel_count)
                 : screen_pixel_count_(screen_pixel_count)
         {
                 init_impl();
@@ -90,9 +90,9 @@ public:
                 pass_start_pixel_count_ = pixel_counter_;
         }
 
-        Statistics statistics() const
+        painter::Statistics statistics() const
         {
-                Statistics s;
+                painter::Statistics s;
 
                 const std::lock_guard lg(lock_);
 

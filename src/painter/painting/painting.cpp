@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <barrier>
 #include <vector>
 
-namespace ns::painter
+namespace ns::painter::painting
 {
 namespace
 {
@@ -38,7 +38,7 @@ template <std::size_t N, typename T, typename Color, typename Integrator>
 class Painting final
 {
         std::atomic_bool* const stop_;
-        PaintingStatistics* const statistics_;
+        Statistics* const statistics_;
         Notifier<N>* const notifier_;
         pixels::Pixels<N, T, Color>* const pixels_;
         Integrator* const integrator_;
@@ -55,7 +55,7 @@ class Painting final
 public:
         Painting(
                 std::atomic_bool* const stop,
-                PaintingStatistics* const statistics,
+                Statistics* const statistics,
                 Notifier<N>* const notifier,
                 pixels::Pixels<N, T, Color>* const pixels,
                 Integrator* const integrator,
@@ -199,7 +199,7 @@ void Painting<N, T, Color, Integrator>::paint(const unsigned thread_count)
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting_impl(
         Notifier<N - 1>* const notifier,
-        PaintingStatistics* const statistics,
+        Statistics* const statistics,
         const int samples_per_pixel,
         const std::optional<int> max_pass_count,
         const Scene<N, T, Color>& scene,
@@ -220,7 +220,7 @@ void painting_impl(
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
         Notifier<N - 1>* const notifier,
-        PaintingStatistics* const statistics,
+        Statistics* const statistics,
         const int samples_per_pixel,
         const std::optional<int> max_pass_count,
         const Scene<N, T, Color>& scene,
@@ -249,12 +249,12 @@ void painting(
         }
 }
 
-#define TEMPLATE(N, T, C)                                                                                     \
-        template void painting<true, (N), T, C>(                                                              \
-                Notifier<(N)-1>*, PaintingStatistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
-                std::atomic_bool*) noexcept;                                                                  \
-        template void painting<false, (N), T, C>(                                                             \
-                Notifier<(N)-1>*, PaintingStatistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+#define TEMPLATE(N, T, C)                                                                             \
+        template void painting<true, (N), T, C>(                                                      \
+                Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+                std::atomic_bool*) noexcept;                                                          \
+        template void painting<false, (N), T, C>(                                                     \
+                Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
                 std::atomic_bool*) noexcept;
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

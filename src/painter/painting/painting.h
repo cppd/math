@@ -25,12 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <optional>
 
-namespace ns::painter
+namespace ns::painter::painting
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
         Notifier<N - 1>* notifier,
-        PaintingStatistics* statistics,
+        Statistics* statistics,
         int samples_per_pixel,
         std::optional<int> max_pass_count,
         const Scene<N, T, Color>& scene,

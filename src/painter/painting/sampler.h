@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/halton_sampler.h>
 #include <src/sampling/sj_sampler.h>
 
-namespace ns::painter
+namespace ns::painter::painting
 {
 template <std::size_t N, typename T>
 class SamplerHalton final

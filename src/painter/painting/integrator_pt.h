@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 
-namespace ns::painter
+namespace ns::painter::painting
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 class IntegratorPT final
@@ -42,7 +42,7 @@ class IntegratorPT final
         const Scene<N, T, Color>* const scene_;
         const Projector<N, T>* const projector_;
         const std::atomic_bool* const stop_;
-        PaintingStatistics* const statistics_;
+        Statistics* const statistics_;
         Notifier<N - 1>* const notifier_;
         pixels::Pixels<N - 1, T, Color>* const pixels_;
 
@@ -53,7 +53,7 @@ public:
         IntegratorPT(
                 const Scene<N, T, Color>* const scene,
                 const std::atomic_bool* const stop,
-                PaintingStatistics* const statistics,
+                Statistics* const statistics,
                 Notifier<N - 1>* const notifier,
                 pixels::Pixels<N - 1, T, Color>* const pixels,
                 const int samples_per_pixel)
