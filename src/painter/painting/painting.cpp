@@ -17,12 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painting.h"
 
+#include "integrator_bpt.h"
 #include "integrator_pt.h"
 
 #include "../pixels/pixels.h"
 
 #include <src/color/color.h>
+#include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/settings/instantiation.h>
 
@@ -34,6 +37,14 @@ namespace ns::painter::painting
 {
 namespace
 {
+enum class Integrator
+{
+        BPT,
+        PT
+};
+
+constexpr Integrator INTEGRATOR = Integrator::PT;
+
 template <std::size_t N, typename T, typename Color, typename Integrator>
 class Painting final
 {
@@ -196,6 +207,21 @@ void Painting<N, T, Color, Integrator>::paint(const unsigned thread_count)
         }
 }
 
+template <std::size_t N, typename T, typename Color, typename Integrator>
+void painting_impl(
+        std::atomic_bool* const stop,
+        Statistics* const statistics,
+        Notifier<N>* const notifier,
+        pixels::Pixels<N, T, Color>* const pixels,
+        Integrator* const integrator,
+        const std::optional<int> max_pass_count,
+        const int thread_count)
+{
+        Painting painting(stop, statistics, notifier, pixels, integrator, max_pass_count);
+
+        painting.paint(thread_count);
+}
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting_impl(
         Notifier<N - 1>* const notifier,
@@ -208,12 +234,24 @@ void painting_impl(
 {
         pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_light(), notifier);
 
-        IntegratorPT<FLAT_SHADING, N, T, Color> integrator(
-                &scene, stop, statistics, notifier, &pixels, samples_per_pixel);
-
-        Painting painting(stop, statistics, notifier, &pixels, &integrator, max_pass_count);
-
-        painting.paint(thread_count);
+        switch (INTEGRATOR)
+        {
+        case Integrator::BPT:
+        {
+                IntegratorBPT<FLAT_SHADING, N, T, Color> integrator(
+                        &scene, stop, statistics, notifier, &pixels, samples_per_pixel, thread_count);
+                painting_impl(stop, statistics, notifier, &pixels, &integrator, max_pass_count, thread_count);
+                return;
+        }
+        case Integrator::PT:
+        {
+                IntegratorPT<FLAT_SHADING, N, T, Color> integrator(
+                        &scene, stop, statistics, notifier, &pixels, samples_per_pixel);
+                painting_impl(stop, statistics, notifier, &pixels, &integrator, max_pass_count, thread_count);
+                return;
+        }
+        }
+        error("Unknown integrator " + to_string(enum_to_int(INTEGRATOR)));
 }
 }
 

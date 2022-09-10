@@ -121,7 +121,8 @@ public:
                 light_pdf_.reserve(lights.size());
                 for (std::size_t i = 0; i < lights.size(); ++i)
                 {
-                        samples_.emplace_back(lights[i], probabilities[i]);
+                        samples_.push_back(
+                                LightDistributionSample<N, T, Color>{.light = lights[i], .pdf = probabilities[i]});
                         light_pdf_[lights[i]] = probabilities[i];
                 }
         }
