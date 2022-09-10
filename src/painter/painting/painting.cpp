@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painting.h"
 
-#include "integrators.h"
+#include "integrator_pt.h"
 
 #include "../pixels/pixels.h"
 
@@ -34,29 +34,31 @@ namespace ns::painter
 {
 namespace
 {
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename Integrator>
 class Painting final
 {
         std::atomic_bool* const stop_;
         PaintingStatistics* const statistics_;
-        Notifier<N - 1>* const notifier_;
-        pixels::Pixels<N - 1, T, Color>* const pixels_;
-        Integrator<FLAT_SHADING, N, T, Color>* const integrator_;
+        Notifier<N>* const notifier_;
+        pixels::Pixels<N, T, Color>* const pixels_;
+        Integrator* const integrator_;
 
         std::optional<int> pass_count_;
         std::atomic_int call_counter_ = 0;
 
         void prepare_next_pass(unsigned thread_number);
+
         [[nodiscard]] bool paint_pass(unsigned thread_number, std::barrier<>* barrier);
+
         void paint(unsigned thread_number, std::barrier<>* barrier) noexcept;
 
 public:
         Painting(
                 std::atomic_bool* const stop,
                 PaintingStatistics* const statistics,
-                Notifier<N - 1>* const notifier,
-                pixels::Pixels<N - 1, T, Color>* const pixels,
-                Integrator<FLAT_SHADING, N, T, Color>* const integrator,
+                Notifier<N>* const notifier,
+                pixels::Pixels<N, T, Color>* const pixels,
+                Integrator* const integrator,
                 const std::optional<int> max_pass_count)
                 : stop_(stop),
                   statistics_(statistics),
@@ -74,11 +76,11 @@ public:
                 ASSERT(!pass_count_ || *pass_count_ > 0);
         }
 
-        void paint(const Scene<N, T, Color>* scene, unsigned thread_count);
+        void paint(unsigned thread_count);
 };
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned thread_number)
+template <std::size_t N, typename T, typename Color, typename Integrator>
+void Painting<N, T, Color, Integrator>::prepare_next_pass(const unsigned thread_number)
 {
         if (thread_number != 0)
         {
@@ -107,8 +109,8 @@ void Painting<FLAT_SHADING, N, T, Color>::prepare_next_pass(const unsigned threa
         }
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-bool Painting<FLAT_SHADING, N, T, Color>::paint_pass(const unsigned thread_number, std::barrier<>* const barrier)
+template <std::size_t N, typename T, typename Color, typename Integrator>
+bool Painting<N, T, Color, Integrator>::paint_pass(const unsigned thread_number, std::barrier<>* const barrier)
 {
         try
         {
@@ -152,8 +154,8 @@ bool Painting<FLAT_SHADING, N, T, Color>::paint_pass(const unsigned thread_numbe
         return !(*stop_);
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, std::barrier<>* const barrier) noexcept
+template <std::size_t N, typename T, typename Color, typename Integrator>
+void Painting<N, T, Color, Integrator>::paint(const unsigned thread_number, std::barrier<>* const barrier) noexcept
 {
         try
         {
@@ -167,14 +169,12 @@ void Painting<FLAT_SHADING, N, T, Color>::paint(const unsigned thread_number, st
         }
 }
 
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-void Painting<FLAT_SHADING, N, T, Color>::paint(const Scene<N, T, Color>* const scene, const unsigned thread_count)
+template <std::size_t N, typename T, typename Color, typename Integrator>
+void Painting<N, T, Color, Integrator>::paint(const unsigned thread_count)
 {
         ASSERT(++call_counter_ == 1);
 
         statistics_->init();
-
-        integrator_->init(scene, stop_, statistics_, notifier_, pixels_, thread_count);
 
         std::barrier barrier(thread_count);
 
@@ -206,13 +206,14 @@ void painting_impl(
         const int thread_count,
         std::atomic_bool* const stop)
 {
-        IntegratorPT<FLAT_SHADING, N, T, Color> integrator(samples_per_pixel);
-
         pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_light(), notifier);
 
-        Painting<FLAT_SHADING, N, T, Color> painting(stop, statistics, notifier, &pixels, &integrator, max_pass_count);
+        IntegratorPT<FLAT_SHADING, N, T, Color> integrator(
+                &scene, stop, statistics, notifier, &pixels, samples_per_pixel);
 
-        painting.paint(&scene, thread_count);
+        Painting painting(stop, statistics, notifier, &pixels, &integrator, max_pass_count);
+
+        painting.paint(thread_count);
 }
 }
 

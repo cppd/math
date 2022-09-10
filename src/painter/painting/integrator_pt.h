@@ -35,75 +35,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-class Integrator
-{
-protected:
-        ~Integrator() = default;
-
-public:
-        virtual void init(
-                const Scene<N, T, Color>* scene,
-                std::atomic_bool* stop,
-                PaintingStatistics* statistics,
-                Notifier<N - 1>* notifier,
-                pixels::Pixels<N - 1, T, Color>* pixels,
-                unsigned thread_count) = 0;
-
-        virtual void integrate(unsigned thread_number) = 0;
-
-        virtual void next_pass() = 0;
-};
-
-template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-class IntegratorPT final : public Integrator<FLAT_SHADING, N, T, Color>
+class IntegratorPT final
 {
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const Scene<N, T, Color>* scene_ = nullptr;
-        const Projector<N, T>* projector_ = nullptr;
-        std::atomic_bool* stop_ = nullptr;
-        PaintingStatistics* statistics_ = nullptr;
-        Notifier<N - 1>* notifier_ = nullptr;
-        pixels::Pixels<N - 1, T, Color>* pixels_ = nullptr;
+        const Scene<N, T, Color>* const scene_;
+        const Projector<N, T>* const projector_;
+        const std::atomic_bool* const stop_;
+        PaintingStatistics* const statistics_;
+        Notifier<N - 1>* const notifier_;
+        pixels::Pixels<N - 1, T, Color>* const pixels_;
 
         const SamplerStratifiedJittered<N - 1, T> sampler_;
-        std::optional<Paintbrush<N - 1>> paintbrush_;
+        Paintbrush<N - 1> paintbrush_;
 
 public:
-        explicit IntegratorPT(const int samples_per_pixel)
-                : sampler_(samples_per_pixel)
-        {
-        }
-
-        void init(
+        IntegratorPT(
                 const Scene<N, T, Color>* const scene,
-                std::atomic_bool* const stop,
+                const std::atomic_bool* const stop,
                 PaintingStatistics* const statistics,
                 Notifier<N - 1>* const notifier,
                 pixels::Pixels<N - 1, T, Color>* const pixels,
-                const unsigned /*thread_count*/) override
-        {
-                ASSERT(scene);
-
-                scene_ = scene;
-                projector_ = &scene->projector();
-                stop_ = stop;
-                statistics_ = statistics;
-                notifier_ = notifier;
-                pixels_ = pixels;
-
-                paintbrush_.emplace(projector_->screen_size(), PANTBRUSH_WIDTH);
-        }
-
-        void integrate(const unsigned thread_number) override
+                const int samples_per_pixel)
+                : scene_(scene),
+                  projector_(&scene_->projector()),
+                  stop_(stop),
+                  statistics_(statistics),
+                  notifier_(notifier),
+                  pixels_(pixels),
+                  sampler_(samples_per_pixel),
+                  paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH)
         {
                 ASSERT(scene_);
-                ASSERT(projector_);
                 ASSERT(stop_);
                 ASSERT(statistics_);
                 ASSERT(notifier_);
                 ASSERT(pixels_);
+        }
 
+        void next_pass()
+        {
+                sampler_.next_pass();
+                paintbrush_.next_pass();
+        }
+
+        void integrate(const unsigned thread_number)
+        {
                 thread_local PCG engine;
                 thread_local std::vector<Vector<N - 1, T>> sample_points;
                 thread_local std::vector<std::optional<Color>> sample_colors;
@@ -117,7 +94,7 @@ public:
                                 return;
                         }
 
-                        const std::optional<std::array<int, N - 1>> pixel = paintbrush_->next_pixel();
+                        const std::optional<std::array<int, N - 1>> pixel = paintbrush_.next_pixel();
                         if (!pixel)
                         {
                                 return;
@@ -141,14 +118,6 @@ public:
                         pixels_->add_samples(*pixel, sample_points, sample_colors);
                         statistics_->pixel_done(scene_->thread_ray_count() - ray_count, sample_points.size());
                 }
-        }
-
-        void next_pass() override
-        {
-                ASSERT(paintbrush_);
-
-                paintbrush_->next_pass();
-                sampler_.next_pass();
         }
 };
 }
