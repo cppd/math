@@ -47,10 +47,10 @@ template <
         typename CameraPathVertex>
 std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const Scene<N, T, Color>& scene,
-        LightDistribution<N, T, Color>& light_distribution,
-        PCG& engine,
         const CameraPathVertex<N, T, Color>& camera_path_prev_vertex,
-        const Surface<N, T, Color>& camera_path_vertex)
+        const Surface<N, T, Color>& camera_path_vertex,
+        LightDistribution<N, T, Color>& light_distribution,
+        PCG& engine)
 {
         if (!camera_path_vertex.is_connectible())
         {
@@ -155,10 +155,10 @@ std::optional<Color> connect(
 template <std::size_t N, typename T, typename Color>
 decltype(auto) connect_s_1(
         const Scene<N, T, Color>& scene,
-        LightDistribution<N, T, Color>& light_distribution,
-        PCG& engine,
         const Vertex<N, T, Color>& camera_path_prev_vertex,
-        const Vertex<N, T, Color>& camera_path_vertex)
+        const Vertex<N, T, Color>& camera_path_vertex,
+        LightDistribution<N, T, Color>& light_distribution,
+        PCG& engine)
 {
         ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
         const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
@@ -166,7 +166,7 @@ decltype(auto) connect_s_1(
         return std::visit(
                 [&](const auto& camera_prev_vertex)
                 {
-                        return connect_s_1(scene, light_distribution, engine, camera_prev_vertex, camera_vertex);
+                        return connect_s_1(scene, camera_prev_vertex, camera_vertex, light_distribution, engine);
                 },
                 camera_path_prev_vertex);
 }
@@ -204,12 +204,12 @@ decltype(auto) connect(
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
-        LightDistribution<N, T, Color>& light_distribution,
-        PCG& engine,
         const std::vector<Vertex<N, T, Color>>& light_path,
         const std::vector<Vertex<N, T, Color>>& camera_path,
         const int s,
-        const int t)
+        const int t,
+        LightDistribution<N, T, Color>& light_distribution,
+        PCG& engine)
 {
         namespace impl = connect_implementation;
 
@@ -224,7 +224,7 @@ std::optional<Color> connect(
                 const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
 
-                auto connection = impl::connect_s_1(scene, light_distribution, engine, t_2, t_1);
+                auto connection = impl::connect_s_1(scene, t_2, t_1, light_distribution, engine);
                 if (connection)
                 {
                         color = std::move(connection->color);
@@ -233,8 +233,8 @@ std::optional<Color> connect(
         }
         else
         {
-                const Vertex<N, T, Color>& s_2 = light_path[t - 2];
-                const Vertex<N, T, Color>& s_1 = light_path[t - 1];
+                const Vertex<N, T, Color>& s_2 = light_path[s - 2];
+                const Vertex<N, T, Color>& s_1 = light_path[s - 1];
                 const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
 
