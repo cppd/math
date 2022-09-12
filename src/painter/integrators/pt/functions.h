@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::pt
 {
 template <typename Dst, typename Src>
 void add_optional(std::optional<Dst>* const dst, Src&& src) requires requires

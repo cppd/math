@@ -37,8 +37,9 @@ Elsevier, 2017.
 
 #pragma once
 
+#include "functions.h"
+
 #include "../../objects.h"
-#include "../com/functions.h"
 #include "../com/normals.h"
 
 #include <src/com/error.h>
