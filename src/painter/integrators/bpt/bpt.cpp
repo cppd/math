@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "surface_sample.h"
 #include "vertex.h"
 
-#include "../com/functions.h"
 #include "../com/normals.h"
 #include "../com/visibility.h"
 
@@ -30,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <cmath>
+#include <vector>
 
 namespace ns::painter::integrators::bpt
 {
@@ -167,15 +167,20 @@ std::optional<Color> bpt(
         thread_local std::vector<Vertex<N, T, Color>> light_path;
 
         generate_camera_path<FLAT_SHADING>(scene, ray, engine, &camera_path);
+        ASSERT(camera_path.size() <= MAX_DEPTH + 1);
+        ASSERT(camera_path.size() >= 1);
+        if (camera_path.size() == 1)
+        {
+                return {};
+        }
+
         generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
+        ASSERT(light_path.size() <= MAX_DEPTH + 1);
 
         const int camera_size = camera_path.size();
         const int light_size = light_path.size();
 
-        ASSERT(camera_size - 1 <= MAX_DEPTH);
-        ASSERT(light_size - 1 <= MAX_DEPTH);
-
-        std::optional<Color> color;
+        Color color(0);
 
         for (int t = 2; t <= camera_size; ++t)
         {
@@ -188,8 +193,10 @@ std::optional<Color> bpt(
                         }
 
                         const auto c = connect(scene, light_path, camera_path, s, t, light_distribution, engine);
-
-                        add_optional(&color, c);
+                        if (c)
+                        {
+                                color += *c;
+                        }
                 }
         }
 
