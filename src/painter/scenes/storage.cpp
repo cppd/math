@@ -37,6 +37,37 @@ template <typename T>
         }
         return res;
 }
+
+template <std::size_t N, typename T, typename Color>
+std::vector<std::unique_ptr<const LightSource<N, T, Color>>> init_light_sources(
+        const std::vector<std::unique_ptr<const Shape<N, T, Color>>>& shapes,
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>>&& light_sources)
+{
+        if (shapes.empty())
+        {
+                error("No objects for scene");
+        }
+
+        geometry::BoundingBox<N, T> box = shapes[0]->bounding_box();
+        for (std::size_t i = 1; i < shapes.size(); ++i)
+        {
+                box.merge(shapes[i]->bounding_box());
+        }
+
+        const Vector<N, T> center = box.center();
+        const T radius = box.diagonal().norm() / 2;
+
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> res;
+        res.reserve(light_sources.size());
+
+        for (auto& light_source : light_sources)
+        {
+                light_source->init(center, radius);
+                res.push_back(std::move(light_source));
+        }
+
+        return res;
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -53,11 +84,7 @@ StorageScene<N, T, Color> create_storage_scene(
         res.projector = std::move(projector);
         res.shapes = std::move(shapes);
 
-        res.light_sources.reserve(light_sources.size());
-        for (auto& light_source : light_sources)
-        {
-                res.light_sources.push_back(std::move(light_source));
-        }
+        res.light_sources = init_light_sources(res.shapes, std::move(light_sources));
 
         res.scene = create_scene(
                 background_light, clip_plane_equation, res.projector.get(), to_pointers(res.light_sources),
