@@ -57,11 +57,10 @@ enum class LightType
 constexpr ProjectorType PROJECTOR_TYPE = ProjectorType::PERSPECTIVE;
 constexpr LightType LIGHT_TYPE = LightType::PARALLELOTOPE;
 
-template <std::size_t N, typename T, typename Color>
-void create_shapes(
+template <typename Color, std::size_t N, typename T>
+std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
         const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center,
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const shapes)
+        const Vector<N, T>& center)
 {
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
@@ -85,6 +84,8 @@ void create_shapes(
                 return res;
         }();
 
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
+
         // Walls
         {
                 std::array<Vector<N, T>, N> walls_vectors = camera;
@@ -92,14 +93,14 @@ void create_shapes(
 
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED), ALPHA, org,
                                 del_elem(walls_vectors, i)));
-                        shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN), ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes->push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
@@ -122,9 +123,11 @@ void create_shapes(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes->push_back(std::make_unique<shapes::Parallelotope<N, T, Color>>(
+                shapes.push_back(std::make_unique<shapes::Parallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::MAGENTA), ALPHA, box_org, box_vectors));
         }
+
+        return shapes;
 }
 
 template <std::size_t N, typename T>
@@ -155,14 +158,15 @@ std::unique_ptr<Projector<N, T>> create_projector(
 }
 
 template <std::size_t N, typename T, typename Color>
-void create_light_sources(
+std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
         const Color& light,
         const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center,
-        std::vector<std::unique_ptr<LightSource<N, T, Color>>>* const light_sources)
+        const Vector<N, T>& center)
 {
         constexpr T FALLOFF_START = 60;
         constexpr T WIDTH = 72;
+
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> res;
 
         switch (LIGHT_TYPE)
         {
@@ -188,10 +192,10 @@ void create_light_sources(
 
                 Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
+                res.push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
                         org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
-                return;
+                return res;
         }
         case LightType::SPOTLIGHT:
         {
@@ -200,10 +204,10 @@ void create_light_sources(
                 const Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
+                res.push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
-                return;
+                return res;
         }
         case LightType::POINT:
         {
@@ -211,10 +215,9 @@ void create_light_sources(
 
                 const Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
-                light_sources->push_back(
-                        std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
+                res.push_back(std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
 
-                return;
+                return res;
         }
         }
         error_fatal("Unknown light type " + to_string(enum_to_int(LIGHT_TYPE)));
@@ -233,14 +236,12 @@ StorageScene<N, T, Color> create_cornell_box_scene(
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
 
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
-        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes = create_shapes<Color>(camera, center);
 
         shapes.push_back(std::move(shape));
 
-        create_shapes(camera, center, &shapes);
-
-        create_light_sources(light, camera, center, &light_sources);
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources =
+                create_light_sources(light, camera, center);
 
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
