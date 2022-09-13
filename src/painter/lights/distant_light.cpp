@@ -24,6 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+void DistantLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+{
+}
+
+template <std::size_t N, typename T, typename Color>
 LightSourceSample<N, T, Color> DistantLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& /*point*/) const
 {
         return sample_;

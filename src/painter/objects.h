@@ -223,6 +223,8 @@ class LightSource
 public:
         virtual ~LightSource() = default;
 
+        virtual void init(const Vector<N, T>& scene_center, T scene_radius) = 0;
+
         [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
 
         [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)

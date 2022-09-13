@@ -32,6 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+void PointLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+{
+}
+
+template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::radiance(const T squared_distance, const T distance) const
 {
         return intensity_ * (1 / com::power_n1<N>(squared_distance, distance));

@@ -41,6 +41,8 @@ class BallLight final : public LightSource<N, T, Color>
         std::optional<com::Spotlight<N, T>> spotlight_;
         T radius_;
 
+        void init(const Vector<N, T>& scene_center, T scene_radius) override;
+
         [[nodiscard]] bool visible(const Vector<N, T>& point) const;
         [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;
         [[nodiscard]] Color radiance(T cos) const;

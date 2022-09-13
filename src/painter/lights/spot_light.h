@@ -35,6 +35,8 @@ class SpotLight final : public LightSource<N, T, Color>
         Color intensity_;
         com::Spotlight<N, T> spotlight_;
 
+        void init(const Vector<N, T>& scene_center, T scene_radius) override;
+
         [[nodiscard]] Color radiance(T cos, T squared_distance, T distance) const;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;

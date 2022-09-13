@@ -37,6 +37,11 @@ constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T
 }
 
 template <std::size_t N, typename T, typename Color>
+void SpotLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+{
+}
+
+template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, const T distance) const
 {
         const T spotlight_coef = spotlight_.coef(cos);

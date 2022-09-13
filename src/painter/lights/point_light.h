@@ -32,6 +32,8 @@ class PointLight final : public LightSource<N, T, Color>
         Vector<N, T> location_;
         Color intensity_;
 
+        void init(const Vector<N, T>& scene_center, T scene_radius) override;
+
         [[nodiscard]] Color radiance(T squared_distance, T distance) const;
 
         [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;

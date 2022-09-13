@@ -31,6 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+void BallLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+{
+}
+
+template <std::size_t N, typename T, typename Color>
 bool BallLight<N, T, Color>::visible(const Vector<N, T>& point) const
 {
         return dot(ball_.normal(), point - ball_.center()) > 0;

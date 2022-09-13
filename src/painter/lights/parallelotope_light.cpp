@@ -32,6 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
+void ParallelotopeLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+{
+}
+
+template <std::size_t N, typename T, typename Color>
 bool ParallelotopeLight<N, T, Color>::visible(const Vector<N, T>& point) const
 {
         return dot(parallelotope_.normal(), point - parallelotope_.org()) > 0;
