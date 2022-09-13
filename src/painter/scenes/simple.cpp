@@ -134,7 +134,7 @@ Info<N, T> create_info(const geometry::BoundingBox<N, T>& bounding_box, const in
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
+std::unique_ptr<LightSource<N, T, Color>> create_light_source(
         const Vector<N, T>& center,
         const T distance,
         const T radius,
@@ -149,7 +149,7 @@ std::unique_ptr<const LightSource<N, T, Color>> create_light_source(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_sources(
+std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
         const T object_size,
         const Vector<N, T>& center,
         const Info<N, T>& info,
@@ -161,7 +161,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> create_light_source
         const T distance = object_size * LIGHT_SOURCE_DISTANCE<T>;
         const T radius = object_size * LIGHT_SOURCE_RADIUS<T>;
 
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> res;
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> res;
 
         if (front_light_proportion > 0)
         {
@@ -237,7 +237,7 @@ StorageScene<N, T, Color> create_simple_scene(
 
         std::unique_ptr<const Projector<N, T>> projector = create_projector(shape_size, center, info);
 
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources =
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources =
                 create_light_sources(shape_size, center, info, front_light_proportion, light);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;

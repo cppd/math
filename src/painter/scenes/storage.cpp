@@ -44,15 +44,20 @@ StorageScene<N, T, Color> create_storage_scene(
         const Color& background_light,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         std::unique_ptr<const Projector<N, T>>&& projector,
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
         progress::Ratio* const progress)
 {
         StorageScene<N, T, Color> res;
 
         res.projector = std::move(projector);
-        res.light_sources = std::move(light_sources);
         res.shapes = std::move(shapes);
+
+        res.light_sources.reserve(light_sources.size());
+        for (auto& light_source : light_sources)
+        {
+                res.light_sources.push_back(std::move(light_source));
+        }
 
         res.scene = create_scene(
                 background_light, clip_plane_equation, res.projector.get(), to_pointers(res.light_sources),
@@ -64,7 +69,7 @@ StorageScene<N, T, Color> create_storage_scene(
 #define TEMPLATE(N, T, C)                                                                                       \
         template StorageScene<N, T, C> create_storage_scene(                                                    \
                 const C&, const std::optional<Vector<(N) + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
-                std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&,                                   \
+                std::vector<std::unique_ptr<LightSource<(N), T, C>>>&&,                                         \
                 std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

@@ -159,7 +159,7 @@ void create_light_sources(
         const Color& light,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>>* const light_sources)
 {
         constexpr T FALLOFF_START = 60;
         constexpr T WIDTH = 72;
@@ -188,7 +188,7 @@ void create_light_sources(
 
                 Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<const lights::ParallelotopeLight<N, T, Color>>(
+                light_sources->push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
                         org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
                 return;
@@ -200,7 +200,7 @@ void create_light_sources(
                 const Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
 
-                light_sources->push_back(std::make_unique<const lights::SpotLight<N, T, Color>>(
+                light_sources->push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
                 return;
@@ -212,7 +212,7 @@ void create_light_sources(
                 const Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
                 light_sources->push_back(
-                        std::make_unique<const lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
+                        std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
 
                 return;
         }
@@ -234,7 +234,7 @@ StorageScene<N, T, Color> create_cornell_box_scene(
         static_assert(std::is_floating_point_v<T>);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources;
 
         shapes.push_back(std::move(shape));
 
