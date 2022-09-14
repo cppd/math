@@ -29,7 +29,10 @@ class DistantLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
+        LightSourceEmitSample<N, T, Color> emit_sample_;
         LightSourceSample<N, T, Color> sample_;
+        std::array<Vector<N, T>, N - 1> vectors_;
+        T area_;
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 
