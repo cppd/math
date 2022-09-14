@@ -141,10 +141,9 @@ T BallLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vect
 template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
-        const T area = geometry::ball_volume<N - 1, T>(radius_);
         const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()
                                              : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
-        return (area * cosine_integral) * radiance_;
+        return (area_ * cosine_integral) * radiance_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -161,9 +160,9 @@ BallLight<N, T, Color>::BallLight(
         const Color& radiance)
         : ball_(center, direction, radius),
           radiance_(radiance),
-          pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
-          vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal())),
-          radius_(radius)
+          pdf_(sampling::uniform_in_sphere_pdf<N - 1>(radius)),
+          area_(geometry::ball_volume<N - 1, T>(radius)),
+          vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
 {
         if (!(radius > 0))
         {

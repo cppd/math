@@ -37,9 +37,9 @@ class BallLight final : public LightSource<N, T, Color>
         geometry::HyperplaneBall<N, T> ball_;
         Color radiance_;
         T pdf_;
+        T area_;
         std::array<Vector<N, T>, N - 1> vectors_;
         std::optional<com::Spotlight<N, T>> spotlight_;
-        T radius_;
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 
