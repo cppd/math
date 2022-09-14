@@ -188,13 +188,6 @@ public:
                 return beta_;
         }
 
-        template <typename Prev>
-        void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
-        {
-                namespace impl = vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, pos_, normal_);
-        }
-
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
@@ -277,13 +270,6 @@ public:
                 return beta_;
         }
 
-        template <typename Prev>
-        void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
-        {
-                namespace impl = vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(prev.pos(), forward_angle_pdf, pos_, normal_);
-        }
-
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
@@ -315,16 +301,12 @@ void set_forward_pdf(
         const T pdf_forward)
 {
         std::visit(
-                [&](auto& v_next)
+                [&](const auto& v_prev)
                 {
-                        std::visit(
-                                [&](const auto& v_prev)
-                                {
-                                        v_next.set_forward_pdf(v_prev, pdf_forward);
-                                },
-                                prev);
+                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(*next)));
+                        std::get<Surface<N, T, Color>>(*next).set_forward_pdf(v_prev, pdf_forward);
                 },
-                *next);
+                prev);
 }
 
 template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
@@ -336,12 +318,8 @@ void set_reversed_pdf(
         std::visit(
                 [&](auto& v_prev)
                 {
-                        std::visit(
-                                [&](const auto& v_next)
-                                {
-                                        v_prev.set_reversed_pdf(v_next, pdf_reversed);
-                                },
-                                next);
+                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
+                        v_prev.set_reversed_pdf(std::get<Surface<N, T, Color>>(next), pdf_reversed);
                 },
                 *prev);
 }
