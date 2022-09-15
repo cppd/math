@@ -54,7 +54,7 @@ Color directional_albedo_uniform_sampling(
                 error("Sample count " + to_string(sample_count) + " must be positive");
         }
 
-        static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
+        static constexpr T UNIFORM_ON_HEMISPHERE_PDF = sampling::uniform_on_hemisphere_pdf<N, T>();
 
         Color sum{0};
 

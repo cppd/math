@@ -30,12 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::lights
 {
-namespace
-{
-template <std::size_t N, typename T>
-constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
-}
-
 template <std::size_t N, typename T, typename Color>
 void SpotLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
 {
@@ -90,7 +84,7 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
         LightSourceEmitSample<N, T, Color> s;
         s.ray = ray;
         s.pdf_pos = 1;
-        s.pdf_dir = UNIFORM_ON_HEMISPHERE_PDF<N, T>;
+        s.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
         s.radiance = spotlight_.color(intensity_, cos);
         return s;
 }
@@ -105,7 +99,7 @@ template <std::size_t N, typename T, typename Color>
 T SpotLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
-        return dot(dir, direction_) >= 0 ? UNIFORM_ON_HEMISPHERE_PDF<N, T> : 0;
+        return dot(dir, direction_) >= 0 ? sampling::uniform_on_hemisphere_pdf<N, T>() : 0;
 }
 
 template <std::size_t N, typename T, typename Color>

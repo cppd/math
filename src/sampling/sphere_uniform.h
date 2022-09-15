@@ -206,4 +206,11 @@ constexpr T uniform_on_sphere_pdf()
         constexpr T PDF = 1 / geometry::SPHERE_AREA<N, long double>;
         return PDF;
 }
+
+template <std::size_t N, typename T>
+constexpr T uniform_on_hemisphere_pdf()
+{
+        constexpr T PDF = 2 / geometry::SPHERE_AREA<N, long double>;
+        return PDF;
+}
 }
