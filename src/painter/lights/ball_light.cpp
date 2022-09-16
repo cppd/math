@@ -160,7 +160,12 @@ std::optional<Color> BallLight<N, T, Color>::leave_radiance(
                 return {};
         }
 
-        return radiance_;
+        if (!spotlight_)
+        {
+                return radiance_;
+        }
+        const T cos = -dot(ray_to_light.dir(), ball_.normal());
+        return spotlight_->color(radiance_, cos);
 }
 
 template <std::size_t N, typename T, typename Color>
