@@ -92,7 +92,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         if (!surface)
         {
-                if (const auto c = directly_visible_light_sources(scene, ray))
+                if (const auto c = ray_light_sources(scene, ray, surface))
                 {
                         return *c + scene.background_light();
                 }
@@ -101,7 +101,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         Color color(0);
 
-        if (const auto c = directly_visible_light_sources(scene, surface, ray))
+        if (const auto c = ray_light_sources<N, T, Color>(scene, ray, surface))
         {
                 color = *c;
         }
