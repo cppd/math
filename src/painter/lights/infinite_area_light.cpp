@@ -37,9 +37,11 @@ void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, 
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSample<N, T, Color> InfiniteAreaLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& /*point*/) const
+LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_sample(
+        PCG& engine,
+        const Vector<N, T>& /*point*/) const
 {
-        LightSourceSample<N, T, Color> s;
+        LightSourceArriveSample<N, T, Color> s;
         s.l = sampling::uniform_on_sphere<N, T>(engine);
         s.pdf = sampling::uniform_on_sphere_pdf<N, T>();
         s.radiance = radiance_;
@@ -47,29 +49,30 @@ LightSourceSample<N, T, Color> InfiniteAreaLight<N, T, Color>::sample(PCG& engin
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceInfo<T, Color> InfiniteAreaLight<N, T, Color>::info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/)
-        const
+LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
+        const Vector<N, T>& /*point*/,
+        const Vector<N, T>& /*l*/) const
 {
-        LightSourceInfo<T, Color> info;
+        LightSourceArriveInfo<T, Color> info;
         info.pdf = sampling::uniform_on_sphere_pdf<N, T>();
         info.radiance = radiance_;
         return info;
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceEmitSample<N, T, Color> InfiniteAreaLight<N, T, Color>::emit_sample(PCG& /*engine*/) const
+LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample(PCG& /*engine*/) const
 {
         error("not implemented");
 }
 
 template <std::size_t N, typename T, typename Color>
-T InfiniteAreaLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T InfiniteAreaLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         error("not implemented");
 }
 
 template <std::size_t N, typename T, typename Color>
-T InfiniteAreaLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T InfiniteAreaLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         error("not implemented");
 }

@@ -43,13 +43,14 @@ Color PointLight<N, T, Color>::radiance(const T squared_distance, const T distan
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
+LightSourceArriveSample<N, T, Color> PointLight<N, T, Color>::arrive_sample(PCG& /*engine*/, const Vector<N, T>& point)
+        const
 {
         const Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();
         const T distance = std::sqrt(squared_distance);
 
-        LightSourceSample<N, T, Color> s;
+        LightSourceArriveSample<N, T, Color> s;
         s.distance = distance;
         s.l = direction / distance;
         s.pdf = 1;
@@ -58,19 +59,21 @@ LightSourceSample<N, T, Color> PointLight<N, T, Color>::sample(PCG& /*engine*/, 
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceInfo<T, Color> PointLight<N, T, Color>::info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const
+LightSourceArriveInfo<T, Color> PointLight<N, T, Color>::arrive_info(
+        const Vector<N, T>& /*point*/,
+        const Vector<N, T>& /*l*/) const
 {
-        LightSourceInfo<T, Color> info;
+        LightSourceArriveInfo<T, Color> info;
         info.pdf = 0;
         return info;
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceEmitSample<N, T, Color> PointLight<N, T, Color>::emit_sample(PCG& engine) const
+LightSourceLeaveSample<N, T, Color> PointLight<N, T, Color>::leave_sample(PCG& engine) const
 {
         const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
 
-        LightSourceEmitSample<N, T, Color> s;
+        LightSourceLeaveSample<N, T, Color> s;
         s.ray = ray;
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
@@ -79,13 +82,13 @@ LightSourceEmitSample<N, T, Color> PointLight<N, T, Color>::emit_sample(PCG& eng
 }
 
 template <std::size_t N, typename T, typename Color>
-T PointLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T PointLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T PointLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T PointLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return sampling::uniform_on_sphere_pdf<N, T>();
 }

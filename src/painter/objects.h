@@ -161,7 +161,7 @@ public:
 };
 
 template <typename T, typename Color>
-struct LightSourceInfo final
+struct LightSourceArriveInfo final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -169,7 +169,7 @@ struct LightSourceInfo final
         Color radiance;
         std::optional<T> distance;
 
-        LightSourceInfo()
+        LightSourceArriveInfo()
         {
         }
 
@@ -180,7 +180,7 @@ struct LightSourceInfo final
 };
 
 template <std::size_t N, typename T, typename Color>
-struct LightSourceSample final
+struct LightSourceArriveSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -189,7 +189,7 @@ struct LightSourceSample final
         Color radiance;
         std::optional<T> distance;
 
-        LightSourceSample()
+        LightSourceArriveSample()
         {
         }
 
@@ -200,7 +200,7 @@ struct LightSourceSample final
 };
 
 template <std::size_t N, typename T, typename Color>
-struct LightSourceEmitSample final
+struct LightSourceLeaveSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -210,7 +210,7 @@ struct LightSourceEmitSample final
         T pdf_dir;
         Color radiance;
 
-        LightSourceEmitSample()
+        LightSourceLeaveSample()
         {
         }
 };
@@ -225,15 +225,17 @@ public:
 
         virtual void init(const Vector<N, T>& scene_center, T scene_radius) = 0;
 
-        [[nodiscard]] virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
-
-        [[nodiscard]] virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l)
+        [[nodiscard]] virtual LightSourceArriveSample<N, T, Color> arrive_sample(PCG& engine, const Vector<N, T>& point)
                 const = 0;
 
-        [[nodiscard]] virtual LightSourceEmitSample<N, T, Color> emit_sample(PCG& engine) const = 0;
+        [[nodiscard]] virtual LightSourceArriveInfo<T, Color> arrive_info(
+                const Vector<N, T>& point,
+                const Vector<N, T>& l) const = 0;
 
-        [[nodiscard]] virtual T emit_pdf_pos(const Vector<N, T>& point, const Vector<N, T>& dir) const = 0;
-        [[nodiscard]] virtual T emit_pdf_dir(const Vector<N, T>& point, const Vector<N, T>& dir) const = 0;
+        [[nodiscard]] virtual LightSourceLeaveSample<N, T, Color> leave_sample(PCG& engine) const = 0;
+
+        [[nodiscard]] virtual T leave_pdf_pos(const Vector<N, T>& point, const Vector<N, T>& dir) const = 0;
+        [[nodiscard]] virtual T leave_pdf_dir(const Vector<N, T>& point, const Vector<N, T>& dir) const = 0;
 
         [[nodiscard]] virtual Color power() const = 0;
 

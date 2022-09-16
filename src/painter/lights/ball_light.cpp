@@ -58,11 +58,11 @@ Color BallLight<N, T, Color>::radiance(const T cos) const
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const Vector<N, T>& point) const
+LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(PCG& engine, const Vector<N, T>& point) const
 {
         if (!visible(point))
         {
-                LightSourceSample<N, T, Color> sample;
+                LightSourceArriveSample<N, T, Color> sample;
                 sample.pdf = 0;
                 return sample;
         }
@@ -73,7 +73,7 @@ LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const
 
         const T cos = -dot(l, ball_.normal());
 
-        LightSourceSample<N, T, Color> s;
+        LightSourceArriveSample<N, T, Color> s;
         s.l = l;
         s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
         s.radiance = radiance(cos);
@@ -82,11 +82,12 @@ LightSourceSample<N, T, Color> BallLight<N, T, Color>::sample(PCG& engine, const
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point, const Vector<N, T>& l) const
+LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
+        const
 {
         if (!visible(point))
         {
-                LightSourceInfo<T, Color> info;
+                LightSourceArriveInfo<T, Color> info;
                 info.pdf = 0;
                 return info;
         }
@@ -95,14 +96,14 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
         const auto intersection = ball_.intersect(ray);
         if (!intersection)
         {
-                LightSourceInfo<T, Color> info;
+                LightSourceArriveInfo<T, Color> info;
                 info.pdf = 0;
                 return info;
         }
 
         const T cos = -dot(ray.dir(), ball_.normal());
 
-        LightSourceInfo<T, Color> info;
+        LightSourceArriveInfo<T, Color> info;
         info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
         info.radiance = radiance(cos);
         info.distance = *intersection;
@@ -110,12 +111,12 @@ LightSourceInfo<T, Color> BallLight<N, T, Color>::info(const Vector<N, T>& point
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engine) const
+LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& engine) const
 {
         const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
         const T cos = dot(ball_.normal(), ray.dir());
 
-        LightSourceEmitSample<N, T, Color> s;
+        LightSourceLeaveSample<N, T, Color> s;
         s.ray = ray;
         s.n = ball_.normal();
         s.pdf_pos = pdf_;
@@ -125,13 +126,13 @@ LightSourceEmitSample<N, T, Color> BallLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T BallLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
+T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(ball_.normal(), dir);

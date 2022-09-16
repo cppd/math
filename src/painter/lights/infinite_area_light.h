@@ -32,14 +32,16 @@ class InfiniteAreaLight final : public LightSource<N, T, Color>
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 
-        [[nodiscard]] LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override;
+        [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(PCG& engine, const Vector<N, T>& point)
+                const override;
 
-        [[nodiscard]] LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override;
+        [[nodiscard]] LightSourceArriveInfo<T, Color> arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
+                const override;
 
-        [[nodiscard]] LightSourceEmitSample<N, T, Color> emit_sample(PCG& engine) const override;
+        [[nodiscard]] LightSourceLeaveSample<N, T, Color> leave_sample(PCG& engine) const override;
 
-        [[nodiscard]] T emit_pdf_pos(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
-        [[nodiscard]] T emit_pdf_dir(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
 
         [[nodiscard]] Color power() const override;
 

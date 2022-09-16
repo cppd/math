@@ -137,7 +137,7 @@ void generate_light_path(
         path->clear();
 
         const LightDistributionSample distribution = light_distribution.sample(engine);
-        const LightSourceEmitSample sample = distribution.light->emit_sample(engine);
+        const LightSourceLeaveSample sample = distribution.light->leave_sample(engine);
 
         if (!(sample.pdf_pos > 0 && sample.pdf_dir > 0 && !sample.radiance.is_black()))
         {

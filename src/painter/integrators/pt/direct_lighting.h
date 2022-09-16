@@ -69,7 +69,7 @@ std::optional<Color> sample_light_with_mis(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const LightSourceSample<N, T, Color> sample = light.sample(engine, surface.point());
+        const LightSourceArriveSample<N, T, Color> sample = light.arrive_sample(engine, surface.point());
         if (!sample.usable())
         {
                 return {};
@@ -131,7 +131,7 @@ std::optional<Color> sample_surface_with_mis(
                 return {};
         }
 
-        const LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
+        const LightSourceArriveInfo<T, Color> light_info = light.arrive_info(surface.point(), l);
         if (!light_info.usable())
         {
                 return {};
@@ -177,7 +177,7 @@ std::optional<Color> directly_visible_light_sources(const Scene<N, T, Color>& sc
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
+                const LightSourceArriveInfo<T, Color> info = light->arrive_info(ray.org(), ray.dir());
                 if (info.usable())
                 {
                         add_optional(&res, info.radiance);
@@ -198,7 +198,7 @@ std::optional<Color> directly_visible_light_sources(
 
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                const LightSourceInfo<T, Color> info = light->info(ray.org(), ray.dir());
+                const LightSourceArriveInfo<T, Color> info = light->arrive_info(ray.org(), ray.dir());
 
                 if (!info.usable())
                 {

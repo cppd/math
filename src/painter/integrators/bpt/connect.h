@@ -59,7 +59,8 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 
         const LightDistributionSample distribution = light_distribution.sample(engine);
 
-        const LightSourceSample<N, T, Color> sample = distribution.light->sample(engine, camera_path_vertex.pos());
+        const LightSourceArriveSample<N, T, Color> sample =
+                distribution.light->arrive_sample(engine, camera_path_vertex.pos());
         if (!sample.usable())
         {
                 return {};

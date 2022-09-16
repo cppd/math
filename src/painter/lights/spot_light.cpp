@@ -47,7 +47,8 @@ Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, co
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, const Vector<N, T>& point) const
+LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(PCG& /*engine*/, const Vector<N, T>& point)
+        const
 {
         const Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();
@@ -55,7 +56,7 @@ LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, c
         const Vector<N, T> l = direction / distance;
         const T cos = -dot(l, direction_);
 
-        LightSourceSample<N, T, Color> s;
+        LightSourceArriveSample<N, T, Color> s;
         s.distance = distance;
         s.l = l;
         s.pdf = 1;
@@ -64,15 +65,17 @@ LightSourceSample<N, T, Color> SpotLight<N, T, Color>::sample(PCG& /*engine*/, c
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceInfo<T, Color> SpotLight<N, T, Color>::info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const
+LightSourceArriveInfo<T, Color> SpotLight<N, T, Color>::arrive_info(
+        const Vector<N, T>& /*point*/,
+        const Vector<N, T>& /*l*/) const
 {
-        LightSourceInfo<T, Color> info;
+        LightSourceArriveInfo<T, Color> info;
         info.pdf = 0;
         return info;
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engine) const
+LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& engine) const
 {
         const Ray<N, T> ray = [&]
         {
@@ -81,7 +84,7 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
         }();
         const T cos = dot(direction_, ray.dir());
 
-        LightSourceEmitSample<N, T, Color> s;
+        LightSourceLeaveSample<N, T, Color> s;
         s.ray = ray;
         s.pdf_pos = 1;
         s.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
@@ -90,13 +93,13 @@ LightSourceEmitSample<N, T, Color> SpotLight<N, T, Color>::emit_sample(PCG& engi
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::emit_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T SpotLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::emit_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
+T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         return dot(dir, direction_) >= 0 ? sampling::uniform_on_hemisphere_pdf<N, T>() : 0;
