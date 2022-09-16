@@ -140,6 +140,30 @@ T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vec
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> BallLight<N, T, Color>::leave_radiance(
+        const Ray<N, T>& ray_to_light,
+        const std::optional<T>& distance) const
+{
+        if (!visible(ray_to_light.org()))
+        {
+                return {};
+        }
+
+        const auto intersection = ball_.intersect(ray_to_light);
+        if (!intersection)
+        {
+                return {};
+        }
+
+        if (distance && !(*intersection < *distance))
+        {
+                return {};
+        }
+
+        return radiance_;
+}
+
+template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
         const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()

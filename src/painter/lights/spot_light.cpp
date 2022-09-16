@@ -106,6 +106,14 @@ T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vec
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> SpotLight<N, T, Color>::leave_radiance(
+        const Ray<N, T>& /*ray_to_light*/,
+        const std::optional<T>& /*distance*/) const
+{
+        return {};
+}
+
+template <std::size_t N, typename T, typename Color>
 Color SpotLight<N, T, Color>::power() const
 {
         return spotlight_.area() * intensity_;
