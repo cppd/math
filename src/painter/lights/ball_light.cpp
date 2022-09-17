@@ -58,6 +58,17 @@ Color BallLight<N, T, Color>::radiance(const T cos) const
 }
 
 template <std::size_t N, typename T, typename Color>
+Color BallLight<N, T, Color>::radiance(const Vector<N, T>& l) const
+{
+        if (!spotlight_)
+        {
+                return radiance_;
+        }
+        const T cos = -dot(l, ball_.normal());
+        return spotlight_->color(radiance_, cos);
+}
+
+template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(PCG& engine, const Vector<N, T>& point) const
 {
         if (!visible(point))
@@ -160,12 +171,7 @@ std::optional<Color> BallLight<N, T, Color>::leave_radiance(
                 return {};
         }
 
-        if (!spotlight_)
-        {
-                return radiance_;
-        }
-        const T cos = -dot(ray_to_light.dir(), ball_.normal());
-        return spotlight_->color(radiance_, cos);
+        return radiance(ray_to_light.dir());
 }
 
 template <std::size_t N, typename T, typename Color>
