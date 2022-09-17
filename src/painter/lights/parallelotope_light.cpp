@@ -72,7 +72,8 @@ Color ParallelotopeLight<N, T, Color>::radiance(const Vector<N, T>& l) const
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sample(
         PCG& engine,
-        const Vector<N, T>& point) const
+        const Vector<N, T>& point,
+        const Vector<N, T>& /*n*/) const
 {
         if (!visible(point))
         {

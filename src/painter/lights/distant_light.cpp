@@ -49,7 +49,8 @@ void DistantLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T s
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> DistantLight<N, T, Color>::arrive_sample(
         PCG& /*engine*/,
-        const Vector<N, T>& /*point*/) const
+        const Vector<N, T>& /*point*/,
+        const Vector<N, T>& /*n*/) const
 {
         return arrive_sample_;
 }

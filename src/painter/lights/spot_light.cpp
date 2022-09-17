@@ -47,8 +47,10 @@ Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, co
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(PCG& /*engine*/, const Vector<N, T>& point)
-        const
+LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(
+        PCG& /*engine*/,
+        const Vector<N, T>& point,
+        const Vector<N, T>& /*n*/) const
 {
         const Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();

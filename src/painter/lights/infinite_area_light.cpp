@@ -39,11 +39,16 @@ void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, 
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_sample(
         PCG& engine,
-        const Vector<N, T>& /*point*/) const
+        const Vector<N, T>& /*point*/,
+        const Vector<N, T>& n) const
 {
         LightSourceArriveSample<N, T, Color> s;
-        s.l = sampling::uniform_on_sphere<N, T>(engine);
-        s.pdf = sampling::uniform_on_sphere_pdf<N, T>();
+        s.l = [&]
+        {
+                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
+                return (dot(n, l) >= 0) ? l : -l;
+        }();
+        s.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
         s.radiance = radiance_;
         return s;
 }
@@ -54,7 +59,7 @@ LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
         const Vector<N, T>& /*l*/) const
 {
         LightSourceArriveInfo<T, Color> info;
-        info.pdf = sampling::uniform_on_sphere_pdf<N, T>();
+        info.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
         info.radiance = radiance_;
         return info;
 }

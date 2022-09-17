@@ -36,8 +36,10 @@ class DistantLight final : public LightSource<N, T, Color>
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 
-        [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(PCG& engine, const Vector<N, T>& point)
-                const override;
+        [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(
+                PCG& engine,
+                const Vector<N, T>& point,
+                const Vector<N, T>& n) const override;
 
         [[nodiscard]] LightSourceArriveInfo<T, Color> arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
                 const override;

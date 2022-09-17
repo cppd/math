@@ -69,7 +69,10 @@ Color BallLight<N, T, Color>::radiance(const Vector<N, T>& l) const
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(PCG& engine, const Vector<N, T>& point) const
+LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(
+        PCG& engine,
+        const Vector<N, T>& point,
+        const Vector<N, T>& /*n*/) const
 {
         if (!visible(point))
         {

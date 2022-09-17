@@ -36,8 +36,10 @@ class PointLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] Color radiance(T squared_distance, T distance) const;
 
-        [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(PCG& engine, const Vector<N, T>& point)
-                const override;
+        [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(
+                PCG& engine,
+                const Vector<N, T>& point,
+                const Vector<N, T>& n) const override;
 
         [[nodiscard]] LightSourceArriveInfo<T, Color> arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
                 const override;

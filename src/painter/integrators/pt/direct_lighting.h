@@ -69,7 +69,7 @@ std::optional<Color> sample_light_with_mis(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const LightSourceArriveSample<N, T, Color> sample = light.arrive_sample(engine, surface.point());
+        const LightSourceArriveSample<N, T, Color> sample = light.arrive_sample(engine, surface.point(), n);
         if (!sample.usable())
         {
                 return {};

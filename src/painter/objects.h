@@ -225,8 +225,10 @@ public:
 
         virtual void init(const Vector<N, T>& scene_center, T scene_radius) = 0;
 
-        [[nodiscard]] virtual LightSourceArriveSample<N, T, Color> arrive_sample(PCG& engine, const Vector<N, T>& point)
-                const = 0;
+        [[nodiscard]] virtual LightSourceArriveSample<N, T, Color> arrive_sample(
+                PCG& engine,
+                const Vector<N, T>& point,
+                const Vector<N, T>& n) const = 0;
 
         [[nodiscard]] virtual LightSourceArriveInfo<T, Color> arrive_info(
                 const Vector<N, T>& point,
