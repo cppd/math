@@ -92,18 +92,21 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         if (!surface)
         {
-                if (const auto c = ray_light_sources(scene, ray, surface))
-                {
-                        return *c + scene.background_light();
-                }
-                return {};
+                return ray_light_sources(scene.non_background_light_sources(), ray, surface);
         }
 
-        Color color(0);
-
-        if (const auto c = ray_light_sources<N, T, Color>(scene, ray, surface))
+        Color color = [&]
         {
-                color = *c;
+                if (const auto& c = ray_light_sources<N, T, Color>(scene.light_sources(), ray, surface))
+                {
+                        return *c;
+                }
+                return Color(0);
+        }();
+
+        if (const auto& c = surface.light_source())
+        {
+                color += *c;
         }
 
         Color beta(1);
@@ -117,17 +120,12 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
                         break;
                 }
 
-                if (const auto& c = surface.light_source())
+                if (const auto& c = direct_lighting(scene, surface, v, normals, engine))
                 {
                         color.multiply_add(beta, *c);
                 }
 
-                if (const auto c = direct_lighting(scene, surface, v, normals, engine))
-                {
-                        color.multiply_add(beta, *c);
-                }
-
-                const auto sample = surface_sample(surface, v, normals, engine);
+                const auto& sample = surface_sample(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;
@@ -145,7 +143,6 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
                 if (!surface)
                 {
-                        color.multiply_add(beta, scene.background_light());
                         break;
                 }
         }

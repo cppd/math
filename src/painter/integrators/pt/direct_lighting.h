@@ -173,7 +173,7 @@ std::optional<Color> direct_lighting(
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> ray_light_sources(
-        const Scene<N, T, Color>& scene,
+        const std::vector<const LightSource<N, T, Color>*>& light_sources,
         const Ray<N, T>& ray,
         const SurfaceIntersection<N, T, Color>& surface)
 {
@@ -187,7 +187,7 @@ std::optional<Color> ray_light_sources(
         }();
 
         std::optional<Color> res;
-        for (const LightSource<N, T, Color>* const light : scene.light_sources())
+        for (const LightSource<N, T, Color>* const light : light_sources)
         {
                 add_optional(&res, light->leave_radiance(ray, distance));
         }

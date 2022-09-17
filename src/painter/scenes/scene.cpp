@@ -19,8 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_intersection.h"
 
+#include "../lights/infinite_area_light.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/merge.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
@@ -51,11 +54,13 @@ class Impl final : public Scene<N, T, Color>
 {
         inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
 
-        std::vector<const Shape<N, T, Color>*> shapes_;
-        std::vector<const LightSource<N, T, Color>*> light_sources_;
-        const Projector<N, T>* projector_;
-        Color background_light_;
-        std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
+        const Color background_light_;
+        const lights::InfiniteAreaLight<N, T, Color> background_light_source_{background_light_};
+        const std::vector<const Shape<N, T, Color>*> shapes_;
+        const std::vector<const LightSource<N, T, Color>*> light_sources_;
+        const std::vector<const LightSource<N, T, Color>*> non_background_light_sources_;
+        const Projector<N, T>* const projector_;
+        const std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
 
         geometry::Bvh<N, T> bvh_;
 
@@ -179,14 +184,19 @@ class Impl final : public Scene<N, T, Color>
                 return light_sources_;
         }
 
-        [[nodiscard]] const Projector<N, T>& projector() const override
+        [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& non_background_light_sources() const override
         {
-                return *projector_;
+                return non_background_light_sources_;
         }
 
         [[nodiscard]] const Color& background_light() const override
         {
                 return background_light_;
+        }
+
+        [[nodiscard]] const Projector<N, T>& projector() const override
+        {
+                return *projector_;
         }
 
         [[nodiscard]] long long thread_ray_count() const noexcept override
@@ -201,14 +211,22 @@ public:
              std::vector<const LightSource<N, T, Color>*>&& light_sources,
              std::vector<const Shape<N, T, Color>*>&& shapes,
              progress::Ratio* const progress)
-                : shapes_(std::move(shapes)),
-                  light_sources_(std::move(light_sources)),
+                : background_light_(background_light),
+                  shapes_(std::move(shapes)),
+                  light_sources_(merge<std::vector<const LightSource<N, T, Color>*>>(
+                          light_sources,
+                          &background_light_source_)),
+                  non_background_light_sources_(std::move(light_sources)),
                   projector_(projector),
-                  background_light_(background_light),
                   clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
                   bvh_(geometry::bvh_objects(shapes_), progress)
         {
         }
+
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
