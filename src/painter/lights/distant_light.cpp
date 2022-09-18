@@ -60,17 +60,17 @@ LightSourceArriveInfo<T, Color> DistantLight<N, T, Color>::arrive_info(
         const Vector<N, T>& /*point*/,
         const Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> info;
-        info.pdf = 0;
-        return info;
+        LightSourceArriveInfo<T, Color> res;
+        res.pdf = 0;
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> DistantLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        LightSourceLeaveSample<N, T, Color> s = leave_sample_;
-        s.ray.set_org(leave_sample_.ray.org() + sampling::uniform_in_sphere(engine, vectors_));
-        return s;
+        LightSourceLeaveSample<N, T, Color> res = leave_sample_;
+        res.ray.set_org(leave_sample_.ray.org() + sampling::uniform_in_sphere(engine, vectors_));
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>

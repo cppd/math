@@ -58,12 +58,12 @@ LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(
         const Vector<N, T> l = direction / distance;
         const T cos = -dot(l, direction_);
 
-        LightSourceArriveSample<N, T, Color> s;
-        s.distance = distance;
-        s.l = l;
-        s.pdf = 1;
-        s.radiance = radiance(cos, squared_distance, distance);
-        return s;
+        LightSourceArriveSample<N, T, Color> res;
+        res.distance = distance;
+        res.l = l;
+        res.pdf = 1;
+        res.radiance = radiance(cos, squared_distance, distance);
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -71,9 +71,9 @@ LightSourceArriveInfo<T, Color> SpotLight<N, T, Color>::arrive_info(
         const Vector<N, T>& /*point*/,
         const Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> info;
-        info.pdf = 0;
-        return info;
+        LightSourceArriveInfo<T, Color> res;
+        res.pdf = 0;
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -86,12 +86,12 @@ LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& en
         }();
         const T cos = dot(direction_, ray.dir());
 
-        LightSourceLeaveSample<N, T, Color> s;
-        s.ray = ray;
-        s.pdf_pos = 1;
-        s.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
-        s.radiance = spotlight_.color(intensity_, cos);
-        return s;
+        LightSourceLeaveSample<N, T, Color> res;
+        res.ray = ray;
+        res.pdf_pos = 1;
+        res.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
+        res.radiance = spotlight_.color(intensity_, cos);
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>

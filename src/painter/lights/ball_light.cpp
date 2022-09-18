@@ -87,12 +87,12 @@ LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(
 
         const T cos = -dot(l, ball_.normal());
 
-        LightSourceArriveSample<N, T, Color> s;
-        s.l = l;
-        s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-        s.radiance = radiance(cos);
-        s.distance = distance;
-        return s;
+        LightSourceArriveSample<N, T, Color> res;
+        res.l = l;
+        res.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
+        res.radiance = radiance(cos);
+        res.distance = distance;
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -117,11 +117,11 @@ LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(const Vector
 
         const T cos = -dot(ray.dir(), ball_.normal());
 
-        LightSourceArriveInfo<T, Color> info;
-        info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-        info.radiance = radiance(cos);
-        info.distance = *intersection;
-        return info;
+        LightSourceArriveInfo<T, Color> res;
+        res.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
+        res.radiance = radiance(cos);
+        res.distance = *intersection;
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -130,13 +130,13 @@ LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& en
         const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
         const T cos = dot(ball_.normal(), ray.dir());
 
-        LightSourceLeaveSample<N, T, Color> s;
-        s.ray = ray;
-        s.n = ball_.normal();
-        s.pdf_pos = pdf_;
-        s.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
-        s.radiance = radiance(cos);
-        return s;
+        LightSourceLeaveSample<N, T, Color> res;
+        res.ray = ray;
+        res.n = ball_.normal();
+        res.pdf_pos = pdf_;
+        res.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
+        res.radiance = radiance(cos);
+        return res;
 }
 
 template <std::size_t N, typename T, typename Color>

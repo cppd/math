@@ -47,7 +47,6 @@ LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_samp
         const Vector<N, T>& n) const
 {
         LightSourceArriveSample<N, T, Color> res;
-
         res.l = [&]
         {
                 const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
@@ -55,7 +54,6 @@ LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_samp
         }();
         res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
         res.radiance = radiance_;
-
         return res;
 }
 
@@ -65,10 +63,8 @@ LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
         const Vector<N, T>& /*l*/) const
 {
         LightSourceArriveInfo<T, Color> res;
-
         res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
         res.radiance = radiance_;
-
         return res;
 }
 
@@ -84,13 +80,11 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
         }
 
         LightSourceLeaveSample<N, T, Color> res;
-
         res.ray.set_org(scene_center_ - scene_radius_ * dir + sampling::uniform_in_sphere(engine, vectors));
         res.ray.set_dir(dir);
         res.pdf_pos = leave_pdf_pos_;
         res.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
         res.radiance = radiance_;
-
         return res;
 }
 
