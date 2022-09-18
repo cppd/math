@@ -28,7 +28,10 @@ class InfiniteAreaLight final : public LightSource<N, T, Color>
         static_assert(std::is_floating_point_v<T>);
 
         Color radiance_;
+        Vector<N, T> scene_center_;
+        T scene_radius_;
         T area_;
+        T leave_pdf_pos_;
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 
