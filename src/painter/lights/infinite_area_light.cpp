@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "infinite_area_light.h"
 
+#include "com/functions.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/ball_volume.h>
@@ -73,11 +75,8 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
 {
         const Vector<N, T> dir = sampling::uniform_on_sphere<N, T>(engine);
 
-        std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(dir);
-        for (Vector<N, T>& v : vectors)
-        {
-                v *= scene_radius_;
-        }
+        const std::array<Vector<N, T>, N - 1> vectors =
+                com::multiply(numerical::orthogonal_complement_of_unit_vector(dir), scene_radius_);
 
         LightSourceLeaveSample<N, T, Color> res;
         res.ray.set_org(scene_center_ - scene_radius_ * dir + sampling::uniform_in_sphere(engine, vectors));

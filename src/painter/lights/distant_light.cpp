@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distant_light.h"
 
+#include "com/functions.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/ball_volume.h>
@@ -39,11 +41,8 @@ void DistantLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T s
         leave_sample_.ray.set_org(scene_center - scene_radius * leave_sample_.ray.dir());
         leave_sample_.pdf_pos = sampling::uniform_in_sphere_pdf<N - 1>(scene_radius);
 
-        vectors_ = numerical::orthogonal_complement_of_unit_vector(leave_sample_.ray.dir());
-        for (Vector<N, T>& v : vectors_)
-        {
-                v *= scene_radius;
-        }
+        vectors_ =
+                com::multiply(numerical::orthogonal_complement_of_unit_vector(leave_sample_.ray.dir()), scene_radius);
 }
 
 template <std::size_t N, typename T, typename Color>

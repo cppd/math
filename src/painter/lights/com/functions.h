@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/exponent.h>
+#include <src/numerical/vector.h>
 
+#include <array>
 #include <type_traits>
 
 namespace ns::painter::lights::com
@@ -38,5 +40,16 @@ template <std::size_t N, typename T>
         {
                 return power<((N - 2) / 2)>(squared_distance) * distance;
         }
+}
+
+template <std::size_t N, std::size_t M, typename T>
+std::array<Vector<N, T>, M> multiply(const std::array<Vector<N, T>, M>& vectors, const T value)
+{
+        std::array<Vector<N, T>, M> res;
+        for (std::size_t i = 0; i < M; ++i)
+        {
+                res[i] = vectors[i] * value;
+        }
+        return res;
 }
 }
