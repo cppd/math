@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/normals.h"
 
 #include <src/com/error.h>
+#include <src/com/variant.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/pdf.h>
 
@@ -294,6 +295,25 @@ public:
         }
 };
 
+template <std::size_t N, typename T, typename Color>
+class InfiniteLight final
+{
+        Color beta_;
+        T pdf_forward_;
+
+public:
+        InfiniteLight(const Color& beta, const T pdf_forward)
+                : beta_(beta),
+                  pdf_forward_(pdf_forward)
+        {
+        }
+
+        [[nodiscard]] const Color& beta() const
+        {
+                return beta_;
+        }
+};
+
 template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
 void set_forward_pdf(
         const std::variant<Vertex<N, T, Color>...>& prev,
@@ -301,11 +321,16 @@ void set_forward_pdf(
         const T pdf_forward)
 {
         std::visit(
-                [&](const auto& v_prev)
-                {
-                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(*next)));
-                        std::get<Surface<N, T, Color>>(*next).set_forward_pdf(v_prev, pdf_forward);
-                },
+                Visitors{
+                        [&](const InfiniteLight<N, T, Color>&)
+                        {
+                                error_fatal("Previous vertex is an infinite light");
+                        },
+                        [&](const auto& v_prev)
+                        {
+                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(*next)));
+                                std::get<Surface<N, T, Color>>(*next).set_forward_pdf(v_prev, pdf_forward);
+                        }},
                 prev);
 }
 
@@ -316,11 +341,16 @@ void set_reversed_pdf(
         const T pdf_reversed)
 {
         std::visit(
-                [&](auto& v_prev)
-                {
-                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
-                        v_prev.set_reversed_pdf(std::get<Surface<N, T, Color>>(next), pdf_reversed);
-                },
+                Visitors{
+                        [&](InfiniteLight<N, T, Color>&)
+                        {
+                                error_fatal("Previous vertex is an infinite light");
+                        },
+                        [&](auto& v_prev)
+                        {
+                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
+                                v_prev.set_reversed_pdf(std::get<Surface<N, T, Color>>(next), pdf_reversed);
+                        }},
                 *prev);
 }
 
@@ -345,5 +375,5 @@ template <std::size_t N, typename T, typename Color, template <std::size_t, type
 }
 
 template <std::size_t N, typename T, typename Color>
-using Vertex = std::variant<Camera<N, T, Color>, Light<N, T, Color>, Surface<N, T, Color>>;
+using Vertex = std::variant<Camera<N, T, Color>, InfiniteLight<N, T, Color>, Light<N, T, Color>, Surface<N, T, Color>>;
 }

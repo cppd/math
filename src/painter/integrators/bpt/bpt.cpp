@@ -48,6 +48,7 @@ template <std::size_t N, typename T, typename Color>
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void walk(
+        const bool camera_path,
         const Scene<N, T, Color>& scene,
         Color beta,
         const T pdf,
@@ -66,15 +67,19 @@ void walk(
                 return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
-        if (!surface_found(ray, surface, normals))
-        {
-                return;
-        }
-
         T pdf_forward = pdf;
 
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
+                if (!surface_found(ray, surface, normals))
+                {
+                        if (camera_path)
+                        {
+                                path->emplace_back(std::in_place_type<InfiniteLight<N, T, Color>>, beta, pdf_forward);
+                        }
+                        return;
+                }
+
                 Vertex<N, T, Color>& next =
                         path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals, beta);
 
@@ -103,11 +108,6 @@ void walk(
 
                 ray = Ray<N, T>(surface.point(), sample->l);
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
-
-                if (!surface_found(ray, surface, normals))
-                {
-                        break;
-                }
         }
 }
 
@@ -124,7 +124,7 @@ void generate_camera_path(
 
         path->emplace_back(std::in_place_type<Camera<N, T, Color>>, ray.org(), beta);
 
-        walk<FLAT_SHADING>(scene, beta, /*pdf=*/T{1}, ray, engine, path);
+        walk<FLAT_SHADING>(/*camera_path=*/true, scene, beta, /*pdf=*/T{1}, ray, engine, path);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -152,7 +152,7 @@ void generate_light_path(
         const T k = sample.n ? std::abs(dot(*sample.n, sample.ray.dir())) : 1;
         const Color beta = sample.radiance * (k / pdf);
 
-        walk<FLAT_SHADING>(scene, beta, sample.pdf_dir, sample.ray, engine, path);
+        walk<FLAT_SHADING>(/*camera_path=*/false, scene, beta, sample.pdf_dir, sample.ray, engine, path);
 }
 }
 
@@ -168,8 +168,9 @@ std::optional<Color> bpt(
 
         generate_camera_path<FLAT_SHADING>(scene, ray, engine, &camera_path);
         ASSERT(camera_path.size() <= MAX_DEPTH + 1);
-        ASSERT(camera_path.size() >= 1);
-        if (camera_path.size() == 1)
+        ASSERT(camera_path.size() >= 2);
+
+        if (camera_path.size() == 2 && std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[1]))
         {
                 return {};
         }

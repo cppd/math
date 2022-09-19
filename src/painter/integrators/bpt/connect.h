@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/visibility.h"
 
 #include <src/com/error.h>
+#include <src/com/variant.h>
 
 #include <optional>
 #include <vector>
@@ -165,10 +166,16 @@ decltype(auto) connect_s_1(
         const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
 
         return std::visit(
-                [&](const auto& camera_prev_vertex)
-                {
-                        return connect_s_1(scene, camera_prev_vertex, camera_vertex, light_distribution, engine);
-                },
+                Visitors{
+                        [&](const InfiniteLight<N, T, Color>&) -> std::optional<ConnectS1<N, T, Color>>
+                        {
+                                error_fatal("Camera previous vertex is an infinite light");
+                        },
+                        [&](const auto& camera_prev_vertex)
+                        {
+                                return connect_s_1(
+                                        scene, camera_prev_vertex, camera_vertex, light_distribution, engine);
+                        }},
                 camera_path_prev_vertex);
 }
 
@@ -187,17 +194,27 @@ decltype(auto) connect(
         const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
 
         return std::visit(
-                [&](const auto& light_prev_vertex)
-                {
-                        return std::visit(
-                                [&](const auto& camera_prev_vertex)
-                                {
-                                        return connect(
-                                                scene, light_prev_vertex, light_vertex, camera_prev_vertex,
-                                                camera_vertex);
-                                },
-                                camera_path_prev_vertex);
-                },
+                Visitors{
+                        [&](const InfiniteLight<N, T, Color>&) -> std::optional<Color>
+                        {
+                                error_fatal("Light previous vertex is an infinite light");
+                        },
+                        [&](const auto& light_prev_vertex)
+                        {
+                                return std::visit(
+                                        Visitors{
+                                                [&](const InfiniteLight<N, T, Color>&) -> std::optional<Color>
+                                                {
+                                                        error_fatal("Camera previous vertex is an infinite light");
+                                                },
+                                                [&](const auto& camera_prev_vertex)
+                                                {
+                                                        return connect(
+                                                                scene, light_prev_vertex, light_vertex,
+                                                                camera_prev_vertex, camera_vertex);
+                                                }},
+                                        camera_path_prev_vertex);
+                        }},
                 light_path_prev_vertex);
 }
 }
@@ -216,6 +233,11 @@ std::optional<Color> connect(
 
         ASSERT(s >= 1);
         ASSERT(t >= 2);
+
+        if (std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
+        {
+                return {};
+        }
 
         std::optional<Color> color;
         std::optional<Light<N, T, Color>> vertex;
