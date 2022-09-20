@@ -138,6 +138,7 @@ LightSourceLeaveSample<N, T, Color> ParallelotopeLight<N, T, Color>::leave_sampl
         res.pdf_pos = pdf_;
         res.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
         res.radiance = radiance(cos);
+        res.infinite_distance = false;
         return res;
 }
 

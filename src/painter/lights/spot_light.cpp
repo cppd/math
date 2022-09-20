@@ -91,6 +91,7 @@ LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& en
         res.pdf_pos = 1;
         res.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
         res.radiance = spotlight_.color(intensity_, cos);
+        res.infinite_distance = false;
         return res;
 }
 

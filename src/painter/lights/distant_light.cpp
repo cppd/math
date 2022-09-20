@@ -110,6 +110,7 @@ DistantLight<N, T, Color>::DistantLight(const Vector<N, T>& direction, const Col
         leave_sample_.ray.set_dir(direction);
         leave_sample_.radiance = radiance;
         leave_sample_.pdf_dir = 1;
+        leave_sample_.infinite_distance = true;
 
         arrive_sample_.l = -leave_sample_.ray.dir();
         arrive_sample_.pdf = 1;

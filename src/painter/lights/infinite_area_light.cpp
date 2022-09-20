@@ -84,6 +84,7 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
         res.pdf_pos = leave_pdf_pos_;
         res.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
         res.radiance = radiance_;
+        res.infinite_distance = true;
         return res;
 }
 

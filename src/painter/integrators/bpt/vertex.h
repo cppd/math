@@ -78,6 +78,13 @@ template <std::size_t N, typename T, typename Normal>
         }();
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, next_distance);
 }
+
+template <std::size_t N, typename T>
+[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const Vector<N, T>& dir, const Vector<N, T>& next_normal)
+{
+        const T cosine = std::abs(dot(dir, next_normal));
+        return pos_pdf * cosine;
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -123,6 +130,12 @@ public:
                 namespace impl = vertex_implementation;
                 pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(
                         prev.pos(), forward_angle_pdf, surface_.point(), normals_.shading);
+        }
+
+        void set_forward_pos_pdf(const Vector<N, T>& dir, const T pos_pdf)
+        {
+                namespace impl = vertex_implementation;
+                pdf_forward_ = impl::pos_pdf_to_area_pdf(pos_pdf, dir, normals_.shading);
         }
 
         template <typename Next>

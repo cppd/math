@@ -136,6 +136,7 @@ LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& en
         res.pdf_pos = pdf_;
         res.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
         res.radiance = radiance(cos);
+        res.infinite_distance = false;
         return res;
 }
 

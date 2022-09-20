@@ -80,6 +80,7 @@ LightSourceLeaveSample<N, T, Color> PointLight<N, T, Color>::leave_sample(PCG& e
         res.pdf_pos = 1;
         res.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
         res.radiance = intensity_;
+        res.infinite_distance = false;
         return res;
 }
 

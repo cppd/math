@@ -153,6 +153,14 @@ void generate_light_path(
         const Color beta = sample.radiance * (k / pdf);
 
         walk<FLAT_SHADING>(/*camera_path=*/false, scene, beta, sample.pdf_dir, sample.ray, engine, path);
+
+        if (!sample.infinite_distance || path->size() <= 1)
+        {
+                return;
+        }
+
+        auto& next = std::get<Surface<N, T, Color>>((*path)[1]);
+        next.set_forward_pos_pdf(sample.ray.dir(), sample.pdf_pos);
 }
 }
 

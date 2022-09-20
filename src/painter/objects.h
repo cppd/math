@@ -209,6 +209,7 @@ struct LightSourceLeaveSample final
         T pdf_pos;
         T pdf_dir;
         Color radiance;
+        bool infinite_distance;
 
         LightSourceLeaveSample()
         {
