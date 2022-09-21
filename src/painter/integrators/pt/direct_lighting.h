@@ -37,9 +37,8 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "functions.h"
-
 #include "../../objects.h"
+#include "../com/functions.h"
 #include "../com/normals.h"
 
 #include <src/com/error.h>
@@ -165,8 +164,8 @@ std::optional<Color> direct_lighting(
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                add_optional(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
-                add_optional(&res, impl::sample_surface_with_mis(*light, scene, surface, v, normals, engine));
+                com::add_optional(&res, impl::sample_light_with_mis(*light, scene, surface, v, normals, engine));
+                com::add_optional(&res, impl::sample_surface_with_mis(*light, scene, surface, v, normals, engine));
         }
         return res;
 }
@@ -189,7 +188,7 @@ std::optional<Color> ray_light_sources(
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : light_sources)
         {
-                add_optional(&res, light->leave_radiance(ray, distance));
+                com::add_optional(&res, light->leave_radiance(ray, distance));
         }
         return res;
 }

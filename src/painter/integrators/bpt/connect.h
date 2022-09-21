@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex.h"
 
 #include "../../objects.h"
+#include "../com/functions.h"
 #include "../com/visibility.h"
 
 #include <src/com/error.h>
@@ -39,6 +40,22 @@ struct ConnectS1 final
         Color color;
         Light<N, T, Color> light_vertex;
 };
+
+template <std::size_t N, typename T, typename Color>
+std::optional<Color> connect_s_0(
+        const std::vector<const LightSource<N, T, Color>*>& light_sources,
+        const InfiniteLight<N, T, Color>& light_vertex)
+{
+        std::optional<Color> res;
+        for (const LightSource<N, T, Color>* const light : light_sources)
+        {
+                if (const auto c = light->leave_radiance(light_vertex.ray_to_light(), {}))
+                {
+                        com::add_optional(&res, light_vertex.beta() * (*c));
+                }
+        }
+        return res;
+}
 
 template <
         std::size_t N,
@@ -155,6 +172,15 @@ std::optional<Color> connect(
 //
 
 template <std::size_t N, typename T, typename Color>
+decltype(auto) connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N, T, Color>& camera_path_vertex)
+{
+        ASSERT((std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path_vertex)));
+        const auto& camera_vertex = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
+
+        return connect_s_0(scene.light_sources(), camera_vertex);
+}
+
+template <std::size_t N, typename T, typename Color>
 decltype(auto) connect_s_1(
         const Scene<N, T, Color>& scene,
         const Vertex<N, T, Color>& camera_path_prev_vertex,
@@ -231,10 +257,10 @@ std::optional<Color> connect(
 {
         namespace impl = connect_implementation;
 
-        ASSERT(s >= 1);
+        ASSERT(s >= 0);
         ASSERT(t >= 2);
 
-        if (std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
+        if ((s > 0) == std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
         {
                 return {};
         }
@@ -242,7 +268,12 @@ std::optional<Color> connect(
         std::optional<Color> color;
         std::optional<Light<N, T, Color>> vertex;
 
-        if (s == 1)
+        if (s == 0)
+        {
+                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
+                color = impl::connect_s_0(scene, t_1);
+        }
+        else if (s == 1)
         {
                 const Vertex<N, T, Color>& t_2 = camera_path[t - 2];
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];

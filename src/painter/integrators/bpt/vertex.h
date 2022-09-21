@@ -311,12 +311,14 @@ public:
 template <std::size_t N, typename T, typename Color>
 class InfiniteLight final
 {
+        Ray<N, T> ray_to_light_;
         Color beta_;
         T pdf_forward_;
 
 public:
-        InfiniteLight(const Color& beta, const T pdf_forward)
-                : beta_(beta),
+        InfiniteLight(const Ray<N, T>& ray_to_light, const Color& beta, const T pdf_forward)
+                : ray_to_light_(ray_to_light),
+                  beta_(beta),
                   pdf_forward_(pdf_forward)
         {
         }
@@ -324,6 +326,11 @@ public:
         [[nodiscard]] const Color& beta() const
         {
                 return beta_;
+        }
+
+        [[nodiscard]] const Ray<N, T>& ray_to_light() const
+        {
+                return ray_to_light_;
         }
 };
 

@@ -75,7 +75,8 @@ void walk(
                 {
                         if (camera_path)
                         {
-                                path->emplace_back(std::in_place_type<InfiniteLight<N, T, Color>>, beta, pdf_forward);
+                                path->emplace_back(
+                                        std::in_place_type<InfiniteLight<N, T, Color>>, ray, beta, pdf_forward);
                         }
                         return;
                 }
@@ -85,17 +86,14 @@ void walk(
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
 
+                set_forward_pdf(prev, &next, pdf_forward);
+
                 const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
-                        set_forward_pdf(prev, &next, pdf_forward);
                         break;
                 }
 
-                if (!surface.is_specular())
-                {
-                        set_forward_pdf(prev, &next, pdf_forward);
-                }
                 set_reversed_pdf(&prev, next, sample->pdf_reversed);
 
                 pdf_forward = sample->pdf_forward;
@@ -193,7 +191,7 @@ std::optional<Color> bpt(
 
         for (int t = 2; t <= camera_size; ++t)
         {
-                for (int s = 1; s <= light_size; ++s)
+                for (int s = 0; s <= light_size; ++s)
                 {
                         const int depth = t + s - 2;
                         if (depth > MAX_DEPTH)
