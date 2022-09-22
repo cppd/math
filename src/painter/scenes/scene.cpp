@@ -59,6 +59,7 @@ class Impl final : public Scene<N, T, Color>
         const std::vector<const Shape<N, T, Color>*> shapes_;
         const std::vector<const LightSource<N, T, Color>*> light_sources_;
         const std::vector<const LightSource<N, T, Color>*> non_background_light_sources_;
+        const std::vector<const LightSource<N, T, Color>*> background_light_sources_;
         const Projector<N, T>* const projector_;
         const std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
 
@@ -189,6 +190,11 @@ class Impl final : public Scene<N, T, Color>
                 return non_background_light_sources_;
         }
 
+        [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& background_light_sources() const override
+        {
+                return background_light_sources_;
+        }
+
         [[nodiscard]] const Color& background_light() const override
         {
                 return background_light_;
@@ -217,6 +223,7 @@ public:
                           light_sources,
                           &background_light_source_)),
                   non_background_light_sources_(std::move(light_sources)),
+                  background_light_sources_({&background_light_source_}),
                   projector_(projector),
                   clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
                   bvh_(geometry::bvh_objects(shapes_), progress)
