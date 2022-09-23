@@ -81,8 +81,8 @@ void walk(
                         return;
                 }
 
-                Vertex<N, T, Color>& next =
-                        path->emplace_back(std::in_place_type<Surface<N, T, Color>>, surface, normals, beta);
+                Vertex<N, T, Color>& next = path->emplace_back(
+                        std::in_place_type<Surface<N, T, Color>>, surface, normals, beta, -ray.dir());
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
 

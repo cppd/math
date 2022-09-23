@@ -93,15 +93,25 @@ class Surface final
         SurfaceIntersection<N, T, Color> surface_;
         Normals<N, T> normals_;
         Color beta_;
+        Vector<N, T> dir_to_prev_;
         T pdf_forward_ = 0;
         T pdf_reversed_ = 0;
 
 public:
-        Surface(const SurfaceIntersection<N, T, Color>& surface, const Normals<N, T>& normals, const Color& beta)
+        Surface(const SurfaceIntersection<N, T, Color>& surface,
+                const Normals<N, T>& normals,
+                const Color& beta,
+                const Vector<N, T>& dir_to_prev)
                 : surface_(surface),
                   normals_(normals),
-                  beta_(beta)
+                  beta_(beta),
+                  dir_to_prev_(dir_to_prev)
         {
+        }
+
+        [[nodiscard]] const Vector<N, T>& dir_to_prev() const
+        {
+                return dir_to_prev_;
         }
 
         [[nodiscard]] const Vector<N, T>& pos() const
