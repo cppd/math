@@ -134,18 +134,18 @@ public:
                 return beta_;
         }
 
-        template <typename Prev>
-        void set_forward_pdf(const Prev& prev, const T forward_angle_pdf)
+        [[nodiscard]] T area_pdf(
+                const T angle_pdf,
+                const Surface<N, T, Color>& next,
+                const Vector<N, T>& /*dir_to_next*/) const
         {
                 namespace impl = vertex_implementation;
-                pdf_forward_ = impl::solid_angle_pdf_to_area_pdf(
-                        prev.pos(), forward_angle_pdf, surface_.point(), normals_.shading);
+                return impl::solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next.pos(), next.normal());
         }
 
-        void set_forward_pos_pdf(const Vector<N, T>& dir, const T pos_pdf)
+        void set_forward_pdf(const T forward_pdf)
         {
-                namespace impl = vertex_implementation;
-                pdf_forward_ = impl::pos_pdf_to_area_pdf(pos_pdf, dir, normals_.shading);
+                pdf_forward_ = forward_pdf;
         }
 
         template <typename Next>
@@ -212,6 +212,15 @@ public:
                 return beta_;
         }
 
+        [[nodiscard]] T area_pdf(
+                const T angle_pdf,
+                const Surface<N, T, Color>& next,
+                const Vector<N, T>& /*dir_to_next*/) const
+        {
+                namespace impl = vertex_implementation;
+                return impl::solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
+        }
+
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
@@ -249,18 +258,21 @@ class Light final
         Color beta_;
         T pdf_forward_;
         T pdf_reversed_ = 0;
+        bool infinite_distance_;
 
 public:
         Light(const LightSource<N, T, Color>* const light,
               const Vector<N, T>& pos,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
-              const T pdf_forward)
+              const T pdf_forward,
+              const bool infinite_distance)
                 : light_(light),
                   pos_(pos),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(pdf_forward)
+                  pdf_forward_(pdf_forward),
+                  infinite_distance_(infinite_distance)
         {
         }
 
@@ -270,12 +282,14 @@ public:
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
               const LightDistribution<N, T, Color>& distribution,
-              const Next& next)
+              const Next& next,
+              const bool infinite_distance)
                 : light_(light),
                   pos_(pos),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(compute_pdf_spatial(distribution, next, light_, pos_))
+                  pdf_forward_(compute_pdf_spatial(distribution, next, light_, pos_)),
+                  infinite_distance_(infinite_distance)
         {
         }
 
@@ -292,6 +306,17 @@ public:
         [[nodiscard]] const Color& beta() const
         {
                 return beta_;
+        }
+
+        [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next, const Vector<N, T>& dir_to_next)
+                const
+        {
+                namespace impl = vertex_implementation;
+                if (!infinite_distance_)
+                {
+                        return impl::solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
+                }
+                return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(pos_, dir_to_next), dir_to_next, next.normal());
         }
 
         template <typename Next>
@@ -348,7 +373,8 @@ template <std::size_t N, typename T, typename Color, template <std::size_t, type
 void set_forward_pdf(
         const std::variant<Vertex<N, T, Color>...>& prev,
         std::variant<Vertex<N, T, Color>...>* const next,
-        const T pdf_forward)
+        const Vector<N, T>& dir_to_next,
+        const T angle_pdf)
 {
         std::visit(
                 Visitors{
@@ -359,7 +385,8 @@ void set_forward_pdf(
                         [&](const auto& v_prev)
                         {
                                 ASSERT((std::holds_alternative<Surface<N, T, Color>>(*next)));
-                                std::get<Surface<N, T, Color>>(*next).set_forward_pdf(v_prev, pdf_forward);
+                                auto& surface = std::get<Surface<N, T, Color>>(*next);
+                                surface.set_forward_pdf(v_prev.area_pdf(angle_pdf, surface, dir_to_next));
                         }},
                 prev);
 }

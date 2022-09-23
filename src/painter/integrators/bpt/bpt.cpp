@@ -86,7 +86,7 @@ void walk(
 
                 Vertex<N, T, Color>& prev = *(path->end() - 2);
 
-                set_forward_pdf(prev, &next, pdf_forward);
+                set_forward_pdf(prev, &next, ray.dir(), pdf_forward);
 
                 const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
                 if (!sample)
@@ -144,21 +144,13 @@ void generate_light_path(
 
         path->emplace_back(
                 std::in_place_type<Light<N, T, Color>>, distribution.light, sample.ray.org(), sample.n, sample.radiance,
-                distribution.pdf * sample.pdf_pos);
+                distribution.pdf * sample.pdf_pos, sample.infinite_distance);
 
         const T pdf = distribution.pdf * sample.pdf_pos * sample.pdf_dir;
         const T k = sample.n ? std::abs(dot(*sample.n, sample.ray.dir())) : 1;
         const Color beta = sample.radiance * (k / pdf);
 
         walk<FLAT_SHADING>(/*camera_path=*/false, scene, beta, sample.pdf_dir, sample.ray, engine, path);
-
-        if (!sample.infinite_distance || path->size() <= 1)
-        {
-                return;
-        }
-
-        auto& next = std::get<Surface<N, T, Color>>((*path)[1]);
-        next.set_forward_pos_pdf(sample.ray.dir(), sample.pdf_pos);
 }
 }
 
