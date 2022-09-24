@@ -85,13 +85,13 @@ LightSourceLeaveSample<N, T, Color> PointLight<N, T, Color>::leave_sample(PCG& e
 }
 
 template <std::size_t N, typename T, typename Color>
-T PointLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T PointLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T PointLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T PointLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*dir*/) const
 {
         return sampling::uniform_on_sphere_pdf<N, T>();
 }

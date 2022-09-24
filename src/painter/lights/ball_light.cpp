@@ -141,13 +141,13 @@ LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& en
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T BallLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
+T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(ball_.normal(), dir);

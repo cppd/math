@@ -49,8 +49,8 @@ class SpotLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] LightSourceLeaveSample<N, T, Color> leave_sample(PCG& engine) const override;
 
-        [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
-        [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& point, const Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& dir) const override;
 
         [[nodiscard]] std::optional<Color> leave_radiance(
                 const Ray<N, T>& ray_to_light,

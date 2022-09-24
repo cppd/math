@@ -247,7 +247,7 @@ class Light final
                 const Vector<N, T> next_dir = (next.pos() - pos);
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
-                const T pdf_pos = light->leave_pdf_pos(pos, l);
+                const T pdf_pos = light->leave_pdf_pos(l);
                 const T distribution_pdf = distribution.pdf(light);
                 return pdf_pos * distribution_pdf;
         }
@@ -316,7 +316,7 @@ public:
                 {
                         return impl::solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
                 }
-                return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(pos_, dir_to_next), dir_to_next, next.normal());
+                return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_to_next), dir_to_next, next.normal());
         }
 
         template <typename Next>
@@ -333,7 +333,7 @@ public:
                 const Vector<N, T> next_dir = (next.pos() - pos_);
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = light_->leave_pdf_dir(pos_, l);
+                const T pdf = light_->leave_pdf_dir(l);
                 return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 

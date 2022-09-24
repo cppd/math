@@ -96,13 +96,13 @@ LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& en
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T SpotLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
+T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         return dot(dir, direction_) >= 0 ? sampling::uniform_on_hemisphere_pdf<N, T>() : 0;

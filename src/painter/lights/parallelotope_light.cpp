@@ -143,13 +143,13 @@ LightSourceLeaveSample<N, T, Color> ParallelotopeLight<N, T, Color>::leave_sampl
 }
 
 template <std::size_t N, typename T, typename Color>
-T ParallelotopeLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*point*/, const Vector<N, T>& /*dir*/) const
+T ParallelotopeLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*point*/, const Vector<N, T>& dir) const
+T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(parallelotope_.normal(), dir);
