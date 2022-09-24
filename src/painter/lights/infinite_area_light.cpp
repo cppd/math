@@ -125,6 +125,12 @@ bool InfiniteAreaLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool InfiniteAreaLight<N, T, Color>::is_infinite_area() const
+{
+        return true;
+}
+
+template <std::size_t N, typename T, typename Color>
 InfiniteAreaLight<N, T, Color>::InfiniteAreaLight(const Color& radiance)
         : radiance_(radiance)
 {

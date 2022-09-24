@@ -117,6 +117,12 @@ bool PointLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool PointLight<N, T, Color>::is_infinite_area() const
+{
+        return false;
+}
+
+template <std::size_t N, typename T, typename Color>
 PointLight<N, T, Color>::PointLight(
         const Vector<N, T>& location,
         const Color& radiance,

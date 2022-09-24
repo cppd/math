@@ -57,6 +57,8 @@ class DistantLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] bool is_delta() const override;
 
+        [[nodiscard]] bool is_infinite_area() const override;
+
 public:
         DistantLight(const Vector<N, T>& direction, const Color& radiance);
 };

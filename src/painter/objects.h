@@ -247,6 +247,8 @@ public:
         [[nodiscard]] virtual Color power() const = 0;
 
         [[nodiscard]] virtual bool is_delta() const = 0;
+
+        [[nodiscard]] virtual bool is_infinite_area() const = 0;
 };
 
 template <std::size_t N, typename T>

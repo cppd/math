@@ -129,6 +129,12 @@ bool SpotLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool SpotLight<N, T, Color>::is_infinite_area() const
+{
+        return false;
+}
+
+template <std::size_t N, typename T, typename Color>
 SpotLight<N, T, Color>::SpotLight(
         const Vector<N, T>& location,
         const Vector<N, T>& direction,

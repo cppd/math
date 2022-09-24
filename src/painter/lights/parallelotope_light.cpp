@@ -196,6 +196,12 @@ bool ParallelotopeLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool ParallelotopeLight<N, T, Color>::is_infinite_area() const
+{
+        return false;
+}
+
+template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors,

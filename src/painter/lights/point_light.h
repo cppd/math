@@ -57,6 +57,8 @@ class PointLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] bool is_delta() const override;
 
+        [[nodiscard]] bool is_infinite_area() const override;
+
 public:
         PointLight(const Vector<N, T>& location, const Color& radiance, std::type_identity_t<T> radiance_distance);
 };

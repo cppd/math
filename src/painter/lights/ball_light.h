@@ -69,6 +69,8 @@ class BallLight final : public LightSource<N, T, Color>
 
         [[nodiscard]] bool is_delta() const override;
 
+        [[nodiscard]] bool is_infinite_area() const override;
+
 public:
         BallLight(
                 const Vector<N, T>& center,

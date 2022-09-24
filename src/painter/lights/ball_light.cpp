@@ -193,6 +193,12 @@ bool BallLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool BallLight<N, T, Color>::is_infinite_area() const
+{
+        return false;
+}
+
+template <std::size_t N, typename T, typename Color>
 BallLight<N, T, Color>::BallLight(
         const Vector<N, T>& center,
         const Vector<N, T>& direction,

@@ -105,6 +105,12 @@ bool DistantLight<N, T, Color>::is_delta() const
 }
 
 template <std::size_t N, typename T, typename Color>
+bool DistantLight<N, T, Color>::is_infinite_area() const
+{
+        return false;
+}
+
+template <std::size_t N, typename T, typename Color>
 DistantLight<N, T, Color>::DistantLight(const Vector<N, T>& direction, const Color& radiance)
 {
         leave_sample_.ray.set_dir(direction);
