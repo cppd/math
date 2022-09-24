@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
+#include <optional>
 #include <type_traits>
 
 namespace ns::painter::lights
@@ -32,7 +33,7 @@ class DistantLight final : public LightSource<N, T, Color>
         LightSourceLeaveSample<N, T, Color> leave_sample_;
         LightSourceArriveSample<N, T, Color> arrive_sample_;
         std::array<Vector<N, T>, N - 1> vectors_;
-        T area_;
+        std::optional<T> area_;
 
         void init(const Vector<N, T>& scene_center, T scene_radius) override;
 

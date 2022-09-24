@@ -95,7 +95,9 @@ std::optional<Color> DistantLight<N, T, Color>::leave_radiance(
 template <std::size_t N, typename T, typename Color>
 Color DistantLight<N, T, Color>::power() const
 {
-        return area_ * arrive_sample_.radiance;
+        ASSERT(area_);
+
+        return *area_ * arrive_sample_.radiance;
 }
 
 template <std::size_t N, typename T, typename Color>

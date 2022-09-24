@@ -36,9 +36,10 @@ void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& scene_center, cons
                 error("Scene radius " + to_string(scene_radius) + " must be positive");
         }
 
+        area_ = geometry::ball_volume<N - 1, T>(scene_radius);
+
         scene_center_ = scene_center;
         scene_radius_ = scene_radius;
-        area_ = geometry::ball_volume<N - 1, T>(scene_radius);
         leave_pdf_pos_ = sampling::uniform_in_sphere_pdf<N - 1>(scene_radius);
 }
 
@@ -115,7 +116,9 @@ std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(
 template <std::size_t N, typename T, typename Color>
 Color InfiniteAreaLight<N, T, Color>::power() const
 {
-        return area_ * radiance_;
+        ASSERT(area_);
+
+        return *area_ * radiance_;
 }
 
 template <std::size_t N, typename T, typename Color>
