@@ -40,11 +40,14 @@ std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N
         const auto& camera_vertex = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
 
         std::optional<Color> res;
-        for (const LightSource<N, T, Color>* const light : scene.background_light_sources())
+        for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                if (const auto c = light->leave_radiance(camera_vertex.ray_to_light(), {}))
+                if (light->is_infinite_area())
                 {
-                        com::add_optional(&res, camera_vertex.beta() * (*c));
+                        if (const auto c = light->leave_radiance(camera_vertex.ray_to_light(), {}))
+                        {
+                                com::add_optional(&res, camera_vertex.beta() * (*c));
+                        }
                 }
         }
         return res;

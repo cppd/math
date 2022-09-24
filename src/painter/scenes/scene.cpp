@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_intersection.h"
 
-#include "../lights/infinite_area_light.h"
-
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/merge.h>
@@ -54,12 +52,9 @@ class Impl final : public Scene<N, T, Color>
 {
         inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
 
-        const Color background_light_;
-        const lights::InfiniteAreaLight<N, T, Color> background_light_source_{background_light_};
+        const Color background_color_;
         const std::vector<const Shape<N, T, Color>*> shapes_;
         const std::vector<const LightSource<N, T, Color>*> light_sources_;
-        const std::vector<const LightSource<N, T, Color>*> non_background_light_sources_;
-        const std::vector<const LightSource<N, T, Color>*> background_light_sources_;
         const Projector<N, T>* const projector_;
         const std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
 
@@ -185,19 +180,9 @@ class Impl final : public Scene<N, T, Color>
                 return light_sources_;
         }
 
-        [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& non_background_light_sources() const override
+        [[nodiscard]] const Color& background_color() const override
         {
-                return non_background_light_sources_;
-        }
-
-        [[nodiscard]] const std::vector<const LightSource<N, T, Color>*>& background_light_sources() const override
-        {
-                return background_light_sources_;
-        }
-
-        [[nodiscard]] const Color& background_light() const override
-        {
-                return background_light_;
+                return background_color_;
         }
 
         [[nodiscard]] const Projector<N, T>& projector() const override
@@ -211,19 +196,15 @@ class Impl final : public Scene<N, T, Color>
         }
 
 public:
-        Impl(const Color& background_light,
+        Impl(const Color& background_color,
              const std::optional<Vector<N + 1, T>>& clip_plane_equation,
              const Projector<N, T>* const projector,
              std::vector<const LightSource<N, T, Color>*>&& light_sources,
              std::vector<const Shape<N, T, Color>*>&& shapes,
              progress::Ratio* const progress)
-                : background_light_(background_light),
+                : background_color_(background_color),
                   shapes_(std::move(shapes)),
-                  light_sources_(merge<std::vector<const LightSource<N, T, Color>*>>(
-                          light_sources,
-                          &background_light_source_)),
-                  non_background_light_sources_(std::move(light_sources)),
-                  background_light_sources_({&background_light_source_}),
+                  light_sources_(std::move(light_sources)),
                   projector_(projector),
                   clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
                   bvh_(geometry::bvh_objects(shapes_), progress)
@@ -239,7 +220,7 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_scene(
-        const Color& background_light,
+        const Color& background_color,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         const Projector<N, T>* const projector,
         std::vector<const LightSource<N, T, Color>*>&& light_sources,
@@ -249,11 +230,12 @@ std::unique_ptr<const Scene<N, T, Color>> create_scene(
         if (clip_plane_equation)
         {
                 return std::make_unique<Impl<N, T, Color, true>>(
-                        background_light, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
+                        background_color, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
                         progress);
         }
+
         return std::make_unique<Impl<N, T, Color, false>>(
-                background_light, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
+                background_color, clip_plane_equation, projector, std::move(light_sources), std::move(shapes),
                 progress);
 }
 

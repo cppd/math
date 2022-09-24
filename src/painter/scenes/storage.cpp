@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "scene.h"
 
+#include "../lights/infinite_area_light.h"
+
 #include <src/color/color.h>
 #include <src/settings/instantiation.h>
 
@@ -72,7 +74,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> init_light_sources(
 
 template <std::size_t N, typename T, typename Color>
 StorageScene<N, T, Color> create_storage_scene(
-        const Color& background_light,
+        const Color& background_color,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<LightSource<N, T, Color>>>&& light_sources,
@@ -84,10 +86,12 @@ StorageScene<N, T, Color> create_storage_scene(
         res.projector = std::move(projector);
         res.shapes = std::move(shapes);
 
+        light_sources.push_back(std::make_unique<lights::InfiniteAreaLight<N, T, Color>>(background_color));
+
         res.light_sources = init_light_sources(res.shapes, std::move(light_sources));
 
         res.scene = create_scene(
-                background_light, clip_plane_equation, res.projector.get(), to_pointers(res.light_sources),
+                background_color, clip_plane_equation, res.projector.get(), to_pointers(res.light_sources),
                 to_pointers(res.shapes), progress);
 
         return res;

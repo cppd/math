@@ -232,7 +232,7 @@ void painting_impl(
         const int thread_count,
         std::atomic_bool* const stop)
 {
-        pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_light(), notifier);
+        pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_color(), notifier);
 
         switch (INTEGRATOR)
         {

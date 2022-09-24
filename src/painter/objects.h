@@ -328,12 +328,7 @@ public:
 
         [[nodiscard]] virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 
-        [[nodiscard]] virtual const std::vector<const LightSource<N, T, Color>*>& non_background_light_sources()
-                const = 0;
-
-        [[nodiscard]] virtual const std::vector<const LightSource<N, T, Color>*>& background_light_sources() const = 0;
-
-        [[nodiscard]] virtual const Color& background_light() const = 0;
+        [[nodiscard]] virtual const Color& background_color() const = 0;
 
         [[nodiscard]] virtual const Projector<N, T>& projector() const = 0;
 
