@@ -170,25 +170,16 @@ std::optional<Color> direct_lighting(
         return res;
 }
 
-template <bool WITHOUT_INFINITE_AREA, std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color>
 std::optional<Color> ray_light_sources(
         const Scene<N, T, Color>& scene,
         const Ray<N, T>& ray,
-        const SurfaceIntersection<N, T, Color>& surface)
+        const std::optional<T> distance)
 {
-        const std::optional<T> distance = [&]() -> std::optional<T>
-        {
-                if (surface)
-                {
-                        return surface.distance();
-                }
-                return {};
-        }();
-
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                if (!WITHOUT_INFINITE_AREA || !light->is_infinite_area())
+                if (!light->is_infinite_area())
                 {
                         com::add_optional(&res, light->leave_radiance(ray, distance));
                 }

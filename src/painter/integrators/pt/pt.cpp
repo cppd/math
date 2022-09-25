@@ -92,14 +92,12 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         if (!surface)
         {
-                static constexpr bool WITHOUT_INFINITE_AREA = true;
-                return ray_light_sources<WITHOUT_INFINITE_AREA, N, T, Color>(scene, ray, surface);
+                return ray_light_sources<N, T, Color>(scene, ray, std::nullopt);
         }
 
         Color color = [&]
         {
-                static constexpr bool WITHOUT_INFINITE_AREA = false;
-                if (const auto& c = ray_light_sources<WITHOUT_INFINITE_AREA, N, T, Color>(scene, ray, surface))
+                if (const auto& c = ray_light_sources<N, T, Color>(scene, ray, surface.distance()))
                 {
                         return *c;
                 }
