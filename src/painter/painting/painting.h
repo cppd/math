@@ -29,6 +29,7 @@ namespace ns::painter::painting
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
+        Integrator integrator,
         Notifier<N - 1>* notifier,
         Statistics* statistics,
         int samples_per_pixel,

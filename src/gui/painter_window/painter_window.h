@@ -82,6 +82,7 @@ public:
 template <std::size_t N, typename T, typename Color>
 void create_painter_window(
         const std::string& name,
+        const painter::Integrator integrator,
         const unsigned thread_count,
         const int samples_per_pixel,
         const bool flat_shading,
@@ -91,8 +92,9 @@ void create_painter_window(
                 [=, scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
-                                name, std::make_unique<PainterPixels<N, T, Color>>(
-                                              std::move(*scene), thread_count, samples_per_pixel, flat_shading));
+                                name,
+                                std::make_unique<PainterPixels<N, T, Color>>(
+                                        std::move(*scene), integrator, thread_count, samples_per_pixel, flat_shading));
                 });
 }
 }

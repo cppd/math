@@ -50,6 +50,8 @@ constexpr float FRONT_LIGHT_PROPORTION = 0.2;
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
 
+constexpr Integrator INTEGRATOR = Integrator::PT;
+
 constexpr bool WRITE_LOG = false;
 
 template <std::size_t N>
@@ -186,7 +188,8 @@ void test_painter_file(const int samples_per_pixel, const int thread_count, scen
         const Clock::time_point start_time = Clock::now();
         {
                 std::unique_ptr<Painter> painter = create_painter(
-                        &image, samples_per_pixel, MAX_PASS_COUNT, scene.scene.get(), thread_count, FLAT_SHADING);
+                        INTEGRATOR, &image, samples_per_pixel, MAX_PASS_COUNT, scene.scene.get(), thread_count,
+                        FLAT_SHADING);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
@@ -212,7 +215,7 @@ void test_painter_window(const int samples_per_pixel, const int thread_count, sc
         std::string name = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
         gui::painter_window::create_painter_window(
-                name, thread_count, samples_per_pixel, FLAT_SHADING, std::move(scene));
+                name, INTEGRATOR, thread_count, samples_per_pixel, FLAT_SHADING, std::move(scene));
 }
 
 enum class OutputType

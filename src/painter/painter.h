@@ -138,8 +138,15 @@ public:
         [[nodiscard]] virtual Statistics statistics() const = 0;
 };
 
+enum class Integrator
+{
+        BPT,
+        PT
+};
+
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Painter> create_painter(
+        Integrator integrator,
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
         std::optional<int> max_pass_count,

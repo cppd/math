@@ -37,14 +37,6 @@ namespace ns::painter::painting
 {
 namespace
 {
-enum class Integrator
-{
-        BPT,
-        PT
-};
-
-constexpr Integrator INTEGRATOR = Integrator::PT;
-
 template <std::size_t N, typename T, typename Color, typename Integrator>
 class Painting final
 {
@@ -224,6 +216,7 @@ void painting_impl(
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting_impl(
+        const Integrator integrator,
         Notifier<N - 1>* const notifier,
         Statistics* const statistics,
         const int samples_per_pixel,
@@ -234,29 +227,30 @@ void painting_impl(
 {
         pixels::Pixels<N - 1, T, Color> pixels(scene.projector().screen_size(), scene.background_color(), notifier);
 
-        switch (INTEGRATOR)
+        switch (integrator)
         {
         case Integrator::BPT:
         {
-                IntegratorBPT<FLAT_SHADING, N, T, Color> integrator(
+                IntegratorBPT<FLAT_SHADING, N, T, Color> integrator_bpt(
                         &scene, stop, statistics, notifier, &pixels, samples_per_pixel, thread_count);
-                painting_impl(stop, statistics, notifier, &pixels, &integrator, max_pass_count, thread_count);
+                painting_impl(stop, statistics, notifier, &pixels, &integrator_bpt, max_pass_count, thread_count);
                 return;
         }
         case Integrator::PT:
         {
-                IntegratorPT<FLAT_SHADING, N, T, Color> integrator(
+                IntegratorPT<FLAT_SHADING, N, T, Color> integrator_pt(
                         &scene, stop, statistics, notifier, &pixels, samples_per_pixel);
-                painting_impl(stop, statistics, notifier, &pixels, &integrator, max_pass_count, thread_count);
+                painting_impl(stop, statistics, notifier, &pixels, &integrator_pt, max_pass_count, thread_count);
                 return;
         }
         }
-        error("Unknown integrator " + to_string(enum_to_int(INTEGRATOR)));
+        error("Unknown integrator " + to_string(enum_to_int(integrator)));
 }
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void painting(
+        const Integrator integrator,
         Notifier<N - 1>* const notifier,
         Statistics* const statistics,
         const int samples_per_pixel,
@@ -270,7 +264,8 @@ void painting(
                 try
                 {
                         painting_impl<FLAT_SHADING>(
-                                notifier, statistics, samples_per_pixel, max_pass_count, scene, thread_count, stop);
+                                integrator, notifier, statistics, samples_per_pixel, max_pass_count, scene,
+                                thread_count, stop);
                 }
                 catch (const std::exception& e)
                 {
@@ -287,12 +282,12 @@ void painting(
         }
 }
 
-#define TEMPLATE(N, T, C)                                                                             \
-        template void painting<true, (N), T, C>(                                                      \
-                Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
-                std::atomic_bool*) noexcept;                                                          \
-        template void painting<false, (N), T, C>(                                                     \
-                Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+#define TEMPLATE(N, T, C)                                                                                         \
+        template void painting<true, (N), T, C>(                                                                  \
+                Integrator, Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+                std::atomic_bool*) noexcept;                                                                      \
+        template void painting<false, (N), T, C>(                                                                 \
+                Integrator, Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
                 std::atomic_bool*) noexcept;
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

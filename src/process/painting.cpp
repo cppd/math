@@ -59,6 +59,8 @@ using Colors = std::tuple<color::Spectrum, color::Color>;
 template <std::size_t N>
 constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 
+constexpr painter::Integrator INTEGRATOR = painter::Integrator::PT;
+
 std::array<const char*, 2> precision_names()
 {
         static_assert(2 == std::tuple_size_v<Precisions>);
@@ -196,7 +198,8 @@ void thread_function(
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 
         gui::painter_window::create_painter_window(
-                name, parameters.thread_count, parameters.samples_per_pixel, parameters.flat_shading, std::move(scene));
+                name, INTEGRATOR, parameters.thread_count, parameters.samples_per_pixel, parameters.flat_shading,
+                std::move(scene));
 }
 
 template <typename T, std::size_t N, typename Parameters>

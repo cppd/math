@@ -55,7 +55,8 @@ class Impl final : public Painter
 
 public:
         template <std::size_t N, typename T, typename Color>
-        Impl(Notifier<N - 1>* const notifier,
+        Impl(const Integrator integrator,
+             Notifier<N - 1>* const notifier,
              const int samples_per_pixel,
              const std::optional<int> max_pass_count,
              const Scene<N, T, Color>* const scene,
@@ -97,14 +98,14 @@ public:
                                 if (flat_shading)
                                 {
                                         painting::painting<true>(
-                                                notifier, statistics, samples_per_pixel, max_pass_count, *scene,
-                                                thread_count, stop);
+                                                integrator, notifier, statistics, samples_per_pixel, max_pass_count,
+                                                *scene, thread_count, stop);
                                 }
                                 else
                                 {
                                         painting::painting<false>(
-                                                notifier, statistics, samples_per_pixel, max_pass_count, *scene,
-                                                thread_count, stop);
+                                                integrator, notifier, statistics, samples_per_pixel, max_pass_count,
+                                                *scene, thread_count, stop);
                                 }
                         });
         }
@@ -121,6 +122,7 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Painter> create_painter(
+        const Integrator integrator,
         Notifier<N - 1>* const notifier,
         const int samples_per_pixel,
         const std::optional<int> max_pass_count,
@@ -128,12 +130,13 @@ std::unique_ptr<Painter> create_painter(
         const int thread_count,
         const bool flat_shading)
 {
-        return std::make_unique<Impl>(notifier, samples_per_pixel, max_pass_count, scene, thread_count, flat_shading);
+        return std::make_unique<Impl>(
+                integrator, notifier, samples_per_pixel, max_pass_count, scene, thread_count, flat_shading);
 }
 
 #define TEMPLATE(N, T, C)                                 \
         template std::unique_ptr<Painter> create_painter( \
-                Notifier<(N)-1>*, int, std::optional<int>, const Scene<(N), T, C>*, int, bool);
+                Integrator, Notifier<(N)-1>*, int, std::optional<int>, const Scene<(N), T, C>*, int, bool);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

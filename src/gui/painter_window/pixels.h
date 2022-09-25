@@ -369,6 +369,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 public:
         PainterPixels(
                 painter::scenes::StorageScene<N, T, Color>&& scene,
+                const painter::Integrator integrator,
                 const unsigned thread_count,
                 const int samples_per_pixel,
                 const bool flat_shading)
@@ -383,6 +384,7 @@ public:
                           }(scene_.scene->projector().screen_size())),
                   busy_indices_2d_(thread_count, NULL_INDEX),
                   painter_(painter::create_painter(
+                          integrator,
                           this,
                           samples_per_pixel,
                           MAX_PASS_COUNT,
