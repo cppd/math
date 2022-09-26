@@ -26,6 +26,24 @@ namespace ns::gui::dialog
 {
 namespace
 {
+void check_texts(const char* const name, const std::array<const char*, 2>& texts, const int index)
+{
+        if (std::any_of(
+                    texts.cbegin(), texts.cend(),
+                    [](const char* const s)
+                    {
+                            return s == nullptr || std::string_view(s).empty();
+                    }))
+        {
+                error(std::string("Empty ") + name);
+        }
+
+        if (!(index == 0 || index == 1))
+        {
+                error("Default index " + to_string(index) + " is out of range for " + name);
+        }
+}
+
 void check_parameters(
         const int max_thread_count,
         const int default_samples_per_pixel,
@@ -33,7 +51,9 @@ void check_parameters(
         const std::array<const char*, 2>& precisions,
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index)
+        const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index)
 {
         if (!(max_thread_count >= 1))
         {
@@ -52,35 +72,45 @@ void check_parameters(
                       + to_string(max_samples_per_pixel) + "]");
         }
 
-        if (std::any_of(
-                    precisions.cbegin(), precisions.cend(),
-                    [](const char* const s)
-                    {
-                            return s == nullptr || std::string_view(s).empty();
-                    }))
+        check_texts("precisions", precisions, default_precision_index);
+
+        check_texts("colors", colors, default_color_index);
+
+        check_texts("integrators", integrators, default_integrator_index);
+}
+
+void set_buttons(const std::array<QRadioButton*, 2>& buttons, const std::array<const char*, 2>& texts, const int index)
+{
+        for (std::size_t i = 0; i < 2; ++i)
         {
-                error("Empty precisions");
+                buttons[i]->setText(texts[i]);
         }
 
-        if (!(default_precision_index == 0 || default_precision_index == 1))
+        if (index < 2)
         {
-                error("Default precision index error " + to_string(default_precision_index));
+                buttons[index]->setChecked(true);
+                return;
         }
 
-        if (std::any_of(
-                    colors.cbegin(), colors.cend(),
-                    [](const char* const s)
-                    {
-                            return s == nullptr || std::string_view(s).empty();
-                    }))
+        error("Default index " + to_string(index) + " is out of range");
+}
+
+[[nodiscard]] bool check_button_selection(const char* const name, const std::array<QRadioButton*, 2>& buttons)
+{
+        const auto count = std::count_if(
+                buttons.cbegin(), buttons.cend(),
+                [](const QRadioButton* const button)
+                {
+                        return button->isChecked();
+                });
+
+        if (count == 1)
         {
-                error("Empty colors");
+                return true;
         }
 
-        if (!(default_color_index == 0 || default_color_index == 1))
-        {
-                error("Default color index error " + to_string(default_color_index));
-        }
+        dialog::message_critical(name + std::string(" is not selected"));
+        return false;
 }
 }
 
@@ -92,14 +122,16 @@ PainterParametersWidget::PainterParametersWidget(
         const std::array<const char*, 2>& precisions,
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index)
+        const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index)
         : QWidget(parent),
           max_thread_count_(max_thread_count),
           max_samples_per_pixel_(max_samples_per_pixel)
 {
         check_parameters(
                 max_thread_count, default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index,
-                colors, default_color_index);
+                colors, default_color_index, integrators, default_integrator_index);
 
         ui_.setupUi(this);
 
@@ -116,27 +148,12 @@ PainterParametersWidget::PainterParametersWidget(
         ui_.check_box_flat_shading->setChecked(false);
         ui_.check_box_cornell_box->setChecked(false);
 
-        ui_.radio_button_precision_0->setText(precisions[0]);
-        ui_.radio_button_precision_1->setText(precisions[1]);
-        if (default_precision_index == 0)
-        {
-                ui_.radio_button_precision_0->setChecked(true);
-        }
-        else
-        {
-                ui_.radio_button_precision_1->setChecked(true);
-        }
+        set_buttons({ui_.radio_button_precision_0, ui_.radio_button_precision_1}, precisions, default_precision_index);
 
-        ui_.radio_button_color_0->setText(colors[0]);
-        ui_.radio_button_color_1->setText(colors[1]);
-        if (default_color_index == 0)
-        {
-                ui_.radio_button_color_0->setChecked(true);
-        }
-        else
-        {
-                ui_.radio_button_color_1->setChecked(true);
-        }
+        set_buttons({ui_.radio_button_color_0, ui_.radio_button_color_1}, colors, default_color_index);
+
+        set_buttons(
+                {ui_.radio_button_integrator_0, ui_.radio_button_integrator_1}, integrators, default_integrator_index);
 }
 
 bool PainterParametersWidget::check()
@@ -158,15 +175,18 @@ bool PainterParametersWidget::check()
                 return false;
         }
 
-        if (!(ui_.radio_button_precision_0->isChecked() || ui_.radio_button_precision_1->isChecked()))
+        if (!check_button_selection("Precision", {ui_.radio_button_precision_0, ui_.radio_button_precision_1}))
         {
-                dialog::message_critical("Precision is not selected");
                 return false;
         }
 
-        if (!(ui_.radio_button_color_0->isChecked() || ui_.radio_button_color_1->isChecked()))
+        if (!check_button_selection("Color", {ui_.radio_button_color_0, ui_.radio_button_color_1}))
         {
-                dialog::message_critical("Color is not selected");
+                return false;
+        }
+
+        if (!check_button_selection("Integrator", {ui_.radio_button_integrator_0, ui_.radio_button_integrator_1}))
+        {
                 return false;
         }
 
@@ -175,13 +195,12 @@ bool PainterParametersWidget::check()
 
 [[nodiscard]] PainterParameters PainterParametersWidget::parameters()
 {
-        PainterParameters p;
-        p.thread_count = ui_.spin_box_threads->value();
-        p.samples_per_pixel = ui_.spin_box_samples_per_pixel->value();
-        p.flat_shading = ui_.check_box_flat_shading->isChecked();
-        p.cornell_box = ui_.check_box_cornell_box->isChecked();
-        p.precision_index = ui_.radio_button_precision_0->isChecked() ? 0 : 1;
-        p.color_index = ui_.radio_button_color_0->isChecked() ? 0 : 1;
-        return p;
+        return {.thread_count = ui_.spin_box_threads->value(),
+                .samples_per_pixel = ui_.spin_box_samples_per_pixel->value(),
+                .flat_shading = ui_.check_box_flat_shading->isChecked(),
+                .cornell_box = ui_.check_box_cornell_box->isChecked(),
+                .precision_index = ui_.radio_button_precision_0->isChecked() ? 0 : 1,
+                .color_index = ui_.radio_button_color_0->isChecked() ? 0 : 1,
+                .integrator_index = ui_.radio_button_integrator_0->isChecked() ? 0 : 1};
 }
 }

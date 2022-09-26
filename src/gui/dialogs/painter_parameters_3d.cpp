@@ -60,6 +60,8 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
         const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index,
         std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
@@ -70,7 +72,9 @@ PainterParameters3dDialog::PainterParameters3dDialog(
                   precisions,
                   default_precision_index,
                   colors,
-                  default_color_index)),
+                  default_color_index,
+                  integrators,
+                  default_integrator_index)),
           aspect_ratio_(static_cast<double>(width) / height),
           max_width_(aspect_ratio_ >= 1 ? max_screen_size : std::lround(max_screen_size * aspect_ratio_)),
           min_width_(std::min(max_width_, width)),
@@ -169,7 +173,9 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
         const std::array<const char*, 2>& precisions,
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index)
+        const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index)
 {
         check_parameters(width, height, max_screen_size);
 
@@ -177,7 +183,8 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
 
         QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
-                precisions, default_precision_index, colors, default_color_index, parameters));
+                precisions, default_precision_index, colors, default_color_index, integrators, default_integrator_index,
+                parameters));
 
         if (!w->exec() || w.isNull())
         {

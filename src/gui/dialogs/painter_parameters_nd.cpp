@@ -71,6 +71,8 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
         const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index,
         std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
@@ -81,7 +83,9 @@ PainterParametersNdDialog::PainterParametersNdDialog(
                   precisions,
                   default_precision_index,
                   colors,
-                  default_color_index)),
+                  default_color_index,
+                  integrators,
+                  default_integrator_index)),
           min_screen_size_(min_screen_size),
           max_screen_size_(max_screen_size),
           parameters_(parameters)
@@ -141,7 +145,9 @@ std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParamet
         const std::array<const char*, 2>& precisions,
         const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index)
+        const int default_color_index,
+        const std::array<const char*, 2>& integrators,
+        int default_integrator_index)
 {
         check_parameters(dimension, default_screen_size, min_screen_size, max_screen_size);
 
@@ -150,7 +156,7 @@ std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParamet
         QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                 default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, colors,
-                default_color_index, parameters));
+                default_color_index, integrators, default_integrator_index, parameters));
 
         if (!w->exec() || w.isNull())
         {

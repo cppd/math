@@ -31,6 +31,7 @@ struct PainterParameters final
         bool cornell_box;
         int precision_index;
         int color_index;
+        int integrator_index;
 };
 
 class PainterParametersWidget final : public QWidget
@@ -52,7 +53,9 @@ public:
                 const std::array<const char*, 2>& precisions,
                 int default_precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index);
+                int default_color_index,
+                const std::array<const char*, 2>& integrators,
+                int default_integrator_index);
 
         [[nodiscard]] bool check();
         [[nodiscard]] PainterParameters parameters();

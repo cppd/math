@@ -59,8 +59,6 @@ using Colors = std::tuple<color::Spectrum, color::Color>;
 template <std::size_t N>
 constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 
-constexpr painter::Integrator INTEGRATOR = painter::Integrator::PT;
-
 std::array<const char*, 2> precision_names()
 {
         static_assert(2 == std::tuple_size_v<Precisions>);
@@ -72,6 +70,28 @@ std::array<const char*, 2> color_names()
 {
         static_assert(2 == std::tuple_size_v<Colors>);
         return {std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
+}
+
+constexpr std::size_t INTEGRATOR_INDEX = 0;
+
+std::array<const char*, 2> integrators_names()
+{
+        return {"PT", "BPT"};
+}
+
+static_assert(INTEGRATOR_INDEX < std::tuple_size_v<decltype(integrators_names())>);
+
+painter::Integrator integrator_by_index(const std::size_t index)
+{
+        switch (index)
+        {
+        case 0:
+                return painter::Integrator::PT;
+        case 1:
+                return painter::Integrator::BPT;
+        default:
+                error("Unknown integrator index " + to_string(index));
+        }
 }
 
 template <std::size_t N, typename T>
@@ -198,8 +218,8 @@ void thread_function(
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 
         gui::painter_window::create_painter_window(
-                name, INTEGRATOR, parameters.thread_count, parameters.samples_per_pixel, parameters.flat_shading,
-                std::move(scene));
+                name, integrator_by_index(parameters.integrator_index), parameters.thread_count,
+                parameters.samples_per_pixel, parameters.flat_shading, std::move(scene));
 }
 
 template <typename T, std::size_t N, typename Parameters>
@@ -284,7 +304,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
                 gui::dialog::PainterParameters3dDialog::show(
                         hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM,
                         SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
-                        color_names(), COLOR_INDEX<N>);
+                        color_names(), COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
 
         if (!parameters)
         {
@@ -321,7 +341,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
                 gui::dialog::PainterParametersNdDialog::show(
                         N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
                         SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
-                        color_names(), COLOR_INDEX<N>);
+                        color_names(), COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
 
         if (!parameters)
         {

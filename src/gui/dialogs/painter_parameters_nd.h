@@ -58,6 +58,8 @@ private:
                 int default_precision_index,
                 const std::array<const char*, 2>& colors,
                 int default_color_index,
+                const std::array<const char*, 2>& integrators,
+                int default_integrator_index,
                 std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters);
 
         void done(int r) override;
@@ -74,6 +76,8 @@ public:
                 const std::array<const char*, 2>& precisions,
                 int default_precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index);
+                int default_color_index,
+                const std::array<const char*, 2>& integrators,
+                int default_integrator_index);
 };
 }
