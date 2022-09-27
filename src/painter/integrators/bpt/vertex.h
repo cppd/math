@@ -153,16 +153,9 @@ public:
                         next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
         }
 
-        template <typename Prev, typename Next>
-        [[nodiscard]] T compute_pdf(const Prev& prev, const Next& next) const
+        [[nodiscard]] T pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
         {
-                namespace impl = vertex_implementation;
-                const Vector<N, T> v = (prev.pos() - surface_.point()).normalized();
-                const Vector<N, T> next_dir = (next.pos() - surface_.point());
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = surface_.pdf(normals_.shading, v, l);
-                return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
+                return surface_.pdf(normals_.shading, v, l);
         }
 
         [[nodiscard]] Color brdf(const Vector<N, T>& v, const Vector<N, T>& l) const
@@ -300,6 +293,12 @@ public:
                 return pos_;
         }
 
+        [[nodiscard]] const Vector<N, T>& dir() const
+        {
+                ASSERT(!pos_);
+                return dir_;
+        }
+
         [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
         {
                 return normal_;
@@ -338,7 +337,7 @@ public:
                 namespace impl = vertex_implementation;
                 if (!pos_)
                 {
-                        impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
+                        return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
                 }
                 const Vector<N, T> next_dir = (next.pos() - *pos_);
                 const T next_distance = next_dir.norm();
@@ -421,23 +420,93 @@ void set_reversed_pdf(
 }
 
 template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
-[[nodiscard]] decltype(auto) compute_pdf(
+[[nodiscard]] T compute_pdf(
+        const std::variant<Vertex<N, T, Color>...>& vertex,
+        const std::variant<Vertex<N, T, Color>...>& next)
+{
+        return std::visit(
+                Visitors{
+                        [&](const Light<N, T, Color>& l) -> T
+                        {
+                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
+                                return l.compute_pdf(std::get<Surface<N, T, Color>>(next));
+                        },
+                        [&](const auto&) -> T
+                        {
+                                error_fatal("Vertex is not a light");
+                        },
+                },
+                vertex);
+}
+
+template <std::size_t N, typename T, typename Color, template <std::size_t, typename, typename> typename... Vertex>
+[[nodiscard]] T compute_pdf(
         const std::variant<Vertex<N, T, Color>...>& vertex,
         const std::variant<Vertex<N, T, Color>...>& prev,
         const std::variant<Vertex<N, T, Color>...>& next)
 {
-        return std::visit(
-                [&](const auto& v_prev)
-                {
-                        return std::visit(
-                                [&](const auto& v_next)
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(vertex)));
+        const auto& surface = std::get<Surface<N, T, Color>>(vertex);
+
+        const Vector<N, T> v = std::visit(
+                Visitors{
+                        [&](const InfiniteLight<N, T, Color>&) -> Vector<N, T>
+                        {
+                                error_fatal("Previous vertex is an infinite light");
+                        },
+                        [&](const Camera<N, T, Color>&) -> Vector<N, T>
+                        {
+                                error_fatal("Previous vertex is a camera");
+                        },
+                        [&](const Surface<N, T, Color>& v_prev) -> Vector<N, T>
+                        {
+                                return (v_prev.pos() - surface.pos()).normalized();
+                        },
+                        [&](const Light<N, T, Color>& v_prev) -> Vector<N, T>
+                        {
+                                if (v_prev.pos())
                                 {
-                                        ASSERT((std::holds_alternative<Surface<N, T, Color>>(vertex)));
-                                        return std::get<Surface<N, T, Color>>(vertex).compute_pdf(v_prev, v_next);
-                                },
-                                next);
-                },
+                                        return (*v_prev.pos() - surface.pos()).normalized();
+                                }
+                                return -v_prev.dir();
+                        }},
                 prev);
+
+        const auto compute_pos_pdf = [&](const auto& next_pos, const auto& next_normal)
+        {
+                namespace impl = vertex_implementation;
+
+                const Vector<N, T> next_dir = (next_pos - surface.pos());
+                const T next_distance = next_dir.norm();
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf = surface.pdf(v, l);
+                return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
+        };
+
+        return std::visit(
+                Visitors{
+                        [&](const InfiniteLight<N, T, Color>& v_next) -> T
+                        {
+                                const Vector<N, T> l = v_next.ray_to_light().dir();
+                                return surface.pdf(v, l);
+                        },
+                        [&](const Camera<N, T, Color>&) -> T
+                        {
+                                error_fatal("Next vertex is a camera");
+                        },
+                        [&](const Surface<N, T, Color>& v_next) -> T
+                        {
+                                return compute_pos_pdf(v_next.pos(), v_next.normal());
+                        },
+                        [&](const Light<N, T, Color>& v_next) -> T
+                        {
+                                if (!v_next.pos())
+                                {
+                                        return 0;
+                                }
+                                return compute_pos_pdf(*v_next.pos(), v_next.normal());
+                        }},
+                next);
 }
 
 template <std::size_t N, typename T, typename Color>
