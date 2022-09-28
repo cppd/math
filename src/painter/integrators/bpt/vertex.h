@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "light_distribution.h"
+#include "probability_density.h"
 
 #include "../../objects.h"
 #include "../com/normals.h"
@@ -25,68 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/variant.h>
 #include <src/numerical/vector.h>
-#include <src/sampling/pdf.h>
 
-#include <cmath>
+#include <optional>
 #include <variant>
 
 namespace ns::painter::integrators::bpt
 {
-namespace vertex_implementation
-{
-template <std::size_t N, typename T, typename Normal>
-[[nodiscard]] T solid_angle_pdf_to_area_pdf(
-        const Vector<N, T>& prev_pos,
-        const T angle_pdf,
-        const Vector<N, T>& next_pos,
-        const Normal& next_normal)
-{
-        const Vector<N, T> v = prev_pos - next_pos;
-        const T distance = v.norm();
-        const T cosine = [&]
-        {
-                if constexpr (requires { dot(v, *next_normal); })
-                {
-                        return next_normal ? (std::abs(dot(v, *next_normal)) / distance) : 1;
-                }
-                else
-                {
-                        return std::abs(dot(v, next_normal)) / distance;
-                }
-        }();
-        return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, distance);
-}
-
-template <std::size_t N, typename T, typename Normal>
-[[nodiscard]] T solid_angle_pdf_to_area_pdf(
-        const T angle_pdf,
-        const Vector<N, T>& next_dir,
-        const T next_distance,
-        const Normal& next_normal)
-{
-        ASSERT(next_dir.is_unit());
-        const T cosine = [&]
-        {
-                if constexpr (requires { dot(next_dir, *next_normal); })
-                {
-                        return next_normal ? std::abs(dot(next_dir, *next_normal)) : 1;
-                }
-                else
-                {
-                        return std::abs(dot(next_dir, next_normal));
-                }
-        }();
-        return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, next_distance);
-}
-
-template <std::size_t N, typename T>
-[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const Vector<N, T>& dir, const Vector<N, T>& next_normal)
-{
-        const T cosine = std::abs(dot(dir, next_normal));
-        return pos_pdf * cosine;
-}
-}
-
 template <std::size_t N, typename T, typename Color>
 class Surface final
 {
@@ -136,8 +81,7 @@ public:
 
         [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
         {
-                namespace impl = vertex_implementation;
-                return impl::solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next.pos(), next.normal());
+                return solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next.pos(), next.normal());
         }
 
         void set_forward_pdf(const T forward_pdf)
@@ -148,9 +92,8 @@ public:
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(
-                        next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
+                pdf_reversed_ =
+                        solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
         }
 
         [[nodiscard]] T pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
@@ -204,15 +147,13 @@ public:
 
         [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
         {
-                namespace impl = vertex_implementation;
-                return impl::solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
+                return solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
         }
 
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = vertex_implementation;
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
+                pdf_reversed_ = solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -311,39 +252,36 @@ public:
 
         [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
         {
-                namespace impl = vertex_implementation;
                 if (pos_)
                 {
-                        return impl::solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next.pos(), next.normal());
+                        return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next.pos(), next.normal());
                 }
-                return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
+                return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
         }
 
         template <typename Next>
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
-                namespace impl = vertex_implementation;
                 if (!pos_)
                 {
                         pdf_reversed_ = 0;
                         return;
                 }
-                pdf_reversed_ = impl::solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, *pos_, normal_);
+                pdf_reversed_ = solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, *pos_, normal_);
         }
 
         template <typename Next>
         [[nodiscard]] T compute_pdf(const Next& next) const
         {
-                namespace impl = vertex_implementation;
                 if (!pos_)
                 {
-                        return impl::pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
+                        return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
                 }
                 const Vector<N, T> next_dir = (next.pos() - *pos_);
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
                 const T pdf = light_->leave_pdf_dir(l);
-                return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
+                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -474,13 +412,11 @@ template <std::size_t N, typename T, typename Color, template <std::size_t, type
 
         const auto compute_pos_pdf = [&](const auto& next_pos, const auto& next_normal)
         {
-                namespace impl = vertex_implementation;
-
                 const Vector<N, T> next_dir = (next_pos - surface.pos());
                 const T next_distance = next_dir.norm();
                 const Vector<N, T> l = next_dir / next_distance;
                 const T pdf = surface.pdf(v, l);
-                return impl::solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
+                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
         };
 
         return std::visit(
