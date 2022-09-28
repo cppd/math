@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "connect.h"
 #include "surface_sample.h"
 #include "vertex.h"
+#include "vertex_pdf.h"
 
 #include "../com/normals.h"
 #include "../com/visibility.h"
