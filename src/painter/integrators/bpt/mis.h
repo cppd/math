@@ -19,19 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex.h"
 
-#include <optional>
+#include <src/com/error.h>
+
 #include <vector>
 
 namespace ns::painter::integrators::bpt
 {
 template <std::size_t N, typename T, typename Color>
-T mis_weight(
+[[nodiscard]] T mis_weight(
         const std::vector<Vertex<N, T, Color>>& /*light_path*/,
         const std::vector<Vertex<N, T, Color>>& /*camera_path*/,
-        const int /*s*/,
-        const int /*t*/,
-        const std::optional<Light<N, T, Color>>& /*light_vertex*/)
+        const int s,
+        const int t)
 {
+        ASSERT(t >= 2);
+        ASSERT(s >= 0);
+
+        if (s + t == 2)
+        {
+                return 1;
+        }
+
         return 1;
 }
 }

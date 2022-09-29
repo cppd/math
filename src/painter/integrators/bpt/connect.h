@@ -190,7 +190,7 @@ std::optional<Color> connect(
         ASSERT(t >= 2);
 
         std::optional<Color> color;
-        std::optional<Light<N, T, Color>> vertex;
+        const std::vector<Vertex<N, T, Color>>* connected_light_path = &light_path;
 
         if (s == 0)
         {
@@ -213,7 +213,10 @@ std::optional<Color> connect(
                 if (connection)
                 {
                         color = std::move(connection->color);
-                        vertex = std::move(connection->light_vertex);
+                        thread_local std::vector<Vertex<N, T, Color>> path;
+                        path.clear();
+                        path.push_back(std::move(connection->light_vertex));
+                        connected_light_path = &path;
                 }
         }
         else
@@ -228,7 +231,7 @@ std::optional<Color> connect(
                 return {};
         }
 
-        *color *= mis_weight(light_path, camera_path, s, t, vertex);
+        *color *= mis_weight(*connected_light_path, camera_path, s, t);
 
         return color;
 }
