@@ -112,6 +112,16 @@ public:
         {
                 return !surface_.is_specular();
         }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return pdf_forward_;
+        }
+
+        [[nodiscard]] T pdf_reversed() const
+        {
+                return pdf_forward_;
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -160,6 +170,16 @@ public:
         {
                 return false;
         }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return pdf_forward_;
+        }
+
+        [[nodiscard]] T pdf_reversed() const
+        {
+                return pdf_forward_;
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -167,7 +187,7 @@ class Light final
 {
         template <typename Next>
         [[nodiscard]] static T compute_pdf_spatial(
-                const LightDistribution<N, T, Color>& distribution,
+                const T light_distribution_pdf,
                 const Next& next,
                 const LightSource<N, T, Color>* const light,
                 const std::optional<Vector<N, T>>& pos,
@@ -184,8 +204,7 @@ class Light final
                         return next_dir / next_distance;
                 }();
                 const T pdf_pos = light->leave_pdf_pos(l);
-                const T distribution_pdf = distribution.pdf(light);
-                return pdf_pos * distribution_pdf;
+                return pdf_pos * light_distribution_pdf;
         }
 
         const LightSource<N, T, Color>* light_;
@@ -193,11 +212,13 @@ class Light final
         Vector<N, T> dir_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
+        T light_distribution_pdf_;
         T pdf_forward_;
         T pdf_reversed_ = 0;
 
 public:
         Light(const LightSource<N, T, Color>* const light,
+              const LightDistribution<N, T, Color>& distribution,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
@@ -208,24 +229,26 @@ public:
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
+                  light_distribution_pdf_(distribution.pdf(light)),
                   pdf_forward_(pdf_forward)
         {
         }
 
         template <typename Next>
         Light(const LightSource<N, T, Color>* const light,
+              const LightDistribution<N, T, Color>& distribution,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
-              const LightDistribution<N, T, Color>& distribution,
               const Next& next)
                 : light_(light),
                   pos_(pos),
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(compute_pdf_spatial(distribution, next, light_, pos_, dir_))
+                  light_distribution_pdf_(distribution.pdf(light)),
+                  pdf_forward_(compute_pdf_spatial(light_distribution_pdf_, next, light_, pos_, dir_))
         {
         }
 
@@ -287,6 +310,16 @@ public:
         [[nodiscard]] bool is_connectible() const
         {
                 return !light_->is_delta();
+        }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return pdf_forward_;
+        }
+
+        [[nodiscard]] T pdf_reversed() const
+        {
+                return pdf_forward_;
         }
 };
 
