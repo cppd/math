@@ -113,14 +113,13 @@ public:
                 return !surface_.is_specular();
         }
 
-        [[nodiscard]] T pdf_forward() const
+        [[nodiscard]] T pdf_reversed_over_forward() const
         {
-                return pdf_forward_;
-        }
-
-        [[nodiscard]] T pdf_reversed() const
-        {
-                return pdf_forward_;
+                const auto map = [](const T v)
+                {
+                        return (v != 0) ? v : 1;
+                };
+                return map(pdf_reversed_) / map(pdf_forward_);
         }
 };
 
@@ -171,14 +170,13 @@ public:
                 return false;
         }
 
-        [[nodiscard]] T pdf_forward() const
+        [[nodiscard]] T pdf_reversed_over_forward() const
         {
-                return pdf_forward_;
-        }
-
-        [[nodiscard]] T pdf_reversed() const
-        {
-                return pdf_forward_;
+                const auto map = [](const T v)
+                {
+                        return (v != 0) ? v : 1;
+                };
+                return map(pdf_reversed_) / map(pdf_forward_);
         }
 };
 
@@ -312,29 +310,61 @@ public:
                 return !light_->is_delta();
         }
 
-        [[nodiscard]] T pdf_forward() const
+        [[nodiscard]] T pdf_reversed_over_forward() const
         {
-                return pdf_forward_;
-        }
-
-        [[nodiscard]] T pdf_reversed() const
-        {
-                return pdf_forward_;
+                const auto map = [](const T v)
+                {
+                        return (v != 0) ? v : 1;
+                };
+                return map(pdf_reversed_) / map(pdf_forward_);
         }
 };
 
 template <std::size_t N, typename T, typename Color>
 class InfiniteLight final
 {
+        static T compute_angle_pdf_reversed(
+                const Scene<N, T, Color>& scene,
+                LightDistribution<N, T, Color>& light_distribution,
+                const Ray<N, T>& ray_to_light)
+        {
+                T res = 0;
+                T sum = 0;
+                for (const LightSource<N, T, Color>* const light : scene.light_sources())
+                {
+                        if (!light->is_infinite_area())
+                        {
+                                continue;
+                        }
+                        const LightSourceArriveInfo<T, Color> info =
+                                light->arrive_info(ray_to_light.org(), ray_to_light.dir());
+                        const T distribution_pdf = light_distribution.pdf(light);
+                        res += info.pdf * distribution_pdf;
+                        sum += distribution_pdf;
+                }
+                if (sum > 0)
+                {
+                        res /= sum;
+                }
+                return 0;
+        }
+
         Ray<N, T> ray_to_light_;
         Color beta_;
         T pdf_forward_;
+        T pdf_reversed_;
 
 public:
-        InfiniteLight(const Ray<N, T>& ray_to_light, const Color& beta, const T pdf_forward)
+        InfiniteLight(
+                const Scene<N, T, Color>& scene,
+                LightDistribution<N, T, Color>& light_distribution,
+                const Ray<N, T>& ray_to_light,
+                const Color& beta,
+                const T angle_pdf_forward)
                 : ray_to_light_(ray_to_light),
                   beta_(beta),
-                  pdf_forward_(pdf_forward)
+                  pdf_forward_(angle_pdf_forward),
+                  pdf_reversed_(compute_angle_pdf_reversed(scene, light_distribution, ray_to_light))
         {
         }
 
@@ -346,6 +376,15 @@ public:
         [[nodiscard]] const Ray<N, T>& ray_to_light() const
         {
                 return ray_to_light_;
+        }
+
+        [[nodiscard]] T pdf_reversed_over_forward() const
+        {
+                const auto map = [](const T v)
+                {
+                        return (v != 0) ? v : 1;
+                };
+                return map(pdf_reversed_) / map(pdf_forward_);
         }
 };
 
