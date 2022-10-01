@@ -323,48 +323,24 @@ public:
 template <std::size_t N, typename T, typename Color>
 class InfiniteLight final
 {
-        static T compute_angle_pdf_reversed(
-                const Scene<N, T, Color>& scene,
-                LightDistribution<N, T, Color>& light_distribution,
-                const Ray<N, T>& ray_to_light)
-        {
-                T res = 0;
-                T sum = 0;
-                for (const LightSource<N, T, Color>* const light : scene.light_sources())
-                {
-                        if (!light->is_infinite_area())
-                        {
-                                continue;
-                        }
-                        const LightSourceArriveInfo<T, Color> info =
-                                light->arrive_info(ray_to_light.org(), ray_to_light.dir());
-                        const T distribution_pdf = light_distribution.pdf(light);
-                        res += info.pdf * distribution_pdf;
-                        sum += distribution_pdf;
-                }
-                if (sum > 0)
-                {
-                        res /= sum;
-                }
-                return 0;
-        }
-
+        const Scene<N, T, Color>* scene_;
+        LightDistribution<N, T, Color>* light_distribution_;
         Ray<N, T> ray_to_light_;
         Color beta_;
-        T pdf_forward_;
-        T pdf_reversed_;
+        T angle_pdf_forward_;
 
 public:
         InfiniteLight(
-                const Scene<N, T, Color>& scene,
-                LightDistribution<N, T, Color>& light_distribution,
+                const Scene<N, T, Color>* const scene,
+                LightDistribution<N, T, Color>* const light_distribution,
                 const Ray<N, T>& ray_to_light,
                 const Color& beta,
                 const T angle_pdf_forward)
-                : ray_to_light_(ray_to_light),
+                : scene_(scene),
+                  light_distribution_(light_distribution),
+                  ray_to_light_(ray_to_light),
                   beta_(beta),
-                  pdf_forward_(angle_pdf_forward),
-                  pdf_reversed_(compute_angle_pdf_reversed(scene, light_distribution, ray_to_light))
+                  angle_pdf_forward_(angle_pdf_forward)
         {
         }
 
@@ -378,13 +354,56 @@ public:
                 return ray_to_light_;
         }
 
-        [[nodiscard]] T pdf_reversed_over_forward() const
+        [[nodiscard]] T angle_pdf_forward() const
         {
-                const auto map = [](const T v)
+                return angle_pdf_forward_;
+        }
+
+        [[nodiscard]] T angle_pdf_reversed(const Vector<N, T>& pos) const
+        {
+                T res = 0;
+                T sum = 0;
+                for (const LightSource<N, T, Color>* const light : scene_->light_sources())
                 {
-                        return (v != 0) ? v : 1;
-                };
-                return map(pdf_reversed_) / map(pdf_forward_);
+                        if (!light->is_infinite_area())
+                        {
+                                continue;
+                        }
+                        const LightSourceArriveInfo<T, Color> info = light->arrive_info(pos, ray_to_light_.dir());
+                        const T distribution_pdf = light_distribution_->pdf(light);
+                        res += info.pdf * distribution_pdf;
+                        sum += distribution_pdf;
+                }
+                if (sum > 0)
+                {
+                        res /= sum;
+                }
+                return 0;
+        }
+
+        template <typename Next>
+        [[nodiscard]] T compute_pdf(const Next& next) const
+        {
+                const Vector<N, T> dir = -ray_to_light_.dir();
+                T res = 0;
+                T sum = 0;
+                for (const LightSource<N, T, Color>* const light : scene_->light_sources())
+                {
+                        if (!light->is_infinite_area())
+                        {
+                                continue;
+                        }
+                        const T pdf = light->leave_pdf_pos(dir);
+                        const T distribution_pdf = light_distribution_->pdf(light);
+                        res += pdf * distribution_pdf;
+                        sum += distribution_pdf;
+                }
+                if (sum > 0)
+                {
+                        res /= sum;
+                        return pos_pdf_to_area_pdf(res, dir, next.normal());
+                }
+                return 0;
         }
 };
 

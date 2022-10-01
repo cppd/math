@@ -78,8 +78,8 @@ void walk(
                         if (camera_path)
                         {
                                 path->emplace_back(
-                                        std::in_place_type<InfiniteLight<N, T, Color>>, scene, light_distribution, ray,
-                                        beta, pdf_forward);
+                                        std::in_place_type<InfiniteLight<N, T, Color>>, &scene, &light_distribution,
+                                        ray, beta, pdf_forward);
                         }
                         return;
                 }
