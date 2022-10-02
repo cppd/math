@@ -96,6 +96,11 @@ public:
                         solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
         }
 
+        void set_reversed_area_pdf(const T reversed_area_pdf)
+        {
+                pdf_reversed_ = reversed_area_pdf;
+        }
+
         [[nodiscard]] T pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
         {
                 return surface_.pdf(normals_.shading, v, l);
@@ -163,6 +168,11 @@ public:
         void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
         {
                 pdf_reversed_ = solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
+        }
+
+        void set_reversed_area_pdf(const T reversed_area_pdf)
+        {
+                pdf_reversed_ = reversed_area_pdf;
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -323,11 +333,34 @@ public:
 template <std::size_t N, typename T, typename Color>
 class InfiniteLight final
 {
+        [[nodiscard]] T angle_pdf_reversed(const Vector<N, T>& prev_pos) const
+        {
+                T res = 0;
+                T sum = 0;
+                for (const LightSource<N, T, Color>* const light : scene_->light_sources())
+                {
+                        if (!light->is_infinite_area())
+                        {
+                                continue;
+                        }
+                        const LightSourceArriveInfo<T, Color> info = light->arrive_info(prev_pos, ray_to_light_.dir());
+                        const T distribution_pdf = light_distribution_->pdf(light);
+                        res += info.pdf * distribution_pdf;
+                        sum += distribution_pdf;
+                }
+                if (sum > 0)
+                {
+                        res /= sum;
+                }
+                return 0;
+        }
+
         const Scene<N, T, Color>* scene_;
         LightDistribution<N, T, Color>* light_distribution_;
         Ray<N, T> ray_to_light_;
         Color beta_;
         T angle_pdf_forward_;
+        T angle_pdf_reversed_;
 
 public:
         InfiniteLight(
@@ -335,12 +368,14 @@ public:
                 LightDistribution<N, T, Color>* const light_distribution,
                 const Ray<N, T>& ray_to_light,
                 const Color& beta,
-                const T angle_pdf_forward)
+                const T angle_pdf_forward,
+                const Vector<N, T>& prev_pos)
                 : scene_(scene),
                   light_distribution_(light_distribution),
                   ray_to_light_(ray_to_light),
                   beta_(beta),
-                  angle_pdf_forward_(angle_pdf_forward)
+                  angle_pdf_forward_(angle_pdf_forward),
+                  angle_pdf_reversed_(angle_pdf_reversed(prev_pos))
         {
         }
 
@@ -352,33 +387,6 @@ public:
         [[nodiscard]] const Ray<N, T>& ray_to_light() const
         {
                 return ray_to_light_;
-        }
-
-        [[nodiscard]] T angle_pdf_forward() const
-        {
-                return angle_pdf_forward_;
-        }
-
-        [[nodiscard]] T angle_pdf_reversed(const Vector<N, T>& pos) const
-        {
-                T res = 0;
-                T sum = 0;
-                for (const LightSource<N, T, Color>* const light : scene_->light_sources())
-                {
-                        if (!light->is_infinite_area())
-                        {
-                                continue;
-                        }
-                        const LightSourceArriveInfo<T, Color> info = light->arrive_info(pos, ray_to_light_.dir());
-                        const T distribution_pdf = light_distribution_->pdf(light);
-                        res += info.pdf * distribution_pdf;
-                        sum += distribution_pdf;
-                }
-                if (sum > 0)
-                {
-                        res /= sum;
-                }
-                return 0;
         }
 
         template <typename Next>
@@ -404,6 +412,15 @@ public:
                         return pos_pdf_to_area_pdf(res, dir, next.normal());
                 }
                 return 0;
+        }
+
+        [[nodiscard]] T pdf_reversed_over_forward() const
+        {
+                const auto map = [](const T v)
+                {
+                        return (v != 0) ? v : 1;
+                };
+                return map(angle_pdf_reversed_) / map(angle_pdf_forward_);
         }
 };
 

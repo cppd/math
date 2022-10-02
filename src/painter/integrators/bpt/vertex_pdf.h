@@ -96,9 +96,9 @@ template <std::size_t N, typename T, typename Color>
                         {
                                 error_fatal("Previous vertex is an infinite light");
                         },
-                        [&](const Camera<N, T, Color>&) -> Vector<N, T>
+                        [&](const Camera<N, T, Color>& v_prev) -> Vector<N, T>
                         {
-                                error_fatal("Previous vertex is a camera");
+                                return (v_prev.pos() - surface.pos()).normalized();
                         },
                         [&](const Surface<N, T, Color>& v_prev) -> Vector<N, T>
                         {
@@ -125,10 +125,9 @@ template <std::size_t N, typename T, typename Color>
 
         return std::visit(
                 Visitors{
-                        [&](const InfiniteLight<N, T, Color>& v_next) -> T
+                        [&](const InfiniteLight<N, T, Color>&) -> T
                         {
-                                const Vector<N, T> l = v_next.ray_to_light().dir();
-                                return surface.pdf(v, l);
+                                error_fatal("Next vertex is an infinite light");
                         },
                         [&](const Camera<N, T, Color>&) -> T
                         {

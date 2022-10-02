@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/pdf.h>
 
@@ -69,10 +70,21 @@ template <std::size_t N, typename T, typename Normal>
         return sampling::solid_angle_pdf_to_area_pdf<N, T>(angle_pdf, cosine, next_distance);
 }
 
-template <std::size_t N, typename T>
-[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const Vector<N, T>& dir, const Vector<N, T>& next_normal)
+template <std::size_t N, typename T, typename Normal>
+[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const Vector<N, T>& dir, const Normal& next_normal)
 {
-        const T cosine = std::abs(dot(dir, next_normal));
+        ASSERT(dir.is_unit());
+        const T cosine = [&]
+        {
+                if constexpr (requires { dot(dir, *next_normal); })
+                {
+                        return next_normal ? std::abs(dot(dir, *next_normal)) : 1;
+                }
+                else
+                {
+                        return std::abs(dot(dir, next_normal));
+                }
+        }();
         return pos_pdf * cosine;
 }
 }

@@ -37,16 +37,16 @@ template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N, T, Color>& camera_path_vertex)
 {
         ASSERT((std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path_vertex)));
-        const auto& camera_vertex = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
+        const auto& infinite_area_light = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
 
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
                 if (light->is_infinite_area())
                 {
-                        if (const auto c = light->leave_radiance(camera_vertex.ray_to_light(), {}))
+                        if (const auto c = light->leave_radiance(infinite_area_light.ray_to_light(), {}))
                         {
-                                com::add_optional(&res, camera_vertex.beta() * (*c));
+                                com::add_optional(&res, infinite_area_light.beta() * (*c));
                         }
                 }
         }
