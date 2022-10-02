@@ -78,45 +78,9 @@ void walk(
                 {
                         if (camera_path)
                         {
-                                const Vector<N, T> prev_pos = [&]
-                                {
-                                        return std::visit(
-                                                Visitors{
-                                                        [](const Surface<N, T, Color>& v_prev) -> Vector<N, T>
-                                                        {
-                                                                return v_prev.pos();
-                                                        },
-                                                        [](const Camera<N, T, Color>& v_prev) -> Vector<N, T>
-                                                        {
-                                                                return v_prev.pos();
-                                                        },
-                                                        [](const auto&) -> Vector<N, T>
-                                                        {
-                                                                error_fatal(
-                                                                        "Previous vertex is not a surface or a camera");
-                                                        }},
-                                                path->back());
-                                }();
-
-                                InfiniteLight<N, T, Color> light(
-                                        &scene, &light_distribution, ray, beta, pdf_forward, prev_pos);
-
-                                std::visit(
-                                        Visitors{
-                                                [&](Surface<N, T, Color>& v_prev)
-                                                {
-                                                        v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
-                                                },
-                                                [&](Camera<N, T, Color>& v_prev)
-                                                {
-                                                        v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
-                                                },
-                                                [](const auto&)
-                                                {
-                                                        error_fatal("Previous vertex is not a surface or a camera");
-                                                }},
-                                        path->back());
-
+                                InfiniteLight<N, T, Color> light(&scene, &light_distribution, ray, beta, pdf_forward);
+                                Vertex<N, T, Color>& prev = *(path->end() - 2);
+                                set_reversed_pdf(&prev, std::as_const(light));
                                 path->push_back(std::move(light));
                         }
                         return;

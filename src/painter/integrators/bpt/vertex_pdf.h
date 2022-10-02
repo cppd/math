@@ -64,6 +64,26 @@ void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>
 }
 
 template <std::size_t N, typename T, typename Color>
+void set_reversed_pdf(Vertex<N, T, Color>* const prev, const InfiniteLight<N, T, Color>& light)
+{
+        std::visit(
+                Visitors{
+                        [&](Surface<N, T, Color>& v_prev)
+                        {
+                                v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
+                        },
+                        [&](Camera<N, T, Color>& v_prev)
+                        {
+                                v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
+                        },
+                        [](const auto&)
+                        {
+                                error_fatal("Previous vertex is not a surface or a camera");
+                        }},
+                *prev);
+}
+
+template <std::size_t N, typename T, typename Color>
 [[nodiscard]] T compute_pdf(const Vertex<N, T, Color>& vertex, const Vertex<N, T, Color>& next)
 {
         return std::visit(

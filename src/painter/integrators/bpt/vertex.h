@@ -368,14 +368,13 @@ public:
                 LightDistribution<N, T, Color>* const light_distribution,
                 const Ray<N, T>& ray_to_light,
                 const Color& beta,
-                const T angle_pdf_forward,
-                const Vector<N, T>& prev_pos)
+                const T angle_pdf_forward)
                 : scene_(scene),
                   light_distribution_(light_distribution),
                   ray_to_light_(ray_to_light),
                   beta_(beta),
                   angle_pdf_forward_(angle_pdf_forward),
-                  angle_pdf_reversed_(angle_pdf_reversed(prev_pos))
+                  angle_pdf_reversed_(angle_pdf_reversed(ray_to_light.org()))
         {
         }
 
