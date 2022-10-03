@@ -78,35 +78,34 @@ void walk(
                 {
                         if (camera_path)
                         {
-                                InfiniteLight<N, T, Color> light(&scene, &light_distribution, ray, beta, pdf_forward);
-                                Vertex<N, T, Color>& prev = *(path->end() - 2);
-                                set_reversed_pdf(&prev, std::as_const(light));
-                                path->push_back(std::move(light));
+                                InfiniteLight<N, T, Color> next(&scene, &light_distribution, ray, beta, pdf_forward);
+                                Vertex<N, T, Color>& prev = path->back();
+                                set_reversed_pdf(&prev, std::as_const(next));
+                                path->push_back(std::move(next));
                         }
                         return;
                 }
 
-                Vertex<N, T, Color>& next = path->emplace_back(
-                        std::in_place_type<Surface<N, T, Color>>, surface, normals, beta, -ray.dir());
-
-                Vertex<N, T, Color>& prev = *(path->end() - 2);
-
-                set_forward_pdf(prev, &next, pdf_forward);
-
                 const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
-                        break;
+                        return;
                 }
 
-                set_reversed_pdf(&prev, next, sample->pdf_reversed);
+                {
+                        Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                        Vertex<N, T, Color>& prev = path->back();
+                        set_forward_pdf(prev, &next, pdf_forward);
+                        set_reversed_pdf(&prev, std::as_const(next), sample->pdf_reversed);
+                        path->push_back(std::move(next));
+                }
 
                 pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
 
                 if (beta.is_black())
                 {
-                        break;
+                        return;
                 }
 
                 ray = Ray<N, T>(surface.point(), sample->l);

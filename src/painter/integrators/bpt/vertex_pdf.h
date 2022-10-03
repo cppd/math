@@ -29,7 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::bpt
 {
 template <std::size_t N, typename T, typename Color>
-void set_forward_pdf(const Vertex<N, T, Color>& prev, Vertex<N, T, Color>* const next, const T angle_pdf)
+void set_forward_pdf(
+        const Vertex<N, T, Color>& prev_vertex,
+        Surface<N, T, Color>* const next_surface,
+        const T angle_pdf)
 {
         std::visit(
                 Visitors{
@@ -37,17 +40,18 @@ void set_forward_pdf(const Vertex<N, T, Color>& prev, Vertex<N, T, Color>* const
                         {
                                 error_fatal("Previous vertex is an infinite light");
                         },
-                        [&](const auto& v_prev)
+                        [&](const auto& prev)
                         {
-                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(*next)));
-                                auto& surface = std::get<Surface<N, T, Color>>(*next);
-                                surface.set_forward_pdf(v_prev.area_pdf(angle_pdf, surface));
+                                next_surface->set_forward_pdf(prev.area_pdf(angle_pdf, *next_surface));
                         }},
-                prev);
+                prev_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
-void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>& next, const T pdf_reversed)
+void set_reversed_pdf(
+        Vertex<N, T, Color>* const prev_vertex,
+        const Surface<N, T, Color>& next_surface,
+        const T pdf_reversed)
 {
         std::visit(
                 Visitors{
@@ -55,32 +59,31 @@ void set_reversed_pdf(Vertex<N, T, Color>* const prev, const Vertex<N, T, Color>
                         {
                                 error_fatal("Previous vertex is an infinite light");
                         },
-                        [&](auto& v_prev)
+                        [&](auto& prev)
                         {
-                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
-                                v_prev.set_reversed_pdf(std::get<Surface<N, T, Color>>(next), pdf_reversed);
+                                prev.set_reversed_pdf(next_surface, pdf_reversed);
                         }},
-                *prev);
+                *prev_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
-void set_reversed_pdf(Vertex<N, T, Color>* const prev, const InfiniteLight<N, T, Color>& light)
+void set_reversed_pdf(Vertex<N, T, Color>* const prev_vertex, const InfiniteLight<N, T, Color>& next_light)
 {
         std::visit(
                 Visitors{
-                        [&](Surface<N, T, Color>& v_prev)
+                        [&](Surface<N, T, Color>& prev)
                         {
-                                v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
+                                prev.set_reversed_area_pdf(next_light.compute_pdf(prev));
                         },
-                        [&](Camera<N, T, Color>& v_prev)
+                        [&](Camera<N, T, Color>& prev)
                         {
-                                v_prev.set_reversed_area_pdf(light.compute_pdf(v_prev));
+                                prev.set_reversed_area_pdf(next_light.compute_pdf(prev));
                         },
                         [](const auto&)
                         {
                                 error_fatal("Previous vertex is not a surface or a camera");
                         }},
-                *prev);
+                *prev_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
