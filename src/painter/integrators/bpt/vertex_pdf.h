@@ -73,11 +73,11 @@ void set_reversed_pdf(Vertex<N, T, Color>* const prev_vertex, const InfiniteLigh
                 Visitors{
                         [&](Surface<N, T, Color>& prev)
                         {
-                                prev.set_reversed_area_pdf(next_light.compute_pdf(prev));
+                                prev.set_reversed_area_pdf(next_light.area_pdf(prev.normal()));
                         },
                         [&](Camera<N, T, Color>& prev)
                         {
-                                prev.set_reversed_area_pdf(next_light.compute_pdf(prev));
+                                prev.set_reversed_area_pdf(next_light.area_pdf(prev.normal()));
                         },
                         [](const auto&)
                         {
@@ -94,7 +94,8 @@ template <std::size_t N, typename T, typename Color>
                         [&](const Light<N, T, Color>& l) -> T
                         {
                                 ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
-                                return l.compute_pdf(std::get<Surface<N, T, Color>>(next));
+                                const auto& surface = std::get<Surface<N, T, Color>>(next);
+                                return l.area_pdf(surface.pos(), surface.normal());
                         },
                         [&](const auto&) -> T
                         {

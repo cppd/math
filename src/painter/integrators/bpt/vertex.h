@@ -192,10 +192,9 @@ public:
 template <std::size_t N, typename T, typename Color>
 class Light final
 {
-        template <typename Next>
         [[nodiscard]] static T compute_pdf_spatial(
                 const T light_distribution_pdf,
-                const Next& next,
+                const Surface<N, T, Color>& next,
                 const LightSource<N, T, Color>* const light,
                 const std::optional<Vector<N, T>>& pos,
                 const Vector<N, T>& dir)
@@ -241,14 +240,13 @@ public:
         {
         }
 
-        template <typename Next>
         Light(const LightSource<N, T, Color>* const light,
               const LightDistribution<N, T, Color>& distribution,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
-              const Next& next)
+              const Surface<N, T, Color>& next)
                 : light_(light),
                   pos_(pos),
                   dir_(dir.normalized()),
@@ -289,6 +287,19 @@ public:
                 return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
         }
 
+        [[nodiscard]] T area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
+        {
+                if (!pos_)
+                {
+                        return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
+                }
+                const Vector<N, T> next_dir = (next_pos - *pos_);
+                const T next_distance = next_dir.norm();
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf = light_->leave_pdf_dir(l);
+                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
+        }
+
         void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
         {
                 if (!pos_)
@@ -297,20 +308,6 @@ public:
                         return;
                 }
                 pdf_reversed_ = next.area_pdf(angle_pdf, *pos_, normal_);
-        }
-
-        template <typename Next>
-        [[nodiscard]] T compute_pdf(const Next& next) const
-        {
-                if (!pos_)
-                {
-                        return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
-                }
-                const Vector<N, T> next_dir = (next.pos() - *pos_);
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = light_->leave_pdf_dir(l);
-                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next.normal());
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -386,8 +383,8 @@ public:
                 return ray_to_light_;
         }
 
-        template <typename Next>
-        [[nodiscard]] T compute_pdf(const Next& next) const
+        template <typename Normal>
+        [[nodiscard]] T area_pdf(const Normal& next_normal) const
         {
                 const Vector<N, T> dir = -ray_to_light_.dir();
                 T res = 0;
@@ -406,7 +403,7 @@ public:
                 if (sum > 0)
                 {
                         res /= sum;
-                        return pos_pdf_to_area_pdf(res, dir, next.normal());
+                        return pos_pdf_to_area_pdf(res, dir, next_normal);
                 }
                 return 0;
         }
