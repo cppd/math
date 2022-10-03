@@ -42,7 +42,7 @@ void set_forward_pdf(
                         },
                         [&](const auto& prev)
                         {
-                                next_surface->set_forward_pdf(prev.area_pdf(angle_pdf, *next_surface));
+                                next_surface->set_forward_pdf(prev, angle_pdf);
                         }},
                 prev_vertex);
 }

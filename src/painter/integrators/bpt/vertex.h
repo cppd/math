@@ -79,26 +79,26 @@ public:
                 return beta_;
         }
 
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
+        template <typename Normal>
+        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Normal& next_normal) const
         {
-                return solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next.pos(), next.normal());
+                return solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next_pos, next_normal);
         }
 
-        void set_forward_pdf(const T forward_pdf)
+        template <typename Prev>
+        void set_forward_pdf(const Prev& prev, const T angle_pdf)
         {
-                pdf_forward_ = forward_pdf;
+                pdf_forward_ = prev.area_pdf(angle_pdf, surface_.point(), normals_.shading);
         }
 
-        template <typename Next>
-        void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
+        void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
         {
-                pdf_reversed_ =
-                        solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, surface_.point(), normals_.shading);
+                pdf_reversed_ = next.area_pdf(angle_pdf, surface_.point(), normals_.shading);
         }
 
-        void set_reversed_area_pdf(const T reversed_area_pdf)
+        void set_reversed_area_pdf(const T pdf)
         {
-                pdf_reversed_ = reversed_area_pdf;
+                pdf_reversed_ = pdf;
         }
 
         [[nodiscard]] T pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
@@ -159,20 +159,19 @@ public:
                 return beta_;
         }
 
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
+        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
         {
-                return solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next.pos(), next.normal());
+                return solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next_pos, next_normal);
         }
 
-        template <typename Next>
-        void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
+        void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
         {
-                pdf_reversed_ = solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, pos_, normal_);
+                pdf_reversed_ = next.area_pdf(angle_pdf, pos_, normal_);
         }
 
-        void set_reversed_area_pdf(const T reversed_area_pdf)
+        void set_reversed_area_pdf(const T pdf)
         {
-                pdf_reversed_ = reversed_area_pdf;
+                pdf_reversed_ = pdf;
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -281,24 +280,23 @@ public:
                 return beta_;
         }
 
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Surface<N, T, Color>& next) const
+        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
         {
                 if (pos_)
                 {
-                        return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next.pos(), next.normal());
+                        return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next_pos, next_normal);
                 }
-                return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next.normal());
+                return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
         }
 
-        template <typename Next>
-        void set_reversed_pdf(const Next& next, const T reversed_angle_pdf)
+        void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
         {
                 if (!pos_)
                 {
                         pdf_reversed_ = 0;
                         return;
                 }
-                pdf_reversed_ = solid_angle_pdf_to_area_pdf(next.pos(), reversed_angle_pdf, *pos_, normal_);
+                pdf_reversed_ = next.area_pdf(angle_pdf, *pos_, normal_);
         }
 
         template <typename Next>
