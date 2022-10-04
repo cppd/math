@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "probability_density.h"
 #include "vertex.h"
 
 #include <src/com/error.h>
@@ -36,13 +35,21 @@ void set_forward_pdf(
 {
         std::visit(
                 Visitors{
-                        [&](const InfiniteLight<N, T, Color>&)
-                        {
-                                error_fatal("Previous vertex is an infinite light");
-                        },
-                        [&](const auto& prev)
+                        [&](const Surface<N, T, Color>& prev)
                         {
                                 next_surface->set_forward_pdf(prev, angle_pdf);
+                        },
+                        [&](const Camera<N, T, Color>& prev)
+                        {
+                                next_surface->set_forward_pdf(prev, angle_pdf);
+                        },
+                        [&](const Light<N, T, Color>& prev)
+                        {
+                                next_surface->set_forward_pdf(prev, angle_pdf);
+                        },
+                        [](const InfiniteLight<N, T, Color>&)
+                        {
+                                error_fatal("Previous vertex is an infinite light");
                         }},
                 prev_vertex);
 }
@@ -55,13 +62,21 @@ void set_reversed_pdf(
 {
         std::visit(
                 Visitors{
-                        [&](InfiniteLight<N, T, Color>&)
-                        {
-                                error_fatal("Previous vertex is an infinite light");
-                        },
-                        [&](auto& prev)
+                        [&](Surface<N, T, Color>& prev)
                         {
                                 prev.set_reversed_pdf(next_surface, pdf_reversed);
+                        },
+                        [&](Camera<N, T, Color>& prev)
+                        {
+                                prev.set_reversed_pdf(next_surface, pdf_reversed);
+                        },
+                        [&](Light<N, T, Color>& prev)
+                        {
+                                prev.set_reversed_pdf(next_surface, pdf_reversed);
+                        },
+                        [](const InfiniteLight<N, T, Color>&)
+                        {
+                                error_fatal("Previous vertex is an infinite light");
                         }},
                 *prev_vertex);
 }
@@ -79,96 +94,85 @@ void set_reversed_pdf(Vertex<N, T, Color>* const prev_vertex, const InfiniteLigh
                         {
                                 prev.set_reversed_area_pdf(next_light.area_pdf(prev.normal()));
                         },
-                        [](const auto&)
+                        [](const Light<N, T, Color>&)
                         {
-                                error_fatal("Previous vertex is not a surface or a camera");
+                                error_fatal("Previous vertex is a light");
+                        },
+                        [](const InfiniteLight<N, T, Color>&)
+                        {
+                                error_fatal("Previous vertex is an infinite light");
                         }},
                 *prev_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] T compute_pdf(const Vertex<N, T, Color>& vertex, const Vertex<N, T, Color>& next)
+[[nodiscard]] T compute_pdf(const Vertex<N, T, Color>& vertex, const Vertex<N, T, Color>& next_vertex)
 {
-        return std::visit(
-                Visitors{
-                        [&](const Light<N, T, Color>& l) -> T
-                        {
-                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(next)));
-                                const auto& surface = std::get<Surface<N, T, Color>>(next);
-                                return l.area_pdf(surface.pos(), surface.normal());
-                        },
-                        [&](const auto&) -> T
-                        {
-                                error_fatal("Vertex is not a light");
-                        },
-                },
-                vertex);
+        ASSERT((std::holds_alternative<Light<N, T, Color>>(vertex)));
+        const auto& light = std::get<Light<N, T, Color>>(vertex);
+
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(next_vertex)));
+        const auto& surface = std::get<Surface<N, T, Color>>(next_vertex);
+
+        return light.area_pdf(surface.pos(), surface.normal());
 }
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] T compute_pdf(
+        const Vertex<N, T, Color>& prev_vertex,
         const Vertex<N, T, Color>& vertex,
-        const Vertex<N, T, Color>& prev,
-        const Vertex<N, T, Color>& next)
+        const Vertex<N, T, Color>& next_vertex)
 {
         ASSERT((std::holds_alternative<Surface<N, T, Color>>(vertex)));
         const auto& surface = std::get<Surface<N, T, Color>>(vertex);
 
-        const Vector<N, T> v = std::visit(
+        const Vector<N, T> to_prev = std::visit(
                 Visitors{
-                        [&](const InfiniteLight<N, T, Color>&) -> Vector<N, T>
+                        [&](const Surface<N, T, Color>& prev) -> Vector<N, T>
+                        {
+                                return (prev.pos() - surface.pos()).normalized();
+                        },
+                        [&](const Camera<N, T, Color>& prev) -> Vector<N, T>
+                        {
+                                return (prev.pos() - surface.pos()).normalized();
+                        },
+                        [&](const Light<N, T, Color>& prev) -> Vector<N, T>
+                        {
+                                if (prev.pos())
+                                {
+                                        return (*prev.pos() - surface.pos()).normalized();
+                                }
+                                return -prev.dir();
+                        },
+                        [](const InfiniteLight<N, T, Color>&) -> Vector<N, T>
                         {
                                 error_fatal("Previous vertex is an infinite light");
-                        },
-                        [&](const Camera<N, T, Color>& v_prev) -> Vector<N, T>
-                        {
-                                return (v_prev.pos() - surface.pos()).normalized();
-                        },
-                        [&](const Surface<N, T, Color>& v_prev) -> Vector<N, T>
-                        {
-                                return (v_prev.pos() - surface.pos()).normalized();
-                        },
-                        [&](const Light<N, T, Color>& v_prev) -> Vector<N, T>
-                        {
-                                if (v_prev.pos())
-                                {
-                                        return (*v_prev.pos() - surface.pos()).normalized();
-                                }
-                                return -v_prev.dir();
                         }},
-                prev);
-
-        const auto compute_pos_pdf = [&](const auto& next_pos, const auto& next_normal)
-        {
-                const Vector<N, T> next_dir = (next_pos - surface.pos());
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = surface.pdf(v, l);
-                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
-        };
+                prev_vertex);
 
         return std::visit(
                 Visitors{
-                        [&](const InfiniteLight<N, T, Color>&) -> T
+
+                        [&](const Surface<N, T, Color>& next) -> T
                         {
-                                error_fatal("Next vertex is an infinite light");
+                                return surface.area_pdf(to_prev, next.pos(), next.normal());
                         },
-                        [&](const Camera<N, T, Color>&) -> T
+                        [&](const Camera<N, T, Color>& next) -> T
                         {
-                                error_fatal("Next vertex is a camera");
+                                return surface.area_pdf(to_prev, next.pos(), next.normal());
                         },
-                        [&](const Surface<N, T, Color>& v_next) -> T
+                        [&](const Light<N, T, Color>& next) -> T
                         {
-                                return compute_pos_pdf(v_next.pos(), v_next.normal());
-                        },
-                        [&](const Light<N, T, Color>& v_next) -> T
-                        {
-                                if (!v_next.pos())
+                                if (!next.pos())
                                 {
                                         return 0;
                                 }
-                                return compute_pos_pdf(*v_next.pos(), v_next.normal());
+                                return surface.area_pdf(to_prev, *next.pos(), next.normal());
+                        },
+                        [](const InfiniteLight<N, T, Color>&) -> T
+                        {
+                                error_fatal("Next vertex is an infinite light");
                         }},
-                next);
+                next_vertex);
 }
 }

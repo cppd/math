@@ -101,9 +101,18 @@ public:
                 pdf_reversed_ = pdf;
         }
 
-        [[nodiscard]] T pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
+        template <typename Normal>
+        [[nodiscard]] T area_pdf(
+                const Vector<N, T>& dir_to_previous,
+                const Vector<N, T>& next_pos,
+                const Normal& next_normal) const
         {
-                return surface_.pdf(normals_.shading, v, l);
+                ASSERT(dir_to_previous.is_unit());
+                const Vector<N, T> next_dir = (next_pos - surface_.point());
+                const T next_distance = next_dir.norm();
+                const Vector<N, T> l = next_dir / next_distance;
+                const T pdf = surface_.pdf(normals_.shading, dir_to_previous, l);
+                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
         }
 
         [[nodiscard]] Color brdf(const Vector<N, T>& v, const Vector<N, T>& l) const
@@ -419,5 +428,5 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-using Vertex = std::variant<Camera<N, T, Color>, InfiniteLight<N, T, Color>, Light<N, T, Color>, Surface<N, T, Color>>;
+using Vertex = std::variant<Surface<N, T, Color>, Camera<N, T, Color>, Light<N, T, Color>, InfiniteLight<N, T, Color>>;
 }
