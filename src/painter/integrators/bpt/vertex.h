@@ -417,6 +417,11 @@ public:
                 return 0;
         }
 
+        [[nodiscard]] bool is_connectible() const
+        {
+                return true;
+        }
+
         [[nodiscard]] T pdf_reversed_over_forward() const
         {
                 const auto map = [](const T v)
