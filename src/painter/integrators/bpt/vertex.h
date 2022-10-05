@@ -127,13 +127,14 @@ public:
                 return !surface_.is_specular();
         }
 
-        [[nodiscard]] T pdf_reversed_over_forward() const
+        [[nodiscard]] T pdf_reversed() const
         {
-                const auto map = [](const T v)
-                {
-                        return (v != 0) ? v : 1;
-                };
-                return map(pdf_reversed_) / map(pdf_forward_);
+                return pdf_reversed_;
+        }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return pdf_forward_;
         }
 };
 
@@ -141,10 +142,7 @@ template <std::size_t N, typename T, typename Color>
 class Camera final
 {
         Vector<N, T> pos_;
-        std::optional<Vector<N, T>> normal_;
         Color beta_;
-        T pdf_forward_ = 1;
-        T pdf_reversed_ = 0;
 
 public:
         Camera(const Vector<N, T>& pos, const Color& beta)
@@ -158,11 +156,6 @@ public:
                 return pos_;
         }
 
-        [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
-        {
-                return normal_;
-        }
-
         [[nodiscard]] const Color& beta() const
         {
                 return beta_;
@@ -173,28 +166,9 @@ public:
                 return solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next_pos, next_normal);
         }
 
-        void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
-        {
-                pdf_reversed_ = next.area_pdf(angle_pdf, pos_, normal_);
-        }
-
-        void set_reversed_area_pdf(const T pdf)
-        {
-                pdf_reversed_ = pdf;
-        }
-
         [[nodiscard]] bool is_connectible() const
         {
                 return false;
-        }
-
-        [[nodiscard]] T pdf_reversed_over_forward() const
-        {
-                const auto map = [](const T v)
-                {
-                        return (v != 0) ? v : 1;
-                };
-                return map(pdf_reversed_) / map(pdf_forward_);
         }
 };
 
@@ -324,13 +298,14 @@ public:
                 return !light_->is_delta();
         }
 
-        [[nodiscard]] T pdf_reversed_over_forward() const
+        [[nodiscard]] T pdf_reversed() const
         {
-                const auto map = [](const T v)
-                {
-                        return (v != 0) ? v : 1;
-                };
-                return map(pdf_reversed_) / map(pdf_forward_);
+                return pdf_reversed_;
+        }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return pdf_forward_;
         }
 };
 
@@ -422,13 +397,14 @@ public:
                 return true;
         }
 
-        [[nodiscard]] T pdf_reversed_over_forward() const
+        [[nodiscard]] T pdf_reversed() const
         {
-                const auto map = [](const T v)
-                {
-                        return (v != 0) ? v : 1;
-                };
-                return map(angle_pdf_reversed_) / map(angle_pdf_forward_);
+                return angle_pdf_reversed_;
+        }
+
+        [[nodiscard]] T pdf_forward() const
+        {
+                return angle_pdf_forward_;
         }
 };
 
