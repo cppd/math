@@ -136,11 +136,7 @@ template <std::size_t N, typename T, typename Color>
                         },
                         [&](const Light<N, T, Color>& prev) -> Vector<N, T>
                         {
-                                if (prev.pos())
-                                {
-                                        return (*prev.pos() - surface.pos()).normalized();
-                                }
-                                return -prev.dir();
+                                return prev.dir_to_light(surface.pos());
                         },
                         [](const InfiniteLight<N, T, Color>&) -> Vector<N, T>
                         {
@@ -153,7 +149,7 @@ template <std::size_t N, typename T, typename Color>
 
                         [&](const Surface<N, T, Color>& next) -> T
                         {
-                                return surface.area_pdf(to_prev, next.pos(), next.normal());
+                                return next.reversed_pdf(to_prev, surface);
                         },
                         [](const Camera<N, T, Color>&) -> T
                         {
@@ -161,11 +157,8 @@ template <std::size_t N, typename T, typename Color>
                         },
                         [&](const Light<N, T, Color>& next) -> T
                         {
-                                if (!next.pos())
-                                {
-                                        return 0;
-                                }
-                                return surface.area_pdf(to_prev, *next.pos(), next.normal());
+                                const Vector<N, T> to_next = next.dir_to_light(surface.pos());
+                                return next.reversed_pdf(surface, surface.angle_pdf(to_prev, to_next));
                         },
                         [](const InfiniteLight<N, T, Color>&) -> T
                         {

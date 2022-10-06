@@ -96,23 +96,26 @@ public:
                 pdf_reversed_ = next.area_pdf(angle_pdf, surface_.point(), normals_.shading);
         }
 
+        [[nodiscard]] T reversed_pdf(const Vector<N, T>& v, const Surface<N, T, Color>& next) const
+        {
+                ASSERT(v.is_unit());
+                const Vector<N, T> l_dir = (surface_.point() - next.pos());
+                const T l_distance = l_dir.norm();
+                const Vector<N, T> l = l_dir / l_distance;
+                const T pdf = next.angle_pdf(v, l);
+                return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, normals_.shading);
+        }
+
         void set_reversed_area_pdf(const T pdf)
         {
                 pdf_reversed_ = pdf;
         }
 
-        template <typename Normal>
-        [[nodiscard]] T area_pdf(
-                const Vector<N, T>& dir_to_previous,
-                const Vector<N, T>& next_pos,
-                const Normal& next_normal) const
+        [[nodiscard]] T angle_pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
         {
-                ASSERT(dir_to_previous.is_unit());
-                const Vector<N, T> next_dir = (next_pos - surface_.point());
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
-                const T pdf = surface_.pdf(normals_.shading, dir_to_previous, l);
-                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
+                ASSERT(v.is_unit());
+                ASSERT(l.is_unit());
+                return surface_.pdf(normals_.shading, v, l);
         }
 
         [[nodiscard]] Color brdf(const Vector<N, T>& v, const Vector<N, T>& l) const
@@ -245,10 +248,13 @@ public:
                 return pos_;
         }
 
-        [[nodiscard]] const Vector<N, T>& dir() const
+        [[nodiscard]] Vector<N, T> dir_to_light(const Vector<N, T>& point) const
         {
-                ASSERT(!pos_);
-                return dir_;
+                if (pos_)
+                {
+                        return (*pos_ - point).normalized();
+                }
+                return -dir_;
         }
 
         [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
@@ -276,21 +282,25 @@ public:
                 {
                         return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
                 }
-                const Vector<N, T> next_dir = (next_pos - *pos_);
-                const T next_distance = next_dir.norm();
-                const Vector<N, T> l = next_dir / next_distance;
+                const Vector<N, T> l_dir = (next_pos - *pos_);
+                const T l_distance = l_dir.norm();
+                const Vector<N, T> l = l_dir / l_distance;
                 const T pdf = light_->leave_pdf_dir(l);
-                return solid_angle_pdf_to_area_pdf(pdf, l, next_distance, next_normal);
+                return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, next_normal);
         }
 
         void set_reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf)
         {
+                pdf_reversed_ = this->reversed_pdf(next, angle_pdf);
+        }
+
+        [[nodiscard]] T reversed_pdf(const Surface<N, T, Color>& next, const T angle_pdf) const
+        {
                 if (!pos_)
                 {
-                        pdf_reversed_ = 0;
-                        return;
+                        return 0;
                 }
-                pdf_reversed_ = next.area_pdf(angle_pdf, *pos_, normal_);
+                return next.area_pdf(angle_pdf, *pos_, normal_);
         }
 
         [[nodiscard]] bool is_connectible() const
