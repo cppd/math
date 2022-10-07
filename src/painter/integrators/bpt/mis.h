@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "vertex.h"
+#include "vertex_pdf.h"
 
 #include <src/com/error.h>
 #include <src/com/variant.h>
@@ -28,6 +29,9 @@ namespace ns::painter::integrators::bpt
 {
 namespace mis_weight_implementation
 {
+template <typename T>
+inline constexpr T EMPTY = -1;
+
 template <typename T>
 struct Node
 {
@@ -58,7 +62,7 @@ void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, s
                                 },
                                 [&](const Camera<N, T, Color>& v)
                                 {
-                                        nodes->emplace_back(-1, -1, v.is_connectible());
+                                        nodes->emplace_back(EMPTY<T>, EMPTY<T>, v.is_connectible());
                                 },
                                 [&](const Light<N, T, Color>& v)
                                 {
@@ -71,6 +75,44 @@ void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, s
                         path[i]);
         }
 }
+
+template <std::size_t N, typename T, typename Color>
+void set_reversed(
+        const std::vector<Vertex<N, T, Color>>& light,
+        const std::vector<Vertex<N, T, Color>>& camera,
+        const int s,
+        const int t,
+        std::vector<Node<T>>& light_nodes,
+        std::vector<Node<T>>& camera_nodes)
+{
+        ASSERT(s >= 0);
+        ASSERT(t >= 2);
+
+        if (s == 0)
+        {
+                return;
+        }
+
+        light_nodes[s - 1].reversed = compute_pdf(camera[t - 2], camera[t - 1], light[s - 1]);
+
+        if (t > 2)
+        {
+                camera_nodes[t - 2].reversed = compute_pdf(light[s - 1], camera[t - 1], camera[t - 2]);
+        }
+
+        if (s == 1)
+        {
+                camera_nodes[t - 1].reversed = compute_pdf(light[s - 1], camera[t - 1]);
+        }
+        else if (s > 1)
+        {
+                light_nodes[s - 2].reversed = compute_pdf(camera[t - 1], light[s - 1], light[s - 2]);
+                camera_nodes[t - 1].reversed = compute_pdf(light[s - 2], light[s - 1], camera[t - 1]);
+        }
+
+        ASSERT(camera_nodes[0].forward == EMPTY<T>);
+        ASSERT(camera_nodes[0].reversed == EMPTY<T>);
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -82,8 +124,8 @@ template <std::size_t N, typename T, typename Color>
 {
         namespace impl = mis_weight_implementation;
 
-        ASSERT(t >= 2);
         ASSERT(s >= 0);
+        ASSERT(t >= 2);
 
         if (s + t == 2)
         {
@@ -95,6 +137,8 @@ template <std::size_t N, typename T, typename Color>
 
         impl::make_nodes(light_path, s, &light_nodes);
         impl::make_nodes(camera_path, t, &camera_nodes);
+
+        impl::set_reversed(light_path, camera_path, s, t, light_nodes, camera_nodes);
 
         return 1;
 }
