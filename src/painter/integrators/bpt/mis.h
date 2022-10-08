@@ -76,14 +76,23 @@ void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, s
         }
 }
 
+template <typename T>
+void set_connectible(std::vector<Node<T>>* const nodes)
+{
+        if (!nodes->empty())
+        {
+                nodes->back().connectible = true;
+        }
+}
+
 template <std::size_t N, typename T, typename Color>
 void set_reversed(
         const std::vector<Vertex<N, T, Color>>& light,
         const std::vector<Vertex<N, T, Color>>& camera,
         const int s,
         const int t,
-        std::vector<Node<T>>& light_nodes,
-        std::vector<Node<T>>& camera_nodes)
+        std::vector<Node<T>>* const light_nodes,
+        std::vector<Node<T>>* const camera_nodes)
 {
         ASSERT(s >= 0);
         ASSERT(t >= 2);
@@ -93,25 +102,25 @@ void set_reversed(
                 return;
         }
 
-        light_nodes[s - 1].reversed = compute_pdf(camera[t - 2], camera[t - 1], light[s - 1]);
+        (*light_nodes)[s - 1].reversed = compute_pdf(camera[t - 2], camera[t - 1], light[s - 1]);
 
         if (t > 2)
         {
-                camera_nodes[t - 2].reversed = compute_pdf(light[s - 1], camera[t - 1], camera[t - 2]);
+                (*camera_nodes)[t - 2].reversed = compute_pdf(light[s - 1], camera[t - 1], camera[t - 2]);
         }
 
         if (s == 1)
         {
-                camera_nodes[t - 1].reversed = compute_pdf(light[s - 1], camera[t - 1]);
+                (*camera_nodes)[t - 1].reversed = compute_pdf(light[s - 1], camera[t - 1]);
         }
         else if (s > 1)
         {
-                light_nodes[s - 2].reversed = compute_pdf(camera[t - 1], light[s - 1], light[s - 2]);
-                camera_nodes[t - 1].reversed = compute_pdf(light[s - 2], light[s - 1], camera[t - 1]);
+                (*light_nodes)[s - 2].reversed = compute_pdf(camera[t - 1], light[s - 1], light[s - 2]);
+                (*camera_nodes)[t - 1].reversed = compute_pdf(light[s - 2], light[s - 1], camera[t - 1]);
         }
 
-        ASSERT(camera_nodes[0].forward == EMPTY<T>);
-        ASSERT(camera_nodes[0].reversed == EMPTY<T>);
+        ASSERT((*camera_nodes)[0].forward == EMPTY<T>);
+        ASSERT((*camera_nodes)[0].reversed == EMPTY<T>);
 }
 }
 
@@ -138,7 +147,10 @@ template <std::size_t N, typename T, typename Color>
         impl::make_nodes(light_path, s, &light_nodes);
         impl::make_nodes(camera_path, t, &camera_nodes);
 
-        impl::set_reversed(light_path, camera_path, s, t, light_nodes, camera_nodes);
+        impl::set_reversed(light_path, camera_path, s, t, &light_nodes, &camera_nodes);
+
+        impl::set_connectible(&light_nodes);
+        impl::set_connectible(&camera_nodes);
 
         return 1;
 }
