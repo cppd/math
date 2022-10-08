@@ -122,6 +122,94 @@ void set_reversed(
         ASSERT((*camera_nodes)[0].forward == EMPTY<T>);
         ASSERT((*camera_nodes)[0].reversed == EMPTY<T>);
 }
+
+template <typename T>
+T map(const T v)
+{
+        ASSERT(v >= 0);
+        return v != 0 ? v : 1;
+}
+
+template <typename T>
+T light_sum(const std::vector<Node<T>>& light)
+{
+        if (light.empty())
+        {
+                return 0;
+        }
+
+        T sum = 0;
+        T ri = 1;
+        for (int i = light.size() - 1; i > 0; --i)
+        {
+                ri *= map(light[i].reversed) / map(light[i].forward);
+                if (light[i].connectible && light[i - 1].connectible)
+                {
+                        sum += ri;
+                }
+        }
+        if (light[0].connectible)
+        {
+                ri *= map(light[0].reversed) / map(light[0].forward);
+                sum += ri;
+        }
+        return sum;
+}
+
+template <typename T>
+T camera_sum(const std::vector<Node<T>>& camera)
+{
+        if (camera.size() <= 1)
+        {
+                return 0;
+        }
+
+        T sum = 0;
+        T ri = 1;
+        for (int i = camera.size() - 1; i > 1; --i)
+        {
+                ri *= map(camera[i].reversed) / map(camera[i].forward);
+                if (camera[i].connectible && camera[i - 1].connectible)
+                {
+                        sum += ri;
+                }
+        }
+        if (camera[1].connectible && camera[0].connectible)
+        {
+                ri *= map(camera[1].reversed) / map(camera[1].forward);
+                sum += ri;
+        }
+        return sum;
+}
+
+template <std::size_t N, typename T, typename Color>
+T weight(
+        const std::vector<Vertex<N, T, Color>>& light_path,
+        const std::vector<Vertex<N, T, Color>>& camera_path,
+        const int s,
+        const int t)
+{
+        ASSERT(s >= 0);
+        ASSERT(t >= 2);
+
+        if (s + t == 2)
+        {
+                return 1;
+        }
+
+        thread_local std::vector<Node<T>> light_nodes;
+        thread_local std::vector<Node<T>> camera_nodes;
+
+        make_nodes(light_path, s, &light_nodes);
+        make_nodes(camera_path, t, &camera_nodes);
+
+        set_reversed(light_path, camera_path, s, t, &light_nodes, &camera_nodes);
+
+        set_connectible(&light_nodes);
+        set_connectible(&camera_nodes);
+
+        return 1 / (1 + light_sum(light_nodes) + camera_sum(camera_nodes));
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -131,27 +219,6 @@ template <std::size_t N, typename T, typename Color>
         const int s,
         const int t)
 {
-        namespace impl = mis_weight_implementation;
-
-        ASSERT(s >= 0);
-        ASSERT(t >= 2);
-
-        if (s + t == 2)
-        {
-                return 1;
-        }
-
-        thread_local std::vector<impl::Node<T>> light_nodes;
-        thread_local std::vector<impl::Node<T>> camera_nodes;
-
-        impl::make_nodes(light_path, s, &light_nodes);
-        impl::make_nodes(camera_path, t, &camera_nodes);
-
-        impl::set_reversed(light_path, camera_path, s, t, &light_nodes, &camera_nodes);
-
-        impl::set_connectible(&light_nodes);
-        impl::set_connectible(&camera_nodes);
-
-        return 1;
+        return mis_weight_implementation::weight(light_path, camera_path, s, t);
 }
 }
