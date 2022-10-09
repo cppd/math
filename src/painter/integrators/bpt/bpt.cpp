@@ -173,7 +173,12 @@ std::optional<Color> bpt(
 
         generate_camera_path<FLAT_SHADING>(scene, light_distribution, ray, engine, &camera_path);
         ASSERT(camera_path.size() <= MAX_DEPTH + 1);
-        ASSERT(camera_path.size() >= 2);
+        ASSERT(camera_path.size() >= 1);
+
+        if (camera_path.size() == 1)
+        {
+                return Color(0);
+        }
 
         if (camera_path.size() == 2 && std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[1]))
         {
