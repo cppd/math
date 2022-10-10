@@ -36,17 +36,21 @@ namespace connect_implementation
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N, T, Color>& camera_path_vertex)
 {
-        ASSERT((std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path_vertex)));
-        const auto& infinite_area_light = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
+        if (!std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path_vertex))
+        {
+                return {};
+        }
+
+        const auto& infinite_light = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
 
         std::optional<Color> res;
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
                 if (light->is_infinite_area())
                 {
-                        if (const auto c = light->leave_radiance(infinite_area_light.ray_to_light(), {}))
+                        if (const auto c = light->leave_radiance(infinite_light.ray_to_light(), {}))
                         {
-                                com::add_optional(&res, infinite_area_light.beta() * (*c));
+                                com::add_optional(&res, infinite_light.beta() * (*c));
                         }
                 }
         }
@@ -194,10 +198,6 @@ std::optional<Color> connect(
         if (s == 0)
         {
                 const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
-                if (!std::holds_alternative<InfiniteLight<N, T, Color>>(t_1))
-                {
-                        return {};
-                }
                 color = impl::connect_s_0(scene, t_1);
         }
         else if (std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
