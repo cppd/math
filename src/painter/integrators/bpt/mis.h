@@ -99,6 +99,8 @@ void set_reversed(
 
         if (s == 0)
         {
+                (*camera_nodes)[t - 1].reversed = compute_light_origin_pdf(camera[t - 1], camera[t - 2]);
+                (*camera_nodes)[t - 2].reversed = compute_light_pdf(camera[t - 1], camera[t - 2]);
                 return;
         }
 
@@ -111,7 +113,7 @@ void set_reversed(
 
         if (s == 1)
         {
-                (*camera_nodes)[t - 1].reversed = compute_pdf(light[s - 1], camera[t - 1]);
+                (*camera_nodes)[t - 1].reversed = compute_light_pdf(light[s - 1], camera[t - 1]);
         }
         else if (s > 1)
         {

@@ -78,10 +78,9 @@ void walk(
                 {
                         if (camera_path)
                         {
-                                InfiniteLight<N, T, Color> next(&scene, &light_distribution, ray, beta, pdf_forward);
-                                Vertex<N, T, Color>& prev = path->back();
-                                set_reversed_pdf(&prev, std::as_const(next));
-                                path->push_back(std::move(next));
+                                path->emplace_back(
+                                        std::in_place_type<InfiniteLight<N, T, Color>>, &scene, &light_distribution,
+                                        ray, beta, pdf_forward);
                         }
                         return;
                 }
