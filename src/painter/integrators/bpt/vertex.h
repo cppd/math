@@ -178,25 +178,6 @@ public:
 template <std::size_t N, typename T, typename Color>
 class Light final
 {
-        [[nodiscard]] static T compute_pdf_spatial(
-                const Surface<N, T, Color>& next,
-                const LightSource<N, T, Color>* const light,
-                const std::optional<Vector<N, T>>& pos,
-                const Vector<N, T>& dir)
-        {
-                const Vector<N, T> l = [&]
-                {
-                        if (!pos)
-                        {
-                                return dir;
-                        }
-                        const Vector<N, T> next_dir = (next.pos() - *pos);
-                        const T next_distance = next_dir.norm();
-                        return next_dir / next_distance;
-                }();
-                return light->leave_pdf_pos(l);
-        }
-
         const LightSource<N, T, Color>* light_;
         std::optional<Vector<N, T>> pos_;
         Vector<N, T> dir_;
@@ -233,7 +214,9 @@ public:
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(light_distribution_pdf * compute_pdf_spatial(next, light_, pos_, dir_))
+                  pdf_forward_(
+                          light_distribution_pdf
+                          * light_->leave_pdf_pos(!pos_ ? dir_ : (next.pos() - *pos_).normalized()))
         {
         }
 
@@ -263,11 +246,11 @@ public:
 
         [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
         {
-                if (pos_)
+                if (!pos_)
                 {
-                        return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next_pos, next_normal);
+                        return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
                 }
-                return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
+                return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next_pos, next_normal);
         }
 
         [[nodiscard]] T area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
