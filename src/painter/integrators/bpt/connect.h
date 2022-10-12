@@ -89,7 +89,7 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         }
 
         const Light<N, T, Color> light_vertex(
-                distribution.light, light_distribution,
+                distribution.light, distribution.pdf,
                 sample.distance ? (camera_vertex.pos() + sample.l * (*sample.distance)) : std::optional<Vector<N, T>>(),
                 -sample.l, std::nullopt, sample.radiance / (sample.pdf * distribution.pdf), camera_vertex);
 

@@ -179,7 +179,6 @@ template <std::size_t N, typename T, typename Color>
 class Light final
 {
         [[nodiscard]] static T compute_pdf_spatial(
-                const T light_distribution_pdf,
                 const Surface<N, T, Color>& next,
                 const LightSource<N, T, Color>* const light,
                 const std::optional<Vector<N, T>>& pos,
@@ -195,8 +194,7 @@ class Light final
                         const T next_distance = next_dir.norm();
                         return next_dir / next_distance;
                 }();
-                const T pdf_pos = light->leave_pdf_pos(l);
-                return pdf_pos * light_distribution_pdf;
+                return light->leave_pdf_pos(l);
         }
 
         const LightSource<N, T, Color>* light_;
@@ -204,13 +202,11 @@ class Light final
         Vector<N, T> dir_;
         std::optional<Vector<N, T>> normal_;
         Color beta_;
-        T light_distribution_pdf_;
         T pdf_forward_;
         T pdf_reversed_ = 0;
 
 public:
         Light(const LightSource<N, T, Color>* const light,
-              const LightDistribution<N, T, Color>& distribution,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
@@ -221,13 +217,12 @@ public:
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  light_distribution_pdf_(distribution.pdf(light)),
                   pdf_forward_(pdf_forward)
         {
         }
 
         Light(const LightSource<N, T, Color>* const light,
-              const LightDistribution<N, T, Color>& distribution,
+              const T light_distribution_pdf,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
@@ -238,8 +233,7 @@ public:
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  light_distribution_pdf_(distribution.pdf(light)),
-                  pdf_forward_(compute_pdf_spatial(light_distribution_pdf_, next, light_, pos_, dir_))
+                  pdf_forward_(light_distribution_pdf * compute_pdf_spatial(next, light_, pos_, dir_))
         {
         }
 
