@@ -47,7 +47,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return std::nullopt;
         }
 
-        [[nodiscard]] std::optional<Color> light_source() const override
+        [[nodiscard]] const LightSource<N, T, Color>* light_source() const override
         {
                 return obj_->light_source();
         }
@@ -109,7 +109,7 @@ T Parallelotope<N, T, Color>::intersection_cost() const
 template <std::size_t N, typename T, typename Color>
 std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& r, const T max_distance) const
 {
-        if (alpha_nonzero_ || light_source_)
+        if (alpha_nonzero_)
         {
                 std::optional<T> res = parallelotope_.intersect(r);
                 if (res && *res < max_distance)
@@ -167,21 +167,15 @@ Parallelotope<N, T, Color>::Parallelotope(
 }
 
 template <std::size_t N, typename T, typename Color>
-void Parallelotope<N, T, Color>::set_light_source(const Color& color)
-{
-        light_source_ = color;
-}
-
-template <std::size_t N, typename T, typename Color>
 const geometry::Parallelotope<N, T>& Parallelotope<N, T, Color>::parallelotope() const
 {
         return parallelotope_;
 }
 
 template <std::size_t N, typename T, typename Color>
-const std::optional<Color>& Parallelotope<N, T, Color>::light_source() const
+const LightSource<N, T, Color>* Parallelotope<N, T, Color>::light_source() const
 {
-        return light_source_;
+        return nullptr;
 }
 
 template <std::size_t N, typename T, typename Color>

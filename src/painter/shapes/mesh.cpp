@@ -77,9 +77,9 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return facet_->shading_normal(mesh_data_->normals, point);
         }
 
-        [[nodiscard]] std::optional<Color> light_source() const override
+        [[nodiscard]] const LightSource<N, T, Color>* light_source() const override
         {
-                return std::nullopt;
+                return nullptr;
         }
 
         [[nodiscard]] Color brdf(

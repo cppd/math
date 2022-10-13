@@ -28,7 +28,6 @@ template <std::size_t N, typename T, typename Color>
 class HyperplaneParallelotope final : public Shape<N, T, Color>
 {
         const geometry::HyperplaneParallelotope<N, T> hyperplane_parallelotope_;
-        std::optional<Color> light_source_;
         const T roughness_;
         const shading::Colors<Color> colors_;
         const T alpha_;
@@ -57,11 +56,9 @@ public:
                 const Vector<N, T>& org,
                 const std::array<Vector<N, T>, N - 1>& vectors);
 
-        void set_light_source(const Color& color);
-
         const geometry::HyperplaneParallelotope<N, T>& hyperplane_parallelotope() const;
 
-        const std::optional<Color>& light_source() const;
+        const LightSource<N, T, Color>* light_source() const;
 
         T roughness() const;
 

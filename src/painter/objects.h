@@ -32,6 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
+class LightSource;
+
+template <std::size_t N, typename T, typename Color>
 struct SurfaceSample final
 {
         static_assert(std::is_floating_point_v<T>);
@@ -65,7 +68,7 @@ public:
 
         [[nodiscard]] virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const = 0;
 
-        [[nodiscard]] virtual std::optional<Color> light_source() const = 0;
+        [[nodiscard]] virtual const LightSource<N, T, Color>* light_source() const = 0;
 
         [[nodiscard]] virtual Color brdf(
                 const Vector<N, T>& point,

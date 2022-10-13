@@ -104,11 +104,6 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
                 return Color(0);
         }();
 
-        if (const auto& c = surface.light_source())
-        {
-                color += *c;
-        }
-
         Color beta(1);
 
         for (int depth = 0;; ++depth)

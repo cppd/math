@@ -28,7 +28,6 @@ template <std::size_t N, typename T, typename Color>
 class Parallelotope final : public Shape<N, T, Color>
 {
         const geometry::Parallelotope<N, T> parallelotope_;
-        std::optional<Color> light_source_;
         const T roughness_;
         const shading::Colors<Color> colors_;
         const T alpha_;
@@ -57,11 +56,9 @@ public:
                 const Vector<N, T>& org,
                 const std::array<Vector<N, T>, N>& vectors);
 
-        void set_light_source(const Color& color);
-
         const geometry::Parallelotope<N, T>& parallelotope() const;
 
-        const std::optional<Color>& light_source() const;
+        const LightSource<N, T, Color>* light_source() const;
 
         T roughness() const;
 
