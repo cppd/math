@@ -64,9 +64,6 @@ public:
 
         static T intersection_cost();
 
-        template <typename... P>
-        explicit HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
-
         HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 
         void set_normal_direction(const Vector<N, T>& direction);
@@ -96,15 +93,6 @@ public:
 
         [[nodiscard]] auto overlap_function() const;
 };
-
-template <std::size_t N, typename T>
-template <typename... P>
-HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors)
-        : HyperplaneParallelotope(org, {vectors...})
-{
-        static_assert((std::is_same_v<Vector<N, T>, P> && ...));
-        static_assert(sizeof...(P) + 1 == N);
-}
 
 template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(

@@ -84,8 +84,6 @@ public:
 
         ParallelotopeAA() = default;
 
-        template <typename... P>
-        explicit ParallelotopeAA(const Vector<N, T>& org, const P&... sizes);
         ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes);
         ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max);
 
@@ -132,15 +130,6 @@ public:
                 return s;
         }
 };
-
-template <std::size_t N, typename T>
-template <typename... P>
-ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const P&... sizes)
-        : ParallelotopeAA(org, std::array<T, N>{sizes...})
-{
-        static_assert((std::is_same_v<T, P> && ...));
-        static_assert(sizeof...(P) == N);
-}
 
 template <std::size_t N, typename T>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes)

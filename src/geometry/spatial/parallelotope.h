@@ -84,8 +84,6 @@ public:
 
         Parallelotope() = default;
 
-        template <typename... P>
-        explicit Parallelotope(const Vector<N, T>& org, const P&... vectors);
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         Parallelotope(const Vector<N, T>& org, const std::array<T, N>& vectors);
         Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max);
@@ -135,16 +133,6 @@ public:
                 return s;
         }
 };
-
-template <std::size_t N, typename T>
-template <typename... P>
-Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
-{
-        static_assert((std::is_same_v<Vector<N, T>, P> && ...));
-        static_assert(sizeof...(P) == N);
-
-        set_data(org, {vectors...});
-}
 
 template <std::size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
