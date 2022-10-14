@@ -179,6 +179,13 @@ std::optional<Color> BallLight<N, T, Color>::leave_radiance(
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> BallLight<N, T, Color>::leave_radiance(const Vector<N, T>& l) const
+{
+        ASSERT(l.is_unit());
+        return radiance(l);
+}
+
+template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
         const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()

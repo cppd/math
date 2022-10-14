@@ -56,6 +56,8 @@ class SpotLight final : public LightSource<N, T, Color>
                 const Ray<N, T>& ray_to_light,
                 const std::optional<T>& distance) const override;
 
+        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& l) const override;
+
         [[nodiscard]] Color power() const override;
 
         [[nodiscard]] bool is_delta() const override;

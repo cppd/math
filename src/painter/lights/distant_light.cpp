@@ -93,6 +93,12 @@ std::optional<Color> DistantLight<N, T, Color>::leave_radiance(
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> DistantLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*l*/) const
+{
+        error("distant light leave radiance");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color DistantLight<N, T, Color>::power() const
 {
         ASSERT(area_);

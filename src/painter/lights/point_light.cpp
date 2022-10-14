@@ -105,6 +105,12 @@ std::optional<Color> PointLight<N, T, Color>::leave_radiance(
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> PointLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*l*/) const
+{
+        error("point light leave radiance");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::power() const
 {
         return geometry::SPHERE_AREA<N, T> * intensity_;

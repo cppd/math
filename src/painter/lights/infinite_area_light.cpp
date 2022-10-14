@@ -114,6 +114,12 @@ std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*l*/) const
+{
+        error("infinite area light leave radiance");
+}
+
+template <std::size_t N, typename T, typename Color>
 Color InfiniteAreaLight<N, T, Color>::power() const
 {
         ASSERT(area_);

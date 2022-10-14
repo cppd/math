@@ -247,6 +247,8 @@ public:
                 const Ray<N, T>& ray_to_light,
                 const std::optional<T>& distance) const = 0;
 
+        [[nodiscard]] virtual std::optional<Color> leave_radiance(const Vector<N, T>& l) const = 0;
+
         [[nodiscard]] virtual Color power() const = 0;
 
         [[nodiscard]] virtual bool is_delta() const = 0;
