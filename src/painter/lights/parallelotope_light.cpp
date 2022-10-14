@@ -207,7 +207,7 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const std::array<Vector<N, T>, N - 1>& vectors,
         const Vector<N, T>& direction,
         const Color& radiance)
-        : parallelotope_(org, vectors),
+        : parallelotope_(org, vectors, direction),
           radiance_(radiance),
           pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
 {
@@ -220,8 +220,6 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         {
                 error("Parallelotope vectors " + to_string(vectors) + " must be non-zero");
         }
-
-        parallelotope_.set_normal_direction(direction);
 }
 
 template <std::size_t N, typename T, typename Color>
