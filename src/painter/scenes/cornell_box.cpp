@@ -193,7 +193,8 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
                 Vector<N, T> direction = -camera[N - 2];
 
                 res.push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
-                        org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
+                        geometry::HyperplaneParallelotope(org, vectors), direction, INTENSITY * light, FALLOFF_START,
+                        WIDTH));
 
                 return res;
         }

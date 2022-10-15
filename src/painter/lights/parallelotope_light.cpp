@@ -210,34 +210,24 @@ bool ParallelotopeLight<N, T, Color>::is_infinite_area() const
 
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N - 1>& vectors,
+        const geometry::HyperplaneParallelotope<N, T>& parallelotope,
         const Vector<N, T>& direction,
         const Color& radiance)
-        : parallelotope_(org, vectors, direction),
+        : parallelotope_(parallelotope),
           radiance_(radiance),
-          pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
+          pdf_(sampling::uniform_in_parallelotope_pdf(parallelotope_.vectors()))
 {
-        if (!std::all_of(
-                    vectors.cbegin(), vectors.cend(),
-                    [](const Vector<N, T>& v)
-                    {
-                            return v.norm_squared() > 0;
-                    }))
-        {
-                error("Parallelotope vectors " + to_string(vectors) + " must be non-zero");
-        }
+        parallelotope_.set_normal_direction(direction);
 }
 
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N - 1>& vectors,
+        const geometry::HyperplaneParallelotope<N, T>& parallelotope,
         const Vector<N, T>& direction,
         const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,
         const std::type_identity_t<T> spotlight_width)
-        : ParallelotopeLight(org, vectors, direction, radiance)
+        : ParallelotopeLight(parallelotope, direction, radiance)
 {
         if (!(spotlight_width <= 90))
         {

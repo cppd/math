@@ -32,6 +32,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
         const shading::Colors<Color> colors_;
         const T alpha_;
         const bool alpha_nonzero_ = alpha_ > 0;
+        const LightSource<N, T, Color>* light_source_ = nullptr;
 
         T intersection_cost() const override;
 
@@ -58,6 +59,7 @@ public:
 
         const geometry::HyperplaneParallelotope<N, T>& hyperplane_parallelotope() const;
 
+        void set_light_source(const LightSource<N, T, Color>* light_source);
         const LightSource<N, T, Color>* light_source() const;
 
         T roughness() const;

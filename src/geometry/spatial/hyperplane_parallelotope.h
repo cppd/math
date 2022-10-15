@@ -66,10 +66,7 @@ public:
 
         HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 
-        HyperplaneParallelotope(
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N - 1>& vectors,
-                const Vector<N, T>& normal_direction);
+        void set_normal_direction(const Vector<N, T>& direction);
 
         [[nodiscard]] Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
@@ -133,13 +130,9 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 }
 
 template <std::size_t N, typename T>
-HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N - 1>& vectors,
-        const Vector<N, T>& normal_direction)
-        : HyperplaneParallelotope(org, vectors)
+void HyperplaneParallelotope<N, T>::set_normal_direction(const Vector<N, T>& direction)
 {
-        if (dot(plane_.n, normal_direction) < 0)
+        if (dot(plane_.n, direction) < 0)
         {
                 plane_.reverse_normal();
         }

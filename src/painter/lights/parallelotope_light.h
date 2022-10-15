@@ -73,14 +73,12 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
 
 public:
         ParallelotopeLight(
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N - 1>& vectors,
+                const geometry::HyperplaneParallelotope<N, T>& parallelotope,
                 const Vector<N, T>& direction,
                 const Color& radiance);
 
         ParallelotopeLight(
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N - 1>& vectors,
+                const geometry::HyperplaneParallelotope<N, T>& parallelotope,
                 const Vector<N, T>& direction,
                 const Color& radiance,
                 std::type_identity_t<T> spotlight_falloff_start,

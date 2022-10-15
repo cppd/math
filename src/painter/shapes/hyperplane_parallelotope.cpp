@@ -174,9 +174,15 @@ const geometry::HyperplaneParallelotope<N, T>& HyperplaneParallelotope<N, T, Col
 }
 
 template <std::size_t N, typename T, typename Color>
+void HyperplaneParallelotope<N, T, Color>::set_light_source(const LightSource<N, T, Color>* const light_source)
+{
+        light_source_ = light_source;
+}
+
+template <std::size_t N, typename T, typename Color>
 const LightSource<N, T, Color>* HyperplaneParallelotope<N, T, Color>::light_source() const
 {
-        return nullptr;
+        return light_source_;
 }
 
 template <std::size_t N, typename T, typename Color>
