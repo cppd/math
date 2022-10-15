@@ -158,15 +158,15 @@ std::unique_ptr<Projector<N, T>> create_projector(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
+void create_light_sources(
         const Color& light,
         const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center)
+        const Vector<N, T>& center,
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>>* const lights,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const shapes)
 {
         constexpr T FALLOFF_START = 60;
         constexpr T WIDTH = 72;
-
-        std::vector<std::unique_ptr<LightSource<N, T, Color>>> res;
 
         switch (LIGHT_TYPE)
         {
@@ -174,6 +174,10 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
         {
                 constexpr T SIZE = 0.1;
                 constexpr T INTENSITY = power<N - 1>(T{8});
+
+                constexpr T ALPHA = 1;
+                constexpr T METALNESS = 0;
+                constexpr T ROUGHNESS = 1;
 
                 Vector<N, T> org = center;
                 for (std::size_t i = 0; i < N - 2; ++i)
@@ -190,13 +194,19 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
                 }
                 vectors[N - 2] = SIZE * camera[N - 1];
 
-                Vector<N, T> direction = -camera[N - 2];
+                const Vector<N, T> direction = -camera[N - 2];
 
-                res.push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
-                        geometry::HyperplaneParallelotope(org, vectors), direction, INTENSITY * light, FALLOFF_START,
-                        WIDTH));
+                auto shape = std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org, vectors);
 
-                return res;
+                lights->push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
+                        shape->hyperplane_parallelotope(), direction, INTENSITY * light, FALLOFF_START, WIDTH));
+
+                shape->set_light_source(lights->back().get());
+
+                shapes->push_back(std::move(shape));
+
+                return;
         }
         case LightType::SPOTLIGHT:
         {
@@ -205,10 +215,10 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
                 const Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
 
-                res.push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
+                lights->push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
-                return res;
+                return;
         }
         case LightType::POINT:
         {
@@ -216,9 +226,10 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
 
                 const Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
-                res.push_back(std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
+                lights->push_back(
+                        std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
 
-                return res;
+                return;
         }
         }
         error_fatal("Unknown light type " + to_string(enum_to_int(LIGHT_TYPE)));
@@ -241,8 +252,8 @@ StorageScene<N, T, Color> create_cornell_box_scene(
 
         shapes.push_back(std::move(shape));
 
-        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources =
-                create_light_sources(light, camera, center);
+        std::vector<std::unique_ptr<LightSource<N, T, Color>>> light_sources;
+        create_light_sources(light, camera, center, &light_sources, &shapes);
 
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
