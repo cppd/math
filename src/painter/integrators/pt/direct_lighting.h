@@ -169,21 +169,4 @@ std::optional<Color> direct_lighting(
         }
         return res;
 }
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> ray_light_sources(
-        const Scene<N, T, Color>& scene,
-        const Ray<N, T>& ray,
-        const std::optional<T> distance)
-{
-        std::optional<Color> res;
-        for (const LightSource<N, T, Color>* const light : scene.light_sources())
-        {
-                if (!light->is_infinite_area())
-                {
-                        com::add_optional(&res, light->leave_radiance(ray, distance));
-                }
-        }
-        return res;
-}
 }

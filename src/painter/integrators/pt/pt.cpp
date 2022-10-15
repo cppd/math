@@ -92,14 +92,17 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         if (!surface)
         {
-                return ray_light_sources<N, T, Color>(scene, ray, std::nullopt);
+                return {};
         }
 
         Color color = [&]
         {
-                if (const auto& c = ray_light_sources<N, T, Color>(scene, ray, surface.distance()))
+                if (const auto* light = surface.light_source())
                 {
-                        return *c;
+                        if (const auto& radiance = light->leave_radiance(ray.dir()))
+                        {
+                                return *radiance;
+                        }
                 }
                 return Color(0);
         }();

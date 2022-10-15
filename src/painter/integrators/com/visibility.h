@@ -30,6 +30,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::integrators
 {
+namespace visibility_implementation
+{
+template <typename T>
+T visibility_distance(const T distance)
+{
+        static constexpr T EPSILON = 1000 * Limits<T>::epsilon();
+        static_assert(EPSILON > 0 && EPSILON < 1);
+        static constexpr T K = 1 - EPSILON;
+        return K * distance;
+}
+}
+
 template <std::size_t N, typename T, typename Color>
 bool light_source_occluded(
         const Scene<N, T, Color>& scene,
@@ -37,9 +49,11 @@ bool light_source_occluded(
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
+        namespace impl = visibility_implementation;
+
         ASSERT(dot(ray.dir(), normals.shading) > 0);
 
-        const T d = distance ? *distance : Limits<T>::infinity();
+        const T d = distance ? impl::visibility_distance(*distance) : Limits<T>::infinity();
 
         if (dot(ray.dir(), normals.geometric) >= 0)
         {
@@ -68,8 +82,7 @@ bool occluded(
         const Vector<N, T>& point_2,
         const Normals<N, T>& normals_2)
 {
-        static constexpr T EPSILON = 1000 * Limits<T>::epsilon();
-        static_assert(EPSILON < 1);
+        namespace impl = visibility_implementation;
 
         const Vector<N, T> direction_1 = point_2 - point_1;
         const Ray<N, T> ray_1(point_1, direction_1);
@@ -80,7 +93,7 @@ bool occluded(
         const bool visible_1 = dot(ray_1.dir(), normals_1.geometric) >= 0;
         const bool visible_2 = dot(ray_1.dir(), normals_2.geometric) <= 0;
 
-        T distance = direction_1.norm() * (1 - EPSILON);
+        T distance = impl::visibility_distance(direction_1.norm());
 
         if (visible_1 && visible_2)
         {
