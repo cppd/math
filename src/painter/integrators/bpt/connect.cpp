@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/variant.h>
 #include <src/settings/instantiation.h>
 
 namespace ns::painter::integrators::bpt
@@ -33,25 +34,45 @@ namespace
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N, T, Color>& camera_path_vertex)
 {
-        if (!std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path_vertex))
-        {
-                return {};
-        }
-
-        const auto& infinite_light = std::get<InfiniteLight<N, T, Color>>(camera_path_vertex);
-
-        std::optional<Color> res;
-        for (const LightSource<N, T, Color>* const light : scene.light_sources())
-        {
-                if (light->is_infinite_area())
-                {
-                        if (const auto c = light->leave_radiance(infinite_light.ray_to_light(), {}))
+        return std::visit(
+                Visitors{
+                        [](const Surface<N, T, Color>& surface) -> std::optional<Color>
                         {
-                                com::add_optional(&res, infinite_light.beta() * (*c));
-                        }
-                }
-        }
-        return res;
+                                if (!surface.is_light())
+                                {
+                                }
+                                if (const auto& radiance = surface.light_radiance())
+                                {
+                                        return *radiance * surface.beta();
+                                }
+                                return {};
+                        },
+                        [](const Camera<N, T, Color>&) -> std::optional<Color>
+                        {
+                                error("Last camera path vertex is a camera");
+                        },
+                        [](const Light<N, T, Color>&) -> std::optional<Color>
+                        {
+                                error("Last camera path vertex is an light");
+                        },
+                        [&scene](const InfiniteLight<N, T, Color>& infinite_light) -> std::optional<Color>
+                        {
+                                std::optional<Color> res;
+                                for (const LightSource<N, T, Color>* const light : scene.light_sources())
+                                {
+                                        if (!light->is_infinite_area())
+                                        {
+                                                continue;
+                                        }
+                                        if (const auto& radiance =
+                                                    light->leave_radiance(infinite_light.ray_to_light(), {}))
+                                        {
+                                                com::add_optional(&res, *radiance * infinite_light.beta());
+                                        }
+                                }
+                                return res;
+                        }},
+                camera_path_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>

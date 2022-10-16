@@ -91,7 +91,7 @@ public:
                 return surface_.light_source() != nullptr;
         }
 
-        [[nodiscard]] T light_radiance()
+        [[nodiscard]] decltype(auto) light_radiance() const
         {
                 ASSERT(surface_.light_source() != nullptr);
                 return surface_.light_source()->leave_radiance(dir_to_prev_);
