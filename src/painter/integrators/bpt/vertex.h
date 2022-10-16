@@ -52,6 +52,7 @@ public:
                   beta_(beta),
                   dir_to_prev_(dir_to_prev)
         {
+                ASSERT(dir_to_prev_.is_unit());
         }
 
         [[nodiscard]] const Vector<N, T>& dir_to_prev() const
@@ -90,10 +91,10 @@ public:
                 return surface_.light_source() != nullptr;
         }
 
-        [[nodiscard]] T light_radiance(const Vector<N, T>& next_pos)
+        [[nodiscard]] T light_radiance()
         {
                 ASSERT(surface_.light_source() != nullptr);
-                return surface_.light_source()->leave_radiance((next_pos - surface_.point()).normalized());
+                return surface_.light_source()->leave_radiance(dir_to_prev_);
         }
 
         [[nodiscard]] T light_area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
@@ -106,10 +107,10 @@ public:
                 return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, next_normal);
         }
 
-        [[nodiscard]] T light_area_origin_pdf(const Vector<N, T>& next_pos) const
+        [[nodiscard]] T light_area_origin_pdf() const
         {
                 ASSERT(surface_.light_source() != nullptr);
-                return surface_.light_source()->leave_pdf_pos((next_pos - surface_.point()).normalized());
+                return surface_.light_source()->leave_pdf_pos(dir_to_prev_);
         }
 
         template <typename Prev>

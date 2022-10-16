@@ -88,6 +88,12 @@ void walk(
                 const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
+                        if (surface.light_source())
+                        {
+                                Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                                set_forward_pdf(path->back(), &next, pdf_forward);
+                                path->push_back(std::move(next));
+                        }
                         return;
                 }
 

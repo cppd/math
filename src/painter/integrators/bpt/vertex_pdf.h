@@ -108,17 +108,13 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] T compute_light_origin_pdf(
-        const Vertex<N, T, Color>& light_vertex,
-        const Vertex<N, T, Color>& next_vertex)
+[[nodiscard]] T compute_light_origin_pdf(const Vertex<N, T, Color>& light_vertex)
 {
         return std::visit(
                 Visitors{
                         [&](const Surface<N, T, Color>& light) -> T
                         {
-                                ASSERT((std::holds_alternative<Surface<N, T, Color>>(next_vertex)));
-                                const auto& surface = std::get<Surface<N, T, Color>>(next_vertex);
-                                return light.light_area_origin_pdf(surface.pos());
+                                return light.light_area_origin_pdf();
                         },
                         [](const Camera<N, T, Color>&) -> T
                         {
