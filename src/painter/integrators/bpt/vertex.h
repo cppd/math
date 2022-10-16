@@ -85,6 +85,33 @@ public:
                 return solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next_pos, next_normal);
         }
 
+        [[nodiscard]] bool is_light() const
+        {
+                return surface_.light_source() != nullptr;
+        }
+
+        [[nodiscard]] T light_radiance(const Vector<N, T>& next_pos)
+        {
+                ASSERT(surface_.light_source() != nullptr);
+                return surface_.light_source()->leave_radiance((next_pos - surface_.point()).normalized());
+        }
+
+        [[nodiscard]] T light_area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
+        {
+                ASSERT(surface_.light_source() != nullptr);
+                const Vector<N, T> l_dir = (next_pos - surface_.point());
+                const T l_distance = l_dir.norm();
+                const Vector<N, T> l = l_dir / l_distance;
+                const T pdf = surface_.light_source()->leave_pdf_dir(l);
+                return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, next_normal);
+        }
+
+        [[nodiscard]] T light_area_origin_pdf(const Vector<N, T>& next_pos) const
+        {
+                ASSERT(surface_.light_source() != nullptr);
+                return surface_.light_source()->leave_pdf_pos((next_pos - surface_.point()).normalized());
+        }
+
         template <typename Prev>
         void set_forward_pdf(const Prev& prev, const T angle_pdf)
         {
