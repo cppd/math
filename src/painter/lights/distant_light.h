@@ -50,7 +50,7 @@ class DistantLight final : public LightSource<N, T, Color>
         [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& dir) const override;
         [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& dir) const override;
 
-        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& l) const override;
+        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& dir) const override;
 
         [[nodiscard]] Color power() const override;
 

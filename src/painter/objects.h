@@ -243,7 +243,7 @@ public:
         [[nodiscard]] virtual T leave_pdf_pos(const Vector<N, T>& dir) const = 0;
         [[nodiscard]] virtual T leave_pdf_dir(const Vector<N, T>& dir) const = 0;
 
-        [[nodiscard]] virtual std::optional<Color> leave_radiance(const Vector<N, T>& l) const = 0;
+        [[nodiscard]] virtual std::optional<Color> leave_radiance(const Vector<N, T>& dir) const = 0;
 
         [[nodiscard]] virtual Color power() const = 0;
 

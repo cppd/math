@@ -109,7 +109,7 @@ T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> SpotLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*l*/) const
+std::optional<Color> SpotLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*dir*/) const
 {
         return {};
 }

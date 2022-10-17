@@ -65,8 +65,7 @@ std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N
                                         {
                                                 continue;
                                         }
-                                        if (const auto& radiance =
-                                                    light->leave_radiance(infinite_light.ray_to_light().dir()))
+                                        if (const auto& radiance = light->leave_radiance(infinite_light.dir()))
                                         {
                                                 com::add_optional(&res, *radiance * infinite_light.beta());
                                         }

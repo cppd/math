@@ -59,17 +59,6 @@ Color ParallelotopeLight<N, T, Color>::radiance(const T cos) const
 }
 
 template <std::size_t N, typename T, typename Color>
-Color ParallelotopeLight<N, T, Color>::radiance(const Vector<N, T>& l) const
-{
-        if (!spotlight_)
-        {
-                return radiance_;
-        }
-        const T cos = -dot(l, parallelotope_.normal());
-        return spotlight_->color(radiance_, cos);
-}
-
-template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sample(
         PCG& engine,
         const Vector<N, T>& point,
@@ -157,10 +146,15 @@ T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(const Vector<N, T>& l) const
+std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(const Vector<N, T>& dir) const
 {
-        ASSERT(l.is_unit());
-        return radiance(l);
+        ASSERT(dir.is_unit());
+        const T cos = dot(dir, parallelotope_.normal());
+        if (cos > 0)
+        {
+                return radiance(cos);
+        }
+        return {};
 }
 
 template <std::size_t N, typename T, typename Color>

@@ -99,7 +99,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
         {
                 if (const auto* light = surface.light_source())
                 {
-                        if (const auto& radiance = light->leave_radiance(ray.dir()))
+                        if (const auto& radiance = light->leave_radiance(-ray.dir()))
                         {
                                 return *radiance;
                         }

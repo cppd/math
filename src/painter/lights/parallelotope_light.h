@@ -44,7 +44,6 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         [[nodiscard]] bool visible(const Vector<N, T>& point) const;
         [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;
         [[nodiscard]] Color radiance(T cos) const;
-        [[nodiscard]] Color radiance(const Vector<N, T>& l) const;
 
         [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(
                 PCG& engine,
@@ -59,7 +58,7 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& dir) const override;
         [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& dir) const override;
 
-        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& l) const override;
+        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& dir) const override;
 
         [[nodiscard]] Color power() const override;
 

@@ -355,7 +355,7 @@ class InfiniteLight final
 
         const Scene<N, T, Color>* scene_;
         const LightDistribution<N, T, Color>* light_distribution_;
-        Ray<N, T> ray_to_light_;
+        Vector<N, T> dir_;
         Color beta_;
         T angle_pdf_forward_;
         T angle_pdf_reversed_;
@@ -369,7 +369,7 @@ public:
                 const T angle_pdf_forward)
                 : scene_(scene),
                   light_distribution_(light_distribution),
-                  ray_to_light_(ray_to_light),
+                  dir_(-ray_to_light.dir()),
                   beta_(beta),
                   angle_pdf_forward_(angle_pdf_forward),
                   angle_pdf_reversed_(angle_pdf_reversed(*scene, *light_distribution, ray_to_light))
@@ -381,15 +381,14 @@ public:
                 return beta_;
         }
 
-        [[nodiscard]] const Ray<N, T>& ray_to_light() const
+        [[nodiscard]] const Vector<N, T>& dir() const
         {
-                return ray_to_light_;
+                return dir_;
         }
 
         template <typename Normal>
         [[nodiscard]] T area_pdf(const Normal& next_normal) const
         {
-                const Vector<N, T> dir = -ray_to_light_.dir();
                 T res = 0;
                 T sum = 0;
                 for (const LightSource<N, T, Color>* const light : scene_->light_sources())
@@ -398,7 +397,7 @@ public:
                         {
                                 continue;
                         }
-                        const T pdf = light->leave_pdf_pos(dir);
+                        const T pdf = light->leave_pdf_pos(dir_);
                         const T distribution_pdf = light_distribution_->pdf(light);
                         res += pdf * distribution_pdf;
                         sum += distribution_pdf;
@@ -406,7 +405,7 @@ public:
                 if (sum > 0)
                 {
                         res /= sum;
-                        return pos_pdf_to_area_pdf(res, dir, next_normal);
+                        return pos_pdf_to_area_pdf(res, dir_, next_normal);
                 }
                 return 0;
         }
