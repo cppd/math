@@ -102,21 +102,9 @@ T InfiniteAreaLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*dir*/) con
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(
-        const Ray<N, T>& /*ray_to_light*/,
-        const std::optional<T>& distance) const
-{
-        if (!distance)
-        {
-                return radiance_;
-        }
-        return {};
-}
-
-template <std::size_t N, typename T, typename Color>
 std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*l*/) const
 {
-        error("infinite area light leave radiance");
+        return radiance_;
 }
 
 template <std::size_t N, typename T, typename Color>

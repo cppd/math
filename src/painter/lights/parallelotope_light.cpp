@@ -157,30 +157,6 @@ T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(
-        const Ray<N, T>& ray_to_light,
-        const std::optional<T>& distance) const
-{
-        if (!visible(ray_to_light.org()))
-        {
-                return {};
-        }
-
-        const auto intersection = parallelotope_.intersect(ray_to_light);
-        if (!intersection)
-        {
-                return {};
-        }
-
-        if (distance && !(*intersection < *distance))
-        {
-                return {};
-        }
-
-        return radiance(ray_to_light.dir());
-}
-
-template <std::size_t N, typename T, typename Color>
 std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(const Vector<N, T>& l) const
 {
         ASSERT(l.is_unit());
