@@ -40,6 +40,7 @@ std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N
                         {
                                 if (!surface.is_light())
                                 {
+                                        return {};
                                 }
                                 if (const auto& radiance = surface.light_radiance())
                                 {
