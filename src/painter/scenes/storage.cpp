@@ -86,7 +86,10 @@ StorageScene<N, T, Color> create_storage_scene(
         res.projector = std::move(projector);
         res.shapes = std::move(shapes);
 
-        light_sources.push_back(std::make_unique<lights::InfiniteAreaLight<N, T, Color>>(background_color));
+        if (!background_color.is_black())
+        {
+                light_sources.push_back(std::make_unique<lights::InfiniteAreaLight<N, T, Color>>(background_color));
+        }
 
         res.light_sources = init_light_sources(res.shapes, std::move(light_sources));
 
