@@ -128,11 +128,10 @@ void generate_camera_path(
 {
         path->clear();
 
-        const Color beta(1);
+        path->emplace_back(std::in_place_type<Camera<N, T, Color>>, ray.dir());
 
-        path->emplace_back(std::in_place_type<Camera<N, T, Color>>, ray.org(), beta);
-
-        walk<FLAT_SHADING>(/*camera_path=*/true, scene, light_distribution, beta, /*pdf=*/T{1}, ray, engine, path);
+        walk<FLAT_SHADING>(
+                /*camera_path=*/true, scene, light_distribution, /*beta=*/Color{1}, /*pdf=*/T{1}, ray, engine, path);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>

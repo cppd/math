@@ -172,34 +172,32 @@ public:
 template <std::size_t N, typename T, typename Color>
 class Camera final
 {
-        Vector<N, T> pos_;
-        Color beta_;
+        Vector<N, T> dir_to_camera_;
 
 public:
-        Camera(const Vector<N, T>& pos, const Color& beta)
-                : pos_(pos),
-                  beta_(beta)
+        explicit Camera(const Vector<N, T>& dir)
+                : dir_to_camera_(-dir)
         {
+                ASSERT(dir_to_camera_.is_unit());
         }
 
-        [[nodiscard]] const Vector<N, T>& pos() const
+        [[nodiscard]] const Vector<N, T>& dir_to_camera() const
         {
-                return pos_;
+                return dir_to_camera_;
         }
 
-        [[nodiscard]] const Color& beta() const
+        [[nodiscard]] T area_pdf(
+                [[maybe_unused]] const T angle_pdf,
+                const Vector<N, T>& /*next_pos*/,
+                const Vector<N, T>& /*next_normal*/) const
         {
-                return beta_;
-        }
-
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
-        {
-                return solid_angle_pdf_to_area_pdf(pos_, angle_pdf, next_pos, next_normal);
+                ASSERT(angle_pdf == 1);
+                return 1;
         }
 
         [[nodiscard]] bool is_connectible() const
         {
-                return false;
+                return true;
         }
 };
 

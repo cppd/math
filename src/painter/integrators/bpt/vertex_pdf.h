@@ -148,7 +148,7 @@ template <std::size_t N, typename T, typename Color>
                         },
                         [&](const Camera<N, T, Color>& prev) -> Vector<N, T>
                         {
-                                return (prev.pos() - surface.pos()).normalized();
+                                return prev.dir_to_camera();
                         },
                         [&](const Light<N, T, Color>& prev) -> Vector<N, T>
                         {
