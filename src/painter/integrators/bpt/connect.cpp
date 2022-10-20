@@ -213,8 +213,7 @@ std::optional<Color> connect(
 
         if (s == 0)
         {
-                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
-                color = connect_s_0(scene, t_1);
+                color = connect_s_0(scene, camera_path[t - 1]);
         }
         else if (std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
         {
@@ -222,23 +221,20 @@ std::optional<Color> connect(
         }
         else if (s == 1)
         {
-                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
-
-                auto connection = connect_s_1(scene, t_1, light_distribution, engine);
-                if (connection)
+                auto connection = connect_s_1(scene, camera_path[t - 1], light_distribution, engine);
+                if (!connection)
                 {
-                        color = std::move(connection->color);
-                        thread_local std::vector<Vertex<N, T, Color>> path;
-                        path.clear();
-                        path.push_back(std::move(connection->light_vertex));
-                        connected_light_path = &path;
+                        return {};
                 }
+                color = std::move(connection->color);
+                thread_local std::vector<Vertex<N, T, Color>> path;
+                path.clear();
+                path.push_back(std::move(connection->light_vertex));
+                connected_light_path = &path;
         }
         else
         {
-                const Vertex<N, T, Color>& s_1 = light_path[s - 1];
-                const Vertex<N, T, Color>& t_1 = camera_path[t - 1];
-                color = connect(scene, s_1, t_1);
+                color = connect(scene, light_path[s - 1], camera_path[t - 1]);
         }
 
         if (!color || color->is_black())
