@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 template <std::size_t N, typename T>
 [[nodiscard]] model::mesh::Mesh<N> optimize_mesh(

@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 template <std::size_t N>
-class MeshTexture final
+class Texture final
 {
         [[nodiscard]] static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {
@@ -59,7 +59,7 @@ class MeshTexture final
         numerical::Interpolation<N, Vector<3, float>, float> interpolation_;
 
 public:
-        explicit MeshTexture(const image::Image<N>& image)
+        explicit Texture(const image::Image<N>& image)
                 : pixels_(to_rgb32(image)),
                   interpolation_(image.size, pixels_)
         {

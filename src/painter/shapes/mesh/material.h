@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 template <typename T, typename Color>
-class MeshMaterial final
+class Material final
 {
         T metalness_;
         T roughness_;
@@ -33,7 +33,7 @@ class MeshMaterial final
         int image_;
 
 public:
-        MeshMaterial(const T metalness, const T roughness, const color::Color& color, const int image, const T alpha)
+        Material(const T metalness, const T roughness, const color::Color& color, const int image, const T alpha)
                 : metalness_(std::clamp<T>(metalness, 0, 1)),
                   roughness_(std::clamp<T>(roughness, 0, 1)),
                   color_(to_color<Color>(color).clamp(0, 1)),

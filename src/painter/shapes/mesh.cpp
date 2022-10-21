@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "mesh_data.h"
-
 #include "../objects.h"
+#include "mesh/data.h"
 
 #include <src/color/color.h>
 #include <src/com/chrono.h>
@@ -43,17 +42,17 @@ namespace
 template <std::size_t N, typename T, typename Color>
 class SurfaceImpl final : public Surface<N, T, Color>
 {
-        const MeshData<N, T, Color>* mesh_data_;
-        const MeshFacet<N, T>* facet_;
+        const mesh::Mesh<N, T, Color>* mesh_;
+        const mesh::Facet<N, T>* facet_;
 
         [[nodiscard]] shading::Colors<Color> surface_color(
                 const Vector<N, T>& point,
-                const MeshMaterial<T, Color>& material) const
+                const mesh::Material<T, Color>& material) const
         {
                 if (facet_->has_texcoord() && material.image() >= 0)
                 {
-                        const Vector<3, float> rgb = mesh_data_->images[material.image()].color(
-                                facet_->texcoord(mesh_data_->texcoords, point));
+                        const Vector<3, float> rgb =
+                                mesh_->images[material.image()].color(facet_->texcoord(mesh_->texcoords, point));
                         const Color color = Color(rgb[0], rgb[1], rgb[2]);
                         return shading::ggx::compute_metalness(color, material.metalness());
                 }
@@ -74,7 +73,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         [[nodiscard]] std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
         {
-                return facet_->shading_normal(mesh_data_->normals, point);
+                return facet_->shading_normal(mesh_->normals, point);
         }
 
         [[nodiscard]] const LightSource<N, T, Color>* light_source() const override
@@ -90,7 +89,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
+                const mesh::Material<T, Color>& material = mesh_->materials[facet_->material()];
 
                 return shading::ggx::brdf::f(material.roughness(), surface_color(point, material), n, v, l);
         }
@@ -103,7 +102,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
+                const mesh::Material<T, Color>& material = mesh_->materials[facet_->material()];
 
                 return shading::ggx::brdf::pdf(material.roughness(), n, v, l);
         }
@@ -116,7 +115,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 ASSERT(facet_->material() >= 0);
 
-                const MeshMaterial<T, Color>& material = mesh_data_->materials[facet_->material()];
+                const mesh::Material<T, Color>& material = mesh_->materials[facet_->material()];
 
                 const shading::Sample<N, T, Color>& sample = shading::ggx::brdf::sample_f(
                         engine, material.roughness(), surface_color(point, material), n, v);
@@ -134,8 +133,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
 public:
-        SurfaceImpl(const MeshData<N, T, Color>* const mesh_data, const MeshFacet<N, T>* const facet)
-                : mesh_data_(mesh_data),
+        SurfaceImpl(const mesh::Mesh<N, T, Color>* const mesh, const mesh::Facet<N, T>* const facet)
+                : mesh_(mesh),
                   facet_(facet)
         {
         }
@@ -143,25 +142,25 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects(
-        const MeshData<N, T, Color>& mesh_data,
+        const mesh::Mesh<N, T, Color>& mesh,
         const std::vector<std::array<int, N>>& facet_vertex_indices)
 {
-        const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets;
+        const std::vector<mesh::Facet<N, T>>& facets = mesh.facets;
         std::vector<geometry::BvhObject<N, T>> res;
         res.reserve(facets.size());
         for (std::size_t i = 0; i < facets.size(); ++i)
         {
                 ASSERT(i < facet_vertex_indices.size());
                 res.emplace_back(
-                        geometry::BoundingBox(mesh_data.vertices, facet_vertex_indices[i]),
-                        facets[i].intersection_cost(), i);
+                        geometry::BoundingBox(mesh.vertices, facet_vertex_indices[i]), facets[i].intersection_cost(),
+                        i);
         }
         return res;
 }
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] geometry::Bvh<N, T> create_bvh(
-        const MeshData<N, T, Color>& mesh_data,
+        const mesh::Mesh<N, T, Color>& mesh,
         const std::vector<std::array<int, N>>& facet_vertex_indices,
         const bool write_log,
         progress::Ratio* const progress)
@@ -171,7 +170,7 @@ template <std::size_t N, typename T, typename Color>
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::Bvh<N, T> bvh(bvh_objects(mesh_data, facet_vertex_indices), progress);
+        geometry::Bvh<N, T> bvh(bvh_objects(mesh, facet_vertex_indices), progress);
 
         if (write_log)
         {
@@ -182,9 +181,9 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T, typename Color>
-class ShapeImpl final : public Shape<N, T, Color>
+class Impl final : public Shape<N, T, Color>
 {
-        MeshData<N, T, Color> mesh_data_;
+        mesh::Mesh<N, T, Color> mesh_;
         geometry::Bvh<N, T> bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
@@ -206,10 +205,10 @@ class ShapeImpl final : public Shape<N, T, Color>
         {
                 const auto intersection = bvh_.intersect(
                         ray, max_distance,
-                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& max)
-                                -> std::optional<std::tuple<T, const MeshFacet<N, T>*>>
+                        [facets = &mesh_.facets, &ray](const auto& indices, const auto& max)
+                                -> std::optional<std::tuple<T, const mesh::Facet<N, T>*>>
                         {
-                                const std::tuple<T, const MeshFacet<N, T>*> info =
+                                const std::tuple<T, const mesh::Facet<N, T>*> info =
                                         geometry::ray_intersection(*facets, indices, ray, max);
                                 if (std::get<1>(info))
                                 {
@@ -222,7 +221,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                         return {0, nullptr};
                 }
                 const auto& [distance, facet] = *intersection;
-                return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_data_, facet)};
+                return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_, facet)};
         }
 
         [[nodiscard]] bool intersect_any(const Ray<N, T>& ray, const T max_distance, const T /*bounding_distance*/)
@@ -230,7 +229,7 @@ class ShapeImpl final : public Shape<N, T, Color>
         {
                 return bvh_.intersect(
                         ray, max_distance,
-                        [facets = &mesh_data_.facets, &ray](const auto& indices, const auto& max) -> bool
+                        [facets = &mesh_.facets, &ray](const auto& indices, const auto& max) -> bool
                         {
                                 return geometry::ray_intersection_any(*facets, indices, ray, max);
                         });
@@ -252,26 +251,24 @@ class ShapeImpl final : public Shape<N, T, Color>
                 };
         }
 
-        ShapeImpl(MeshInfo<N, T, Color>&& mesh_info, const bool write_log, progress::Ratio* const progress)
-                : mesh_data_(std::move(mesh_info.mesh_data)),
-                  bvh_(create_bvh(mesh_data_, mesh_info.facet_vertex_indices, write_log, progress)),
+        Impl(mesh::MeshData<N, T, Color>&& mesh_data, const bool write_log, progress::Ratio* const progress)
+                : mesh_(std::move(mesh_data.mesh)),
+                  bvh_(create_bvh(mesh_, mesh_data.facet_vertex_indices, write_log, progress)),
                   bounding_box_(bvh_.bounding_box()),
                   intersection_cost_(
-                          mesh_data_.facets.size()
-                          * std::remove_reference_t<decltype(mesh_data_.facets.front())>::intersection_cost())
+                          mesh_.facets.size()
+                          * std::remove_reference_t<decltype(mesh_.facets.front())>::intersection_cost())
         {
         }
 
 public:
-        ShapeImpl(
-                const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-                const std::optional<Vector<N + 1, T>>& clip_plane_equation,
-                const bool write_log,
-                progress::Ratio* const progress)
-                : ShapeImpl(
-                        create_mesh_info<N, T, Color>(mesh_objects, clip_plane_equation, write_log),
-                        write_log,
-                        progress)
+        Impl(const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
+             const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+             const bool write_log,
+             progress::Ratio* const progress)
+                : Impl(mesh::create_mesh_data<N, T, Color>(mesh_objects, clip_plane_equation, write_log),
+                       write_log,
+                       progress)
         {
         }
 };
@@ -284,7 +281,7 @@ std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const bool write_log,
         progress::Ratio* const progress)
 {
-        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
+        return std::make_unique<Impl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
 }
 
 #define TEMPLATE(N, T, C)                                                                                          \

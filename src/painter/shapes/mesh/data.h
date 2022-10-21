@@ -17,37 +17,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_facet.h"
-#include "mesh_material.h"
-#include "mesh_texture.h"
+#include "facet.h"
+#include "material.h"
+#include "texture.h"
 
 #include <src/model/mesh_object.h>
 
 #include <array>
 #include <vector>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 template <std::size_t N, typename T, typename Color>
-struct MeshData final
+struct Mesh final
 {
         std::vector<Vector<N, T>> vertices;
         std::vector<Vector<N, T>> normals;
         std::vector<Vector<N - 1, T>> texcoords;
-        std::vector<MeshMaterial<T, Color>> materials;
-        std::vector<MeshTexture<N - 1>> images;
-        std::vector<MeshFacet<N, T>> facets;
+        std::vector<Material<T, Color>> materials;
+        std::vector<Texture<N - 1>> images;
+        std::vector<Facet<N, T>> facets;
 };
 
 template <std::size_t N, typename T, typename Color>
-struct MeshInfo final
+struct MeshData final
 {
-        MeshData<N, T, Color> mesh_data;
+        Mesh<N, T, Color> mesh;
         std::vector<std::array<int, N>> facet_vertex_indices;
 };
 
 template <std::size_t N, typename T, typename Color>
-MeshInfo<N, T, Color> create_mesh_info(
+MeshData<N, T, Color> create_mesh_data(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         bool write_log);

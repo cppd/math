@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_data.h"
+#include "data.h"
 
-#include "mesh_optimize.h"
+#include "optimize.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <optional>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 namespace
 {
@@ -80,11 +80,10 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T, typename Color>
-void create(
+void add_mesh(
         const model::mesh::Reading<N>& mesh_object,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
-        MeshData<N, T, Color>* const mesh_data,
-        std::vector<std::array<int, N>>* const facet_vertex_indices)
+        MeshData<N, T, Color>* const data)
 {
         const T alpha = std::clamp<T>(mesh_object.alpha(), 0, 1);
 
@@ -105,11 +104,11 @@ void create(
                 return;
         }
 
-        const int vertices_offset = mesh_data->vertices.size();
-        const int normals_offset = mesh_data->normals.size();
-        const int texcoords_offset = mesh_data->texcoords.size();
-        const int materials_offset = mesh_data->materials.size();
-        const int images_offset = mesh_data->images.size();
+        const int vertices_offset = data->mesh.vertices.size();
+        const int normals_offset = data->mesh.normals.size();
+        const int texcoords_offset = data->mesh.texcoords.size();
+        const int materials_offset = data->mesh.materials.size();
+        const int images_offset = data->mesh.images.size();
 
         const Matrix<N + 1, N + 1, T> mesh_matrix = to_matrix<T>(mesh_object.matrix());
 
@@ -117,7 +116,7 @@ void create(
                 const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
                 for (const auto& v : mesh.vertices)
                 {
-                        mesh_data->vertices.push_back(multiplier(to_vector<T>(v)));
+                        data->mesh.vertices.push_back(multiplier(to_vector<T>(v)));
                 }
         }
 
@@ -125,13 +124,13 @@ void create(
                 const Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inverse().transpose();
                 for (const auto& v : mesh.normals)
                 {
-                        mesh_data->normals.push_back(matrix * to_vector<T>(v));
+                        data->mesh.normals.push_back(matrix * to_vector<T>(v));
                 }
         }
 
         for (const auto& v : mesh.texcoords)
         {
-                mesh_data->texcoords.push_back(to_vector<T>(v));
+                data->mesh.texcoords.push_back(to_vector<T>(v));
         }
 
         const int default_material_index = mesh.materials.size();
@@ -148,11 +147,11 @@ void create(
                 const std::array<int, N> texcoords = add_offset(facet.texcoords, texcoords_offset, facet.has_texcoord);
                 const int material = facet_material + materials_offset;
 
-                mesh_data->facets.emplace_back(
-                        vertices_to_array(mesh_data->vertices, vertices), mesh_data->normals, facet.has_normal, normals,
+                data->mesh.facets.emplace_back(
+                        vertices_to_array(data->mesh.vertices, vertices), data->mesh.normals, facet.has_normal, normals,
                         facet.has_texcoord, texcoords, material);
 
-                facet_vertex_indices->push_back(vertices);
+                data->facet_vertex_indices.push_back(vertices);
 
                 facets_without_material = facets_without_material || no_material;
         }
@@ -160,42 +159,34 @@ void create(
         for (const typename model::mesh::Mesh<N>::Material& material : mesh.materials)
         {
                 const int image = material.image < 0 ? -1 : (images_offset + material.image);
-                mesh_data->materials.emplace_back(
+                data->mesh.materials.emplace_back(
                         mesh_object.metalness(), mesh_object.roughness(), material.color, image, alpha);
         }
 
         if (facets_without_material)
         {
-                ASSERT(materials_offset + default_material_index == static_cast<int>(mesh_data->materials.size()));
-                mesh_data->materials.emplace_back(
+                ASSERT(materials_offset + default_material_index == static_cast<int>(data->mesh.materials.size()));
+                data->mesh.materials.emplace_back(
                         mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1, alpha);
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
         {
-                mesh_data->images.emplace_back(image);
+                data->mesh.images.emplace_back(image);
         }
 }
 
 template <std::size_t N, typename T, typename Color>
-void create(
+MeshData<N, T, Color> create_mesh_data(
         const std::vector<model::mesh::Reading<N>>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
-        MeshData<N, T, Color>* const mesh_data,
-        std::vector<std::array<int, N>>* const facet_vertex_indices)
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
 {
         if (mesh_objects.empty())
         {
                 error("No objects to paint");
         }
 
-        mesh_data->vertices.clear();
-        mesh_data->normals.clear();
-        mesh_data->texcoords.clear();
-        mesh_data->materials.clear();
-        mesh_data->images.clear();
-        mesh_data->facets.clear();
-        facet_vertex_indices->clear();
+        MeshData<N, T, Color> data;
 
         std::size_t vertex_count = 0;
         std::size_t normal_count = 0;
@@ -223,28 +214,30 @@ void create(
                 }
         }
 
-        mesh_data->vertices.reserve(vertex_count);
-        mesh_data->normals.reserve(normal_count);
-        mesh_data->texcoords.reserve(texcoord_count);
-        mesh_data->materials.reserve(material_count);
-        mesh_data->images.reserve(image_count);
-        mesh_data->facets.reserve(facet_count);
-        facet_vertex_indices->reserve(facet_count);
+        data.mesh.vertices.reserve(vertex_count);
+        data.mesh.normals.reserve(normal_count);
+        data.mesh.texcoords.reserve(texcoord_count);
+        data.mesh.materials.reserve(material_count);
+        data.mesh.images.reserve(image_count);
+        data.mesh.facets.reserve(facet_count);
+        data.facet_vertex_indices.reserve(facet_count);
 
         for (const model::mesh::Reading<N>& mesh_object : mesh_objects)
         {
-                create(mesh_object, clip_plane_equation, mesh_data, facet_vertex_indices);
+                add_mesh(mesh_object, clip_plane_equation, &data);
         }
 
-        if (mesh_data->facets.empty())
+        if (data.mesh.facets.empty())
         {
                 error("No facets found in meshes");
         }
+
+        return data;
 }
 }
 
 template <std::size_t N, typename T, typename Color>
-MeshInfo<N, T, Color> create_mesh_info(
+MeshData<N, T, Color> create_mesh_data(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
         const std::optional<Vector<N + 1, T>>& clip_plane_equation,
         const bool write_log)
@@ -258,8 +251,6 @@ MeshInfo<N, T, Color> create_mesh_info(
                 return std::nullopt;
         }();
 
-        MeshInfo<N, T, Color> res;
-
         std::vector<model::mesh::Reading<N>> reading;
         reading.reserve(mesh_objects.size());
         for (const model::mesh::MeshObject<N>* const mesh_object : mesh_objects)
@@ -267,20 +258,20 @@ MeshInfo<N, T, Color> create_mesh_info(
                 reading.emplace_back(*mesh_object);
         }
 
-        create(reading, clip_plane_equation, &res.mesh_data, &res.facet_vertex_indices);
+        MeshData<N, T, Color> res = create_mesh_data<N, T, Color>(reading, clip_plane_equation);
 
         if (write_log)
         {
                 LOG("Painter mesh data created, " + to_string_fixed(duration_from(*start_time), 5)
-                    + " s, vertex count = " + to_string_digit_groups(res.mesh_data.vertices.size())
-                    + ", facet count = " + to_string_digit_groups(res.mesh_data.facets.size()));
+                    + " s, vertex count = " + to_string_digit_groups(res.mesh.vertices.size())
+                    + ", facet count = " + to_string_digit_groups(res.mesh.facets.size()));
         }
 
         return res;
 }
 
 #define TEMPLATE(N, T, C)                                                                                          \
-        template MeshInfo<N, T, C> create_mesh_info(                                                               \
+        template MeshData<N, T, C> create_mesh_data(                                                               \
                 const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<(N) + 1, T>>&, \
                 const bool);
 

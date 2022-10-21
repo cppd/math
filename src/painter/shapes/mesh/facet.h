@@ -29,10 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <vector>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 template <std::size_t N, typename T>
-class MeshFacet final
+class Facet final
 {
         static_assert(N >= 3);
 
@@ -53,14 +53,13 @@ class MeshFacet final
         std::array<bool, N> reverse_normal_;
 
 public:
-        MeshFacet(
-                const std::array<Vector<N, T>, N>& vertices,
-                const std::vector<Vector<N, T>>& normals,
-                const bool has_normals,
-                const std::array<int, N>& normal_indices,
-                const bool has_texcoords,
-                const std::array<int, N>& texcoord_indices,
-                const int material)
+        Facet(const std::array<Vector<N, T>, N>& vertices,
+              const std::vector<Vector<N, T>>& normals,
+              const bool has_normals,
+              const std::array<int, N>& normal_indices,
+              const bool has_texcoords,
+              const std::array<int, N>& texcoord_indices,
+              const int material)
                 : simplex_(vertices),
                   material_(material)
         {

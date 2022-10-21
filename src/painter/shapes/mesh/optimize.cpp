@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_optimize.h"
+#include "optimize.h"
 
 #include <src/geometry/spatial/hyperplane.h>
 #include <src/geometry/spatial/point_offset.h>
 #include <src/model/mesh_utility.h>
 #include <src/settings/instantiation.h>
 
-namespace ns::painter::shapes
+namespace ns::painter::shapes::mesh
 {
 namespace
 {
