@@ -83,7 +83,7 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
         res.ray.set_org(scene_center_ - scene_radius_ * dir + sampling::uniform_in_sphere(engine, vectors));
         res.ray.set_dir(dir);
         res.pdf_pos = leave_pdf_pos_;
-        res.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
+        res.pdf_dir = leave_pdf_dir_;
         res.radiance = radiance_;
         res.infinite_distance = true;
         return res;
@@ -98,7 +98,7 @@ T InfiniteAreaLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) con
 template <std::size_t N, typename T, typename Color>
 T InfiniteAreaLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*dir*/) const
 {
-        return sampling::uniform_on_sphere_pdf<N, T>();
+        return leave_pdf_dir_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -129,7 +129,8 @@ bool InfiniteAreaLight<N, T, Color>::is_infinite_area() const
 
 template <std::size_t N, typename T, typename Color>
 InfiniteAreaLight<N, T, Color>::InfiniteAreaLight(const Color& radiance)
-        : radiance_(radiance)
+        : radiance_(radiance),
+          leave_pdf_dir_(sampling::uniform_on_sphere_pdf<N, T>())
 {
 }
 
