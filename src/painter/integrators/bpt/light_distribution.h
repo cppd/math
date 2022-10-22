@@ -30,14 +30,10 @@ namespace ns::painter::integrators::bpt
 {
 namespace light_distribution_implementation
 {
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] decltype(auto) light_power(const LightSource<N, T, Color>& light)
-{
-        return light.power().luminance();
-}
-
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::discrete_distribution<int> create_distribution(const Scene<N, T, Color>& scene)
+template <std::size_t N, typename T, typename Color, typename LightPower>
+[[nodiscard]] std::discrete_distribution<int> create_distribution(
+        const Scene<N, T, Color>& scene,
+        const LightPower& light_power)
 {
         const auto& lights = scene.light_sources();
         if (lights.empty())
@@ -108,8 +104,9 @@ class LightDistributionBase final
         }
 
 public:
-        explicit LightDistributionBase(const Scene<N, T, Color>& scene)
-                : distribution_(light_distribution_implementation::create_distribution(scene))
+        template <typename LightPower>
+        LightDistributionBase(const Scene<N, T, Color>& scene, const LightPower& light_power)
+                : distribution_(light_distribution_implementation::create_distribution(scene, light_power))
         {
                 const std::vector<T> probabilities =
                         light_distribution_implementation::create_probabilities<T>(distribution_);

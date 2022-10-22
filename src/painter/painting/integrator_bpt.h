@@ -38,6 +38,16 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 class IntegratorBPT final
 {
         static constexpr int PANTBRUSH_WIDTH = 20;
+        static constexpr bool EQUAL_LIGHT_POWER = true;
+
+        static T light_power(const LightSource<N, T, Color>& light_source)
+        {
+                if (EQUAL_LIGHT_POWER)
+                {
+                        return 1;
+                }
+                return light_source.power().luminance();
+        }
 
         static std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions(
                 const integrators::bpt::LightDistributionBase<N, T, Color>* const light_distribution_base,
@@ -82,7 +92,7 @@ public:
                   pixels_(pixels),
                   sampler_(samples_per_pixel),
                   paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH),
-                  light_distribution_base_(*scene_),
+                  light_distribution_base_(*scene_, light_power),
                   light_distributions_(light_distributions(&light_distribution_base_, thread_count))
         {
                 ASSERT(scene_);
