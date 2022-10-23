@@ -218,18 +218,21 @@ public:
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
-              const T pdf_forward)
+              const T distribution_pdf,
+              const T pdf_pos,
+              const T pdf_dir)
                 : light_(light),
                   pos_(pos),
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(pdf_forward)
+                  pdf_forward_(distribution_pdf * (!light->is_infinite_area() ? pdf_pos : pdf_dir))
         {
         }
 
         Light(const LightSource<N, T, Color>* const light,
               const T light_distribution_pdf,
+              const T dir_pdf,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
@@ -242,7 +245,9 @@ public:
                   beta_(beta),
                   pdf_forward_(
                           light_distribution_pdf
-                          * light_->leave_pdf_pos(!pos_ ? dir_ : (next.pos() - *pos_).normalized()))
+                          * (!light->is_infinite_area()
+                                     ? light_->leave_pdf_pos(!pos_ ? dir_ : (next.pos() - *pos_).normalized())
+                                     : dir_pdf))
         {
         }
 
@@ -301,8 +306,13 @@ public:
         {
                 if (!pos_)
                 {
+                        if (light_->is_infinite_area())
+                        {
+                                return angle_pdf;
+                        }
                         return 0;
                 }
+                ASSERT(!light_->is_infinite_area());
                 return next.area_pdf(angle_pdf, *pos_, normal_);
         }
 
@@ -338,10 +348,9 @@ class InfiniteLight final
                         {
                                 continue;
                         }
-                        const LightSourceArriveInfo<T, Color> info =
-                                light->arrive_info(ray_to_light.org(), ray_to_light.dir());
+                        const T pdf_dir = light->leave_pdf_dir(-ray_to_light.dir());
                         const T distribution_pdf = light_distribution.pdf(light);
-                        res += info.pdf * distribution_pdf;
+                        res += pdf_dir * distribution_pdf;
                         sum += distribution_pdf;
                 }
                 if (sum > 0)
