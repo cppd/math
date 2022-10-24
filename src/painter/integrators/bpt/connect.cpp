@@ -99,17 +99,25 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 
         const LightDistributionSample distribution = light_distribution.sample(engine);
 
-        const LightSourceArriveSample<N, T, Color> sample =
+        const LightSourceArriveSample sample =
                 distribution.light->arrive_sample(engine, camera_vertex.pos(), camera_vertex.normal());
         if (!sample.usable())
         {
                 return {};
         }
 
+        const auto light_position = [&]() -> std::optional<Vector<N, T>>
+        {
+                if (sample.distance)
+                {
+                        return camera_vertex.pos() + sample.l * (*sample.distance);
+                }
+                return std::nullopt;
+        }();
+
         const Light<N, T, Color> light_vertex(
-                distribution.light, distribution.pdf, sample.pdf,
-                sample.distance ? (camera_vertex.pos() + sample.l * (*sample.distance)) : std::optional<Vector<N, T>>(),
-                -sample.l, std::nullopt, sample.radiance / (sample.pdf * distribution.pdf), camera_vertex);
+                distribution.light, distribution.pdf, sample.pdf, light_position, -sample.l, std::nullopt,
+                sample.radiance / (sample.pdf * distribution.pdf), camera_vertex);
 
         const Ray<N, T> ray_to_light(camera_vertex.pos(), sample.l);
 
