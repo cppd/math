@@ -66,7 +66,7 @@ bool ray_tracing_intersect(
         return true;
 }
 
-bool light_source_occluded_impl(
+bool occluded_impl(
         const vec3 org,
         const vec3 dir,
         const vec3 geometric_normal,
@@ -92,17 +92,17 @@ bool light_source_occluded_impl(
         return false;
 }
 
-bool light_source_occluded(
+bool occluded(
         const vec3 org,
         const vec3 dir,
         const vec3 geometric_normal,
         const accelerationStructureEXT acceleration_structure)
 {
         const vec3 moved_org = offset_ray_org(geometric_normal, org, dir);
-        return light_source_occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
+        return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
 }
 
-bool light_source_occluded(
+bool occluded(
         const vec3 org,
         const vec3 dir,
         const vec3 geometric_normal,
@@ -116,15 +116,14 @@ bool light_source_occluded(
         const float n_dot_dir = dot(clip_plane_equation.xyz, dir);
         if (n_dot_dir >= 0)
         {
-                return light_source_occluded_impl(
-                        moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
+                return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, RAY_TRACING_T_MAX);
         }
 
         const float t_clip_plane = dot(clip_plane_equation, vec4(moved_org, 1)) / -n_dot_dir;
         if (t_clip_plane > 0)
         {
                 const float t_max = min(RAY_TRACING_T_MAX, t_clip_plane);
-                return light_source_occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, t_max);
+                return occluded_impl(moved_org, dir, geometric_normal, acceleration_structure, t_max);
         }
 
         return false;
