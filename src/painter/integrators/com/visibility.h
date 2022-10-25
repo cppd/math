@@ -43,7 +43,7 @@ T visibility_distance(const T distance)
 }
 
 template <std::size_t N, typename T, typename Color>
-bool light_source_occluded(
+bool occluded(
         const Scene<N, T, Color>& scene,
         const Normals<N, T>& normals,
         const Ray<N, T>& ray,

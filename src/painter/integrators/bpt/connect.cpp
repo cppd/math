@@ -139,7 +139,7 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
                 return {};
         }
 
-        if (light_source_occluded(scene, camera_vertex.normals(), ray_to_light, sample.distance))
+        if (occluded(scene, camera_vertex.normals(), ray_to_light, sample.distance))
         {
                 return {};
         }
