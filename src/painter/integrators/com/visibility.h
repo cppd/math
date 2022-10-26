@@ -40,6 +40,13 @@ T visibility_distance(const T distance)
         static constexpr T K = 1 - EPSILON;
         return K * distance;
 }
+
+template <typename T>
+bool directed_outside(const T cosine)
+{
+        static constexpr T EPSILON = 100 * Limits<T>::epsilon();
+        return cosine > EPSILON;
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -51,7 +58,10 @@ bool occluded(
 {
         namespace impl = visibility_implementation;
 
-        ASSERT(dot(ray.dir(), normals.shading) > 0);
+        if (!impl::directed_outside(dot(ray.dir(), normals.shading)))
+        {
+                return true;
+        }
 
         const T d = distance ? impl::visibility_distance(*distance) : Limits<T>::infinity();
 
@@ -87,8 +97,15 @@ bool occluded(
         const Vector<N, T> direction_1 = point_2 - point_1;
         const Ray<N, T> ray_1(point_1, direction_1);
 
-        ASSERT(dot(ray_1.dir(), normals_1.shading) >= 0);
-        ASSERT(dot(ray_1.dir(), normals_2.shading) <= 0);
+        if (!impl::directed_outside(dot(ray_1.dir(), normals_1.shading)))
+        {
+                return true;
+        }
+
+        if (!impl::directed_outside(-dot(ray_1.dir(), normals_2.shading)))
+        {
+                return true;
+        }
 
         const bool visible_1 = dot(ray_1.dir(), normals_1.geometric) >= 0;
         const bool visible_2 = dot(ray_1.dir(), normals_2.geometric) <= 0;
