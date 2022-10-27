@@ -218,7 +218,7 @@ public:
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
               const Color& beta,
-              const T distribution_pdf,
+              const T pdf_distribution,
               const T pdf_pos,
               const T pdf_dir)
                 : light_(light),
@@ -226,13 +226,13 @@ public:
                   dir_(dir.normalized()),
                   normal_(normal),
                   beta_(beta),
-                  pdf_forward_(distribution_pdf * (!light->is_infinite_area() ? pdf_pos : pdf_dir))
+                  pdf_forward_(pdf_distribution * (!light->is_infinite_area() ? pdf_pos : pdf_dir))
         {
         }
 
         Light(const LightSource<N, T, Color>* const light,
-              const T light_distribution_pdf,
-              const T dir_pdf,
+              const T pdf_distribution,
+              const T pdf_dir,
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
@@ -244,10 +244,10 @@ public:
                   normal_(normal),
                   beta_(beta),
                   pdf_forward_(
-                          light_distribution_pdf
+                          pdf_distribution
                           * (!light->is_infinite_area()
                                      ? light_->leave_pdf_pos(!pos_ ? dir_ : (next.pos() - *pos_).normalized())
-                                     : dir_pdf))
+                                     : pdf_dir))
         {
         }
 
@@ -335,27 +335,60 @@ public:
 template <std::size_t N, typename T, typename Color>
 class InfiniteLight final
 {
-        [[nodiscard]] static T angle_pdf_reversed(
+        [[nodiscard]] static T angle_pdf_origin(
                 const Scene<N, T, Color>& scene,
                 const LightDistribution<N, T, Color>& light_distribution,
                 const Ray<N, T>& ray_to_light)
         {
-                T res = 0;
                 T sum = 0;
+                T weight_sum = 0;
+
                 for (const LightSource<N, T, Color>* const light : scene.light_sources())
                 {
                         if (!light->is_infinite_area())
                         {
                                 continue;
                         }
+
                         const T pdf_dir = light->leave_pdf_dir(-ray_to_light.dir());
                         const T distribution_pdf = light_distribution.pdf(light);
-                        res += pdf_dir * distribution_pdf;
-                        sum += distribution_pdf;
+                        sum += pdf_dir * distribution_pdf;
+                        weight_sum += distribution_pdf;
                 }
-                if (sum > 0)
+
+                if (weight_sum > 0)
                 {
-                        return res / sum;
+                        return sum / weight_sum;
+                }
+                return 0;
+        }
+
+        template <typename Normal>
+        [[nodiscard]] static T area_pdf(
+                const Scene<N, T, Color>& scene,
+                const LightDistribution<N, T, Color>& light_distribution,
+                const Vector<N, T>& light_dir,
+                const Normal& next_normal)
+        {
+                T sum = 0;
+                T weight_sum = 0;
+
+                for (const LightSource<N, T, Color>* const light : scene.light_sources())
+                {
+                        if (!light->is_infinite_area())
+                        {
+                                continue;
+                        }
+
+                        const T pdf = light->leave_pdf_pos(light_dir);
+                        const T distribution_pdf = light_distribution.pdf(light);
+                        sum += pdf * distribution_pdf;
+                        weight_sum += distribution_pdf;
+                }
+
+                if (weight_sum > 0)
+                {
+                        return pos_pdf_to_area_pdf(sum / weight_sum, light_dir, next_normal);
                 }
                 return 0;
         }
@@ -365,7 +398,7 @@ class InfiniteLight final
         Vector<N, T> dir_;
         Color beta_;
         T angle_pdf_forward_;
-        T angle_pdf_reversed_;
+        T angle_pdf_origin_;
 
 public:
         InfiniteLight(
@@ -379,7 +412,7 @@ public:
                   dir_(-ray_to_light.dir()),
                   beta_(beta),
                   angle_pdf_forward_(angle_pdf_forward),
-                  angle_pdf_reversed_(angle_pdf_reversed(*scene, *light_distribution, ray_to_light))
+                  angle_pdf_origin_(angle_pdf_origin(*scene, *light_distribution, ray_to_light))
         {
         }
 
@@ -396,25 +429,7 @@ public:
         template <typename Normal>
         [[nodiscard]] T area_pdf(const Normal& next_normal) const
         {
-                T res = 0;
-                T sum = 0;
-                for (const LightSource<N, T, Color>* const light : scene_->light_sources())
-                {
-                        if (!light->is_infinite_area())
-                        {
-                                continue;
-                        }
-                        const T pdf = light->leave_pdf_pos(dir_);
-                        const T distribution_pdf = light_distribution_->pdf(light);
-                        res += pdf * distribution_pdf;
-                        sum += distribution_pdf;
-                }
-                if (sum > 0)
-                {
-                        res /= sum;
-                        return pos_pdf_to_area_pdf(res, dir_, next_normal);
-                }
-                return 0;
+                return area_pdf(*scene_, *light_distribution_, dir_, next_normal);
         }
 
         [[nodiscard]] bool is_connectible() const
@@ -422,9 +437,9 @@ public:
                 return true;
         }
 
-        [[nodiscard]] T pdf_reversed() const
+        [[nodiscard]] T pdf_origin() const
         {
-                return angle_pdf_reversed_;
+                return angle_pdf_origin_;
         }
 
         [[nodiscard]] T pdf_forward() const

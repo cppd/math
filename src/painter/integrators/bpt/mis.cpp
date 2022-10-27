@@ -72,7 +72,7 @@ void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, s
                                 },
                                 [&](const InfiniteLight<N, T, Color>& v)
                                 {
-                                        nodes->emplace_back(v.pdf_forward(), v.pdf_reversed(), v.is_connectible());
+                                        nodes->emplace_back(v.pdf_forward(), v.pdf_origin(), v.is_connectible());
                                 }},
                         path[i]);
         }

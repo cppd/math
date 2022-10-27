@@ -126,7 +126,7 @@ template <std::size_t N, typename T, typename Color>
                         },
                         [&](const InfiniteLight<N, T, Color>& light) -> T
                         {
-                                return light.pdf_reversed();
+                                return light.pdf_origin();
                         }},
                 light_vertex);
 }
