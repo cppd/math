@@ -208,7 +208,6 @@ class Light final
         std::optional<Vector<N, T>> pos_;
         Vector<N, T> dir_;
         std::optional<Vector<N, T>> normal_;
-        Color beta_;
         T pdf_forward_;
         T pdf_reversed_ = 0;
 
@@ -217,7 +216,6 @@ public:
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
-              const Color& beta,
               const T pdf_distribution,
               const T pdf_pos,
               const T pdf_dir)
@@ -225,7 +223,6 @@ public:
                   pos_(pos),
                   dir_(dir.normalized()),
                   normal_(normal),
-                  beta_(beta),
                   pdf_forward_(pdf_distribution * (!light->is_infinite_area() ? pdf_pos : pdf_dir))
         {
         }
@@ -236,13 +233,11 @@ public:
               const std::optional<Vector<N, T>>& pos,
               const Vector<N, T>& dir,
               const std::optional<Vector<N, T>>& normal,
-              const Color& beta,
               const Surface<N, T, Color>& next)
                 : light_(light),
                   pos_(pos),
                   dir_(dir.normalized()),
                   normal_(normal),
-                  beta_(beta),
                   pdf_forward_(
                           pdf_distribution
                           * (!light->is_infinite_area()
@@ -268,11 +263,6 @@ public:
         [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
         {
                 return normal_;
-        }
-
-        [[nodiscard]] const Color& beta() const
-        {
-                return beta_;
         }
 
         [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const

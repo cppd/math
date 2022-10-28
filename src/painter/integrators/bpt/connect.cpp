@@ -117,7 +117,9 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 
         const Light<N, T, Color> light_vertex(
                 distribution.light, distribution.pdf, sample.pdf, light_position, -sample.l, std::nullopt,
-                sample.radiance / (sample.pdf * distribution.pdf), camera_vertex);
+                camera_vertex);
+
+        const Color light_beta = sample.radiance / (sample.pdf * distribution.pdf);
 
         const Ray<N, T> ray_to_light(camera_vertex.pos(), sample.l);
 
@@ -131,7 +133,7 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 
                 const T n_l = std::abs(dot(n, l));
 
-                return camera_vertex.beta() * brdf * light_vertex.beta() * n_l;
+                return camera_vertex.beta() * brdf * light_beta * n_l;
         }();
 
         if (color.is_black())
