@@ -84,16 +84,35 @@ struct ConnectS1 final
 };
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> compute_color_s_1(
+        const Surface<N, T, Color>& surface,
+        const Ray<N, T>& ray_to_light,
+        const LightDistributionSample<N, T, Color>& distribution,
+        const LightSourceArriveSample<N, T, Color>& sample)
+{
+        const Vector<N, T>& n = surface.normal();
+        const Vector<N, T>& v = surface.dir_to_prev();
+        const Vector<N, T>& l = ray_to_light.dir();
+
+        const T n_l = dot(n, l);
+        if (!(n_l > 0))
+        {
+                return {};
+        }
+
+        return surface.beta() * surface.brdf(v, l) * sample.radiance * (n_l / (sample.pdf * distribution.pdf));
+}
+
+template <std::size_t N, typename T, typename Color>
 std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const Scene<N, T, Color>& scene,
-        const Vertex<N, T, Color>& camera_path_vertex,
+        const Vertex<N, T, Color>& camera_vertex,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine)
 {
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
-        const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
-
-        if (!camera_vertex.is_connectible())
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_vertex)));
+        const auto& surface = std::get<Surface<N, T, Color>>(camera_vertex);
+        if (!surface.is_connectible())
         {
                 return {};
         }
@@ -101,113 +120,104 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const LightDistributionSample distribution = light_distribution.sample(engine);
 
         const LightSourceArriveSample sample =
-                distribution.light->arrive_sample(engine, camera_vertex.pos(), camera_vertex.normal());
+                distribution.light->arrive_sample(engine, surface.pos(), surface.normal());
         if (!sample.usable())
         {
                 return {};
         }
 
-        const auto light_position = [&]() -> std::optional<Vector<N, T>>
+        const Light<N, T, Color> light = [&]()
         {
-                if (sample.distance)
-                {
-                        return camera_vertex.pos() + sample.l * (*sample.distance);
-                }
-                return std::nullopt;
+                const auto position =
+                        sample.distance ? std::optional<Vector<N, T>>(surface.pos() + sample.l * (*sample.distance))
+                                        : std::nullopt;
+
+                return Light<N, T, Color>(
+                        distribution.light, distribution.pdf, sample.pdf, position, -sample.l, std::nullopt, surface);
         }();
 
-        const Light<N, T, Color> light_vertex(
-                distribution.light, distribution.pdf, sample.pdf, light_position, -sample.l, std::nullopt,
-                camera_vertex);
+        const Ray<N, T> ray_to_light(surface.pos(), sample.l);
 
-        const Color light_beta = sample.radiance / (sample.pdf * distribution.pdf);
-
-        const Ray<N, T> ray_to_light(camera_vertex.pos(), sample.l);
-
-        const Color color = [&]
-        {
-                const Vector<N, T>& n = camera_vertex.normal();
-                const Vector<N, T>& v = camera_vertex.dir_to_prev();
-                const Vector<N, T>& l = ray_to_light.dir();
-
-                const Color& brdf = camera_vertex.brdf(v, l);
-
-                const T n_l = std::abs(dot(n, l));
-
-                return camera_vertex.beta() * brdf * light_beta * n_l;
-        }();
-
-        if (color.is_black())
+        const auto color = compute_color_s_1(surface, ray_to_light, distribution, sample);
+        if (!color || color->is_black())
         {
                 return {};
         }
 
-        if (occluded(scene, camera_vertex.normals(), ray_to_light, sample.distance))
+        if (occluded(scene, surface.normals(), ray_to_light, sample.distance))
         {
                 return {};
         }
 
-        return ConnectS1<N, T, Color>{.color = color, .light_vertex = light_vertex};
+        return ConnectS1<N, T, Color>{.color = *color, .light_vertex = light};
+}
+
+template <std::size_t N, typename T, typename Color>
+std::optional<Color> compute_color(const Surface<N, T, Color>& light, const Surface<N, T, Color>& camera)
+{
+        const Vector<N, T> v = light.pos() - camera.pos();
+        const T distance = v.norm();
+        const Vector<N, T> from_camera_to_light = v / distance;
+
+        const Vector<N, T>& camera_n = camera.normal();
+        const Vector<N, T>& camera_v = camera.dir_to_prev();
+        const Vector<N, T>& camera_l = from_camera_to_light;
+
+        const T camera_n_l = dot(camera_n, camera_l);
+        if (!(camera_n_l > 0))
+        {
+                return {};
+        }
+
+        const Vector<N, T>& light_n = light.normal();
+        const Vector<N, T>& light_v = light.dir_to_prev();
+        const Vector<N, T>& light_l = -from_camera_to_light;
+
+        const T light_n_l = dot(light_n, light_l);
+        if (!(light_n_l > 0))
+        {
+                return {};
+        }
+
+        const Color c = camera.beta() * camera.brdf(camera_v, camera_l) * light.brdf(light_v, light_l) * light.beta();
+
+        const T g = camera_n_l * light_n_l / power<N - 1>(distance);
+
+        return c * g;
 }
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
-        const Vertex<N, T, Color>& light_path_vertex,
-        const Vertex<N, T, Color>& camera_path_vertex)
+        const Vertex<N, T, Color>& light_vertex,
+        const Vertex<N, T, Color>& camera_vertex)
 {
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(light_path_vertex)));
-        const auto& light_vertex = std::get<Surface<N, T, Color>>(light_path_vertex);
-
-        if (!light_vertex.is_connectible())
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(light_vertex)));
+        const auto& light = std::get<Surface<N, T, Color>>(light_vertex);
+        if (!light.is_connectible())
         {
                 return {};
         }
 
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_path_vertex)));
-        const auto& camera_vertex = std::get<Surface<N, T, Color>>(camera_path_vertex);
-
-        if (!camera_vertex.is_connectible())
+        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_vertex)));
+        const auto& camera = std::get<Surface<N, T, Color>>(camera_vertex);
+        if (!camera.is_connectible())
         {
                 return {};
         }
 
-        const Color color = [&]
-        {
-                const Vector<N, T>& v = light_vertex.pos() - camera_vertex.pos();
-                const T distance = v.norm();
-
-                const Vector<N, T>& from_camera_to_light = v / distance;
-
-                const Vector<N, T>& camera_n = camera_vertex.normal();
-                const Vector<N, T>& camera_v = camera_vertex.dir_to_prev();
-                const Vector<N, T>& camera_l = from_camera_to_light;
-
-                const Vector<N, T>& light_n = light_vertex.normal();
-                const Vector<N, T>& light_v = light_vertex.dir_to_prev();
-                const Vector<N, T>& light_l = -from_camera_to_light;
-
-                const Color& c = camera_vertex.beta() * camera_vertex.brdf(camera_v, camera_l)
-                                 * light_vertex.brdf(light_v, light_l) * light_vertex.beta();
-
-                const T camera_n_l = std::abs(dot(camera_n, camera_l));
-                const T light_n_l = std::abs(dot(light_n, light_l));
-                const T g = camera_n_l * light_n_l / power<N - 1>(distance);
-
-                return c * g;
-        }();
-
-        if (color.is_black())
+        const auto color = compute_color(light, camera);
+        if (!color || color->is_black())
         {
                 return {};
         }
 
-        if (occluded(scene, camera_vertex.pos(), camera_vertex.normals(), light_vertex.pos(), light_vertex.normals()))
+        if (occluded(scene, camera.pos(), camera.normals(), light.pos(), light.normals()))
         {
                 return {};
         }
 
-        return color;
+        return *color;
 }
 }
 

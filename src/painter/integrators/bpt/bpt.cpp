@@ -157,7 +157,7 @@ void generate_light_path(
                 distribution.pdf, sample.pdf_pos, sample.pdf_dir);
 
         const T pdf = distribution.pdf * sample.pdf_pos * sample.pdf_dir;
-        const T k = sample.n ? std::abs(dot(*sample.n, sample.ray.dir())) : 1;
+        const T k = sample.n ? std::max<T>(0, dot(*sample.n, sample.ray.dir())) : 1;
         const Color beta = sample.radiance * (k / pdf);
 
         walk<FLAT_SHADING>(
