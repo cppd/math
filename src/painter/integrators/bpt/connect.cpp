@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/variant.h>
 #include <src/settings/instantiation.h>
 
@@ -173,7 +174,10 @@ std::optional<Color> connect(
 
         const Color color = [&]
         {
-                const Vector<N, T>& from_camera_to_light = (light_vertex.pos() - camera_vertex.pos()).normalized();
+                const Vector<N, T>& v = light_vertex.pos() - camera_vertex.pos();
+                const T distance = v.norm();
+
+                const Vector<N, T>& from_camera_to_light = v / distance;
 
                 const Vector<N, T>& camera_n = camera_vertex.normal();
                 const Vector<N, T>& camera_v = camera_vertex.dir_to_prev();
@@ -183,12 +187,14 @@ std::optional<Color> connect(
                 const Vector<N, T>& light_v = light_vertex.dir_to_prev();
                 const Vector<N, T>& light_l = -from_camera_to_light;
 
-                const Color& brdf = camera_vertex.brdf(camera_v, camera_l) * light_vertex.brdf(light_v, light_l);
+                const Color& c = camera_vertex.beta() * camera_vertex.brdf(camera_v, camera_l)
+                                 * light_vertex.brdf(light_v, light_l) * light_vertex.beta();
 
                 const T camera_n_l = std::abs(dot(camera_n, camera_l));
                 const T light_n_l = std::abs(dot(light_n, light_l));
+                const T g = camera_n_l * light_n_l / power<N - 1>(distance);
 
-                return camera_vertex.beta() * brdf * light_vertex.beta() * (camera_n_l * light_n_l);
+                return c * g;
         }();
 
         if (color.is_black())
