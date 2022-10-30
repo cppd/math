@@ -63,13 +63,13 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
         const Vector<N, T>& center)
 {
         constexpr T BOX_SIZE = 0.16;
-        constexpr T BOX_SPACE = 0.08;
+        constexpr T BOX_SPACE = 0.06;
         constexpr T NEAR = 0.9;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
-        constexpr T ROUGHNESS = 0.25;
+        constexpr T ROUGHNESS = 0.15;
 
         const Vector<N, T> org = [&]
         {
@@ -238,7 +238,7 @@ void create_light_sources(
 template <std::size_t N, typename T, typename Color>
 StorageScene<N, T, Color> create_cornell_box_scene(
         const Color& light,
-        const Color& background_light,
+        const Color& /*background_light*/,
         const std::array<int, N - 1>& screen_size,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
@@ -258,8 +258,8 @@ StorageScene<N, T, Color> create_cornell_box_scene(
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
         return create_storage_scene<N, T>(
-                background_light, /*clip_plane_equation*/ std::nullopt, std::move(projector), std::move(light_sources),
-                std::move(shapes), progress);
+                /*background_light*/ Color{0}, /*clip_plane_equation*/ std::nullopt, std::move(projector),
+                std::move(light_sources), std::move(shapes), progress);
 }
 
 template <std::size_t N, typename T>
