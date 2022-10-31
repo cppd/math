@@ -182,6 +182,33 @@ void test_intersection_1(
 }
 
 template <std::size_t N, typename T>
+void test_intersection_1_volume(
+        const BoundingBox<N, T>& box,
+        const Ray<N, T>& ray,
+        const std::optional<T>& t,
+        const T& length)
+{
+        if (!t)
+        {
+                std::string s;
+                s += "Ray must intersect, inside\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(ray);
+                error(s);
+        }
+
+        if (!(*t == 0))
+        {
+                std::string s;
+                s += "Intersection out of bounding box, inside\n";
+                s += "distance = " + to_string(*t) + ", max distance = " + to_string(length) + "\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(ray);
+                error(s);
+        }
+}
+
+template <std::size_t N, typename T>
 void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const bool t)
 {
         if (t)
@@ -285,10 +312,13 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
                         const Ray<N, T> r = ray;
 
                         test_intersection_1(box, r, box.intersect(r), length, precision);
+                        test_intersection_1(box, r, box.intersect(r, move_distance), length, precision);
+
+                        test_intersection_1_volume(box, r, box.intersect_volume(r), length);
+                        test_intersection_1_volume(box, r, box.intersect_volume(r, move_distance), length);
+
                         test_intersection_1(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
-
-                        test_intersection_1(box, r, box.intersect(r, move_distance), length, precision);
                         test_intersection_1(
                                 box, r,
                                 box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
@@ -298,14 +328,18 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
 
                         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
                         test_intersection_2(box, r, box.intersect(r, move_distance), move_min, move_max, precision);
+                        test_no_intersection(box, r, box.intersect(r, length));
+
+                        test_intersection_2(box, r, box.intersect_volume(r), move_min, move_max, precision);
+                        test_intersection_2(
+                                box, r, box.intersect_volume(r, move_distance), move_min, move_max, precision);
+                        test_no_intersection(box, r, box.intersect_volume(r, length));
 
                         test_intersection_2(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
                         test_intersection_2(
                                 box, r,
                                 box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
-
-                        test_no_intersection(box, r, box.intersect(r, length));
                         test_no_intersection(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), length));
                 }
@@ -314,6 +348,10 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
 
                         test_no_intersection(box, r, box.intersect(r));
                         test_no_intersection(box, r, box.intersect(r, length));
+
+                        test_no_intersection(box, r, box.intersect_volume(r));
+                        test_no_intersection(box, r, box.intersect_volume(r, length));
+
                         test_no_intersection(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
                         test_no_intersection(
@@ -331,6 +369,9 @@ void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEn
                 const Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));
 
                 test_no_intersection(box, ray, box.intersect(ray));
+
+                test_no_intersection(box, ray, box.intersect_volume(ray));
+
                 test_no_intersection(
                         box, ray, box.intersect(ray.org(), reciprocal(ray.dir()), negative_bool(ray.dir())));
         }

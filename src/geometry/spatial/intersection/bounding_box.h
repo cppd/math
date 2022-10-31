@@ -79,7 +79,7 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
         return rays;
 }
 
-template <std::size_t N, typename T>
+template <bool VOLUME, std::size_t N, typename T>
 void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
@@ -92,9 +92,19 @@ void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<Ra
                 std::size_t res = 0;
                 for (const Ray<N, T>& ray : rays)
                 {
-                        if (box.intersect(ray))
+                        if constexpr (!VOLUME)
                         {
-                                ++res;
+                                if (box.intersect(ray))
+                                {
+                                        ++res;
+                                }
+                        }
+                        else
+                        {
+                                if (box.intersect_volume(ray))
+                                {
+                                        ++res;
+                                }
                         }
                 }
                 return res;
@@ -188,7 +198,7 @@ double compute_intersections_per_second(const int point_count, RandomEngine& eng
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
 
-        check_intersection_count(box, rays);
+        check_intersection_count</*volume*/ false>(box, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
@@ -196,6 +206,25 @@ double compute_intersections_per_second(const int point_count, RandomEngine& eng
                 for (const Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(box.intersect(ray));
+                }
+        }
+        return COUNT * (rays.size() / duration_from(start_time));
+}
+
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_volume_intersections_per_second(const int point_count, RandomEngine& engine)
+{
+        const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+
+        check_intersection_count</*volume*/ true>(box, rays);
+
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
+        {
+                for (const Ray<N, T>& ray : rays)
+                {
+                        do_not_optimize(box.intersect_volume(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
@@ -236,7 +265,8 @@ void test_intersection()
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, POINT_COUNT, engine);
 
-        check_intersection_count(box, rays);
+        check_intersection_count</*volume*/ false>(box, rays);
+        check_intersection_count</*volume*/ true>(box, rays);
 
         const std::vector<Vector<N, T>> orgs = ray_orgs(rays);
         const std::vector<Vector<N, T>> dirs_reciprocal = ray_reciprocal_directions(rays);
@@ -254,6 +284,18 @@ double compute_intersections_per_second()
                 [&]
                 {
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
+                });
+}
+
+template <std::size_t N, typename T>
+double compute_volume_intersections_per_second()
+{
+        PCG engine;
+
+        return average<AVERAGE_COUNT>(
+                [&]
+                {
+                        return compute_volume_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 }
 
@@ -280,6 +322,12 @@ template <std::size_t N, typename T>
 [[nodiscard]] double compute_intersections_per_second()
 {
         return implementation::compute_intersections_per_second<N, T>();
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] double compute_volume_intersections_per_second()
+{
+        return implementation::compute_volume_intersections_per_second<N, T>();
 }
 
 template <std::size_t N, typename T>

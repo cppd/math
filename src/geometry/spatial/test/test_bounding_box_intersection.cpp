@@ -54,10 +54,11 @@ template <std::size_t N, typename T>
 void test_performance()
 {
         const long long p_1 = std::llround(test::compute_intersections_per_second<N, T>());
-        const long long p_2 = std::llround(test::compute_intersections_r_per_second<N, T>());
+        const long long p_2 = std::llround(test::compute_volume_intersections_per_second<N, T>());
+        const long long p_3 = std::llround(test::compute_intersections_r_per_second<N, T>());
 
         LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">: {" + to_string_digit_groups(p_1) + ", "
-            + to_string_digit_groups(p_2) + "} o/s");
+            + to_string_digit_groups(p_2) + ", " + to_string_digit_groups(p_3) + "} o/s");
 }
 
 template <typename T, typename Counter>

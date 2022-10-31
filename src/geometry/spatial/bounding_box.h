@@ -101,10 +101,18 @@ class BoundingBox final
 
         std::array<Vector<N, T>, 2> bounds_;
 
+        enum class IntersectionType
+        {
+                NEAREST,
+                VOLUME
+        };
+
+        template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
         {
                 T near = 0;
                 T far = max_distance;
+
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T dir = ray.dir()[i];
@@ -128,7 +136,18 @@ class BoundingBox final
                                 return {};
                         }
                 }
-                return near > 0 ? near : far;
+
+                static_assert(
+                        INTERSECTION_TYPE == IntersectionType::NEAREST
+                        || INTERSECTION_TYPE == IntersectionType::VOLUME);
+
+                switch (INTERSECTION_TYPE)
+                {
+                case IntersectionType::NEAREST:
+                        return near > 0 ? near : far;
+                case IntersectionType::VOLUME:
+                        return near;
+                }
         }
 
         // if direction is +0 or -0, then dir_reciprocal must be +infinity.
@@ -164,6 +183,7 @@ class BoundingBox final
 
 public:
         static T intersection_cost();
+        static T intersection_volume_cost();
         static T intersection_r_cost();
 
         constexpr BoundingBox()
@@ -250,7 +270,13 @@ public:
 
         [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r, const T max_distance = Limits<T>::max()) const
         {
-                return intersect_impl(r, max_distance);
+                return intersect_impl<IntersectionType::NEAREST>(r, max_distance);
+        }
+
+        [[nodiscard]] std::optional<T> intersect_volume(const Ray<N, T>& r, const T max_distance = Limits<T>::max())
+                const
+        {
+                return intersect_impl<IntersectionType::VOLUME>(r, max_distance);
         }
 
         [[nodiscard]] bool intersect(

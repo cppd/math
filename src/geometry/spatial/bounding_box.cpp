@@ -35,7 +35,20 @@ T BoundingBox<N, T>::intersection_cost()
         {
                 const double p = spatial::intersection::bounding_box::compute_intersections_per_second<N, T>();
                 LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
-                    + "> #1 intersections per second = " + to_string_digit_groups(std::llround(p)));
+                    + "> #1n intersections per second = " + to_string_digit_groups(std::llround(p)));
+                return 1 / p;
+        }();
+        return cost;
+}
+
+template <std::size_t N, typename T>
+T BoundingBox<N, T>::intersection_volume_cost()
+{
+        static const T cost = []
+        {
+                const double p = spatial::intersection::bounding_box::compute_volume_intersections_per_second<N, T>();
+                LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
+                    + "> #1v intersections per second = " + to_string_digit_groups(std::llround(p)));
                 return 1 / p;
         }();
         return cost;
@@ -54,8 +67,9 @@ T BoundingBox<N, T>::intersection_r_cost()
         return cost;
 }
 
-#define TEMPLATE(N, T)                                       \
-        template T BoundingBox<(N), T>::intersection_cost(); \
+#define TEMPLATE(N, T)                                              \
+        template T BoundingBox<(N), T>::intersection_cost();        \
+        template T BoundingBox<(N), T>::intersection_volume_cost(); \
         template T BoundingBox<(N), T>::intersection_r_cost();
 
 TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
