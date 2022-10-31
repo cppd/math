@@ -188,7 +188,7 @@ public:
 
         [[nodiscard]] std::optional<T> intersect_root(const Ray<N, T>& ray, const T& max_distance) const
         {
-                return nodes_[0].bounds.intersect(ray, max_distance);
+                return nodes_[0].bounds.intersect_volume(ray, max_distance);
         }
 
         // The signature of the object_intersect function
