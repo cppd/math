@@ -63,7 +63,15 @@ class Parallelotope final
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
-        [[nodiscard]] bool intersect_impl(const Ray<N, T>& r, T max_distance, T* first, T* second) const;
+        enum class IntersectionType
+        {
+                FARTHEST,
+                NEAREST,
+                VOLUME
+        };
+
+        template <IntersectionType INTERSECTION_TYPE>
+        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& r, T max_distance) const;
 
         template <int INDEX, typename F>
         void binary_division_impl(
@@ -213,8 +221,8 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 }
 
 template <std::size_t N, typename T>
-bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_distance, T* const first, T* const second)
-        const
+template <typename Parallelotope<N, T>::IntersectionType INTERSECTION_TYPE>
+std::optional<T> Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_distance) const
 {
         T near = 0;
         T far = max_distance;
@@ -227,7 +235,7 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_dista
                 {
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                return false;
+                                return {};
                         }
                         continue;
                 }
@@ -238,50 +246,41 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_dista
                 far = std::min(far, a[!dir_negative]);
                 if (far < near)
                 {
-                        return false;
+                        return {};
                 }
         }
 
-        *first = near;
-        *second = far;
+        static_assert(
+                INTERSECTION_TYPE == IntersectionType::FARTHEST || INTERSECTION_TYPE == IntersectionType::NEAREST
+                || INTERSECTION_TYPE == IntersectionType::VOLUME);
 
-        return true;
+        switch (INTERSECTION_TYPE)
+        {
+        case IntersectionType::FARTHEST:
+                return far;
+        case IntersectionType::NEAREST:
+                return near > 0 ? near : far;
+        case IntersectionType::VOLUME:
+                return near;
+        }
 }
 
 template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& ray, const T max_distance) const
 {
-        T first;
-        T second;
-        if (intersect_impl(ray, max_distance, &first, &second))
-        {
-                return (first > 0) ? first : second;
-        }
-        return std::nullopt;
+        return intersect_impl<IntersectionType::NEAREST>(ray, max_distance);
 }
 
 template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& ray, const T max_distance) const
 {
-        T first;
-        T second;
-        if (intersect_impl(ray, max_distance, &first, &second))
-        {
-                return second;
-        }
-        return std::nullopt;
+        return intersect_impl<IntersectionType::FARTHEST>(ray, max_distance);
 }
 
 template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& ray, const T max_distance) const
 {
-        T first;
-        T second;
-        if (intersect_impl(ray, max_distance, &first, &second))
-        {
-                return first;
-        }
-        return std::nullopt;
+        return intersect_impl<IntersectionType::VOLUME>(ray, max_distance);
 }
 
 template <std::size_t N, typename T>
