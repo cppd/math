@@ -107,11 +107,11 @@ T Parallelotope<N, T, Color>::intersection_cost() const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& r, const T max_distance) const
+std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& ray, const T max_distance) const
 {
         if (alpha_nonzero_)
         {
-                std::optional<T> res = parallelotope_.intersect(r);
+                std::optional<T> res = parallelotope_.intersect_volume(ray, max_distance);
                 if (res && *res < max_distance)
                 {
                         return res;

@@ -106,11 +106,12 @@ T HyperplaneParallelotope<N, T, Color>::intersection_cost() const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<T> HyperplaneParallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& r, const T max_distance) const
+std::optional<T> HyperplaneParallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& ray, const T max_distance)
+        const
 {
         if (alpha_nonzero_)
         {
-                std::optional<T> res = hyperplane_parallelotope_.intersect(r);
+                std::optional<T> res = hyperplane_parallelotope_.intersect(ray);
                 if (res && *res < max_distance)
                 {
                         return res;

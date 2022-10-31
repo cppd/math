@@ -35,7 +35,7 @@ class Parallelotope final : public Shape<N, T, Color>
 
         T intersection_cost() const override;
 
-        std::optional<T> intersect_bounds(const Ray<N, T>& r, T max_distance) const override;
+        std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const override;
 
         ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
                 const override;
