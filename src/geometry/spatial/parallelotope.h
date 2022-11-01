@@ -71,7 +71,7 @@ class Parallelotope final
         };
 
         template <IntersectionType INTERSECTION_TYPE>
-        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& r, T max_distance) const;
+        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, T max_distance) const;
 
         template <int INDEX, typename F>
         void binary_division_impl(
