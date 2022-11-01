@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/spinlock.h>
 #include <src/com/type/limit.h>
-#include <src/com/type/name.h>
 #include <src/image/format.h>
 #include <src/painter/painter.h>
 #include <src/painter/scenes/storage.h>
@@ -62,8 +61,6 @@ public:
 
         virtual ~Pixels() = default;
 
-        [[nodiscard]] virtual const char* floating_point_name() const = 0;
-        [[nodiscard]] virtual const char* color_name() const = 0;
         [[nodiscard]] virtual std::optional<float> pixel_max() const = 0;
 
         [[nodiscard]] virtual const std::vector<int>& screen_size() const = 0;
@@ -96,9 +93,6 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const painter::scenes::StorageScene<N, T, Color> scene_;
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
-
-        const char* const floating_point_name_;
-        const char* const color_name_;
 
         const GlobalIndex<N - 1, long long> global_index_;
         const std::vector<int> screen_size_;
@@ -246,16 +240,6 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         // Pixels
 
-        [[nodiscard]] const char* floating_point_name() const override
-        {
-                return floating_point_name_;
-        }
-
-        [[nodiscard]] const char* color_name() const override
-        {
-                return color_name_;
-        }
-
         [[nodiscard]] std::optional<float> pixel_max() const override
         {
                 float max = pixel_max_.load(std::memory_order_relaxed);
@@ -374,8 +358,6 @@ public:
                 const int samples_per_pixel,
                 const bool flat_shading)
                 : scene_(std::move(scene)),
-                  floating_point_name_(type_bit_name<T>()),
-                  color_name_(Color::name()),
                   global_index_(scene_.scene->projector().screen_size()),
                   screen_size_(
                           [](const auto& array)

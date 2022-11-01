@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_window.h"
 
+#include <src/com/type/name.h>
 #include <src/painter/painter.h>
 #include <src/painter/scenes/storage.h>
 
@@ -65,7 +66,7 @@ private:
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
-        void create_interface();
+        void create_interface(const char* integrator_name, const char* floating_point_name, const char* color_name);
         void create_sliders();
         void create_actions();
 
@@ -74,14 +75,19 @@ private:
         void update_image();
 
 public:
-        PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);
+        PainterWindow(
+                const std::string& name,
+                painter::Integrator integrator,
+                const char* floating_point_name,
+                const char* color_name,
+                std::unique_ptr<Pixels>&& pixels);
 
         ~PainterWindow() override;
 };
 
 template <std::size_t N, typename T, typename Color>
 void create_painter_window(
-        const std::string& name,
+        std::string name,
         const painter::Integrator integrator,
         const unsigned thread_count,
         const int samples_per_pixel,
@@ -89,12 +95,13 @@ void create_painter_window(
         painter::scenes::StorageScene<N, T, Color>&& scene)
 {
         Application::run(
-                [=, scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
+                [=, name = std::move(name),
+                 scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
                 {
+                        auto pixels = std::make_unique<PainterPixels<N, T, Color>>(
+                                std::move(*scene), integrator, thread_count, samples_per_pixel, flat_shading);
                         create_and_show_delete_on_close_window<PainterWindow>(
-                                name,
-                                std::make_unique<PainterPixels<N, T, Color>>(
-                                        std::move(*scene), integrator, thread_count, samples_per_pixel, flat_shading));
+                                name, integrator, type_bit_name<T>(), Color::name(), std::move(pixels));
                 });
 }
 }

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/message.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/settings/name.h>
 
@@ -31,9 +32,26 @@ namespace
 {
 constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
 constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
+
+const char* integrator_to_string(const painter::Integrator integrator)
+{
+        switch (integrator)
+        {
+        case painter::Integrator::BPT:
+                return "BPT";
+        case painter::Integrator::PT:
+                return "PT";
+        }
+        error("Unknown painter integrator " + to_string(enum_to_int(integrator)));
+}
 }
 
-PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels)
+PainterWindow::PainterWindow(
+        const std::string& name,
+        const painter::Integrator integrator,
+        const char* const floating_point_name,
+        const char* const color_name,
+        std::unique_ptr<Pixels>&& pixels)
         : pixels_(std::move(pixels))
 {
         ui_.setupUi(this);
@@ -46,7 +64,7 @@ PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& 
         }
         this->setWindowTitle(QString::fromStdString(title));
 
-        create_interface();
+        create_interface(integrator_to_string(integrator), floating_point_name, color_name);
         create_sliders();
         create_actions();
 }
@@ -82,7 +100,10 @@ void PainterWindow::closeEvent(QCloseEvent* const event)
         event->accept();
 }
 
-void PainterWindow::create_interface()
+void PainterWindow::create_interface(
+        const char* const integrator_name,
+        const char* const floating_point_name,
+        const char* const color_name)
 {
         ui_.status_bar->setFixedHeight(ui_.status_bar->height());
 
@@ -116,8 +137,9 @@ void PainterWindow::create_interface()
         statistics_widget_ = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
         main_layout->addWidget(statistics_widget_.get());
 
-        ui_.status_bar->addPermanentWidget(new QLabel(pixels_->color_name(), this));
-        ui_.status_bar->addPermanentWidget(new QLabel(pixels_->floating_point_name(), this));
+        ui_.status_bar->addPermanentWidget(new QLabel(integrator_name, this));
+        ui_.status_bar->addPermanentWidget(new QLabel(color_name, this));
+        ui_.status_bar->addPermanentWidget(new QLabel(floating_point_name, this));
 
         connect(ui_.menu_window->addAction("Adjust size"), &QAction::triggered, this,
                 &PainterWindow::adjust_window_size);
