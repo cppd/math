@@ -104,7 +104,7 @@ ShapeIntersection<N, T, Color> ray_intersection(
 {
         thread_local BoundingIntersectionHeap<N, T, Color> heap;
 
-        ShapeIntersection<N, T, Color> res{Limits<T>::infinity(), nullptr};
+        ShapeIntersection<N, T, Color> res{max_distance, nullptr};
 
         for (heap.make(shapes, indices, ray, max_distance); !heap.empty(); heap.pop())
         {
