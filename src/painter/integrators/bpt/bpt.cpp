@@ -48,6 +48,18 @@ template <std::size_t N, typename T, typename Color>
         return surface && dot(normals.shading, -ray.dir()) > 0;
 }
 
+template <std::size_t N, typename T>
+T correct_normals(const Normals<N, T>& normals, const Vector<N, T>& v, const Vector<N, T>& l)
+{
+        const T denominator = dot(v, normals.geometric) * dot(l, normals.shading);
+        if (denominator == 0)
+        {
+                return 0;
+        }
+        const T numerator = dot(v, normals.shading) * dot(l, normals.geometric);
+        return std::abs(numerator / denominator);
+}
+
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void walk(
         const bool camera_path,
@@ -107,6 +119,11 @@ void walk(
 
                 pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
+
+                if (!camera_path)
+                {
+                        beta *= correct_normals(normals, sample->l, -ray.dir());
+                }
 
                 if (beta.is_black())
                 {
