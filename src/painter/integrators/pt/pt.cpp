@@ -16,16 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
-Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
-Real-Time Rendering. Fourth Edition.
-CRC Press, 2018.
-
-9.3 The BRDF
-Reflectance equation (9.3)
-*/
-
-/*
 Matt Pharr, Wenzel Jakob, Greg Humphreys.
 Physically Based Rendering. From theory to implementation. Third edition.
 Elsevier, 2017.

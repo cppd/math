@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
+
+16.1 The path-space measurement equation
+16.3 Bidirectional path tracing
+*/
+
 #include "bpt.h"
 
 #include "connect.h"

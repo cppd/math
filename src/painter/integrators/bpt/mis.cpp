@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
+
+13.10.1 Multiple importance sampling
+16.3.4 Multiple importance sampling
+*/
+
 #include "mis.h"
 
 #include "vertex.h"
