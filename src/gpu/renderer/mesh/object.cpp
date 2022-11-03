@@ -170,6 +170,49 @@ class Impl final : public MeshObject
                         device_->handle(), texture_sampler_, material_layouts_, mesh, textures_, material_buffers_);
         }
 
+        void load_mesh_geometry_vertices(const model::mesh::Mesh<3>& mesh)
+        {
+                std::vector<int> sorted_face_indices;
+                std::vector<int> material_face_offset;
+                std::vector<int> material_face_count;
+
+                model::mesh::sort_facets_by_material(
+                        mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
+
+                ASSERT(material_face_offset.size() == material_face_count.size());
+                ASSERT(std::all_of(
+                        material_memory_.cbegin(), material_memory_.cend(),
+                        [&](const auto& v)
+                        {
+                                return material_face_offset.size() == v.second.descriptor_set_count();
+                        }));
+
+                material_vertices_.resize(material_face_count.size());
+                for (std::size_t i = 0; i < material_face_count.size(); ++i)
+                {
+                        material_vertices_[i].offset = 3 * material_face_offset[i];
+                        material_vertices_[i].count = 3 * material_face_count[i];
+                }
+
+                BufferMesh buffer_mesh;
+
+                load_vertices(
+                        *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh, sorted_face_indices,
+                        &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
+
+                faces_vertex_count_ = buffer_mesh.vertices.size();
+                faces_index_count_ = buffer_mesh.indices.size();
+
+                ASSERT(faces_index_count_ == 3 * mesh.facets.size());
+
+                if (ray_tracing_)
+                {
+                        acceleration_structure_ = load_acceleration_structure(
+                                *device_, *compute_command_pool_, *compute_queue_,
+                                acceleration_structure_family_indices_, buffer_mesh);
+                }
+        }
+
         void load_mesh_geometry(const model::mesh::Mesh<3>& mesh)
         {
                 faces_vertex_buffer_.reset();
@@ -178,40 +221,7 @@ class Impl final : public MeshObject
                 points_vertex_buffer_.reset();
                 acceleration_structure_.reset();
 
-                BufferMesh buffer_mesh;
-
-                {
-                        std::vector<int> sorted_face_indices;
-                        std::vector<int> material_face_offset;
-                        std::vector<int> material_face_count;
-
-                        model::mesh::sort_facets_by_material(
-                                mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
-
-                        ASSERT(material_face_offset.size() == material_face_count.size());
-                        ASSERT(std::all_of(
-                                material_memory_.cbegin(), material_memory_.cend(),
-                                [&](const auto& v)
-                                {
-                                        return material_face_offset.size() == v.second.descriptor_set_count();
-                                }));
-
-                        material_vertices_.resize(material_face_count.size());
-                        for (std::size_t i = 0; i < material_face_count.size(); ++i)
-                        {
-                                material_vertices_[i].offset = 3 * material_face_offset[i];
-                                material_vertices_[i].count = 3 * material_face_count[i];
-                        }
-
-                        load_vertices(
-                                *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh,
-                                sorted_face_indices, &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
-
-                        faces_vertex_count_ = buffer_mesh.vertices.size();
-                        faces_index_count_ = buffer_mesh.indices.size();
-
-                        ASSERT(faces_index_count_ == 3 * mesh.facets.size());
-                }
+                load_mesh_geometry_vertices(mesh);
 
                 lines_vertex_buffer_ =
                         load_line_vertices(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
@@ -220,13 +230,6 @@ class Impl final : public MeshObject
                 points_vertex_buffer_ =
                         load_point_vertices(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
                 points_vertex_count_ = mesh.points.size();
-
-                if (ray_tracing_)
-                {
-                        acceleration_structure_ = load_acceleration_structure(
-                                *device_, *compute_command_pool_, *compute_queue_,
-                                acceleration_structure_family_indices_, buffer_mesh);
-                }
         }
 
         //
