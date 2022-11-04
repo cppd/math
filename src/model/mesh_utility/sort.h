@@ -35,12 +35,15 @@ Key-indexed counting
 
 namespace ns::model::mesh
 {
+struct SortedFacets final
+{
+        std::vector<int> indices;
+        std::vector<int> offset;
+        std::vector<int> count;
+};
+
 template <std::size_t N>
-void sort_facets_by_material(
-        const Mesh<N>& mesh,
-        std::vector<int>* const sorted_facet_indices,
-        std::vector<int>* const facet_offset,
-        std::vector<int>* const facet_count)
+SortedFacets sort_facets_by_material(const Mesh<N>& mesh)
 {
         ASSERT(std::all_of(
                 std::cbegin(mesh.facets), std::cend(mesh.facets),
@@ -58,39 +61,43 @@ void sort_facets_by_material(
                 return i >= 0 ? i : max_material_index;
         };
 
-        *facet_count = std::vector<int>(new_material_size, 0);
+        SortedFacets facets;
+
+        facets.count = std::vector<int>(new_material_size, 0);
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
                 int m = material_index(facet.material);
-                ++(*facet_count)[m];
+                ++facets.count[m];
         }
 
-        *facet_offset = std::vector<int>(new_material_size, 0);
+        facets.offset = std::vector<int>(new_material_size, 0);
         for (int i = 0, sum = 0; i < new_material_size; ++i)
         {
-                (*facet_offset)[i] = sum;
-                sum += (*facet_count)[i];
+                facets.offset[i] = sum;
+                sum += facets.count[i];
         }
 
-        sorted_facet_indices->resize(mesh.facets.size());
-        std::vector<int> starting_indices = *facet_offset;
+        facets.indices.resize(mesh.facets.size());
+        std::vector<int> starting_indices = facets.offset;
         for (std::size_t i = 0; i < mesh.facets.size(); ++i)
         {
                 const int m = material_index(mesh.facets[i].material);
-                (*sorted_facet_indices)[starting_indices[m]++] = i;
+                facets.indices[starting_indices[m]++] = i;
         }
 
-        ASSERT(facet_offset->size() == facet_count->size());
-        ASSERT(facet_count->size() == mesh.materials.size() + 1);
-        ASSERT(sorted_facet_indices->size() == mesh.facets.size());
-        ASSERT(sorted_facet_indices->size() == sort_and_unique(*sorted_facet_indices).size());
+        ASSERT(facets.offset.size() == facets.count.size());
+        ASSERT(facets.count.size() == mesh.materials.size() + 1);
+        ASSERT(facets.indices.size() == mesh.facets.size());
+        ASSERT(facets.indices.size() == sort_and_unique(facets.indices).size());
         ASSERT(std::is_sorted(
-                std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices),
+                std::cbegin(facets.indices), std::cend(facets.indices),
                 [&](int a, int b)
                 {
                         int a_ = material_index(mesh.facets[a].material);
                         int b_ = material_index(mesh.facets[b].material);
                         return a_ < b_;
                 }));
+
+        return facets;
 }
 }

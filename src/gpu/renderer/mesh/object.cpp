@@ -172,32 +172,27 @@ class Impl final : public MeshObject
 
         void load_mesh_geometry_vertices(const model::mesh::Mesh<3>& mesh)
         {
-                std::vector<int> sorted_face_indices;
-                std::vector<int> material_face_offset;
-                std::vector<int> material_face_count;
+                const model::mesh::SortedFacets facets = model::mesh::sort_facets_by_material(mesh);
 
-                model::mesh::sort_facets_by_material(
-                        mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
-
-                ASSERT(material_face_offset.size() == material_face_count.size());
+                ASSERT(facets.offset.size() == facets.count.size());
                 ASSERT(std::all_of(
                         material_memory_.cbegin(), material_memory_.cend(),
                         [&](const auto& v)
                         {
-                                return material_face_offset.size() == v.second.descriptor_set_count();
+                                return facets.offset.size() == v.second.descriptor_set_count();
                         }));
 
-                material_vertices_.resize(material_face_count.size());
-                for (std::size_t i = 0; i < material_face_count.size(); ++i)
+                material_vertices_.resize(facets.count.size());
+                for (std::size_t i = 0; i < facets.count.size(); ++i)
                 {
-                        material_vertices_[i].offset = 3 * material_face_offset[i];
-                        material_vertices_[i].count = 3 * material_face_count[i];
+                        material_vertices_[i].offset = 3 * facets.offset[i];
+                        material_vertices_[i].count = 3 * facets.count[i];
                 }
 
                 BufferMesh buffer_mesh;
 
                 load_vertices(
-                        *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh, sorted_face_indices,
+                        *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh, facets.indices,
                         &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
 
                 faces_vertex_count_ = buffer_mesh.vertices.size();
