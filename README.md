@@ -19,6 +19,7 @@ Just for fun with mathematics and stuff
   * [Real-time rendering](#real-time-rendering)
   * [3D model](#3d-model)
   * [4D polytope](#4d-polytope)
+  * [The Cornell box](#the-cornell-box)
 
 
 ## File types
@@ -186,3 +187,7 @@ f 8 7 6 5
 <img src="https://i.imgur.com/lkC8Bgs.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/X2D1jMr.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/8MJ5Ptm.png" alt="image" width="23%"></img>
+
+### The Cornell box
+
+<img src="https://i.imgur.com/woWVUC3.png" alt="image" width="23%"></img>
