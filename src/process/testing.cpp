@@ -31,7 +31,7 @@ std::function<void(progress::RatioList*)> action_self_test(const TestType test_t
         {
         case TestType::SMALL:
         {
-                return [=](progress::RatioList* progress_list)
+                return [=](progress::RatioList* const progress_list)
                 {
                         test::Tests::instance().run_small(progress_list);
                 };

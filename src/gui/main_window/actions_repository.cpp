@@ -119,7 +119,7 @@ void create_point_mesh_menu(
         {
                 ASSERT(!object_name.empty());
 
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
@@ -153,7 +153,7 @@ void create_facet_mesh_menu(
         {
                 ASSERT(!object_name.empty());
 
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
@@ -187,7 +187,7 @@ void create_volume_menu(
         {
                 ASSERT(!object_name.empty());
 
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()

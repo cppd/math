@@ -53,7 +53,7 @@ std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, c
                 {
                         for (int x = 0; x < screen_size[0]; ++x)
                         {
-                                const std::byte* pixel = ((x + y) & 1) ? light.data() : dark.data();
+                                const std::byte* const pixel = ((x + y) & 1) ? light.data() : dark.data();
                                 std::memcpy(&image[index], pixel, pixel_size);
                                 index += pixel_size;
                         }

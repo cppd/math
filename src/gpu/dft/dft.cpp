@@ -98,7 +98,7 @@ class Impl final : public Dft
 
         void rows_mul_d(const VkCommandBuffer command_buffer, const bool inverse) const
         {
-                const VkDescriptorSet* set =
+                const VkDescriptorSet* const set =
                         inverse ? &mul_d_d1_inv_.descriptor_set() : &mul_d_d1_fwd_.descriptor_set();
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_rows());
                 vkCmdBindDescriptorSets(
@@ -137,7 +137,7 @@ class Impl final : public Dft
 
         void columns_mul_d(const VkCommandBuffer command_buffer, const bool inverse) const
         {
-                const VkDescriptorSet* set =
+                const VkDescriptorSet* const set =
                         inverse ? &mul_d_d2_inv_.descriptor_set() : &mul_d_d2_fwd_.descriptor_set();
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_columns());
                 vkCmdBindDescriptorSets(

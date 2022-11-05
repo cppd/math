@@ -55,7 +55,7 @@ Vector<N, T> random_normal()
 //
 
 template <std::size_t N, typename T>
-void test_power_cosine_on_hemisphere(progress::Ratio* progress)
+void test_power_cosine_on_hemisphere(progress::Ratio* const progress)
 {
         const auto power = random_power<T>();
 

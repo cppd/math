@@ -57,7 +57,7 @@ std::function<void(progress::RatioList*)> action_bound_cocone(const storage::Mes
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& mesh_object)
                 {
-                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* progress_list)
+                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* const progress_list)
                         {
                                 constexpr bool CONVEX_HULL = false;
                                 constexpr bool COCONE = false;
@@ -92,7 +92,7 @@ std::function<void(progress::RatioList*)> action_3d_slice(const storage::VolumeO
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
-                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* progress_list)
+                        std::function<void(progress::RatioList*)> f = [=](progress::RatioList* const progress_list)
                         {
                                 if constexpr (N > DIMENSION)
                                 {
