@@ -297,11 +297,10 @@ public:
                 return sphere_mesh_.facet_count();
         }
 
-        [[nodiscard]] long long distribution_count(const long long uniform_min_count_per_bucket) const
+        [[nodiscard]] double distribution_count(const long long uniform_min_count_per_bucket) const
         {
                 const double count = uniform_min_count_per_bucket * bucket_count();
-                const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-                return std::ceil(count / round_to) * round_to;
+                return count;
         }
 
         template <typename RandomVector, typename PDF>

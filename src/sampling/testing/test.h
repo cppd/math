@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "angle_distribution.h"
+#include "functions.h"
 #include "sphere_distribution.h"
 
 #include <src/com/benchmark.h>
@@ -114,7 +115,7 @@ void test_distribution_angle(
 
         const long long count = [&]
         {
-                const double c = buckets.distribution_count(count_per_bucket);
+                const double c = round_distribution_count(buckets.distribution_count(count_per_bucket));
                 return (c <= 1e9) ? c : 0;
         }();
 
@@ -152,7 +153,7 @@ void test_distribution_surface(
 
         SphereDistribution<N, T> buckets(progress);
 
-        const long long count = buckets.distribution_count(count_per_bucket);
+        const long long count = round_distribution_count(buckets.distribution_count(count_per_bucket));
 
         if (count <= 0)
         {

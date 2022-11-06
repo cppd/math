@@ -174,15 +174,13 @@ class AngleDistribution final
         std::vector<Distribution> distribution_;
 
 public:
-        static double distribution_count(const long long uniform_min_count_per_bucket)
+        [[nodiscard]] static double distribution_count(const long long uniform_min_count_per_bucket)
         {
                 const double bucket_size = BUCKET_SIZE;
                 const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
                 const double s_bucket = geometry::sphere_relative_area<N, long double>(0, bucket_size);
                 const double count = s_all / s_bucket * uniform_min_count_per_bucket;
-                const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-                const double rounded_count = std::ceil(count / round_to) * round_to;
-                return rounded_count;
+                return count;
         }
 
         template <typename RandomVector>
@@ -235,7 +233,7 @@ public:
         }
 
         template <typename PDF>
-        std::string histogram(const PDF& pdf) const
+        [[nodiscard]] std::string histogram(const PDF& pdf) const
         {
                 constexpr int BAR_SIZE = 100;
                 constexpr int DIVISION_SIZE = 10;
