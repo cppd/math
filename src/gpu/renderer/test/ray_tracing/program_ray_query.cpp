@@ -29,7 +29,7 @@ namespace ns::gpu::renderer::test
 {
 namespace
 {
-class Constant final : public vulkan::SpecializationConstant
+class Constant final
 {
         struct Data final
         {
@@ -39,14 +39,12 @@ class Constant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
-
 public:
         Constant();
 
         void set_local_size(std::int32_t size);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 Constant::Constant()
@@ -75,19 +73,14 @@ void Constant::set_local_size(const std::int32_t size)
         data_.local_size_y = size;
 }
 
-const std::vector<VkSpecializationMapEntry>& Constant::entries() const
+VkSpecializationInfo Constant::info() const
 {
-        return entries_;
-}
-
-const void* Constant::data() const
-{
-        return &data_;
-}
-
-std::size_t Constant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 }
 
@@ -107,11 +100,13 @@ RayQueryProgram::RayQueryProgram(const VkDevice device, const unsigned local_siz
         Constant constant;
         constant.set_local_size(local_size);
 
+        const VkSpecializationInfo constant_info = constant.info();
+
         vulkan::ComputePipelineCreateInfo compute_info;
         compute_info.device = device;
         compute_info.pipeline_layout = pipeline_layout_;
         compute_info.shader = &shader;
-        compute_info.constants = &constant;
+        compute_info.constants = &constant_info;
         pipeline_ = vulkan::create_compute_pipeline(compute_info);
 }
 

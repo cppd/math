@@ -166,19 +166,14 @@ void ComputeConstant::set(const std::int32_t local_size, const Region<2, int>& r
         data_.height = rectangle.height();
 }
 
-const std::vector<VkSpecializationMapEntry>& ComputeConstant::entries() const
+VkSpecializationInfo ComputeConstant::info() const
 {
-        return entries_;
-}
-
-const void* ComputeConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t ComputeConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -211,13 +206,15 @@ VkPipeline ComputeProgram::pipeline() const
 
 void ComputeProgram::create_pipeline(const unsigned group_size, const Region<2, int>& rectangle)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set(group_size, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

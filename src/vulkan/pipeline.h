@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "constant.h"
 #include "device.h"
 #include "objects.h"
 #include "shader.h"
@@ -49,7 +48,7 @@ struct GraphicsPipelineCreateInfo final
         // optional
         const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
         const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
-        const std::vector<const SpecializationConstant*>* constants = nullptr;
+        const std::vector<VkSpecializationInfo>* constants = nullptr;
         std::vector<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
@@ -65,7 +64,7 @@ struct ComputePipelineCreateInfo final
         const Shader* shader = nullptr;
 
         // optional
-        const SpecializationConstant* constants = nullptr;
+        const VkSpecializationInfo* constants = nullptr;
 };
 
 handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
@@ -81,7 +80,7 @@ struct RayTracingPipelineCreateInfo final
         const std::vector<VkRayTracingShaderGroupCreateInfoKHR>* shader_groups = nullptr;
 
         // optional
-        const std::vector<const SpecializationConstant*>* constants = nullptr;
+        const std::vector<VkSpecializationInfo>* constants = nullptr;
 };
 
 handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info);

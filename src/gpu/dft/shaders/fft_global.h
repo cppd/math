@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -68,7 +67,7 @@ public:
         void set(const vulkan::Buffer& buffer) const;
 };
 
-class FftGlobalConstant final : public vulkan::SpecializationConstant
+class FftGlobalConstant final
 {
         struct Data final
         {
@@ -80,14 +79,12 @@ class FftGlobalConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
-
 public:
         FftGlobalConstant();
 
         void set(std::uint32_t group_size, bool inverse, std::uint32_t data_size, std::uint32_t n);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 class FftGlobalProgram final

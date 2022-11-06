@@ -130,19 +130,14 @@ void DownsampleConstant::set(const std::uint32_t local_size_x, const std::uint32
         data_.local_size_y = local_size_y;
 }
 
-const std::vector<VkSpecializationMapEntry>& DownsampleConstant::entries() const
+VkSpecializationInfo DownsampleConstant::info() const
 {
-        return entries_;
-}
-
-const void* DownsampleConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t DownsampleConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -175,13 +170,15 @@ VkPipeline DownsampleProgram::pipeline() const
 
 void DownsampleProgram::create_pipeline(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set(local_size_x, local_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

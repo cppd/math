@@ -301,19 +301,12 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 
         ASSERT(info.shader->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
 
-        ASSERT(!info.constants || info.constants->size() > 0);
-        ASSERT(!info.constants || info.constants->data() != nullptr);
-        ASSERT(!info.constants || !info.constants->entries().empty());
+        ASSERT(!info.constants || info.constants->dataSize > 0);
+        ASSERT(!info.constants || info.constants->pData != nullptr);
+        ASSERT(!info.constants || info.constants->mapEntryCount > 0);
+        ASSERT(!info.constants || info.constants->pMapEntries != nullptr);
 
-        ASSERT(!info.constants
-               || std::all_of(
-                       info.constants->entries().cbegin(), info.constants->entries().cend(),
-                       [&](const VkSpecializationMapEntry& entry)
-                       {
-                               return entry.offset + entry.size <= info.constants->size();
-                       }));
-
-        const PipelineShaderStageCreateInfo shader_stage_create_info({info.shader}, {info.constants});
+        const PipelineShaderStageCreateInfo shader_stage_create_info({info.shader}, {*info.constants});
 
         const VkComputePipelineCreateInfo create_info = [&]
         {

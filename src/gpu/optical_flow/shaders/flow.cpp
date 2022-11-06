@@ -351,19 +351,14 @@ void FlowConstant::set(
         data_.min_determinant = min_determinant;
 }
 
-const std::vector<VkSpecializationMapEntry>& FlowConstant::entries() const
+VkSpecializationInfo FlowConstant::info() const
 {
-        return entries_;
-}
-
-const void* FlowConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t FlowConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -402,13 +397,15 @@ void FlowProgram::create_pipeline(
         const float stop_move_square,
         const float min_determinant)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set(local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -50,7 +49,7 @@ public:
         void set_object_image(const vulkan::ImageView& image) const;
 };
 
-class ComputeConstant final : public vulkan::SpecializationConstant
+class ComputeConstant final
 {
         struct Data final
         {
@@ -59,19 +58,16 @@ class ComputeConstant final : public vulkan::SpecializationConstant
                 std::int32_t y;
                 std::int32_t width;
                 std::int32_t height;
-
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
-
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
 
 public:
         ComputeConstant();
 
         void set(std::int32_t local_size, const Region<2, int>& rectangle);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 class ComputeProgram final

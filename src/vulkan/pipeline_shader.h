@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "constant.h"
 #include "shader.h"
 
 #include <memory>
@@ -34,16 +33,16 @@ class PipelineShaderStageCreateInfo final
 
         void init_specialization_info(
                 const std::vector<const Shader*>& shaders,
-                const std::vector<const SpecializationConstant*>& constants);
+                const std::vector<VkSpecializationInfo>& constants);
 
 public:
         PipelineShaderStageCreateInfo(
                 const std::vector<const Shader*>& shaders,
-                const std::vector<const SpecializationConstant*>* constants);
+                const std::vector<VkSpecializationInfo>* constants);
 
         PipelineShaderStageCreateInfo(
                 const std::vector<const Shader*>& shaders,
-                const std::vector<const SpecializationConstant*>& constants);
+                const std::vector<VkSpecializationInfo>& constants);
 
         [[nodiscard]] std::uint32_t size() const
         {

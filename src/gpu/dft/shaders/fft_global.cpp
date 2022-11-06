@@ -162,19 +162,14 @@ void FftGlobalConstant::set(
         data_.n = n;
 }
 
-const std::vector<VkSpecializationMapEntry>& FftGlobalConstant::entries() const
+VkSpecializationInfo FftGlobalConstant::info() const
 {
-        return entries_;
-}
-
-const void* FftGlobalConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t FftGlobalConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -216,6 +211,8 @@ void FftGlobalProgram::create_pipelines(
         const std::uint32_t data_size,
         const std::uint32_t n)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         {
                 constant_.set(group_size, false, data_size, n);
 
@@ -223,7 +220,7 @@ void FftGlobalProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_forward_ = create_compute_pipeline(info);
         }
         {
@@ -233,7 +230,7 @@ void FftGlobalProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_inverse_ = create_compute_pipeline(info);
         }
 }

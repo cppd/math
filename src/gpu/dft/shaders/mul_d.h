@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -46,7 +45,7 @@ public:
         void set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const;
 };
 
-class MulDConstant final : public vulkan::SpecializationConstant
+class MulDConstant final
 {
         struct Data final
         {
@@ -58,14 +57,12 @@ class MulDConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
-
 public:
         MulDConstant();
 
         void set(std::uint32_t group_size_x, std::uint32_t group_size_y, std::int32_t rows, std::int32_t columns);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 class MulDProgram final

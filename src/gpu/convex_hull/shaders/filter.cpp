@@ -129,19 +129,14 @@ void FilterConstant::set_line_size(const std::int32_t v)
         data_.line_size = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& FilterConstant::entries() const
+VkSpecializationInfo FilterConstant::info() const
 {
-        return entries_;
-}
-
-const void* FilterConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t FilterConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -158,13 +153,15 @@ FilterProgram::FilterProgram(const VkDevice device)
 
 void FilterProgram::create_pipeline(const unsigned height)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

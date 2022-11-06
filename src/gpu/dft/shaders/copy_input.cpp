@@ -156,19 +156,14 @@ void CopyInputConstant::set(
         data_.height = rectangle.height();
 }
 
-const std::vector<VkSpecializationMapEntry>& CopyInputConstant::entries() const
+VkSpecializationInfo CopyInputConstant::info() const
 {
-        return entries_;
-}
-
-const void* CopyInputConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t CopyInputConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -204,13 +199,15 @@ void CopyInputProgram::create_pipeline(
         const std::int32_t local_size_y,
         const Region<2, int>& rectangle)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

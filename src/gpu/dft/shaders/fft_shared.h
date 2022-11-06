@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -45,7 +44,7 @@ public:
         void set(const vulkan::Buffer& buffer) const;
 };
 
-class FftSharedConstant final : public vulkan::SpecializationConstant
+class FftSharedConstant final
 {
         struct Data final
         {
@@ -61,10 +60,6 @@ class FftSharedConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
-
 public:
         FftSharedConstant();
 
@@ -77,6 +72,8 @@ public:
                 std::uint32_t shared_size,
                 bool reverse_input,
                 std::uint32_t group_size);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 class FftSharedProgram final

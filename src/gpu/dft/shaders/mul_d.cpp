@@ -143,19 +143,14 @@ void MulDConstant::set(
         data_.columns = columns;
 }
 
-const std::vector<VkSpecializationMapEntry>& MulDConstant::entries() const
+VkSpecializationInfo MulDConstant::info() const
 {
-        return entries_;
-}
-
-const void* MulDConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t MulDConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -200,6 +195,8 @@ void MulDProgram::create_pipelines(
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         {
                 constant_.set(group_size_x, group_size_y, n2, m1);
 
@@ -207,7 +204,7 @@ void MulDProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_rows_ = create_compute_pipeline(info);
         }
         {
@@ -217,7 +214,7 @@ void MulDProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_columns_ = create_compute_pipeline(info);
         }
 }

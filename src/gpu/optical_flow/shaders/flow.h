@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -94,7 +93,7 @@ public:
         void set_flow_guess(const vulkan::Buffer& buffer) const;
 };
 
-class FlowConstant final : public vulkan::SpecializationConstant
+class FlowConstant final
 {
         struct Data final
         {
@@ -108,10 +107,6 @@ class FlowConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> entries_;
 
-        [[nodiscard]] const std::vector<VkSpecializationMapEntry>& entries() const override;
-        [[nodiscard]] const void* data() const override;
-        [[nodiscard]] std::size_t size() const override;
-
 public:
         FlowConstant();
 
@@ -122,6 +117,8 @@ public:
                 std::int32_t max_iteration_count,
                 float stop_move_square,
                 float min_determinant);
+
+        [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 class FlowProgram final

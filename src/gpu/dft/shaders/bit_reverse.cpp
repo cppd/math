@@ -119,19 +119,14 @@ void BitReverseConstant::set(
         data_.n_bits = n_bits;
 }
 
-const std::vector<VkSpecializationMapEntry>& BitReverseConstant::entries() const
+VkSpecializationInfo BitReverseConstant::info() const
 {
-        return entries_;
-}
-
-const void* BitReverseConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t BitReverseConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -168,13 +163,15 @@ void BitReverseProgram::create_pipeline(
         const std::uint32_t n_mask,
         const std::uint32_t n_bits)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set(group_size, data_size, n_mask, n_bits);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

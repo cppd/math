@@ -113,19 +113,14 @@ void MergeConstant::set_local_size_x(const std::int32_t v)
         data_.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& MergeConstant::entries() const
+VkSpecializationInfo MergeConstant::info() const
 {
-        return entries_;
-}
-
-const void* MergeConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t MergeConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -142,6 +137,8 @@ MergeProgram::MergeProgram(const VkDevice device)
 
 void MergeProgram::create_pipeline(const unsigned height, const unsigned local_size_x, const unsigned iteration_count)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set_line_size(height);
         constant_.set_local_size_x(local_size_x);
         constant_.set_iteration_count(iteration_count);
@@ -150,7 +147,7 @@ void MergeProgram::create_pipeline(const unsigned height, const unsigned local_s
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
         pipeline_ = create_compute_pipeline(info);
 }
 

@@ -184,19 +184,14 @@ void MulConstant::set_function(const std::int32_t function_index, const bool inv
         data_.inverse = inverse ? 1 : 0;
 }
 
-const std::vector<VkSpecializationMapEntry>& MulConstant::entries() const
+VkSpecializationInfo MulConstant::info() const
 {
-        return entries_;
-}
-
-const void* MulConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t MulConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -276,13 +271,15 @@ void MulProgram::create_pipelines(
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         constant_.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_;
+        info.constants = &constant_info;
 
         constant_.set_function(0, false);
         pipeline_rows_to_buffer_forward_ = create_compute_pipeline(info);

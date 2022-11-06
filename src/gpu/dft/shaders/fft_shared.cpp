@@ -159,19 +159,14 @@ void FftSharedConstant::set(
         data_.group_size = group_size;
 }
 
-const std::vector<VkSpecializationMapEntry>& FftSharedConstant::entries() const
+VkSpecializationInfo FftSharedConstant::info() const
 {
-        return entries_;
-}
-
-const void* FftSharedConstant::data() const
-{
-        return &data_;
-}
-
-std::size_t FftSharedConstant::size() const
-{
-        return sizeof(data_);
+        VkSpecializationInfo info = {};
+        info.mapEntryCount = entries_.size();
+        info.pMapEntries = entries_.data();
+        info.dataSize = sizeof(data_);
+        info.pData = &data_;
+        return info;
 }
 
 //
@@ -217,6 +212,8 @@ void FftSharedProgram::create_pipelines(
         const bool reverse_input,
         const std::uint32_t group_size)
 {
+        const VkSpecializationInfo constant_info = constant_.info();
+
         {
                 constant_.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
 
@@ -224,7 +221,7 @@ void FftSharedProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_forward_ = create_compute_pipeline(info);
         }
         {
@@ -234,7 +231,7 @@ void FftSharedProgram::create_pipelines(
                 info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
-                info.constants = &constant_;
+                info.constants = &constant_info;
                 pipeline_inverse_ = create_compute_pipeline(info);
         }
 }
