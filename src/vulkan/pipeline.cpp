@@ -306,7 +306,7 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants || info.constants->mapEntryCount > 0);
         ASSERT(!info.constants || info.constants->pMapEntries != nullptr);
 
-        const PipelineShaderStageCreateInfo shader_stage_create_info({info.shader}, {*info.constants});
+        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shader, info.constants);
 
         const VkComputePipelineCreateInfo create_info = [&]
         {

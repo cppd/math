@@ -38,44 +38,44 @@ void PipelineShaderStageCreateInfo::init_create_info(const std::vector<const Sha
         }
 }
 
-void PipelineShaderStageCreateInfo::init_specialization_info(
-        const std::vector<const Shader*>& shaders,
-        const std::vector<VkSpecializationInfo>& constants)
+void PipelineShaderStageCreateInfo::init_specialization_info()
 {
-        ASSERT(shaders.size() == constants.size());
+        ASSERT(create_info_.size() == specialization_info_.size());
 
-        for (std::size_t i = 0; i < shaders.size(); ++i)
+        for (std::size_t i = 0; i < specialization_info_.size(); ++i)
         {
-                const VkSpecializationInfo& constant = constants[i];
-
-                if (constant.mapEntryCount == 0)
+                const VkSpecializationInfo& info = specialization_info_[i];
+                if (info.mapEntryCount > 0)
                 {
-                        continue;
+                        create_info_[i].pSpecializationInfo = &info;
                 }
-
-                const auto& ptr = specialization_info_.emplace_back(std::make_unique<VkSpecializationInfo>(constant));
-                create_info_[i].pSpecializationInfo = ptr.get();
         }
 }
 
 PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
         const std::vector<const Shader*>& shaders,
-        const std::vector<VkSpecializationInfo>* const constants)
+        const std::vector<VkSpecializationInfo>* const specialization_info)
 {
         init_create_info(shaders);
 
-        if (constants)
+        if (specialization_info)
         {
-                init_specialization_info(shaders, *constants);
+                ASSERT(shaders.size() == specialization_info->size());
+                specialization_info_ = *specialization_info;
+                init_specialization_info();
         }
 }
 
 PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
-        const std::vector<const Shader*>& shaders,
-        const std::vector<VkSpecializationInfo>& constants)
+        const Shader* const shader,
+        const VkSpecializationInfo* const specialization_info)
 {
-        init_create_info(shaders);
+        init_create_info({shader});
 
-        init_specialization_info(shaders, constants);
+        if (specialization_info)
+        {
+                specialization_info_.push_back(*specialization_info);
+                init_specialization_info();
+        }
 }
 }

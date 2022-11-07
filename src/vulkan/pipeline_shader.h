@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader.h"
 
-#include <memory>
 #include <vector>
 
 namespace ns::vulkan
@@ -27,22 +26,22 @@ namespace ns::vulkan
 class PipelineShaderStageCreateInfo final
 {
         std::vector<VkPipelineShaderStageCreateInfo> create_info_;
-        std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info_;
+        std::vector<VkSpecializationInfo> specialization_info_;
 
         void init_create_info(const std::vector<const Shader*>& shaders);
-
-        void init_specialization_info(
-                const std::vector<const Shader*>& shaders,
-                const std::vector<VkSpecializationInfo>& constants);
+        void init_specialization_info();
 
 public:
         PipelineShaderStageCreateInfo(
                 const std::vector<const Shader*>& shaders,
-                const std::vector<VkSpecializationInfo>* constants);
+                const std::vector<VkSpecializationInfo>* specialization_info);
 
-        PipelineShaderStageCreateInfo(
-                const std::vector<const Shader*>& shaders,
-                const std::vector<VkSpecializationInfo>& constants);
+        PipelineShaderStageCreateInfo(const Shader* shader, const VkSpecializationInfo* specialization_info);
+
+        PipelineShaderStageCreateInfo(const PipelineShaderStageCreateInfo&) = delete;
+        PipelineShaderStageCreateInfo& operator=(const PipelineShaderStageCreateInfo&) = delete;
+        PipelineShaderStageCreateInfo(PipelineShaderStageCreateInfo&&) = delete;
+        PipelineShaderStageCreateInfo& operator=(PipelineShaderStageCreateInfo&&) = delete;
 
         [[nodiscard]] std::uint32_t size() const
         {
