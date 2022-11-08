@@ -17,10 +17,8 @@ Just for fun with mathematics and stuff
 * [Images](#images)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
   * [Real-time rendering](#real-time-rendering)
-  * [3D model](#3d-model)
+  * [3D models](#3d-models)
   * [4D polytope](#4d-polytope)
-  * [The Cornell box](#the-cornell-box)
-
 
 ## File types
 
@@ -138,7 +136,7 @@ Semitransparent objects
 <img src="https://i.imgur.com/UC7VQjT.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/ifhRGra.png" alt="image" width="23%"></img>
 
-### 3D model
+### 3D models
 
 Spectral rendering
 
@@ -151,6 +149,11 @@ Spectral rendering
 <img src="https://i.imgur.com/55ZX2bE.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/VBa1A6A.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/S9YZB2N.png" alt="image" width="23%"></img>
+
+<img src="https://i.imgur.com/b0jPI0I.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/GSz4tk8.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/w1kS1Fv.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/XsUdYnt.png" alt="image" width="23%"></img>
 
 ### 4D polytope
 
@@ -187,7 +190,3 @@ f 8 7 6 5
 <img src="https://i.imgur.com/lkC8Bgs.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/X2D1jMr.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/8MJ5Ptm.png" alt="image" width="23%"></img>
-
-### The Cornell box
-
-<img src="https://i.imgur.com/woWVUC3.png" alt="image" width="23%"></img>
