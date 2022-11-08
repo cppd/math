@@ -236,12 +236,12 @@ VkPipelineDepthStencilStateCreateInfo create_depth_stencil_state_info(const Grap
 handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         if (!info.device || !info.render_pass || !info.sub_pass || !info.sample_count || !info.sample_shading
-            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders)
+            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || info.shaders.empty())
         {
                 error("No required data to create graphics pipeline");
         }
 
-        const PipelineShaderStageCreateInfo shader_stage_info(*info.shaders, info.constants);
+        const PipelineShaderStageCreateInfo shader_stage_info(info.shaders, info.constants);
 
         const VkPipelineVertexInputStateCreateInfo vertex_input_state_info = create_vertex_input_state_info(info);
 
@@ -322,27 +322,27 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 
 handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info)
 {
-        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || !info.shaders
-            || !info.shader_groups)
+        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || info.shaders.empty()
+            || info.shader_groups.empty())
         {
                 error("No required data to create ray tracing pipeline");
         }
 
-        const PipelineShaderStageCreateInfo shader_stage_create_info(*info.shaders, info.constants);
+        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shaders, info.constants);
 
         const std::vector<VkRayTracingShaderGroupCreateInfoKHR> group_info = [&]()
         {
-                std::vector<VkRayTracingShaderGroupCreateInfoKHR> res = *info.shader_groups;
+                std::vector<VkRayTracingShaderGroupCreateInfoKHR> res = info.shader_groups;
                 for (VkRayTracingShaderGroupCreateInfoKHR& v : res)
                 {
                         v.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
                         v.pNext = nullptr;
 
-                        ASSERT(v.generalShader == VK_SHADER_UNUSED_KHR || v.generalShader < info.shaders->size());
-                        ASSERT(v.closestHitShader == VK_SHADER_UNUSED_KHR || v.closestHitShader < info.shaders->size());
-                        ASSERT(v.anyHitShader == VK_SHADER_UNUSED_KHR || v.anyHitShader < info.shaders->size());
+                        ASSERT(v.generalShader == VK_SHADER_UNUSED_KHR || v.generalShader < info.shaders.size());
+                        ASSERT(v.closestHitShader == VK_SHADER_UNUSED_KHR || v.closestHitShader < info.shaders.size());
+                        ASSERT(v.anyHitShader == VK_SHADER_UNUSED_KHR || v.anyHitShader < info.shaders.size());
                         ASSERT(v.intersectionShader == VK_SHADER_UNUSED_KHR
-                               || v.intersectionShader < info.shaders->size());
+                               || v.intersectionShader < info.shaders.size());
                 }
                 return res;
         }();

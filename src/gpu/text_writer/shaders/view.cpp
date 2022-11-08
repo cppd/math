@@ -209,8 +209,7 @@ vulkan::handle::Pipeline Program::create_pipeline(
         state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         state.alphaBlendOp = VK_BLEND_OP_ADD;
 
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
-        info.shaders = &shaders;
+        info.shaders = {&vertex_shader_, &fragment_shader_};
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = Vertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;

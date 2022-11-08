@@ -152,9 +152,7 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
-        info.shaders = &shaders;
+        info.shaders = {&vertex_shader_, &fragment_shader_};
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = ViewVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;

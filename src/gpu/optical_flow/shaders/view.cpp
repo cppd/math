@@ -171,9 +171,7 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
-
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
-        info.shaders = &shaders;
+        info.shaders = {&vertex_shader_, &fragment_shader_};
 
         return vulkan::create_graphics_pipeline(info);
 }

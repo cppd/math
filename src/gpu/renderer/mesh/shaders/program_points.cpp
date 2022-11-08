@@ -97,20 +97,18 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         info.primitive_topology = primitive_topology;
         info.depth_write = !transparency;
 
-        std::vector<const vulkan::Shader*> shaders;
         if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
         {
-                shaders = {&vertex_shader_0d_, &fragment_shader_};
+                info.shaders = {&vertex_shader_0d_, &fragment_shader_};
         }
         else if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
         {
-                shaders = {&vertex_shader_1d_, &fragment_shader_};
+                info.shaders = {&vertex_shader_1d_, &fragment_shader_};
         }
         else
         {
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
-        info.shaders = &shaders;
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;

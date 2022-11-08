@@ -70,40 +70,35 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
 
         const vulkan::Shader ray_miss_shader(device.handle(), code_ray_miss_rmiss(), VK_SHADER_STAGE_MISS_BIT_KHR);
 
-        std::vector<const vulkan::Shader*> shaders(3);
-
-        shaders[0] = &ray_closest_hit_shader;
-        shaders[1] = &ray_generation_shader;
-        shaders[2] = &ray_miss_shader;
-
-        std::vector<VkRayTracingShaderGroupCreateInfoKHR> shader_groups(3);
-
-        shader_groups[0] = {};
-        shader_groups[0].type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
-        shader_groups[0].generalShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[0].closestHitShader = 0;
-        shader_groups[0].anyHitShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[0].intersectionShader = VK_SHADER_UNUSED_KHR;
-
-        shader_groups[1] = {};
-        shader_groups[1].type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
-        shader_groups[1].generalShader = 1;
-        shader_groups[1].closestHitShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[1].anyHitShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[1].intersectionShader = VK_SHADER_UNUSED_KHR;
-
-        shader_groups[2] = {};
-        shader_groups[2].type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
-        shader_groups[2].generalShader = 2;
-        shader_groups[2].closestHitShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[2].anyHitShader = VK_SHADER_UNUSED_KHR;
-        shader_groups[2].intersectionShader = VK_SHADER_UNUSED_KHR;
-
         vulkan::RayTracingPipelineCreateInfo info;
+
         info.device = device.handle();
         info.pipeline_layout = pipeline_layout_;
-        info.shaders = &shaders;
-        info.shader_groups = &shader_groups;
+
+        info.shaders.push_back(&ray_closest_hit_shader);
+        info.shaders.push_back(&ray_generation_shader);
+        info.shaders.push_back(&ray_miss_shader);
+
+        info.shader_groups.push_back({});
+        info.shader_groups.back().type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+        info.shader_groups.back().generalShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().closestHitShader = 0;
+        info.shader_groups.back().anyHitShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().intersectionShader = VK_SHADER_UNUSED_KHR;
+
+        info.shader_groups.push_back({});
+        info.shader_groups.back().type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+        info.shader_groups.back().generalShader = 1;
+        info.shader_groups.back().closestHitShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().anyHitShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().intersectionShader = VK_SHADER_UNUSED_KHR;
+
+        info.shader_groups.push_back({});
+        info.shader_groups.back().type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+        info.shader_groups.back().generalShader = 2;
+        info.shader_groups.back().closestHitShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().anyHitShader = VK_SHADER_UNUSED_KHR;
+        info.shader_groups.back().intersectionShader = VK_SHADER_UNUSED_KHR;
 
         pipeline_ = vulkan::create_ray_tracing_pipeline(info);
 

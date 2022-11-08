@@ -93,9 +93,7 @@ vulkan::handle::Pipeline ShadowProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = true;
-
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_};
-        info.shaders = &shaders;
+        info.shaders = {&vertex_shader_};
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();

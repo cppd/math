@@ -174,8 +174,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         state.alphaBlendOp = VK_BLEND_OP_ADD;
 
-        const std::vector<const vulkan::Shader*> shaders{&vertex_shader_, fragment_shader(type)};
-        info.shaders = &shaders;
+        info.shaders = {&vertex_shader_, fragment_shader(type)};
 
         return vulkan::create_graphics_pipeline(info);
 }

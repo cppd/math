@@ -39,7 +39,7 @@ struct GraphicsPipelineCreateInfo final
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<Region<2, int>> viewport;
         std::optional<VkPrimitiveTopology> primitive_topology;
-        const std::vector<const Shader*>* shaders = nullptr;
+        std::vector<const Shader*> shaders;
 
         bool depth_bias = false;
         bool depth_test = true;
@@ -76,8 +76,8 @@ struct RayTracingPipelineCreateInfo final
         // required
         VkDevice device = VK_NULL_HANDLE;
         VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-        const std::vector<const Shader*>* shaders = nullptr;
-        const std::vector<VkRayTracingShaderGroupCreateInfoKHR>* shader_groups = nullptr;
+        std::vector<const Shader*> shaders;
+        std::vector<VkRayTracingShaderGroupCreateInfoKHR> shader_groups;
 
         // optional
         const std::vector<VkSpecializationInfo>* constants = nullptr;
