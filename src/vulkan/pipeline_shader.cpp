@@ -21,61 +21,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-void PipelineShaderStageCreateInfo::init_create_info(const std::vector<const Shader*>& shaders)
+namespace
 {
-        create_info_.resize(shaders.size());
+std::vector<VkPipelineShaderStageCreateInfo> create_info(const std::vector<const Shader*>& shaders)
+{
+        std::vector<VkPipelineShaderStageCreateInfo> info;
+        info.reserve(shaders.size());
 
-        for (std::size_t i = 0; i < shaders.size(); ++i)
+        for (const Shader* const shader : shaders)
         {
-                const Shader* const shader = shaders[i];
                 ASSERT(shader);
-
-                create_info_[i] = {};
-                create_info_[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                create_info_[i].stage = shader->stage();
-                create_info_[i].module = shader->module();
-                create_info_[i].pName = shader->entry_point_name();
+                info.push_back({});
+                info.back().sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                info.back().stage = shader->stage();
+                info.back().module = shader->module();
+                info.back().pName = shader->entry_point_name();
         }
+
+        return info;
 }
 
-void PipelineShaderStageCreateInfo::init_specialization_info()
+void set_info_pointers(
+        std::vector<VkPipelineShaderStageCreateInfo>* const create_info,
+        const std::vector<VkSpecializationInfo>& specialization_info)
 {
-        ASSERT(create_info_.size() == specialization_info_.size());
+        ASSERT(create_info->size() == specialization_info.size());
 
-        for (std::size_t i = 0; i < specialization_info_.size(); ++i)
+        for (std::size_t i = 0; i < specialization_info.size(); ++i)
         {
-                const VkSpecializationInfo& info = specialization_info_[i];
+                const VkSpecializationInfo& info = specialization_info[i];
                 if (info.mapEntryCount > 0)
                 {
-                        create_info_[i].pSpecializationInfo = &info;
+                        (*create_info)[i].pSpecializationInfo = &info;
                 }
         }
+}
 }
 
 PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
         const std::vector<const Shader*>& shaders,
-        const std::vector<VkSpecializationInfo>* const specialization_info)
+        std::vector<VkSpecializationInfo> specialization_info)
+        : create_info_(create_info(shaders))
 {
-        init_create_info(shaders);
-
-        if (specialization_info)
+        if (!specialization_info.empty())
         {
-                ASSERT(shaders.size() == specialization_info->size());
-                specialization_info_ = *specialization_info;
-                init_specialization_info();
+                ASSERT(shaders.size() == specialization_info.size());
+                specialization_info_ = std::move(specialization_info);
+                set_info_pointers(&create_info_, specialization_info_);
         }
 }
 
 PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
         const Shader* const shader,
         const VkSpecializationInfo* const specialization_info)
+        : create_info_(create_info({shader}))
 {
-        init_create_info({shader});
-
         if (specialization_info)
         {
                 specialization_info_.push_back(*specialization_info);
-                init_specialization_info();
+                set_info_pointers(&create_info_, specialization_info_);
         }
 }
 }

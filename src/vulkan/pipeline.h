@@ -30,7 +30,7 @@ namespace ns::vulkan
 {
 struct GraphicsPipelineCreateInfo final
 {
-        // required, std::optional is used to check that values are set
+        // required, std::optional is used to check that the values are set
         const Device* device = nullptr;
         const RenderPass* render_pass = nullptr;
         std::optional<std::uint32_t> sub_pass;
@@ -48,7 +48,7 @@ struct GraphicsPipelineCreateInfo final
         // optional
         const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
         const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
-        const std::vector<VkSpecializationInfo>* constants = nullptr;
+        std::vector<VkSpecializationInfo> constants;
         std::vector<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
@@ -80,7 +80,7 @@ struct RayTracingPipelineCreateInfo final
         std::vector<VkRayTracingShaderGroupCreateInfoKHR> shader_groups;
 
         // optional
-        const std::vector<VkSpecializationInfo>* constants = nullptr;
+        std::vector<VkSpecializationInfo> constants;
 };
 
 handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info);

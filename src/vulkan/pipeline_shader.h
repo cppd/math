@@ -28,13 +28,10 @@ class PipelineShaderStageCreateInfo final
         std::vector<VkPipelineShaderStageCreateInfo> create_info_;
         std::vector<VkSpecializationInfo> specialization_info_;
 
-        void init_create_info(const std::vector<const Shader*>& shaders);
-        void init_specialization_info();
-
 public:
         PipelineShaderStageCreateInfo(
                 const std::vector<const Shader*>& shaders,
-                const std::vector<VkSpecializationInfo>* specialization_info);
+                std::vector<VkSpecializationInfo> specialization_info);
 
         PipelineShaderStageCreateInfo(const Shader* shader, const VkSpecializationInfo* specialization_info);
 
