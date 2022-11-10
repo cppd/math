@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
+#include <src/vulkan/print.h>
 
 namespace ns::gpu::renderer
 {
@@ -88,7 +89,8 @@ const vulkan::Shader* PointsProgram::topology_shader(const VkPrimitiveTopology p
         {
                 return &vertex_shader_1d_;
         }
-        error("Unsupported primitive topology for renderer points program");
+        error("Unsupported primitive topology " + vulkan::primitive_topology_to_string(primitive_topology)
+              + " for renderer points program");
 }
 
 vulkan::handle::Pipeline PointsProgram::create_pipeline(
