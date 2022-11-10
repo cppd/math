@@ -31,11 +31,11 @@ std::vector<VkPipelineShaderStageCreateInfo> create_info(const std::vector<const
         for (const Shader* const shader : shaders)
         {
                 ASSERT(shader);
-                info.push_back({});
-                info.back().sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                info.back().stage = shader->stage();
-                info.back().module = shader->module();
-                info.back().pName = shader->entry_point_name();
+                auto& v = info.emplace_back();
+                v.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                v.stage = shader->stage();
+                v.module = shader->module();
+                v.pName = shader->entry_point_name();
         }
 
         return info;
@@ -43,13 +43,12 @@ std::vector<VkPipelineShaderStageCreateInfo> create_info(const std::vector<const
 
 void set_info_pointers(
         std::vector<VkPipelineShaderStageCreateInfo>* const create_info,
-        const std::vector<VkSpecializationInfo>& specialization_info)
+        const std::vector<VkSpecializationInfo>* const specialization_info)
 {
-        ASSERT(create_info->size() == specialization_info.size());
-
-        for (std::size_t i = 0; i < specialization_info.size(); ++i)
+        ASSERT(create_info->size() == specialization_info->size());
+        for (std::size_t i = 0; i < specialization_info->size(); ++i)
         {
-                const VkSpecializationInfo& info = specialization_info[i];
+                const VkSpecializationInfo& info = (*specialization_info)[i];
                 if (info.mapEntryCount > 0)
                 {
                         (*create_info)[i].pSpecializationInfo = &info;
@@ -67,7 +66,7 @@ PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
         {
                 ASSERT(shaders.size() == specialization_info.size());
                 specialization_info_ = std::move(specialization_info);
-                set_info_pointers(&create_info_, specialization_info_);
+                set_info_pointers(&create_info_, &specialization_info_);
         }
 }
 
@@ -79,7 +78,7 @@ PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
         if (specialization_info)
         {
                 specialization_info_.push_back(*specialization_info);
-                set_info_pointers(&create_info_, specialization_info_);
+                set_info_pointers(&create_info_, &specialization_info_);
         }
 }
 }
