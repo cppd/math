@@ -78,6 +78,19 @@ VkPipelineLayout PointsProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
+const vulkan::Shader* PointsProgram::topology_shader(const VkPrimitiveTopology primitive_topology) const
+{
+        if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
+        {
+                return &vertex_shader_0d_;
+        }
+        if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
+        {
+                return &vertex_shader_1d_;
+        }
+        error("Unsupported primitive topology for renderer points program");
+}
+
 vulkan::handle::Pipeline PointsProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
@@ -96,20 +109,7 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
         info.depth_write = !transparency;
-
-        if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
-        {
-                info.shaders = {&vertex_shader_0d_, &fragment_shader_};
-        }
-        else if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
-        {
-                info.shaders = {&vertex_shader_1d_, &fragment_shader_};
-        }
-        else
-        {
-                error_fatal("Unsupported primitive topology for renderer points program");
-        }
-
+        info.shaders = {topology_shader(primitive_topology), &fragment_shader_};
         info.binding_descriptions = PointsVertex::binding_descriptions();
         info.attribute_descriptions = PointsVertex::attribute_descriptions();
 
