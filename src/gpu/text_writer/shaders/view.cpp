@@ -196,6 +196,9 @@ vulkan::handle::Pipeline Program::create_pipeline(
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.shaders = {&vertex_shader_, &fragment_shader_};
+        info.binding_descriptions = Vertex::binding_descriptions();
+        info.attribute_descriptions = Vertex::attribute_descriptions();
 
         ASSERT(render_pass.color_attachment_count() == 1);
         VkPipelineColorBlendAttachmentState& state = info.color_blend.emplace_back();
@@ -208,14 +211,6 @@ vulkan::handle::Pipeline Program::create_pipeline(
         state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         state.alphaBlendOp = VK_BLEND_OP_ADD;
-
-        info.shaders = {&vertex_shader_, &fragment_shader_};
-
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = Vertex::binding_descriptions();
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions = Vertex::attribute_descriptions();
-        info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);
 }

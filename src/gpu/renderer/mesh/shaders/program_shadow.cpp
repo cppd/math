@@ -94,14 +94,8 @@ vulkan::handle::Pipeline ShadowProgram::create_pipeline(
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = true;
         info.shaders = {&vertex_shader_};
-
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                TrianglesVertex::binding_descriptions();
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_shadow();
-        info.attribute_descriptions = &attribute_descriptions;
+        info.binding_descriptions = TrianglesVertex::binding_descriptions();
+        info.attribute_descriptions = TrianglesVertex::attribute_descriptions_shadow();
 
         return vulkan::create_graphics_pipeline(info);
 }

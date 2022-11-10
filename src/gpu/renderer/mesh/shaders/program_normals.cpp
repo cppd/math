@@ -96,14 +96,8 @@ vulkan::handle::Pipeline NormalsProgram::create_pipeline(
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
         info.depth_write = !transparency;
         info.shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
-
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                TrianglesVertex::binding_descriptions();
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_normals();
-        info.attribute_descriptions = &attribute_descriptions;
+        info.binding_descriptions = TrianglesVertex::binding_descriptions();
+        info.attribute_descriptions = TrianglesVertex::attribute_descriptions_normals();
 
         return vulkan::create_graphics_pipeline(info);
 }

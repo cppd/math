@@ -46,8 +46,8 @@ struct GraphicsPipelineCreateInfo final
         bool depth_write = true;
 
         // optional
-        const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
-        const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
+        std::vector<VkVertexInputBindingDescription> binding_descriptions;
+        std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
         std::vector<VkSpecializationInfo> constants;
         std::vector<VkPipelineColorBlendAttachmentState> color_blend;
 };

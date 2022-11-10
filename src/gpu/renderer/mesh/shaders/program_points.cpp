@@ -110,12 +110,8 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                PointsVertex::attribute_descriptions();
-        info.attribute_descriptions = &attribute_descriptions;
+        info.binding_descriptions = PointsVertex::binding_descriptions();
+        info.attribute_descriptions = PointsVertex::attribute_descriptions();
 
         return vulkan::create_graphics_pipeline(info);
 }

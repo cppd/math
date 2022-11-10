@@ -153,13 +153,8 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
         info.shaders = {&vertex_shader_, &fragment_shader_};
-
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = ViewVertex::binding_descriptions();
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                ViewVertex::attribute_descriptions();
-        info.attribute_descriptions = &attribute_descriptions;
+        info.binding_descriptions = ViewVertex::binding_descriptions();
+        info.attribute_descriptions = ViewVertex::attribute_descriptions();
 
         return vulkan::create_graphics_pipeline(info);
 }

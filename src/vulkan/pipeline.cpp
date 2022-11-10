@@ -35,16 +35,16 @@ VkPipelineVertexInputStateCreateInfo create_vertex_input_state_info(const Graphi
         VkPipelineVertexInputStateCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        if (info.binding_descriptions)
+        if (!info.binding_descriptions.empty())
         {
-                create_info.vertexBindingDescriptionCount = info.binding_descriptions->size();
-                create_info.pVertexBindingDescriptions = info.binding_descriptions->data();
+                create_info.vertexBindingDescriptionCount = info.binding_descriptions.size();
+                create_info.pVertexBindingDescriptions = info.binding_descriptions.data();
         }
 
-        if (info.attribute_descriptions)
+        if (!info.attribute_descriptions.empty())
         {
-                create_info.vertexAttributeDescriptionCount = info.attribute_descriptions->size();
-                create_info.pVertexAttributeDescriptions = info.attribute_descriptions->data();
+                create_info.vertexAttributeDescriptionCount = info.attribute_descriptions.size();
+                create_info.pVertexAttributeDescriptions = info.attribute_descriptions.data();
         }
 
         return create_info;
