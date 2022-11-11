@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../code/code.h"
 
 #include <src/vulkan/create.h>
-#include <src/vulkan/pipeline.h>
+#include <src/vulkan/pipeline_graphics.h>
 
 namespace ns::gpu::pencil_sketch
 {
