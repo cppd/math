@@ -291,47 +291,4 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
         return {info.device->handle(), create_info};
 }
-
-handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info)
-{
-        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || info.shaders.empty()
-            || info.shader_groups.empty())
-        {
-                error("No required data to create ray tracing pipeline");
-        }
-
-        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shaders, info.constants);
-
-        const std::vector<VkRayTracingShaderGroupCreateInfoKHR> group_info = [&]()
-        {
-                std::vector<VkRayTracingShaderGroupCreateInfoKHR> res = info.shader_groups;
-                for (VkRayTracingShaderGroupCreateInfoKHR& v : res)
-                {
-                        v.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-                        v.pNext = nullptr;
-
-                        ASSERT(v.generalShader == VK_SHADER_UNUSED_KHR || v.generalShader < info.shaders.size());
-                        ASSERT(v.closestHitShader == VK_SHADER_UNUSED_KHR || v.closestHitShader < info.shaders.size());
-                        ASSERT(v.anyHitShader == VK_SHADER_UNUSED_KHR || v.anyHitShader < info.shaders.size());
-                        ASSERT(v.intersectionShader == VK_SHADER_UNUSED_KHR
-                               || v.intersectionShader < info.shaders.size());
-                }
-                return res;
-        }();
-
-        const VkRayTracingPipelineCreateInfoKHR create_info = [&]
-        {
-                VkRayTracingPipelineCreateInfoKHR res = {};
-                res.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-                res.stageCount = shader_stage_create_info.size();
-                res.pStages = shader_stage_create_info.data();
-                res.groupCount = group_info.size();
-                res.pGroups = group_info.data();
-                res.maxPipelineRayRecursionDepth = 1;
-                res.layout = info.pipeline_layout;
-                return res;
-        }();
-
-        return {info.device, create_info};
-}
 }
