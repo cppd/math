@@ -50,7 +50,7 @@ handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo&
                 error("No required data to create ray tracing pipeline");
         }
 
-        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shaders, info.constants);
+        const PipelineShaderStageCreateInfo shader_stage_info(info.shaders, info.constants);
 
         const std::vector<VkRayTracingShaderGroupCreateInfoKHR> shader_group_info = create_shader_group_info(info);
 
@@ -58,8 +58,8 @@ handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo&
         {
                 VkRayTracingPipelineCreateInfoKHR res = {};
                 res.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-                res.stageCount = shader_stage_create_info.size();
-                res.pStages = shader_stage_create_info.data();
+                res.stageCount = shader_stage_info.size();
+                res.pStages = shader_stage_info.data();
                 res.groupCount = shader_group_info.size();
                 res.pGroups = shader_group_info.data();
                 res.maxPipelineRayRecursionDepth = 1;

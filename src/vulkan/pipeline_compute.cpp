@@ -37,13 +37,13 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants || info.constants->mapEntryCount > 0);
         ASSERT(!info.constants || info.constants->pMapEntries != nullptr);
 
-        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shader, info.constants);
+        const PipelineShaderStageCreateInfo shader_stage_info(info.shader, info.constants);
 
         const VkComputePipelineCreateInfo create_info = [&]
         {
                 VkComputePipelineCreateInfo res = {};
                 res.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-                res.stage = *shader_stage_create_info.data();
+                res.stage = *shader_stage_info.data();
                 res.layout = info.pipeline_layout;
                 return res;
         }();
