@@ -56,21 +56,6 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
 //
 
-struct ComputePipelineCreateInfo final
-{
-        // required
-        VkDevice device = VK_NULL_HANDLE;
-        VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-        const Shader* shader = nullptr;
-
-        // optional
-        const VkSpecializationInfo* constants = nullptr;
-};
-
-handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
-
-//
-
 struct RayTracingPipelineCreateInfo final
 {
         // required

@@ -292,34 +292,6 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         return {info.device->handle(), create_info};
 }
 
-handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
-{
-        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || !info.shader)
-        {
-                error("No required data to create compute pipeline");
-        }
-
-        ASSERT(info.shader->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
-
-        ASSERT(!info.constants || info.constants->dataSize > 0);
-        ASSERT(!info.constants || info.constants->pData != nullptr);
-        ASSERT(!info.constants || info.constants->mapEntryCount > 0);
-        ASSERT(!info.constants || info.constants->pMapEntries != nullptr);
-
-        const PipelineShaderStageCreateInfo shader_stage_create_info(info.shader, info.constants);
-
-        const VkComputePipelineCreateInfo create_info = [&]
-        {
-                VkComputePipelineCreateInfo res = {};
-                res.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-                res.stage = *shader_stage_create_info.data();
-                res.layout = info.pipeline_layout;
-                return res;
-        }();
-
-        return {info.device, create_info};
-}
-
 handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info)
 {
         if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || info.shaders.empty()

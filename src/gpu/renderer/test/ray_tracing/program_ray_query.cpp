@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/error.h>
-#include <src/vulkan/pipeline.h>
+#include <src/vulkan/pipeline_compute.h>
 
 namespace ns::gpu::renderer::test
 {
