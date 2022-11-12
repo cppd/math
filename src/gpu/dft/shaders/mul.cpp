@@ -99,95 +99,81 @@ MulConstant::MulConstant()
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 0;
-                entry.offset = offsetof(Data, function_index);
-                entry.size = sizeof(Data::function_index);
+                entry.offset = offsetof(Data, functions) + offsetof(Functions, function_index);
+                entry.size = sizeof(Functions::function_index);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
-                entry.offset = offsetof(Data, n1);
-                entry.size = sizeof(Data::n1);
+                entry.offset = offsetof(Data, functions) + offsetof(Functions, inverse);
+                entry.size = sizeof(Functions::inverse);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
-                entry.offset = offsetof(Data, n2);
-                entry.size = sizeof(Data::n2);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, n_1);
+                entry.size = sizeof(Parameters::n_1);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
-                entry.offset = offsetof(Data, m1);
-                entry.size = sizeof(Data::m1);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, n_2);
+                entry.size = sizeof(Parameters::n_2);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
-                entry.offset = offsetof(Data, m2);
-                entry.size = sizeof(Data::m2);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, m_1);
+                entry.size = sizeof(Parameters::m_1);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 5;
-                entry.offset = offsetof(Data, inverse);
-                entry.size = sizeof(Data::inverse);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, m_2);
+                entry.size = sizeof(Parameters::m_2);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 6;
-                entry.offset = offsetof(Data, group_size_x);
-                entry.size = sizeof(Data::group_size_x);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_x);
+                entry.size = sizeof(Parameters::group_size_x);
                 entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 7;
-                entry.offset = offsetof(Data, group_size_y);
-                entry.size = sizeof(Data::group_size_y);
+                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_y);
+                entry.size = sizeof(Parameters::group_size_y);
                 entries_.push_back(entry);
         }
 }
 
 void MulConstant::set_data(
-        const std::int32_t n1,
-        const std::int32_t n2,
-        const std::int32_t m1,
-        const std::int32_t m2,
+        const std::int32_t n_1,
+        const std::int32_t n_2,
+        const std::int32_t m_1,
+        const std::int32_t m_2,
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
-        static_assert(std::is_same_v<decltype(data_.n1), std::remove_const_t<decltype(n1)>>);
-        data_.n1 = n1;
-
-        static_assert(std::is_same_v<decltype(data_.n2), std::remove_const_t<decltype(n2)>>);
-        data_.n2 = n2;
-
-        static_assert(std::is_same_v<decltype(data_.m1), std::remove_const_t<decltype(m1)>>);
-        data_.m1 = m1;
-
-        static_assert(std::is_same_v<decltype(data_.m2), std::remove_const_t<decltype(m2)>>);
-        data_.m2 = m2;
-
-        static_assert(std::is_same_v<decltype(data_.group_size_x), std::remove_const_t<decltype(group_size_x)>>);
-        data_.group_size_x = group_size_x;
-
-        static_assert(std::is_same_v<decltype(data_.group_size_y), std::remove_const_t<decltype(group_size_y)>>);
-        data_.group_size_y = group_size_y;
+        data_.parameters = {
+                .n_1 = n_1,
+                .n_2 = n_2,
+                .m_1 = m_1,
+                .m_2 = m_2,
+                .group_size_x = group_size_x,
+                .group_size_y = group_size_y};
 }
 
 void MulConstant::set_function(const std::int32_t function_index, const bool inverse)
 {
-        static_assert(std::is_same_v<decltype(data_.function_index), std::int32_t>);
-        data_.function_index = function_index;
-
-        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
-        data_.inverse = inverse ? 1 : 0;
+        data_.functions = {.function_index = function_index, .inverse = static_cast<std::uint32_t>(inverse ? 1 : 0)};
 }
 
 VkSpecializationInfo MulConstant::info() const
@@ -270,16 +256,16 @@ VkPipeline MulProgram::pipeline_columns_from_buffer(const bool inverse) const
 }
 
 void MulProgram::create_pipelines(
-        const std::int32_t n1,
-        const std::int32_t n2,
-        const std::int32_t m1,
-        const std::int32_t m2,
+        const std::int32_t n_1,
+        const std::int32_t n_2,
+        const std::int32_t m_1,
+        const std::int32_t m_2,
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
         const VkSpecializationInfo constant_info = constant_.info();
 
-        constant_.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
+        constant_.set_data(n_1, n_2, m_1, m_2, group_size_x, group_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;

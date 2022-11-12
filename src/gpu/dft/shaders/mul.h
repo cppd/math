@@ -47,17 +47,29 @@ public:
 
 class MulConstant final
 {
-        struct Data final
+        struct Functions final
         {
                 std::int32_t function_index;
-                std::int32_t n1;
-                std::int32_t n2;
-                std::int32_t m1;
-                std::int32_t m2;
                 std::uint32_t inverse;
+        };
+
+        struct Parameters final
+        {
+                std::int32_t n_1;
+                std::int32_t n_2;
+                std::int32_t m_1;
+                std::int32_t m_2;
                 std::uint32_t group_size_x;
                 std::uint32_t group_size_y;
+        };
+
+        struct Data final
+        {
+                Functions functions;
+                Parameters parameters;
         } data_;
+
+        static_assert(sizeof(Data) == sizeof(Functions) + sizeof(Parameters));
 
         std::vector<VkSpecializationMapEntry> entries_;
 
@@ -65,10 +77,10 @@ public:
         MulConstant();
 
         void set_data(
-                std::int32_t n1,
-                std::int32_t n2,
-                std::int32_t m1,
-                std::int32_t m2,
+                std::int32_t n_1,
+                std::int32_t n_2,
+                std::int32_t m_1,
+                std::int32_t m_2,
                 std::uint32_t group_size_x,
                 std::uint32_t group_size_y);
 
@@ -105,10 +117,10 @@ public:
         ~MulProgram() = default;
 
         void create_pipelines(
-                std::int32_t n1,
-                std::int32_t n2,
-                std::int32_t m1,
-                std::int32_t m2,
+                std::int32_t n_1,
+                std::int32_t n_2,
+                std::int32_t m_1,
+                std::int32_t m_2,
                 std::uint32_t group_size_x,
                 std::uint32_t group_size_y);
         void delete_pipelines();

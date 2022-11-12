@@ -87,10 +87,10 @@ public:
         ~MulDProgram() = default;
 
         void create_pipelines(
-                std::uint32_t n1,
-                std::uint32_t n2,
-                std::uint32_t m1,
-                std::uint32_t m2,
+                std::uint32_t n_1,
+                std::uint32_t n_2,
+                std::uint32_t m_1,
+                std::uint32_t m_2,
                 std::uint32_t group_size_x,
                 std::uint32_t group_size_y);
         void delete_pipelines();

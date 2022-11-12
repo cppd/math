@@ -181,17 +181,17 @@ VkPipeline MulDProgram::pipeline_columns() const
 }
 
 void MulDProgram::create_pipelines(
-        const std::uint32_t n1,
-        const std::uint32_t n2,
-        const std::uint32_t m1,
-        const std::uint32_t m2,
+        const std::uint32_t n_1,
+        const std::uint32_t n_2,
+        const std::uint32_t m_1,
+        const std::uint32_t m_2,
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
         const VkSpecializationInfo constant_info = constant_.info();
 
         {
-                constant_.set(group_size_x, group_size_y, n2, m1);
+                constant_.set(group_size_x, group_size_y, n_2, m_1);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = device_;
@@ -201,7 +201,7 @@ void MulDProgram::create_pipelines(
                 pipeline_rows_ = create_compute_pipeline(info);
         }
         {
-                constant_.set(group_size_x, group_size_y, n1, m2);
+                constant_.set(group_size_x, group_size_y, n_1, m_2);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = device_;
