@@ -335,20 +335,13 @@ void FlowConstant::set(
         const float stop_move_square,
         const float min_determinant)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
-        data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
-        data_.local_size_y = local_size_y;
-        static_assert(std::is_same_v<decltype(data_.radius), std::remove_const_t<decltype(radius)>>);
-        data_.radius = radius;
-        static_assert(std::is_same_v<
-                      decltype(data_.max_iteration_count), std::remove_const_t<decltype(max_iteration_count)>>);
-        data_.max_iteration_count = max_iteration_count;
-        static_assert(
-                std::is_same_v<decltype(data_.stop_move_square), std::remove_const_t<decltype(stop_move_square)>>);
-        data_.stop_move_square = stop_move_square;
-        static_assert(std::is_same_v<decltype(data_.min_determinant), std::remove_const_t<decltype(min_determinant)>>);
-        data_.min_determinant = min_determinant;
+        data_ = {
+                .local_size_x = local_size_x,
+                .local_size_y = local_size_y,
+                .radius = radius,
+                .max_iteration_count = max_iteration_count,
+                .stop_move_square = stop_move_square,
+                .min_determinant = min_determinant};
 }
 
 VkSpecializationInfo FlowConstant::info() const

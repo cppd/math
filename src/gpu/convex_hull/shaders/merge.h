@@ -58,9 +58,7 @@ class MergeConstant final
 public:
         MergeConstant();
 
-        void set_line_size(std::int32_t v);
-        void set_iteration_count(std::int32_t v);
-        void set_local_size_x(std::int32_t v);
+        void set(std::int32_t line_size, std::int32_t iteration_count, std::int32_t local_size_x);
 
         [[nodiscard]] VkSpecializationInfo info() const;
 };

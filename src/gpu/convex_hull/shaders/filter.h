@@ -60,7 +60,7 @@ class FilterConstant final
 public:
         FilterConstant();
 
-        void set_line_size(std::int32_t v);
+        void set(std::int32_t line_size);
 
         [[nodiscard]] VkSpecializationInfo info() const;
 };

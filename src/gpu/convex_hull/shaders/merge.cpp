@@ -95,22 +95,12 @@ MergeConstant::MergeConstant()
         }
 }
 
-void MergeConstant::set_line_size(const std::int32_t v)
+void MergeConstant::set(
+        const std::int32_t line_size,
+        const std::int32_t iteration_count,
+        const std::int32_t local_size_x)
 {
-        static_assert(std::is_same_v<decltype(data_.line_size), std::remove_const_t<decltype(v)>>);
-        data_.line_size = v;
-}
-
-void MergeConstant::set_iteration_count(const std::int32_t v)
-{
-        static_assert(std::is_same_v<decltype(data_.iteration_count), std::remove_const_t<decltype(v)>>);
-        data_.iteration_count = v;
-}
-
-void MergeConstant::set_local_size_x(const std::int32_t v)
-{
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(v)>>);
-        data_.local_size_x = v;
+        data_ = {.line_size = line_size, .iteration_count = iteration_count, .local_size_x = local_size_x};
 }
 
 VkSpecializationInfo MergeConstant::info() const
@@ -139,9 +129,7 @@ void MergeProgram::create_pipeline(const unsigned height, const unsigned local_s
 {
         const VkSpecializationInfo constant_info = constant_.info();
 
-        constant_.set_line_size(height);
-        constant_.set_local_size_x(local_size_x);
-        constant_.set_iteration_count(iteration_count);
+        constant_.set(height, iteration_count, local_size_x);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;

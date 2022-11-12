@@ -143,16 +143,15 @@ void PrepareConstant::set(
         const std::int32_t buffer_size,
         const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
-        data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.buffer_size), std::remove_const_t<decltype(buffer_size)>>);
-        data_.buffer_size = buffer_size;
-
         ASSERT(rectangle.is_positive());
-        data_.x = rectangle.x0();
-        data_.y = rectangle.y0();
-        data_.width = rectangle.width();
-        data_.height = rectangle.height();
+
+        data_ = {
+                .local_size_x = local_size_x,
+                .buffer_size = buffer_size,
+                .x = rectangle.x0(),
+                .y = rectangle.y0(),
+                .width = rectangle.width(),
+                .height = rectangle.height()};
 }
 
 VkSpecializationInfo PrepareConstant::info() const

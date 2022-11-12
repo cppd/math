@@ -153,16 +153,15 @@ void GrayscaleConstant::set(
         const std::uint32_t local_size_y,
         const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
-        data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
-        data_.local_size_y = local_size_y;
-
         ASSERT(rectangle.is_positive());
-        data_.x = rectangle.x0();
-        data_.y = rectangle.y0();
-        data_.width = rectangle.width();
-        data_.height = rectangle.height();
+
+        data_ = {
+                .local_size_x = local_size_x,
+                .local_size_y = local_size_y,
+                .x = rectangle.x0(),
+                .y = rectangle.y0(),
+                .width = rectangle.width(),
+                .height = rectangle.height()};
 }
 
 VkSpecializationInfo GrayscaleConstant::info() const

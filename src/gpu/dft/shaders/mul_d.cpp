@@ -133,14 +133,7 @@ void MulDConstant::set(
         const std::int32_t rows,
         const std::int32_t columns)
 {
-        static_assert(std::is_same_v<decltype(data_.group_size_x), std::remove_const_t<decltype(group_size_x)>>);
-        data_.group_size_x = group_size_x;
-        static_assert(std::is_same_v<decltype(data_.group_size_y), std::remove_const_t<decltype(group_size_y)>>);
-        data_.group_size_y = group_size_y;
-        static_assert(std::is_same_v<decltype(data_.rows), std::remove_const_t<decltype(rows)>>);
-        data_.rows = rows;
-        static_assert(std::is_same_v<decltype(data_.columns), std::remove_const_t<decltype(columns)>>);
-        data_.columns = columns;
+        data_ = {.group_size_x = group_size_x, .group_size_y = group_size_y, .rows = rows, .columns = columns};
 }
 
 VkSpecializationInfo MulDConstant::info() const

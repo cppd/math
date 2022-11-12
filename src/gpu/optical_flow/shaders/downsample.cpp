@@ -124,10 +124,7 @@ DownsampleConstant::DownsampleConstant()
 
 void DownsampleConstant::set(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
-        data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
-        data_.local_size_y = local_size_y;
+        data_ = {.local_size_x = local_size_x, .local_size_y = local_size_y};
 }
 
 VkSpecializationInfo DownsampleConstant::info() const

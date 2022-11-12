@@ -141,22 +141,15 @@ void FftSharedConstant::set(
         const bool reverse_input,
         const std::uint32_t group_size)
 {
-        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
-        data_.inverse = inverse ? 1 : 0;
-        static_assert(std::is_same_v<decltype(data_.data_size), std::remove_const_t<decltype(data_size)>>);
-        data_.data_size = data_size;
-        static_assert(std::is_same_v<decltype(data_.n), std::remove_const_t<decltype(n)>>);
-        data_.n = n;
-        static_assert(std::is_same_v<decltype(data_.n_mask), std::remove_const_t<decltype(n_mask)>>);
-        data_.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(data_.n_bits), std::remove_const_t<decltype(n_bits)>>);
-        data_.n_bits = n_bits;
-        static_assert(std::is_same_v<decltype(data_.shared_size), std::remove_const_t<decltype(shared_size)>>);
-        data_.shared_size = shared_size;
-        static_assert(std::is_same_v<decltype(data_.reverse_input), std::uint32_t>);
-        data_.reverse_input = reverse_input ? 1 : 0;
-        static_assert(std::is_same_v<decltype(data_.group_size), std::remove_const_t<decltype(group_size)>>);
-        data_.group_size = group_size;
+        data_ = {
+                .inverse = static_cast<std::uint32_t>(inverse ? 1 : 0),
+                .data_size = data_size,
+                .n = n,
+                .n_mask = n_mask,
+                .n_bits = n_bits,
+                .shared_size = shared_size,
+                .reverse_input = static_cast<std::uint32_t>(reverse_input ? 1 : 0),
+                .group_size = group_size};
 }
 
 VkSpecializationInfo FftSharedConstant::info() const

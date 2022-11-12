@@ -123,10 +123,9 @@ FilterConstant::FilterConstant()
         }
 }
 
-void FilterConstant::set_line_size(const std::int32_t v)
+void FilterConstant::set(const std::int32_t line_size)
 {
-        static_assert(std::is_same_v<decltype(data_.line_size), std::remove_const_t<decltype(v)>>);
-        data_.line_size = v;
+        data_ = {.line_size = line_size};
 }
 
 VkSpecializationInfo FilterConstant::info() const
@@ -155,7 +154,7 @@ void FilterProgram::create_pipeline(const unsigned height)
 {
         const VkSpecializationInfo constant_info = constant_.info();
 
-        constant_.set_line_size(height);
+        constant_.set(height);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;

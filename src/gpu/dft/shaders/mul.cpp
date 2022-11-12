@@ -164,14 +164,19 @@ void MulConstant::set_data(
 {
         static_assert(std::is_same_v<decltype(data_.n1), std::remove_const_t<decltype(n1)>>);
         data_.n1 = n1;
+
         static_assert(std::is_same_v<decltype(data_.n2), std::remove_const_t<decltype(n2)>>);
         data_.n2 = n2;
+
         static_assert(std::is_same_v<decltype(data_.m1), std::remove_const_t<decltype(m1)>>);
         data_.m1 = m1;
+
         static_assert(std::is_same_v<decltype(data_.m2), std::remove_const_t<decltype(m2)>>);
         data_.m2 = m2;
+
         static_assert(std::is_same_v<decltype(data_.group_size_x), std::remove_const_t<decltype(group_size_x)>>);
         data_.group_size_x = group_size_x;
+
         static_assert(std::is_same_v<decltype(data_.group_size_y), std::remove_const_t<decltype(group_size_y)>>);
         data_.group_size_y = group_size_y;
 }
@@ -180,6 +185,7 @@ void MulConstant::set_function(const std::int32_t function_index, const bool inv
 {
         static_assert(std::is_same_v<decltype(data_.function_index), std::int32_t>);
         data_.function_index = function_index;
+
         static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
         data_.inverse = inverse ? 1 : 0;
 }

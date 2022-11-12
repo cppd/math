@@ -109,14 +109,7 @@ void BitReverseConstant::set(
         const std::uint32_t n_mask,
         const std::uint32_t n_bits)
 {
-        static_assert(std::is_same_v<decltype(data_.group_size), std::remove_const_t<decltype(group_size)>>);
-        data_.group_size = group_size;
-        static_assert(std::is_same_v<decltype(data_.data_size), std::remove_const_t<decltype(data_size)>>);
-        data_.data_size = data_size;
-        static_assert(std::is_same_v<decltype(data_.n_mask), std::remove_const_t<decltype(n_mask)>>);
-        data_.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(data_.n_bits), std::remove_const_t<decltype(n_bits)>>);
-        data_.n_bits = n_bits;
+        data_ = {.group_size = group_size, .data_size = data_size, .n_mask = n_mask, .n_bits = n_bits};
 }
 
 VkSpecializationInfo BitReverseConstant::info() const

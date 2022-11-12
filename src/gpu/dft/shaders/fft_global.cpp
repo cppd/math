@@ -152,14 +152,11 @@ void FftGlobalConstant::set(
         const std::uint32_t data_size,
         const std::uint32_t n)
 {
-        static_assert(std::is_same_v<decltype(data_.group_size), std::remove_const_t<decltype(group_size)>>);
-        data_.group_size = group_size;
-        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
-        data_.inverse = inverse ? 1 : 0;
-        static_assert(std::is_same_v<decltype(data_.data_size), std::remove_const_t<decltype(data_size)>>);
-        data_.data_size = data_size;
-        static_assert(std::is_same_v<decltype(data_.n), std::remove_const_t<decltype(n)>>);
-        data_.n = n;
+        data_ = {
+                .group_size = group_size,
+                .inverse = static_cast<std::uint32_t>(inverse ? 1 : 0),
+                .data_size = data_size,
+                .n = n};
 }
 
 VkSpecializationInfo FftGlobalConstant::info() const

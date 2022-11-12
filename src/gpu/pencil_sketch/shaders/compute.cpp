@@ -156,14 +156,14 @@ ComputeConstant::ComputeConstant()
 
 void ComputeConstant::set(const std::int32_t local_size, const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size), std::remove_const_t<decltype(local_size)>>);
-        data_.local_size = local_size;
-
         ASSERT(rectangle.is_positive());
-        data_.x = rectangle.x0();
-        data_.y = rectangle.y0();
-        data_.width = rectangle.width();
-        data_.height = rectangle.height();
+
+        data_ = {
+                .local_size = local_size,
+                .x = rectangle.x0(),
+                .y = rectangle.y0(),
+                .width = rectangle.width(),
+                .height = rectangle.height()};
 }
 
 VkSpecializationInfo ComputeConstant::info() const
