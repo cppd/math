@@ -96,62 +96,39 @@ void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) co
 
 MulConstant::MulConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, functions) + offsetof(Functions, function_index);
-                entry.size = sizeof(Functions::function_index);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, functions) + offsetof(Functions, inverse);
-                entry.size = sizeof(Functions::inverse);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, n_1);
-                entry.size = sizeof(Parameters::n_1);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, n_2);
-                entry.size = sizeof(Parameters::n_2);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 4;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, m_1);
-                entry.size = sizeof(Parameters::m_1);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 5;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, m_2);
-                entry.size = sizeof(Parameters::m_2);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 6;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_x);
-                entry.size = sizeof(Parameters::group_size_x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 7;
-                entry.offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_y);
-                entry.size = sizeof(Parameters::group_size_y);
-                entries_.push_back(entry);
-        }
+        entries_.resize(8);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, functions) + offsetof(Functions, function_index);
+        entries_[0].size = sizeof(Functions::function_index);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, functions) + offsetof(Functions, inverse);
+        entries_[1].size = sizeof(Functions::inverse);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, parameters) + offsetof(Parameters, n_1);
+        entries_[2].size = sizeof(Parameters::n_1);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, parameters) + offsetof(Parameters, n_2);
+        entries_[3].size = sizeof(Parameters::n_2);
+
+        entries_[4].constantID = 4;
+        entries_[4].offset = offsetof(Data, parameters) + offsetof(Parameters, m_1);
+        entries_[4].size = sizeof(Parameters::m_1);
+
+        entries_[5].constantID = 5;
+        entries_[5].offset = offsetof(Data, parameters) + offsetof(Parameters, m_2);
+        entries_[5].size = sizeof(Parameters::m_2);
+
+        entries_[6].constantID = 6;
+        entries_[6].offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_x);
+        entries_[6].size = sizeof(Parameters::group_size_x);
+
+        entries_[7].constantID = 7;
+        entries_[7].offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_y);
+        entries_[7].size = sizeof(Parameters::group_size_y);
 }
 
 void MulConstant::set_data(

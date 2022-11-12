@@ -129,20 +129,15 @@ void SobelMemory::set_dy(const vulkan::ImageView& image_dy)
 
 SobelConstant::SobelConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, local_size_y);
-                entry.size = sizeof(Data::local_size_y);
-                entries_.push_back(entry);
-        }
+        entries_.resize(2);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, local_size_x);
+        entries_[0].size = sizeof(Data::local_size_x);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, local_size_y);
+        entries_[1].size = sizeof(Data::local_size_y);
 }
 
 void SobelConstant::set(const std::uint32_t local_size_x, const std::uint32_t local_size_y)

@@ -43,7 +43,7 @@ class PointsProgram final
         vulkan::Shader vertex_shader_1d_;
         vulkan::Shader fragment_shader_;
 
-        const vulkan::Shader* topology_shader(VkPrimitiveTopology primitive_topology) const;
+        [[nodiscard]] const vulkan::Shader* topology_shader(VkPrimitiveTopology primitive_topology) const;
 
 public:
         explicit PointsProgram(const vulkan::Device* device, const Code& code);

@@ -72,27 +72,19 @@ void MergeMemory::set_lines(const vulkan::Buffer& buffer) const
 
 MergeConstant::MergeConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, line_size);
-                entry.size = sizeof(Data::line_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, iteration_count);
-                entry.size = sizeof(Data::iteration_count);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
-                entries_.push_back(entry);
-        }
+        entries_.resize(3);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, line_size);
+        entries_[0].size = sizeof(Data::line_size);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, iteration_count);
+        entries_[1].size = sizeof(Data::iteration_count);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, local_size_x);
+        entries_[2].size = sizeof(Data::local_size_x);
 }
 
 void MergeConstant::set(

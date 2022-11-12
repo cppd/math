@@ -42,35 +42,27 @@ class Constant final
 public:
         Constant();
 
-        void set_local_size(std::int32_t size);
+        void set(std::int32_t size);
 
         [[nodiscard]] VkSpecializationInfo info() const;
 };
 
 Constant::Constant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, local_size_y);
-                entry.size = sizeof(Data::local_size_y);
-                entries_.push_back(entry);
-        }
+        entries_.resize(2);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, local_size_x);
+        entries_[0].size = sizeof(Data::local_size_x);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, local_size_y);
+        entries_[1].size = sizeof(Data::local_size_y);
 }
 
-void Constant::set_local_size(const std::int32_t size)
+void Constant::set(const std::int32_t size)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(size)>>);
-        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(size)>>);
-        data_.local_size_x = size;
-        data_.local_size_y = size;
+        data_ = {.local_size_x = size, .local_size_y = size};
 }
 
 VkSpecializationInfo Constant::info() const
@@ -98,7 +90,7 @@ RayQueryProgram::RayQueryProgram(const VkDevice device, const unsigned local_siz
         const vulkan::Shader shader(device, code_ray_query_comp(), VK_SHADER_STAGE_COMPUTE_BIT);
 
         Constant constant;
-        constant.set_local_size(local_size);
+        constant.set(local_size);
 
         const VkSpecializationInfo constant_info = constant.info();
 

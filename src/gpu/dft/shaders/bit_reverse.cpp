@@ -73,34 +73,23 @@ void BitReverseMemory::set(const vulkan::Buffer& buffer) const
 
 BitReverseConstant::BitReverseConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, group_size);
-                entry.size = sizeof(Data::group_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, data_size);
-                entry.size = sizeof(Data::data_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, n_mask);
-                entry.size = sizeof(Data::n_mask);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, n_bits);
-                entry.size = sizeof(Data::n_bits);
-                entries_.push_back(entry);
-        }
+        entries_.resize(4);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, group_size);
+        entries_[0].size = sizeof(Data::group_size);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, data_size);
+        entries_[1].size = sizeof(Data::data_size);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, n_mask);
+        entries_[2].size = sizeof(Data::n_mask);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, n_bits);
+        entries_[3].size = sizeof(Data::n_bits);
 }
 
 void BitReverseConstant::set(

@@ -114,13 +114,11 @@ void FilterMemory::set_point_count(const vulkan::Buffer& buffer) const
 
 FilterConstant::FilterConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, line_size);
-                entry.size = sizeof(Data::line_size);
-                entries_.push_back(entry);
-        }
+        entries_.resize(1);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, line_size);
+        entries_[0].size = sizeof(Data::line_size);
 }
 
 void FilterConstant::set(const std::int32_t line_size)

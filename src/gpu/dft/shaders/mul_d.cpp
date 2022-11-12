@@ -96,35 +96,23 @@ void MulDMemory::set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data)
 
 MulDConstant::MulDConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, group_size_x);
-                entry.size = sizeof(Data::group_size_x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, group_size_y);
-                entry.size = sizeof(Data::group_size_y);
-                entries_.push_back(entry);
-        }
+        entries_.resize(4);
 
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, rows);
-                entry.size = sizeof(Data::rows);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, columns);
-                entry.size = sizeof(Data::columns);
-                entries_.push_back(entry);
-        }
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, group_size_x);
+        entries_[0].size = sizeof(Data::group_size_x);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, group_size_y);
+        entries_[1].size = sizeof(Data::group_size_y);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, rows);
+        entries_[2].size = sizeof(Data::rows);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, columns);
+        entries_[3].size = sizeof(Data::columns);
 }
 
 void MulDConstant::set(

@@ -104,48 +104,31 @@ void GrayscaleMemory::set_dst(const vulkan::ImageView& image_0, const vulkan::Im
 
 GrayscaleConstant::GrayscaleConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, local_size_y);
-                entry.size = sizeof(Data::local_size_y);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, x);
-                entry.size = sizeof(Data::x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, y);
-                entry.size = sizeof(Data::y);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 4;
-                entry.offset = offsetof(Data, width);
-                entry.size = sizeof(Data::width);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 5;
-                entry.offset = offsetof(Data, height);
-                entry.size = sizeof(Data::height);
-                entries_.push_back(entry);
-        }
+        entries_.resize(6);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, local_size_x);
+        entries_[0].size = sizeof(Data::local_size_x);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, local_size_y);
+        entries_[1].size = sizeof(Data::local_size_y);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, x);
+        entries_[2].size = sizeof(Data::x);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, y);
+        entries_[3].size = sizeof(Data::y);
+
+        entries_[4].constantID = 4;
+        entries_[4].offset = offsetof(Data, width);
+        entries_[4].size = sizeof(Data::width);
+
+        entries_[5].constantID = 5;
+        entries_[5].offset = offsetof(Data, height);
+        entries_[5].size = sizeof(Data::height);
 }
 
 void GrayscaleConstant::set(

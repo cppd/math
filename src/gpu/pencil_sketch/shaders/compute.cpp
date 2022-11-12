@@ -117,41 +117,27 @@ void ComputeMemory::set_object_image(const vulkan::ImageView& image) const
 
 ComputeConstant::ComputeConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, local_size);
-                entry.size = sizeof(Data::local_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, x);
-                entry.size = sizeof(Data::x);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, y);
-                entry.size = sizeof(Data::y);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, width);
-                entry.size = sizeof(Data::width);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 4;
-                entry.offset = offsetof(Data, height);
-                entry.size = sizeof(Data::height);
-                entries_.push_back(entry);
-        }
+        entries_.resize(5);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, local_size);
+        entries_[0].size = sizeof(Data::local_size);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, x);
+        entries_[1].size = sizeof(Data::x);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, y);
+        entries_[2].size = sizeof(Data::y);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, width);
+        entries_[3].size = sizeof(Data::width);
+
+        entries_[4].constantID = 4;
+        entries_[4].offset = offsetof(Data, height);
+        entries_[4].size = sizeof(Data::height);
 }
 
 void ComputeConstant::set(const std::int32_t local_size, const Region<2, int>& rectangle)

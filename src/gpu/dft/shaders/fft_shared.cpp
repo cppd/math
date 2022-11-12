@@ -73,62 +73,39 @@ void FftSharedMemory::set(const vulkan::Buffer& buffer) const
 
 FftSharedConstant::FftSharedConstant()
 {
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, inverse);
-                entry.size = sizeof(Data::inverse);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, data_size);
-                entry.size = sizeof(Data::data_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 2;
-                entry.offset = offsetof(Data, n);
-                entry.size = sizeof(Data::n);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 3;
-                entry.offset = offsetof(Data, n_mask);
-                entry.size = sizeof(Data::n_mask);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 4;
-                entry.offset = offsetof(Data, n_bits);
-                entry.size = sizeof(Data::n_bits);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 5;
-                entry.offset = offsetof(Data, shared_size);
-                entry.size = sizeof(Data::shared_size);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 6;
-                entry.offset = offsetof(Data, reverse_input);
-                entry.size = sizeof(Data::reverse_input);
-                entries_.push_back(entry);
-        }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 7;
-                entry.offset = offsetof(Data, group_size);
-                entry.size = sizeof(Data::group_size);
-                entries_.push_back(entry);
-        }
+        entries_.resize(8);
+
+        entries_[0].constantID = 0;
+        entries_[0].offset = offsetof(Data, inverse);
+        entries_[0].size = sizeof(Data::inverse);
+
+        entries_[1].constantID = 1;
+        entries_[1].offset = offsetof(Data, data_size);
+        entries_[1].size = sizeof(Data::data_size);
+
+        entries_[2].constantID = 2;
+        entries_[2].offset = offsetof(Data, n);
+        entries_[2].size = sizeof(Data::n);
+
+        entries_[3].constantID = 3;
+        entries_[3].offset = offsetof(Data, n_mask);
+        entries_[3].size = sizeof(Data::n_mask);
+
+        entries_[4].constantID = 4;
+        entries_[4].offset = offsetof(Data, n_bits);
+        entries_[4].size = sizeof(Data::n_bits);
+
+        entries_[5].constantID = 5;
+        entries_[5].offset = offsetof(Data, shared_size);
+        entries_[5].size = sizeof(Data::shared_size);
+
+        entries_[6].constantID = 6;
+        entries_[6].offset = offsetof(Data, reverse_input);
+        entries_[6].size = sizeof(Data::reverse_input);
+
+        entries_[7].constantID = 7;
+        entries_[7].offset = offsetof(Data, group_size);
+        entries_[7].size = sizeof(Data::group_size);
 }
 
 void FftSharedConstant::set(
