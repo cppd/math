@@ -46,31 +46,12 @@ public:
         void set_small(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const;
 };
 
-class DownsampleConstant final
-{
-        struct Data final
-        {
-                std::uint32_t local_size_x;
-                std::uint32_t local_size_y;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        DownsampleConstant();
-
-        void set(std::uint32_t local_size_x, std::uint32_t local_size_y);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class DownsampleProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        DownsampleConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

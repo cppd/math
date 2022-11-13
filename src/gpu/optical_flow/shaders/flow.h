@@ -93,41 +93,12 @@ public:
         void set_flow_guess(const vulkan::Buffer& buffer) const;
 };
 
-class FlowConstant final
-{
-        struct Data final
-        {
-                std::uint32_t local_size_x;
-                std::uint32_t local_size_y;
-                std::int32_t radius;
-                std::int32_t max_iteration_count;
-                float stop_move_square;
-                float min_determinant;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        FlowConstant();
-
-        void set(
-                std::uint32_t local_size_x,
-                std::uint32_t local_size_y,
-                std::int32_t radius,
-                std::int32_t max_iteration_count,
-                float stop_move_square,
-                float min_determinant);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class FlowProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        FlowConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

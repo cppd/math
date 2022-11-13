@@ -47,35 +47,12 @@ public:
         void set_dst(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
 };
 
-class GrayscaleConstant final
-{
-        struct Data final
-        {
-                std::uint32_t local_size_x;
-                std::uint32_t local_size_y;
-                std::int32_t x;
-                std::int32_t y;
-                std::int32_t width;
-                std::int32_t height;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        GrayscaleConstant();
-
-        void set(std::uint32_t local_size_x, std::uint32_t local_size_y, const Region<2, int>& rectangle);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class GrayscaleProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        GrayscaleConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

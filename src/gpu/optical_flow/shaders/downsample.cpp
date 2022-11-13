@@ -22,8 +22,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::optical_flow
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::uint32_t local_size_x;
+                std::uint32_t local_size_y;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 2> ENTRIES{
+                {{0, offsetof(Data, local_size_x), sizeof(Data::local_size_x)},
+                 {1, offsetof(Data, local_size_y), sizeof(Data::local_size_y)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
+                : data_{.local_size_x = local_size_x, .local_size_y = local_size_y}
+        {
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 std::vector<VkDescriptorSetLayoutBinding> DownsampleMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -104,36 +145,6 @@ void DownsampleMemory::set_small(const vulkan::ImageView& image_0, const vulkan:
 
 //
 
-DownsampleConstant::DownsampleConstant()
-{
-        entries_.resize(2);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, local_size_x);
-        entries_[0].size = sizeof(Data::local_size_x);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, local_size_y);
-        entries_[1].size = sizeof(Data::local_size_y);
-}
-
-void DownsampleConstant::set(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
-{
-        data_ = {.local_size_x = local_size_x, .local_size_y = local_size_y};
-}
-
-VkSpecializationInfo DownsampleConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
-}
-
-//
-
 DownsampleProgram::DownsampleProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
@@ -162,15 +173,13 @@ VkPipeline DownsampleProgram::pipeline() const
 
 void DownsampleProgram::create_pipeline(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
-
-        constant_.set(local_size_x, local_size_y);
+        const SpecializationConstants constants(local_size_x, local_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_info;
+        info.constants = &constants.info();
         pipeline_ = create_compute_pipeline(info);
 }
 

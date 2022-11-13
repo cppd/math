@@ -48,31 +48,12 @@ public:
         void set_dy(const vulkan::ImageView& image_dy);
 };
 
-class SobelConstant final
-{
-        struct Data final
-        {
-                std::uint32_t local_size_x;
-                std::uint32_t local_size_y;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        SobelConstant();
-
-        void set(std::uint32_t local_size_x, std::uint32_t local_size_y);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class SobelProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        SobelConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

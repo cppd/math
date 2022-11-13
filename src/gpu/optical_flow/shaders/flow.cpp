@@ -22,8 +22,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::optical_flow
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::uint32_t local_size_x;
+                std::uint32_t local_size_y;
+                std::int32_t radius;
+                std::int32_t max_iteration_count;
+                float stop_move_square;
+                float min_determinant;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 6> ENTRIES{
+                {{0, offsetof(Data, local_size_x), sizeof(Data::local_size_x)},
+                 {1, offsetof(Data, local_size_y), sizeof(Data::local_size_y)},
+                 {2, offsetof(Data, radius), sizeof(Data::radius)},
+                 {3, offsetof(Data, max_iteration_count), sizeof(Data::max_iteration_count)},
+                 {4, offsetof(Data, stop_move_square), sizeof(Data::stop_move_square)},
+                 {5, offsetof(Data, min_determinant), sizeof(Data::min_determinant)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(
+                const std::uint32_t local_size_x,
+                const std::uint32_t local_size_y,
+                const std::int32_t radius,
+                const std::int32_t max_iteration_count,
+                const float stop_move_square,
+                const float min_determinant)
+                : data_{.local_size_x = local_size_x,
+                        .local_size_y = local_size_y,
+                        .radius = radius,
+                        .max_iteration_count = max_iteration_count,
+                        .stop_move_square = stop_move_square,
+                        .min_determinant = min_determinant}
+        {
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 FlowDataBuffer::FlowDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : buffer_(
                 vulkan::BufferMemoryType::HOST_VISIBLE,
@@ -281,64 +341,6 @@ void FlowMemory::set_flow_guess(const vulkan::Buffer& buffer) const
 
 //
 
-FlowConstant::FlowConstant()
-{
-        entries_.resize(6);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, local_size_x);
-        entries_[0].size = sizeof(Data::local_size_x);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, local_size_y);
-        entries_[1].size = sizeof(Data::local_size_y);
-
-        entries_[2].constantID = 2;
-        entries_[2].offset = offsetof(Data, radius);
-        entries_[2].size = sizeof(Data::radius);
-
-        entries_[3].constantID = 3;
-        entries_[3].offset = offsetof(Data, max_iteration_count);
-        entries_[3].size = sizeof(Data::max_iteration_count);
-
-        entries_[4].constantID = 4;
-        entries_[4].offset = offsetof(Data, stop_move_square);
-        entries_[4].size = sizeof(Data::stop_move_square);
-
-        entries_[5].constantID = 5;
-        entries_[5].offset = offsetof(Data, min_determinant);
-        entries_[5].size = sizeof(Data::min_determinant);
-}
-
-void FlowConstant::set(
-        const std::uint32_t local_size_x,
-        const std::uint32_t local_size_y,
-        const std::int32_t radius,
-        const std::int32_t max_iteration_count,
-        const float stop_move_square,
-        const float min_determinant)
-{
-        data_ = {
-                .local_size_x = local_size_x,
-                .local_size_y = local_size_y,
-                .radius = radius,
-                .max_iteration_count = max_iteration_count,
-                .stop_move_square = stop_move_square,
-                .min_determinant = min_determinant};
-}
-
-VkSpecializationInfo FlowConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
-}
-
-//
-
 FlowProgram::FlowProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
@@ -373,15 +375,14 @@ void FlowProgram::create_pipeline(
         const float stop_move_square,
         const float min_determinant)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
-
-        constant_.set(local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
+        const SpecializationConstants constants(
+                local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_info;
+        info.constants = &constants.info();
         pipeline_ = create_compute_pipeline(info);
 }
 
