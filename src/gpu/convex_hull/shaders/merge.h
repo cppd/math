@@ -44,32 +44,12 @@ public:
         void set_lines(const vulkan::Buffer& buffer) const;
 };
 
-class MergeConstant final
-{
-        struct Data final
-        {
-                std::int32_t line_size;
-                std::int32_t iteration_count;
-                std::int32_t local_size_x;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        MergeConstant();
-
-        void set(std::int32_t line_size, std::int32_t iteration_count, std::int32_t local_size_x);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class MergeProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        MergeConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

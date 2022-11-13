@@ -48,30 +48,12 @@ public:
         void set_point_count(const vulkan::Buffer& buffer) const;
 };
 
-class FilterConstant final
-{
-        struct Data final
-        {
-                std::int32_t line_size;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        FilterConstant();
-
-        void set(std::int32_t line_size);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class FilterProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        FilterConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

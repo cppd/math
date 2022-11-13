@@ -47,35 +47,12 @@ public:
         void set_lines(const vulkan::Buffer& buffer) const;
 };
 
-class PrepareConstant final
-{
-        struct Data final
-        {
-                std::int32_t local_size_x;
-                std::int32_t buffer_size;
-                std::int32_t x;
-                std::int32_t y;
-                std::int32_t width;
-                std::int32_t height;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        PrepareConstant();
-
-        void set(std::int32_t local_size_x, std::int32_t buffer_size, const Region<2, int>& rectangle);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class PrepareProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        PrepareConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 
