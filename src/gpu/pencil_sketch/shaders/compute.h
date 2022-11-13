@@ -49,34 +49,12 @@ public:
         void set_object_image(const vulkan::ImageView& image) const;
 };
 
-class ComputeConstant final
-{
-        struct Data final
-        {
-                std::int32_t local_size;
-                std::int32_t x;
-                std::int32_t y;
-                std::int32_t width;
-                std::int32_t height;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        ComputeConstant();
-
-        void set(std::int32_t local_size, const Region<2, int>& rectangle);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class ComputeProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        ComputeConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 
