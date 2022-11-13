@@ -22,8 +22,80 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::dft
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::int32_t function_index;
+                std::uint32_t inverse;
+                std::int32_t n_1;
+                std::int32_t n_2;
+                std::int32_t m_1;
+                std::int32_t m_2;
+                std::uint32_t group_size_x;
+                std::uint32_t group_size_y;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 8> ENTRIES{
+                {{0, offsetof(Data, function_index), sizeof(Data::function_index)},
+                 {1, offsetof(Data, inverse), sizeof(Data::inverse)},
+                 {2, offsetof(Data, n_1), sizeof(Data::n_1)},
+                 {3, offsetof(Data, n_2), sizeof(Data::n_2)},
+                 {4, offsetof(Data, m_1), sizeof(Data::m_1)},
+                 {5, offsetof(Data, m_2), sizeof(Data::m_2)},
+                 {6, offsetof(Data, group_size_x), sizeof(Data::group_size_x)},
+                 {7, offsetof(Data, group_size_y), sizeof(Data::group_size_y)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(
+                const std::int32_t n_1,
+                const std::int32_t n_2,
+                const std::int32_t m_1,
+                const std::int32_t m_2,
+                const std::uint32_t group_size_x,
+                const std::uint32_t group_size_y)
+                : data_{.function_index = 0,
+                        .inverse = 0,
+                        .n_1 = n_1,
+                        .n_2 = n_2,
+                        .m_1 = m_1,
+                        .m_2 = m_2,
+                        .group_size_x = group_size_x,
+                        .group_size_y = group_size_y}
+        {
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        void set_function(const std::int32_t function_index, const bool inverse)
+        {
+                data_.function_index = function_index;
+                data_.inverse = inverse ? 1 : 0;
+        }
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 std::vector<VkDescriptorSetLayoutBinding> MulMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -90,77 +162,6 @@ void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) co
 
                 descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
         }
-}
-
-//
-
-MulConstant::MulConstant()
-{
-        entries_.resize(8);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, functions) + offsetof(Functions, function_index);
-        entries_[0].size = sizeof(Functions::function_index);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, functions) + offsetof(Functions, inverse);
-        entries_[1].size = sizeof(Functions::inverse);
-
-        entries_[2].constantID = 2;
-        entries_[2].offset = offsetof(Data, parameters) + offsetof(Parameters, n_1);
-        entries_[2].size = sizeof(Parameters::n_1);
-
-        entries_[3].constantID = 3;
-        entries_[3].offset = offsetof(Data, parameters) + offsetof(Parameters, n_2);
-        entries_[3].size = sizeof(Parameters::n_2);
-
-        entries_[4].constantID = 4;
-        entries_[4].offset = offsetof(Data, parameters) + offsetof(Parameters, m_1);
-        entries_[4].size = sizeof(Parameters::m_1);
-
-        entries_[5].constantID = 5;
-        entries_[5].offset = offsetof(Data, parameters) + offsetof(Parameters, m_2);
-        entries_[5].size = sizeof(Parameters::m_2);
-
-        entries_[6].constantID = 6;
-        entries_[6].offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_x);
-        entries_[6].size = sizeof(Parameters::group_size_x);
-
-        entries_[7].constantID = 7;
-        entries_[7].offset = offsetof(Data, parameters) + offsetof(Parameters, group_size_y);
-        entries_[7].size = sizeof(Parameters::group_size_y);
-}
-
-void MulConstant::set_data(
-        const std::int32_t n_1,
-        const std::int32_t n_2,
-        const std::int32_t m_1,
-        const std::int32_t m_2,
-        const std::uint32_t group_size_x,
-        const std::uint32_t group_size_y)
-{
-        data_.parameters = {
-                .n_1 = n_1,
-                .n_2 = n_2,
-                .m_1 = m_1,
-                .m_2 = m_2,
-                .group_size_x = group_size_x,
-                .group_size_y = group_size_y};
-}
-
-void MulConstant::set_function(const std::int32_t function_index, const bool inverse)
-{
-        data_.functions = {.function_index = function_index, .inverse = static_cast<std::uint32_t>(inverse ? 1 : 0)};
-}
-
-VkSpecializationInfo MulConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
 }
 
 //
@@ -240,34 +241,32 @@ void MulProgram::create_pipelines(
         const std::uint32_t group_size_x,
         const std::uint32_t group_size_y)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
-
-        constant_.set_data(n_1, n_2, m_1, m_2, group_size_x, group_size_y);
+        SpecializationConstants constants(n_1, n_2, m_1, m_2, group_size_x, group_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_info;
+        info.constants = &constants.info();
 
-        constant_.set_function(0, false);
+        constants.set_function(0, false);
         pipeline_rows_to_buffer_forward_ = create_compute_pipeline(info);
-        constant_.set_function(0, true);
+        constants.set_function(0, true);
         pipeline_rows_to_buffer_inverse_ = create_compute_pipeline(info);
 
-        constant_.set_function(1, false);
+        constants.set_function(1, false);
         pipeline_rows_from_buffer_forward_ = create_compute_pipeline(info);
-        constant_.set_function(1, true);
+        constants.set_function(1, true);
         pipeline_rows_from_buffer_inverse_ = create_compute_pipeline(info);
 
-        constant_.set_function(2, false);
+        constants.set_function(2, false);
         pipeline_columns_to_buffer_forward_ = create_compute_pipeline(info);
-        constant_.set_function(2, true);
+        constants.set_function(2, true);
         pipeline_columns_to_buffer_inverse_ = create_compute_pipeline(info);
 
-        constant_.set_function(3, false);
+        constants.set_function(3, false);
         pipeline_columns_from_buffer_forward_ = create_compute_pipeline(info);
-        constant_.set_function(3, true);
+        constants.set_function(3, true);
         pipeline_columns_from_buffer_inverse_ = create_compute_pipeline(info);
 }
 

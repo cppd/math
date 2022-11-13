@@ -22,8 +22,66 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::dft
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::int32_t local_size_x;
+                std::int32_t local_size_y;
+                std::int32_t x;
+                std::int32_t y;
+                std::int32_t width;
+                std::int32_t height;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 6> ENTRIES{
+                {{0, offsetof(Data, local_size_x), sizeof(Data::local_size_x)},
+                 {1, offsetof(Data, local_size_y), sizeof(Data::local_size_y)},
+                 {2, offsetof(Data, x), sizeof(Data::x)},
+                 {3, offsetof(Data, y), sizeof(Data::y)},
+                 {4, offsetof(Data, width), sizeof(Data::width)},
+                 {5, offsetof(Data, height), sizeof(Data::height)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(
+                const std::int32_t local_size_x,
+                const std::int32_t local_size_y,
+                const Region<2, int>& rectangle)
+                : data_{.local_size_x = local_size_x,
+                        .local_size_y = local_size_y,
+                        .x = rectangle.x0(),
+                        .y = rectangle.y0(),
+                        .width = rectangle.width(),
+                        .height = rectangle.height()}
+        {
+                ASSERT(rectangle.is_positive());
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 std::vector<VkDescriptorSetLayoutBinding> CopyInputMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -93,63 +151,6 @@ void CopyInputMemory::set(const VkSampler sampler, const vulkan::ImageView& inpu
 
 //
 
-CopyInputConstant::CopyInputConstant()
-{
-        entries_.resize(6);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, local_size_x);
-        entries_[0].size = sizeof(Data::local_size_x);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, local_size_y);
-        entries_[1].size = sizeof(Data::local_size_y);
-
-        entries_[2].constantID = 2;
-        entries_[2].offset = offsetof(Data, x);
-        entries_[2].size = sizeof(Data::x);
-
-        entries_[3].constantID = 3;
-        entries_[3].offset = offsetof(Data, y);
-        entries_[3].size = sizeof(Data::y);
-
-        entries_[4].constantID = 4;
-        entries_[4].offset = offsetof(Data, width);
-        entries_[4].size = sizeof(Data::width);
-
-        entries_[5].constantID = 5;
-        entries_[5].offset = offsetof(Data, height);
-        entries_[5].size = sizeof(Data::height);
-}
-
-void CopyInputConstant::set(
-        const std::int32_t local_size_x,
-        const std::int32_t local_size_y,
-        const Region<2, int>& rectangle)
-{
-        ASSERT(rectangle.is_positive());
-
-        data_ = {
-                .local_size_x = local_size_x,
-                .local_size_y = local_size_y,
-                .x = rectangle.x0(),
-                .y = rectangle.y0(),
-                .width = rectangle.width(),
-                .height = rectangle.height()};
-}
-
-VkSpecializationInfo CopyInputConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
-}
-
-//
-
 CopyInputProgram::CopyInputProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
@@ -181,15 +182,13 @@ void CopyInputProgram::create_pipeline(
         const std::int32_t local_size_y,
         const Region<2, int>& rectangle)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
-
-        constant_.set(local_size_x, local_size_y, rectangle);
+        const SpecializationConstants constants(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_info;
+        info.constants = &constants.info();
         pipeline_ = create_compute_pipeline(info);
 }
 

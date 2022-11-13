@@ -46,35 +46,12 @@ public:
         void set(VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const;
 };
 
-class CopyInputConstant final
-{
-        struct Data final
-        {
-                std::int32_t local_size_x;
-                std::int32_t local_size_y;
-                std::int32_t x;
-                std::int32_t y;
-                std::int32_t width;
-                std::int32_t height;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        CopyInputConstant();
-
-        void set(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class CopyInputProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        CopyInputConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

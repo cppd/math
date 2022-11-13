@@ -44,33 +44,12 @@ public:
         void set(const vulkan::Buffer& buffer) const;
 };
 
-class BitReverseConstant final
-{
-        struct Data final
-        {
-                std::uint32_t group_size;
-                std::uint32_t data_size;
-                std::uint32_t n_mask;
-                std::uint32_t n_bits;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        BitReverseConstant();
-
-        void set(std::uint32_t group_size, std::uint32_t data_size, std::uint32_t n_mask, std::uint32_t n_bits);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class BitReverseProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        BitReverseConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

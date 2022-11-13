@@ -45,33 +45,12 @@ public:
         void set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const;
 };
 
-class MulDConstant final
-{
-        struct Data final
-        {
-                std::uint32_t group_size_x;
-                std::uint32_t group_size_y;
-                std::int32_t rows;
-                std::int32_t columns;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        MulDConstant();
-
-        void set(std::uint32_t group_size_x, std::uint32_t group_size_y, std::int32_t rows, std::int32_t columns);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class MulDProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        MulDConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_rows_;
         vulkan::handle::Pipeline pipeline_columns_;

@@ -45,32 +45,12 @@ public:
         void set(const vulkan::Buffer& input, const vulkan::ImageView& output) const;
 };
 
-class CopyOutputConstant final
-{
-        struct Data final
-        {
-                std::uint32_t local_size_x;
-                std::uint32_t local_size_y;
-                float to_mul;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        CopyOutputConstant();
-
-        void set(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class CopyOutputProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        CopyOutputConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 

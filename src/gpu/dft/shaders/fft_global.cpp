@@ -22,8 +22,58 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::dft
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::uint32_t group_size;
+                std::uint32_t inverse;
+                std::uint32_t data_size;
+                std::uint32_t n;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 4> ENTRIES{
+                {{0, offsetof(Data, group_size), sizeof(Data::group_size)},
+                 {1, offsetof(Data, inverse), sizeof(Data::inverse)},
+                 {2, offsetof(Data, data_size), sizeof(Data::data_size)},
+                 {3, offsetof(Data, n), sizeof(Data::n)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(const std::uint32_t group_size, const std::uint32_t data_size, const std::uint32_t n)
+                : data_{.group_size = group_size, .inverse = 0, .data_size = data_size, .n = n}
+        {
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        void set_inverse(const bool inverse)
+        {
+                data_.inverse = inverse ? 1 : 0;
+        }
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 FftGlobalBuffer::FftGlobalBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : buffer_(
                 vulkan::BufferMemoryType::HOST_VISIBLE,
@@ -114,52 +164,6 @@ void FftGlobalMemory::set(const vulkan::Buffer& buffer) const
 
 //
 
-FftGlobalConstant::FftGlobalConstant()
-{
-        entries_.resize(4);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, group_size);
-        entries_[0].size = sizeof(Data::group_size);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, inverse);
-        entries_[1].size = sizeof(Data::inverse);
-
-        entries_[2].constantID = 2;
-        entries_[2].offset = offsetof(Data, data_size);
-        entries_[2].size = sizeof(Data::data_size);
-
-        entries_[3].constantID = 3;
-        entries_[3].offset = offsetof(Data, n);
-        entries_[3].size = sizeof(Data::n);
-}
-
-void FftGlobalConstant::set(
-        const std::uint32_t group_size,
-        const bool inverse,
-        const std::uint32_t data_size,
-        const std::uint32_t n)
-{
-        data_ = {
-                .group_size = group_size,
-                .inverse = static_cast<std::uint32_t>(inverse ? 1 : 0),
-                .data_size = data_size,
-                .n = n};
-}
-
-VkSpecializationInfo FftGlobalConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
-}
-
-//
-
 FftGlobalProgram::FftGlobalProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
@@ -197,28 +201,19 @@ void FftGlobalProgram::create_pipelines(
         const std::uint32_t data_size,
         const std::uint32_t n)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
+        SpecializationConstants constants(group_size, data_size, n);
 
-        {
-                constant_.set(group_size, false, data_size, n);
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constants.info();
 
-                vulkan::ComputePipelineCreateInfo info;
-                info.device = device_;
-                info.pipeline_layout = pipeline_layout_;
-                info.shader = &shader_;
-                info.constants = &constant_info;
-                pipeline_forward_ = create_compute_pipeline(info);
-        }
-        {
-                constant_.set(group_size, true, data_size, n);
+        constants.set_inverse(false);
+        pipeline_forward_ = create_compute_pipeline(info);
 
-                vulkan::ComputePipelineCreateInfo info;
-                info.device = device_;
-                info.pipeline_layout = pipeline_layout_;
-                info.shader = &shader_;
-                info.constants = &constant_info;
-                pipeline_inverse_ = create_compute_pipeline(info);
-        }
+        constants.set_inverse(true);
+        pipeline_inverse_ = create_compute_pipeline(info);
 }
 
 void FftGlobalProgram::delete_pipelines()

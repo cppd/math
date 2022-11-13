@@ -22,8 +22,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline_compute.h>
 
+#include <array>
+
 namespace ns::gpu::dft
 {
+namespace
+{
+class SpecializationConstants final
+{
+        struct Data final
+        {
+                std::uint32_t group_size;
+                std::uint32_t data_size;
+                std::uint32_t n_mask;
+                std::uint32_t n_bits;
+        };
+
+        static constexpr std::array<VkSpecializationMapEntry, 4> ENTRIES{
+                {{0, offsetof(Data, group_size), sizeof(Data::group_size)},
+                 {1, offsetof(Data, data_size), sizeof(Data::data_size)},
+                 {2, offsetof(Data, n_mask), sizeof(Data::n_mask)},
+                 {3, offsetof(Data, n_bits), sizeof(Data::n_bits)}}
+        };
+
+        Data data_;
+
+        VkSpecializationInfo info_{
+                .mapEntryCount = ENTRIES.size(),
+                .pMapEntries = ENTRIES.data(),
+                .dataSize = sizeof(data_),
+                .pData = &data_};
+
+public:
+        SpecializationConstants(
+                const std::uint32_t group_size,
+                const std::uint32_t data_size,
+                const std::uint32_t n_mask,
+                const std::uint32_t n_bits)
+                : data_{.group_size = group_size, .data_size = data_size, .n_mask = n_mask, .n_bits = n_bits}
+        {
+        }
+
+        SpecializationConstants(const SpecializationConstants&) = delete;
+        SpecializationConstants& operator=(const SpecializationConstants&) = delete;
+
+        [[nodiscard]] const VkSpecializationInfo& info() const
+        {
+                return info_;
+        }
+};
+}
+
 std::vector<VkDescriptorSetLayoutBinding> BitReverseMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -71,48 +120,6 @@ void BitReverseMemory::set(const vulkan::Buffer& buffer) const
 
 //
 
-BitReverseConstant::BitReverseConstant()
-{
-        entries_.resize(4);
-
-        entries_[0].constantID = 0;
-        entries_[0].offset = offsetof(Data, group_size);
-        entries_[0].size = sizeof(Data::group_size);
-
-        entries_[1].constantID = 1;
-        entries_[1].offset = offsetof(Data, data_size);
-        entries_[1].size = sizeof(Data::data_size);
-
-        entries_[2].constantID = 2;
-        entries_[2].offset = offsetof(Data, n_mask);
-        entries_[2].size = sizeof(Data::n_mask);
-
-        entries_[3].constantID = 3;
-        entries_[3].offset = offsetof(Data, n_bits);
-        entries_[3].size = sizeof(Data::n_bits);
-}
-
-void BitReverseConstant::set(
-        const std::uint32_t group_size,
-        const std::uint32_t data_size,
-        const std::uint32_t n_mask,
-        const std::uint32_t n_bits)
-{
-        data_ = {.group_size = group_size, .data_size = data_size, .n_mask = n_mask, .n_bits = n_bits};
-}
-
-VkSpecializationInfo BitReverseConstant::info() const
-{
-        VkSpecializationInfo info = {};
-        info.mapEntryCount = entries_.size();
-        info.pMapEntries = entries_.data();
-        info.dataSize = sizeof(data_);
-        info.pData = &data_;
-        return info;
-}
-
-//
-
 BitReverseProgram::BitReverseProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
@@ -145,15 +152,13 @@ void BitReverseProgram::create_pipeline(
         const std::uint32_t n_mask,
         const std::uint32_t n_bits)
 {
-        const VkSpecializationInfo constant_info = constant_.info();
-
-        constant_.set(group_size, data_size, n_mask, n_bits);
+        const SpecializationConstants constants(group_size, data_size, n_mask, n_bits);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
-        info.constants = &constant_info;
+        info.constants = &constants.info();
         pipeline_ = create_compute_pipeline(info);
 }
 

@@ -45,57 +45,12 @@ public:
         void set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) const;
 };
 
-class MulConstant final
-{
-        struct Functions final
-        {
-                std::int32_t function_index;
-                std::uint32_t inverse;
-        };
-
-        struct Parameters final
-        {
-                std::int32_t n_1;
-                std::int32_t n_2;
-                std::int32_t m_1;
-                std::int32_t m_2;
-                std::uint32_t group_size_x;
-                std::uint32_t group_size_y;
-        };
-
-        struct Data final
-        {
-                Functions functions;
-                Parameters parameters;
-        } data_;
-
-        static_assert(sizeof(Data) == sizeof(Functions) + sizeof(Parameters));
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        MulConstant();
-
-        void set_data(
-                std::int32_t n_1,
-                std::int32_t n_2,
-                std::int32_t m_1,
-                std::int32_t m_2,
-                std::uint32_t group_size_x,
-                std::uint32_t group_size_y);
-
-        void set_function(std::int32_t function_index, bool inverse);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class MulProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        MulConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_rows_to_buffer_forward_;
         vulkan::handle::Pipeline pipeline_rows_to_buffer_inverse_;

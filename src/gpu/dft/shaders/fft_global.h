@@ -67,33 +67,12 @@ public:
         void set(const vulkan::Buffer& buffer) const;
 };
 
-class FftGlobalConstant final
-{
-        struct Data final
-        {
-                std::uint32_t group_size;
-                std::uint32_t inverse;
-                std::uint32_t data_size;
-                std::uint32_t n;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        FftGlobalConstant();
-
-        void set(std::uint32_t group_size, bool inverse, std::uint32_t data_size, std::uint32_t n);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class FftGlobalProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        FftGlobalConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_forward_;
         vulkan::handle::Pipeline pipeline_inverse_;

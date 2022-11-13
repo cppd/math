@@ -44,45 +44,12 @@ public:
         void set(const vulkan::Buffer& buffer) const;
 };
 
-class FftSharedConstant final
-{
-        struct Data final
-        {
-                std::uint32_t inverse;
-                std::uint32_t data_size;
-                std::uint32_t n;
-                std::uint32_t n_mask;
-                std::uint32_t n_bits;
-                std::uint32_t shared_size;
-                std::uint32_t reverse_input;
-                std::uint32_t group_size;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-public:
-        FftSharedConstant();
-
-        void set(
-                bool inverse,
-                std::uint32_t data_size,
-                std::uint32_t n,
-                std::uint32_t n_mask,
-                std::uint32_t n_bits,
-                std::uint32_t shared_size,
-                bool reverse_input,
-                std::uint32_t group_size);
-
-        [[nodiscard]] VkSpecializationInfo info() const;
-};
-
 class FftSharedProgram final
 {
         VkDevice device_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        FftSharedConstant constant_;
         vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_forward_;
         vulkan::handle::Pipeline pipeline_inverse_;
