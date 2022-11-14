@@ -73,16 +73,14 @@ public:
 std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(1);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = LINES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = LINES_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }

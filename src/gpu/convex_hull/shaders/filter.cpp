@@ -65,34 +65,28 @@ public:
 std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(3);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = LINES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        bindings.push_back(
+                {.binding = LINES_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = POINTS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        bindings.push_back(
+                {.binding = POINTS_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = POINT_COUNT_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = POINT_COUNT_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }
