@@ -70,27 +70,21 @@ public:
 std::vector<VkDescriptorSetLayoutBinding> CopyOutputMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(2);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = SRC_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = SRC_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DST_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = DST_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }
