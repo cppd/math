@@ -79,37 +79,28 @@ public:
 std::vector<VkDescriptorSetLayoutBinding> ComputeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(3);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = INPUT_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = INPUT_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OUTPUT_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = OUTPUT_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OBJECTS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = OBJECTS_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }

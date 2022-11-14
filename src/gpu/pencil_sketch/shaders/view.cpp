@@ -27,16 +27,14 @@ namespace ns::gpu::pencil_sketch
 std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(1);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = IMAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = IMAGE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }
