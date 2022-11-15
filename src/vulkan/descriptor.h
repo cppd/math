@@ -82,11 +82,25 @@ public:
 
         using Info = std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo, VkAccelerationStructureKHR>;
 
+        struct BindingInfo final
+        {
+                std::uint32_t binding;
+                Info info;
+
+                BindingInfo(const std::uint32_t binding, const Info& info)
+                        : binding(binding),
+                          info(info)
+                {
+                }
+        };
+
+        void update_descriptor_set(std::uint32_t index, std::uint32_t binding, const Info& info) const;
+
         void update_descriptor_set(
                 std::uint32_t index,
                 const std::vector<std::uint32_t>& bindings,
-                const std::vector<Info>& descriptor_infos) const;
+                const std::vector<Info>& infos) const;
 
-        void update_descriptor_set(std::uint32_t index, std::uint32_t binding, const Info& info) const;
+        void update_descriptor_set(std::uint32_t index, const std::vector<BindingInfo>& infos) const;
 };
 }
