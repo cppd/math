@@ -24,24 +24,21 @@ namespace ns::gpu::renderer::test
 std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layout_bindings(const bool raygen)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(2);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = ACCELERATION_STRUCTURE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-                b.descriptorCount = 1;
-                b.stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT;
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = ACCELERATION_STRUCTURE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+                 .descriptorCount = 1,
+                 .stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = IMAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT;
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = IMAGE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }
