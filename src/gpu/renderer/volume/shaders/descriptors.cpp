@@ -22,138 +22,105 @@ namespace ns::gpu::renderer
 std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings(const Flags& flags)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(13);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OPACITY_0_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = OPACITY_0_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OPACITY_1_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = OPACITY_1_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OPACITY_2_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = OPACITY_2_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OPACITY_3_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = OPACITY_3_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DRAWING_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings.push_back(
+                {.binding = DRAWING_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = COORDINATES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings.push_back(
+                {.binding = COORDINATES_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DEPTH_IMAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = DEPTH_IMAGE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = TRANSPARENCY_HEADS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = TRANSPARENCY_HEADS_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = TRANSPARENCY_NODES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = TRANSPARENCY_NODES_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
         if (flags.acceleration_structure)
         {
                 ASSERT(!flags.shadow_map);
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = ACCELERATION_STRUCTURE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-                b.descriptorCount = 1;
-                b.stageFlags = flags.acceleration_structure;
-
-                bindings.push_back(b);
+                bindings.push_back(
+                        {.binding = ACCELERATION_STRUCTURE_BINDING,
+                         .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+                         .descriptorCount = 1,
+                         .stageFlags = flags.acceleration_structure,
+                         .pImmutableSamplers = nullptr});
         }
 
         if (flags.shadow_map)
         {
                 ASSERT(!flags.acceleration_structure);
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = SHADOW_MAP_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = flags.shadow_map;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
+                bindings.push_back(
+                        {.binding = SHADOW_MAP_BINDING,
+                         .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                         .descriptorCount = 1,
+                         .stageFlags = flags.shadow_map,
+                         .pImmutableSamplers = nullptr});
         }
 
         return bindings;
@@ -353,47 +320,35 @@ void VolumeSharedMemory::set_acceleration_structure(const VkAccelerationStructur
 std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        bindings.reserve(4);
 
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = BUFFER_COORDINATES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = BUFFER_COORDINATES_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = BUFFER_VOLUME_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = BUFFER_VOLUME_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = IMAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+        bindings.push_back(
+                {.binding = IMAGE_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = TRANSFER_FUNCTION_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
+        bindings.push_back(
+                {.binding = TRANSFER_FUNCTION_BINDING,
+                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                 .descriptorCount = 1,
+                 .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                 .pImmutableSamplers = nullptr});
 
         return bindings;
 }
