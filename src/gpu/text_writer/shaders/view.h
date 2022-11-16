@@ -62,7 +62,7 @@ public:
         [[nodiscard]] static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         [[nodiscard]] static unsigned set_number();
 
-        Memory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& data_buffer);
+        Memory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& buffer);
 
         void set_image(VkSampler sampler, VkImageView image) const;
 

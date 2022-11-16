@@ -110,36 +110,27 @@ void FilterMemory::set_lines(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, LINES_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, LINES_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 void FilterMemory::set_points(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, POINTS_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, POINTS_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 void FilterMemory::set_point_count(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, POINT_COUNT_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, POINT_COUNT_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 //

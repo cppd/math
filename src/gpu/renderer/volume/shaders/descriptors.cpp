@@ -146,22 +146,16 @@ const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 
 void VolumeSharedMemory::set_drawing(const vulkan::Buffer& drawing) const
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = drawing.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = drawing.size();
-
-        descriptors_.update_descriptor_set(0, DRAWING_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, DRAWING_BINDING,
+                VkDescriptorBufferInfo{.buffer = drawing.handle(), .offset = 0, .range = drawing.size()});
 }
 
 void VolumeSharedMemory::set_coordinates(const vulkan::Buffer& coordinates) const
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = coordinates.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = coordinates.size();
-
-        descriptors_.update_descriptor_set(0, COORDINATES_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, COORDINATES_BINDING,
+                VkDescriptorBufferInfo{.buffer = coordinates.handle(), .offset = 0, .range = coordinates.size()});
 }
 
 void VolumeSharedMemory::set_ggx_f1_albedo(
@@ -254,12 +248,12 @@ void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>
 
 void VolumeSharedMemory::set_depth_image(const VkImageView image_view, const VkSampler sampler) const
 {
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image_view;
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, DEPTH_IMAGE_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = image_view,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 
 void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const
@@ -292,12 +286,12 @@ void VolumeSharedMemory::set_shadow_image(const VkSampler sampler, const vulkan:
         ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_image.handle();
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, SHADOW_MAP_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = shadow_image.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 
 void VolumeSharedMemory::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure) const
@@ -382,21 +376,21 @@ const VkDescriptorSet& VolumeImageMemory::descriptor_set() const
 
 void VolumeImageMemory::set_image(const VkSampler sampler, const VkImageView image) const
 {
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image;
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, IMAGE_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = image,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 
 void VolumeImageMemory::set_transfer_function(const VkSampler sampler, const VkImageView transfer_function) const
 {
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = transfer_function;
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, TRANSFER_FUNCTION_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, TRANSFER_FUNCTION_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = transfer_function,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 }

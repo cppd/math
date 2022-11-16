@@ -71,10 +71,11 @@ void RayTracingMemory::set_image(const vulkan::ImageView& image) const
         ASSERT(image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
         ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.handle();
-
-        descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, IMAGE_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 }
 }

@@ -124,15 +124,12 @@ std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout
 FftGlobalMemory::FftGlobalMemory(
         const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& data_buffer)
+        const vulkan::Buffer& buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = data_buffer.size();
-
-        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, DATA_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 unsigned FftGlobalMemory::set_number()
@@ -149,12 +146,9 @@ void FftGlobalMemory::set(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, BUFFER_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 //

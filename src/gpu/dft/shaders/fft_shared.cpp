@@ -130,12 +130,9 @@ void FftSharedMemory::set(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, BUFFER_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 //

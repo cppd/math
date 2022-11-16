@@ -162,12 +162,9 @@ SharedMemory::SharedMemory(
         const vulkan::Buffer& drawing)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = drawing.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = drawing.size();
-
-        descriptors_.update_descriptor_set(0, DRAWING_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, DRAWING_BINDING,
+                VkDescriptorBufferInfo{.buffer = drawing.handle(), .offset = 0, .range = drawing.size()});
 }
 
 unsigned SharedMemory::set_number()
@@ -182,12 +179,12 @@ const VkDescriptorSet& SharedMemory::descriptor_set() const
 
 void SharedMemory::set_shadow_matrices(const vulkan::Buffer& shadow_matrices) const
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = shadow_matrices.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = shadow_matrices.size();
-
-        descriptors_.update_descriptor_set(0, SHADOW_MATRICES_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, SHADOW_MATRICES_BINDING,
+                VkDescriptorBufferInfo{
+                        .buffer = shadow_matrices.handle(),
+                        .offset = 0,
+                        .range = shadow_matrices.size()});
 }
 
 void SharedMemory::set_ggx_f1_albedo(
@@ -227,11 +224,12 @@ void SharedMemory::set_objects_image(const vulkan::ImageView& objects) const
         ASSERT(objects.format() == VK_FORMAT_R32_UINT);
         ASSERT(objects.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = objects.handle();
-
-        descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, OBJECTS_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = objects.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 }
 
 void SharedMemory::set_transparency(
@@ -282,12 +280,12 @@ void SharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::Image
         ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_image.handle();
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, SHADOW_MAP_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = shadow_image.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 
 void SharedMemory::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure) const
@@ -322,12 +320,9 @@ MeshMemory::MeshMemory(
 {
         ASSERT(buffer.handle() != VK_NULL_HANDLE && buffer.size() > 0);
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, BUFFER_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 unsigned MeshMemory::set_number()

@@ -75,18 +75,12 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
         return bindings;
 }
 
-Memory::Memory(
-        const VkDevice device,
-        const VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& data_buffer)
+Memory::Memory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout, const vulkan::Buffer& buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = data_buffer.size();
-
-        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(
+                0, DATA_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 }
 
 unsigned Memory::set_number()
@@ -96,12 +90,12 @@ unsigned Memory::set_number()
 
 void Memory::set_image(const VkSampler sampler, const VkImageView image) const
 {
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image;
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, TEXTURE_BINDING, image_info);
+        descriptors_.update_descriptor_set(
+                0, TEXTURE_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = image,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 }
 
 const VkDescriptorSet& Memory::descriptor_set() const
