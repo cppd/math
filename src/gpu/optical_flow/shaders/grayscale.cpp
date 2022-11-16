@@ -124,15 +124,20 @@ void GrayscaleMemory::set_src(const VkSampler sampler, const vulkan::ImageView& 
 {
         ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.handle();
-        image_info.sampler = sampler;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, SRC_BINDING, image_info);
+                infos.emplace_back(
+                        i, SRC_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = sampler,
+                                .imageView = image.handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void GrayscaleMemory::set_dst(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)

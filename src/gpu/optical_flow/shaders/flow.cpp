@@ -184,15 +184,20 @@ FlowMemory::FlowMemory(
         const vulkan::Buffer& data_buffer)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data_buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = data_buffer.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
         for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(i, DATA_BINDING, buffer_info);
+                infos.emplace_back(
+                        i, DATA_BINDING,
+                        VkDescriptorBufferInfo{
+                                .buffer = data_buffer.handle(),
+                                .offset = 0,
+                                .range = data_buffer.size()});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 unsigned FlowMemory::set_number()
@@ -211,14 +216,20 @@ void FlowMemory::set_dx(const vulkan::ImageView& image) const
         ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.handle();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, DX_BINDING, image_info);
+                infos.emplace_back(
+                        i, DX_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = image.handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_dy(const vulkan::ImageView& image) const
@@ -226,14 +237,20 @@ void FlowMemory::set_dy(const vulkan::ImageView& image) const
         ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.handle();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, DY_BINDING, image_info);
+                infos.emplace_back(
+                        i, DY_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = image.handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
@@ -295,45 +312,51 @@ void FlowMemory::set_top_points(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, TOP_POINTS_BINDING, buffer_info);
+                infos.emplace_back(
+                        i, TOP_POINTS_BINDING,
+                        VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_flow(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, POINTS_FLOW_BINDING, buffer_info);
+                infos.emplace_back(
+                        i, POINTS_FLOW_BINDING,
+                        VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_flow_guess(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer.handle();
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, POINTS_FLOW_GUESS_BINDING, buffer_info);
+                infos.emplace_back(
+                        i, POINTS_FLOW_GUESS_BINDING,
+                        VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

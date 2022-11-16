@@ -138,34 +138,46 @@ void SobelMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageVie
         descriptors_.update_descriptor_set(infos);
 }
 
-void SobelMemory::set_dx(const vulkan::ImageView& image_dx)
+void SobelMemory::set_dx(const vulkan::ImageView& image)
 {
-        ASSERT(image_dx.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_dx.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image_dx.handle();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, DX_BINDING, image_info);
+                infos.emplace_back(
+                        i, DX_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = image.handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
-void SobelMemory::set_dy(const vulkan::ImageView& image_dy)
+void SobelMemory::set_dy(const vulkan::ImageView& image)
 {
-        ASSERT(image_dy.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_dy.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image_dy.handle();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < 2; ++i)
         {
-                descriptors_.update_descriptor_set(s, DY_BINDING, image_info);
+                infos.emplace_back(
+                        i, DY_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = image.handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
         }
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

@@ -44,8 +44,8 @@ public:
         [[nodiscard]] const VkDescriptorSet& descriptor_set(int index) const;
 
         void set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
-        void set_dx(const vulkan::ImageView& image_dx);
-        void set_dy(const vulkan::ImageView& image_dy);
+        void set_dx(const vulkan::ImageView& image);
+        void set_dy(const vulkan::ImageView& image);
 };
 
 class SobelProgram final
