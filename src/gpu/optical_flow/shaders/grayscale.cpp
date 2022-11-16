@@ -143,13 +143,24 @@ void GrayscaleMemory::set_dst(const vulkan::ImageView& image_0, const vulkan::Im
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        image_info.imageView = image_0.handle();
-        descriptors_.update_descriptor_set(0, DST_BINDING, image_info);
-        image_info.imageView = image_1.handle();
-        descriptors_.update_descriptor_set(1, DST_BINDING, image_info);
+        infos.emplace_back(
+                /*descriptor index*/ 0, DST_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_0.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        infos.emplace_back(
+                /*descriptor index*/ 1, DST_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_1.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

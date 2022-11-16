@@ -121,26 +121,25 @@ const VkDescriptorSet& CopyInputMemory::descriptor_set() const
 
 void CopyInputMemory::set(const VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const
 {
-        {
-                ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
 
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = input.handle();
-                image_info.sampler = sampler;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-                descriptors_.update_descriptor_set(0, SRC_BINDING, image_info);
-        }
-        {
-                ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, SRC_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = input.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = output.handle();
-                buffer_info.offset = 0;
-                buffer_info.range = output.size();
+        ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, DST_BINDING,
+                VkDescriptorBufferInfo{.buffer = output.handle(), .offset = 0, .range = output.size()});
 
-                descriptors_.update_descriptor_set(0, DST_BINDING, buffer_info);
-        }
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

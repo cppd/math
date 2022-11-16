@@ -244,13 +244,24 @@ void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        image_info.imageView = image_0.handle();
-        descriptors_.update_descriptor_set(0, I_BINDING, image_info);
-        image_info.imageView = image_1.handle();
-        descriptors_.update_descriptor_set(1, I_BINDING, image_info);
+        infos.emplace_back(
+                /*descriptor index*/ 0, I_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_0.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        infos.emplace_back(
+                /*descriptor index*/ 1, I_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_1.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_j(const VkSampler sampler, const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)
@@ -260,14 +271,24 @@ void FlowMemory::set_j(const VkSampler sampler, const vulkan::ImageView& image_0
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.sampler = sampler;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        image_info.imageView = image_0.handle();
-        descriptors_.update_descriptor_set(0, J_BINDING, image_info);
-        image_info.imageView = image_1.handle();
-        descriptors_.update_descriptor_set(1, J_BINDING, image_info);
+        infos.emplace_back(
+                /*descriptor index*/ 0, J_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = image_0.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
+
+        infos.emplace_back(
+                /*descriptor index*/ 1, J_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = sampler,
+                        .imageView = image_1.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void FlowMemory::set_top_points(const vulkan::Buffer& buffer) const

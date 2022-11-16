@@ -169,33 +169,37 @@ void VolumeSharedMemory::set_ggx_f1_albedo(
         const vulkan::ImageView& cosine_roughness,
         const vulkan::ImageView& cosine_weighted_average) const
 {
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
+
         ASSERT(cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
         ASSERT(cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        std::vector<vulkan::Descriptors::BindingInfo> infos;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
         infos.reserve(2);
 
         infos.emplace_back(
-                GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING,
+                DESCRIPTOR_INDEX, GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING,
                 VkDescriptorImageInfo{
                         .sampler = sampler,
                         .imageView = cosine_roughness.handle(),
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 
         infos.emplace_back(
-                GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING,
+                DESCRIPTOR_INDEX, GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING,
                 VkDescriptorImageInfo{
                         .sampler = sampler,
                         .imageView = cosine_weighted_average.handle(),
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 
-        descriptors_.update_descriptor_set(0, infos);
+        descriptors_.update_descriptor_set(infos);
 }
 
 void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>& images) const
 {
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
+
         ASSERT(images.size() == 2 || images.size() == 4);
         ASSERT(std::all_of(
                 images.cbegin(), images.cend(),
@@ -211,45 +215,41 @@ void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>
                 ASSERT(images[3]->format() == VK_FORMAT_R32G32_SFLOAT);
         }
 
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(images.size());
 
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = images[0]->handle();
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, OPACITY_0_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = images[0]->handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 
-                infos.emplace_back(image_info);
-                bindings.push_back(OPACITY_0_BINDING);
-        }
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = images[1]->handle();
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, OPACITY_1_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = images[1]->handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 
-                infos.emplace_back(image_info);
-                bindings.push_back(OPACITY_1_BINDING);
-        }
         if (images.size() == 4)
         {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = images[2]->handle();
+                infos.emplace_back(
+                        DESCRIPTOR_INDEX, OPACITY_2_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = images[2]->handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 
-                infos.emplace_back(image_info);
-                bindings.push_back(OPACITY_2_BINDING);
-        }
-        if (images.size() == 4)
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = images[3]->handle();
-
-                infos.emplace_back(image_info);
-                bindings.push_back(OPACITY_3_BINDING);
+                infos.emplace_back(
+                        DESCRIPTOR_INDEX, OPACITY_3_BINDING,
+                        VkDescriptorImageInfo{
+                                .sampler = VK_NULL_HANDLE,
+                                .imageView = images[3]->handle(),
+                                .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
         }
 
-        descriptors_.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(infos);
 }
 
 void VolumeSharedMemory::set_depth_image(const VkImageView image_view, const VkSampler sampler) const
@@ -264,25 +264,27 @@ void VolumeSharedMemory::set_depth_image(const VkImageView image_view, const VkS
 
 void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const
 {
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
+
         ASSERT(heads.format() == VK_FORMAT_R32_UINT);
         ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        std::vector<vulkan::Descriptors::BindingInfo> infos;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
         infos.reserve(2);
 
         infos.emplace_back(
-                TRANSPARENCY_HEADS_BINDING,
+                DESCRIPTOR_INDEX, TRANSPARENCY_HEADS_BINDING,
                 VkDescriptorImageInfo{
                         .sampler = VK_NULL_HANDLE,
                         .imageView = heads.handle(),
                         .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
 
         infos.emplace_back(
-                TRANSPARENCY_NODES_BINDING,
+                DESCRIPTOR_INDEX, TRANSPARENCY_NODES_BINDING,
                 VkDescriptorBufferInfo{.buffer = nodes.handle(), .offset = 0, .range = nodes.size()});
 
-        descriptors_.update_descriptor_set(0, infos);
+        descriptors_.update_descriptor_set(infos);
 }
 
 void VolumeSharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
@@ -349,21 +351,23 @@ VolumeImageMemory::VolumeImageMemory(
         const vulkan::Buffer& buffer_volume)
         : descriptors_(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings))
 {
-        std::vector<vulkan::Descriptors::BindingInfo> infos;
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
+
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
         infos.reserve(2);
 
         infos.emplace_back(
-                BUFFER_COORDINATES_BINDING,
+                DESCRIPTOR_INDEX, BUFFER_COORDINATES_BINDING,
                 VkDescriptorBufferInfo{
                         .buffer = buffer_coordinates.handle(),
                         .offset = 0,
                         .range = buffer_coordinates.size()});
 
         infos.emplace_back(
-                BUFFER_VOLUME_BINDING,
+                DESCRIPTOR_INDEX, BUFFER_VOLUME_BINDING,
                 VkDescriptorBufferInfo{.buffer = buffer_volume.handle(), .offset = 0, .range = buffer_volume.size()});
 
-        descriptors_.update_descriptor_set(0, infos);
+        descriptors_.update_descriptor_set(infos);
 }
 
 unsigned VolumeImageMemory::set_number()

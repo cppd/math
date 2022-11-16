@@ -193,38 +193,16 @@ void Descriptors::update_descriptor_set(const std::uint32_t index, const std::ui
         vkUpdateDescriptorSets(device_, 1, &write, 0, nullptr);
 }
 
-void Descriptors::update_descriptor_set(
-        const std::uint32_t index,
-        const std::vector<std::uint32_t>& bindings,
-        const std::vector<Info>& infos) const
+void Descriptors::update_descriptor_set(const std::vector<DescriptorInfo>& infos) const
 {
-        ASSERT(bindings.size() == infos.size());
-        ASSERT(index < descriptor_sets_.count());
-
-        const VkDescriptorSet descriptor_set = descriptor_sets_[index];
-
-        std::vector<VkWriteDescriptorSet> write(bindings.size());
-        std::vector<VkWriteDescriptorSetAccelerationStructureKHR> write_as(bindings.size());
-        for (std::size_t i = 0; i < bindings.size(); ++i)
-        {
-                write_descriptor_set(descriptor_set, layout_binding(bindings[i]), infos[i], &write[i], &write_as[i]);
-        }
-
-        vkUpdateDescriptorSets(device_, write.size(), write.data(), 0, nullptr);
-}
-
-void Descriptors::update_descriptor_set(const std::uint32_t index, const std::vector<BindingInfo>& infos) const
-{
-        ASSERT(index < descriptor_sets_.count());
-
-        const VkDescriptorSet descriptor_set = descriptor_sets_[index];
-
         std::vector<VkWriteDescriptorSet> write(infos.size());
         std::vector<VkWriteDescriptorSetAccelerationStructureKHR> write_as(infos.size());
         for (std::size_t i = 0; i < infos.size(); ++i)
         {
+                const DescriptorInfo& info = infos[i];
+                ASSERT(info.index < descriptor_sets_.count());
                 write_descriptor_set(
-                        descriptor_set, layout_binding(infos[i].binding), infos[i].info, &write[i], &write_as[i]);
+                        descriptor_sets_[info.index], layout_binding(info.binding), info.info, &write[i], &write_as[i]);
         }
 
         vkUpdateDescriptorSets(device_, write.size(), write.data(), 0, nullptr);

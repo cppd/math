@@ -114,26 +114,22 @@ const VkDescriptorSet& MulDMemory::descriptor_set() const
 
 void MulDMemory::set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const
 {
-        {
-                ASSERT(diagonal.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
 
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = diagonal.handle();
-                buffer_info.offset = 0;
-                buffer_info.range = diagonal.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-                descriptors_.update_descriptor_set(0, DIAGONAL_BINDING, buffer_info);
-        }
-        {
-                ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(diagonal.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, DIAGONAL_BINDING,
+                VkDescriptorBufferInfo{.buffer = diagonal.handle(), .offset = 0, .range = diagonal.size()});
 
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = data.handle();
-                buffer_info.offset = 0;
-                buffer_info.range = data.size();
+        ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, DATA_BINDING,
+                VkDescriptorBufferInfo{.buffer = data.handle(), .offset = 0, .range = data.size()});
 
-                descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
-        }
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

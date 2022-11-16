@@ -111,13 +111,24 @@ void DownsampleMemory::set_big(const vulkan::ImageView& image_0, const vulkan::I
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        image_info.imageView = image_0.handle();
-        descriptors_.update_descriptor_set(0, BIG_BINDING, image_info);
-        image_info.imageView = image_1.handle();
-        descriptors_.update_descriptor_set(1, BIG_BINDING, image_info);
+        infos.emplace_back(
+                /*descriptor index*/ 0, BIG_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_0.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        infos.emplace_back(
+                /*descriptor index*/ 1, BIG_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_1.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 void DownsampleMemory::set_small(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
@@ -128,13 +139,24 @@ void DownsampleMemory::set_small(const vulkan::ImageView& image_0, const vulkan:
         ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-        image_info.imageView = image_0.handle();
-        descriptors_.update_descriptor_set(0, SMALL_BINDING, image_info);
-        image_info.imageView = image_1.handle();
-        descriptors_.update_descriptor_set(1, SMALL_BINDING, image_info);
+        infos.emplace_back(
+                /*descriptor index*/ 0, SMALL_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_0.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        infos.emplace_back(
+                /*descriptor index*/ 1, SMALL_BINDING,
+                VkDescriptorImageInfo{
+                        .sampler = VK_NULL_HANDLE,
+                        .imageView = image_1.handle(),
+                        .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
+
+        descriptors_.update_descriptor_set(infos);
 }
 
 //

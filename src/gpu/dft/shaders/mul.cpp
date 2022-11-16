@@ -135,26 +135,22 @@ const VkDescriptorSet& MulMemory::descriptor_set() const
 
 void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) const
 {
-        {
-                ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        static constexpr unsigned DESCRIPTOR_INDEX = 0;
 
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = data.handle();
-                buffer_info.offset = 0;
-                buffer_info.range = data.size();
+        std::vector<vulkan::Descriptors::DescriptorInfo> infos;
+        infos.reserve(2);
 
-                descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
-        }
-        {
-                ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, DATA_BINDING,
+                VkDescriptorBufferInfo{.buffer = data.handle(), .offset = 0, .range = data.size()});
 
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffer.handle();
-                buffer_info.offset = 0;
-                buffer_info.range = buffer.size();
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        infos.emplace_back(
+                DESCRIPTOR_INDEX, BUFFER_BINDING,
+                VkDescriptorBufferInfo{.buffer = buffer.handle(), .offset = 0, .range = buffer.size()});
 
-                descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
-        }
+        descriptors_.update_descriptor_set(infos);
 }
 
 //
