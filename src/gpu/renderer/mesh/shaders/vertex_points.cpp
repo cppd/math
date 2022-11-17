@@ -22,15 +22,10 @@ namespace ns::gpu::renderer
 std::vector<VkVertexInputBindingDescription> PointsVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
+        descriptions.reserve(1);
 
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(PointsVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back(
+                {.binding = 0, .stride = sizeof(PointsVertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX});
 
         return descriptions;
 }
@@ -38,16 +33,13 @@ std::vector<VkVertexInputBindingDescription> PointsVertex::binding_descriptions(
 std::vector<VkVertexInputAttributeDescription> PointsVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
+        descriptions.reserve(1);
 
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(PointsVertex, position);
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back(
+                {.location = 0,
+                 .binding = 0,
+                 .format = VK_FORMAT_R32G32B32_SFLOAT,
+                 .offset = offsetof(PointsVertex, position)});
 
         return descriptions;
 }
