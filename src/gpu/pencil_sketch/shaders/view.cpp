@@ -71,15 +71,9 @@ void ViewMemory::set_image(const VkSampler sampler, const vulkan::ImageView& ima
 std::vector<VkVertexInputBindingDescription> ViewVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
+        descriptions.reserve(1);
 
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(ViewVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back({.binding = 0, .stride = sizeof(ViewVertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX});
 
         return descriptions;
 }
@@ -87,25 +81,19 @@ std::vector<VkVertexInputBindingDescription> ViewVertex::binding_descriptions()
 std::vector<VkVertexInputAttributeDescription> ViewVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
+        descriptions.reserve(2);
 
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-                d.offset = offsetof(ViewVertex, position);
+        descriptions.push_back(
+                {.location = 0,
+                 .binding = 0,
+                 .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+                 .offset = offsetof(ViewVertex, position)});
 
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 1;
-                d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(ViewVertex, texture_coordinates);
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back(
+                {.location = 1,
+                 .binding = 0,
+                 .format = VK_FORMAT_R32G32_SFLOAT,
+                 .offset = offsetof(ViewVertex, texture_coordinates)});
 
         return descriptions;
 }
