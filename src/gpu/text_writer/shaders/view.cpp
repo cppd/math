@@ -108,15 +108,9 @@ const VkDescriptorSet& Memory::descriptor_set() const
 std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
+        descriptions.reserve(1);
 
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(Vertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back({.binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX});
 
         return descriptions;
 }
@@ -124,25 +118,20 @@ std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
 std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
+        descriptions.reserve(2);
 
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32_SINT;
-                d.offset = offsetof(Vertex, window_coordinates);
+        descriptions.push_back(
+                {.location = 0,
+                 .binding = 0,
+                 .format = VK_FORMAT_R32G32_SINT,
+                 .offset = offsetof(Vertex, window_coordinates)});
 
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 1;
-                d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(Vertex, texture_coordinates);
-
-                descriptions.push_back(d);
-        }
+        descriptions.push_back({
+                .location = 1,
+                .binding = 0,
+                .format = VK_FORMAT_R32G32_SFLOAT,
+                .offset = offsetof(Vertex, texture_coordinates),
+        });
 
         return descriptions;
 }
