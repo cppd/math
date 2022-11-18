@@ -29,6 +29,8 @@ set(shader_environment "vulkan1.2")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
+set(qt6_version 6.3)
+set(qt6_disable_deprecated_before 0x060300)
 
 ##################################################
 
@@ -142,8 +144,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         target_link_libraries(${PROJECT_NAME} PRIVATE X11::xcb)
 endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
-target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x060300)
-find_package(Qt6 6.3 REQUIRED COMPONENTS Widgets)
+target_compile_definitions(
+        ${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=${qt6_disable_deprecated_before})
+find_package(Qt6 ${qt6_version} REQUIRED COMPONENTS Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 
 find_package(Freetype REQUIRED)
