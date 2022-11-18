@@ -21,7 +21,7 @@ function(add_source_files TARGET_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG
                 ""
-                ""
+                "VULKAN_API_VERSION"
                 "EXTENSIONS;DIRECTORIES")
 
         if(NOT ARG_EXTENSIONS)
@@ -58,6 +58,11 @@ function(add_source_files TARGET_TYPE)
         endif()
 
         target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
+
+        if(ARG_VULKAN_API_VERSION)
+                target_compile_definitions(
+                        ${PROJECT_NAME} PRIVATE BUILD_VULKAN_API_VERSION=${ARG_VULKAN_API_VERSION})
+        endif()
 
         target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
         if(BUILD_DEBUG AND BUILD_RELEASE)

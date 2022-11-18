@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 inline constexpr std::uint32_t API_VERSION_VARIANT = 0;
-inline constexpr std::uint32_t API_VERSION_MAJOR = 1;
-inline constexpr std::uint32_t API_VERSION_MINOR = 2;
+inline constexpr std::uint32_t API_VERSION_MAJOR = (static_cast<unsigned>(BUILD_VULKAN_API_VERSION) >> 8) & 0xFFu;
+inline constexpr std::uint32_t API_VERSION_MINOR = static_cast<unsigned>(BUILD_VULKAN_API_VERSION) & 0xFFu;
 
 inline constexpr std::uint32_t API_VERSION =
         VK_MAKE_API_VERSION(API_VERSION_VARIANT, API_VERSION_MAJOR, API_VERSION_MINOR, 0);
