@@ -38,8 +38,7 @@ Just for fun with mathematics and stuff
 
 ### CPU
 
-Bidirectional path tracing
-
+* Bidirectional path tracing.
 * (n-1)-simplex meshes in n-space on (n-1)-dimensional screen.
 * n-dimensional microfacet BRDF.
 * Spectral rendering.
