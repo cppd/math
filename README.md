@@ -81,7 +81,7 @@ Property                  | Value
 Programming languages     | C++20, GLSL 4.60
 C++ compilers             | GCC 12, Clang 14
 Platforms                 | Linux
-Graphics and compute APIs | Vulkan 1.2 with ray tracing extensions
+Graphics and compute APIs | Vulkan 1.3 with ray tracing extensions
 Frameworks                | Qt 6
 Libraries                 | FreeType, GMP
 Optional libraries        | cuFFT (for DFT tests), FFTW (for DFT tests)
