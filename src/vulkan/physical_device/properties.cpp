@@ -30,7 +30,7 @@ namespace
 template <typename T>
 void add_value(
         const T& value,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, to_string(value));
@@ -38,7 +38,7 @@ void add_value(
 
 void add_value(
         const VkPointClippingBehavior value,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, point_clipping_behavior_to_string(value));
@@ -46,15 +46,15 @@ void add_value(
 
 void add_value(
         const VkShaderFloatControlsIndependence value,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, shader_float_controls_independence_to_string(value));
 }
 
-void add_sample(
+void add_sample_count(
         const VkSampleCountFlags flags,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, sample_counts_to_string(flags));
@@ -62,7 +62,7 @@ void add_sample(
 
 void add_shader_stage(
         const VkShaderStageFlags flags,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, shader_stages_to_string(flags));
@@ -70,7 +70,7 @@ void add_shader_stage(
 
 void add_subgroup_feature(
         const VkSubgroupFeatureFlags flags,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, subgroup_features_to_string(flags));
@@ -78,7 +78,7 @@ void add_subgroup_feature(
 
 void add_resolve_mode(
         const VkResolveModeFlags flags,
-        const std::string_view& name,
+        const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
         strings->emplace_back(name, resolve_modes_to_string(flags));
@@ -87,7 +87,7 @@ void add_resolve_mode(
 
 #define ADD_VALUE_10(v) add_value(properties.properties_10.limits.v, "Limits::" #v, &strings)
 
-#define ADD_SAMPLE_10(v) add_sample(properties.properties_10.limits.v, "Limits::" #v, &strings)
+#define ADD_SAMPLE_COUNT_10(v) add_sample_count(properties.properties_10.limits.v, "Limits::" #v, &strings)
 
 #define ADD_VALUE_11(v) add_value(properties.properties_11.v, "Vulkan11::" #v, &strings)
 
@@ -97,7 +97,7 @@ void add_resolve_mode(
 
 #define ADD_VALUE_12(v) add_value(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
-#define ADD_SAMPLE_12(v) add_sample(properties.properties_12.v, "Vulkan12::" #v, &strings)
+#define ADD_SAMPLE_COUNT_12(v) add_sample_count(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
 #define ADD_RESOLVE_MODE_12(v) add_resolve_mode(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
@@ -116,15 +116,15 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
 {
         std::vector<std::tuple<std::string, std::string>> strings;
 
-        ADD_SAMPLE_10(framebufferColorSampleCounts);
-        ADD_SAMPLE_10(framebufferDepthSampleCounts);
-        ADD_SAMPLE_10(framebufferNoAttachmentsSampleCounts);
-        ADD_SAMPLE_10(framebufferStencilSampleCounts);
-        ADD_SAMPLE_10(sampledImageColorSampleCounts);
-        ADD_SAMPLE_10(sampledImageDepthSampleCounts);
-        ADD_SAMPLE_10(sampledImageIntegerSampleCounts);
-        ADD_SAMPLE_10(sampledImageStencilSampleCounts);
-        ADD_SAMPLE_10(storageImageSampleCounts);
+        ADD_SAMPLE_COUNT_10(framebufferColorSampleCounts);
+        ADD_SAMPLE_COUNT_10(framebufferDepthSampleCounts);
+        ADD_SAMPLE_COUNT_10(framebufferNoAttachmentsSampleCounts);
+        ADD_SAMPLE_COUNT_10(framebufferStencilSampleCounts);
+        ADD_SAMPLE_COUNT_10(sampledImageColorSampleCounts);
+        ADD_SAMPLE_COUNT_10(sampledImageDepthSampleCounts);
+        ADD_SAMPLE_COUNT_10(sampledImageIntegerSampleCounts);
+        ADD_SAMPLE_COUNT_10(sampledImageStencilSampleCounts);
+        ADD_SAMPLE_COUNT_10(storageImageSampleCounts);
         ADD_VALUE_10(bufferImageGranularity);
         ADD_VALUE_10(discreteQueuePriorities);
         ADD_VALUE_10(lineWidthGranularity);
@@ -221,22 +221,21 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
         ADD_VALUE_10(viewportBoundsRange);
         ADD_VALUE_10(viewportSubPixelBits);
 
-        ADD_VALUE_11(pointClippingBehavior);
         ADD_SHADER_STAGE_11(subgroupSupportedStages);
         ADD_SUBGROUP_FEATURE_11(subgroupSupportedOperations);
         ADD_VALUE_11(maxMemoryAllocationSize);
         ADD_VALUE_11(maxMultiviewInstanceIndex);
         ADD_VALUE_11(maxMultiviewViewCount);
         ADD_VALUE_11(maxPerSetDescriptors);
+        ADD_VALUE_11(pointClippingBehavior);
         ADD_VALUE_11(protectedNoFault);
         ADD_VALUE_11(subgroupQuadOperationsInAllStages);
         ADD_VALUE_11(subgroupSize);
 
         ADD_RESOLVE_MODE_12(supportedDepthResolveModes);
         ADD_RESOLVE_MODE_12(supportedStencilResolveModes);
-        ADD_SAMPLE_12(framebufferIntegerColorSampleCounts);
+        ADD_SAMPLE_COUNT_12(framebufferIntegerColorSampleCounts);
         ADD_VALUE_12(denormBehaviorIndependence);
-        ADD_VALUE_12(roundingModeIndependence);
         ADD_VALUE_12(filterMinmaxImageComponentMapping);
         ADD_VALUE_12(filterMinmaxSingleComponentFormats);
         ADD_VALUE_12(independentResolve);
@@ -260,6 +259,7 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
         ADD_VALUE_12(maxUpdateAfterBindDescriptorsInAllPools);
         ADD_VALUE_12(quadDivergentImplicitLod);
         ADD_VALUE_12(robustBufferAccessUpdateAfterBind);
+        ADD_VALUE_12(roundingModeIndependence);
         ADD_VALUE_12(shaderDenormFlushToZeroFloat16);
         ADD_VALUE_12(shaderDenormFlushToZeroFloat32);
         ADD_VALUE_12(shaderDenormFlushToZeroFloat64);
