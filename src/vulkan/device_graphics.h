@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 #include "extensions.h"
-#include "functionality.h"
 #include "objects.h"
-#include "physical_device.h"
+
+#include "physical_device/functionality.h"
+#include "physical_device/physical_device.h"
 
 #include <src/com/error.h>
 

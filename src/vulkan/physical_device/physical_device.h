@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "functionality.h"
-#include "objects.h"
-#include "physical_device_info.h"
+#include "info.h"
+
+#include "../objects.h"
 
 #include <optional>
 #include <string>

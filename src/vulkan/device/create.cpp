@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "../features.h"
+#include "../physical_device/features.h"
 #include "../print.h"
 
 #include <src/com/error.h>

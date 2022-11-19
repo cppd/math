@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../objects.h"
-#include "../physical_device.h"
-#include "../physical_device_info.h"
+#include "../physical_device/info.h"
+#include "../physical_device/physical_device.h"
 
 #include <string>
 #include <unordered_map>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "features.h"
 
-#include "features/properties.h"
+#include "feature_properties.h"
 
 #include <src/com/error.h>
 

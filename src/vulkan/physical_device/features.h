@@ -17,14 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../device.h"
+#include "info.h"
 
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace ns::vulkan
 {
-std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
-        const PhysicalDeviceProperties& properties);
+void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
+
+PhysicalDeviceFeatures make_features(
+        const PhysicalDeviceFeatures& required,
+        const PhysicalDeviceFeatures& optional,
+        const PhysicalDeviceFeatures& supported);
+
+[[nodiscard]] bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported);
+
+std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, bool enabled);
+
+template <typename Features>
+bool any_feature_enabled(const Features& features);
 }

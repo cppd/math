@@ -17,14 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../device.h"
+#include "info.h"
 
 #include <string>
+#include <unordered_set>
 
 namespace ns::vulkan
 {
-std::string device_conformance_version(const PhysicalDevice& device);
-std::string device_name(const PhysicalDevice& device);
-std::string device_driver_name(const PhysicalDevice& device);
-std::string device_driver_info(const PhysicalDevice& device);
+struct DeviceFunctionality final
+{
+        std::unordered_set<std::string> required_extensions;
+        std::unordered_set<std::string> optional_extensions;
+        PhysicalDeviceFeatures required_features;
+        PhysicalDeviceFeatures optional_features;
+
+        void merge(const DeviceFunctionality& functionality);
+};
 }

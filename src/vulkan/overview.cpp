@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "overview.h"
 
-#include "features.h"
 #include "instance_info.h"
-#include "physical_device.h"
 #include "print.h"
 
-#include "overview/device.h"
-#include "overview/device_properties.h"
+#include "physical_device/features.h"
+#include "physical_device/physical_device.h"
+#include "physical_device/properties.h"
 
 #include <src/com/print.h>
 #include <src/com/string_tree.h>
@@ -50,20 +49,30 @@ std::vector<std::string> sorted(const T& s)
 void conformance_version(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Conformance Version");
-        tree->add(node, device_conformance_version(device));
+
+        const VkConformanceVersion version = device.properties().properties_12.conformanceVersion;
+        std::ostringstream oss;
+        oss << static_cast<int>(version.major);
+        oss << "." << static_cast<int>(version.minor);
+        oss << "." << static_cast<int>(version.subminor);
+        oss << "." << static_cast<int>(version.patch);
+        tree->add(node, oss.str());
 }
 
 void device_name(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Device Name");
-        tree->add(node, device_name(device));
+        const std::string device_name = static_cast<const char*>(device.properties().properties_10.deviceName);
+        tree->add(node, device_name);
 }
 
 void driver_info(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Driver");
-        tree->add(node, "Name = " + device_driver_name(device));
-        tree->add(node, "Info = " + device_driver_info(device));
+        const std::string driver_name = static_cast<const char*>(device.properties().properties_12.driverName);
+        const std::string driver_info = static_cast<const char*>(device.properties().properties_12.driverInfo);
+        tree->add(node, "Name = " + driver_name);
+        tree->add(node, "Info = " + driver_info);
 }
 
 void device_type(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)

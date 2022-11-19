@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "functionality.h"
 
 #include <src/com/log.h>
-#include <src/vulkan/features.h>
+#include <src/vulkan/physical_device/features.h>
 
 #include <algorithm>
 #include <array>
@@ -61,12 +61,8 @@ vulkan::DeviceFunctionality device_ray_tracing_functionality()
 {
         vulkan::DeviceFunctionality res;
 
-        for (const auto& s : RAY_TRACING_EXTENSIONS)
-        {
-                res.optional_extensions.insert(s);
-        }
-
-        vulkan::add_features(&res.optional_features, RAY_TRACING_FEATURES);
+        res.optional_extensions.insert(RAY_TRACING_EXTENSIONS.cbegin(), RAY_TRACING_EXTENSIONS.cend());
+        res.optional_features = RAY_TRACING_FEATURES;
 
         return res;
 }

@@ -17,20 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "physical_device_info.h"
+#include "info.h"
 
 #include <string>
-#include <unordered_set>
+#include <tuple>
+#include <vector>
 
 namespace ns::vulkan
 {
-struct DeviceFunctionality final
-{
-        std::unordered_set<std::string> required_extensions;
-        std::unordered_set<std::string> optional_extensions;
-        PhysicalDeviceFeatures required_features;
-        PhysicalDeviceFeatures optional_features;
-
-        void merge(const DeviceFunctionality& functionality);
-};
+std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
+        const PhysicalDeviceProperties& properties);
 }

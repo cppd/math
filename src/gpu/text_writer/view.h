@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/text/text_data.h>
 #include <src/vulkan/device.h>
-#include <src/vulkan/functionality.h>
+#include <src/vulkan/physical_device/functionality.h>
 
 #include <memory>
 #include <vulkan/vulkan.h>

@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "physical_device.h"
 
-#include "api_version.h"
-#include "error.h"
-#include "extensions.h"
 #include "features.h"
-#include "overview.h"
-#include "print.h"
-#include "surface.h"
+
+#include "../api_version.h"
+#include "../error.h"
+#include "../extensions.h"
+#include "../overview.h"
+#include "../print.h"
+#include "../surface.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>

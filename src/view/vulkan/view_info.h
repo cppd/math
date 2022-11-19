@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/physical_device_info.h>
+#include <src/vulkan/physical_device/info.h>
 #include <src/vulkan/swapchain.h>
 
 #include <array>
