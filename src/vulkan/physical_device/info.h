@@ -30,6 +30,7 @@ struct PhysicalDeviceProperties final
         VkPhysicalDeviceProperties properties_10;
         VkPhysicalDeviceVulkan11Properties properties_11;
         VkPhysicalDeviceVulkan12Properties properties_12;
+        VkPhysicalDeviceVulkan13Properties properties_13;
         std::optional<VkPhysicalDeviceAccelerationStructurePropertiesKHR> acceleration_structure;
         std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };
@@ -39,6 +40,7 @@ struct PhysicalDeviceFeatures final
         VkPhysicalDeviceFeatures features_10{};
         VkPhysicalDeviceVulkan11Features features_11{};
         VkPhysicalDeviceVulkan12Features features_12{};
+        VkPhysicalDeviceVulkan13Features features_13{};
         VkPhysicalDeviceAccelerationStructureFeaturesKHR acceleration_structure{};
         VkPhysicalDeviceRayQueryFeaturesKHR ray_query{};
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR ray_tracing_pipeline{};

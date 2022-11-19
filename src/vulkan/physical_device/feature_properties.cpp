@@ -40,6 +40,7 @@ struct Check final
 template struct Check<VkPhysicalDeviceFeatures>;
 template struct Check<VkPhysicalDeviceVulkan11Features>;
 template struct Check<VkPhysicalDeviceVulkan12Features>;
+template struct Check<VkPhysicalDeviceVulkan13Features>;
 template struct Check<VkPhysicalDeviceAccelerationStructureFeaturesKHR>;
 template struct Check<VkPhysicalDeviceRayQueryFeaturesKHR>;
 template struct Check<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>;
@@ -54,6 +55,8 @@ template struct Check<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>;
 #define CASE_FEATURE_11(feature) CASE_FEATURE("Vulkan11Features", VkPhysicalDeviceVulkan11Features, feature)
 
 #define CASE_FEATURE_12(feature) CASE_FEATURE("Vulkan12Features", VkPhysicalDeviceVulkan12Features, feature)
+
+#define CASE_FEATURE_13(feature) CASE_FEATURE("Vulkan13Features", VkPhysicalDeviceVulkan13Features, feature)
 
 #define CASE_ACCELERATION_STRUCTURE(feature) \
         CASE_FEATURE("AccelerationStructureFeaturesKHR", VkPhysicalDeviceAccelerationStructureFeaturesKHR, feature)
@@ -201,6 +204,30 @@ std::string FeatureProperties<VkPhysicalDeviceVulkan12Features>::name(const std:
                 CASE_FEATURE_12(subgroupBroadcastDynamicId)
         default:
                 return "Unknown feature (index " + std::to_string(index) + ") in VkPhysicalDeviceVulkan12Features)";
+        }
+}
+
+std::string FeatureProperties<VkPhysicalDeviceVulkan13Features>::name(const std::size_t index)
+{
+        switch (index)
+        {
+                CASE_FEATURE_13(robustImageAccess)
+                CASE_FEATURE_13(inlineUniformBlock)
+                CASE_FEATURE_13(descriptorBindingInlineUniformBlockUpdateAfterBind)
+                CASE_FEATURE_13(pipelineCreationCacheControl)
+                CASE_FEATURE_13(privateData)
+                CASE_FEATURE_13(shaderDemoteToHelperInvocation)
+                CASE_FEATURE_13(shaderTerminateInvocation)
+                CASE_FEATURE_13(subgroupSizeControl)
+                CASE_FEATURE_13(computeFullSubgroups)
+                CASE_FEATURE_13(synchronization2)
+                CASE_FEATURE_13(textureCompressionASTC_HDR)
+                CASE_FEATURE_13(shaderZeroInitializeWorkgroupMemory)
+                CASE_FEATURE_13(dynamicRendering)
+                CASE_FEATURE_13(shaderIntegerDotProduct)
+                CASE_FEATURE_13(maintenance4)
+        default:
+                return "Unknown feature (index " + std::to_string(index) + ") in VkPhysicalDeviceVulkan13Features)";
         }
 }
 

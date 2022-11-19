@@ -101,6 +101,10 @@ void add_resolve_mode(
 
 #define ADD_RESOLVE_MODE_12(v) add_resolve_mode(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
+#define ADD_VALUE_13(v) add_value(properties.properties_13.v, "Vulkan13::" #v, &strings)
+
+#define ADD_SHADER_STAGE_13(v) add_shader_stage(properties.properties_13.v, "Vulkan13::" #v, &strings)
+
 #define ADD_VALUE_ACCELERATION_STRUCTURE(v) \
         add_value(properties.acceleration_structure->v, "AccelerationStructure::" #v, &strings)
 
@@ -216,7 +220,7 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
         ADD_VALUE_10(subTexelPrecisionBits);
         ADD_VALUE_10(viewportBoundsRange);
         ADD_VALUE_10(viewportSubPixelBits);
-        //
+
         ADD_VALUE_11(pointClippingBehavior);
         ADD_SHADER_STAGE_11(subgroupSupportedStages);
         ADD_SUBGROUP_FEATURE_11(subgroupSupportedOperations);
@@ -227,7 +231,7 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
         ADD_VALUE_11(protectedNoFault);
         ADD_VALUE_11(subgroupQuadOperationsInAllStages);
         ADD_VALUE_11(subgroupSize);
-        //
+
         ADD_RESOLVE_MODE_12(supportedDepthResolveModes);
         ADD_RESOLVE_MODE_12(supportedStencilResolveModes);
         ADD_SAMPLE_12(framebufferIntegerColorSampleCounts);
@@ -276,6 +280,52 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
         ADD_VALUE_12(shaderStorageBufferArrayNonUniformIndexingNative);
         ADD_VALUE_12(shaderStorageImageArrayNonUniformIndexingNative);
         ADD_VALUE_12(shaderUniformBufferArrayNonUniformIndexingNative);
+
+        ADD_SHADER_STAGE_13(requiredSubgroupSizeStages);
+        ADD_VALUE_13(integerDotProduct16BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProduct16BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProduct16BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProduct32BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProduct32BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProduct32BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProduct4x8BitPackedMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProduct4x8BitPackedSignedAccelerated);
+        ADD_VALUE_13(integerDotProduct4x8BitPackedUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProduct64BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProduct64BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProduct64BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProduct8BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProduct8BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProduct8BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating16BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating16BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating32BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating32BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating64BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating64BitUnsignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating8BitSignedAccelerated);
+        ADD_VALUE_13(integerDotProductAccumulatingSaturating8BitUnsignedAccelerated);
+        ADD_VALUE_13(maxBufferSize);
+        ADD_VALUE_13(maxComputeWorkgroupSubgroups);
+        ADD_VALUE_13(maxDescriptorSetInlineUniformBlocks);
+        ADD_VALUE_13(maxDescriptorSetUpdateAfterBindInlineUniformBlocks);
+        ADD_VALUE_13(maxInlineUniformBlockSize);
+        ADD_VALUE_13(maxInlineUniformTotalSize);
+        ADD_VALUE_13(maxPerStageDescriptorInlineUniformBlocks);
+        ADD_VALUE_13(maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks);
+        ADD_VALUE_13(maxSubgroupSize);
+        ADD_VALUE_13(minSubgroupSize);
+        ADD_VALUE_13(storageTexelBufferOffsetAlignmentBytes);
+        ADD_VALUE_13(storageTexelBufferOffsetSingleTexelAlignment);
+        ADD_VALUE_13(uniformTexelBufferOffsetAlignmentBytes);
+        ADD_VALUE_13(uniformTexelBufferOffsetSingleTexelAlignment);
 
         if (properties.acceleration_structure)
         {

@@ -88,6 +88,7 @@ void set_nullptr_next(PhysicalDeviceProperties* const properties)
 {
         properties->properties_11.pNext = nullptr;
         properties->properties_12.pNext = nullptr;
+        properties->properties_13.pNext = nullptr;
         if (properties->acceleration_structure)
         {
                 properties->acceleration_structure->pNext = nullptr;
@@ -102,6 +103,7 @@ void set_nullptr_next(PhysicalDeviceFeatures* const features)
 {
         features->features_11.pNext = nullptr;
         features->features_12.pNext = nullptr;
+        features->features_13.pNext = nullptr;
         features->acceleration_structure.pNext = nullptr;
         features->ray_query.pNext = nullptr;
         features->ray_tracing_pipeline.pNext = nullptr;
@@ -124,6 +126,9 @@ PhysicalDeviceProperties find_properties(
 
         res.properties_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
         connect(last, res.properties_12);
+
+        res.properties_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+        connect(last, res.properties_13);
 
         if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
         {
@@ -164,6 +169,9 @@ PhysicalDeviceFeatures find_features(const VkPhysicalDevice device, const std::u
 
         res.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         connect(last, res.features_12);
+
+        res.features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+        connect(last, res.features_13);
 
         if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
         {
@@ -282,6 +290,9 @@ void make_physical_device_features(
 
         device_features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         connect(last, device_features->features_12);
+
+        device_features->features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+        connect(last, device_features->features_13);
 
         if (any_feature_enabled(device_features->acceleration_structure))
         {

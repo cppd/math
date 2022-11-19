@@ -260,6 +260,7 @@ vulkan::DeviceFunctionality View::device_functionality()
 {
         vulkan::DeviceFunctionality res;
         res.required_features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
+        res.required_features.features_13.maintenance4 = VK_TRUE;
         return res;
 }
 

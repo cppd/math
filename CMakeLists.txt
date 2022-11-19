@@ -25,8 +25,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/check_compilers.cmake")
 
 ##################################################
 
-set(vulkan_api_version 0x0102)
-set(shader_environment "vulkan1.2")
+set(vulkan_api_version 0x0103)
+set(shader_environment "vulkan1.3")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})

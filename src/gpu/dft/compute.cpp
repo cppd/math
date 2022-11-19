@@ -67,6 +67,13 @@ namespace
 {
 constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
 
+vulkan::DeviceFunctionality device_functionality()
+{
+        vulkan::DeviceFunctionality res;
+        res.required_features.features_13.maintenance4 = VK_TRUE;
+        return res;
+}
+
 void begin_command_buffer(const VkCommandBuffer command_buffer)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
@@ -274,7 +281,7 @@ class DftVector final : public ComputeVector
 
 public:
         explicit DftVector(const vulkan::PhysicalDeviceSearchType search_type)
-                : device_compute_(search_type, vulkan::Instance::handle(), vulkan::DeviceFunctionality()),
+                : device_compute_(search_type, vulkan::Instance::handle(), device_functionality()),
                   compute_command_pool_(vulkan::create_command_pool(
                           device_compute_.device().handle(),
                           device_compute_.compute_family_index())),
