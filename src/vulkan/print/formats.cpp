@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view& separator)
+std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view separator)
 {
         if (formats.empty())
         {

@@ -19,10 +19,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/print.h>
 
+#include <bit>
+#include <sstream>
+
 namespace ns::vulkan
 {
 namespace
 {
+template <typename Flags>
+std::string to_hex_flags(const Flags flags)
+{
+        if (!flags)
+        {
+                return {};
+        }
+
+        std::ostringstream oss;
+        oss << std::hex;
+        Flags f = 1 << (std::bit_width(flags) - 1);
+        bool first = true;
+        while (f)
+        {
+                if (flags & f)
+                {
+                        if (!first)
+                        {
+                                oss << '|';
+                        }
+                        else
+                        {
+                                first = false;
+                        }
+                        oss << "0x" << f;
+                }
+                f >>= 1;
+        }
+        return oss.str();
+}
+
 template <typename Flags, typename Flag>
 void add_flags(
         std::string* const s,
@@ -46,17 +80,21 @@ void add_flags(
 template <typename Flags>
 void add_flags_unknown(std::string* const s, const Flags flags)
 {
-        if (flags)
+        if (!flags)
         {
-                if (!s->empty())
-                {
-                        *s += ", ";
-                }
-
-                *s += "UNKNOWN (";
-                *s += to_string_binary(flags, "0b");
-                *s += ")";
+                return;
         }
+
+        if (!s->empty())
+        {
+                *s += ", ";
+        }
+
+        *s += "UNKNOWN (";
+        *s += to_string_binary(flags, "0b");
+        *s += ", ";
+        *s += to_hex_flags(flags);
+        *s += ")";
 }
 }
 
