@@ -125,6 +125,8 @@ std::string shader_stages_to_string(const VkShaderStageFlags flags)
         add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_MISS_BIT_KHR, "MISS");
         add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_INTERSECTION_BIT_KHR, "INTERSECTION");
         add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_CALLABLE_BIT_KHR, "CALLABLE");
+        add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_TASK_BIT_EXT, "TASK");
+        add_flags(&s, flags, &flags_clear, VK_SHADER_STAGE_MESH_BIT_EXT, "MESH");
 
         add_flags_unknown(&s, flags_clear);
 
