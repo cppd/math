@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "device_compute.h"
+#include "device_graphics.h"
 
-#include "device/queues.h"
+#include "queues.h"
 
 #include <src/com/log.h>
 
@@ -25,8 +25,20 @@ namespace ns::vulkan
 {
 namespace
 {
+constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
 constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
 constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
+constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
+
+std::uint32_t find_graphics_compute_family_index(const PhysicalDevice& device)
+{
+        if (const auto index = device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+        {
+                return *index;
+        }
+
+        error("Graphics compute queue family index not found");
+}
 
 std::uint32_t find_compute_family_index(const PhysicalDevice& device)
 {
@@ -66,32 +78,46 @@ std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
 }
 }
 
-DeviceCompute::DeviceCompute(
-        const PhysicalDeviceSearchType search_type,
+DeviceGraphics::DeviceGraphics(
         const VkInstance instance,
-        const DeviceFunctionality& device_functionality)
-        : physical_device_(find_physical_device(search_type, instance, VK_NULL_HANDLE, device_functionality)),
+        const DeviceFunctionality& device_functionality,
+        const VkSurfaceKHR surface)
+        : physical_device_(
+                find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
+          graphics_compute_family_index_(find_graphics_compute_family_index(physical_device_)),
           compute_family_index_(find_compute_family_index(physical_device_)),
-          transfer_family_index_(find_transfer_family_index(physical_device_))
+          transfer_family_index_(find_transfer_family_index(physical_device_)),
+          presentation_family_index_(physical_device_.presentation_family_index())
 {
-        constexpr int COMPUTE = 0;
-        constexpr int TRANSFER = 1;
+        constexpr int GRAPHICS_COMPUTE = 0;
+        constexpr int COMPUTE = 1;
+        constexpr int TRANSFER = 2;
+        constexpr int PRESENTATION = 3;
 
         const std::vector<QueueFamilyInfo> family_info = [&]
         {
-                std::vector<QueueFamilyInfo> res(2);
+                std::vector<QueueFamilyInfo> res(4);
+                res[GRAPHICS_COMPUTE] = {
+                        .index = graphics_compute_family_index_,
+                        .count = GRAPHICS_COMPUTE_QUEUE_COUNT};
                 res[COMPUTE] = {.index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
                 res[TRANSFER] = {.index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
+                res[PRESENTATION] = {.index = presentation_family_index_, .count = PRESENTATION_QUEUE_COUNT};
                 return res;
         }();
 
         const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
 
-        LOG(device_queues_description({"compute", "transfer"}, distribution.device_queues));
+        LOG(device_queues_description(
+                {"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
 
         device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
 
+        device_extension_functions_.emplace(device_->handle());
+
+        graphics_compute_queues_ = create_device_queues(*device_, distribution.device_queues[GRAPHICS_COMPUTE]);
         compute_queues_ = create_device_queues(*device_, distribution.device_queues[COMPUTE]);
         transfer_queues_ = create_device_queues(*device_, distribution.device_queues[TRANSFER]);
+        presentation_queues_ = create_device_queues(*device_, distribution.device_queues[PRESENTATION]);
 }
 }

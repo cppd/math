@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 
-#include "error.h"
+#include "create.h"
+#include "queues.h"
 
-#include "device/create.h"
-#include "device/queues.h"
-#include "physical_device/features.h"
+#include "../error.h"
+#include "../physical_device/features.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>

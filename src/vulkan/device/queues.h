@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../device.h"
+#include "device.h"
+
 #include "../physical_device/physical_device.h"
 
 #include <string>

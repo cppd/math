@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "device.h"
-#include "extensions.h"
-#include "objects.h"
 
-#include "physical_device/functionality.h"
-#include "physical_device/physical_device.h"
+#include "../extensions.h"
+#include "../objects.h"
+#include "../physical_device/functionality.h"
+#include "../physical_device/physical_device.h"
 
 #include <src/com/error.h>
 

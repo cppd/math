@@ -54,7 +54,7 @@ There are errors in chapter 13 when calculating H2
 #include <src/com/error.h>
 #include <src/com/group_count.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/device_compute.h>
+#include <src/vulkan/device/device_compute.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>

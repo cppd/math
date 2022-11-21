@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image.h"
 
 #include <src/image/image.h>
-#include <src/vulkan/device.h>
+#include <src/vulkan/device/device.h>
 
 namespace ns::gpu::renderer::test
 {
