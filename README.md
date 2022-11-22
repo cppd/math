@@ -159,11 +159,10 @@ Spectral rendering
 
 4-dimensional Cornell box
 
-<img src="https://i.imgur.com/GCOCSAe.png" alt="image" width="19%"></img>
-<img src="https://i.imgur.com/ZteKk5e.png" alt="image" width="19%"></img>
-<img src="https://i.imgur.com/AeG9Dj0.png" alt="image" width="19%"></img>
-<img src="https://i.imgur.com/VFc3KNJ.png" alt="image" width="19%"></img>
-<img src="https://i.imgur.com/A8nSU56.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/oDufPGh.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/Qts0cgW.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/ojdEkWt.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/M7GMG8P.png" alt="image" width="23%"></img>
 
 ### 4D polytope
 
