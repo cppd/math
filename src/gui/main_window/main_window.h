@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/view/view.h>
-#include <src/vulkan/instance.h>
+#include <src/vulkan/instance/instance.h>
 
 #include <QTimer>
 #include <list>

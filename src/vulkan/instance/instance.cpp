@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "instance.h"
 
-#include "debug.h"
-#include "extensions.h"
-#include "instance_create.h"
-#include "instance_info.h"
-#include "objects.h"
+#include "create.h"
+#include "info.h"
+
+#include "../debug.h"
+#include "../extensions.h"
+#include "../objects.h"
 
 #include <src/com/error.h>
 #include <src/window/surface.h>
