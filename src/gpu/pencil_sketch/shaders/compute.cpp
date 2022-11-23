@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../code/code.h"
 
 #include <src/vulkan/create.h>
-#include <src/vulkan/pipeline_compute.h>
+#include <src/vulkan/pipeline/compute.h>
 
 #include <array>
 

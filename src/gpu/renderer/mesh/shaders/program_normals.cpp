@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex_triangles.h"
 
 #include <src/vulkan/create.h>
-#include <src/vulkan/pipeline_graphics.h>
+#include <src/vulkan/pipeline/graphics.h>
 
 namespace ns::gpu::renderer
 {

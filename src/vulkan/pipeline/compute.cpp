@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pipeline_compute.h"
+#include "compute.h"
 
-#include "pipeline_shader.h"
+#include "shader_info.h"
 
 #include <src/com/error.h>
 
