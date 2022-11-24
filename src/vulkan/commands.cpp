@@ -30,7 +30,6 @@ void begin_command_buffer(const VkCommandBuffer command_buffer)
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        // command_buffer_info.pInheritanceInfo = nullptr;
 
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
@@ -48,55 +47,47 @@ handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& inf
                 error("No required data to create command buffers");
         }
 
-        handle::CommandBuffers command_buffers(
-                info.device.value(), info.command_pool.value(), info.framebuffers->size());
-
-        for (std::uint32_t i = 0; i < command_buffers.count(); ++i)
+        VkRenderPassBeginInfo render_pass_info = {};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_info.renderPass = *info.render_pass;
+        render_pass_info.renderArea = *info.render_area;
+        if (info.clear_values)
         {
-                begin_command_buffer(command_buffers[i]);
+                ASSERT(!info.clear_values->empty());
+                render_pass_info.clearValueCount = info.clear_values->size();
+                render_pass_info.pClearValues = info.clear_values->data();
+        }
+
+        handle::CommandBuffers buffers(*info.device, *info.command_pool, info.framebuffers->size());
+
+        for (std::uint32_t i = 0; i < buffers.count(); ++i)
+        {
+                render_pass_info.framebuffer = (*info.framebuffers)[i];
+
+                begin_command_buffer(buffers[i]);
 
                 if (info.before_render_pass_commands)
                 {
-                        info.before_render_pass_commands(command_buffers[i]);
+                        info.before_render_pass_commands(buffers[i]);
                 }
 
-                VkRenderPassBeginInfo render_pass_info = {};
-                render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                render_pass_info.renderPass = info.render_pass.value();
-                render_pass_info.framebuffer = (*info.framebuffers)[i];
-                render_pass_info.renderArea = info.render_area.value();
-
-                if (info.clear_values)
-                {
-                        render_pass_info.clearValueCount = info.clear_values->size();
-                        render_pass_info.pClearValues = info.clear_values->data();
-                }
-                else
-                {
-                        render_pass_info.clearValueCount = 0;
-                }
-
-                vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-                //
+                vkCmdBeginRenderPass(buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
                 if (info.render_pass_commands)
                 {
-                        info.render_pass_commands(command_buffers[i]);
+                        info.render_pass_commands(buffers[i]);
                 }
 
-                //
-
-                vkCmdEndRenderPass(command_buffers[i]);
+                vkCmdEndRenderPass(buffers[i]);
 
                 if (info.after_render_pass_commands)
                 {
-                        info.after_render_pass_commands(command_buffers[i]);
+                        info.after_render_pass_commands(buffers[i]);
                 }
 
-                end_command_buffer(command_buffers[i]);
+                end_command_buffer(buffers[i]);
         }
 
-        return command_buffers;
+        return buffers;
 }
 }

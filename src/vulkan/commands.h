@@ -27,7 +27,7 @@ namespace ns::vulkan
 {
 struct CommandBufferCreateInfo final
 {
-        // required, std::optional is used to check that values are set
+        // required, std::optional is used to check that the values are set
         std::optional<VkDevice> device;
         std::optional<VkRect2D> render_area;
         std::optional<VkRenderPass> render_pass;
