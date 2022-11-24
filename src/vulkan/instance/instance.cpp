@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "instance.h"
 
 #include "create.h"
+#include "debug.h"
 #include "info.h"
 
-#include "../debug.h"
 #include "../extensions.h"
 #include "../objects.h"
 
