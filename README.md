@@ -128,6 +128,14 @@ Volumetric rendering
 
 2D images of a 3D image of the 4-dimensional Cornell box.
 
+* Seven 3-parallelotopes (the sides of the box). 
+* One 3-parallelotope light source.
+* One 3-simplex mesh without boundary (3-sphere).
+* One 4-parallelotope.
+* 4-dimensional microfacet BRDF.
+* 4-dimensional soft shadows.
+* Perspective projection onto 3D screen.
+
 <img src="https://i.imgur.com/oDufPGh.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/Qts0cgW.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/ojdEkWt.png" alt="image" width="23%"></img>
