@@ -23,26 +23,26 @@ Just for fun with mathematics and stuff
 
 ## File types
 
-* OBJ and STL files with objects in 3-space.
-* Extended OBJ and STL files with objects in n-space.
-* Text files with the coordinates of points in n-space.
+* OBJ and STL files with objects in 3-space
+* Extended OBJ and STL files with objects in n-space
+* Text files with the coordinates of points in n-space
 
 ## Rendering
 
 ### GPU
 
-* Triangle meshes (rasterization).
-* Volumes (ray marching).
-* Isosurfaces (ray marching).
-* Shadows (ray tracing, ray marching, shadow mapping).
-* Order-independent transparency (lists of fragments).
+* Triangle meshes (rasterization)
+* Volumes (ray marching)
+* Isosurfaces (ray marching)
+* Shadows (ray tracing, ray marching, shadow mapping)
+* Order-independent transparency (lists of fragments)
 
 ### CPU
 
-* Bidirectional path tracing.
-* (n-1)-simplex meshes in n-space on (n-1)-dimensional screen.
-* n-dimensional microfacet BRDF.
-* Spectral rendering.
+* Bidirectional path tracing
+* (n-1)-simplex meshes in n-space on (n-1)-dimensional screen
+* n-dimensional microfacet BRDF
+* Spectral rendering
 
 ## Algorithms
 
@@ -93,18 +93,18 @@ Build systems             | CMake
 ### 3-manifold reconstruction and path tracing in 4-space
 
 2D images of a 3D image of the 3-manifold reconstructed from the points 
-on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
+on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>)
 
 * 5-space
-  * The convex hull.
-  * 4-simplex facets.
+  * The convex hull
+  * 4-simplex facets
 * 4-space
-  * 3-simplex mesh without boundary.
-  * 4-parallelotope hierarchy.
-  * 4-dimensional microfacet BRDF.
-  * 3-ball light source.
-  * 4-dimensional soft shadows.
-  * Parallel projection onto 3D screen.
+  * 3-simplex mesh without boundary
+  * 4-parallelotope hierarchy
+  * 4-dimensional microfacet BRDF
+  * 3-ball light source
+  * 4-dimensional soft shadows
+  * Parallel projection onto 3D screen
 
 Volumetric rendering
 
@@ -126,15 +126,15 @@ Volumetric rendering
 
 ### 4D Cornell box
 
-2D images of a 3D image of the 4-dimensional Cornell box.
+2D images of a 3D image of the 4-dimensional Cornell box
 
-* Seven 3-parallelotopes (the sides of the box). 
-* One 3-parallelotope light source.
-* One 3-simplex mesh without boundary (3-sphere).
-* One 4-parallelotope.
-* 4-dimensional microfacet BRDF.
-* 4-dimensional soft shadows.
-* Perspective projection onto 3D screen.
+* Seven 3-parallelotopes (the sides of the box)
+* One 3-parallelotope light source
+* One 3-simplex mesh without boundary (3-sphere)
+* One 4-parallelotope
+* 4-dimensional microfacet BRDF
+* 4-dimensional soft shadows
+* Perspective projection onto 3D screen
 
 <img src="https://i.imgur.com/oDufPGh.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/Qts0cgW.png" alt="image" width="23%"></img>
@@ -145,8 +145,8 @@ Volumetric rendering
 
 Semitransparent objects
 
-* Triangle mesh (green) and its ray tracing shadows.
-* Isosurface (blue) and its ray marching shadows.
+* Triangle mesh (green) and its ray tracing shadows
+* Isosurface (blue) and its ray marching shadows
 
 <img src="https://i.imgur.com/82dhRk9.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/gvchVTs.png" alt="image" width="23%"></img>
@@ -157,10 +157,10 @@ Semitransparent objects
 
 Spectral rendering
 
-1. Blackbody 2500 K.
-1. Daylight 4000 K.
-1. Daylight D65.
-1. Blackbody 12000 K.
+1. Blackbody 2500 K
+1. Daylight 4000 K
+1. Daylight D65
+1. Blackbody 12000 K
 
 <img src="https://i.imgur.com/6XJs94H.png" alt="image" width="23%"></img>
 <img src="https://i.imgur.com/55ZX2bE.png" alt="image" width="23%"></img>
