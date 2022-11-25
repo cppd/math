@@ -119,14 +119,14 @@ handle::Device create_device(
         const std::vector<const char*> extensions = const_char_pointer_vector(&required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
-        info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";
+        info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
 
         VkPhysicalDeviceFeatures2 features_2;
         PhysicalDeviceFeatures features;
         make_physical_device_features(required_features, &features_2, &features);
         create_info.pNext = &features_2;
-        info += "\nVulkan device features: {" + strings_to_sorted_string(features_to_strings(required_features, true))
-                + "}";
+        info += "\nVulkan device features: {"
+                + strings_to_sorted_string(features_to_strings(required_features, true), ", ") + "}";
 
         LOG(info);
 

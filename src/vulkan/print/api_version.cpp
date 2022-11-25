@@ -15,13 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "api_version.h"
 
-#include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, std::string_view separator);
+std::string api_version_to_string(const std::uint32_t api_version)
+{
+        std::string s;
+        s += std::to_string(VK_API_VERSION_VARIANT(api_version));
+        s += ".";
+        s += std::to_string(VK_API_VERSION_MAJOR(api_version));
+        s += ".";
+        s += std::to_string(VK_API_VERSION_MINOR(api_version));
+        s += ".";
+        s += std::to_string(VK_API_VERSION_PATCH(api_version));
+        return s;
+}
 }

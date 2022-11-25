@@ -17,16 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "print/api_version.h"
-#include "print/color_space.h"
-#include "print/flags.h"
-#include "print/format.h"
-#include "print/image_layout.h"
-#include "print/image_type.h"
-#include "print/physical_device_type.h"
-#include "print/point_clipping_behavior.h"
-#include "print/present_mode.h"
-#include "print/primitive_topology.h"
-#include "print/result.h"
-#include "print/shader_float_controls_independence.h"
-#include "print/strings.h"
+#include <string>
+
+namespace ns::vulkan
+{
+std::string api_version_to_string(std::uint32_t api_version);
+}

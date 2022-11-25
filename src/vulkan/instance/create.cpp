@@ -117,11 +117,11 @@ handle::Instance create_instance(
 
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
-        info = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions) + "}";
+        info = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
 
         create_info.enabledLayerCount = layers.size();
         create_info.ppEnabledLayerNames = layers.data();
-        info += "\nVulkan instance layers: {" + strings_to_sorted_string(layers) + "}";
+        info += "\nVulkan instance layers: {" + strings_to_sorted_string(layers, ", ") + "}";
 
         LOG(info);
 
