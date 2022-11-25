@@ -17,22 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
 #include <vector>
 
 namespace ns
 {
 template <typename T>
-std::vector<const char*> const_char_pointer_vector(const T* const v)
+std::vector<const char*> const_char_pointer_vector(const T& v)
 {
         std::vector<const char*> res;
-        res.reserve(std::size(*v));
-
-        for (const std::string& s : *v)
+        res.reserve(std::size(v));
+        for (const auto& s : v)
         {
                 res.push_back(s.c_str());
         }
-
         return res;
 }
+
+template <typename T>
+std::vector<const char*> const_char_pointer_vector(const T&&) = delete;
 }

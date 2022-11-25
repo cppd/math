@@ -116,7 +116,7 @@ handle::Device create_device(
                         error("Vulkan physical device does not support required extension " + extension);
                 }
         }
-        const std::vector<const char*> extensions = const_char_pointer_vector(&required_extensions);
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
         info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
