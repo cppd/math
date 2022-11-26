@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../api_version.h"
 #include "../overview.h"
-#include "../print.h"
+#include "../strings.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/string/vector.h>
 #include <src/settings/name.h>
 
 #include <sstream>
@@ -110,8 +109,8 @@ handle::Instance create_instance(
         create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         create_info.pApplicationInfo = &app_info;
 
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        const std::vector<const char*> layers = const_char_pointer_vector(required_layers);
+        const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
+        const std::vector<const char*> layers = strings_to_char_pointers(required_layers);
 
         std::string info;
 

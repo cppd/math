@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 #include "error.h"
-#include "print.h"
+#include "strings.h"
 
 #include "buffers/copy.h"
 #include "buffers/create.h"

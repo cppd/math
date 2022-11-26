@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include "print.h"
+#include "strings.h"
 
 #include <src/com/error.h>
 

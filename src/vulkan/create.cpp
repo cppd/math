@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "print.h"
+#include "strings.h"
 
 #include <src/color/conversion.h>
 #include <src/com/error.h>

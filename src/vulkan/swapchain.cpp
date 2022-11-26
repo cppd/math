@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 #include "extensions.h"
-#include "print.h"
+#include "strings.h"
 #include "surface.h"
 
 #include <src/com/alg.h>

@@ -17,22 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <vector>
-
-namespace ns
-{
-template <typename T>
-std::vector<const char*> const_char_pointer_vector(const T& v)
-{
-        std::vector<const char*> res;
-        res.reserve(std::size(v));
-        for (const auto& s : v)
-        {
-                res.push_back(s.c_str());
-        }
-        return res;
-}
-
-template <typename T>
-std::vector<const char*> const_char_pointer_vector(const T&&) = delete;
-}
+#include "strings/api_version.h"
+#include "strings/color_space.h"
+#include "strings/flags.h"
+#include "strings/format.h"
+#include "strings/image_layout.h"
+#include "strings/image_type.h"
+#include "strings/physical_device_type.h"
+#include "strings/point_clipping_behavior.h"
+#include "strings/present_mode.h"
+#include "strings/primitive_topology.h"
+#include "strings/result.h"
+#include "strings/shader_float_controls_independence.h"
+#include "strings/strings.h"

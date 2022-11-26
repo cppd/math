@@ -27,4 +27,18 @@ std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, std::
 
 template <typename T>
 std::string strings_to_sorted_string(const std::vector<T>& strings, std::string_view separator);
+
+template <typename T>
+std::vector<const char*> strings_to_char_pointers(const T& v)
+{
+        std::vector<const char*> res;
+        res.reserve(std::size(v));
+        for (const auto& s : v)
+        {
+                res.push_back(s.c_str());
+        }
+        return res;
+}
+template <typename T>
+std::vector<const char*> strings_to_char_pointers(const T&&) = delete;
 }

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "copy.h"
 
-#include "../print.h"
+#include "../strings.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

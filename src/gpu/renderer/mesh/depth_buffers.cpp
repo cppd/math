@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/print.h>
+#include <src/vulkan/strings.h>
 
 #include <algorithm>
 #include <array>

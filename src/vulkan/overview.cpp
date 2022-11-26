@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "overview.h"
 
-#include "print.h"
+#include "strings.h"
 
 #include "instance/info.h"
 #include "physical_device/features.h"
