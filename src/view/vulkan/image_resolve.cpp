@@ -60,7 +60,7 @@ ImageResolve::ImageResolve(
         {
                 images_.emplace_back(
                         device, std::vector({command_pool.family_index()}),
-                        std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        std::vector({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers.width(), render_buffers.height()),
                         usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
 

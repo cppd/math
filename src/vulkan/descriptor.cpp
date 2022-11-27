@@ -144,10 +144,7 @@ Descriptors::Descriptors(
                   max_sets,
                   VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
           descriptor_set_layout_bindings_(bindings),
-          descriptor_sets_(
-                  device_,
-                  descriptor_pool_,
-                  std::vector<VkDescriptorSetLayout>(max_sets, descriptor_set_layout_)),
+          descriptor_sets_(device_, descriptor_pool_, std::vector(max_sets, descriptor_set_layout_)),
           binding_map_(create_binding_map(descriptor_set_layout_bindings_))
 {
 }

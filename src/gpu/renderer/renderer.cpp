@@ -221,7 +221,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         {
                 depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
                         *device_, std::vector({graphics_queue_->family_index()}),
-                        std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
+                        std::vector({render_buffers_->depth_format()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
                         graphics_command_pool_->handle(), graphics_queue_->handle());

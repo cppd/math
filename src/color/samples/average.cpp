@@ -146,7 +146,7 @@ std::vector<ResultType> average(
 
         if (to <= waves.front() || from >= waves.back())
         {
-                return std::vector<ResultType>(count, DEFAULT_VALUE<ResultType>);
+                return std::vector(count, DEFAULT_VALUE<ResultType>);
         }
 
         std::vector<ResultType> result;

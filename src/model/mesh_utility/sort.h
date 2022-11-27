@@ -63,14 +63,14 @@ SortedFacets sort_facets_by_material(const Mesh<N>& mesh)
 
         SortedFacets facets;
 
-        facets.count = std::vector<int>(new_material_size, 0);
+        facets.count.resize(new_material_size, 0);
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
                 int m = material_index(facet.material);
                 ++facets.count[m];
         }
 
-        facets.offset = std::vector<int>(new_material_size, 0);
+        facets.offset.resize(new_material_size, 0);
         for (int i = 0, sum = 0; i < new_material_size; ++i)
         {
                 facets.offset[i] = sum;

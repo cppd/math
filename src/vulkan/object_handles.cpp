@@ -491,7 +491,7 @@ void CommandBuffers::move(CommandBuffers* const from) noexcept
         command_buffers_ = std::move(from->command_buffers_);
         from->device_ = VK_NULL_HANDLE;
         from->command_pool_ = VK_NULL_HANDLE;
-        from->command_buffers_ = std::vector<VkCommandBuffer>();
+        from->command_buffers_ = {};
 }
 
 CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool command_pool, const std::uint32_t count)
@@ -618,7 +618,7 @@ void DescriptorSets::move(DescriptorSets* const from) noexcept
         descriptor_sets_ = std::move(from->descriptor_sets_);
         from->device_ = VK_NULL_HANDLE;
         from->descriptor_pool_ = VK_NULL_HANDLE;
-        from->descriptor_sets_ = std::vector<VkDescriptorSet>();
+        from->descriptor_sets_ = {};
 }
 
 DescriptorSets::DescriptorSets(

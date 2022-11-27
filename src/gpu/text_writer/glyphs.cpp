@@ -70,7 +70,7 @@ Glyphs::Glyphs(
 
         image_.emplace(
                 device, family_indices,
-                std::vector<VkFormat>(std::cbegin(GRAYSCALE_IMAGE_FORMATS), std::cend(GRAYSCALE_IMAGE_FORMATS)),
+                std::vector(std::cbegin(GRAYSCALE_IMAGE_FORMATS), std::cend(GRAYSCALE_IMAGE_FORMATS)),
                 VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(font_glyphs.image.size[0], font_glyphs.image.size[1]),
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);

@@ -111,12 +111,12 @@ void TransparencyBuffers::create_buffers(
         delete_buffers();
 
         heads_.emplace(
-                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
+                device, family_indices, std::vector({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(width, height), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_GENERAL, command_pool, queue);
 
         heads_size_.emplace(
-                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
+                device, family_indices, std::vector({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(width, height), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_GENERAL, command_pool, queue);
 }

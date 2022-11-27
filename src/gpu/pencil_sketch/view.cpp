@@ -103,7 +103,7 @@ class Impl final : public View
                 //
 
                 image_ = std::make_unique<vulkan::ImageWithMemory>(
-                        *device_, std::vector({graphics_family_index_}), std::vector<VkFormat>({IMAGE_FORMAT}),
+                        *device_, std::vector({graphics_family_index_}), std::vector({IMAGE_FORMAT}),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(rectangle.width(), rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,

@@ -62,10 +62,9 @@ vulkan::ImageWithMemory create_cosine_roughness_image(
         static_assert(std::is_same_v<decltype(data)::value_type, float>);
 
         vulkan::ImageWithMemory image(
-                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_SFLOAT}), VK_SAMPLE_COUNT_1_BIT,
-                VK_IMAGE_TYPE_2D, vulkan::make_extent(size[0], size[1]),
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-                transfer_command_pool, transfer_queue);
+                device, family_indices, std::vector({VK_FORMAT_R32_SFLOAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(size[0], size[1]), VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED, transfer_command_pool, transfer_queue);
 
         image.write(
                 transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -86,10 +85,9 @@ vulkan::ImageWithMemory create_cosine_weighted_average_image(
         static_assert(std::is_same_v<decltype(data)::value_type, float>);
 
         vulkan::ImageWithMemory image(
-                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_SFLOAT}), VK_SAMPLE_COUNT_1_BIT,
-                VK_IMAGE_TYPE_1D, vulkan::make_extent(size[0]),
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-                transfer_command_pool, transfer_queue);
+                device, family_indices, std::vector({VK_FORMAT_R32_SFLOAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
+                vulkan::make_extent(size[0]), VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED, transfer_command_pool, transfer_queue);
 
         image.write(
                 transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,

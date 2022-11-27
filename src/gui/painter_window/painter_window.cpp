@@ -176,7 +176,8 @@ void PainterWindow::create_sliders()
                         }
                         slice_ = slice;
                 });
-        sliders_widget_->set(std::vector<int>(count, 0));
+
+        sliders_widget_->set(std::vector(count, 0));
 }
 
 void PainterWindow::create_actions()
