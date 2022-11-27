@@ -79,7 +79,7 @@ class Impl final : public View
 
                 glyphs_.emplace(
                         size, *device_, *graphics_command_pool_, *graphics_queue_,
-                        std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+                        std::vector({graphics_queue_->family_index()}));
 
                 memory_.set_image(sampler_, glyphs_->image_view());
         }
@@ -193,8 +193,8 @@ class Impl final : public View
 
                         vertex_buffer_.emplace(
                                 vulkan::BufferMemoryType::HOST_VISIBLE, *device_,
-                                std::vector<std::uint32_t>({graphics_queue_->family_index()}),
-                                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, std::max(vertex_buffer_->buffer().size() * 2, size));
+                                std::vector({graphics_queue_->family_index()}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                std::max(vertex_buffer_->buffer().size() * 2, size));
 
                         command_buffers_ = create_commands();
                 }
@@ -234,19 +234,19 @@ public:
                   semaphore_(device_->handle()),
                   sampler_(create_sampler(device_->handle())),
                   program_(device_),
-                  buffer_(*device_, std::vector<std::uint32_t>({graphics_queue->family_index()})),
+                  buffer_(*device_, {graphics_queue->family_index()}),
                   memory_(device_->handle(), program_.descriptor_set_layout(), buffer_.buffer()),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,
                           *device_,
-                          std::vector<std::uint32_t>({graphics_queue->family_index()}),
+                          std::vector({graphics_queue->family_index()}),
                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                           VERTEX_BUFFER_FIRST_SIZE),
                   indirect_buffer_(
                           vulkan::BufferMemoryType::HOST_VISIBLE,
                           *device_,
-                          std::vector<std::uint32_t>({graphics_queue->family_index()}),
+                          {graphics_queue->family_index()},
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                           sizeof(VkDrawIndirectCommand))
         {

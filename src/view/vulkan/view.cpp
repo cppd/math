@@ -253,7 +253,7 @@ class Impl final
 
                 object_image_.emplace(
                         device_graphics_.device(),
-                        std::vector<std::uint32_t>({device_graphics_.graphics_compute_queue(0).family_index()}),
+                        std::vector({device_graphics_.graphics_compute_queue(0).family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,

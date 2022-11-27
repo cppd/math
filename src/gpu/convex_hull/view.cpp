@@ -94,7 +94,7 @@ class Impl final : public View
                 //
 
                 points_.emplace(
-                        vulkan::BufferMemoryType::DEVICE_LOCAL, *device_, std::vector<std::uint32_t>({family_index_}),
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, *device_, std::vector({family_index_}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points_buffer_size(rectangle.height()));
 
                 memory_.set_points(points_->buffer());

@@ -220,7 +220,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_depth_copy_image()
         {
                 depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
-                        *device_, std::vector<std::uint32_t>({graphics_queue_->family_index()}),
+                        *device_, std::vector({graphics_queue_->family_index()}),
                         std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
@@ -230,9 +230,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_transparency_buffers()
         {
                 transparency_buffers_.create_buffers(
-                        *device_, *graphics_command_pool_, *graphics_queue_,
-                        std::vector<std::uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
-                        render_buffers_->width(), render_buffers_->height());
+                        *device_, *graphics_command_pool_, *graphics_queue_, {graphics_queue_->family_index()},
+                        render_buffers_->sample_count(), render_buffers_->width(), render_buffers_->height());
 
                 LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_.node_count()));
 
@@ -242,8 +241,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_opacity_buffers()
         {
                 opacity_buffers_.create_buffers(
-                        *device_, std::vector<std::uint32_t>({graphics_queue_->family_index()}),
-                        render_buffers_->sample_count(), render_buffers_->width(), render_buffers_->height());
+                        *device_, {graphics_queue_->family_index()}, render_buffers_->sample_count(),
+                        render_buffers_->width(), render_buffers_->height());
         }
 
         void delete_mesh_shadow_mapping_buffers()
@@ -518,10 +517,7 @@ public:
                           {graphics_queue_->family_index()},
                           *transfer_command_pool_,
                           *transfer_queue_),
-                  transparency_buffers_(
-                          ray_tracing_,
-                          *device_,
-                          std::vector<std::uint32_t>({graphics_queue_->family_index()})),
+                  transparency_buffers_(ray_tracing_, *device_, {graphics_queue_->family_index()}),
                   opacity_buffers_(ray_tracing_),
                   mesh_renderer_(
                           device_,
@@ -552,7 +548,7 @@ public:
                 {
                         acceleration_structure_.emplace(
                                 *device_, *compute_command_pool_, *compute_queue_,
-                                std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+                                std::vector({graphics_queue_->family_index()}));
                         mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
                         volume_renderer_.set_acceleration_structure(acceleration_structure_->handle());
                 }

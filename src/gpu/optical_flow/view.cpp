@@ -110,8 +110,7 @@ class Impl final : public View
 
                 top_points_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
-                        std::vector<std::uint32_t>(
-                                {graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
+                        std::vector({graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                         data_size(top_level.points));
                 top_points_->write(
@@ -120,8 +119,7 @@ class Impl final : public View
 
                 top_flow_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
-                        std::vector<std::uint32_t>(
-                                {graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
+                        std::vector({graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, top_level.points.size() * sizeof(Vector2f));
 
                 pipeline_points_ = program_.create_pipeline(

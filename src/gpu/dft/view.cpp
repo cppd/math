@@ -107,8 +107,8 @@ class Impl final : public View
                 ASSERT(source_rectangle.height() == draw_rectangle.height());
 
                 image_ = std::make_unique<vulkan::ImageWithMemory>(
-                        *device_, std::vector<std::uint32_t>({graphics_family_index_}),
-                        std::vector<VkFormat>({IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        *device_, std::vector({graphics_family_index_}), std::vector<VkFormat>({IMAGE_FORMAT}),
+                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(source_rectangle.width(), source_rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *graphics_command_pool_, *graphics_queue_);
@@ -190,7 +190,7 @@ class Impl final : public View
                 vertices_.reset();
                 vertices_ = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
-                        std::vector<std::uint32_t>({graphics_queue_->family_index()}),
+                        std::vector({graphics_queue_->family_index()}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(VERTICES));
                 vertices_->write(
                         *graphics_command_pool_, *graphics_queue_, data_size(VERTICES), data_pointer(VERTICES));
