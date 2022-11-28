@@ -19,31 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "format.h"
 
-#include <src/com/alg.h>
-#include <src/com/error.h>
+#include <src/com/string/strings.h>
 
 namespace ns::vulkan
 {
-namespace
-{
-template <typename T>
-std::string sort_strings(std::vector<T>&& strings, const std::string_view separator)
-{
-        sort_and_unique(&strings);
-
-        ASSERT(!strings.empty());
-
-        auto iter = strings.cbegin();
-        std::string res{*iter};
-        while (++iter != strings.cend())
-        {
-                res += separator;
-                res += *iter;
-        }
-        return res;
-}
-}
-
 std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view separator)
 {
         if (formats.empty())
@@ -63,25 +42,6 @@ std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const
                 strings.push_back(format_to_string(format));
         }
 
-        return sort_strings(std::move(strings), separator);
+        return strings_to_sorted_string(std::move(strings), separator);
 }
-
-template <typename T>
-std::string strings_to_sorted_string(const std::vector<T>& strings, const std::string_view separator)
-{
-        if (strings.empty())
-        {
-                return {};
-        }
-
-        if (strings.size() == 1)
-        {
-                return strings.front();
-        }
-
-        return sort_strings(std::vector<std::string_view>(strings.cbegin(), strings.cend()), separator);
-}
-
-template std::string strings_to_sorted_string(const std::vector<const char*>&, std::string_view);
-template std::string strings_to_sorted_string(const std::vector<std::string>&, std::string_view);
 }

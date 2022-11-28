@@ -18,10 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "functionality.h"
 
 #include <src/com/log.h>
+#include <src/com/string/strings.h>
 #include <src/vulkan/physical_device/features.h>
 
-#include <algorithm>
 #include <array>
+#include <string>
 
 namespace ns::gpu::renderer
 {
@@ -93,18 +94,8 @@ bool ray_tracing_supported(const vulkan::Device& device)
 
         if (!check_features(RAY_TRACING_FEATURES, device.features()))
         {
-                std::vector<std::string> features = vulkan::features_to_strings(RAY_TRACING_FEATURES, true);
-                std::sort(features.begin(), features.end());
-                std::string s;
-                for (const auto& feature : features)
-                {
-                        if (!s.empty())
-                        {
-                                s += ", ";
-                        }
-                        s += feature;
-                }
-                LOG("Renderer ray tracing features are not supported: " + s);
+                LOG("Renderer ray tracing features are not supported: "
+                    + strings_to_sorted_string(vulkan::features_to_strings(RAY_TRACING_FEATURES, true), ", "));
                 return false;
         }
 
