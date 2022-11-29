@@ -21,34 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-namespace
-{
-template <typename T>
-void set_instance(const VkInstance instance, const char* const name, T** const ptr)
-{
-        *ptr = reinterpret_cast<T*>(vkGetInstanceProcAddr(instance, name));
-}
-
-template <typename T>
-void set_device(const VkDevice device, const char* const name, T** const ptr)
-{
-        *ptr = reinterpret_cast<T*>(vkGetDeviceProcAddr(device, name));
-}
-}
-
 PFN_vkVoidFunction instance_proc_addr(const VkInstance instance, const char* const name)
 {
         ASSERT(instance != VK_NULL_HANDLE);
-        const PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name);
-        if (addr)
+        if (const PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name))
         {
                 return addr;
         }
         error(std::string("Failed to find address of ") + name);
 }
 
-#define SET_INSTANCE(instance, name) set_instance((instance), #name, &(name));
-#define SET_DEVICE(device, name) set_device((device), #name, &(name));
+#define SET_INSTANCE(instance, name) \
+        (name) = reinterpret_cast<decltype(name)>(vkGetInstanceProcAddr((instance), #name));
+
+#define SET_DEVICE(device, name) (name) = reinterpret_cast<decltype(name)>(vkGetDeviceProcAddr((device), #name));
 
 InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance)
         : lock_(mutex_, std::try_to_lock)
