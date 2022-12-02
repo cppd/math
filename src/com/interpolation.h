@@ -23,7 +23,7 @@ namespace ns
 {
 template <typename T>
         requires std::is_floating_point_v<T>
-[[nodiscard]] constexpr T interpolation(const T& a, const T& b, const T& t)
+[[nodiscard]] constexpr T interpolation(const T a, const T b, const T t)
 {
         return (1 - t) * a + t * b;
 }
