@@ -26,33 +26,55 @@ namespace ns
 enum class Smooth
 {
         N_1,
-        N_2
+        N_2,
+        N_3
 };
 
+namespace interpolation_smooth_implementation
+{
 template <Smooth SMOOTH, typename T>
         requires(SMOOTH == Smooth::N_1)
 [[nodiscard]] constexpr T smooth(const T t)
 {
-        return t * t * (3 - 2 * t);
+        static_assert(std::is_floating_point_v<T>);
+
+        return t * t * (-2 * t + 3);
 }
 
 template <Smooth SMOOTH, typename T>
         requires(SMOOTH == Smooth::N_2)
 [[nodiscard]] constexpr T smooth(const T t)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         return t * t * t * (t * (6 * t - 15) + 10);
+}
+
+template <Smooth SMOOTH, typename T>
+        requires(SMOOTH == Smooth::N_3)
+[[nodiscard]] constexpr T smooth(const T t)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const T t_2 = t * t;
+        return t_2 * t_2 * (t * (t * (-20 * t + 70) - 84) + 35);
+}
 }
 
 template <Smooth SMOOTH, typename T, typename F>
 [[nodiscard]] constexpr T interpolation(const T& c0, const T& c1, const F& t)
 {
-        return interpolation(c0, c1, smooth<SMOOTH>(t));
+        namespace impl = interpolation_smooth_implementation;
+
+        return interpolation(c0, c1, impl::smooth<SMOOTH>(t));
 }
 
 template <Smooth SMOOTH, typename T, typename F>
 [[nodiscard]] constexpr T interpolation(const T& c00, const T& c01, const T& c10, const T& c11, const F& x, const F& y)
 {
-        return interpolation(c00, c01, c10, c11, smooth<SMOOTH>(x), smooth<SMOOTH>(y));
+        namespace impl = interpolation_smooth_implementation;
+
+        return interpolation(c00, c01, c10, c11, impl::smooth<SMOOTH>(x), impl::smooth<SMOOTH>(y));
 }
 
 template <Smooth SMOOTH, typename T, typename F>
@@ -69,18 +91,22 @@ template <Smooth SMOOTH, typename T, typename F>
         const F& y,
         const F& z)
 {
+        namespace impl = interpolation_smooth_implementation;
+
         return interpolation(
-                c000, c001, c010, c011, c100, c101, c110, c111, smooth<SMOOTH>(x), smooth<SMOOTH>(y),
-                smooth<SMOOTH>(z));
+                c000, c001, c010, c011, c100, c101, c110, c111, impl::smooth<SMOOTH>(x), impl::smooth<SMOOTH>(y),
+                impl::smooth<SMOOTH>(z));
 }
 
 template <Smooth SMOOTH, std::size_t N, typename T, typename F>
 [[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 {
+        namespace impl = interpolation_smooth_implementation;
+
         std::array<T, N> p_smooth;
         for (std::size_t i = 0; i < N; ++i)
         {
-                p_smooth[i] = smooth<SMOOTH>(p[i]);
+                p_smooth[i] = impl::smooth<SMOOTH>(p[i]);
         }
         return interpolation(data, p_smooth);
 }
