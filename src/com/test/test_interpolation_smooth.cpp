@@ -17,7 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../interpolation_smooth.h"
 
+#include <src/com/benchmark.h>
+#include <src/com/chrono.h>
+#include <src/com/enum.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name.h>
+#include <src/test/test.h>
+
+#include <array>
+#include <vector>
 
 namespace ns
 {
@@ -43,5 +54,73 @@ struct Check2 final : Check1<T, Smooth::N_1>, Check1<T, Smooth::N_2>, Check1<T, 
 template struct Check2<float>;
 template struct Check2<double>;
 template struct Check2<long double>;
+
+template <Smooth SMOOTH>
+std::string smooth_name()
+{
+        switch (SMOOTH)
+        {
+        case Smooth::N_1:
+                return "N_1";
+        case Smooth::N_2:
+                return "N_2";
+        case Smooth::N_3:
+                return "N_3";
+        }
+        error_fatal("Unknown interpolation smooth type " + to_string(enum_to_int(SMOOTH)));
+}
+
+template <typename T, typename RandomEngine>
+std::vector<std::array<T, 3>> make_random_data(const int count, RandomEngine& engine)
+{
+        std::uniform_real_distribution<T> urd(0, 1);
+        std::vector<std::array<T, 3>> res;
+        res.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                res.push_back(std::array{urd(engine), urd(engine), urd(engine)});
+        }
+        return res;
+}
+
+template <int ITERATION_COUNT, typename T, Smooth SMOOTH, typename RandomEngine>
+void test_performance(RandomEngine& engine)
+{
+        static constexpr int DATA_COUNT = 1'000'000;
+
+        std::vector<std::array<T, 3>> data = make_random_data<T>(DATA_COUNT, engine);
+
+        const Clock::time_point start_time = Clock::now();
+        for (const auto& v : data)
+        {
+                for (int i = 0; i < ITERATION_COUNT; ++i)
+                {
+                        do_not_optimize(interpolation<SMOOTH>(v[0], v[1], v[2]));
+                }
+        }
+        const auto performance = std::llround(DATA_COUNT * (ITERATION_COUNT / duration_from(start_time)));
+
+        LOG(std::string("Smooth Interpolation<") + type_name<T>() + ", " + smooth_name<SMOOTH>()
+            + ">: " + to_string_digit_groups(performance) + " o/s");
+}
+
+template <int ITERATION_COUNT, typename T, typename RandomEngine>
+void test_performance(RandomEngine& engine)
+{
+        test_performance<ITERATION_COUNT, T, Smooth::N_1>(engine);
+        test_performance<ITERATION_COUNT, T, Smooth::N_2>(engine);
+        test_performance<ITERATION_COUNT, T, Smooth::N_3>(engine);
+}
+
+void test()
+{
+        PCG engine;
+
+        test_performance<1000, float>(engine);
+        test_performance<1000, double>(engine);
+        test_performance<500, long double>(engine);
+}
+
+TEST_PERFORMANCE("Smooth Interpolation", test)
 }
 }
