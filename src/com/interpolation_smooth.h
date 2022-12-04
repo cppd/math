@@ -25,13 +25,29 @@ namespace ns
 {
 enum class Smooth
 {
+        N_0,
         N_1,
         N_2,
-        N_3
+        N_3,
+        N_4
 };
 
 namespace interpolation_smooth_implementation
 {
+// Plot[{x, -2*x^3 + 3*x^2,
+//   6*x^5 - 15*x^4 + 10*x^3, -20*x^7 + 70*x^6 - 84*x^5 + 35*x^4,
+//   70*x^9 - 315*x^8 + 540*x^7 - 420*x^6 + 126*x^5}, {x, 0, 1},
+//  PlotLegends -> "Expressions"]
+
+template <Smooth SMOOTH, typename T>
+        requires(SMOOTH == Smooth::N_0)
+[[nodiscard]] constexpr T smooth(const T t)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return t;
+}
+
 template <Smooth SMOOTH, typename T>
         requires(SMOOTH == Smooth::N_1)
 [[nodiscard]] constexpr T smooth(const T t)
@@ -58,6 +74,16 @@ template <Smooth SMOOTH, typename T>
 
         const T t_2 = t * t;
         return t_2 * t_2 * (t * (t * (-20 * t + 70) - 84) + 35);
+}
+
+template <Smooth SMOOTH, typename T>
+        requires(SMOOTH == Smooth::N_4)
+[[nodiscard]] constexpr T smooth(const T t)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const T t_2 = t * t;
+        return t_2 * t_2 * t * (t * (t * (t * (70 * t - 315) + 540) - 420) + 126);
 }
 }
 

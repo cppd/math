@@ -47,7 +47,12 @@ struct Check1
 };
 
 template <typename T>
-struct Check2 final : Check1<T, Smooth::N_1>, Check1<T, Smooth::N_2>, Check1<T, Smooth::N_3>
+struct Check2 final
+        : Check1<T, Smooth::N_0>,
+          Check1<T, Smooth::N_1>,
+          Check1<T, Smooth::N_2>,
+          Check1<T, Smooth::N_3>,
+          Check1<T, Smooth::N_4>
 {
 };
 
@@ -60,12 +65,16 @@ std::string smooth_name()
 {
         switch (SMOOTH)
         {
+        case Smooth::N_0:
+                return "N_0";
         case Smooth::N_1:
                 return "N_1";
         case Smooth::N_2:
                 return "N_2";
         case Smooth::N_3:
                 return "N_3";
+        case Smooth::N_4:
+                return "N_4";
         }
         error_fatal("Unknown interpolation smooth type " + to_string(enum_to_int(SMOOTH)));
 }
@@ -107,9 +116,11 @@ void test_performance(RandomEngine& engine)
 template <int ITERATION_COUNT, typename T, typename RandomEngine>
 void test_performance(RandomEngine& engine)
 {
+        test_performance<ITERATION_COUNT, T, Smooth::N_0>(engine);
         test_performance<ITERATION_COUNT, T, Smooth::N_1>(engine);
         test_performance<ITERATION_COUNT, T, Smooth::N_2>(engine);
         test_performance<ITERATION_COUNT, T, Smooth::N_3>(engine);
+        test_performance<ITERATION_COUNT, T, Smooth::N_4>(engine);
 }
 
 void test()
