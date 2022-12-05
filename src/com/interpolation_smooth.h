@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "interpolation.h"
 
 #include <array>
+#include <string_view>
 
 namespace ns
 {
@@ -31,6 +32,8 @@ enum class Smooth
         N_3,
         N_4
 };
+
+std::string_view smooth_to_string(Smooth smooth);
 
 namespace interpolation_smooth_implementation
 {

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
-#include <src/com/enum.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -60,25 +59,6 @@ template struct Check2<float>;
 template struct Check2<double>;
 template struct Check2<long double>;
 
-template <Smooth SMOOTH>
-std::string smooth_name()
-{
-        switch (SMOOTH)
-        {
-        case Smooth::N_0:
-                return "N_0";
-        case Smooth::N_1:
-                return "N_1";
-        case Smooth::N_2:
-                return "N_2";
-        case Smooth::N_3:
-                return "N_3";
-        case Smooth::N_4:
-                return "N_4";
-        }
-        error_fatal("Unknown interpolation smooth type " + to_string(enum_to_int(SMOOTH)));
-}
-
 template <typename T, typename RandomEngine>
 std::vector<std::array<T, 3>> make_random_data(const int count, RandomEngine& engine)
 {
@@ -109,7 +89,7 @@ void test_performance(RandomEngine& engine)
         }
         const auto performance = std::llround(DATA_COUNT * (ITERATION_COUNT / duration_from(start_time)));
 
-        LOG(std::string("Smooth Interpolation<") + type_name<T>() + ", " + smooth_name<SMOOTH>()
+        LOG(std::string("Smooth Interpolation<") + type_name<T>() + ", " + std::string(smooth_to_string(SMOOTH))
             + ">: " + to_string_digit_groups(performance) + " o/s");
 }
 
