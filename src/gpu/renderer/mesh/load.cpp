@@ -381,16 +381,16 @@ std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_stru
                 vertices.push_back(v.position);
         }
 
-        std::unique_ptr<vulkan::BottomLevelAccelerationStructure> acceleration_structure = std::make_unique<
-                vulkan::BottomLevelAccelerationStructure>(vulkan::create_bottom_level_acceleration_structure(
-                device, compute_command_pool, compute_queue, family_indices, vertices, buffer_mesh.indices,
-                std::nullopt));
+        vulkan::BottomLevelAccelerationStructure acceleration_structure =
+                vulkan::create_bottom_level_acceleration_structure(
+                        device, compute_command_pool, compute_queue, family_indices, vertices, buffer_mesh.indices,
+                        std::nullopt);
 
         const double duration = duration_from(start_time);
 
         LOG("Mesh acceleration structure info: " + time_string(duration));
 
-        return acceleration_structure;
+        return std::make_unique<vulkan::BottomLevelAccelerationStructure>(std::move(acceleration_structure));
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
