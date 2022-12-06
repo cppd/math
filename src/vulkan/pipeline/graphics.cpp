@@ -145,8 +145,9 @@ std::vector<VkPipelineColorBlendAttachmentState> create_color_blend_attachment_s
                 if (info.render_pass->color_attachment_count() > 0)
                 {
                         VkPipelineColorBlendAttachmentState state = {};
-                        state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                               | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+                        state.colorWriteMask =
+                                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
+                                | VK_COLOR_COMPONENT_A_BIT;
                         state.blendEnable = VK_FALSE;
 
                         states.resize(info.render_pass->color_attachment_count(), state);

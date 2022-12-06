@@ -158,8 +158,9 @@ std::optional<Color> BallLight<N, T, Color>::leave_radiance(const Vector<N, T>& 
 template <std::size_t N, typename T, typename Color>
 Color BallLight<N, T, Color>::power() const
 {
-        const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()
-                                             : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+        const T cosine_integral =
+                spotlight_ ? spotlight_->cosine_integral()
+                           : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
         return (area_ * cosine_integral) * radiance_;
 }
 

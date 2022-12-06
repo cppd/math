@@ -161,8 +161,9 @@ template <std::size_t N, typename T, typename Color>
 Color ParallelotopeLight<N, T, Color>::power() const
 {
         const T area = geometry::parallelotope_volume(parallelotope_.vectors());
-        const T cosine_integral = spotlight_ ? spotlight_->cosine_integral()
-                                             : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+        const T cosine_integral =
+                spotlight_ ? spotlight_->cosine_integral()
+                           : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
         return (area * cosine_integral) * radiance_;
 }
 

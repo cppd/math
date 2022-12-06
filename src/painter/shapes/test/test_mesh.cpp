@@ -166,8 +166,9 @@ void test_surface_ratio(
         const T intersection_ratio = static_cast<T>(mesh_intersections) / rays.size();
         const T surface_ratio = mesh.surface / mesh.bounding_box.surface();
 
-        const T relative_error = std::abs(intersection_ratio - surface_ratio)
-                                 / std::max(std::abs(intersection_ratio), std::abs(surface_ratio));
+        const T relative_error =
+                std::abs(intersection_ratio - surface_ratio)
+                / std::max(std::abs(intersection_ratio), std::abs(surface_ratio));
 
         std::string s;
         s += '<' + space_name(N) + ", " + type_name<T>() + '>';

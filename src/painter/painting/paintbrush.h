@@ -78,9 +78,10 @@ void generate_pixels(
                 int i = 0;
                 while (i < screen_size[LEVEL])
                 {
-                        const int next = screen_size[LEVEL] - paintbrush_size[LEVEL] >= i
-                                                 ? i + paintbrush_size[LEVEL]
-                                                 : screen_size[LEVEL];
+                        const int next =
+                                screen_size[LEVEL] - paintbrush_size[LEVEL] >= i
+                                        ? i + paintbrush_size[LEVEL]
+                                        : screen_size[LEVEL];
 
                         min[LEVEL] = i;
                         max[LEVEL] = next;
