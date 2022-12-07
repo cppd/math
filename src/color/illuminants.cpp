@@ -42,7 +42,7 @@ Spectrum create_spectrum(const F& f)
                 v[i] = samples[i];
         }
 
-        Spectrum spectrum(v);
+        const Spectrum spectrum(v);
         return spectrum / spectrum.luminance();
 }
 }

@@ -113,7 +113,7 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
                 oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
                 const std::filesystem::path path = std::filesystem::temp_directory_path() / path_from_utf8(oss.str());
                 // create empty file
-                std::ofstream f(path);
+                const std::ofstream f(path);
                 if (!f)
                 {
                         error("Error creating the file " + generic_utf8_filename(path));
@@ -136,7 +136,7 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
         {
                 // create empty file
                 oss << ".txt";
-                std::ofstream f(oss.str());
+                const std::ofstream f(oss.str());
                 if (!f)
                 {
                         error("Error creating the file " + oss.str());

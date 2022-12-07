@@ -209,7 +209,7 @@ void append_to_text_edit(
                                 return;
                         }
 
-                        bool bottom =
+                        const bool bottom =
                                 text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum()
                                 || text_edit->verticalScrollBar()->maximum() == 0;
 
@@ -220,7 +220,7 @@ void append_to_text_edit(
                         }
                         else
                         {
-                                int v = text_edit->verticalScrollBar()->value();
+                                const int v = text_edit->verticalScrollBar()->value();
                                 append_text(text_edit, text, color);
                                 text_edit->verticalScrollBar()->setValue(v);
                         }

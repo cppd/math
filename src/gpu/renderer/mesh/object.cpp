@@ -382,7 +382,7 @@ class Impl final : public MeshObject
                 {
                         buffer_set_alpha(mesh_object.alpha());
 
-                        bool transparent = mesh_object.alpha() < 1;
+                        const bool transparent = mesh_object.alpha() < 1;
                         if (transparent_ != transparent)
                         {
                                 transparent_ = transparent;

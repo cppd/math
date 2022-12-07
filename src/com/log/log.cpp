@@ -111,7 +111,7 @@ void LogEvents::log_event(const std::string_view& text, const LogType type) noex
         }
         catch (const std::exception& e)
         {
-                std::string msg = std::string("Error in log observer: ") + e.what();
+                const std::string msg = std::string("Error in log observer: ") + e.what();
                 write_log_fatal_error_and_exit(msg.c_str());
         }
         catch (...)
@@ -150,7 +150,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
         }
         catch (const std::exception& e)
         {
-                std::string msg = std::string("Error in message observer: ") + e.what();
+                const std::string msg = std::string("Error in message observer: ") + e.what();
                 write_log_fatal_error_and_exit(msg.c_str());
         }
         catch (...)

@@ -93,7 +93,7 @@ void SlidersWidget::set(const std::vector<int>& positions)
 {
         {
                 ASSERT(positions.size() == sliders_.size());
-                QSignalBlocker blocker(this);
+                const QSignalBlocker blocker(this);
                 for (const auto& [slider, info] : sliders_)
                 {
                         ASSERT(slider->minimum() <= positions[info.number]);

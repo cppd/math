@@ -41,13 +41,13 @@ const vulkan::Buffer& Buffer::buffer() const
 
 void Buffer::set_matrix(const Matrix4d& matrix) const
 {
-        decltype(Data().matrix) m = vulkan::to_std140<float>(matrix);
+        const decltype(Data().matrix) m = vulkan::to_std140<float>(matrix);
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);
 }
 
 void Buffer::set_color(const Vector3f& color) const
 {
-        decltype(Data().color) c = color;
+        const decltype(Data().color) c = color;
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, color), c);
 }
 

@@ -164,7 +164,7 @@ void ViewImageDialog::done(const int r)
 
         if (!has_directory_and_filename(path_string))
         {
-                std::string msg = "File is not selected";
+                const std::string msg = "File is not selected";
                 dialog::message_critical(msg);
                 return;
         }
@@ -180,7 +180,7 @@ void ViewImageDialog::done(const int r)
 
 void ViewImageDialog::on_select_path_clicked()
 {
-        QPointer ptr(this);
+        const QPointer ptr(this);
 
         const std::string caption = "File";
         dialog::FileFilter filter;
@@ -207,7 +207,8 @@ std::optional<ViewImageParameters> ViewImageDialog::show(
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(dialog_parameters().read(), title, info, file_name, parameters));
+        const QtObjectInDynamicMemory w(
+                new ViewImageDialog(dialog_parameters().read(), title, info, file_name, parameters));
 
         if (!w->exec() || w.isNull())
         {

@@ -56,11 +56,11 @@ void message_event(const MessageEvent& event)
 
 int run_application(int argc, char** const argv)
 {
-        ApplicationMessage application_message;
+        const ApplicationMessage application_message;
 
-        Application a(&argc, argv);
+        const Application a(&argc, argv);
 
-        MessageEventsObserver message_observer(
+        const MessageEventsObserver message_observer(
                 [](const MessageEvent& event)
                 {
                         Application::run(

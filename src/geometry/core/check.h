@@ -58,7 +58,7 @@ void check_facet_dimension(
                               + " is not equal to " + to_string(N));
                 }
 
-                Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
+                const Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
                 if (!is_finite(n))
                 {
                         error(name + " facet normal " + to_string(n) + " is not finite");
@@ -82,7 +82,7 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
         {
                 for (unsigned r = 0; r < N; ++r)
                 {
-                        std::array<int, N - 1> ridge = sort(del_elem(facet, r));
+                        const std::array<int, N - 1> ridge = sort(del_elem(facet, r));
                         ++ridges[ridge];
                 }
         }

@@ -81,14 +81,15 @@ void VolumeBuffer::set_coordinates(
 
 void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const
 {
-        decltype(VolumeCoordinates().texture_to_shadow_matrix) m = vulkan::to_std140<float>(texture_to_shadow_matrix);
+        const decltype(VolumeCoordinates().texture_to_shadow_matrix) m =
+                vulkan::to_std140<float>(texture_to_shadow_matrix);
         vulkan::map_and_write_to_buffer(
                 uniform_buffer_coordinates_, offsetof(VolumeCoordinates, texture_to_shadow_matrix), m);
 }
 
 void VolumeBuffer::set_clip_plane(const geometry::Hyperplane<3, double>& clip_plane) const
 {
-        decltype(VolumeCoordinates().clip_plane) cp = clip_plane_to_buffer_vector<float>(clip_plane);
+        const decltype(VolumeCoordinates().clip_plane) cp = clip_plane_to_buffer_vector<float>(clip_plane);
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, offsetof(VolumeCoordinates, clip_plane), cp);
 }
 

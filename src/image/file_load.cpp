@@ -263,7 +263,7 @@ Info file_info(const Path& path)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
-        QImage image = open_image(path);
+        const QImage image = open_image(path);
         Info info;
         info.size[0] = image.width();
         info.size[1] = image.height();

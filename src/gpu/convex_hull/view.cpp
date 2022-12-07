@@ -100,14 +100,14 @@ class Impl final : public View
                 memory_.set_points(points_->buffer());
 
                 // (0, 0) is top left
-                double left = 0;
-                double right = rectangle.width();
-                double bottom = rectangle.height();
-                double top = 0;
-                double near = 1;
-                double far = -1;
-                Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
+                const double left = 0;
+                const double right = rectangle.width();
+                const double bottom = rectangle.height();
+                const double top = 0;
+                const double near = 1;
+                const double far = -1;
+                const Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                const Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
                 data_buffer_.set_matrix(p * t);
 
                 pipeline_ = program_.create_pipeline(
@@ -156,7 +156,7 @@ class Impl final : public View
 
                 //
 
-                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
+                const float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
                 data_buffer_.set_brightness(brightness);
 
                 //

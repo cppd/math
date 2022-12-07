@@ -68,7 +68,7 @@ class StorageVolume final : private StorageEvents<VolumeObject>
 
                 try
                 {
-                        model::volume::Reading reading(object);
+                        const model::volume::Reading reading(object);
                         return Updates{.visible = reading.visible(), .changes = ptr->update(reading)};
                 }
                 catch (const std::exception& e)

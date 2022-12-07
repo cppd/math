@@ -86,7 +86,7 @@ void compute_slice(
         auto volume = std::make_unique<model::volume::Volume<DIMENSION>>();
 
         {
-                model::volume::Reading reading(volume_object);
+                const model::volume::Reading reading(volume_object);
                 volume->image = image::slice(reading.volume().image, slices.slices);
         }
 

@@ -265,7 +265,7 @@ std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
 {
         std::optional<TestSelectionParameters> parameters;
 
-        QtObjectInDynamicMemory w(new TestSelectionParametersDialog(title, std::move(test_names), parameters));
+        const QtObjectInDynamicMemory w(new TestSelectionParametersDialog(title, std::move(test_names), parameters));
 
         if (!w->exec() || w.isNull())
         {

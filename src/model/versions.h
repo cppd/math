@@ -73,7 +73,7 @@ public:
 
                 std::bitset<N> updates;
 
-                int version_from = version->value() + 1;
+                const int version_from = version->value() + 1;
                 auto iter = versions_.cbegin();
                 while (iter != versions_.cend() && iter->version < version_from)
                 {

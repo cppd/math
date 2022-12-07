@@ -270,9 +270,9 @@ void divide_facets(
                         const Vector<3, T>& v0 = vertices[0];
                         const Vector<3, T>& v1 = vertices[1];
                         const Vector<3, T>& v2 = vertices[2];
-                        Vector<3, T> p01 = (v0 + v1).normalized();
-                        Vector<3, T> p12 = (v1 + v2).normalized();
-                        Vector<3, T> p20 = (v2 + v0).normalized();
+                        const Vector<3, T> p01 = (v0 + v1).normalized();
+                        const Vector<3, T> p12 = (v1 + v2).normalized();
+                        const Vector<3, T> p20 = (v2 + v0).normalized();
                         tmp.push_back({v0, p01, p20});
                         tmp.push_back({v1, p12, p01});
                         tmp.push_back({v2, p20, p12});

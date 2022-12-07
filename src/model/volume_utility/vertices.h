@@ -56,7 +56,7 @@ std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
 
         const numerical::transform::MatrixVectorMultiplier transform(volume.matrix);
 
-        Vector<N, double> org = transform(Vector<N, double>(0));
+        const Vector<N, double> org = transform(Vector<N, double>(0));
 
         std::array<Vector<N, double>, N> vectors;
         for (unsigned i = 0; i < N; ++i)

@@ -271,25 +271,25 @@ void MeshWidget::ui_disable()
         set_enabled(false);
 
         {
-                QSignalBlocker blocker(ui_.widget_color);
+                const QSignalBlocker blocker(ui_.widget_color);
                 set_widget_color(ui_.widget_color, QColor(255, 255, 255));
         }
         {
-                QSignalBlocker blocker(ui_.slider_transparency);
+                const QSignalBlocker blocker(ui_.slider_transparency);
                 set_slider_position(ui_.slider_transparency, 0);
         }
         {
-                QSignalBlocker blocker(ui_.slider_ambient);
+                const QSignalBlocker blocker(ui_.slider_ambient);
                 set_slider_to_middle(ui_.slider_ambient);
                 ui_.label_ambient->clear();
         }
         {
-                QSignalBlocker blocker(ui_.slider_metalness);
+                const QSignalBlocker blocker(ui_.slider_metalness);
                 set_slider_to_middle(ui_.slider_metalness);
                 ui_.label_metalness->clear();
         }
         {
-                QSignalBlocker blocker(ui_.slider_roughness);
+                const QSignalBlocker blocker(ui_.slider_roughness);
                 set_slider_to_middle(ui_.slider_roughness);
                 ui_.label_roughness->clear();
         }
@@ -308,28 +308,28 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
 
                         {
                                 const double position = 1.0 - info.alpha;
-                                QSignalBlocker blocker(ui_.slider_transparency);
+                                const QSignalBlocker blocker(ui_.slider_transparency);
                                 set_slider_position(ui_.slider_transparency, position);
                         }
                         {
-                                QSignalBlocker blocker(ui_.widget_color);
+                                const QSignalBlocker blocker(ui_.widget_color);
                                 set_widget_color(ui_.widget_color, color_to_qcolor(info.color));
                         }
                         {
                                 const double position = info.ambient;
-                                QSignalBlocker blocker(ui_.slider_ambient);
+                                const QSignalBlocker blocker(ui_.slider_ambient);
                                 set_slider_position(ui_.slider_ambient, position);
                                 set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
                                 const double position = info.metalness;
-                                QSignalBlocker blocker(ui_.slider_metalness);
+                                const QSignalBlocker blocker(ui_.slider_metalness);
                                 set_slider_position(ui_.slider_metalness, position);
                                 set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
                                 const double position = info.roughness;
-                                QSignalBlocker blocker(ui_.slider_roughness);
+                                const QSignalBlocker blocker(ui_.slider_roughness);
                                 set_slider_position(ui_.slider_roughness, position);
                                 set_label(ui_.label_roughness, ui_.slider_roughness);
                         }

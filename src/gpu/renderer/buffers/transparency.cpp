@@ -90,7 +90,7 @@ TransparencyBuffers::TransparencyBuffers(
         Counters counters;
         counters.transparency_node_counter = 0;
         counters.transparency_overload_counter = 0;
-        vulkan::BufferMapper mapper(init_buffer_, 0, init_buffer_.buffer().size());
+        const vulkan::BufferMapper mapper(init_buffer_, 0, init_buffer_.buffer().size());
         mapper.write(counters);
 }
 
@@ -170,7 +170,7 @@ void TransparencyBuffers::commands_read(const VkCommandBuffer command_buffer) co
 
 TransparencyBuffers::Info TransparencyBuffers::read() const
 {
-        vulkan::BufferMapper mapper(read_buffer_);
+        const vulkan::BufferMapper mapper(read_buffer_);
         Counters counters;
         mapper.read(&counters);
         return {.required_node_memory = counters.transparency_node_counter * node_size_,

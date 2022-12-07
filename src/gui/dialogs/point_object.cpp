@@ -104,8 +104,9 @@ void PointObjectParametersDialog::done(const int r)
         const int point_count = ui_.spin_box_point_count->value();
         if (!(point_count >= min_point_count_ && point_count <= max_point_count_))
         {
-                std::string msg = "Point count must be in the range [" + to_string(min_point_count_) + ", "
-                                  + to_string(max_point_count_) + "].";
+                const std::string msg =
+                        "Point count must be in the range [" + to_string(min_point_count_) + ", "
+                        + to_string(max_point_count_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -125,7 +126,7 @@ std::optional<PointObjectParameters> PointObjectParametersDialog::show(
 {
         std::optional<PointObjectParameters> parameters;
 
-        QtObjectInDynamicMemory w(new PointObjectParametersDialog(
+        const QtObjectInDynamicMemory w(new PointObjectParametersDialog(
                 dimension, object_name, default_point_count, min_point_count, max_point_count, parameters));
 
         if (!w->exec() || w.isNull())

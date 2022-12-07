@@ -238,7 +238,7 @@ void undo_alpha_multiplication(std::vector<float>* const floats)
 
         for (std::size_t i = 0; i < floats->size(); i += 4)
         {
-                float alpha = (*floats)[i + 3];
+                const float alpha = (*floats)[i + 3];
                 if (alpha != 0)
                 {
                         // no clamp to [0, 1]
@@ -261,7 +261,7 @@ void multiply_alpha(std::vector<float>* const floats)
 
         for (std::size_t i = 0; i < floats->size(); i += 4)
         {
-                float alpha = (*floats)[i + 3];
+                const float alpha = (*floats)[i + 3];
                 (*floats)[i + 0] *= alpha;
                 (*floats)[i + 1] *= alpha;
                 (*floats)[i + 2] *= alpha;

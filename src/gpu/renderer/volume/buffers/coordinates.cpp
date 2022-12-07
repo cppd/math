@@ -38,7 +38,7 @@ const vulkan::Buffer& VolumeCoordinatesBuffer::buffer() const
 
 void VolumeCoordinatesBuffer::set(const Matrix4d& device_to_world) const
 {
-        decltype(Coordinates().device_to_world) m = vulkan::to_std140<float>(device_to_world);
+        const decltype(Coordinates().device_to_world) m = vulkan::to_std140<float>(device_to_world);
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Coordinates, device_to_world), m);
 }
 

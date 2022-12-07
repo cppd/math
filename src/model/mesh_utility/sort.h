@@ -66,7 +66,7 @@ SortedFacets sort_facets_by_material(const Mesh<N>& mesh)
         facets.count.resize(new_material_size, 0);
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
-                int m = material_index(facet.material);
+                const int m = material_index(facet.material);
                 ++facets.count[m];
         }
 
@@ -89,13 +89,14 @@ SortedFacets sort_facets_by_material(const Mesh<N>& mesh)
         ASSERT(facets.count.size() == mesh.materials.size() + 1);
         ASSERT(facets.indices.size() == mesh.facets.size());
         ASSERT(facets.indices.size() == sort_and_unique(facets.indices).size());
+
         ASSERT(std::is_sorted(
                 std::cbegin(facets.indices), std::cend(facets.indices),
-                [&](int a, int b)
+                [&](const int f_0, const int f_1)
                 {
-                        int a_ = material_index(mesh.facets[a].material);
-                        int b_ = material_index(mesh.facets[b].material);
-                        return a_ < b_;
+                        const int m_0 = material_index(mesh.facets[f_0].material);
+                        const int m_1 = material_index(mesh.facets[f_1].material);
+                        return m_0 < m_1;
                 }));
 
         return facets;

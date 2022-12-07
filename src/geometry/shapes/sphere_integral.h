@@ -71,7 +71,7 @@ constexpr std::optional<long double> integer_computation()
 
         for (int i = N - 1; i > 1; i -= 2)
         {
-                unsigned long long new_divident = divident * i;
+                const unsigned long long new_divident = divident * i;
                 if (new_divident <= divident)
                 {
                         return std::nullopt;
@@ -81,7 +81,7 @@ constexpr std::optional<long double> integer_computation()
 
                 if (i > 2)
                 {
-                        unsigned long long new_divisor = divisor * (i - 1);
+                        const unsigned long long new_divisor = divisor * (i - 1);
                         if (new_divisor <= divisor)
                         {
                                 return std::nullopt;
@@ -90,7 +90,7 @@ constexpr std::optional<long double> integer_computation()
                         divisor = new_divisor;
                 }
 
-                unsigned long long gcd = std::gcd(divident, divisor);
+                const unsigned long long gcd = std::gcd(divident, divisor);
                 if (gcd > 1)
                 {
                         divident /= gcd;

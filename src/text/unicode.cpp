@@ -134,25 +134,25 @@ std::string utf32_to_utf8(const T code_point)
 
         if (code_point <= 0x7FF)
         {
-                char c0 = 0b11000000 | (code_point >> 6);
-                char c1 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b11000000 | (code_point >> 6);
+                const char c1 = 0b10000000 | (code_point & 0b11'1111);
                 return std::string({c0, c1});
         }
 
         if (code_point <= 0xFFFF)
         {
-                char c0 = 0b11100000 | (code_point >> 12);
-                char c1 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
-                char c2 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b11100000 | (code_point >> 12);
+                const char c1 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
+                const char c2 = 0b10000000 | (code_point & 0b11'1111);
                 return std::string({c0, c1, c2});
         }
 
         if (code_point <= 0x10FFFF)
         {
-                char c0 = 0b11110000 | (code_point >> 18);
-                char c1 = 0b10000000 | ((code_point >> 12) & 0b11'1111);
-                char c2 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
-                char c3 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b11110000 | (code_point >> 18);
+                const char c1 = 0b10000000 | ((code_point >> 12) & 0b11'1111);
+                const char c2 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
+                const char c3 = 0b10000000 | (code_point & 0b11'1111);
                 return std::string({c0, c1, c2, c3});
         }
 
@@ -167,7 +167,7 @@ char32_t utf8_to_utf32(const std::string& s, std::size_t* const i)
                 error("UTF-8 string index out of range");
         }
 
-        unsigned char s0 = s[*i];
+        const unsigned char s0 = s[*i];
 
         if (s0 <= 0x7F)
         {
@@ -204,7 +204,7 @@ char32_t utf8_to_utf32(const std::string& s, std::size_t* const i)
 char32_t utf8_to_utf32(const std::string& s)
 {
         std::size_t i = 0;
-        char32_t c = unicode::utf8_to_utf32(s, &i);
+        const char32_t c = unicode::utf8_to_utf32(s, &i);
         if (i == s.size())
         {
                 return c;

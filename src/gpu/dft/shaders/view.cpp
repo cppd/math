@@ -42,19 +42,19 @@ const vulkan::Buffer& ViewDataBuffer::buffer() const
 
 void ViewDataBuffer::set_background_color(const Vector3f& background_color) const
 {
-        decltype(Data().background_color) v = background_color;
+        const decltype(Data().background_color) v = background_color;
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, background_color), v);
 }
 
 void ViewDataBuffer::set_foreground_color(const Vector3f& foreground_color) const
 {
-        decltype(Data().foreground_color) v = foreground_color;
+        const decltype(Data().foreground_color) v = foreground_color;
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, foreground_color), v);
 }
 
 void ViewDataBuffer::set_brightness(const float brightness) const
 {
-        decltype(Data().brightness) v = brightness;
+        const decltype(Data().brightness) v = brightness;
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, brightness), v);
 }
 

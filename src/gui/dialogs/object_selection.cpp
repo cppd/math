@@ -108,7 +108,7 @@ std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
 {
         std::optional<ObjectSelectionParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(dialog_parameters().read(), parameters));
+        const QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(dialog_parameters().read(), parameters));
 
         if (!w->exec() || w.isNull())
         {

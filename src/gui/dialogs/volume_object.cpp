@@ -104,8 +104,9 @@ void VolumeObjectParametersDialog::done(const int r)
         const int image_size = ui_.spin_box_image_size->value();
         if (!(image_size >= min_image_size_ && image_size <= max_image_size_))
         {
-                std::string msg = "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "
-                                  + to_string(max_image_size_) + "].";
+                const std::string msg =
+                        "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "
+                        + to_string(max_image_size_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -125,7 +126,7 @@ std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
 {
         std::optional<VolumeObjectParameters> parameters;
 
-        QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
+        const QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
                 dimension, object_name, default_image_size, min_image_size, max_image_size, parameters));
 
         if (!w->exec() || w.isNull())

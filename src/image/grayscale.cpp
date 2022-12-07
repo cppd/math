@@ -28,43 +28,43 @@ namespace
 {
 std::uint8_t srgb_8_to_grayscale(const std::array<std::uint8_t, 3>& rgb)
 {
-        float r = color::srgb_uint8_to_linear_float(rgb[0]);
-        float g = color::srgb_uint8_to_linear_float(rgb[1]);
-        float b = color::srgb_uint8_to_linear_float(rgb[2]);
-        float grayscale = color::linear_float_to_linear_luminance(r, g, b);
+        const float r = color::srgb_uint8_to_linear_float(rgb[0]);
+        const float g = color::srgb_uint8_to_linear_float(rgb[1]);
+        const float b = color::srgb_uint8_to_linear_float(rgb[2]);
+        const float grayscale = color::linear_float_to_linear_luminance(r, g, b);
         return color::linear_float_to_srgb_uint8(grayscale);
 }
 
 std::uint16_t linear_16_to_grayscale(const std::array<std::uint16_t, 3>& rgb)
 {
-        float r = color::linear_uint16_to_linear_float(rgb[0]);
-        float g = color::linear_uint16_to_linear_float(rgb[1]);
-        float b = color::linear_uint16_to_linear_float(rgb[2]);
-        float grayscale = color::linear_float_to_linear_luminance(r, g, b);
+        const float r = color::linear_uint16_to_linear_float(rgb[0]);
+        const float g = color::linear_uint16_to_linear_float(rgb[1]);
+        const float b = color::linear_uint16_to_linear_float(rgb[2]);
+        const float grayscale = color::linear_float_to_linear_luminance(r, g, b);
         return color::linear_float_to_linear_uint16(grayscale);
 }
 
 std::uint16_t srgb_16_to_grayscale(const std::array<std::uint16_t, 3>& rgb)
 {
-        float r = color::srgb_uint16_to_linear_float(rgb[0]);
-        float g = color::srgb_uint16_to_linear_float(rgb[1]);
-        float b = color::srgb_uint16_to_linear_float(rgb[2]);
-        float grayscale = color::linear_float_to_linear_luminance(r, g, b);
+        const float r = color::srgb_uint16_to_linear_float(rgb[0]);
+        const float g = color::srgb_uint16_to_linear_float(rgb[1]);
+        const float b = color::srgb_uint16_to_linear_float(rgb[2]);
+        const float grayscale = color::linear_float_to_linear_luminance(r, g, b);
         return color::linear_float_to_linear_uint16(grayscale);
 }
 
 float linear_32_to_grayscale(const std::array<float, 3>& rgb)
 {
-        float r = std::max<float>(0, rgb[0]);
-        float g = std::max<float>(0, rgb[1]);
-        float b = std::max<float>(0, rgb[2]);
+        const float r = std::max<float>(0, rgb[0]);
+        const float g = std::max<float>(0, rgb[1]);
+        const float b = std::max<float>(0, rgb[2]);
         return color::linear_float_to_linear_luminance(r, g, b);
 }
 
 template <typename T, typename F>
 void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& bytes, const F& rgb_to_grayscale)
 {
-        int component_count = format_component_count(color_format);
+        const int component_count = format_component_count(color_format);
         if (component_count < 3)
         {
                 error("Color component count " + to_string(bytes.size())
@@ -101,7 +101,7 @@ void convert_to_r_component_format(
         const std::span<const std::byte>& bytes_color,
         const std::span<std::byte>& bytes_r)
 {
-        int component_count = format_component_count(color_format);
+        const int component_count = format_component_count(color_format);
         if (component_count < 3)
         {
                 error("Color component count " + to_string(bytes_color.size())

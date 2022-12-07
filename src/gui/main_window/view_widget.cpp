@@ -149,7 +149,7 @@ void ViewWidget::on_clip_plane_clicked()
 
         ui_.slider_clip_plane->setEnabled(checked);
         {
-                QSignalBlocker blocker(ui_.slider_clip_plane);
+                const QSignalBlocker blocker(ui_.slider_clip_plane);
                 set_slider_position(ui_.slider_clip_plane, DEFAULT_POSITION);
         }
 

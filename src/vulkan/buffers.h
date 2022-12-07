@@ -138,28 +138,28 @@ public:
 template <typename T>
 void map_and_write_to_buffer(const BufferWithMemory& buffer, const VkDeviceSize offset, const T& data)
 {
-        BufferMapper map(buffer, offset, data_size(data));
+        const BufferMapper map(buffer, offset, data_size(data));
         map.write(data);
 }
 
 template <typename T>
 void map_and_write_to_buffer(const BufferWithMemory& buffer, const T& data)
 {
-        BufferMapper map(buffer, 0, data_size(data));
+        const BufferMapper map(buffer, 0, data_size(data));
         map.write(data);
 }
 
 template <typename T>
 void map_and_read_from_buffer(const BufferWithMemory& buffer, const VkDeviceSize offset, T* const data)
 {
-        BufferMapper map(buffer, offset, data_size(*data));
+        const BufferMapper map(buffer, offset, data_size(*data));
         map.read(data);
 }
 
 template <typename T>
 void map_and_read_from_buffer(const BufferWithMemory& buffer, T* const data)
 {
-        BufferMapper map(buffer, 0, data_size(*data));
+        const BufferMapper map(buffer, 0, data_size(*data));
         map.read(data);
 }
 

@@ -109,10 +109,10 @@ void PainterImageDialog::done(const int r)
         if (path_type_ == PainterImagePathType::DIRECTORY)
         {
                 path_string = ui_.line_edit_path->text().toStdString();
-                std::filesystem::path path = path_from_utf8(*path_string);
+                const std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path))
                 {
-                        std::string msg = "Directory is not selected";
+                        const std::string msg = "Directory is not selected";
                         dialog::message_critical(msg);
                         return;
                 }
@@ -120,10 +120,10 @@ void PainterImageDialog::done(const int r)
         else if (path_type_ == PainterImagePathType::FILE)
         {
                 path_string = ui_.line_edit_path->text().toStdString();
-                std::filesystem::path path = path_from_utf8(*path_string);
+                const std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
                 {
-                        std::string msg = "File is not selected";
+                        const std::string msg = "File is not selected";
                         dialog::message_critical(msg);
                         return;
                 }
@@ -156,7 +156,7 @@ void PainterImageDialog::on_select_path_clicked()
                 return;
         }
 
-        QPointer ptr(this);
+        const QPointer ptr(this);
         std::optional<std::string> path;
 
         if (path_type_ == PainterImagePathType::DIRECTORY)
@@ -207,7 +207,7 @@ std::optional<PainterImageParameters> PainterImageDialog::show(
 {
         std::optional<PainterImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, parameters));
+        const QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, parameters));
 
         if (!w->exec() || w.isNull())
         {

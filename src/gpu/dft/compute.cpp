@@ -264,7 +264,7 @@ class DftVector final : public ComputeVector
                 }
 
                 {
-                        vulkan::BufferMapper mapper(dft_->buffer_with_memory());
+                        const vulkan::BufferMapper mapper(dft_->buffer_with_memory());
                         mapper.write(*src);
                 }
 
@@ -274,7 +274,7 @@ class DftVector final : public ComputeVector
                 VULKAN_CHECK(vkQueueWaitIdle(device_compute_.compute_queue().handle()));
 
                 {
-                        vulkan::BufferMapper mapper(dft_->buffer_with_memory());
+                        const vulkan::BufferMapper mapper(dft_->buffer_with_memory());
                         mapper.read(src);
                 }
         }

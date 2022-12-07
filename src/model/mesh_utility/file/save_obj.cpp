@@ -208,11 +208,11 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
                         std::array<int, 3> v = f.vertices;
                         std::array<int, 3> n = f.normals;
 
-                        Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+                        const Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                        const Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                        const Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
-                        Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+                        const Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 
                         if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0
@@ -266,18 +266,20 @@ void check_facets_and_lines(const Mesh<N>& mesh)
                 error("Mesh has neither facets nor lines");
         }
 
-        std::vector<int> facet_indices = unique_facet_indices(mesh);
-        std::vector<int> line_indices = unique_line_indices(mesh);
+        const std::vector<int> facet_indices = unique_facet_indices(mesh);
+        const std::vector<int> line_indices = unique_line_indices(mesh);
 
         if (facet_indices.empty() && line_indices.empty())
         {
                 error("Facet and line unique indices are not found");
         }
+
         if (!facet_indices.empty() && facet_indices.size() < N)
         {
                 error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than "
                       + to_string(N));
         }
+
         if (!line_indices.empty() && line_indices.size() < 2)
         {
                 error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));

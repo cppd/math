@@ -198,7 +198,7 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
 
         for (const typename Mesh<N>::Point& point : mesh.points)
         {
-                int index = point.vertex;
+                const int index = point.vertex;
 
                 if (index < 0 || index >= vertex_count)
                 {

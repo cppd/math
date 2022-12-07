@@ -163,14 +163,14 @@ void save_to_images(
         std::ostringstream oss;
         oss << std::setfill('0');
 
-        std::array<int, N - 1> image_size_n_1 = del_elem(image_view.size, N - 1);
+        const std::array<int, N - 1> image_size_n_1 = del_elem(image_view.size, N - 1);
 
         for (int i = 0; i < image_view.size[N - 1]; ++i, ptr += size_in_bytes)
         {
                 oss.str(std::string());
                 oss << std::setw(digit_count) << i;
 
-                image::ImageView<N - 1> image_view_n_1(
+                const image::ImageView<N - 1> image_view_n_1(
                         image_size_n_1, image_view.color_format, std::span(ptr, size_in_bytes));
 
                 if constexpr (N >= 4)
@@ -212,12 +212,12 @@ void load_from_images(
 
         if (names.empty())
         {
-                std::string s = N >= 4 ? "Directories" : "Files";
+                const std::string s = N >= 4 ? "Directories" : "Files";
                 error(s + " not found in directory " + generic_utf8_filename(directory));
         }
         if (names.size() != static_cast<unsigned>(image_size[N - 1]))
         {
-                std::string s = N >= 4 ? "directory" : "file";
+                const std::string s = N >= 4 ? "directory" : "file";
                 error("Expected " + s + " count " + to_string(image_size[N - 1]) + ", found " + to_string(names.size())
                       + " in " + generic_utf8_filename(directory));
         }
@@ -231,12 +231,12 @@ void load_from_images(
         ASSERT(static_cast<long long>(image_bytes.size())
                == image::format_pixel_size_in_bytes(image_format) * multiply_all<long long>(image_size));
 
-        std::array<int, N - 1> image_size_n_1 = del_elem(image_size, N - 1);
+        const std::array<int, N - 1> image_size_n_1 = del_elem(image_size, N - 1);
 
         for (std::size_t i = 0; i < names.size(); ++i, ptr += size_in_bytes)
         {
-                std::filesystem::path entry_path = directory / path_from_utf8(names[i]);
-                std::span span(ptr, size_in_bytes);
+                const std::filesystem::path entry_path = directory / path_from_utf8(names[i]);
+                const std::span span(ptr, size_in_bytes);
                 if constexpr (N >= 4)
                 {
                         if (!std::filesystem::is_directory(entry_path))
@@ -276,7 +276,7 @@ void find_info(const std::filesystem::path& directory, std::vector<int>* const s
         }
         case ContentType::FILES:
         {
-                image::Info info = image::file_info(first);
+                const image::Info info = image::file_info(first);
                 const auto [width, height] = info.size;
                 size->push_back(content->entries.size());
                 size->push_back(height);

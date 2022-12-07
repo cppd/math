@@ -157,14 +157,14 @@ void test_polytopes()
 {
         LOG("Test regular polytopes in " + space_name(N) + ", " + type_name<T>());
         {
-                std::array<Vector<N, T>, N + 1> simplex = create_simplex<N, T>();
+                const std::array<Vector<N, T>, N + 1> simplex = create_simplex<N, T>();
                 test_simplex(simplex);
         }
         {
                 const std::string name = "Regular cross-polytope";
                 constexpr unsigned FACET_COUNT = 1 << N;
                 constexpr unsigned VERTEX_COUNT = 2 * N;
-                std::vector<std::array<Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
+                const std::vector<std::array<Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
                 test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
         if constexpr (N == 3)
@@ -172,7 +172,7 @@ void test_polytopes()
                 const std::string name = "Regular icosahedron";
                 constexpr unsigned FACET_COUNT = 20;
                 constexpr unsigned VERTEX_COUNT = 12;
-                std::vector<std::array<Vector<3, T>, 3>> facets = create_icosahedron<T>();
+                const std::vector<std::array<Vector<3, T>, 3>> facets = create_icosahedron<T>();
                 test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
 }

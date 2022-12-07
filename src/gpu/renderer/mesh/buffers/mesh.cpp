@@ -41,10 +41,10 @@ void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& n
         constexpr std::size_t OFFSET = offsetof(Mesh, model_matrix);
         constexpr std::size_t SIZE = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - OFFSET;
 
-        vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
+        const vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
-        decltype(Mesh().model_matrix) model = vulkan::to_std140<float>(model_matrix);
-        decltype(Mesh().normal_matrix) normal = vulkan::to_std140<float>(normal_matrix);
+        const decltype(Mesh().model_matrix) model = vulkan::to_std140<float>(model_matrix);
+        const decltype(Mesh().normal_matrix) normal = vulkan::to_std140<float>(normal_matrix);
 
         map.write(offsetof(Mesh, model_matrix) - OFFSET, model);
         map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);
@@ -52,13 +52,13 @@ void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& n
 
 void MeshBuffer::set_color(const Vector3f& color) const
 {
-        decltype(Mesh().color) c = color;
+        const decltype(Mesh().color) c = color;
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, color), c);
 }
 
 void MeshBuffer::set_alpha(const float alpha) const
 {
-        decltype(Mesh().alpha) a = alpha;
+        const decltype(Mesh().alpha) a = alpha;
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, alpha), a);
 }
 
@@ -69,7 +69,7 @@ void MeshBuffer::set_lighting(const float ambient, const float metalness, const 
         constexpr std::size_t OFFSET = offsetof(Mesh, ambient);
         constexpr std::size_t SIZE = offsetof(Mesh, roughness) + sizeof(Mesh::roughness) - OFFSET;
 
-        vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
+        const vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
         Mesh mesh;
         mesh.ambient = ambient;

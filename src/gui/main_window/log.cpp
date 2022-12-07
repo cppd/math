@@ -98,7 +98,7 @@ Log::Log(QPlainTextEdit* const text_edit)
 void Log::write()
 {
         std::vector<Message>& log = messages_[(messages_ptr_ == &messages_[0]) ? 1 : 0];
-        Switcher switcher(&messages_ptr_, &log);
+        const Switcher switcher(&messages_ptr_, &log);
         for (const Message& m : log)
         {
                 append_to_text_edit(text_edit_, m.text, m.color);

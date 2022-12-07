@@ -100,10 +100,10 @@ void test_feasible()
         LOG(std::string("SOLVE CONSTRAINTS, ") + type_name<T>());
 
         {
-                std::array<T, 2> b{2, -4};
-                std::array<Vector<2, T>, 2> a{Vector<2, T>(-2, 1), Vector<2, T>(-1, 5)};
+                const std::array<T, 2> b{2, -4};
+                const std::array<Vector<2, T>, 2> a{Vector<2, T>(-2, 1), Vector<2, T>(-1, 5)};
 
-                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::FEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);
@@ -113,12 +113,12 @@ void test_feasible()
                 LOG("passed feasible");
         }
         {
-                std::array<T, 5> b{-1.23456, 3.12321, -1.14321, 3.32123, -4.3214e10};
-                std::array<Vector<2, T>, 5> a{
+                const std::array<T, 5> b{-1.23456, 3.12321, -1.14321, 3.32123, -4.3214e10};
+                const std::array<Vector<2, T>, 5> a{
                         Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
                         Vector<2, T>(1.01e10, 1.00132e10)};
 
-                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::FEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);
@@ -128,12 +128,12 @@ void test_feasible()
                 LOG("passed feasible");
         }
         {
-                std::array<T, 5> b{-1.23456, -3.12321, -1.14321, 3.32123, -4.3214};
-                std::array<Vector<2, T>, 5> a{
+                const std::array<T, 5> b{-1.23456, -3.12321, -1.14321, 3.32123, -4.3214};
+                const std::array<Vector<2, T>, 5> a{
                         Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
                         Vector<2, T>(1.01, 1.00132)};
 
-                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::INFEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);

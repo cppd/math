@@ -221,9 +221,9 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
                 {
                         std::array<int, 3> v = f.vertices;
 
-                        Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+                        const Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                        const Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                        const Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
                         Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 

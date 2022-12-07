@@ -53,7 +53,7 @@ public:
         void delete_object(const model::ObjectId id)
         {
                 typename decltype(map_)::mapped_type tmp;
-                std::unique_lock lock(mutex_);
+                const std::unique_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
@@ -65,7 +65,7 @@ public:
         void clear()
         {
                 decltype(map_) tmp;
-                std::unique_lock lock(mutex_);
+                const std::unique_lock lock(mutex_);
                 tmp = std::move(map_);
                 map_.clear();
         }
@@ -78,7 +78,7 @@ public:
                         error("No mesh object to set in storage");
                 }
 
-                std::unique_lock lock(mutex_);
+                const std::unique_lock lock(mutex_);
                 const auto iter = map_.find(object->id());
                 if (iter == map_.cend())
                 {
@@ -101,7 +101,7 @@ public:
                         error("No mesh object to set in storage");
                 }
 
-                std::unique_lock lock(mutex_);
+                const std::unique_lock lock(mutex_);
                 const auto iter = map_.find(object->id());
                 if (iter == map_.cend())
                 {
@@ -121,7 +121,7 @@ public:
         {
                 std::optional<MeshObject> opt;
 
-                std::shared_lock lock(mutex_);
+                const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
@@ -151,7 +151,7 @@ public:
         {
                 std::optional<VolumeObject> opt;
 
-                std::shared_lock lock(mutex_);
+                const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
@@ -181,7 +181,9 @@ public:
         std::vector<T> objects() const
         {
                 std::vector<T> objects;
-                std::shared_lock lock(mutex_);
+
+                const std::shared_lock lock(mutex_);
+
                 if constexpr (std::is_same_v<T, MeshObjectConst> || std::is_same_v<T, VolumeObjectConst>)
                 {
                         using OBJ = std::conditional_t<std::is_same_v<T, MeshObjectConst>, MeshObject, VolumeObject>;
@@ -204,6 +206,7 @@ public:
                                 }
                         }
                 }
+
                 return objects;
         }
 };

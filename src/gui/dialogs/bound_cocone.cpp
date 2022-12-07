@@ -121,8 +121,9 @@ void BoundCoconeParametersDialog::done(const int r)
         const double rho = ui_.double_spin_box_rho->value();
         if (!(min_rho_ <= rho && rho <= max_rho_))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(min_rho_)
-                                  + ", " + to_string(max_rho_) + "]";
+                const std::string msg =
+                        reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(min_rho_) + ", "
+                        + to_string(max_rho_) + "]";
                 dialog::message_critical(msg);
                 return;
         }
@@ -130,8 +131,9 @@ void BoundCoconeParametersDialog::done(const int r)
         const double alpha = ui_.double_spin_box_alpha->value();
         if (!(min_alpha_ <= alpha && alpha <= max_alpha_))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(min_alpha_)
-                                  + ", " + to_string(max_alpha_) + "]";
+                const std::string msg =
+                        reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(min_alpha_) + ", "
+                        + to_string(max_alpha_) + "]";
                 dialog::message_critical(msg);
                 return;
         }
@@ -147,7 +149,7 @@ std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
 {
         std::optional<BoundCoconeParameters> parameters;
 
-        QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
+        const QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
                 MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, dialog_parameters().read(), parameters));
 
         if (!w->exec() || w.isNull())

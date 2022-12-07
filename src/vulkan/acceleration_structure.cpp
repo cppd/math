@@ -199,7 +199,7 @@ void TopLevelAccelerationStructure::update_matrices(
         {
                 constexpr std::size_t SIZE = sizeof(VkAccelerationStructureInstanceKHR);
                 constexpr std::size_t OFFSET = offsetof(VkAccelerationStructureInstanceKHR, transform);
-                BufferMapper mapper(instance_buffer_);
+                const BufferMapper mapper(instance_buffer_);
                 for (std::size_t i = 0; i < geometry_primitive_count_; ++i)
                 {
                         mapper.write(i * SIZE + OFFSET, bottom_level_matrices[i]);

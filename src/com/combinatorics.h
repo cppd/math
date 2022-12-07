@@ -39,7 +39,7 @@ inline constexpr int BINOMIAL = []
         unsigned __int128 m = 1;
         for (unsigned __int128 i = N; i > K; --i)
         {
-                unsigned __int128 v = m * i;
+                const unsigned __int128 v = m * i;
                 if ((v / i) != m)
                 {
                         error("Binomial overflow");
@@ -94,7 +94,7 @@ inline constexpr unsigned long long FACTORIAL = []
         unsigned long long m = 1;
         for (unsigned i = 2; i <= N; ++i)
         {
-                unsigned long long v = m * i;
+                const unsigned long long v = m * i;
                 if ((v / i) != m)
                 {
                         error("Factorial overflow");

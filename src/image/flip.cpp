@@ -33,17 +33,17 @@ void flip_vertically(Image<N>* const image)
                 error("Error image size");
         }
 
-        std::size_t pixel_size = format_pixel_size_in_bytes(image->color_format);
-        std::size_t row_size = pixel_size * image->size[0];
-        std::size_t size_2d = row_size * image->size[1];
+        const std::size_t pixel_size = format_pixel_size_in_bytes(image->color_format);
+        const std::size_t row_size = pixel_size * image->size[0];
+        const std::size_t size_2d = row_size * image->size[1];
         if (image->pixels.size() % size_2d != 0)
         {
                 error("Error image pixels size");
         }
 
         std::vector<std::byte> row(row_size);
-        std::size_t r1_end = row_size * (image->size[1] / 2);
-        std::size_t r2_init = row_size * (image->size[1] - 1);
+        const std::size_t r1_end = row_size * (image->size[1] / 2);
+        const std::size_t r2_init = row_size * (image->size[1] - 1);
         for (std::size_t offset = 0; offset < image->pixels.size(); offset += size_2d)
         {
                 std::size_t r1 = offset;

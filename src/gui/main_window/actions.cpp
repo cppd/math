@@ -125,7 +125,7 @@ void painter(
                 WORKER_THREAD_ID, action,
                 [&]()
                 {
-                        std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
+                        const std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
                         if (objects.empty())
                         {
                                 message_warning("No objects to paint");

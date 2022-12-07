@@ -35,7 +35,7 @@ std::vector<int> volume_image_size(const storage::VolumeObjectConst& object)
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const model::volume::VolumeObject<N>>& volume_object)
                 {
-                        model::volume::Reading reading(*volume_object);
+                        const model::volume::Reading reading(*volume_object);
                         size = [](const auto& array)
                         {
                                 return std::vector(array.cbegin(), array.cend());

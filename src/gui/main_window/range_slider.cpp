@@ -80,8 +80,8 @@ void RangeSlider::set_range(double min, double max)
         }
 
         {
-                QSignalBlocker blocker_min(slider_min_);
-                QSignalBlocker blocker_max(slider_max_);
+                const QSignalBlocker blocker_min(slider_min_);
+                const QSignalBlocker blocker_max(slider_max_);
                 set_min_value(std::lround(std::lerp(MIN, MAX, min)));
                 set_max_value(std::lround(std::lerp(MIN, MAX, max)));
         }

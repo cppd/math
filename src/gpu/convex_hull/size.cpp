@@ -40,13 +40,13 @@ int group_size_prepare(
 {
         constexpr unsigned SHARED_SIZE_PER_THREAD = 2 * sizeof(std::int32_t); // GLSL ivec2
 
-        unsigned max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
-        unsigned max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;
+        const unsigned max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
+        const unsigned max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;
 
-        unsigned max_group_size = std::bit_floor(std::min(max_group_size_limit, max_group_size_memory));
+        const unsigned max_group_size = std::bit_floor(std::min(max_group_size_limit, max_group_size_memory));
 
         // one thread for 2 or more pixels, power of 2
-        unsigned pref_thread_count = (width > 1) ? (std::bit_floor(static_cast<unsigned>(width) - 1)) : 1;
+        const unsigned pref_thread_count = (width > 1) ? (std::bit_floor(static_cast<unsigned>(width) - 1)) : 1;
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }

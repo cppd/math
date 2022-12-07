@@ -171,10 +171,10 @@ class Impl final : public Dft
                 const double m1_div_n1 = static_cast<double>(m1_) / n1_;
                 const double m2_div_n2 = static_cast<double>(m2_) / n2_;
 
-                std::vector<std::complex<double>> d1_fwd = compute_h2(n1_, m1_, compute_h(n1_, false, 1.0));
-                std::vector<std::complex<double>> d1_inv = compute_h2(n1_, m1_, compute_h(n1_, true, m1_div_n1));
-                std::vector<std::complex<double>> d2_fwd = compute_h2(n2_, m2_, compute_h(n2_, false, 1.0));
-                std::vector<std::complex<double>> d2_inv = compute_h2(n2_, m2_, compute_h(n2_, true, m2_div_n2));
+                const std::vector<std::complex<double>> d1_fwd = compute_h2(n1_, m1_, compute_h(n1_, false, 1.0));
+                const std::vector<std::complex<double>> d1_inv = compute_h2(n1_, m1_, compute_h(n1_, true, m1_div_n1));
+                const std::vector<std::complex<double>> d2_fwd = compute_h2(n2_, m2_, compute_h(n2_, false, 1.0));
+                const std::vector<std::complex<double>> d2_inv = compute_h2(n2_, m2_, compute_h(n2_, true, m2_div_n2));
 
                 //
 

@@ -55,7 +55,7 @@ T facet_normat_weight_at_vertex(
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        int index = (facet_vertex_index + 1 + i) % N;
+                        const int index = (facet_vertex_index + 1 + i) % N;
                         vectors[i] = points[facet[index]] - points[facet[facet_vertex_index]];
                 }
 
@@ -162,7 +162,7 @@ void compute_normals(Mesh<N>* const mesh)
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        int vertex = facet.vertices[i];
+                        const int vertex = facet.vertices[i];
                         ASSERT(vertex < static_cast<int>(vertex_facets.size()));
                         VertexFacet& vertex_facet = vertex_facets[vertex].emplace_back();
                         vertex_facet.facet_index = f;

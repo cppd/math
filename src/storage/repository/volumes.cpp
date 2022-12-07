@@ -188,8 +188,8 @@ std::unique_ptr<model::volume::Volume<N>> scalar_ellipsoid(const unsigned size)
                 volume.image.size,
                 [&](const Vector<N, float>& coordinates)
                 {
-                        Vector<N, float> p = coordinates - center;
-                        float distance = 2 * p.norm();
+                        const Vector<N, float> p = coordinates - center;
+                        const float distance = 2 * p.norm();
                         Type value = std::max(MIN, float_to_uint<Type>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
                         std::memcpy(ptr, &value, sizeof(value));
                         ptr += sizeof(value);
@@ -218,7 +218,7 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
         model::volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::array<std::uint8_t, 4> color;
-        std::uint8_t alpha = std::max(std::uint8_t{1}, float_to_uint<std::uint8_t>(1.0f / size));
+        const std::uint8_t alpha = std::max(std::uint8_t{1}, float_to_uint<std::uint8_t>(1.0f / size));
         color[3] = alpha;
 
         std::byte* ptr = volume.image.pixels.data();
@@ -229,7 +229,7 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
                 {
                         for (std::size_t i = 0; i < N; ++i)
                         {
-                                float c = coordinates[i] / (1 << (i / 3));
+                                const float c = coordinates[i] / (1 << (i / 3));
                                 color[i % 3] = float_to_uint<std::uint8_t>(c);
                         }
                         std::memcpy(ptr, color.data(), color.size());

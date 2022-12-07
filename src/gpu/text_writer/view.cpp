@@ -139,12 +139,12 @@ class Impl final : public View
                 command_buffers_ = create_commands();
 
                 // (0, 0) is top left
-                double left = 0;
-                double right = viewport.width();
-                double bottom = viewport.height();
-                double top = 0;
-                double near = 1;
-                double far = -1;
+                const double left = 0;
+                const double right = viewport.width();
+                const double bottom = viewport.height();
+                const double top = 0;
+                const double near = 1;
+                const double far = -1;
                 buffer_.set_matrix(numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 

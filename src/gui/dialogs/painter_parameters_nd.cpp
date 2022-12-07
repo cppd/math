@@ -120,8 +120,9 @@ void PainterParametersNdDialog::done(const int r)
         const int max_size = ui_.spin_box_max_size->value();
         if (!(max_size >= min_screen_size_ && max_size <= max_screen_size_))
         {
-                std::string msg = "Maximum screen size must be in the range [" + to_string(min_screen_size_) + ", "
-                                  + to_string(max_screen_size_) + "].";
+                const std::string msg =
+                        "Maximum screen size must be in the range [" + to_string(min_screen_size_) + ", "
+                        + to_string(max_screen_size_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -153,7 +154,7 @@ std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParamet
 
         std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters;
 
-        QtObjectInDynamicMemory w(new PainterParametersNdDialog(
+        const QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                 default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, colors,
                 default_color_index, integrators, default_integrator_index, parameters));

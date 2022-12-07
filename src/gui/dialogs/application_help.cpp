@@ -43,7 +43,7 @@ QString title()
 
 void application_help()
 {
-        QtObjectInDynamicMemory<QMessageBox> w(
+        const QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::NoIcon, title(), message(), QMessageBox::Ok, parent_for_dialog());
 
         w->exec();

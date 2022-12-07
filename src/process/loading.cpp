@@ -101,13 +101,13 @@ std::function<void(progress::RatioList*)> action_load_mesh(
 
         return [=](progress::RatioList* const progress_list)
         {
-                unsigned dimension = model::mesh::file_dimension(path);
+                const unsigned dimension = model::mesh::file_dimension(path);
 
                 apply_for_dimension(
                         dimension,
                         [&]<std::size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<model::mesh::MeshObject<N>> mesh =
+                                const std::shared_ptr<model::mesh::MeshObject<N>> mesh =
                                         load_mesh<N>(generic_utf8_filename(path.filename()), progress_list, path);
 
                                 compute_meshes<N>(
@@ -153,7 +153,7 @@ std::function<void(progress::RatioList*)> action_load_point_mesh(
                         dimension,
                         [&]<std::size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<model::mesh::MeshObject<N>> mesh = load_point_mesh<N>(
+                                const std::shared_ptr<model::mesh::MeshObject<N>> mesh = load_point_mesh<N>(
                                         object_name, point_object_parameters->point_count, *repository);
 
                                 compute_meshes<N>(
@@ -199,7 +199,7 @@ std::function<void(progress::RatioList*)> action_load_facet_mesh(
                         dimension,
                         [&]<std::size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<model::mesh::MeshObject<N>> mesh = load_facet_mesh<N>(
+                                const std::shared_ptr<model::mesh::MeshObject<N>> mesh = load_facet_mesh<N>(
                                         object_name, facet_object_parameters->facet_count, *repository);
 
                                 compute_meshes<N>(

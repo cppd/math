@@ -216,8 +216,8 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
                 static constexpr Vector<3, T> X(1, 0, 0);
                 static constexpr Vector<3, T> Y(0, 1, 0);
                 const Vector<3, T>& v = std::abs(unit_vector[0]) > LIMIT ? Y : X;
-                Vector<3, T> e0 = cross(unit_vector, v).normalized();
-                Vector<3, T> e1 = cross(unit_vector, e0);
+                const Vector<3, T> e0 = cross(unit_vector, v).normalized();
+                const Vector<3, T> e1 = cross(unit_vector, e0);
                 return {e0, e1};
         }
 

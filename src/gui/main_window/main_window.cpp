@@ -177,7 +177,7 @@ void MainWindow::closeEvent(QCloseEvent* const event)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        QPointer ptr(this);
+        const QPointer ptr(this);
         std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the main window?");
         if (ptr.isNull())
         {

@@ -109,17 +109,17 @@ PainterParameters3dDialog::PainterParameters3dDialog(
 
 void PainterParameters3dDialog::on_width_value_changed(int)
 {
-        int height = std::lround(ui_.spin_box_width->value() / aspect_ratio_);
+        const int height = std::lround(ui_.spin_box_width->value() / aspect_ratio_);
 
-        QSignalBlocker blocker(ui_.spin_box_height);
+        const QSignalBlocker blocker(ui_.spin_box_height);
         ui_.spin_box_height->setValue(std::clamp(height, min_height_, max_height_));
 }
 
 void PainterParameters3dDialog::on_height_value_changed(int)
 {
-        int width = std::lround(ui_.spin_box_height->value() * aspect_ratio_);
+        const int width = std::lround(ui_.spin_box_height->value() * aspect_ratio_);
 
-        QSignalBlocker blocker(ui_.spin_box_width);
+        const QSignalBlocker blocker(ui_.spin_box_width);
         ui_.spin_box_width->setValue(std::clamp(width, min_width_, max_width_));
 }
 
@@ -139,7 +139,7 @@ void PainterParameters3dDialog::done(const int r)
         const int width = ui_.spin_box_width->value();
         if (!(min_width_ <= width && width <= max_width_))
         {
-                std::string msg =
+                const std::string msg =
                         "Width must be in the range [" + to_string(min_width_) + ", " + to_string(max_width_) + "]";
                 dialog::message_critical(msg);
                 return;
@@ -148,7 +148,7 @@ void PainterParameters3dDialog::done(const int r)
         const int height = ui_.spin_box_height->value();
         if (!(min_height_ <= height && height <= max_height_))
         {
-                std::string msg =
+                const std::string msg =
                         "Height must be in the range [" + to_string(min_height_) + ", " + to_string(max_height_) + "]";
                 dialog::message_critical(msg);
                 return;
@@ -181,7 +181,7 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
 
         std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 
-        QtObjectInDynamicMemory w(new PainterParameters3dDialog(
+        const QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
                 precisions, default_precision_index, colors, default_color_index, integrators, default_integrator_index,
                 parameters));

@@ -104,8 +104,9 @@ void FacetObjectParametersDialog::done(const int r)
         const int facet_count = ui_.spin_box_facet_count->value();
         if (!(facet_count >= min_facet_count_ && facet_count <= max_facet_count_))
         {
-                std::string msg = "Facet count must be in the range [" + to_string(min_facet_count_) + ", "
-                                  + to_string(max_facet_count_) + "].";
+                const std::string msg =
+                        "Facet count must be in the range [" + to_string(min_facet_count_) + ", "
+                        + to_string(max_facet_count_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -125,7 +126,7 @@ std::optional<FacetObjectParameters> FacetObjectParametersDialog::show(
 {
         std::optional<FacetObjectParameters> parameters;
 
-        QtObjectInDynamicMemory w(new FacetObjectParametersDialog(
+        const QtObjectInDynamicMemory w(new FacetObjectParametersDialog(
                 dimension, object_name, default_facet_count, min_facet_count, max_facet_count, parameters));
 
         if (!w->exec() || w.isNull())

@@ -172,7 +172,7 @@ void ImageSliceDialog::done(const int r)
 
         if (slice_dimension_ != count)
         {
-                std::string msg = "Slice dimension must be equal to " + to_string(slice_dimension_);
+                const std::string msg = "Slice dimension must be equal to " + to_string(slice_dimension_);
                 dialog::message_critical(msg);
                 return;
         }
@@ -187,7 +187,7 @@ std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int
 {
         std::optional<ImageSliceParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, parameters));
+        const QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, parameters));
 
         if (!w->exec() || w.isNull())
         {

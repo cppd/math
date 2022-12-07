@@ -273,7 +273,7 @@ class Impl final : public WorkerThreads
                                 &bar, &QProgressBar::customContextMenuRequested,
                                 [this, id, bar_ptr = QPointer(&bar)](const QPoint&)
                                 {
-                                        QtObjectInDynamicMemory<QMenu> menu(bar_ptr);
+                                        const QtObjectInDynamicMemory<QMenu> menu(bar_ptr);
                                         menu->addAction("Terminate");
 
                                         if (menu->exec(QCursor::pos()) == nullptr || menu.isNull() || bar_ptr.isNull())

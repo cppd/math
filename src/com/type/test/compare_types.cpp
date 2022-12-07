@@ -131,7 +131,7 @@ void write(const T value)
 
 void compare_types()
 {
-        MpfPrecision mpf_precision(128);
+        const MpfPrecision mpf_precision(128);
 
         write<mpz_class>(1e16);
         write<mpf_class>(1e12);

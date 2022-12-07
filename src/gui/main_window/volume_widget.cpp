@@ -59,7 +59,7 @@ struct VolumeInfo final
 template <std::size_t N>
 VolumeInfo read_volume(const model::volume::VolumeObject<N>& volume_object)
 {
-        model::volume::Reading reading(volume_object);
+        const model::volume::Reading reading(volume_object);
 
         return {.min = reading.level_min(),
                 .max = reading.level_max(),
@@ -250,7 +250,7 @@ void VolumeWidget::on_color_clicked()
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& object)
                 {
-                        model::volume::Reading reading(*object);
+                        const model::volume::Reading reading(*object);
                         color = reading.color();
                 },
                 *object_opt);
@@ -373,41 +373,41 @@ void VolumeWidget::ui_disable()
         set_enabled(false);
 
         {
-                QSignalBlocker blocker(slider_levels_.get());
+                const QSignalBlocker blocker(slider_levels_.get());
                 slider_levels_->set_range(0, 1);
         }
         {
-                QSignalBlocker blocker(ui_.slider_transparency);
+                const QSignalBlocker blocker(ui_.slider_transparency);
                 set_slider_to_middle(ui_.slider_transparency);
         }
         {
-                QSignalBlocker blocker(ui_.check_box_isosurface);
+                const QSignalBlocker blocker(ui_.check_box_isosurface);
                 ui_.check_box_isosurface->setChecked(false);
         }
         {
-                QSignalBlocker blocker(ui_.slider_isovalue);
+                const QSignalBlocker blocker(ui_.slider_isovalue);
                 set_slider_to_middle(ui_.slider_isovalue);
         }
         {
-                QSignalBlocker blocker(ui_.slider_isosurface_transparency);
+                const QSignalBlocker blocker(ui_.slider_isosurface_transparency);
                 set_slider_position(ui_.slider_isosurface_transparency, 0);
         }
         {
-                QSignalBlocker blocker(ui_.widget_color);
+                const QSignalBlocker blocker(ui_.widget_color);
                 set_widget_color(ui_.widget_color, QColor(255, 255, 255));
         }
         {
-                QSignalBlocker blocker(ui_.slider_ambient);
+                const QSignalBlocker blocker(ui_.slider_ambient);
                 set_slider_to_middle(ui_.slider_ambient);
                 ui_.label_ambient->clear();
         }
         {
-                QSignalBlocker blocker(ui_.slider_metalness);
+                const QSignalBlocker blocker(ui_.slider_metalness);
                 set_slider_to_middle(ui_.slider_metalness);
                 ui_.label_metalness->clear();
         }
         {
-                QSignalBlocker blocker(ui_.slider_roughness);
+                const QSignalBlocker blocker(ui_.slider_roughness);
                 set_slider_to_middle(ui_.slider_roughness);
                 ui_.label_roughness->clear();
         }
@@ -425,7 +425,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                         const VolumeInfo info = read_volume(*volume_object);
 
                         {
-                                QSignalBlocker blocker(slider_levels_.get());
+                                const QSignalBlocker blocker(slider_levels_.get());
                                 slider_levels_->set_range(info.min, info.max);
                         }
                         {
@@ -437,45 +437,45 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                         std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
 
                                 const double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
-                                QSignalBlocker blocker(ui_.slider_transparency);
+                                const QSignalBlocker blocker(ui_.slider_transparency);
                                 ui_.slider_transparency->setEnabled(!info.isosurface);
                                 set_slider_position(ui_.slider_transparency, position);
                         }
                         {
-                                QSignalBlocker blocker(ui_.check_box_isosurface);
+                                const QSignalBlocker blocker(ui_.check_box_isosurface);
                                 ui_.check_box_isosurface->setChecked(info.isosurface);
                         }
                         {
                                 const double position = 1.0 - info.isosurface_alpha;
-                                QSignalBlocker blocker(ui_.slider_isosurface_transparency);
+                                const QSignalBlocker blocker(ui_.slider_isosurface_transparency);
                                 ui_.slider_isosurface_transparency->setEnabled(info.isosurface);
                                 set_slider_position(ui_.slider_isosurface_transparency, position);
                         }
                         {
                                 const double position = info.isovalue;
-                                QSignalBlocker blocker(ui_.slider_isovalue);
+                                const QSignalBlocker blocker(ui_.slider_isovalue);
                                 ui_.slider_isovalue->setEnabled(info.isosurface);
                                 set_slider_position(ui_.slider_isovalue, position);
                         }
                         {
-                                QSignalBlocker blocker(ui_.widget_color);
+                                const QSignalBlocker blocker(ui_.widget_color);
                                 set_widget_color(ui_.widget_color, color_to_qcolor(info.color));
                         }
                         {
                                 const double position = info.ambient;
-                                QSignalBlocker blocker(ui_.slider_ambient);
+                                const QSignalBlocker blocker(ui_.slider_ambient);
                                 set_slider_position(ui_.slider_ambient, position);
                                 set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
                                 const double position = info.metalness;
-                                QSignalBlocker blocker(ui_.slider_metalness);
+                                const QSignalBlocker blocker(ui_.slider_metalness);
                                 set_slider_position(ui_.slider_metalness, position);
                                 set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
                                 const double position = info.roughness;
-                                QSignalBlocker blocker(ui_.slider_roughness);
+                                const QSignalBlocker blocker(ui_.slider_roughness);
                                 set_slider_position(ui_.slider_roughness, position);
                                 set_label(ui_.label_roughness, ui_.slider_roughness);
                         }

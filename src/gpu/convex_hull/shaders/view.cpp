@@ -41,13 +41,13 @@ const vulkan::Buffer& ViewDataBuffer::buffer() const
 
 void ViewDataBuffer::set_matrix(const Matrix4d& matrix) const
 {
-        decltype(Data().matrix) m = vulkan::to_std140<float>(matrix);
+        const decltype(Data().matrix) m = vulkan::to_std140<float>(matrix);
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);
 }
 
 void ViewDataBuffer::set_brightness(const float brightness) const
 {
-        decltype(Data().brightness) b = brightness;
+        const decltype(Data().brightness) b = brightness;
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, brightness), b);
 }
 
