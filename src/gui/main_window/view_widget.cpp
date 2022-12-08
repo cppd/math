@@ -99,6 +99,7 @@ void ViewWidget::set_view(view::View* const view)
         if (!functionality || !sample_count)
         {
                 message_error_fatal("Failed to receive view information");
+                return;
         }
 
         set_functionality(*functionality);
