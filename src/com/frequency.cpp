@@ -75,16 +75,25 @@ Frequency::Frequency(const double interval_length, const int sample_count)
 
 double Frequency::calculate()
 {
-        const int sample_number = duration_from(start_time_) * sample_frequency_;
+        const auto sample_number = static_cast<long long>(duration_from(start_time_) * sample_frequency_);
+        const long long min_sample_number = sample_number - sample_count_;
 
-        while (!deque_.empty() && (deque_.front().sample_number < sample_number - sample_count_))
+        while (!deque_.empty() && (deque_.front().sample_number < min_sample_number))
         {
                 deque_.pop_front();
         }
 
-        for (int i = sample_count_ - deque_.size(); i >= 0; --i)
+        ASSERT(deque_.size() <= 1u + sample_count_);
+
+        const long long end_sample_number = min_sample_number + deque_.size();
+
+        ASSERT(deque_.empty()
+               || (deque_.front().sample_number == min_sample_number
+                   && deque_.back().sample_number + 1 == end_sample_number));
+
+        for (long long i = end_sample_number; i <= sample_number; ++i)
         {
-                deque_.emplace_back(sample_number - i);
+                deque_.emplace_back(i);
         }
 
         ASSERT(deque_.size() == 1u + sample_count_);

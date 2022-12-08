@@ -28,7 +28,7 @@ class Frequency final
 {
         struct Events final
         {
-                int sample_number;
+                long long sample_number;
                 double event_count = 0;
 
                 explicit Events(const int sample_number)
