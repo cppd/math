@@ -20,16 +20,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/text/glyphs.h>
 #include <src/vulkan/buffers.h>
 
-#include <optional>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::gpu::text_writer
 {
 class Glyphs final
 {
         std::unordered_map<char32_t, text::FontGlyph> glyphs_;
-        std::optional<vulkan::ImageWithMemory> image_;
+        vulkan::ImageWithMemory image_;
         unsigned size_;
+
+        Glyphs(unsigned size,
+               const vulkan::Device& device,
+               const vulkan::CommandPool& graphics_command_pool,
+               const vulkan::Queue& graphics_queue,
+               const std::vector<std::uint32_t>& family_indices,
+               text::FontGlyphs&& font_glyphs);
 
 public:
         Glyphs(unsigned size,
@@ -50,7 +57,7 @@ public:
 
         [[nodiscard]] VkImageView image_view() const
         {
-                return image_->image_view().handle();
+                return image_.image_view().handle();
         }
 };
 }
