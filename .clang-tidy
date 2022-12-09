@@ -85,6 +85,8 @@ CheckOptions:
   value: '1'
 - key:   readability-implicit-bool-conversion.AllowPointerConditions
   value: '1'
+- key:   readability-simplify-boolean-expr.SimplifyDeMorgan
+  value: '0'
 - key:   readability-uppercase-literal-suffix.NewSuffixes
   value: 'L;LL;LU;LLU'
 
