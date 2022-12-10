@@ -213,6 +213,8 @@ std::optional<PainterImageParameters> PainterImageDialog::show(
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }

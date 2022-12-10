@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/com/error.h>
+
 #include <algorithm>
 #include <regex>
 #include <sstream>
@@ -271,6 +273,8 @@ std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }

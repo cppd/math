@@ -157,6 +157,7 @@ std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
                 return std::nullopt;
         }
 
+        ASSERT(parameters);
         dialog_parameters().write(*parameters);
 
         return parameters;

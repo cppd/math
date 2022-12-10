@@ -133,6 +133,8 @@ std::optional<FacetObjectParameters> FacetObjectParametersDialog::show(
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }

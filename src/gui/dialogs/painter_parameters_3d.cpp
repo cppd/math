@@ -190,6 +190,8 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }

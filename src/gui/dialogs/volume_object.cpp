@@ -133,6 +133,8 @@ std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }

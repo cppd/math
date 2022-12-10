@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/com/error.h>
+
 #include <mutex>
 
 namespace ns::gui::dialog
@@ -115,6 +117,7 @@ std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
                 return std::nullopt;
         }
 
+        ASSERT(parameters);
         dialog_parameters().write(*parameters);
 
         return parameters;

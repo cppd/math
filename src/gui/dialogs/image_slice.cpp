@@ -193,6 +193,8 @@ std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int
         {
                 return std::nullopt;
         }
+
+        ASSERT(parameters);
         return parameters;
 }
 }
