@@ -260,6 +260,7 @@ MeshData<N, T, Color> create_mesh_data(
 
         MeshData<N, T, Color> res = create_mesh_data<N, T, Color>(reading, clip_plane_equation);
 
+        ASSERT(write_log == start_time.has_value());
         if (write_log)
         {
                 LOG("Painter mesh data created, " + to_string_fixed(duration_from(*start_time), 5)
