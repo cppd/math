@@ -69,6 +69,43 @@ void check_queue_families(
                 error("Error queue families");
         }
 }
+
+void check_required_extensions(
+        const PhysicalDevice& physical_device,
+        const std::unordered_set<std::string>& required_extensions)
+{
+        for (const std::string& extension : required_extensions)
+        {
+                if (!physical_device.extensions().contains(extension))
+                {
+                        error("Vulkan physical device does not support required extension " + extension);
+                }
+        }
+}
+
+std::string info_string(
+        const PhysicalDevice& physical_device,
+        const std::unordered_set<std::string>& required_extensions,
+        const PhysicalDeviceFeatures& required_features)
+{
+        std::string info;
+
+        info += "Vulkan device name: ";
+        info += static_cast<const char*>(physical_device.properties().properties_10.deviceName);
+
+        info += "\nVulkan device API version: ";
+        info += api_version_to_string(physical_device.properties().properties_10.apiVersion);
+
+        info += "\nVulkan device extensions: {";
+        info += strings_to_sorted_string(required_extensions, ", ");
+        info += "}";
+
+        info += "\nVulkan device features: {";
+        info += strings_to_sorted_string(features_to_strings(required_features, true), ", ");
+        info += "}";
+
+        return info;
+}
 }
 
 handle::Device create_device(
@@ -78,6 +115,9 @@ handle::Device create_device(
         const PhysicalDeviceFeatures& required_features)
 {
         check_queue_families(*physical_device, queue_families);
+        check_required_extensions(*physical_device, required_extensions);
+
+        LOG(info_string(*physical_device, required_extensions, required_features));
 
         std::vector<std::vector<float>> queue_priorities(queue_families.size());
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos(queue_families.size());
@@ -96,39 +136,20 @@ handle::Device create_device(
                 ++i;
         }
 
-        std::string info;
-
-        info = std::string("Vulkan device name: ")
-               + static_cast<const char*>(physical_device->properties().properties_10.deviceName);
-        info += "\nVulkan device API version: "
-                + api_version_to_string(physical_device->properties().properties_10.apiVersion);
-
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
 
-        for (const std::string& extension : required_extensions)
-        {
-                if (!physical_device->extensions().contains(extension))
-                {
-                        error("Vulkan physical device does not support required extension " + extension);
-                }
-        }
         const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
-        info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
 
         VkPhysicalDeviceFeatures2 features_2;
         PhysicalDeviceFeatures features;
         make_physical_device_features(required_features, &features_2, &features);
         create_info.pNext = &features_2;
-        info += "\nVulkan device features: {"
-                + strings_to_sorted_string(features_to_strings(required_features, true), ", ") + "}";
-
-        LOG(info);
 
         return {physical_device->device(), create_info};
 }
