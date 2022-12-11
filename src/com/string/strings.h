@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
+        requires(std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
 std::string strings_to_sorted_string(std::vector<T>&& strings, const std::string_view separator)
 {
         if (strings.empty())
@@ -50,7 +51,7 @@ std::string strings_to_sorted_string(std::vector<T>&& strings, const std::string
 }
 
 template <typename T>
-std::string strings_to_sorted_string(const std::vector<T>& strings, const std::string_view separator)
+std::string strings_to_sorted_string(const T& strings, const std::string_view separator)
 {
         if (strings.empty())
         {
@@ -59,10 +60,10 @@ std::string strings_to_sorted_string(const std::vector<T>& strings, const std::s
 
         if (strings.size() == 1)
         {
-                return std::string(strings.front());
+                return std::string(*std::cbegin(strings));
         }
 
-        return strings_to_sorted_string(std::vector<std::string_view>(strings.cbegin(), strings.cend()), separator);
+        return strings_to_sorted_string(
+                std::vector<std::string_view>(std::cbegin(strings), std::cend(strings)), separator);
 }
-
 }
