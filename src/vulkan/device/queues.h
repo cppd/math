@@ -30,8 +30,8 @@ namespace ns::vulkan
 {
 struct QueueFamilyInfo final
 {
-        std::uint32_t index;
-        std::uint32_t count;
+        std::uint32_t family_index;
+        std::uint32_t queue_count;
 };
 
 struct QueueFamilyDevice final
@@ -46,7 +46,7 @@ struct QueueDistribution final
         std::vector<QueueFamilyDevice> device_queues;
 };
 
-QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& data);
+QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& infos);
 
 std::string device_queues_description(
         const std::vector<std::string_view>& names,

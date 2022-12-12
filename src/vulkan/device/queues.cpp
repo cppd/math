@@ -106,28 +106,29 @@ std::string create_queue_description_string(
 }
 }
 
-QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& data)
+QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& infos)
 {
         QueueDistribution distribution;
 
-        for (const QueueFamilyInfo& entry : data)
+        for (const QueueFamilyInfo& info : infos)
         {
-                distribution.index_to_count[entry.index] = std::min(
-                        distribution.index_to_count[entry.index] + entry.count,
-                        physical_device.queue_families()[entry.index].queueCount);
+                distribution.index_to_count[info.family_index] = std::min(
+                        distribution.index_to_count[info.family_index] + info.queue_count,
+                        physical_device.queue_families()[info.family_index].queueCount);
         }
 
-        distribution.device_queues.reserve(data.size());
+        distribution.device_queues.reserve(infos.size());
 
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
 
-        for (const QueueFamilyInfo& entry : data)
+        for (const QueueFamilyInfo& info : infos)
         {
                 std::vector<std::uint32_t> device_queues = distribute_device_queues(
-                        entry.count, entry.index, distribution.index_to_count[entry.index], &queue_count);
+                        info.queue_count, info.family_index, distribution.index_to_count[info.family_index],
+                        &queue_count);
 
                 distribution.device_queues.push_back(
-                        {.family_index = entry.index, .device_queues = std::move(device_queues)});
+                        {.family_index = info.family_index, .device_queues = std::move(device_queues)});
         }
 
         return distribution;

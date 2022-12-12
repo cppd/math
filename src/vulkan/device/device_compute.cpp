@@ -80,8 +80,8 @@ DeviceCompute::DeviceCompute(
         const std::vector<QueueFamilyInfo> family_info = [&]
         {
                 std::vector<QueueFamilyInfo> res(2);
-                res[COMPUTE] = {.index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
-                res[TRANSFER] = {.index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
+                res[COMPUTE] = {.family_index = compute_family_index_, .queue_count = COMPUTE_QUEUE_COUNT};
+                res[TRANSFER] = {.family_index = transfer_family_index_, .queue_count = TRANSFER_QUEUE_COUNT};
                 return res;
         }();
 

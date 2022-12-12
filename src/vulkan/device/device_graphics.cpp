@@ -98,11 +98,13 @@ DeviceGraphics::DeviceGraphics(
         {
                 std::vector<QueueFamilyInfo> res(4);
                 res[GRAPHICS_COMPUTE] = {
-                        .index = graphics_compute_family_index_,
-                        .count = GRAPHICS_COMPUTE_QUEUE_COUNT};
-                res[COMPUTE] = {.index = compute_family_index_, .count = COMPUTE_QUEUE_COUNT};
-                res[TRANSFER] = {.index = transfer_family_index_, .count = TRANSFER_QUEUE_COUNT};
-                res[PRESENTATION] = {.index = presentation_family_index_, .count = PRESENTATION_QUEUE_COUNT};
+                        .family_index = graphics_compute_family_index_,
+                        .queue_count = GRAPHICS_COMPUTE_QUEUE_COUNT};
+                res[COMPUTE] = {.family_index = compute_family_index_, .queue_count = COMPUTE_QUEUE_COUNT};
+                res[TRANSFER] = {.family_index = transfer_family_index_, .queue_count = TRANSFER_QUEUE_COUNT};
+                res[PRESENTATION] = {
+                        .family_index = presentation_family_index_,
+                        .queue_count = PRESENTATION_QUEUE_COUNT};
                 return res;
         }();
 
