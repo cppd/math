@@ -52,44 +52,63 @@ struct Check final
         static_assert(RGB<T>(0.1, 0.2, 0.3) == RGB<T>(0.1, 0.2, 0.3));
         static_assert(RGB<T>(0.1, 0.2, 0.3) != RGB<T>(0.4, 0.5, 0.6));
 
-        // clang-format off
-
         static_assert(
                 RGB<T>(0.1, 0.2, 0.3) + RGB<T>(0.4, 0.5, 0.6)
                 == RGB<T>(T{0.1} + T{0.4}, T{0.2} + T{0.5}, T{0.3} + T{0.6}));
         static_assert(
-                [] { RGB<T> r(0.1, 0.2, 0.3); r += RGB<T>(0.4, 0.5, 0.6); return r; }()
+                []
+                {
+                        RGB<T> r(0.1, 0.2, 0.3);
+                        r += RGB<T>(0.4, 0.5, 0.6);
+                        return r;
+                }()
                 == RGB<T>(T{0.1} + T{0.4}, T{0.2} + T{0.5}, T{0.3} + T{0.6}));
 
         static_assert(
                 RGB<T>(0.4, 0.5, 0.6) - RGB<T>(0.1, 0.2, 0.3)
                 == RGB<T>(T{0.4} - T{0.1}, T{0.5} - T{0.2}, T{0.6} - T{0.3}));
         static_assert(
-                [] { RGB<T> r(0.4, 0.5, 0.6); r -= RGB<T>(0.1, 0.2, 0.3); return r; }()
+                []
+                {
+                        RGB<T> r(0.4, 0.5, 0.6);
+                        r -= RGB<T>(0.1, 0.2, 0.3);
+                        return r;
+                }()
                 == RGB<T>(T{0.4} - T{0.1}, T{0.5} - T{0.2}, T{0.6} - T{0.3}));
 
         static_assert(
                 RGB<T>(0.1, 0.2, 0.3) * RGB<T>(0.4, 0.5, 0.6)
                 == RGB<T>(T{0.1} * T{0.4}, T{0.2} * T{0.5}, T{0.3} * T{0.6}));
         static_assert(
-                [] { RGB<T> r(0.1, 0.2, 0.3); r *= RGB<T>(0.4, 0.5, 0.6); return r; }()
+                []
+                {
+                        RGB<T> r(0.1, 0.2, 0.3);
+                        r *= RGB<T>(0.4, 0.5, 0.6);
+                        return r;
+                }()
                 == RGB<T>(T{0.1} * T{0.4}, T{0.2} * T{0.5}, T{0.3} * T{0.6}));
 
-        static_assert(RGB<T>(0.1, 0.2, 0.3) * 4.1
-                == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
+        static_assert(RGB<T>(0.1, 0.2, 0.3) * 4.1 == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
         static_assert(
-                [] { RGB<T> r(0.1, 0.2, 0.3); r *= 4.1; return r; }()
+                []
+                {
+                        RGB<T> r(0.1, 0.2, 0.3);
+                        r *= 4.1;
+                        return r;
+                }()
                 == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
 
-        static_assert(RGB<T>(0.1, 0.2, 0.3) / 4.1
-                == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
+        static_assert(RGB<T>(0.1, 0.2, 0.3) / 4.1 == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
         static_assert(
-                [] { RGB<T> r(0.1, 0.2, 0.3); r /= 4.1; return r; }()
+                []
+                {
+                        RGB<T> r(0.1, 0.2, 0.3);
+                        r /= 4.1;
+                        return r;
+                }()
                 == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
 
         static_assert(RGB<T>(0.1, 0.2, 0.3) * 4.1 == 4.1 * RGB<T>(0.1, 0.2, 0.3));
-
-        // clang-format on
 };
 template struct Check<float>;
 template struct Check<double>;
