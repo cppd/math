@@ -43,7 +43,7 @@ BraceWrapping:
         SplitEmptyNamespace: true
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
-BreakBeforeConceptDeclarations: true
+BreakBeforeConceptDeclarations: Always
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
@@ -77,9 +77,10 @@ IndentCaseLabels: false
 IndentExternBlock: NoIndent
 IndentGotoLabels: false
 IndentPPDirectives: None
-IndentRequires: true
+IndentRequiresClause: true
 IndentWidth: 8
 IndentWrappedFunctionNames: true
+InsertBraces: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: Signature
 MaxEmptyLinesToKeep: 1
@@ -101,6 +102,7 @@ QualifierAlignment: Custom
 QualifierOrder: ['inline', 'static', 'constexpr', 'const', 'volatile', 'type', 'restrict']
 ReferenceAlignment: Left
 ReflowComments: true
+RequiresClausePosition: OwnLine
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SortIncludes: CaseSensitive
@@ -122,6 +124,8 @@ SpaceBeforeParensOptions:
         AfterFunctionDefinitionName: false
         AfterIfMacros: false
         AfterOverloadedOperator: false
+        AfterRequiresInClause: true
+        AfterRequiresInExpression: true
         BeforeNonEmptyParentheses: false
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
