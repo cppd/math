@@ -45,14 +45,14 @@ T export_mpz(const mpz_t mpz)
 }
 
 template <typename T>
-        requires(static_cast<T>(-1) > T{0})
+        requires (static_cast<T>(-1) > T{0})
 T to_int(const mpz_t mpz)
 {
         return export_mpz<T>(mpz);
 }
 
 template <typename T>
-        requires(static_cast<T>(-1) < T{0})
+        requires (static_cast<T>(-1) < T{0})
 T to_int(const mpz_t mpz)
 {
         if (mpz_sgn(mpz) >= 0)

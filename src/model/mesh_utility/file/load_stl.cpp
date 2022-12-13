@@ -46,7 +46,7 @@ constexpr std::uintmax_t BINARY_DATA_OFFSET = BINARY_NUMBER_OF_TRIANGLES_OFFSET 
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
 template <std::size_t N>
-constexpr std::uintmax_t BINARY_FACET_SIZE = N* N * sizeof(float);
+constexpr std::uintmax_t BINARY_FACET_SIZE = N * N * sizeof(float);
 
 template <bool BYTE_SWAP>
 std::uint32_t binary_number_of_triangles(const std::vector<char>& data)

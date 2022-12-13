@@ -262,11 +262,11 @@ void to_string(std::basic_string_view<T>) = delete;
 //
 
 template <typename T>
-[[nodiscard]] std::string to_string(const T& data) requires requires
-{
-        std::begin(data);
-        std::end(data);
-}
+[[nodiscard]] std::string to_string(const T& data)
+        requires requires {
+                         std::begin(data);
+                         std::end(data);
+                 }
 {
         auto i = std::begin(data);
         if (i == std::end(data))

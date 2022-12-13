@@ -41,7 +41,7 @@ void sort_and_unique(T* const v)
 // }
 
 template <typename T>
-        requires(!std::is_pointer_v<T>)
+        requires (!std::is_pointer_v<T>)
 [[nodiscard]] T sort_and_unique(T v)
 {
         sort_and_unique(&v);

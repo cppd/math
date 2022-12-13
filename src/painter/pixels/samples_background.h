@@ -38,7 +38,7 @@ public:
         }
 
         template <typename T>
-                requires(std::is_same_v<T, typename Color::DataType>)
+                requires (std::is_same_v<T, typename Color::DataType>)
         BackgroundSamples(const T sum_weight, const T min_weight, const T max_weight)
                 : sum_weight_(sum_weight),
                   min_weight_(min_weight),

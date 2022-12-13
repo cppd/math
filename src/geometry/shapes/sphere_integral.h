@@ -168,7 +168,7 @@ Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],x]]
 pow(sin(x), n - 1) / (n - 1)
 */
 template <unsigned N, typename T>
-        requires(N >= 3)
+        requires (N >= 3)
 T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -180,7 +180,7 @@ T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::typ
         return SPHERE_AREA<N - 1, T> * (power<N - 1>(std::sin(b)) - power<N - 1>(std::sin(a))) / (N - 1);
 }
 template <unsigned N, typename T>
-        requires(N == 2)
+        requires (N == 2)
 T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
 {
         static_assert(std::is_floating_point_v<T>);

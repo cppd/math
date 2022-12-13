@@ -37,7 +37,7 @@ inline constexpr std::size_t BASE_ALIGNMENT = round_up(VECTOR_ALIGNMENT<N, T>, V
 }
 
 template <std::size_t N, typename T>
-        requires(N >= 2 && N <= 4 && (std::is_same_v<T, float> || std::is_same_v<T, double>))
+        requires (N >= 2 && N <= 4 && (std::is_same_v<T, float> || std::is_same_v<T, double>))
 struct Matrix final
 {
         struct alignas(implementation::BASE_ALIGNMENT<N, T>) Column final

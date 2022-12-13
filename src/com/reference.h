@@ -24,10 +24,7 @@ namespace ns
 namespace reference_implementation
 {
 template <typename T>
-concept Indirection = requires(T&& v)
-{
-        *v;
-};
+concept Indirection = requires (T&& v) { *v; };
 }
 
 template <typename T>
@@ -37,20 +34,20 @@ template <typename T>
 }
 
 template <typename T>
-        requires(!reference_implementation::Indirection<T>)
+        requires (!reference_implementation::Indirection<T>)
 [[nodiscard]] decltype(auto) to_ref(T&& object)
 {
         return std::forward<T>(object);
 }
 
 template <typename T>
-        requires(reference_implementation::Indirection<T>)
+        requires (reference_implementation::Indirection<T>)
 [[nodiscard]] decltype(auto) to_ref(T& object)
 {
         return *object;
 }
 
 template <typename T>
-        requires(reference_implementation::Indirection<T>)
+        requires (reference_implementation::Indirection<T>)
 void to_ref(const T&& object) = delete;
 }

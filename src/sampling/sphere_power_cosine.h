@@ -160,7 +160,7 @@ public:
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-        requires(N > 3)
+        requires (N > 3)
 Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_identity_t<T> power)
 {
         namespace impl = sphere_power_cosine_implementation;
@@ -169,7 +169,7 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_id
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-        requires(N == 3)
+        requires (N == 3)
 Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_identity_t<T> power)
 {
         Vector<N - 1, T> v;

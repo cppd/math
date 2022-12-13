@@ -22,10 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::com
 {
 template <typename Dst, typename Src>
-void add_optional(std::optional<Dst>* const dst, Src&& src) requires requires
-{
-        **dst = src;
-}
+void add_optional(std::optional<Dst>* const dst, Src&& src)
+        requires requires { **dst = src; }
 {
         if (*dst)
         {
@@ -38,10 +36,8 @@ void add_optional(std::optional<Dst>* const dst, Src&& src) requires requires
 }
 
 template <typename Dst, typename Src>
-void add_optional(std::optional<Dst>* const dst, Src&& src) requires requires
-{
-        **dst = *src;
-}
+void add_optional(std::optional<Dst>* const dst, Src&& src)
+        requires requires { **dst = *src; }
 {
         if (src)
         {

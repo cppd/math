@@ -25,12 +25,12 @@ namespace ns
 namespace container_implementation
 {
 template <typename T>
-concept Container = requires(const T& v)
-{
-        std::data(v);
-        std::size(v);
-        v[0];
-};
+concept Container =
+        requires (const T& v) {
+                std::data(v);
+                std::size(v);
+                v[0];
+        };
 }
 
 template <typename T>

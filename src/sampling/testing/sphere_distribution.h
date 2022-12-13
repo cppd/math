@@ -55,10 +55,8 @@ class SphereDistribution final
                 const double area =
                         static_cast<double>(uniform_count) / all_uniform_count * geometry::SPHERE_AREA<N, double>;
 
-                constexpr bool FUNCTION = requires
-                {
-                        geometry::sphere_simplex_area(sphere_mesh_.facet_vertices(facet_index));
-                };
+                constexpr bool FUNCTION =
+                        requires { geometry::sphere_simplex_area(sphere_mesh_.facet_vertices(facet_index)); };
                 static_assert(FUNCTION || N >= 4);
 
                 if constexpr (FUNCTION)

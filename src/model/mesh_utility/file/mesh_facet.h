@@ -90,7 +90,7 @@ void check_facet_indices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-        requires(N == 3)
+        requires (N == 3)
 [[nodiscard]] bool facet_dimension_is_correct(
         const std::vector<Vector<N, float>>& vertices,
         const std::array<int, N>& indices)
@@ -119,10 +119,8 @@ template <std::size_t N>
 template <std::size_t N>
 void remove_facets_with_incorrect_dimension(Mesh<N>* const mesh)
 {
-        static constexpr bool CHECK = requires
-        {
-                facet_dimension_is_correct(mesh->vertices, mesh->facets.front().vertices);
-        };
+        static constexpr bool CHECK =
+                requires { facet_dimension_is_correct(mesh->vertices, mesh->facets.front().vertices); };
 
         if constexpr (!CHECK)
         {

@@ -39,7 +39,7 @@ template <typename T>
         unsigned max_shared_memory_size);
 
 template <typename Dst, typename Src>
-        requires(!std::is_same_v<Dst, Src>)
+        requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
 {
         std::vector<std::complex<Dst>> res;
@@ -52,14 +52,14 @@ template <typename Dst, typename Src>
 }
 
 template <typename Dst, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) conv(const std::vector<std::complex<Src>>& data)
 {
         return data;
 }
 
 template <typename Dst, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) conv(std::vector<std::complex<Src>>&& data)
 {
         return std::move(data);

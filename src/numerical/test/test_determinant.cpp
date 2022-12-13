@@ -63,8 +63,9 @@ static_assert(TEST_COFACTOR_EXPANSION<long double>);
 static_assert(TEST_COFACTOR_EXPANSION<__float128>);
 
 template <typename T>
-constexpr bool TEST_ROW_REDUCTION = 1'868'201'030'776'499 <= determinant_gauss(VECTORS<T>)
-                                    && determinant_gauss(VECTORS<T>) <= 1'868'201'030'776'500;
+constexpr bool TEST_ROW_REDUCTION =
+        1'868'201'030'776'499 <= determinant_gauss(VECTORS<T>)
+        && determinant_gauss(VECTORS<T>) <= 1'868'201'030'776'500;
 static_assert(TEST_ROW_REDUCTION<float>);
 static_assert(TEST_ROW_REDUCTION<double>);
 static_assert(TEST_ROW_REDUCTION<long double>);

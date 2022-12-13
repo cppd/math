@@ -114,7 +114,7 @@ public:
         }
 
         template <typename F>
-                requires(!std::is_same_v<std::packaged_task<void()>, std::remove_cvref_t<F>>)
+                requires (!std::is_same_v<std::packaged_task<void()>, std::remove_cvref_t<F>>)
         void add(F&& f) noexcept
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());

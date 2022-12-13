@@ -58,8 +58,8 @@ class Matrix final
                 (std::make_integer_sequence<std::size_t, ROWS>());
         }
 
-        static constexpr std::array<Vector<ROWS, T>, ROWS> make_diagonal_matrix(const Vector<ROWS, T>& v) requires(
-                COLUMNS == ROWS)
+        static constexpr std::array<Vector<ROWS, T>, ROWS> make_diagonal_matrix(const Vector<ROWS, T>& v)
+                requires (COLUMNS == ROWS)
         {
                 return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
                 {
@@ -92,7 +92,7 @@ public:
         }
 
         template <typename... Args>
-                requires((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
+                requires ((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
         explicit constexpr Matrix(Args&&... args)
                 : rows_{std::forward<Args>(args)...}
         {
@@ -100,12 +100,14 @@ public:
 
         template <typename Arg>
                 requires std::is_convertible_v<Arg, T>
-        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS)
+        explicit constexpr Matrix(const Arg& v)
+                requires (COLUMNS == ROWS)
                 : rows_(make_diagonal_matrix(v))
         {
         }
 
-        explicit constexpr Matrix(const Vector<ROWS, T>& v) requires(COLUMNS == ROWS)
+        explicit constexpr Matrix(const Vector<ROWS, T>& v)
+                requires (COLUMNS == ROWS)
                 : rows_(make_diagonal_matrix(v))
         {
         }
@@ -154,17 +156,20 @@ public:
                 return res;
         }
 
-        [[nodiscard]] T determinant() const requires(ROWS == COLUMNS)
+        [[nodiscard]] T determinant() const
+                requires (ROWS == COLUMNS)
         {
                 return numerical::determinant(rows_);
         }
 
-        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const requires(ROWS == COLUMNS)
+        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const
+                requires (ROWS == COLUMNS)
         {
                 return Matrix<ROWS, ROWS, T>(numerical::inverse(rows_));
         }
 
-        [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const requires(ROWS == COLUMNS)
+        [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const
+                requires (ROWS == COLUMNS)
         {
                 return numerical::linear_solve<ROWS, T>(rows_, b);
         }
@@ -268,7 +273,7 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-        requires(!std::is_same_v<Dst, Src>)
+        requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
 {
         Matrix<ROWS, COLUMNS, Dst> res;
@@ -283,14 +288,14 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
 {
         return m;
 }
 
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) to_matrix(Matrix<ROWS, COLUMNS, Src>&& m)
 {
         return std::move(m);

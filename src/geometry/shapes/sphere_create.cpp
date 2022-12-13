@@ -337,7 +337,7 @@ void add_vertices(
 }
 
 template <std::size_t N, typename T>
-        requires(N >= 4)
+        requires (N >= 4)
 void divide_facets(
         const unsigned min_facet_count,
         const std::vector<std::array<Vector<N, T>, N>>& facets,

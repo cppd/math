@@ -263,7 +263,8 @@ public:
                 return bounding_box_implementation::volume(diagonal());
         }
 
-        [[nodiscard]] constexpr T surface() const requires(N >= 2)
+        [[nodiscard]] constexpr T surface() const
+                requires (N >= 2)
         {
                 return bounding_box_implementation::surface(diagonal());
         }

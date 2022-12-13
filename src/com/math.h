@@ -27,10 +27,7 @@ namespace ns
 template <typename T>
 [[nodiscard]] constexpr T absolute(const T& v)
 {
-        constexpr bool HAS_ABS = requires
-        {
-                std::abs(v);
-        };
+        constexpr bool HAS_ABS = requires { std::abs(v); };
         if constexpr (HAS_ABS)
         {
                 if (!std::is_constant_evaluated())

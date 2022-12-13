@@ -208,7 +208,7 @@ template <std::size_t N, typename T>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(!std::is_same_v<Dst, Src>)
+        requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] constexpr Vector<N, Dst> to_vector(const Vector<N, Src>& v)
 {
         Vector<N, Dst> res;
@@ -220,14 +220,14 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] constexpr decltype(auto) to_vector(const Vector<N, Src>& v)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] constexpr decltype(auto) to_vector(Vector<N, Src>&& v)
 {
         return std::move(v);
@@ -245,7 +245,7 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(!std::is_same_v<Dst, Src>)
+        requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] std::vector<Vector<N, Dst>> to_vector(const std::vector<Vector<N, Src>>& v)
 {
         std::vector<Vector<N, Dst>> res;
@@ -258,14 +258,14 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) to_vector(const std::vector<Vector<N, Src>>& v)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-        requires(std::is_same_v<Dst, Src>)
+        requires (std::is_same_v<Dst, Src>)
 [[nodiscard]] decltype(auto) to_vector(std::vector<Vector<N, Src>>&& v)
 {
         return std::move(v);

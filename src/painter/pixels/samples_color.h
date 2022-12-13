@@ -46,7 +46,7 @@ public:
         }
 
         template <typename T>
-                requires(std::is_same_v<T, typename Color::DataType>)
+                requires (std::is_same_v<T, typename Color::DataType>)
         ColorSamples(
                 const Color& sum,
                 const Color& min,

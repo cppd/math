@@ -41,7 +41,7 @@ constexpr std::optional<Vector<N, T>> EMPTY_GEOMETRIC_NORMAL;
 constexpr std::size_t GROUP_SIZE = 0x1000;
 
 template <bool ANY, std::size_t N, typename T, typename Color>
-        requires(!ANY)
+        requires (!ANY)
 [[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 {
         const SurfaceIntersection surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
@@ -54,7 +54,7 @@ template <bool ANY, std::size_t N, typename T, typename Color>
 }
 
 template <bool ANY, std::size_t N, typename T, typename Color>
-        requires(ANY)
+        requires (ANY)
 [[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, const Ray<N, T>& ray)
 {
         return scene.intersect_any(EMPTY_GEOMETRIC_NORMAL<N, T>, ray, Limits<T>::infinity());

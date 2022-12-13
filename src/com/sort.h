@@ -35,8 +35,8 @@ void swap_sort(T& a, T& b)
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> >= 6)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> >= 6)
+T&& sort(T&& v)
 {
         std::sort(v.begin(), v.end());
 
@@ -44,15 +44,15 @@ T && sort(T&& v)
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> == 1)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> == 1)
+T&& sort(T&& v)
 {
         return std::forward<T>(v);
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> == 2)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> == 2)
+T&& sort(T&& v)
 {
         namespace impl = sort_implementation;
 
@@ -62,8 +62,8 @@ T && sort(T&& v)
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> == 3)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> == 3)
+T&& sort(T&& v)
 {
         namespace impl = sort_implementation;
 
@@ -75,8 +75,8 @@ T && sort(T&& v)
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> == 4)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> == 4)
+T&& sort(T&& v)
 {
         namespace impl = sort_implementation;
 
@@ -90,8 +90,8 @@ T && sort(T&& v)
 }
 
 template <typename T>
-        requires(std::tuple_size_v<std::remove_reference_t<T>> == 5)
-T && sort(T&& v)
+        requires (std::tuple_size_v<std::remove_reference_t<T>> == 5)
+T&& sort(T&& v)
 {
         namespace impl = sort_implementation;
 

@@ -288,7 +288,7 @@ void thread_function(
 }
 
 template <std::size_t N>
-        requires(N == 3)
+        requires (N == 3)
 std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,
@@ -323,7 +323,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
 }
 
 template <std::size_t N>
-        requires(N >= 4)
+        requires (N >= 4)
 std::function<void(progress::RatioList*)> action_painter_function(
         std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>&& objects,
         const view::info::Camera& camera,

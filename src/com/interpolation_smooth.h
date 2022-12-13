@@ -43,7 +43,7 @@ namespace interpolation_smooth_implementation
 //  PlotLegends -> "Expressions"]
 
 template <Smooth SMOOTH, typename T>
-        requires(SMOOTH == Smooth::N_0)
+        requires (SMOOTH == Smooth::N_0)
 [[nodiscard]] constexpr T smooth(const T t)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -52,7 +52,7 @@ template <Smooth SMOOTH, typename T>
 }
 
 template <Smooth SMOOTH, typename T>
-        requires(SMOOTH == Smooth::N_1)
+        requires (SMOOTH == Smooth::N_1)
 [[nodiscard]] constexpr T smooth(const T t)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -61,7 +61,7 @@ template <Smooth SMOOTH, typename T>
 }
 
 template <Smooth SMOOTH, typename T>
-        requires(SMOOTH == Smooth::N_2)
+        requires (SMOOTH == Smooth::N_2)
 [[nodiscard]] constexpr T smooth(const T t)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -70,7 +70,7 @@ template <Smooth SMOOTH, typename T>
 }
 
 template <Smooth SMOOTH, typename T>
-        requires(SMOOTH == Smooth::N_3)
+        requires (SMOOTH == Smooth::N_3)
 [[nodiscard]] constexpr T smooth(const T t)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -80,7 +80,7 @@ template <Smooth SMOOTH, typename T>
 }
 
 template <Smooth SMOOTH, typename T>
-        requires(SMOOTH == Smooth::N_4)
+        requires (SMOOTH == Smooth::N_4)
 [[nodiscard]] constexpr T smooth(const T t)
 {
         static_assert(std::is_floating_point_v<T>);

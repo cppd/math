@@ -27,10 +27,7 @@ constexpr T bit_width(T value)
 {
         static_assert(std::is_unsigned_v<T> || std::is_same_v<std::remove_cv_t<T>, unsigned __int128>);
 
-        constexpr bool HAS_BIT_WIDTH = requires
-        {
-                std::bit_width(value);
-        };
+        constexpr bool HAS_BIT_WIDTH = requires { std::bit_width(value); };
 
         if constexpr (HAS_BIT_WIDTH)
         {

@@ -60,47 +60,56 @@ public:
                 return extent_;
         }
 
-        [[nodiscard]] T x0() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T x0() const
+                requires (N == 1 || N == 2 || N == 3)
         {
                 return offset0_[0];
         }
 
-        [[nodiscard]] T y0() const requires(N == 2 || N == 3)
+        [[nodiscard]] T y0() const
+                requires (N == 2 || N == 3)
         {
                 return offset0_[1];
         }
 
-        [[nodiscard]] T z0() const requires(N == 3)
+        [[nodiscard]] T z0() const
+                requires (N == 3)
         {
                 return offset0_[2];
         }
 
-        [[nodiscard]] T x1() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T x1() const
+                requires (N == 1 || N == 2 || N == 3)
         {
                 return offset1_[0];
         }
 
-        [[nodiscard]] T y1() const requires(N == 2 || N == 3)
+        [[nodiscard]] T y1() const
+                requires (N == 2 || N == 3)
         {
                 return offset1_[1];
         }
 
-        [[nodiscard]] T z1() const requires(N == 3)
+        [[nodiscard]] T z1() const
+                requires (N == 3)
         {
                 return offset1_[2];
         }
 
-        [[nodiscard]] T width() const requires(N == 1 || N == 2 || N == 3)
+        [[nodiscard]] T width() const
+                requires (N == 1 || N == 2 || N == 3)
         {
                 return extent_[0];
         }
 
-        [[nodiscard]] T height() const requires(N == 2 || N == 3)
+        [[nodiscard]] T height() const
+                requires (N == 2 || N == 3)
         {
                 return extent_[1];
         }
 
-        [[nodiscard]] T depth() const requires(N == 3)
+        [[nodiscard]] T depth() const
+                requires (N == 3)
         {
                 return extent_[2];
         }
