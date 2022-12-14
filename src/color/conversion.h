@@ -140,7 +140,7 @@ inline constexpr std::array<float, 256> SRGB_UINT8_TO_RGB_FLOAT =
 template <typename T>
 T linear_float_to_srgb_float(const T c)
 {
-        static_assert(std::is_same_v<T, float>);
+        static_assert(std::is_floating_point_v<T>);
 
         if (c >= 1)
         {
@@ -160,7 +160,7 @@ T linear_float_to_srgb_float(const T c)
 template <typename T>
 T srgb_float_to_linear_float(const T c)
 {
-        static_assert(std::is_same_v<T, float>);
+        static_assert(std::is_floating_point_v<T>);
 
         if (c >= 1)
         {
