@@ -15,48 +15,58 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 0
+#include "../conversion.h"
 
 #include "conversion.h"
 
+#include <src/com/type/limit.h>
+
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
-namespace ns::color
+namespace ns::color::table
 {
-std::string lookup_table_float()
+std::string conversion_lookup_table_float()
 {
+        const std::string new_line = '\n' + std::string(8, ' ');
+
         std::ostringstream oss;
         oss << std::setprecision(Limits<float>::max_digits10());
         oss << std::scientific;
+
         oss << "// clang-format off\n";
         oss << "inline constexpr std::array<float, 256> SRGB_UINT8_TO_RGB_FLOAT =\n";
         oss << "{";
-        for (unsigned i = 0; i <= 255; ++i)
+        for (int i = 0; i <= 255; ++i)
         {
                 oss << ((i != 0) ? "," : "");
-                oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
+                oss << (((i % 4) != 0) ? " " : new_line);
                 const long double srgb_float = i / 255.0L;
-                const float linear_float = srgb_float_to_linear_float(srgb_float);
-                oss << linear_float;
+                const long double linear_float = srgb_float_to_linear_float(srgb_float);
+                oss << static_cast<float>(linear_float);
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
+
         return oss.str();
 }
 
-std::string lookup_table_uint16()
+std::string conversion_lookup_table_uint16()
 {
+        constexpr long double MAX_UINT16 = Limits<std::uint16_t>::max();
+        const std::string new_line = '\n' + std::string(8, ' ');
+
         std::ostringstream oss;
         oss << std::setfill(' ');
+
         oss << "// clang-format off\n";
         oss << "inline constexpr std::array<std::uint16_t, 256> SRGB_UINT8_TO_RGB_UINT16 =\n";
         oss << "{";
-        constexpr long double MAX_UINT16 = Limits<std::uint16_t>::max();
-        for (unsigned i = 0; i <= 255; ++i)
+        for (int i = 0; i <= 255; ++i)
         {
                 oss << ((i != 0) ? "," : "");
-                oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
+                oss << (((i % 8) != 0) ? " " : new_line);
                 const long double srgb_float = i / 255.0L;
                 const long double linear_float = srgb_float_to_linear_float(srgb_float);
                 const std::uint16_t linear_uint16 = std::lround(linear_float * MAX_UINT16);
@@ -64,7 +74,7 @@ std::string lookup_table_uint16()
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
+
         return oss.str();
 }
 }
-#endif
