@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/bits.h>
+#include <src/com/bit/width.h>
 
 #include <cstddef>
 
