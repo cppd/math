@@ -58,7 +58,7 @@ std::string conversion_lookup_table_uint16()
         const std::string new_line = '\n' + std::string(8, ' ');
 
         std::ostringstream oss;
-        oss << std::setfill(' ');
+        oss << std::hex << std::setfill('0');
 
         oss << "// clang-format off\n";
         oss << "inline constexpr std::array<std::uint16_t, 256> SRGB_UINT8_TO_RGB_UINT16 =\n";
@@ -70,7 +70,7 @@ std::string conversion_lookup_table_uint16()
                 const long double srgb_float = i / 255.0L;
                 const long double linear_float = srgb_float_to_linear_float(srgb_float);
                 const std::uint16_t linear_uint16 = std::lround(linear_float * MAX_UINT16);
-                oss << std::setw(5) << linear_uint16;
+                oss << "0x" << std::setw(4) << linear_uint16;
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
