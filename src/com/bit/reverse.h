@@ -116,39 +116,55 @@ constexpr std::uint64_t bit_reverse_64(const std::uint64_t v)
                | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 56) & 0xff]));
 }
 
-inline void create_bit_reverse_lookup_table(const int size, std::vector<int>* const data)
+class BitReverse
 {
-        if (size <= 0)
+        static std::vector<int> create_table(const int size)
         {
-                error("Table size " + std::to_string(size) + " is not positive");
-        }
-        if (!std::has_single_bit(static_cast<unsigned>(size)))
-        {
-                error("Table size " + std::to_string(size) + " is not an integral power of 2");
-        }
-        const int bit_count = std::bit_width(static_cast<unsigned>(size)) - 1;
-        data->resize(size);
-        for (int i = 0; i < size; ++i)
-        {
-                (*data)[i] = bit_reverse(bit_count, i);
-        }
-}
-
-template <typename T>
-void bit_reverse(const std::vector<int>& reverse_lookup, std::vector<T>* const data)
-{
-        if (data->size() != reverse_lookup.size())
-        {
-                error("bit reverse size error");
-        }
-        const int size = data->size();
-        for (int i = 0; i < size; ++i)
-        {
-                const int r = reverse_lookup[i];
-                if (i < r)
+                if (size <= 0)
                 {
-                        std::swap((*data)[i], (*data)[r]);
+                        error("Bit-reversal size " + std::to_string(size) + " is not positive");
+                }
+
+                if (!std::has_single_bit(static_cast<unsigned>(size)))
+                {
+                        error("Bit-reversal size " + std::to_string(size) + " is not an integral power of 2");
+                }
+
+                const int bit_count = std::bit_width(static_cast<unsigned>(size)) - 1;
+                std::vector<int> res(size);
+                for (int i = 0; i < size; ++i)
+                {
+                        res[i] = bit_reverse(bit_count, i);
+                }
+                return res;
+        }
+
+        std::vector<int> table_;
+
+public:
+        explicit BitReverse(const int size)
+                : table_(create_table(size))
+        {
+        }
+
+        template <typename T>
+        void reverse(std::vector<T>* const data) const
+        {
+                if (data->size() != table_.size())
+                {
+                        error("Bit-reversal data size " + std::to_string(data->size()) + " is not equal to "
+                              + std::to_string(table_.size()));
+                }
+
+                const int size = data->size();
+                for (int i = 0; i < size; ++i)
+                {
+                        const int r = table_[i];
+                        if (i < r)
+                        {
+                                std::swap((*data)[i], (*data)[r]);
+                        }
                 }
         }
-}
+};
 }

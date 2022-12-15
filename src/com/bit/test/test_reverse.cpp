@@ -17,7 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../reverse.h"
 
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/test/test.h>
+
+#include <numeric>
+
 namespace ns
+{
+namespace
 {
 static_assert(bit_reverse(4, 0b1011) == 0b1101);
 static_assert(bit_reverse(31, 0b1011001110001111000011111000001) == 0b1000001111100001111000111001101);
@@ -33,4 +41,43 @@ static_assert(
 static_assert(
         bit_reverse(64, 0b1011001110001111000011111000001111110000001111111000000011111111)
         == 0b1111111100000001111111000000111111000001111100001111000111001101);
+
+template <typename T>
+void test(const int size, const std::vector<T>& reversed)
+{
+        std::vector<T> data(size);
+        std::iota(data.begin(), data.end(), 0);
+
+        const BitReverse bit_reverse(size);
+        bit_reverse.reverse(&data);
+
+        if (!(data == reversed))
+        {
+                error("Bit-reversal permutation " + to_string(data) + " are not equal to " + to_string(reversed));
+        }
+}
+
+template <typename T>
+void test()
+{
+        test<T>(1, {0});
+        test<T>(2, {0, 1});
+        test<T>(4, {0, 2, 1, 3});
+        test<T>(8, {0, 4, 2, 6, 1, 5, 3, 7});
+        test<T>(16, {0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15});
+}
+
+void test_bit_reverse()
+{
+        test<int>();
+        test<unsigned int>();
+        test<long long>();
+        test<unsigned long long>();
+        test<float>();
+        test<double>();
+        test<long double>();
+}
+
+TEST_SMALL("Bit Reverse", test_bit_reverse)
+}
 }
