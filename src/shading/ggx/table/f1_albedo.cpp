@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/interpolation.h>
+#include <src/settings/dimensions.h>
 
 #include <cmath>
 #include <sstream>
@@ -280,9 +281,9 @@ void f1_albedo(std::ostringstream& oss)
         oss << "\n";
         write_cosine_weighted_average<N>(cosine_weighted_average, oss);
 }
-}
 
-std::string f1_albedo_tables()
+template <std::size_t... I>
+std::string f1_albedo_tables(std::index_sequence<I...>&&)
 {
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;
@@ -300,17 +301,16 @@ std::string f1_albedo_tables()
         oss << "constexpr std::array<T, 0> " << ALBEDO_COSINE_NAME << ";\n";
         oss << "\n";
 
-        f1_albedo<3>(oss);
-        oss << "\n";
-        f1_albedo<4>(oss);
-        oss << "\n";
-        f1_albedo<5>(oss);
-        oss << "\n";
-        f1_albedo<6>(oss);
+        ((f1_albedo<I>(oss), (oss << "\n")), ...);
 
-        oss << "\n";
         oss << "// clang-format on\n";
 
         return oss.str();
+}
+}
+
+std::string f1_albedo_tables()
+{
+        return f1_albedo_tables(settings::Dimensions());
 }
 }
