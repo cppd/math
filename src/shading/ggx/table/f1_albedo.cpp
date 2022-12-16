@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compute_f1_albedo.h"
+#include "f1_albedo.h"
 
-#include "brdf.h"
-
-#include "../compute/brdf.h"
+#include "../../compute/brdf.h"
+#include "../brdf.h"
 
 #include <src/color/color.h>
 #include <src/com/exponent.h>
@@ -33,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <sstream>
 
-namespace ns::shading::ggx
+namespace ns::shading::ggx::table
 {
 namespace
 {
@@ -283,7 +282,7 @@ void f1_albedo(std::ostringstream& oss)
 }
 }
 
-std::string compute_f1_albedo()
+std::string f1_albedo_tables()
 {
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::shading::ggx
+namespace ns::shading::ggx::table
 {
-std::string compute_f1_albedo();
+std::string f1_albedo_tables();
 }
