@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/random/pcg.h>
+#include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
@@ -30,18 +31,32 @@ namespace ns::numerical
 namespace
 {
 constexpr unsigned SIZE = 256;
+constexpr PCG::result_type PCG_INIT_VALUE{12345};
 
-std::vector<unsigned> permutation_table(const unsigned size)
+template <typename RandomEngine>
+std::vector<unsigned> permutation_table(const unsigned size, RandomEngine& engine)
 {
-        constexpr PCG::result_type PCG_VALUE{12345};
-
         std::vector<unsigned> data(2 * size);
 
         const auto middle = data.begin() + data.size() / 2;
 
         std::iota(data.begin(), middle, 0);
-        std::shuffle(data.begin(), middle, PCG(PCG_VALUE));
+        std::shuffle(data.begin(), middle, engine);
         std::copy(data.begin(), middle, middle);
+
+        return data;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Vector<N, T>> gradients(const unsigned size, RandomEngine& engine)
+{
+        std::vector<Vector<N, T>> data;
+        data.reserve(size);
+
+        for (unsigned i = 0; i < size; ++i)
+        {
+                data.push_back(sampling::uniform_on_sphere<N, T>(engine));
+        }
 
         return data;
 }
@@ -49,12 +64,17 @@ std::vector<unsigned> permutation_table(const unsigned size)
 template <std::size_t N, typename T>
 class Noise final
 {
-        std::vector<unsigned> perm_ = permutation_table(SIZE);
+        std::vector<unsigned> perm_;
+        std::vector<Vector<N, T>> gradients_;
 
 public:
-        Noise()
+        template <typename RandomEngine>
+        explicit Noise(RandomEngine&& engine)
+                : perm_(permutation_table(SIZE, engine)),
+                  gradients_(gradients<N, T>(SIZE, engine))
         {
                 ASSERT(perm_.size() == 2 * SIZE);
+                ASSERT(gradients_.size() == SIZE);
         }
 
         [[nodiscard]] T compute(const Vector<N, T>& /*p*/) const
@@ -67,7 +87,8 @@ public:
 template <std::size_t N, typename T>
 T noise(const Vector<N, T>& p)
 {
-        static const Noise<N, T> noise;
+        static const Noise<N, T> noise{PCG(PCG_INIT_VALUE)};
+
         return noise.compute(p);
 }
 
