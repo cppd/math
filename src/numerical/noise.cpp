@@ -44,7 +44,7 @@ constexpr unsigned SIZE_M = SIZE - 1;
 template <typename RandomEngine>
 std::vector<unsigned> permutation_table(const unsigned size, RandomEngine& engine)
 {
-        std::vector<unsigned> data(2 * size);
+        std::vector<unsigned> data(2ull * size);
 
         const auto middle = data.begin() + data.size() / 2;
 
@@ -63,7 +63,10 @@ std::vector<Vector<N, T>> gradients(const unsigned size, RandomEngine& engine)
 
         for (unsigned i = 0; i < size; ++i)
         {
-                data.push_back(sampling::uniform_on_sphere<N, T>(engine));
+                static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+                // using double to make identical vectors for different types
+                const Vector<N, double> random = sampling::uniform_on_sphere<N, double>(engine);
+                data.push_back(to_vector<T>(random));
         }
 
         return data;
@@ -77,6 +80,7 @@ class Noise final
 
         std::vector<unsigned> perm_;
         std::vector<Vector<N, T>> gradients_;
+        T max_reciprocal_ = 2 / std::sqrt(T{N});
 
 public:
         template <typename RandomEngine>
@@ -84,7 +88,7 @@ public:
                 : perm_(permutation_table(SIZE, engine)),
                   gradients_(gradients<N, T>(SIZE, engine))
         {
-                ASSERT(perm_.size() == 2 * SIZE);
+                ASSERT(perm_.size() == 2ull * SIZE);
                 ASSERT(gradients_.size() == SIZE);
         }
 
@@ -119,7 +123,7 @@ public:
                         data[i] = dot(gradients_[hash], v);
                 }
 
-                return interpolation<INTERPOLATION_TYPE>(data, s[0]);
+                return max_reciprocal_ * interpolation<INTERPOLATION_TYPE>(data, s[0]);
         }
 };
 }
@@ -134,5 +138,5 @@ T noise(const Vector<N, T>& p)
 
 #define TEMPLATE(N, T) template T noise(const Vector<N, T>&);
 
-TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
+TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }
