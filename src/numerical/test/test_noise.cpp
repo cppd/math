@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_save.h>
 #include <src/test/test.h>
 
-#include <cmath>
 #include <filesystem>
 #include <vector>
 
@@ -78,47 +77,7 @@ T compute_noise(const int i, const int j)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> make_vector()
-{
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = (i + 1) * T{1.23456789} * ((i & 1) ? 1 : -1);
-        }
-        return res;
-}
-
-template <typename T>
-void compare(const T value, const T noise)
-{
-        if (!(std::abs(value - noise) < T{1e-6}))
-        {
-                error("Noise " + to_string(noise) + " is not equal to " + to_string(value));
-        }
-}
-
-template <std::size_t N, typename T>
-        requires (N == 2)
-void test_noise_value()
-{
-        compare(T{0.21541070939906093}, noise(make_vector<N, T>()));
-}
-template <std::size_t N, typename T>
-        requires (N == 3)
-void test_noise_value()
-{
-        compare(T{-0.27705567318090901}, noise(make_vector<N, T>()));
-}
-
-template <std::size_t N, typename T>
-        requires (N == 4)
-void test_noise_value()
-{
-        compare(T{0.064446232956766117}, noise(make_vector<N, T>()));
-}
-
-template <std::size_t N, typename T>
-void test_noise_image()
+void test()
 {
         std::vector<float> pixels(static_cast<unsigned long long>(IMAGE_SIZE) * IMAGE_SIZE);
 
@@ -142,13 +101,6 @@ void test_noise_image()
                 image::ImageView<2>(
                         {IMAGE_SIZE, IMAGE_SIZE}, image::ColorFormat::R32,
                         std::as_bytes(std::span(pixels.cbegin(), pixels.cend()))));
-}
-
-template <std::size_t N, typename T>
-void test()
-{
-        test_noise_value<N, T>();
-        test_noise_image<N, T>();
 }
 
 template <typename T>
