@@ -94,18 +94,21 @@ public:
 
         [[nodiscard]] T compute(const Vector<N, T>& p) const
         {
-                std::array<std::array<T, N>, 2> s;
-                std::array<std::array<unsigned, N>, 2> cell;
+                std::array<std::array<T, 2>, N> s;
+                std::array<std::array<unsigned, 2>, N> cell;
+                std::array<T, N> ps;
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T floor = std::floor(p[i]);
 
-                        s[0][i] = p[i] - floor;
-                        s[1][i] = s[0][i] - 1;
+                        s[i][0] = p[i] - floor;
+                        s[i][1] = s[i][0] - 1;
 
-                        cell[0][i] = static_cast<long long>(floor) & SIZE_M;
-                        cell[1][i] = cell[0][i] + 1;
+                        ps[i] = s[i][0];
+
+                        cell[i][0] = static_cast<long long>(floor) & SIZE_M;
+                        cell[i][1] = cell[i][0] + 1;
                 }
 
                 std::array<T, (1 << N)> data;
@@ -117,13 +120,13 @@ public:
                         for (std::size_t n = 0; n < N; ++n)
                         {
                                 const bool bit = ((1 << n) & i) != 0;
-                                v[n] = s[bit][n];
-                                hash = perm_[cell[bit][n] + hash];
+                                v[n] = s[n][bit];
+                                hash = perm_[cell[n][bit] + hash];
                         }
                         data[i] = dot(gradients_[hash], v);
                 }
 
-                return max_reciprocal_ * interpolation<INTERPOLATION_TYPE>(data, s[0]);
+                return max_reciprocal_ * interpolation<INTERPOLATION_TYPE>(data, ps);
         }
 };
 }
