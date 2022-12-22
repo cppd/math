@@ -23,13 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/numerical/vector.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 #include <random>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::noise
 {
 namespace
 {
@@ -53,7 +54,7 @@ std::vector<Vector<N, T>> random_data(const int count)
 }
 
 template <std::size_t N, typename T>
-void test_performance()
+void test()
 {
         constexpr int DATA_COUNT = 1'000'000;
         constexpr int COUNT = 32;
@@ -76,17 +77,17 @@ void test_performance()
 }
 
 template <std::size_t... I>
-void test_performance(std::index_sequence<I...>&&)
+void test(std::index_sequence<I...>&&)
 {
-        (test_performance<I, float>(), ...);
-        (test_performance<I, double>(), ...);
+        (test<I, float>(), ...);
+        (test<I, double>(), ...);
 }
 
-void test_noise_performance()
+void test_performance()
 {
-        test_performance(settings::Dimensions2());
+        test(settings::Dimensions2());
 }
 
-TEST_PERFORMANCE("Noise", test_noise_performance)
+TEST_PERFORMANCE("Noise", test_performance)
 }
 }

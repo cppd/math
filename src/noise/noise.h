@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vector.h"
+#include <src/numerical/vector.h>
 
-namespace ns::numerical
+namespace ns::noise
 {
 template <std::size_t N, typename T>
 [[nodiscard]] T noise(const Vector<N, T>& p);
