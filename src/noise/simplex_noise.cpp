@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/sort.h>
 #include <src/settings/instantiation.h>
 
 #include <bit>
@@ -70,6 +71,20 @@ Vector<N, T> unskew(const Vector<N, T>& p)
         return p - Vector<N, T>(g * sum(p));
 }
 
+template <typename T>
+struct Coordinate final
+{
+        T value;
+        int index;
+
+        bool operator<(const Coordinate& v) const
+        {
+                ASSERT(value >= 0 && v.value >= 0);
+                // sort form the highest magnitude to the lowest magnitude
+                return value > v.value;
+        }
+};
+
 template <std::size_t N, typename T>
 std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
         requires (N == 2)
@@ -82,10 +97,23 @@ std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
 }
 
 template <std::size_t N, typename T>
-std::array<int, N> traversal_indices(const Vector<N, T>& /*skewed_cell_coord*/)
+std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
         requires (N >= 3)
 {
-        error("not implemented");
+        std::array<Coordinate<T>, N> coordinates;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                coordinates[i] = {.value = skewed_cell_coord[i], .index = static_cast<int>(i)};
+        }
+
+        sort(coordinates);
+
+        std::array<int, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = coordinates[i].index;
+        }
+        return res;
 }
 
 template <std::size_t N, typename T>

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../simplex_noise.h"
 
+#include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
 namespace ns::noise::test
@@ -33,15 +34,16 @@ void test()
         test_performance(NAME, simplex_noise<N, T>);
 }
 
-void test()
+template <std::size_t... I>
+void test(std::index_sequence<I...>&&)
 {
-        test<2, float>();
-        test<2, double>();
+        ((test<I, float>()), ...);
+        ((test<I, double>()), ...);
 }
 
 void test_performance()
 {
-        test();
+        test(settings::Dimensions2());
 }
 
 TEST_PERFORMANCE("Simplex Noise", test_performance)
