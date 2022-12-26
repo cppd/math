@@ -71,13 +71,30 @@ Vector<N, T> unskew(const Vector<N, T>& p)
 }
 
 template <std::size_t N, typename T>
+std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
+        requires (N == 2)
+{
+        if (skewed_cell_coord[0] > skewed_cell_coord[1])
+        {
+                return {0, 1};
+        }
+        return {1, 0};
+}
+
+template <std::size_t N, typename T>
+std::array<int, N> traversal_indices(const Vector<N, T>& /*skewed_cell_coord*/)
+        requires (N >= 3)
+{
+        error("not implemented");
+}
+
+template <std::size_t N, typename T>
 class SimplexNoise final
 {
         static_assert(N > 0);
         static_assert(std::is_floating_point_v<T>);
 
         NoiseTables<N, T> tables_ = noise_tables<N, T>(SIZE);
-        T max_reciprocal_ = 2 / std::sqrt(T{N});
 
         [[nodiscard]] Vector<N, T> gradient(const Vector<N, T>& p) const
         {
@@ -89,35 +106,31 @@ class SimplexNoise final
                 return tables_.gradients[hash];
         }
 
-        [[nodiscard]] std::array<Vector<N, T>, N + 1> skewed_corners(
+        void add_contribution(const Vector<N, T>& p, const Vector<N, T>& skewed_corner, T* const sum) const
+        {
+                const Vector<N, T> coord = p - unskew(skewed_corner);
+                const T t = T{0.5} - coord.norm_squared();
+                if (t > 0)
+                {
+                        *sum += power<4>(t) * dot(gradient(skewed_corner), coord);
+                }
+        }
+
+        [[nodiscard]] T contributions(
+                const Vector<N, T>& p,
                 const Vector<N, T>& skewed_cell_org,
                 const Vector<N, T>& skewed_cell_coord) const
-                requires (N == 2)
         {
-                return {skewed_cell_org,
-                        skewed_cell_org
-                                + ((skewed_cell_coord[0] > skewed_cell_coord[1])
-                                           ? Vector<2, T>(1, 0)
-                                           : Vector<2, T>(0, 1)),
-                        skewed_cell_org + Vector<2, T>(1, 1)};
-        }
+                const std::array<int, N> indices = traversal_indices(skewed_cell_coord);
 
-        [[nodiscard]] std::array<Vector<N, T>, N + 1> skewed_corners(
-                const Vector<N, T>& /*skewed_cell_org*/,
-                const Vector<N, T>& /*skewed_cell_coord*/) const
-                requires (N >= 3)
-        {
-                error("not implemented");
-        }
-
-        [[nodiscard]] T contibutions(const Vector<N, T>& p, const std::array<Vector<N, T>, N + 1>& skewed_corners) const
-        {
                 T res = 0;
-                for (std::size_t i = 0; i < N + 1; ++i)
+                Vector<N, T> skewed_corner = skewed_cell_org;
+
+                add_contribution(p, skewed_corner, &res);
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        const Vector<N, T> coord = p - unskew(skewed_corners[i]);
-                        const T t = T{0.5} - coord.norm_squared();
-                        res += t > 0 ? power<4>(t) * dot(gradient(skewed_corners[i]), coord) : 0;
+                        ++skewed_corner[indices[i]];
+                        add_contribution(p, skewed_corner, &res);
                 }
                 return res;
         }
@@ -129,7 +142,7 @@ public:
                 const Vector<N, T> skewed_cell_org = floor(skewed_coord);
                 const Vector<N, T> skewed_cell_coord = skewed_coord - skewed_cell_org;
 
-                return contibutions(p, skewed_corners(skewed_cell_org, skewed_cell_coord));
+                return contributions(p, skewed_cell_org, skewed_cell_coord);
         }
 };
 }
