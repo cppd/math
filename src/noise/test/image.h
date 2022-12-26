@@ -21,12 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/image/file_save.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <filesystem>
 #include <numeric>
 #include <random>
@@ -93,17 +95,25 @@ void make_noise_image(
         std::vector<float> pixels(static_cast<unsigned long long>(image_size) * image_size);
 
         unsigned long long index = -1;
+        float max = -Limits<float>::infinity();
         for (int i = 0; i < image_size; ++i)
         {
                 for (int j = 0; j < image_size; ++j)
                 {
-                        const T n = noise_image.compute(i, j, noise);
-                        if (!(n > T{-1.001} && n < T{1.001}))
+                        const float n = noise_image.compute(i, j, noise);
+                        if (!(n > -1.001f && n < 1.001f))
                         {
                                 error("Noise value " + to_string(n) + " is not in the range [-1, 1]");
                         }
-                        pixels[++index] = (1 + n) / 2;
+                        max = std::max(max, std::abs(n));
+                        pixels[++index] = n;
                 }
+        }
+
+        ASSERT(max >= 0);
+        for (float& pixel : pixels)
+        {
+                pixel = (1 + pixel / max) / 2;
         }
 
         const std::string name = std::string(file_name) + '_' + std::to_string(N) + "d_" + type_name<T>();
