@@ -89,6 +89,27 @@ class SimplexNoise final
                 return tables_.gradients[hash];
         }
 
+        [[nodiscard]] std::array<Vector<N, T>, N + 1> skewed_corners(
+                const Vector<N, T>& skewed_cell_org,
+                const Vector<N, T>& skewed_cell_coord) const
+                requires (N == 2)
+        {
+                return {skewed_cell_org,
+                        skewed_cell_org
+                                + ((skewed_cell_coord[0] > skewed_cell_coord[1])
+                                           ? Vector<2, T>(1, 0)
+                                           : Vector<2, T>(0, 1)),
+                        skewed_cell_org + Vector<2, T>(1, 1)};
+        }
+
+        [[nodiscard]] std::array<Vector<N, T>, N + 1> skewed_corners(
+                const Vector<N, T>& /*skewed_cell_org*/,
+                const Vector<N, T>& /*skewed_cell_coord*/) const
+                requires (N >= 3)
+        {
+                error("not implemented");
+        }
+
         [[nodiscard]] T contibutions(const Vector<N, T>& p, const std::array<Vector<N, T>, N + 1>& skewed_corners) const
         {
                 T res = 0;
@@ -103,26 +124,12 @@ class SimplexNoise final
 
 public:
         [[nodiscard]] T compute(const Vector<N, T>& p) const
-                requires (N == 2)
         {
                 const Vector<N, T> skewed_coord = skew(p);
                 const Vector<N, T> skewed_cell_org = floor(skewed_coord);
                 const Vector<N, T> skewed_cell_coord = skewed_coord - skewed_cell_org;
 
-                const Vector<2, T> next_corner =
-                        (skewed_cell_coord[0] > skewed_cell_coord[1]) ? Vector<2, T>(1, 0) : Vector<2, T>(0, 1);
-                const Vector<2, T> last_corner = Vector<2, T>(1, 1);
-
-                const std::array<Vector<N, T>, 3> skewed_corners = {
-                        skewed_cell_org, skewed_cell_org + next_corner, skewed_cell_org + last_corner};
-
-                return contibutions(p, skewed_corners);
-        }
-
-        [[nodiscard]] T compute(const Vector<N, T>& /*p*/) const
-                requires (N >= 3)
-        {
-                error("not implemented");
+                return contibutions(p, skewed_corners(skewed_cell_org, skewed_cell_coord));
         }
 };
 }
