@@ -42,7 +42,7 @@ template <std::size_t N, typename T>
         return sum / max;
 }
 
-#define TEMPLATE(N, T) T fbm_noise(const Vector<N, T>&, int, T, T);
+#define TEMPLATE(N, T) template T fractal_noise(const Vector<N, T>&, int, T, T);
 
 TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }
