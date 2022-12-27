@@ -63,7 +63,7 @@ std::string_view log_type_to_string(const LogType type)
         return "unknown";
 }
 
-std::string write_log_event(const std::string_view& text, const LogType type)
+std::string write_log_event(const std::string_view text, const LogType type)
 {
         return write_log(text, log_type_to_string(type));
 }
@@ -88,11 +88,11 @@ public:
         void insert(const std::function<void(const MessageEvent&)>* observer);
         void erase(const std::function<void(const MessageEvent&)>* observer);
 
-        void log_event(const std::string_view& text, LogType type) noexcept;
-        void log_event(const std::string_view& text, MessageType type) noexcept;
+        void log_event(std::string_view text, LogType type) noexcept;
+        void log_event(std::string_view text, MessageType type) noexcept;
 };
 
-void LogEvents::log_event(const std::string_view& text, const LogType type) noexcept
+void LogEvents::log_event(const std::string_view text, const LogType type) noexcept
 {
         try
         {
@@ -120,7 +120,7 @@ void LogEvents::log_event(const std::string_view& text, const LogType type) noex
         }
 }
 
-void LogEvents::log_event(const std::string_view& text, const MessageType type) noexcept
+void LogEvents::log_event(const std::string_view text, const MessageType type) noexcept
 {
         try
         {
@@ -200,12 +200,12 @@ LogEvents& log_events()
 
 //
 
-void log(const std::string_view& text, const LogType type) noexcept
+void log(const std::string_view text, const LogType type) noexcept
 {
         log_events().log_event(text, type);
 }
 
-void log(const std::string_view& text, const MessageType type) noexcept
+void log(const std::string_view text, const MessageType type) noexcept
 {
         log_events().log_event(text, type);
 }

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-std::string write_log(const std::string_view& text, const std::string_view& description) noexcept;
+std::string write_log(std::string_view text, std::string_view description) noexcept;
 
 [[noreturn]] void write_log_fatal_error_and_exit(const char* text) noexcept;
 }

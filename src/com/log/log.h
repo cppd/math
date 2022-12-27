@@ -64,8 +64,8 @@ struct MessageEvent final
         }
 };
 
-void log(const std::string_view& text, LogType type) noexcept;
-void log(const std::string_view& text, MessageType type) noexcept;
+void log(std::string_view text, LogType type) noexcept;
+void log(std::string_view text, MessageType type) noexcept;
 
 class LogEventsObserver final
 {

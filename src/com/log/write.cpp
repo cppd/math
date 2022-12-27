@@ -68,11 +68,11 @@ class Log final
                 oss_line_beginning_ << std::setw(width_) << iter->second;
         }
 
-        std::string format(
-                const std::string_view& text,
-                const std::string_view& description,
-                const double time) noexcept
+        std::string format(const std::string_view text, const std::string_view description) noexcept
         {
+                const double time =
+                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time_).count();
+
                 oss_line_beginning_.str(std::string());
                 oss_line_beginning_ << "[" << std::setw(11) << time << "][";
                 write_thread_id(std::this_thread::get_id());
@@ -108,18 +108,11 @@ class Log final
                 return result_;
         }
 
-        void write(const std::string_view& text) noexcept
+        std::string write(const std::string_view text, const std::string_view description) noexcept
         {
-                std::cerr << text;
-                file_ << text;
-        }
-
-        std::string write(const std::string_view& text, const std::string_view& description) noexcept
-        {
-                const double time =
-                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time_).count();
-                std::string result = format(text, description, time);
-                write(result);
+                std::string result = format(text, description);
+                std::cerr << result;
+                file_ << result;
                 result.pop_back();
                 return result;
         }
@@ -133,7 +126,10 @@ public:
                 oss_line_beginning_ << std::setprecision(6);
 
                 const std::string directory_name = std::string(settings::APPLICATION_NAME) + " Log";
-                const std::filesystem::path directory = std::filesystem::temp_directory_path() / directory_name;
+
+                const std::filesystem::path directory =
+                        std::filesystem::temp_directory_path()
+                        / reinterpret_cast<const char8_t*>(directory_name.c_str());
 
                 std::filesystem::create_directory(directory);
                 std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
@@ -145,12 +141,19 @@ public:
 
                 const std::filesystem::path file = directory / name.str();
                 file_ = std::ofstream(file);
+                if (!file_)
+                {
+                        const std::string file_str = reinterpret_cast<const char*>(file.generic_u8string().c_str());
+                        std::cerr << format("Failed to create log file \"" + file_str + "\"", "fatal error");
+                        std::abort();
+                }
+
                 std::filesystem::permissions(
                         file, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
                 file_ << std::unitbuf;
         }
 
-        std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
+        std::string write_log(const std::string_view text, const std::string_view description) noexcept
         {
                 const std::lock_guard lg(lock_);
                 return write(text, description);
@@ -171,7 +174,7 @@ Log& log()
 }
 }
 
-std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
+std::string write_log(const std::string_view text, const std::string_view description) noexcept
 {
         return log().write_log(text, description);
 }
