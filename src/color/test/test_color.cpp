@@ -143,7 +143,7 @@ Vector<3, float> random_rgb(RandomEngine& engine)
 template <typename ColorType, typename RandomEngine>
 void test_color_white_light(
         RandomEngine& engine,
-        const std::string_view& test_name,
+        const std::string_view test_name,
         const float max_error,
         const float sum_max_error)
 {
@@ -165,7 +165,7 @@ void test_color_white_light(
 template <typename ColorType, typename RandomEngine>
 void test_color_white_color(
         RandomEngine& engine,
-        const std::string_view& test_name,
+        const std::string_view test_name,
         const float max_error,
         const float sum_max_error)
 {
@@ -185,7 +185,7 @@ void test_color_white_color(
 }
 
 template <typename ColorType, typename RandomEngine>
-void test_color_constructors(RandomEngine& engine, const std::string_view& test_name, const float max_error)
+void test_color_constructors(RandomEngine& engine, const std::string_view test_name, const float max_error)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -214,7 +214,7 @@ void test_color_constructors(RandomEngine& engine, const std::string_view& test_
 }
 
 template <typename ColorType, typename FloatType, typename RandomEngine>
-void test_color_conversions(RandomEngine& engine, const std::string_view& test_name)
+void test_color_conversions(RandomEngine& engine, const std::string_view test_name)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -239,7 +239,7 @@ void test_color_conversions(RandomEngine& engine, const std::string_view& test_n
 }
 
 template <typename ColorType, typename RandomEngine>
-void test_color_non_negative(RandomEngine& engine, const std::string_view& test_name)
+void test_color_non_negative(RandomEngine& engine, const std::string_view test_name)
 {
         std::uniform_real_distribution<float> urd_n(-1, 1);
 
@@ -260,7 +260,7 @@ void test_color_non_negative(RandomEngine& engine, const std::string_view& test_
 }
 
 template <typename ColorType, typename RandomEngine>
-void test_color_luminance(RandomEngine& engine, const std::string_view& test_name)
+void test_color_luminance(RandomEngine& engine, const std::string_view test_name)
 {
         std::uniform_real_distribution<double> urd(0, 2);
         const double value = urd(engine);
@@ -283,7 +283,7 @@ void test_color_luminance(RandomEngine& engine, const std::string_view& test_nam
 template <typename ColorType, typename RandomEngine>
 void test_color(
         RandomEngine& engine,
-        const std::string_view& test_name,
+        const std::string_view test_name,
         const float white_light_max_error,
         const float white_light_sum_max_error,
         const float white_color_max_error,

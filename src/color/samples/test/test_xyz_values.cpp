@@ -156,7 +156,7 @@ static_assert(Y_64.size() == WAVES.size());
 static_assert(Z_64.size() == WAVES.size());
 
 template <typename T, typename F>
-void check_non_negative(const std::string_view& name, const F& f)
+void check_non_negative(const std::string_view name, const F& f)
 {
         for (int i = 3800; i <= 7800; ++i)
         {
@@ -173,7 +173,7 @@ void check_non_negative(const std::string_view& name, const F& f)
 }
 
 template <typename T>
-T check_abs(const std::string_view& name, const T& wave, const T& f, const T& tab, const T& max_error)
+T check_abs(const std::string_view name, const T& wave, const T& f, const T& tab, const T& max_error)
 {
         const T abs_error = std::abs(f - tab);
         if (abs_error < max_error)
@@ -191,7 +191,7 @@ T check_abs(const std::string_view& name, const T& wave, const T& f, const T& ta
 }
 
 template <typename T>
-void check_mean(const std::string_view& name, const T& mean, const T& max_error)
+void check_mean(const std::string_view name, const T& mean, const T& max_error)
 {
         if (mean < max_error)
         {
@@ -205,7 +205,7 @@ void check_mean(const std::string_view& name, const T& mean, const T& max_error)
 
 template <typename T, typename F>
 void check(
-        const std::string_view& name,
+        const std::string_view name,
         const F& f,
         const std::array<double, WAVES.size()>& data,
         const T& max_error,

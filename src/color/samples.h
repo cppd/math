@@ -58,7 +58,7 @@ protected:
                 return data_;
         }
 
-        [[nodiscard]] std::string to_string(const std::string_view& name) const
+        [[nodiscard]] std::string to_string(const std::string_view name) const
         {
                 std::ostringstream oss;
                 oss.precision(Limits<T>::max_digits10());
