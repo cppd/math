@@ -36,7 +36,7 @@ namespace
 {
 constexpr unsigned GROUP_SIZE = 16;
 
-void save_to_file(const std::string_view& name, const image::Image<2>& image)
+void save_to_file(const std::string_view name, const image::Image<2>& image)
 {
         image::save(std::filesystem::temp_directory_path() / path_from_utf8(name), image::ImageView<2>(image));
 }

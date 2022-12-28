@@ -46,7 +46,7 @@ static_assert(bswap32(0x12345678) == 0x78563412);
 
 namespace
 {
-[[noreturn]] void error(const std::string_view& msg) noexcept
+[[noreturn]] void error(const std::string_view msg) noexcept
 {
         std::cerr << msg << std::endl;
         std::exit(EXIT_FAILURE);

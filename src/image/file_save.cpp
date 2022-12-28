@@ -46,7 +46,7 @@ std::set<std::string> supported_formats()
         return formats;
 }
 
-void check_write_format_support(const std::string_view& format)
+void check_write_format_support(const std::string_view format)
 {
         static const std::set<std::string> formats = supported_formats();
 

@@ -326,7 +326,7 @@ T compute_cosine_weighted_average(const F& f)
 }
 
 template <unsigned N, typename T>
-void check_cosine_weighted_average(const std::string_view& description, const T computed, const T average)
+void check_cosine_weighted_average(const std::string_view description, const T computed, const T average)
 {
         constexpr T PRECISION = 1e-2;
 

@@ -43,12 +43,12 @@ template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load(const Path& file_name, progress::Ratio* progress);
 
 template <std::size_t N, typename Path>
-std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment);
+std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, std::string_view comment);
 
 template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
         const Path& file_name,
-        const std::string_view& comment,
+        std::string_view comment,
         bool ascii_format);
 }

@@ -35,8 +35,8 @@ constexpr std::string_view PERFORMANCE = "Performance";
 template <typename T>
 void run(
         const T& test,
-        const std::string_view& test_name,
-        const std::string_view& type_name,
+        const std::string_view test_name,
+        const std::string_view type_name,
         progress::Ratios* const progress_ratios)
 {
         const std::string name = [&]()

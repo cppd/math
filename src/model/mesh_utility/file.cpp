@@ -97,7 +97,7 @@ std::unique_ptr<Mesh<N>> load(const Path& file_name, progress::Ratio* const prog
 }
 
 template <std::size_t N, typename Path>
-std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment)
+std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, const std::string_view comment)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -113,7 +113,7 @@ template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
         const Path& file_name,
-        const std::string_view& comment,
+        const std::string_view comment,
         const bool ascii_format)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
@@ -126,12 +126,11 @@ std::filesystem::path save_to_stl(
         return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
 }
 
-#define TEMPLATE(N)                                                                               \
-        template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, progress::Ratio*); \
-        template std::filesystem::path save_to_obj(                                               \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);         \
-        template std::filesystem::path save_to_stl(                                               \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
+#define TEMPLATE(N)                                                                                                   \
+        template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, progress::Ratio*);                     \
+        template std::filesystem::path save_to_obj(const Mesh<(N)>&, const std::filesystem::path&, std::string_view); \
+        template std::filesystem::path save_to_stl(                                                                   \
+                const Mesh<(N)>&, const std::filesystem::path&, std::string_view, bool);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

@@ -98,7 +98,7 @@ void set_widget_color(QWidget* widget, const QColor& c);
 
 void set_slider_to_middle(QSlider* slider);
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, color::RGB8 color) noexcept;
+void append_to_text_edit(QPlainTextEdit* text_edit, std::string_view text, color::RGB8 color) noexcept;
 
 window::WindowID widget_window_id(const QWidget* widget);
 std::array<double, 2> widget_size(const QWidget* widget);
@@ -113,8 +113,8 @@ void set_slider_position(QSlider* slider, double v);
 
 void add_widget(QWidget* dst, QWidget* src);
 
-void set_label_minimum_width_for_text(QLabel* label, const std::string_view& text);
-void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text);
+void set_label_minimum_width_for_text(QLabel* label, std::string_view text);
+void set_label_text_and_minimum_width(QLabel* label, std::string_view text);
 
 void set_dialog_size(QDialog* dialog);
 void set_dialog_height(QDialog* dialog);

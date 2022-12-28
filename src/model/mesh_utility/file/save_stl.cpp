@@ -41,7 +41,7 @@ namespace
 {
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
-std::string comment_to_solid_name(const std::string_view& comment)
+std::string comment_to_solid_name(const std::string_view comment)
 {
         std::string str;
         for (const char c : comment)
@@ -304,7 +304,7 @@ void check_facets(const Mesh<N>& mesh)
 }
 
 template <bool ASCII, bool BYTE_SWAP, std::size_t N>
-void write(std::ostream& file, const Mesh<N>& mesh, const std::string_view& comment)
+void write(std::ostream& file, const Mesh<N>& mesh, const std::string_view comment)
 {
         if constexpr (ASCII)
         {
@@ -327,7 +327,7 @@ template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const Path& file_name,
-        const std::string_view& comment,
+        const std::string_view comment,
         const bool ascii_format,
         const bool byte_swap)
 {
@@ -382,7 +382,7 @@ std::filesystem::path save_to_stl_file(
 
 #define TEMPLATE(N)                                      \
         template std::filesystem::path save_to_stl_file( \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool, bool);
+                const Mesh<(N)>&, const std::filesystem::path&, std::string_view, bool, bool);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

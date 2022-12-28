@@ -38,7 +38,7 @@ namespace
 {
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
-void write_comment(std::ostream& file, const std::string_view& comment)
+void write_comment(std::ostream& file, const std::string_view comment)
 {
         if (comment.empty())
         {
@@ -288,7 +288,7 @@ void check_facets_and_lines(const Mesh<N>& mesh)
 }
 
 template <std::size_t N, typename Path>
-std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment)
+std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_name, const std::string_view comment)
 {
         static_assert(N >= 3);
 
@@ -332,7 +332,7 @@ std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_nam
 
 #define TEMPLATE(N)                                      \
         template std::filesystem::path save_to_obj_file( \
-                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);
+                const Mesh<(N)>&, const std::filesystem::path&, std::string_view);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

@@ -29,7 +29,7 @@ template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const Path& file_name,
-        const std::string_view& comment,
+        std::string_view comment,
         bool ascii_format,
         bool byte_swap = (std::endian::native == std::endian::big));
 }

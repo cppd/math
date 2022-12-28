@@ -68,7 +68,7 @@ namespace simplex_algorithm_implementation
 {
 template <std::size_t N, std::size_t M, typename T>
 void print_simplex_algorithm_data(
-        const std::string_view& text,
+        const std::string_view text,
         const std::array<T, M>& b,
         const std::array<Vector<N, T>, M>& a,
         const T& v,

@@ -37,7 +37,7 @@ namespace ns::sampling::test
 {
 namespace
 {
-std::string replace_space(const std::string_view& s)
+std::string replace_space(const std::string_view s)
 {
         std::string r;
         r.reserve(s.size());
@@ -104,8 +104,8 @@ constexpr int one_dimension_sample_count()
 
 template <std::size_t N, typename T>
 void write_to_file(
-        const std::string_view& name,
-        const std::string_view& file_name,
+        const std::string_view name,
+        const std::string_view file_name,
         const int grid_size,
         const std::vector<Vector<N, T>>& data)
 {

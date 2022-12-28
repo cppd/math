@@ -191,7 +191,7 @@ void compute_fftw(const bool inverse, const int n1, const int n2, std::vector<Co
 }
 #endif
 
-std::filesystem::path make_path(const std::string_view& name)
+std::filesystem::path make_path(const std::string_view name)
 {
         return std::filesystem::temp_directory_path() / path_from_utf8(name);
 }

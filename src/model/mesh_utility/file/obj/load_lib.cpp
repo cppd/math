@@ -70,7 +70,7 @@ image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
 template <std::size_t N>
 void load_image(
         const std::filesystem::path& dir_name,
-        const std::string_view& image_name,
+        const std::string_view image_name,
         std::map<std::filesystem::path, int>* const image_index,
         std::vector<image::Image<N - 1>>* const images,
         int* const index)

@@ -169,7 +169,7 @@ public:
 };
 
 TestSelectionParametersDialog::TestSelectionParametersDialog(
-        const std::string_view& title,
+        const std::string_view title,
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>& parameters)
         : QDialog(parent_for_dialog()),
@@ -262,7 +262,7 @@ void TestSelectionParametersDialog::done(const int r)
 }
 
 std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
-        const std::string_view& title,
+        const std::string_view title,
         std::vector<std::string> test_names)
 {
         std::optional<TestSelectionParameters> parameters;

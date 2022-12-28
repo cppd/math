@@ -98,7 +98,7 @@ bool is_binary(const std::vector<char>& data)
                 });
 }
 
-const char* read_keyword(const char* const first, const char* const last, const std::string_view& keyword)
+const char* read_keyword(const char* const first, const char* const last, const std::string_view keyword)
 {
         if (first + keyword.size() > last)
         {

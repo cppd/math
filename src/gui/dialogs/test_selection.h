@@ -44,7 +44,7 @@ private:
         std::optional<TestSelectionParameters>& parameters_;
 
         TestSelectionParametersDialog(
-                const std::string_view& title,
+                std::string_view title,
                 std::vector<std::string> test_names,
                 std::optional<TestSelectionParameters>& parameters);
 
@@ -56,7 +56,7 @@ public:
         ~TestSelectionParametersDialog() override;
 
         [[nodiscard]] static std::optional<TestSelectionParameters> show(
-                const std::string_view& title,
+                std::string_view title,
                 std::vector<std::string> test_names);
 };
 }

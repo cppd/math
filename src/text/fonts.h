@@ -33,6 +33,6 @@ public:
         static const Fonts& instance();
 
         [[nodiscard]] std::vector<std::string> names() const;
-        [[nodiscard]] std::vector<unsigned char> data(const std::string_view& name) const;
+        [[nodiscard]] std::vector<unsigned char> data(std::string_view name) const;
 };
 }

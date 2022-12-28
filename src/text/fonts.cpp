@@ -54,7 +54,7 @@ std::vector<std::string> Fonts::names() const
         return names;
 }
 
-std::vector<unsigned char> Fonts::data(const std::string_view& name) const
+std::vector<unsigned char> Fonts::data(const std::string_view name) const
 {
         const auto iter = fonts_.find(name);
         if (iter != fonts_.cend())

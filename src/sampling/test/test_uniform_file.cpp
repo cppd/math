@@ -38,7 +38,7 @@ namespace
 {
 namespace impl = sphere_implementation;
 
-std::string replace_space(const std::string_view& s)
+std::string replace_space(const std::string_view s)
 {
         std::string r;
         r.reserve(s.size());
@@ -50,7 +50,7 @@ std::string replace_space(const std::string_view& s)
 }
 
 template <std::size_t N, typename T>
-std::string samples_file_name(const std::string_view& name)
+std::string samples_file_name(const std::string_view name)
 {
         std::ostringstream oss;
         oss << "samples_" << replace_space(name) << "_" << N << "d_" << replace_space(type_name<T>()) << ".txt";
@@ -58,13 +58,13 @@ std::string samples_file_name(const std::string_view& name)
 }
 
 template <std::size_t N, typename T>
-std::filesystem::path samples_file_path(const std::string_view& name)
+std::filesystem::path samples_file_path(const std::string_view name)
 {
         return std::filesystem::temp_directory_path() / path_from_utf8(samples_file_name<N, T>(name));
 }
 
 template <std::size_t N, typename T, typename Generator>
-void write_samples_to_file(const std::string_view& name, const int count, const Generator& g)
+void write_samples_to_file(const std::string_view name, const int count, const Generator& g)
 {
         std::ofstream file(samples_file_path<N, T>(name));
         for (int i = 0; i < count; ++i)

@@ -57,12 +57,12 @@ namespace
 //         return false;
 // }
 
-QString to_qstring(const std::string_view& text)
+QString to_qstring(const std::string_view text)
 {
         return QString::fromUtf8(text.data(), text.size());
 }
 
-void append_text(QPlainTextEdit* const text_edit, const std::string_view& text, const color::RGB8 color)
+void append_text(QPlainTextEdit* const text_edit, const std::string_view text, const color::RGB8 color)
 {
         // text_edit->moveCursor(QTextCursor::End);
 
@@ -193,10 +193,7 @@ void set_slider_to_middle(QSlider* const slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void append_to_text_edit(
-        QPlainTextEdit* const text_edit,
-        const std::string_view& text,
-        const color::RGB8 color) noexcept
+void append_to_text_edit(QPlainTextEdit* const text_edit, const std::string_view text, const color::RGB8 color) noexcept
 {
         try
         {
@@ -342,12 +339,12 @@ void add_widget(QWidget* const dst, QWidget* const src)
         l->addWidget(src);
 }
 
-void set_label_minimum_width_for_text(QLabel* const label, const std::string_view& text)
+void set_label_minimum_width_for_text(QLabel* const label, const std::string_view text)
 {
         label->setMinimumWidth(label->fontMetrics().boundingRect(to_qstring(text)).width());
 }
 
-void set_label_text_and_minimum_width(QLabel* const label, const std::string_view& text)
+void set_label_text_and_minimum_width(QLabel* const label, const std::string_view text)
 {
         const QString s = to_qstring(text);
         label->setText(s);
