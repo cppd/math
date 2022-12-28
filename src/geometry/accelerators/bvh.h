@@ -45,11 +45,13 @@ template <std::size_t N, typename T>
 struct Node final
 {
         BoundingBox<N, T> bounds;
+
         union
         {
                 std::uint32_t object_offset;
                 std::uint32_t second_child_offset;
         };
+
         std::uint16_t object_count;
         std::uint8_t axis;
 };

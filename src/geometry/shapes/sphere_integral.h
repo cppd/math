@@ -179,6 +179,7 @@ T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::typ
         }
         return SPHERE_AREA<N - 1, T> * (power<N - 1>(std::sin(b)) - power<N - 1>(std::sin(a))) / (N - 1);
 }
+
 template <unsigned N, typename T>
         requires (N == 2)
 T sphere_integrate_cosine_factor(const std::type_identity_t<T> a, const std::type_identity_t<T> b)

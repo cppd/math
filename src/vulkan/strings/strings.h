@@ -36,6 +36,7 @@ std::vector<const char*> strings_to_char_pointers(const T& v)
         }
         return res;
 }
+
 template <typename T>
 std::vector<const char*> strings_to_char_pointers(const T&&) = delete;
 }
