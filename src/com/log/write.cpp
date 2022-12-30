@@ -33,21 +33,18 @@ namespace ns
 {
 namespace
 {
-class Log final
+class Format final
 {
         static constexpr unsigned MAX_THREADS = 1'000'000;
         static constexpr unsigned THREADS_WIDTH = 6;
 
         std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
 
-        std::mutex lock_;
         std::unordered_map<std::thread::id, unsigned> map_;
         unsigned width_ = THREADS_WIDTH;
         std::ostringstream oss_line_beginning_;
         std::string line_beginning_;
         std::string result_;
-
-        std::ofstream file_;
 
         void write_thread_id(const std::thread::id& thread_id) noexcept
         {
@@ -66,6 +63,15 @@ class Log final
                         }
                 }
                 oss_line_beginning_ << std::setw(width_) << iter->second;
+        }
+
+public:
+        Format()
+        {
+                oss_line_beginning_ << std::fixed;
+                oss_line_beginning_ << std::setfill('0');
+                oss_line_beginning_ << std::right;
+                oss_line_beginning_ << std::setprecision(6);
         }
 
         std::string format(const std::string_view text, const std::string_view description) noexcept
@@ -107,10 +113,67 @@ class Log final
                 result_ += '\n';
                 return result_;
         }
+};
+
+void create_directory(const std::filesystem::path& directory, Format& format)
+{
+        try
+        {
+                std::filesystem::create_directory(directory);
+                std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
+        }
+        catch (const std::exception& e)
+        {
+                std::cerr << format.format(std::string("Failed to create log directory: ") + e.what(), "fatal error");
+                std::abort();
+        }
+}
+
+std::filesystem::path create_directory(Format& format)
+{
+        std::filesystem::path directory =
+                std::filesystem::temp_directory_path()
+                / reinterpret_cast<const char8_t*>(std::string(settings::APPLICATION_NAME).c_str());
+        create_directory(directory, format);
+
+        directory = directory / reinterpret_cast<const char8_t*>("Log");
+        create_directory(directory, format);
+
+        return directory;
+}
+
+std::ofstream create_file(const std::filesystem::path& directory, Format& format)
+{
+        const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
+        std::ostringstream name;
+        name << std::fixed;
+        name << duration.count();
+
+        const std::filesystem::path file_path = directory / name.str();
+        std::ofstream file(file_path);
+        if (!file)
+        {
+                const std::string file_str = reinterpret_cast<const char*>(file_path.generic_u8string().c_str());
+                std::cerr << format.format("Failed to create log file \"" + file_str + "\"", "fatal error");
+                std::abort();
+        }
+
+        std::filesystem::permissions(
+                file_path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
+        file << std::unitbuf;
+
+        return file;
+}
+
+class Log final
+{
+        std::mutex lock_;
+        Format format_;
+        std::ofstream file_{create_file(create_directory(format_), format_)};
 
         std::string write(const std::string_view text, const std::string_view description) noexcept
         {
-                std::string result = format(text, description);
+                std::string result = format_.format(text, description);
                 std::cerr << result;
                 file_ << result;
                 result.pop_back();
@@ -118,39 +181,19 @@ class Log final
         }
 
 public:
-        Log()
+        Log() noexcept
+        try
         {
-                oss_line_beginning_ << std::fixed;
-                oss_line_beginning_ << std::setfill('0');
-                oss_line_beginning_ << std::right;
-                oss_line_beginning_ << std::setprecision(6);
-
-                const std::string directory_name = std::string(settings::APPLICATION_NAME) + " Log";
-
-                const std::filesystem::path directory =
-                        std::filesystem::temp_directory_path()
-                        / reinterpret_cast<const char8_t*>(directory_name.c_str());
-
-                std::filesystem::create_directory(directory);
-                std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
-
-                const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
-                std::ostringstream name;
-                name << std::fixed;
-                name << duration.count();
-
-                const std::filesystem::path file = directory / name.str();
-                file_ = std::ofstream(file);
-                if (!file_)
-                {
-                        const std::string file_str = reinterpret_cast<const char*>(file.generic_u8string().c_str());
-                        std::cerr << format("Failed to create log file \"" + file_str + "\"", "fatal error");
-                        std::abort();
-                }
-
-                std::filesystem::permissions(
-                        file, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
-                file_ << std::unitbuf;
+        }
+        catch (const std::exception& e)
+        {
+                std::cerr << "Failed to initialize log file: " << e.what() << '\n';
+                std::abort();
+        }
+        catch (...)
+        {
+                std::cerr << "Failed to initialize log file, unknown error\n";
+                std::abort();
         }
 
         std::string write_log(const std::string_view text, const std::string_view description) noexcept
