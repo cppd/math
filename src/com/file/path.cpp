@@ -18,20 +18,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path.h"
 
 #include <string_view>
+#include <type_traits>
 
 namespace ns
 {
 template <typename T>
 std::string generic_utf8_filename(const T& path)
 {
-        return reinterpret_cast<const char*>(path.generic_u8string().c_str());
+        static_assert(std::is_same_v<T, std::filesystem::path>);
+
+        const std::u8string s = path.generic_u8string();
+        return {reinterpret_cast<const char*>(s.data()), s.size()};
 }
 
 template <typename T>
 std::filesystem::path path_from_utf8(const T& filename)
 {
+        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>);
+
         const auto* const data = reinterpret_cast<const char8_t*>(filename.data());
-        return std::filesystem::path(data, data + filename.size());
+        return {data, data + filename.size()};
+}
+
+std::filesystem::path path_from_utf8(const char* const filename)
+{
+        return reinterpret_cast<const char8_t*>(filename);
 }
 
 template std::string generic_utf8_filename(const std::filesystem::path&);

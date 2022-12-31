@@ -27,4 +27,6 @@ std::string generic_utf8_filename(const T& path);
 
 template <typename T>
 std::filesystem::path path_from_utf8(const T& filename);
+
+std::filesystem::path path_from_utf8(const char* filename);
 }
