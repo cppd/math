@@ -33,6 +33,8 @@ namespace ns
 {
 namespace
 {
+constexpr const char* LOG_DIRECTORY_NAME = "log";
+
 class Format final
 {
         static constexpr unsigned MAX_THREADS = 1'000'000;
@@ -115,6 +117,19 @@ public:
         }
 };
 
+template <typename T>
+        requires (std::is_same_v<T, std::filesystem::path>)
+std::string to_filename(const T& path)
+{
+        const std::u8string s = path.generic_u8string();
+        return {reinterpret_cast<const char*>(s.data()), s.size()};
+}
+
+std::filesystem::path to_path(const char* const filename)
+{
+        return reinterpret_cast<const char8_t*>(filename);
+}
+
 void create_directory(const std::filesystem::path& directory, Format& format)
 {
         try
@@ -131,12 +146,10 @@ void create_directory(const std::filesystem::path& directory, Format& format)
 
 std::filesystem::path create_directory(Format& format)
 {
-        std::filesystem::path directory =
-                std::filesystem::temp_directory_path()
-                / reinterpret_cast<const char8_t*>(std::string(settings::APPLICATION_NAME).c_str());
+        std::filesystem::path directory = std::filesystem::temp_directory_path() / to_path(settings::APPLICATION_NAME);
         create_directory(directory, format);
 
-        directory = directory / reinterpret_cast<const char8_t*>("Log");
+        directory = directory / to_path(LOG_DIRECTORY_NAME);
         create_directory(directory, format);
 
         return directory;
@@ -153,8 +166,8 @@ std::ofstream create_file(const std::filesystem::path& directory, Format& format
         std::ofstream file(file_path);
         if (!file)
         {
-                const std::string file_str = reinterpret_cast<const char*>(file_path.generic_u8string().c_str());
-                std::cerr << format.format("Failed to create log file \"" + file_str + "\"", "fatal error");
+                std::cerr << format.format(
+                        "Failed to create log file \"" + to_filename(file_path) + "\"", "fatal error");
                 std::abort();
         }
 
