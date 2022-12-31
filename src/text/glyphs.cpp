@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/image/file_save.h>
+#include <src/settings/directory.h>
 
 #include <algorithm>
 #include <array>
@@ -245,9 +246,7 @@ FontGlyphs create_font_glyphs(const Font& font, const int max_width, const int m
         res.image.size[0] = placed_rectangles.width;
         res.image.size[1] = placed_rectangles.height;
 
-        // image::save(
-        //         std::filesystem::temp_directory_path() / path_from_utf8(std::string_view("font_texture.png")),
-        //         image::ImageView<2>(res.image));
+        // image::save(settings::test_directory() / path_from_utf8("font_texture.png"), image::ImageView<2>(res.image));
 
         return res;
 }

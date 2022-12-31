@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/settings/dimensions.h>
+#include <src/settings/directory.h>
 #include <src/test/test.h>
 
 #include <filesystem>
@@ -216,7 +217,7 @@ void test_mesh_files(
                 return c;
         }();
 
-        const std::filesystem::path directory = std::filesystem::temp_directory_path();
+        const std::filesystem::path directory = settings::test_directory();
 
         test_obj_file(*mesh, name, directory, comment, progress);
 

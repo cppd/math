@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/flip.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
+#include <src/settings/directory.h>
 
 #include <filesystem>
 #include <random>
@@ -107,7 +108,7 @@ class Image final : public Notifier<N>
 
 public:
         explicit Image(const std::string_view directory_name)
-                : path_(std::filesystem::temp_directory_path() / path_from_utf8(directory_name))
+                : path_(settings::test_directory() / path_from_utf8(directory_name))
         {
                 if (!std::filesystem::create_directory(path_))
                 {

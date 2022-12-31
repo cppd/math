@@ -25,10 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/group_count.h>
 #include <src/image/file_save.h>
+#include <src/settings/directory.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
-
-#include <filesystem>
 
 namespace ns::gpu::renderer::test
 {
@@ -38,7 +37,7 @@ constexpr unsigned GROUP_SIZE = 16;
 
 void save_to_file(const std::string_view name, const image::Image<2>& image)
 {
-        image::save(std::filesystem::temp_directory_path() / path_from_utf8(name), image::ImageView<2>(image));
+        image::save(settings::test_directory() / path_from_utf8(name), image::ImageView<2>(image));
 }
 
 vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(

@@ -25,12 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/image/file_save.h>
 #include <src/numerical/vector.h>
-#include <src/settings/name.h>
+#include <src/settings/directory.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -82,18 +81,6 @@ public:
                 return noise(p);
         }
 };
-
-inline std::filesystem::path directory()
-{
-        const std::string directory_name = std::string(settings::APPLICATION_NAME) + " Noise Tests";
-
-        std::filesystem::path directory = std::filesystem::temp_directory_path() / path_from_utf8(directory_name);
-
-        std::filesystem::create_directory(directory);
-        std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
-
-        return directory;
-}
 }
 
 template <std::size_t N, typename T>
@@ -133,7 +120,7 @@ void make_noise_image(
         const std::span bytes = std::as_bytes(std::span(pixels.cbegin(), pixels.cend()));
 
         image::save(
-                image_implementation::directory() / path_from_utf8(name),
+                settings::test_directory() / path_from_utf8(name),
                 image::ImageView<2>({image_size, image_size}, image::ColorFormat::R32, bytes));
 }
 }

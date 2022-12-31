@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/image/file_save.h>
+#include <src/settings/directory.h>
 
 #include <cmath>
 #include <fstream>
@@ -111,7 +112,7 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
         {
                 std::ostringstream oss;
                 oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
-                const std::filesystem::path path = std::filesystem::temp_directory_path() / path_from_utf8(oss.str());
+                const std::filesystem::path path = settings::test_directory() / path_from_utf8(oss.str());
                 // create empty file
                 const std::ofstream f(path);
                 if (!f)
@@ -147,7 +148,7 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
         oss << ".png";
 
         image::save(
-                std::filesystem::temp_directory_path() / path_from_utf8(oss.str()),
+                settings::test_directory() / path_from_utf8(oss.str()),
                 image::ImageView<2>(
                         {data->width, data->height}, image::ColorFormat::R8_SRGB,
                         std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));

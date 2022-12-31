@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/settings/directory.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -193,7 +194,7 @@ void compute_fftw(const bool inverse, const int n1, const int n2, std::vector<Co
 
 std::filesystem::path make_path(const std::string_view name)
 {
-        return std::filesystem::temp_directory_path() / path_from_utf8(name);
+        return settings::test_directory() / path_from_utf8(name);
 }
 
 struct DftData final
