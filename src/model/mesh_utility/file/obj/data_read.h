@@ -146,7 +146,7 @@ inline void read_library_names(
 
                 const char* const iter = begin;
                 begin = read(begin, end, ascii::is_not_space);
-                std::filesystem::path name = path_from_utf8(std::string(iter, begin));
+                std::filesystem::path name = path_from_utf8(std::string_view(iter, begin));
                 found = true;
 
                 if (!unique_library_names->contains(name))

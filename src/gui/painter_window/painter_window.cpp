@@ -56,7 +56,7 @@ PainterWindow::PainterWindow(
 {
         ui_.setupUi(this);
 
-        std::string title = std::string(settings::APPLICATION_NAME);
+        std::string title = settings::APPLICATION_NAME;
         if (!name.empty())
         {
                 title += " - ";
