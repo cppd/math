@@ -17,70 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if 0
-
 #include "structure.h"
 
 #include "../core/delaunay.h"
-
-#include <src/com/log.h>
-#include <src/com/print.h>
 
 #include <vector>
 
 namespace ns::geometry
 {
 template <std::size_t N>
-void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
-{
-        LOG("--delaunay facets--");
-        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
-        {
-                LOG(to_string(delaunay_facets[i].vertices()));
-        }
-        LOG("--");
-}
+void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets);
 
 template <std::size_t N>
-void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
-{
-        LOG("--cocone facets--");
-        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
-        {
-                if (cocone_facets[i])
-                {
-                        LOG(to_string(delaunay_facets[i].vertices()));
-                }
-        }
-        LOG("--");
-}
+void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets);
 
 template <std::size_t N>
-void print_not_cocone_facets(
+void print_non_cocone_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
-        const std::vector<bool>& cocone_facets)
-{
-        LOG("--not cocone facets--");
-        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
-        {
-                if (!cocone_facets[i])
-                {
-                        LOG(to_string(delaunay_facets[i].vertices()));
-                }
-        }
-        LOG("--");
-}
+        const std::vector<bool>& cocone_facets);
 
 template <std::size_t N>
-void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices)
-{
-        LOG("--vertices--");
-        for (std::size_t i = 0; i < vertices.size(); ++i)
-        {
-                LOG("pole " + to_string(i) + ": " + to_string(vertices[i].positive_norm));
-        }
-        LOG("--");
+void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices);
 }
-}
-
-#endif

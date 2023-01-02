@@ -299,14 +299,11 @@ std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone
         return std::make_unique<Impl<N>>(source_points, true, progress);
 }
 
-#define TEMPLATE_CONSTRUCTOR(N)                                                         \
-        template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor( \
-                const std::vector<Vector<(N), float>>&, progress::Ratio*);
-
-#define TEMPLATE_CONSTRUCTOR_COCONE(N)                                                               \
+#define TEMPLATE(N)                                                                                  \
+        template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor(              \
+                const std::vector<Vector<(N), float>>&, progress::Ratio*);                           \
         template std::unique_ptr<ManifoldConstructorCocone<(N)>> create_manifold_constructor_cocone( \
                 const std::vector<Vector<(N), float>>&, progress::Ratio*);
 
-TEMPLATE_INSTANTIATION_N_2(TEMPLATE_CONSTRUCTOR)
-TEMPLATE_INSTANTIATION_N_2(TEMPLATE_CONSTRUCTOR_COCONE)
+TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }
