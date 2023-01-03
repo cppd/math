@@ -116,7 +116,7 @@ template <std::size_t N>
 void cocone(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
-        const geometry::ManifoldConstructor<N>& constructor,
+        const geometry::reconstruction::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::unique_ptr<const model::mesh::Mesh<N>> mesh;
@@ -146,7 +146,7 @@ template <std::size_t N>
 void bound_cocone(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
-        const geometry::ManifoldConstructor<N>& constructor,
+        const geometry::reconstruction::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
         const double rho,
         const double alpha)
@@ -179,7 +179,7 @@ template <std::size_t N>
 void mst(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
-        const geometry::ManifoldConstructor<N>& constructor,
+        const geometry::reconstruction::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::vector<std::array<int, 2>> mst_lines;
@@ -202,15 +202,15 @@ void mst(
 }
 
 template <std::size_t N>
-std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
+std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> create_manifold_constructor(
         progress::RatioList* const progress_list,
         const std::vector<Vector<N, float>>& points)
 {
         progress::Ratio progress(progress_list);
         const Clock::time_point start_time = Clock::now();
 
-        std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
-                geometry::create_manifold_constructor(points, &progress);
+        std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> manifold_constructor =
+                geometry::reconstruction::create_manifold_constructor(points, &progress);
 
         LOG("Manifold constructor created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
@@ -234,7 +234,7 @@ void manifold_constructor(
                 return;
         }
 
-        std::unique_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor =
+        std::unique_ptr<const geometry::reconstruction::ManifoldConstructor<N>> manifold_constructor =
                 create_manifold_constructor(progress_list, points);
 
         Threads threads(3);

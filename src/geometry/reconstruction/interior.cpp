@@ -31,7 +31,7 @@ Cambridge University Press, 2007.
 
 #include <cmath>
 
-namespace ns::geometry
+namespace ns::geometry::reconstruction
 {
 namespace
 {

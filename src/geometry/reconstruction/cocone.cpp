@@ -41,7 +41,7 @@ Cambridge University Press, 2007.
 
 #include <unordered_set>
 
-namespace ns::geometry
+namespace ns::geometry::reconstruction
 {
 namespace
 {

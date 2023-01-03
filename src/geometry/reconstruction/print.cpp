@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
-namespace ns::geometry
+namespace ns::geometry::reconstruction
 {
 template <std::size_t N>
 void print_delaunay_facets(const std::vector<core::DelaunayFacet<N>>& delaunay_facets)

@@ -30,7 +30,7 @@ Cambridge University Press, 2007.
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
 
-namespace ns::geometry
+namespace ns::geometry::reconstruction
 {
 namespace
 {
