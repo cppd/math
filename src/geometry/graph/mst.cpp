@@ -37,7 +37,7 @@ Kruskal’s algorithm
 
 #include <algorithm>
 
-namespace ns::geometry
+namespace ns::geometry::graph
 {
 namespace
 {

@@ -186,7 +186,7 @@ void mst(
         {
                 progress::Ratio progress(progress_list);
 
-                mst_lines = geometry::minimum_spanning_tree(
+                mst_lines = geometry::graph::minimum_spanning_tree(
                         constructor.points(), constructor.delaunay_objects(), &progress);
         }
         std::unique_ptr<const model::mesh::Mesh<N>> mst_mesh =
