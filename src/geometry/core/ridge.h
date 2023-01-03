@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::core
 {
 template <std::size_t N>
 class Ridge final
@@ -254,9 +254,9 @@ void add_to_ridges(const Facet& facet, const int exclude_point, Set<Ridge<N>>* c
 namespace std
 {
 template <std::size_t N>
-struct hash<::ns::geometry::Ridge<N>> final
+struct hash<::ns::geometry::core::Ridge<N>> final
 {
-        std::size_t operator()(const ::ns::geometry::Ridge<N>& v) const
+        std::size_t operator()(const ::ns::geometry::core::Ridge<N>& v) const
         {
                 return v.hash();
         }

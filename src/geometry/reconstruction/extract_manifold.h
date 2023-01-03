@@ -25,7 +25,7 @@ namespace ns::geometry
 {
 template <std::size_t N>
 std::vector<bool> extract_manifold(
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets);
 }

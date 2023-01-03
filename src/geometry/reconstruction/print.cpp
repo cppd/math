@@ -24,11 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
+void print_delaunay_facets(const std::vector<core::DelaunayFacet<N>>& delaunay_facets)
 {
         std::string s;
         s += "-- delaunay facets --\n";
-        for (const DelaunayFacet<N>& facet : delaunay_facets)
+        for (const core::DelaunayFacet<N>& facet : delaunay_facets)
         {
                 s += to_string(facet.vertices());
                 s += '\n';
@@ -38,7 +38,9 @@ void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
 }
 
 template <std::size_t N>
-void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
+void print_cocone_facets(
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& cocone_facets)
 {
         std::string s;
         s += "-- cocone facets --\n";
@@ -56,7 +58,7 @@ void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, c
 
 template <std::size_t N>
 void print_non_cocone_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
 {
         std::string s;
@@ -87,10 +89,10 @@ void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices)
         LOG(s);
 }
 
-#define TEMPLATE(N)                                                                                              \
-        template void print_delaunay_facets(const std::vector<DelaunayFacet<(N)>>&);                             \
-        template void print_cocone_facets(const std::vector<DelaunayFacet<(N)>>&, const std::vector<bool>&);     \
-        template void print_non_cocone_facets(const std::vector<DelaunayFacet<(N)>>&, const std::vector<bool>&); \
+#define TEMPLATE(N)                                                                                                    \
+        template void print_delaunay_facets(const std::vector<core::DelaunayFacet<(N)>>&);                             \
+        template void print_cocone_facets(const std::vector<core::DelaunayFacet<(N)>>&, const std::vector<bool>&);     \
+        template void print_non_cocone_facets(const std::vector<core::DelaunayFacet<(N)>>&, const std::vector<bool>&); \
         template void print_vertex_data(const std::vector<ManifoldVertex<(N)>>&);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <sstream>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 inline constexpr int CONVEX_HULL_BITS = 30;
 inline constexpr int DELAUNAY_BITS = 24;

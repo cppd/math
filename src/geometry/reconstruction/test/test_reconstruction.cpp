@@ -200,8 +200,8 @@ void test_objects(
         }
 
         constexpr bool HAS_BOUNDARY = false;
-        const int euler_characteristic = object_count * euler_characteristic_for_convex_polytope<N>();
-        check_mesh("Cocone reconstruction", points, facets, HAS_BOUNDARY, euler_characteristic);
+        const int euler_characteristic = object_count * core::euler_characteristic_for_convex_polytope<N>();
+        core::check_mesh("Cocone reconstruction", points, facets, HAS_BOUNDARY, euler_characteristic);
 }
 
 template <std::size_t N>

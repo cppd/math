@@ -29,8 +29,8 @@ namespace
 {
 template <std::size_t N>
 std::vector<std::vector<int>> find_delaunay_object_facets(
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets)
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets)
 {
         std::vector<std::vector<int>> facets;
         facets.resize(delaunay_objects.size());
@@ -47,7 +47,7 @@ std::vector<std::vector<int>> find_delaunay_object_facets(
 }
 
 template <std::size_t N>
-std::stack<int> find_external_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
+std::stack<int> find_external_facets(const std::vector<core::DelaunayFacet<N>>& delaunay_facets)
 {
         std::stack<int> facets;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
@@ -62,7 +62,7 @@ std::stack<int> find_external_facets(const std::vector<DelaunayFacet<N>>& delaun
 }
 
 template <std::size_t N>
-std::optional<int> find_index(const DelaunayFacet<N>& facet, const std::vector<bool>& visited_delaunay_objects)
+std::optional<int> find_index(const core::DelaunayFacet<N>& facet, const std::vector<bool>& visited_delaunay_objects)
 {
         if (facet.one_sided())
         {
@@ -87,7 +87,9 @@ std::optional<int> find_index(const DelaunayFacet<N>& facet, const std::vector<b
 }
 
 template <std::size_t N>
-std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* const visited_delaunay_objects)
+std::optional<int> delaunay_for_facet(
+        const core::DelaunayFacet<N>& facet,
+        std::vector<bool>* const visited_delaunay_objects)
 {
         if (const auto index = find_index(facet, *visited_delaunay_objects))
         {
@@ -99,8 +101,8 @@ std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector
 
 template <std::size_t N>
 std::vector<bool> traverse_delaunay_facets(
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
 {
         const std::vector<std::vector<int>>& delaunay_object_facets =
@@ -144,16 +146,16 @@ std::vector<bool> traverse_delaunay_facets(
 
 template <std::size_t N>
 std::vector<bool> extract_manifold(
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
 {
         return traverse_delaunay_facets(delaunay_objects, delaunay_facets, cocone_facets);
 }
 
-#define TEMPLATE(N)                                                                              \
-        template std::vector<bool> extract_manifold(                                             \
-                const std::vector<DelaunayObject<(N)>>&, const std::vector<DelaunayFacet<(N)>>&, \
+#define TEMPLATE(N)                                                                                          \
+        template std::vector<bool> extract_manifold(                                                         \
+                const std::vector<core::DelaunayObject<(N)>>&, const std::vector<core::DelaunayFacet<(N)>>&, \
                 const std::vector<bool>&);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

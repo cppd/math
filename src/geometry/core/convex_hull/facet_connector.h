@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <unordered_map>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 template <std::size_t N, typename Facet>
 class FacetConnector final

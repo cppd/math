@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 namespace simplex_points_implementation
 {

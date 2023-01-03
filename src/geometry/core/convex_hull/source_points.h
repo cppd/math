@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 namespace source_points_implementation
 {

@@ -33,7 +33,7 @@ std::vector<bool> find_interior_vertices(
 
 template <std::size_t N>
 std::vector<bool> find_interior_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
         const std::vector<bool>& interior_vertices);
 }

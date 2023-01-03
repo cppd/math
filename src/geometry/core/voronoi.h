@@ -48,7 +48,7 @@ x ⋅ (2 * (v(n) - v(0))) = v(n) ⋅ v(n) - v(0) ⋅ v(0)
 #include <array>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::core
 {
 template <std::size_t N, typename T>
 [[nodiscard]] Vector<N, T> compute_voronoi_vertex_for_delaunay_object(

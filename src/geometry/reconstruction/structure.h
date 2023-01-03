@@ -52,8 +52,8 @@ template <std::size_t N>
 void find_vertex_and_facet_data(
         bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         std::vector<ManifoldVertex<N>>* vertex_data,
         std::vector<ManifoldFacet<N>>* facet_data);
 }

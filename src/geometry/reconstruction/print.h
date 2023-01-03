@@ -26,14 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets);
+void print_delaunay_facets(const std::vector<core::DelaunayFacet<N>>& delaunay_facets);
 
 template <std::size_t N>
-void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets);
+void print_cocone_facets(
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& cocone_facets);
 
 template <std::size_t N>
 void print_non_cocone_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets);
 
 template <std::size_t N>

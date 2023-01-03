@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::core
 {
 template <std::size_t N>
 class ConvexHullSimplex final

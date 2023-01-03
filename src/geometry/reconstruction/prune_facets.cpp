@@ -39,10 +39,10 @@ namespace ns::geometry
 namespace
 {
 template <std::size_t N>
-using RidgeMap = std::unordered_map<Ridge<N>, RidgeFacets<DelaunayFacet<N>>>;
+using RidgeMap = std::unordered_map<core::Ridge<N>, core::RidgeFacets<core::DelaunayFacet<N>>>;
 
 template <std::size_t N>
-using RidgeSet = std::unordered_set<Ridge<N>>;
+using RidgeSet = std::unordered_set<core::Ridge<N>>;
 
 // orthonormal orthogonal complement of a ridge
 template <std::size_t N, typename T>
@@ -78,7 +78,7 @@ public:
 };
 
 template <std::size_t N>
-bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
+bool boundary_ridge(const std::vector<bool>& interior_vertices, const core::Ridge<N>& ridge)
 {
         for (const auto v : ridge.vertices())
         {
@@ -94,8 +94,8 @@ template <std::size_t N, typename T>
 bool sharp_ridge(
         const std::vector<Vector<N, T>>& points,
         const std::vector<bool>& interior_vertices,
-        const Ridge<N>& ridge,
-        const RidgeFacets<DelaunayFacet<N>>& ridge_facets)
+        const core::Ridge<N>& ridge,
+        const core::RidgeFacets<core::DelaunayFacet<N>>& ridge_facets)
 {
         ASSERT(!ridge_facets.empty());
 
@@ -166,14 +166,14 @@ template <std::size_t N>
 RidgeSet<N> prune(
         const std::vector<Vector<N, double>>& points,
         const std::vector<bool>& interior_vertices,
-        const std::unordered_map<const DelaunayFacet<N>*, int>& facet_ptr_index,
+        const std::unordered_map<const core::DelaunayFacet<N>*, int>& facet_ptr_index,
         const RidgeSet<N>& suspicious_ridges,
         std::vector<bool>* const cocone_facets,
         RidgeMap<N>* const ridge_map)
 {
         RidgeSet<N> ridges;
 
-        for (const Ridge<N>& r : suspicious_ridges)
+        for (const core::Ridge<N>& r : suspicious_ridges)
         {
                 const auto ridge_iter = ridge_map->find(r);
                 if (ridge_iter == ridge_map->cend())
@@ -186,12 +186,12 @@ RidgeSet<N> prune(
                         continue;
                 }
 
-                std::vector<const DelaunayFacet<N>*> facets_to_remove;
+                std::vector<const core::DelaunayFacet<N>*> facets_to_remove;
                 facets_to_remove.reserve(ridge_iter->second.size());
 
                 for (auto d = ridge_iter->second.cbegin(); d != ridge_iter->second.cend(); ++d)
                 {
-                        add_to_ridges(*(d->facet()), d->point(), &ridges);
+                        core::add_to_ridges(*(d->facet()), d->point(), &ridges);
                         facets_to_remove.push_back(d->facet());
 
                         const auto del = facet_ptr_index.find(d->facet());
@@ -199,9 +199,9 @@ RidgeSet<N> prune(
                         (*cocone_facets)[del->second] = false;
                 }
 
-                for (const DelaunayFacet<N>* const facet : facets_to_remove)
+                for (const core::DelaunayFacet<N>* const facet : facets_to_remove)
                 {
-                        remove_from_ridges(facet, ridge_map);
+                        core::remove_from_ridges(facet, ridge_map);
                 }
         }
 
@@ -212,7 +212,7 @@ RidgeSet<N> prune(
 template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
         const std::vector<Vector<N, double>>& points,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& interior_vertices,
         std::vector<bool>* const cocone_facets)
 {
@@ -220,12 +220,12 @@ void prune_facets_incident_to_sharp_ridges(
         ASSERT(points.size() == interior_vertices.size());
 
         RidgeMap<N> ridge_map;
-        std::unordered_map<const DelaunayFacet<N>*, int> facet_ptr_index;
+        std::unordered_map<const core::DelaunayFacet<N>*, int> facet_ptr_index;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if ((*cocone_facets)[i])
                 {
-                        add_to_ridges(&delaunay_facets[i], &ridge_map);
+                        core::add_to_ridges(&delaunay_facets[i], &ridge_map);
                         facet_ptr_index.emplace(&delaunay_facets[i], i);
                 }
         }
@@ -243,9 +243,9 @@ void prune_facets_incident_to_sharp_ridges(
         }
 }
 
-#define TEMPLATE(N)                                                                              \
-        template void prune_facets_incident_to_sharp_ridges(                                     \
-                const std::vector<Vector<(N), double>>&, const std::vector<DelaunayFacet<(N)>>&, \
+#define TEMPLATE(N)                                                                                    \
+        template void prune_facets_incident_to_sharp_ridges(                                           \
+                const std::vector<Vector<(N), double>>&, const std::vector<core::DelaunayFacet<(N)>>&, \
                 const std::vector<bool>&, std::vector<bool>*);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

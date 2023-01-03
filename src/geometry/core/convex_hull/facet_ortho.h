@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 namespace facet_ortho_implementation
 {

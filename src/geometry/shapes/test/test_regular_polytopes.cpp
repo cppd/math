@@ -149,7 +149,8 @@ void test_polytope(
         create_mesh(facets, &mesh_vertices, &mesh_facets);
 
         constexpr bool HAS_BOUNDARY = false;
-        check_mesh(name, mesh_vertices, mesh_facets, HAS_BOUNDARY, euler_characteristic_for_convex_polytope<N>());
+        core::check_mesh(
+                name, mesh_vertices, mesh_facets, HAS_BOUNDARY, core::euler_characteristic_for_convex_polytope<N>());
 }
 
 template <std::size_t N, typename T>

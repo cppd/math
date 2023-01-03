@@ -74,12 +74,12 @@ std::unique_ptr<const model::mesh::Mesh<N>> create_spherical_mesh(
         {
                 progress->set_text("Data: %v of %m");
 
-                const std::vector<geometry::ConvexHullSimplex<N>> ch_facets =
-                        geometry::compute_convex_hull(points, progress, WRITE_LOG);
+                const std::vector<geometry::core::ConvexHullSimplex<N>> ch_facets =
+                        geometry::core::compute_convex_hull(points, progress, WRITE_LOG);
 
                 std::vector<std::array<int, N>> res;
                 res.reserve(ch_facets.size());
-                for (const geometry::ConvexHullSimplex<N>& ch_facet : ch_facets)
+                for (const geometry::core::ConvexHullSimplex<N>& ch_facet : ch_facets)
                 {
                         res.push_back(ch_facet.vertices());
                 }

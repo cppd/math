@@ -61,8 +61,8 @@ struct VertexConnections final
 template <std::size_t N>
 Vector<N, double> voronoi_positive_norm(
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const VertexConnections& vertex_connections)
 {
         bool unbounded = false;
@@ -120,7 +120,7 @@ Vector<N, double> voronoi_positive_norm(
 template <std::size_t N>
 double voronoi_height(
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const Vector<N, double>& positive_pole_norm,
         const std::vector<int>& vertex_objects)
 {
@@ -164,8 +164,8 @@ double voronoi_height(
 
 template <std::size_t N>
 double voronoi_edge_radius(
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const DelaunayFacet<N>& facet,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const core::DelaunayFacet<N>& facet,
         const Vector<N, double>& positive_pole,
         const Vector<N, double>& pa,
         const double pa_length,
@@ -242,9 +242,9 @@ template <std::size_t N>
 EdgePoint<N> compute_edge_point(
         const unsigned index,
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const Vector<N, double>& positive_pole,
-        const DelaunayFacet<N>& facet)
+        const core::DelaunayFacet<N>& facet)
 {
         const Vector<N, double> v = delaunay_objects[facet.delaunay(index)].voronoi_vertex() - vertex;
         const double length = v.norm();
@@ -256,8 +256,8 @@ EdgePoint<N> compute_edge_point(
 template <std::size_t N>
 double cocone_facets_and_voronoi_radius_impl(
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data,
@@ -269,7 +269,7 @@ double cocone_facets_and_voronoi_radius_impl(
 
         for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
         {
-                const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
+                const core::DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
                 const EdgePoint pa = compute_edge_point(0, vertex, delaunay_objects, positive_pole, facet);
 
@@ -309,8 +309,8 @@ double cocone_facets_and_voronoi_radius_impl(
 template <std::size_t N>
 double cocone_facets_and_voronoi_radius(
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data)
@@ -323,8 +323,8 @@ double cocone_facets_and_voronoi_radius(
 template <std::size_t N>
 void cocone_facets(
         const Vector<N, double>& vertex,
-        const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data)
@@ -339,7 +339,7 @@ void cocone_facets(
 // the cocone of p are called the cocone neighbors of p.
 template <std::size_t N>
 void cocone_neighbors(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
         const int vertex_index,
         const VertexConnections::Facet& vertex_facet,
@@ -366,7 +366,7 @@ void cocone_neighbors(
 
 template <std::size_t N>
 void cocone_neighbors(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
         const std::vector<VertexConnections>& vertex_connections,
         std::vector<ManifoldVertex<N>>* const vertex_data)
@@ -388,8 +388,8 @@ void cocone_neighbors(
 template <std::size_t N>
 std::vector<VertexConnections> vertex_connections(
         const int vertex_count,
-        const std::vector<DelaunayObject<N>>& objects,
-        const std::vector<DelaunayFacet<N>>& facets)
+        const std::vector<core::DelaunayObject<N>>& objects,
+        const std::vector<core::DelaunayFacet<N>>& facets)
 {
         std::vector<VertexConnections> connections(vertex_count);
 
@@ -420,8 +420,8 @@ template <std::size_t N>
 void find_vertex_and_facet_data(
         bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
-        const std::vector<DelaunayObject<N>>& objects,
-        const std::vector<DelaunayFacet<N>>& facets,
+        const std::vector<core::DelaunayObject<N>>& objects,
+        const std::vector<core::DelaunayFacet<N>>& facets,
         std::vector<ManifoldVertex<N>>* const vertex_data,
         std::vector<ManifoldFacet<N>>* const facet_data)
 {
@@ -473,10 +473,10 @@ void find_vertex_and_facet_data(
         ASSERT(vertex_data->size() == points.size());
 }
 
-#define TEMPLATE(N)                                                                                     \
-        template void find_vertex_and_facet_data(                                                       \
-                bool, const std::vector<Vector<(N), double>>&, const std::vector<DelaunayObject<(N)>>&, \
-                const std::vector<DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
+#define TEMPLATE(N)                                                                                           \
+        template void find_vertex_and_facet_data(                                                             \
+                bool, const std::vector<Vector<(N), double>>&, const std::vector<core::DelaunayObject<(N)>>&, \
+                const std::vector<core::DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
                 std::vector<ManifoldFacet<(N)>>*);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

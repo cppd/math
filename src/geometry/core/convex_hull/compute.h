@@ -61,7 +61,7 @@ The projection to the n-space of the lower convex hull of the points
 #include <algorithm>
 #include <barrier>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 namespace compute_implementation
 {

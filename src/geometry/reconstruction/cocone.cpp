@@ -81,7 +81,7 @@ std::vector<bool> find_cocone_facets(const std::vector<ManifoldFacet<N>>& facets
 
 template <std::size_t N>
 std::vector<std::array<int, N>> create_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
 {
         std::vector<std::array<int, N>> facets;
@@ -99,22 +99,22 @@ template <std::size_t N>
 void create_voronoi_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<Vector<N, double>>* const points,
-        std::vector<DelaunayObject<N>>* const delaunay_objects,
-        std::vector<DelaunayFacet<N>>* const delaunay_facets,
+        std::vector<core::DelaunayObject<N>>* const delaunay_objects,
+        std::vector<core::DelaunayFacet<N>>* const delaunay_facets,
         progress::Ratio* const progress)
 {
         constexpr bool WRITE_LOG = true;
 
         LOG("computing delaunay...");
-        DelaunayData<N> delaunay = compute_delaunay(source_points, progress, WRITE_LOG);
+        core::DelaunayData<N> delaunay = core::compute_delaunay(source_points, progress, WRITE_LOG);
 
         *points = std::move(delaunay.points);
 
         LOG("creating delaunay objects...");
-        *delaunay_objects = create_delaunay_objects(*points, delaunay.simplices);
+        *delaunay_objects = core::create_delaunay_objects(*points, delaunay.simplices);
 
         LOG("creating delaunay facets...");
-        *delaunay_facets = create_delaunay_facets(delaunay.simplices);
+        *delaunay_facets = core::create_delaunay_facets(delaunay.simplices);
 }
 
 void check_rho_and_aplha(const double rho, const double alpha)
@@ -139,8 +139,8 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
 
         std::vector<Vector<N, float>> source_points_;
         std::vector<Vector<N, double>> points_;
-        std::vector<DelaunayObject<N>> delaunay_objects_;
-        std::vector<DelaunayFacet<N>> delaunay_facets_;
+        std::vector<core::DelaunayObject<N>> delaunay_objects_;
+        std::vector<core::DelaunayFacet<N>> delaunay_facets_;
         std::vector<ManifoldVertex<N>> vertex_data_;
         std::vector<ManifoldFacet<N>> facet_data_;
 
@@ -234,7 +234,7 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
         {
                 std::vector<std::array<int, N + 1>> res;
                 res.reserve(delaunay_objects_.size());
-                for (const DelaunayObject<N>& object : delaunay_objects_)
+                for (const core::DelaunayObject<N>& object : delaunay_objects_)
                 {
                         res.push_back(object.vertices());
                 }

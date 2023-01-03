@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/concept.h>
 #include <src/settings/instantiation.h>
 
-namespace ns::geometry::convex_hull
+namespace ns::geometry::core::convex_hull
 {
 namespace
 {

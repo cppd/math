@@ -41,7 +41,7 @@ namespace ns::geometry
 {
 namespace
 {
-using Edge2 = Ridge<3>;
+using Edge2 = core::Ridge<3>;
 
 class WeightedEdge final
 {

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::core
 {
 namespace check_implementation
 {

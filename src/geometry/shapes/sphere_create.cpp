@@ -46,12 +46,14 @@ namespace
 //         {
 //         }
 //
-//         explicit Facet(const std::array<Vector<N, T>, N>& vertices) : vertices(vertices)
+//         explicit Facet(const std::array<Vector<N, T>, N>& vertices)
+//                 : vertices(vertices)
 //         {
 //         }
 //
 //         template <typename... Ts>
-//         explicit Facet(Ts... vertices) : vertices{vertices...}
+//         explicit Facet(Ts... vertices)
+//                 : vertices{vertices...}
 //         {
 //                 static_assert(sizeof...(Ts) == N);
 //         }
@@ -195,10 +197,10 @@ namespace
 //
 //                 progress::Ratio progress(nullptr);
 //
-//                 const std::vector<ConvexHullSimplex<N>> facets =
-//                         compute_convex_hull(vertices, &facets, &progress, false);
+//                 const std::vector<core::ConvexHullSimplex<N>> facets =
+//                         core::compute_convex_hull(vertices, &facets, &progress, false);
 //
-//                 for (const ConvexHullSimplex<N>& facet : facets)
+//                 for (const core::ConvexHullSimplex<N>& facet : facets)
 //                 {
 //                         if (!on_plane(facet.vertices(), vertices))
 //                         {
@@ -312,13 +314,13 @@ std::unordered_set<Vector<N, float>> create_initial_vertex_set(const std::vector
 
 template <std::size_t N>
 void add_vertices(
-        const std::vector<ConvexHullSimplex<N>>& facets,
+        const std::vector<core::ConvexHullSimplex<N>>& facets,
         std::vector<Vector<N, float>>* const vertices,
         std::unordered_set<Vector<N, float>>* const vertex_set)
 {
         static_assert(N >= 4);
 
-        for (const ConvexHullSimplex<N>& facet : facets)
+        for (const core::ConvexHullSimplex<N>& facet : facets)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -352,13 +354,13 @@ void divide_facets(
 
         std::unordered_set<Vector<N, float>> vertex_set = create_initial_vertex_set(facets);
         std::vector<Vector<N, float>> ch_vertices(vertex_set.cbegin(), vertex_set.cend());
-        std::vector<ConvexHullSimplex<N>> ch_facets;
+        std::vector<core::ConvexHullSimplex<N>> ch_facets;
 
         while (true)
         {
                 progress::Ratio progress(nullptr);
 
-                ch_facets = compute_convex_hull(ch_vertices, &progress, false);
+                ch_facets = core::compute_convex_hull(ch_vertices, &progress, false);
 
                 if (ch_facets.size() >= min_facet_count)
                 {
@@ -377,7 +379,7 @@ void divide_facets(
 
         mesh_facets->clear();
         mesh_facets->reserve(ch_facets.size());
-        for (const ConvexHullSimplex<N>& ch_facet : ch_facets)
+        for (const core::ConvexHullSimplex<N>& ch_facet : ch_facets)
         {
                 mesh_facets->push_back(ch_facet.vertices());
         }

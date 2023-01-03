@@ -74,14 +74,14 @@ std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
         {
                 const Clock::time_point start_time = Clock::now();
 
-                const std::vector<geometry::ConvexHullSimplex<N>> ch_facets =
-                        geometry::compute_convex_hull(points, progress, true);
+                const std::vector<geometry::core::ConvexHullSimplex<N>> ch_facets =
+                        geometry::core::compute_convex_hull(points, progress, true);
 
                 LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
                 std::vector<std::array<int, N>> res;
                 res.reserve(ch_facets.size());
-                for (const geometry::ConvexHullSimplex<N>& f : ch_facets)
+                for (const geometry::core::ConvexHullSimplex<N>& f : ch_facets)
                 {
                         res.push_back(f.vertices());
                 }

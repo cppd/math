@@ -130,7 +130,7 @@ void expansion_phase(
 
 template <std::size_t N>
 bool interior_facet(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& manifold_facets,
         const std::vector<bool>& interior_vertices,
         const int facet)
@@ -190,7 +190,7 @@ std::vector<bool> find_interior_vertices(
 
 template <std::size_t N>
 std::vector<bool> find_interior_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
         const std::vector<bool>& interior_vertices)
 {
@@ -207,7 +207,7 @@ std::vector<bool> find_interior_facets(
 #define TEMPLATE(N)                                                                                                 \
         template std::vector<bool> find_interior_vertices(double, double, const std::vector<ManifoldVertex<(N)>>&); \
         template std::vector<bool> find_interior_facets(                                                            \
-                const std::vector<DelaunayFacet<(N)>>&, const std::vector<ManifoldFacet<(N)>>&,                     \
+                const std::vector<core::DelaunayFacet<(N)>>&, const std::vector<ManifoldFacet<(N)>>&,               \
                 const std::vector<bool>&);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
