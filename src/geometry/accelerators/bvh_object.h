@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../spatial/bounding_box.h"
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 template <std::size_t N, typename T>
 class BvhObject final

@@ -76,11 +76,11 @@ public:
                 return vertices_to_array(vertices_, facets_[index]);
         }
 
-        [[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects() const
+        [[nodiscard]] std::vector<geometry::accelerators::BvhObject<N, T>> bvh_objects() const
         {
                 ASSERT(facets_.size() == simplices_.size());
                 const auto intersection_cost = decltype(simplices_)::value_type::intersection_cost();
-                std::vector<geometry::BvhObject<N, T>> res;
+                std::vector<geometry::accelerators::BvhObject<N, T>> res;
                 res.reserve(simplices_.size());
                 for (std::size_t i = 0; i < simplices_.size(); ++i)
                 {
@@ -95,7 +95,7 @@ template <std::size_t N, typename T>
 class SphereMesh final
 {
         sphere_mesh_implementation::Sphere<N, T> sphere_;
-        geometry::Bvh<N, T> bvh_;
+        geometry::accelerators::Bvh<N, T> bvh_;
 
 public:
         SphereMesh(const unsigned facet_min_count, progress::Ratio* const progress)

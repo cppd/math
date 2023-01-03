@@ -37,7 +37,7 @@ Elsevier, 2017.
 #include <utility>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 namespace bvh_implementation
 {

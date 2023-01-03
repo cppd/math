@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/settings/instantiation.h>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 namespace
 {

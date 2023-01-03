@@ -35,7 +35,7 @@ CRC Press, 2014.
 #include <optional>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 template <typename Parallelotope>
 class SpatialSubdivisionTree final

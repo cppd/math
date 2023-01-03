@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 namespace bvh_objects_implementation
 {

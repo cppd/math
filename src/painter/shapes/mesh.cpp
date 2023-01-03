@@ -141,12 +141,12 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::vector<geometry::BvhObject<N, T>> bvh_objects(
+[[nodiscard]] std::vector<geometry::accelerators::BvhObject<N, T>> bvh_objects(
         const mesh::Mesh<N, T, Color>& mesh,
         const std::vector<std::array<int, N>>& facet_vertex_indices)
 {
         const std::vector<mesh::Facet<N, T>>& facets = mesh.facets;
-        std::vector<geometry::BvhObject<N, T>> res;
+        std::vector<geometry::accelerators::BvhObject<N, T>> res;
         res.reserve(facets.size());
         for (std::size_t i = 0; i < facets.size(); ++i)
         {
@@ -159,7 +159,7 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] geometry::Bvh<N, T> create_bvh(
+[[nodiscard]] geometry::accelerators::Bvh<N, T> create_bvh(
         const mesh::Mesh<N, T, Color>& mesh,
         const std::vector<std::array<int, N>>& facet_vertex_indices,
         const bool write_log,
@@ -170,7 +170,7 @@ template <std::size_t N, typename T, typename Color>
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::Bvh<N, T> bvh(bvh_objects(mesh, facet_vertex_indices), progress);
+        geometry::accelerators::Bvh<N, T> bvh(bvh_objects(mesh, facet_vertex_indices), progress);
 
         if (write_log)
         {
@@ -184,7 +184,7 @@ template <std::size_t N, typename T, typename Color>
 class Impl final : public Shape<N, T, Color>
 {
         mesh::Mesh<N, T, Color> mesh_;
-        geometry::Bvh<N, T> bvh_;
+        geometry::accelerators::Bvh<N, T> bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
 

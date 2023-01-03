@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 template <typename Parallelotope, typename Object>
 class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parallelotope>::Objects

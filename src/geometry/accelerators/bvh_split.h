@@ -37,7 +37,7 @@ Elsevier, 2017.
 #include <span>
 #include <tuple>
 
-namespace ns::geometry
+namespace ns::geometry::accelerators
 {
 namespace bvh_split_implementation
 {
