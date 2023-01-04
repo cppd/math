@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <type_traits>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 template <std::size_t N, typename T, typename Objects, typename Indices>
 [[nodiscard]] auto ray_intersection(

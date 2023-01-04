@@ -31,7 +31,7 @@ template <typename T>
 struct Type;
 
 template <std::size_t N, typename T>
-struct Type<BoundingBox<N, T>> final
+struct Type<spatial::BoundingBox<N, T>> final
 {
         using Value = BvhObject<N, T>;
 };

@@ -50,7 +50,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> init_light_sources(
                 error("No objects for scene");
         }
 
-        geometry::BoundingBox<N, T> box = shapes[0]->bounding_box();
+        geometry::spatial::BoundingBox<N, T> box = shapes[0]->bounding_box();
         for (std::size_t i = 1; i < shapes.size(); ++i)
         {
                 box.merge(shapes[i]->bounding_box());

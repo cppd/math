@@ -139,16 +139,14 @@ bool HyperplaneParallelotope<N, T, Color>::intersect_any(
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::BoundingBox<N, T> HyperplaneParallelotope<N, T, Color>::bounding_box() const
+geometry::spatial::BoundingBox<N, T> HyperplaneParallelotope<N, T, Color>::bounding_box() const
 {
-        return geometry::BoundingBox<N, T>(hyperplane_parallelotope_.vertices());
+        return geometry::spatial::BoundingBox<N, T>(hyperplane_parallelotope_.vertices());
 }
 
 template <std::size_t N, typename T, typename Color>
-std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> HyperplaneParallelotope<
-        N,
-        T,
-        Color>::overlap_function() const
+std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
+        HyperplaneParallelotope<N, T, Color>::overlap_function() const
 {
         return hyperplane_parallelotope_.overlap_function();
 }
@@ -169,7 +167,8 @@ HyperplaneParallelotope<N, T, Color>::HyperplaneParallelotope(
 }
 
 template <std::size_t N, typename T, typename Color>
-const geometry::HyperplaneParallelotope<N, T>& HyperplaneParallelotope<N, T, Color>::hyperplane_parallelotope() const
+const geometry::spatial::HyperplaneParallelotope<N, T>& HyperplaneParallelotope<N, T, Color>::hyperplane_parallelotope()
+        const
 {
         return hyperplane_parallelotope_;
 }

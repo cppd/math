@@ -205,7 +205,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
         check_max_depth<N>(max_depth);
 
         const Vector<N, T> guard_region{GUARD_REGION_SIZE<T> * objects.bounding_box().diagonal().norm()};
-        const BoundingBox<N, T> root{
+        const spatial::BoundingBox<N, T> root{
                 objects.bounding_box().min() - guard_region, objects.bounding_box().max() + guard_region};
         const int max_box_count = std::lround(maximum_box_count(BOX_COUNT<N>, max_depth));
 
@@ -253,7 +253,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
                       * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T{N}));
 }
 
-#define TEMPLATE(N, T) template class SpatialSubdivisionTree<ParallelotopeAA<(N), T>>;
+#define TEMPLATE(N, T) template class SpatialSubdivisionTree<spatial::ParallelotopeAA<(N), T>>;
 
 TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

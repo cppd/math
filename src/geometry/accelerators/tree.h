@@ -128,7 +128,7 @@ public:
         public:
                 [[nodiscard]] virtual int count() const = 0;
 
-                [[nodiscard]] virtual const BoundingBox<N, T>& bounding_box() const = 0;
+                [[nodiscard]] virtual const spatial::BoundingBox<N, T>& bounding_box() const = 0;
 
                 [[nodiscard]] virtual std::vector<int> intersection_indices(
                         const Parallelotope& parallelotope,

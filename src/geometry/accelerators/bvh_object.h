@@ -24,13 +24,13 @@ namespace ns::geometry::accelerators
 template <std::size_t N, typename T>
 class BvhObject final
 {
-        BoundingBox<N, T> bounds_;
+        spatial::BoundingBox<N, T> bounds_;
         Vector<N, T> center_;
         T intersection_cost_;
         unsigned index_;
 
 public:
-        BvhObject(const BoundingBox<N, T>& bounds, const T intersection_cost, const unsigned index)
+        BvhObject(const spatial::BoundingBox<N, T>& bounds, const T intersection_cost, const unsigned index)
                 : bounds_(bounds),
                   center_(bounds.center()),
                   intersection_cost_(intersection_cost),
@@ -38,7 +38,7 @@ public:
         {
         }
 
-        [[nodiscard]] const BoundingBox<N, T>& bounds() const
+        [[nodiscard]] const spatial::BoundingBox<N, T>& bounds() const
         {
                 return bounds_;
         }

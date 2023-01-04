@@ -43,7 +43,7 @@ auto compute_bounds(const T& objects)
 {
         namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox box = impl::bvh_object(objects.front()).bounds();
+        spatial::BoundingBox box = impl::bvh_object(objects.front()).bounds();
         for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
                 box.merge(impl::bvh_object(*i).bounds());
@@ -56,7 +56,7 @@ auto compute_center_bounds(const T& objects)
 {
         namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox box = BoundingBox(impl::bvh_object(objects.front()).center());
+        spatial::BoundingBox box = spatial::BoundingBox(impl::bvh_object(objects.front()).center());
         for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
                 box.merge(impl::bvh_object(*i).center());

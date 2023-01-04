@@ -27,16 +27,18 @@ namespace ns::painter::shapes::mesh
 namespace
 {
 template <std::size_t N, typename T>
-[[nodiscard]] bool vertex_inside_clip_plane(const Vector<N, T>& vertex, const geometry::Hyperplane<N, T>& clip_plane)
+[[nodiscard]] bool vertex_inside_clip_plane(
+        const Vector<N, T>& vertex,
+        const geometry::spatial::Hyperplane<N, T>& clip_plane)
 {
-        return clip_plane.distance(geometry::offset_point(clip_plane.n, vertex)) >= 0;
+        return clip_plane.distance(geometry::spatial::offset_point(clip_plane.n, vertex)) >= 0;
 }
 
 template <std::size_t N, typename T, typename MeshType>
 [[nodiscard]] bool facet_inside_clip_plane(
         const typename model::mesh::Mesh<N>::Facet& facet,
         const numerical::transform::MatrixVectorMultiplier<N + 1, T>& multiplier,
-        const geometry::Hyperplane<N, T>& clip_plane,
+        const geometry::spatial::Hyperplane<N, T>& clip_plane,
         const std::vector<Vector<N, MeshType>>& vertices)
 {
         for (const auto index : facet.vertices)
@@ -54,7 +56,7 @@ template <std::size_t N, typename T, typename MeshType>
         const std::vector<Vector<N, MeshType>>& vertices,
         const std::vector<typename model::mesh::Mesh<N>::Facet>& facets,
         const Matrix<N + 1, N + 1, T>& mesh_matrix,
-        const geometry::Hyperplane<N, T>& clip_plane)
+        const geometry::spatial::Hyperplane<N, T>& clip_plane)
 {
         const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
 
@@ -83,7 +85,7 @@ std::vector<typename model::mesh::Mesh<N>::Facet> find_facets(
 
         return find_facets_inside_clip_plane(
                 mesh.vertices, mesh.facets, to_matrix<T>(mesh_object.matrix()),
-                geometry::Hyperplane<N, T>(*clip_plane_equation));
+                geometry::spatial::Hyperplane<N, T>(*clip_plane_equation));
 }
 }
 

@@ -46,7 +46,7 @@ inline constexpr unsigned BUCKET_COUNT = 32;
 template <std::size_t N, typename T>
 class CenterBounds final
 {
-        BoundingBox<N, T> box_;
+        spatial::BoundingBox<N, T> box_;
         unsigned axis_;
         T length_r_;
         T min_;
@@ -80,14 +80,14 @@ public:
 template <std::size_t N, typename T>
 struct Bucket final
 {
-        BoundingBox<N, T> bounds;
+        spatial::BoundingBox<N, T> bounds;
         T cost;
 
         Bucket()
         {
         }
 
-        Bucket(const BoundingBox<N, T>& bounds, const T& cost)
+        Bucket(const spatial::BoundingBox<N, T>& bounds, const T& cost)
                 : bounds(bounds),
                   cost(cost)
         {
@@ -205,7 +205,7 @@ bool compare_cost(
 
 template <std::size_t N, typename T>
 std::tuple<T, unsigned> minimum_surface_area_heuristic_split(
-        const BoundingBox<N, T>& bounds,
+        const spatial::BoundingBox<N, T>& bounds,
         const T& interior_node_traversal_cost,
         const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& forward_sum,
         const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& backward_sum)
@@ -252,15 +252,15 @@ struct BvhSplit final
 {
         std::span<BvhObject<N, T>> objects_min;
         std::span<BvhObject<N, T>> objects_max;
-        BoundingBox<N, T> bounds_min;
-        BoundingBox<N, T> bounds_max;
+        spatial::BoundingBox<N, T> bounds_min;
+        spatial::BoundingBox<N, T> bounds_max;
         unsigned axis;
 };
 
 template <std::size_t N, typename T>
 std::optional<BvhSplit<N, T>> split(
         const std::span<BvhObject<N, T>>& objects,
-        const BoundingBox<N, T>& bounds,
+        const spatial::BoundingBox<N, T>& bounds,
         const T& interior_node_traversal_cost)
 {
         namespace impl = bvh_split_implementation;

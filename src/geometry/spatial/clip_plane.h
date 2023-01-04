@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 template <std::size_t N, typename T>
 Hyperplane<N - 1, T> clip_plane_equation_to_clip_plane(const Vector<N, T>& clip_plane_equation)

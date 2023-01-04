@@ -37,14 +37,15 @@ namespace ns::painter::scenes
 namespace
 {
 template <std::size_t N, typename T>
-[[nodiscard]] std::optional<geometry::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
+[[nodiscard]] std::optional<geometry::spatial::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
         const std::optional<Vector<N, T>>& clip_plane_equation)
 {
         if (!clip_plane_equation)
         {
                 return std::nullopt;
         }
-        return geometry::ConvexPolytope<N - 1, T>{{geometry::clip_plane_equation_to_clip_plane(*clip_plane_equation)}};
+        return geometry::spatial::ConvexPolytope<N - 1, T>{
+                {geometry::spatial::clip_plane_equation_to_clip_plane(*clip_plane_equation)}};
 }
 
 template <std::size_t N, typename T, typename Color, bool USE_CLIP_POLYTOPE>
@@ -56,7 +57,7 @@ class Impl final : public Scene<N, T, Color>
         const std::vector<const Shape<N, T, Color>*> shapes_;
         const std::vector<const LightSource<N, T, Color>*> light_sources_;
         const Projector<N, T>* const projector_;
-        const std::optional<geometry::ConvexPolytope<N, T>> clip_polytope_;
+        const std::optional<geometry::spatial::ConvexPolytope<N, T>> clip_polytope_;
 
         geometry::accelerators::Bvh<N, T> bvh_;
 
@@ -67,7 +68,7 @@ class Impl final : public Scene<N, T, Color>
         {
                 if (geometric_normal)
                 {
-                        ray->set_org(geometry::offset_ray_org(*geometric_normal, *ray));
+                        ray->set_org(geometry::spatial::offset_ray_org(*geometric_normal, *ray));
                 }
 
                 if constexpr (!USE_CLIP_POLYTOPE)

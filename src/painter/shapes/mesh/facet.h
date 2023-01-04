@@ -45,7 +45,7 @@ class Facet final
                 REVERSE
         };
 
-        geometry::HyperplaneSimplex<N, T> simplex_;
+        geometry::spatial::HyperplaneSimplex<N, T> simplex_;
         std::array<int, N> n_;
         std::array<int, N> t_;
         int material_;

@@ -27,7 +27,7 @@ namespace ns::painter::shapes
 template <std::size_t N, typename T, typename Color>
 class HyperplaneParallelotope final : public Shape<N, T, Color>
 {
-        const geometry::HyperplaneParallelotope<N, T> hyperplane_parallelotope_;
+        const geometry::spatial::HyperplaneParallelotope<N, T> hyperplane_parallelotope_;
         const T roughness_;
         const shading::Colors<Color> colors_;
         const T alpha_;
@@ -43,10 +43,10 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
 
         bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;
 
-        geometry::BoundingBox<N, T> bounding_box() const override;
+        geometry::spatial::BoundingBox<N, T> bounding_box() const override;
 
-        std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
-                const override;
+        std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
+                overlap_function() const override;
 
 public:
         HyperplaneParallelotope(
@@ -57,7 +57,7 @@ public:
                 const Vector<N, T>& org,
                 const std::array<Vector<N, T>, N - 1>& vectors);
 
-        const geometry::HyperplaneParallelotope<N, T>& hyperplane_parallelotope() const;
+        const geometry::spatial::HyperplaneParallelotope<N, T>& hyperplane_parallelotope() const;
 
         void set_light_source(const LightSource<N, T, Color>* light_source);
         const LightSource<N, T, Color>* light_source() const;

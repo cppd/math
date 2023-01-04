@@ -44,7 +44,7 @@ namespace bvh_implementation
 template <std::size_t N, typename T>
 struct Node final
 {
-        BoundingBox<N, T> bounds;
+        spatial::BoundingBox<N, T> bounds;
 
         union
         {
@@ -183,7 +183,7 @@ class Bvh final
 public:
         explicit Bvh(std::vector<BvhObject<N, T>>&& objects, progress::Ratio* progress);
 
-        [[nodiscard]] const BoundingBox<N, T>& bounding_box() const
+        [[nodiscard]] const spatial::BoundingBox<N, T>& bounding_box() const
         {
                 return nodes_[0].bounds;
         }

@@ -152,8 +152,8 @@ template <std::size_t N, typename T, typename Color>
         {
                 ASSERT(i < facet_vertex_indices.size());
                 res.emplace_back(
-                        geometry::BoundingBox(mesh.vertices, facet_vertex_indices[i]), facets[i].intersection_cost(),
-                        i);
+                        geometry::spatial::BoundingBox(mesh.vertices, facet_vertex_indices[i]),
+                        facets[i].intersection_cost(), i);
         }
         return res;
 }
@@ -185,7 +185,7 @@ class Impl final : public Shape<N, T, Color>
 {
         mesh::Mesh<N, T, Color> mesh_;
         geometry::accelerators::Bvh<N, T> bvh_;
-        geometry::BoundingBox<N, T> bounding_box_;
+        geometry::spatial::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
 
         [[nodiscard]] T intersection_cost() const override
@@ -209,7 +209,7 @@ class Impl final : public Shape<N, T, Color>
                                 -> std::optional<std::tuple<T, const mesh::Facet<N, T>*>>
                         {
                                 const std::tuple<T, const mesh::Facet<N, T>*> info =
-                                        geometry::ray_intersection(*facets, indices, ray, max);
+                                        geometry::spatial::ray_intersection(*facets, indices, ray, max);
                                 if (std::get<1>(info))
                                 {
                                         return info;
@@ -231,21 +231,23 @@ class Impl final : public Shape<N, T, Color>
                         ray, max_distance,
                         [facets = &mesh_.facets, &ray](const auto& indices, const auto& max) -> bool
                         {
-                                return geometry::ray_intersection_any(*facets, indices, ray, max);
+                                return geometry::spatial::ray_intersection_any(*facets, indices, ray, max);
                         });
         }
 
-        [[nodiscard]] geometry::BoundingBox<N, T> bounding_box() const override
+        [[nodiscard]] geometry::spatial::BoundingBox<N, T> bounding_box() const override
         {
                 return bounding_box_;
         }
 
-        [[nodiscard]] std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)>
+        [[nodiscard]] std::function<
+                bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
                 overlap_function() const override
         {
-                auto root = std::make_shared<geometry::ParallelotopeAA<N, T>>(bounding_box_.min(), bounding_box_.max());
+                auto root = std::make_shared<geometry::spatial::ParallelotopeAA<N, T>>(
+                        bounding_box_.min(), bounding_box_.max());
                 return [root = root, overlap_function = root->overlap_function()](
-                               const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+                               const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>& p)
                 {
                         return overlap_function(p);
                 };

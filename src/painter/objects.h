@@ -299,9 +299,10 @@ public:
 
         [[nodiscard]] virtual bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const = 0;
 
-        [[nodiscard]] virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
+        [[nodiscard]] virtual geometry::spatial::BoundingBox<N, T> bounding_box() const = 0;
 
-        [[nodiscard]] virtual std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)>
+        [[nodiscard]] virtual std::function<
+                bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
                 overlap_function() const = 0;
 };
 

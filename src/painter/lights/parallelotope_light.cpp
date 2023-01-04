@@ -181,7 +181,7 @@ bool ParallelotopeLight<N, T, Color>::is_infinite_area() const
 
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
-        const geometry::HyperplaneParallelotope<N, T>& parallelotope,
+        const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
         const Vector<N, T>& direction,
         const Color& radiance)
         : parallelotope_(parallelotope),
@@ -193,7 +193,7 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
 
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
-        const geometry::HyperplaneParallelotope<N, T>& parallelotope,
+        const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
         const Vector<N, T>& direction,
         const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,

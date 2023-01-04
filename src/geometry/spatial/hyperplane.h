@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 template <std::size_t N, typename T>
 struct Hyperplane final

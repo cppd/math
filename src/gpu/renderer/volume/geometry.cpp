@@ -41,9 +41,11 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world)
 }
 }
 
-geometry::Hyperplane<3, double> volume_clip_plane(const Vector4d& world_clip_plane_equation, const Matrix4d& model)
+geometry::spatial::Hyperplane<3, double> volume_clip_plane(
+        const Vector4d& world_clip_plane_equation,
+        const Matrix4d& model)
 {
-        return geometry::clip_plane_equation_to_clip_plane(world_clip_plane_equation * model);
+        return geometry::spatial::clip_plane_equation_to_clip_plane(world_clip_plane_equation * model);
 }
 
 // in texture coordinates

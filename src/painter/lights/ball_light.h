@@ -34,7 +34,7 @@ class BallLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        geometry::HyperplaneBall<N, T> ball_;
+        geometry::spatial::HyperplaneBall<N, T> ball_;
         Color radiance_;
         T pdf_;
         T area_;

@@ -34,7 +34,7 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        geometry::HyperplaneParallelotope<N, T> parallelotope_;
+        geometry::spatial::HyperplaneParallelotope<N, T> parallelotope_;
         Color radiance_;
         T pdf_;
         std::optional<com::Spotlight<N, T>> spotlight_;
@@ -68,12 +68,12 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
 
 public:
         ParallelotopeLight(
-                const geometry::HyperplaneParallelotope<N, T>& parallelotope,
+                const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
                 const Vector<N, T>& direction,
                 const Color& radiance);
 
         ParallelotopeLight(
-                const geometry::HyperplaneParallelotope<N, T>& parallelotope,
+                const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
                 const Vector<N, T>& direction,
                 const Color& radiance,
                 std::type_identity_t<T> spotlight_falloff_start,

@@ -36,7 +36,7 @@ Cambridge University Press, 2003.
 #include <array>
 #include <optional>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 template <std::size_t N, typename T>
 class HyperplaneSimplex final

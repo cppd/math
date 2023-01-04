@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::geometry::spatial
+namespace ns::geometry::spatial::test
 {
 namespace
 {

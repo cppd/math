@@ -263,7 +263,7 @@ StorageScene<N, T, Color> create_cornell_box_scene(
 }
 
 template <std::size_t N, typename T>
-std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::BoundingBox<N, T>& bb)
+std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::spatial::BoundingBox<N, T>& bb)
 {
         const T size = bb.diagonal().norm() * T{1.5};
 

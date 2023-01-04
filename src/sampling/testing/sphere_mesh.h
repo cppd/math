@@ -50,7 +50,7 @@ class Sphere final
 {
         std::vector<Vector<N, T>> vertices_;
         std::vector<std::array<int, N>> facets_;
-        std::vector<geometry::HyperplaneSimplex<N, T>> simplices_;
+        std::vector<geometry::spatial::HyperplaneSimplex<N, T>> simplices_;
 
 public:
         explicit Sphere(const unsigned facet_min_count)
@@ -65,7 +65,7 @@ public:
                 }
         }
 
-        [[nodiscard]] const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
+        [[nodiscard]] const std::vector<geometry::spatial::HyperplaneSimplex<N, T>>& simplices() const
         {
                 return simplices_;
         }
@@ -84,7 +84,7 @@ public:
                 res.reserve(simplices_.size());
                 for (std::size_t i = 0; i < simplices_.size(); ++i)
                 {
-                        res.emplace_back(geometry::BoundingBox(vertices_, facets_[i]), intersection_cost, i);
+                        res.emplace_back(geometry::spatial::BoundingBox(vertices_, facets_[i]), intersection_cost, i);
                 }
                 return res;
         }
@@ -119,10 +119,10 @@ public:
                 const auto intersection = bvh_.intersect(
                         ray, Limits<T>::max(),
                         [facets = &sphere_.simplices(), &ray](const auto& indices, const auto& max_distance)
-                                -> std::optional<std::tuple<T, const geometry::HyperplaneSimplex<N, T>*>>
+                                -> std::optional<std::tuple<T, const geometry::spatial::HyperplaneSimplex<N, T>*>>
                         {
-                                const std::tuple<T, const geometry::HyperplaneSimplex<N, T>*> info =
-                                        geometry::ray_intersection(*facets, indices, ray, max_distance);
+                                const std::tuple<T, const geometry::spatial::HyperplaneSimplex<N, T>*> info =
+                                        geometry::spatial::ray_intersection(*facets, indices, ray, max_distance);
                                 if (std::get<1>(info))
                                 {
                                         return info;

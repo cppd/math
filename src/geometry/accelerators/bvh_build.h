@@ -39,7 +39,7 @@ namespace ns::geometry::accelerators
 template <std::size_t N, typename T>
 struct BvhBuildNode final
 {
-        BoundingBox<N, T> bounds;
+        spatial::BoundingBox<N, T> bounds;
         std::array<unsigned, 2> children;
         unsigned axis;
         unsigned object_index_offset;
@@ -51,7 +51,7 @@ struct BvhBuildNode final
 
         // leaf
         BvhBuildNode(
-                const BoundingBox<N, T>& bounds,
+                const spatial::BoundingBox<N, T>& bounds,
                 const unsigned object_index_offset,
                 const unsigned object_index_count)
                 : bounds(bounds),
@@ -63,7 +63,7 @@ struct BvhBuildNode final
 
         // interior
         BvhBuildNode(
-                const BoundingBox<N, T>& bounds,
+                const spatial::BoundingBox<N, T>& bounds,
                 const unsigned axis,
                 const unsigned child_0,
                 const unsigned child_1)
@@ -89,11 +89,11 @@ class BvhBuild final
         struct Task final
         {
                 std::span<BvhObject<N, T>> objects;
-                BoundingBox<N, T> bounds;
+                spatial::BoundingBox<N, T> bounds;
                 BvhBuildNode<N, T>* node;
 
                 Task(const std::span<BvhObject<N, T>>& objects,
-                     const BoundingBox<N, T>& bounds,
+                     const spatial::BoundingBox<N, T>& bounds,
                      BvhBuildNode<N, T>* const node)
                         : objects(objects),
                           bounds(bounds),
@@ -102,7 +102,7 @@ class BvhBuild final
                 }
         };
 
-        const T interior_node_traversal_cost_ = 2 * BoundingBox<N, T>::intersection_r_cost();
+        const T interior_node_traversal_cost_ = 2 * spatial::BoundingBox<N, T>::intersection_r_cost();
         const double max_interior_node_count_reciprocal_;
 
         std::vector<unsigned> object_indices_;

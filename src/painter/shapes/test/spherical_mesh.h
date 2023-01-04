@@ -127,7 +127,7 @@ template <std::size_t N, typename T, typename Color>
 struct SphericalMesh final
 {
         std::size_t facet_count;
-        geometry::BoundingBox<N, T> bounding_box;
+        geometry::spatial::BoundingBox<N, T> bounding_box;
         scenes::StorageScene<N, T, Color> scene;
         T surface;
 };
@@ -180,7 +180,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
-        const geometry::BoundingBox<N, T>& bb,
+        const geometry::spatial::BoundingBox<N, T>& bb,
         const int ray_count,
         RandomEngine& engine)
 {
@@ -199,7 +199,7 @@ std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Ray<N, T>> create_random_intersections_rays(
-        const geometry::BoundingBox<N, T>& bb,
+        const geometry::spatial::BoundingBox<N, T>& bb,
         const int ray_count,
         RandomEngine& engine)
 {

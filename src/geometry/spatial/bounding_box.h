@@ -33,7 +33,7 @@ Elsevier, 2017.
 #include <array>
 #include <optional>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 namespace bounding_box_implementation
 {

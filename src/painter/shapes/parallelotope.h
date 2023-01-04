@@ -27,7 +27,7 @@ namespace ns::painter::shapes
 template <std::size_t N, typename T, typename Color>
 class Parallelotope final : public Shape<N, T, Color>
 {
-        const geometry::Parallelotope<N, T> parallelotope_;
+        const geometry::spatial::Parallelotope<N, T> parallelotope_;
         const T roughness_;
         const shading::Colors<Color> colors_;
         const T alpha_;
@@ -42,10 +42,10 @@ class Parallelotope final : public Shape<N, T, Color>
 
         bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;
 
-        geometry::BoundingBox<N, T> bounding_box() const override;
+        geometry::spatial::BoundingBox<N, T> bounding_box() const override;
 
-        std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
-                const override;
+        std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
+                overlap_function() const override;
 
 public:
         Parallelotope(
@@ -56,7 +56,7 @@ public:
                 const Vector<N, T>& org,
                 const std::array<Vector<N, T>, N>& vectors);
 
-        const geometry::Parallelotope<N, T>& parallelotope() const;
+        const geometry::spatial::Parallelotope<N, T>& parallelotope() const;
 
         const LightSource<N, T, Color>* light_source() const;
 

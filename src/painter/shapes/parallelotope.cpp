@@ -139,14 +139,16 @@ bool Parallelotope<N, T, Color>::intersect_any(
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::BoundingBox<N, T> Parallelotope<N, T, Color>::bounding_box() const
+geometry::spatial::BoundingBox<N, T> Parallelotope<N, T, Color>::bounding_box() const
 {
-        return geometry::BoundingBox<N, T>(parallelotope_.vertices());
+        return geometry::spatial::BoundingBox<N, T>(parallelotope_.vertices());
 }
 
 template <std::size_t N, typename T, typename Color>
-std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> Parallelotope<N, T, Color>::
-        overlap_function() const
+std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)> Parallelotope<
+        N,
+        T,
+        Color>::overlap_function() const
 {
         return parallelotope_.overlap_function();
 }
@@ -167,7 +169,7 @@ Parallelotope<N, T, Color>::Parallelotope(
 }
 
 template <std::size_t N, typename T, typename Color>
-const geometry::Parallelotope<N, T>& Parallelotope<N, T, Color>::parallelotope() const
+const geometry::spatial::Parallelotope<N, T>& Parallelotope<N, T, Color>::parallelotope() const
 {
         return parallelotope_;
 }

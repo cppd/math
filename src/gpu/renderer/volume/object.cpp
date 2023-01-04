@@ -143,10 +143,10 @@ class Impl final : public VolumeObject
         void buffer_set_coordinates() const
         {
                 const Matrix4d& texture_to_device = vp_matrix_ * texture_to_world_matrix_;
-                const geometry::Hyperplane<3, double>& clip_plane =
+                const geometry::spatial::Hyperplane<3, double>& clip_plane =
                         world_clip_plane_equation_
                                 ? volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
-                                : geometry::Hyperplane<3, double>(Vector3d(0), 0);
+                                : geometry::spatial::Hyperplane<3, double>(Vector3d(0), 0);
 
                 buffer_.set_coordinates(
                         texture_to_device.inverse(), texture_to_world_matrix_, texture_to_device.row(2), clip_plane,

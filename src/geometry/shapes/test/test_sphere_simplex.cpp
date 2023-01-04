@@ -74,7 +74,7 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
                       + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
 
-        const HyperplaneSimplex<N, T> simplex(simplex_vertices);
+        const spatial::HyperplaneSimplex<N, T> simplex(simplex_vertices);
 
         constexpr double RAY_COUNT_R = 1.0 / RAY_COUNT;
         unsigned intersect_count = 0;

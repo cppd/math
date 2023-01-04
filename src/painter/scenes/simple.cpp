@@ -70,7 +70,7 @@ Info<3, T> create_info(
 }
 
 template <std::size_t N, typename T>
-Info<N, T> create_info(const geometry::BoundingBox<N, T>& bounding_box, const int max_screen_size)
+Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box, const int max_screen_size)
 {
         static constexpr int BORDER_SIZE = pixels::PixelFilter<N, T>::integer_radius();
 
@@ -194,7 +194,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
 template <std::size_t N, typename T>
 std::optional<Vector<N + 1, T>> create_clip_plane(
         const std::optional<T> clip_plane_position,
-        const geometry::BoundingBox<N, T>& bounding_box)
+        const geometry::spatial::BoundingBox<N, T>& bounding_box)
 {
         static_assert(N >= 1);
 
@@ -288,7 +288,7 @@ StorageScene<N, T, Color> create_simple_scene(
 {
         ASSERT(shape);
 
-        const geometry::BoundingBox<N, T> bounding_box = shape->bounding_box();
+        const geometry::spatial::BoundingBox<N, T> bounding_box = shape->bounding_box();
         const Vector<N, T> box_diagonal = bounding_box.diagonal();
         const Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
 

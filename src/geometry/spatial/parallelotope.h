@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <optional>
 
-namespace ns::geometry
+namespace ns::geometry::spatial
 {
 template <std::size_t N, typename T>
 class Parallelotope final
@@ -133,7 +133,7 @@ public:
                 return parallelotope_vertices(org_, vectors_);
         }
 
-        [[nodiscard]] friend std::string to_string(const geometry::Parallelotope<N, T>& p)
+        [[nodiscard]] friend std::string to_string(const Parallelotope<N, T>& p)
         {
                 std::string s = "org = " + to_string(p.org()) + "\n";
                 const std::array<Vector<N, T>, N>& vectors = p.vectors();
