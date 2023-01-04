@@ -17,36 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "bvh_object.h"
+#include "../spatial/bounding_box.h"
 
 #include <src/com/error.h>
 
 namespace ns::geometry::accelerators
 {
-namespace bvh_functions_implementation
-{
-template <std::size_t N, typename T>
-const BvhObject<N, T>& bvh_object(const BvhObject<N, T>& v)
-{
-        return v;
-}
-
-template <std::size_t N, typename T>
-BvhObject<N, T>&& bvh_object(BvhObject<N, T>&& v)
-{
-        return std::move(v);
-}
-}
-
 template <typename T>
 auto compute_bounds(const T& objects)
 {
-        namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        spatial::BoundingBox box = impl::bvh_object(objects.front()).bounds();
-        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
+
+        spatial::BoundingBox box{objects.front().bounds()};
+        for (auto iter = std::next(objects.begin()); iter != objects.end(); ++iter)
         {
-                box.merge(impl::bvh_object(*i).bounds());
+                box.merge(iter->bounds());
         }
         return box;
 }
@@ -54,12 +39,12 @@ auto compute_bounds(const T& objects)
 template <typename T>
 auto compute_center_bounds(const T& objects)
 {
-        namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        spatial::BoundingBox box = spatial::BoundingBox(impl::bvh_object(objects.front()).center());
-        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
+
+        spatial::BoundingBox box{objects.front().center()};
+        for (auto iter = std::next(objects.begin()); iter != objects.end(); ++iter)
         {
-                box.merge(impl::bvh_object(*i).center());
+                box.merge(iter->center());
         }
         return box;
 }
