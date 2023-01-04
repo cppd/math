@@ -196,21 +196,21 @@ Vector<N, T> uniform_in_sphere(RandomEngine& engine, const std::array<Vector<N, 
 template <std::size_t N, typename T>
 constexpr T uniform_in_sphere_pdf(const T& radius)
 {
-        constexpr T PDF = 1 / geometry::BALL_VOLUME<N, long double>;
+        constexpr T PDF = 1 / geometry::shapes::BALL_VOLUME<N, long double>;
         return PDF / power<N>(radius);
 }
 
 template <std::size_t N, typename T>
 constexpr T uniform_on_sphere_pdf()
 {
-        constexpr T PDF = 1 / geometry::SPHERE_AREA<N, long double>;
+        constexpr T PDF = 1 / geometry::shapes::SPHERE_AREA<N, long double>;
         return PDF;
 }
 
 template <std::size_t N, typename T>
 constexpr T uniform_on_hemisphere_pdf()
 {
-        constexpr T PDF = 2 / geometry::SPHERE_AREA<N, long double>;
+        constexpr T PDF = 2 / geometry::shapes::SPHERE_AREA<N, long double>;
         return PDF;
 }
 }

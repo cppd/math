@@ -240,7 +240,7 @@ void test()
 
         std::vector<Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;
-        geometry::create_sphere(facet_count, &vertices, &facets);
+        geometry::shapes::create_sphere(facet_count, &vertices, &facets);
 
         test_mesh_files(to_string(N - 1) + "-sphere", vertices, facets, &progress);
 

@@ -152,7 +152,7 @@ std::unique_ptr<const model::mesh::Mesh<N>> sphere_mesh(const int facet_count)
 
         std::vector<Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;
-        geometry::create_sphere(facet_count, &vertices, &facets);
+        geometry::shapes::create_sphere(facet_count, &vertices, &facets);
 
         const float radius = random_radius<N>();
         const Vector<N, float> center(-radius / 2);

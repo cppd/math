@@ -66,7 +66,7 @@ template <std::size_t N, typename T, typename Color>
 Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l)
 {
         static constexpr Color WHITE = Color(1);
-        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
+        static constexpr T K = 1 / geometry::shapes::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
         const T l = power<5>(1 - n_l);
         const T v = power<5>(1 - n_v);

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 // template <typename T>
 // T sphere_simplex_area(const std::array<Vector<3, T>, 3>& vectors)

@@ -160,7 +160,7 @@ Color BallLight<N, T, Color>::power() const
 {
         const T cosine_integral =
                 spotlight_ ? spotlight_->cosine_integral()
-                           : geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+                           : geometry::shapes::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
         return (area_ * cosine_integral) * radiance_;
 }
 
@@ -185,7 +185,7 @@ BallLight<N, T, Color>::BallLight(
         : ball_(center, direction, radius),
           radiance_(radiance),
           pdf_(sampling::uniform_in_sphere_pdf<N - 1>(radius)),
-          area_(geometry::ball_volume<N - 1, T>(radius)),
+          area_(geometry::shapes::ball_volume<N - 1, T>(radius)),
           vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
 {
         if (!(radius > 0))

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/combinatorics.h>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, std::size_t M>
 T simplex_volume(const std::array<Vector<N, T>, M>& vertices)

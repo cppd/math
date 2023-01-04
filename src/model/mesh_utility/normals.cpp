@@ -59,7 +59,7 @@ T facet_normat_weight_at_vertex(
                         vectors[i] = points[facet[index]] - points[facet[facet_vertex_index]];
                 }
 
-                return geometry::sphere_simplex_area(vectors);
+                return geometry::shapes::sphere_simplex_area(vectors);
         }
 }
 

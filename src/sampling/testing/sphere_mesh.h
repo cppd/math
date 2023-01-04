@@ -55,7 +55,7 @@ class Sphere final
 public:
         explicit Sphere(const unsigned facet_min_count)
         {
-                geometry::create_sphere(facet_min_count, &vertices_, &facets_);
+                geometry::shapes::create_sphere(facet_min_count, &vertices_, &facets_);
                 ASSERT(facets_.size() >= facet_min_count);
 
                 simplices_.reserve(facets_.size());

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T>
 void create_mesh(

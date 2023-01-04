@@ -155,7 +155,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
                 {
                         vertices[i] = to_vector<T>(mesh->vertices[facet.vertices[i]]);
                 }
-                res.surface += geometry::simplex_volume(vertices);
+                res.surface += geometry::shapes::simplex_volume(vertices);
         }
 
         model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");

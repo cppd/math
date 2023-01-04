@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <unsigned N, typename T>
 inline constexpr T BALL_VOLUME = []

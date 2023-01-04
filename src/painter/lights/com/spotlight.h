@@ -92,14 +92,14 @@ public:
 
         [[nodiscard]] T area() const
         {
-                const T ratio = geometry::sphere_relative_area<N, T>(0, angle_)
-                                / geometry::sphere_relative_area<N, T>(0, PI<T> / 2);
-                return (geometry::SPHERE_AREA<N, T> / 2) * ratio;
+                const T ratio = geometry::shapes::sphere_relative_area<N, T>(0, angle_)
+                                / geometry::shapes::sphere_relative_area<N, T>(0, PI<T> / 2);
+                return (geometry::shapes::SPHERE_AREA<N, T> / 2) * ratio;
         }
 
         [[nodiscard]] T cosine_integral() const
         {
-                return geometry::sphere_integrate_cosine_factor<N, T>(0, angle_);
+                return geometry::shapes::sphere_integrate_cosine_factor<N, T>(0, angle_);
         }
 };
 }

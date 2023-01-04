@@ -190,7 +190,7 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
                 numerical::Interpolation<1, T, T> interpolation({COUNT}, data[roughness_i]);
 
                 constexpr int AVERAGE_COUNT = 1000;
-                const T average = geometry::sphere_cosine_weighted_average_by_cosine<N, T>(
+                const T average = geometry::shapes::sphere_cosine_weighted_average_by_cosine<N, T>(
                         [&](const T cosine)
                         {
                                 return interpolation.compute(Vector<1, T>(cosine));

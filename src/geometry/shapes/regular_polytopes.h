@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Origin-centered
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N + 1> create_simplex()

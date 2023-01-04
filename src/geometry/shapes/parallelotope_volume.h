@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, std::size_t M>
 T parallelotope_volume(const std::array<Vector<N, T>, M>& vectors)

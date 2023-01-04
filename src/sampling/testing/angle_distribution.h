@@ -177,8 +177,8 @@ public:
         [[nodiscard]] static double distribution_count(const long long uniform_min_count_per_bucket)
         {
                 const double bucket_size = BUCKET_SIZE;
-                const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
-                const double s_bucket = geometry::sphere_relative_area<N, long double>(0, bucket_size);
+                const double s_all = geometry::shapes::sphere_relative_area<N, long double>(0, PI<long double>);
+                const double s_bucket = geometry::shapes::sphere_relative_area<N, long double>(0, bucket_size);
                 const double count = s_all / s_bucket * uniform_min_count_per_bucket;
                 return count;
         }
@@ -199,8 +199,8 @@ public:
                 distribution_values.reserve(buckets.size());
 
                 const long double sphere_k =
-                        (geometry::SPHERE_AREA<N, long double>)
-                        / geometry::sphere_relative_area<N, long double>(0, PI<T>);
+                        (geometry::shapes::SPHERE_AREA<N, long double>)
+                        / geometry::shapes::sphere_relative_area<N, long double>(0, PI<T>);
 
                 long long cnt = 0;
                 for (std::size_t bucket = 0; bucket < buckets.size(); ++bucket)
@@ -213,7 +213,8 @@ public:
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
                         long double bucket_area =
-                                sphere_k * geometry::sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
+                                sphere_k
+                                * geometry::shapes::sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
                         d.distribution = buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);

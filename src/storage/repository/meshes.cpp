@@ -194,7 +194,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_
 
         while (points.size() < point_count)
         {
-                Vector<3, double> v = geometry::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
+                Vector<3, double> v = geometry::shapes::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
                 points.add(v);
         }
 
@@ -212,7 +212,7 @@ std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, 
 
         while (points.size() < point_count)
         {
-                const Vector<N, double> v = geometry::torus_point<N, double>(engine);
+                const Vector<N, double> v = geometry::shapes::torus_point<N, double>(engine);
                 if (bound && last_axis(v) < LAST_AXIS_VALUE)
                 {
                         continue;
@@ -271,7 +271,7 @@ std::unique_ptr<model::mesh::Mesh<N>> sphere(const unsigned facet_count)
 {
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
-        geometry::create_sphere(facet_count, &points, &facets);
+        geometry::shapes::create_sphere(facet_count, &points, &facets);
 
         constexpr bool WRITE_LOG = true;
         return model::mesh::create_mesh_for_facets(points, facets, WRITE_LOG);

@@ -36,7 +36,7 @@ void DistantLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T s
                 error("Scene radius " + to_string(scene_radius) + " must be positive");
         }
 
-        area_ = geometry::ball_volume<N - 1, T>(scene_radius);
+        area_ = geometry::shapes::ball_volume<N - 1, T>(scene_radius);
 
         leave_sample_.ray.set_org(scene_center - scene_radius * leave_sample_.ray.dir());
         leave_sample_.pdf_pos = sampling::uniform_in_sphere_pdf<N - 1>(scene_radius);

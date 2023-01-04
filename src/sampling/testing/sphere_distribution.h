@@ -52,17 +52,17 @@ class SphereDistribution final
                 const long long uniform_count,
                 const long long all_uniform_count) const
         {
-                const double area =
-                        static_cast<double>(uniform_count) / all_uniform_count * geometry::SPHERE_AREA<N, double>;
+                const double area = static_cast<double>(uniform_count) / all_uniform_count
+                                    * geometry::shapes::SPHERE_AREA<N, double>;
 
                 constexpr bool FUNCTION =
-                        requires { geometry::sphere_simplex_area(sphere_mesh_.facet_vertices(facet_index)); };
+                        requires { geometry::shapes::sphere_simplex_area(sphere_mesh_.facet_vertices(facet_index)); };
                 static_assert(FUNCTION || N >= 4);
 
                 if constexpr (FUNCTION)
                 {
                         const std::array<Vector<N, T>, N> vertices = sphere_mesh_.facet_vertices(facet_index);
-                        const double geometry_area = geometry::sphere_simplex_area(vertices);
+                        const double geometry_area = geometry::shapes::sphere_simplex_area(vertices);
                         const double relative_error = std::abs(area - geometry_area) / std::max(geometry_area, area);
 
                         if (relative_error < 0.025)
@@ -221,7 +221,7 @@ class SphereDistribution final
                 long double* const sum_expected,
                 long double* const sum_error) const
         {
-                static constexpr T UNIFORM_DENSITY = 1 / geometry::SPHERE_AREA<N, long double>;
+                static constexpr T UNIFORM_DENSITY = 1 / geometry::shapes::SPHERE_AREA<N, long double>;
 
                 const SphereBucket<N, T>& bucket = buckets[facet_index];
 
@@ -265,7 +265,7 @@ class SphereDistribution final
 
                 const T uniform_distribution = static_cast<T>(bucket.uniform_count()) / uniform_count;
                 const T uniform_density = uniform_distribution / bucket_area;
-                const T bucket_relative_area = bucket_area / geometry::SPHERE_AREA<N, T>;
+                const T bucket_relative_area = bucket_area / geometry::shapes::SPHERE_AREA<N, T>;
 
                 std::ostringstream oss;
                 oss << "sampled distribution = " << sampled_distribution << '\n';

@@ -39,7 +39,7 @@ template <std::size_t N, typename T, typename Color>
 Color multiple_bounce_surface_reflection(const Color& f0, const T rs_f1, const T rs_f1_l, const T rs_f1_v)
 {
         static constexpr Color WHITE = Color(1);
-        static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
+        static constexpr T K = geometry::shapes::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
         const Color f = fresnel_cosine_weighted_average<N>(f0);
 

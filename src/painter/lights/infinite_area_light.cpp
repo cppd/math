@@ -36,7 +36,7 @@ void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& scene_center, cons
                 error("Scene radius " + to_string(scene_radius) + " must be positive");
         }
 
-        area_ = geometry::ball_volume<N - 1, T>(scene_radius);
+        area_ = geometry::shapes::ball_volume<N - 1, T>(scene_radius);
 
         scene_center_ = scene_center;
         scene_radius_ = scene_radius;

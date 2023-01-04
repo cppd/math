@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <numeric>
 #include <optional>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 /*
 Assuming[n >= 2 && k >= 0,

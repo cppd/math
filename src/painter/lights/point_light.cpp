@@ -105,7 +105,7 @@ std::optional<Color> PointLight<N, T, Color>::leave_radiance(const Vector<N, T>&
 template <std::size_t N, typename T, typename Color>
 Color PointLight<N, T, Color>::power() const
 {
-        return geometry::SPHERE_AREA<N, T> * intensity_;
+        return geometry::shapes::SPHERE_AREA<N, T> * intensity_;
 }
 
 template <std::size_t N, typename T, typename Color>

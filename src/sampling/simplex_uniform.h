@@ -97,6 +97,6 @@ Vector<N, T> uniform_in_simplex(RandomEngine& engine, const std::array<Vector<N,
 template <std::size_t N, typename T, std::size_t M>
 T uniform_in_simplex_pdf(const std::array<Vector<N, T>, M>& vertices)
 {
-        return 1 / geometry::simplex_volume(vertices);
+        return 1 / geometry::shapes::simplex_volume(vertices);
 }
 }

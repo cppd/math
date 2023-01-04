@@ -213,7 +213,7 @@ T power_cosine_on_hemisphere_pdf(const T& n_v, const std::type_identity_t<T>& po
 {
         if (n_v > 0)
         {
-                const T k = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
+                const T k = geometry::shapes::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
                 return std::pow(n_v, power) / k;
         }
         return 0;

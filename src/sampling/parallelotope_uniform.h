@@ -55,6 +55,6 @@ Vector<N, T> uniform_in_parallelotope(RandomEngine& engine, const std::array<Vec
 template <std::size_t N, typename T, std::size_t M>
 T uniform_in_parallelotope_pdf(const std::array<Vector<N, T>, M>& vectors)
 {
-        return 1 / geometry::parallelotope_volume(vectors);
+        return 1 / geometry::shapes::parallelotope_volume(vectors);
 }
 }

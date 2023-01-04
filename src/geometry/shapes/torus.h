@@ -28,7 +28,7 @@ CRC Press, 2015.
 
 #include <src/sampling/sphere_uniform.h>
 
-namespace ns::geometry
+namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> torus_point(RandomEngine& engine)

@@ -294,7 +294,7 @@ T ggx_d(const T n_h, const T alpha)
 
         if (n_h > 0)
         {
-                static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+                static constexpr T K = geometry::shapes::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
 
                 const T alpha_2 = square(alpha);
                 const T v = 1 + square(n_h) * (alpha_2 - 1);
