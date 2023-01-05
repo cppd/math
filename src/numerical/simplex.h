@@ -326,6 +326,51 @@ unsigned find_index_of_min(const std::array<T, M>& b)
 
 // 29.3 The simplex algorithm.
 // The formal simplex algorithm.
+// Lines 5–12 of SIMPLEX.
+template <std::size_t N, std::size_t M, typename T>
+std::optional<ConstraintSolution> simplex_iteration(
+        const unsigned e,
+        std::array<Vector<N, T>, M>& a,
+        std::array<T, M>& b,
+        Vector<N, T>& c,
+        T& v,
+        std::array<unsigned, N>& map_n,
+        std::array<unsigned, M>& map_m)
+{
+        static_assert(M > 0 && M - 1 < Limits<unsigned>::max());
+
+        T max_delta = Limits<T>::lowest();
+        unsigned l = Limits<unsigned>::max();
+
+        for (unsigned i = 0; i < M; ++i)
+        {
+                b[i] = std::max(static_cast<T>(0), b[i]);
+
+                if (a[i][e] < 0)
+                {
+                        const T delta = b[i] / a[i][e];
+
+                        if (delta > max_delta || l == Limits<unsigned>::max())
+                        {
+                                max_delta = delta;
+                                l = i;
+                        }
+                }
+        }
+
+        if (l == Limits<unsigned>::max())
+        {
+                return ConstraintSolution::UNBOUND;
+        }
+
+        pivot(b, a, v, c, l, e);
+        std::swap(map_m[l], map_n[e]);
+
+        return std::nullopt;
+}
+
+// 29.3 The simplex algorithm.
+// The formal simplex algorithm.
 // Lines 3–12 of SIMPLEX.
 template <bool WITH_PRINT, std::size_t N, std::size_t M, typename T>
 std::optional<ConstraintSolution> simplex_iterations(
@@ -338,7 +383,7 @@ std::optional<ConstraintSolution> simplex_iterations(
 {
         static constexpr int MAX_ITERATION_COUNT = BINOMIAL<N + M, M>;
 
-        for (int iteration = 2;; ++iteration)
+        for (int i = 2;; ++i)
         {
                 const auto e = find_positive_index(c);
                 if (!e)
@@ -346,41 +391,19 @@ std::optional<ConstraintSolution> simplex_iterations(
                         return std::nullopt;
                 }
 
-                if (iteration >= MAX_ITERATION_COUNT)
+                if (i >= MAX_ITERATION_COUNT)
                 {
                         return ConstraintSolution::CYCLING;
                 }
 
-                T max_delta = Limits<T>::lowest();
-                unsigned l = Limits<unsigned>::max();
-                static_assert(M > 0 && M - 1 < Limits<unsigned>::max());
-                for (unsigned i = 0; i < M; ++i)
+                if (const auto r = simplex_iteration(*e, a, b, c, v, map_n, map_m))
                 {
-                        b[i] = std::max(static_cast<T>(0), b[i]);
-
-                        if (a[i][*e] < 0)
-                        {
-                                const T delta = b[i] / a[i][*e];
-
-                                if (delta > max_delta || l == Limits<unsigned>::max())
-                                {
-                                        max_delta = delta;
-                                        l = i;
-                                }
-                        }
+                        return r;
                 }
-
-                if (l == Limits<unsigned>::max())
-                {
-                        return ConstraintSolution::UNBOUND;
-                }
-
-                pivot(b, a, v, c, l, *e);
-                std::swap(map_m[l], map_n[*e]);
 
                 if constexpr (WITH_PRINT)
                 {
-                        print_simplex_algorithm_data("iteration " + to_string(iteration), b, a, v, c, map_n, map_m);
+                        print_simplex_algorithm_data("iteration " + to_string(i), b, a, v, c, map_n, map_m);
                 }
         }
 }
