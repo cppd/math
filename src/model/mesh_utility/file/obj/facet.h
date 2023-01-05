@@ -31,41 +31,42 @@ namespace ns::model::mesh::file::obj
 {
 namespace facet_implementation
 {
-// "x/x/x"
-// "x//x"
-// "x//"
-// "x/x/"
-// "x/x"
-// "x"
 template <std::size_t GROUP_SIZE, typename T>
-const char* read_digit_group(const char* first, const char* const last, std::array<T, GROUP_SIZE>* const group_indices)
+[[nodiscard]] const char* read_vertex(
+        const char* const first,
+        const char* const last,
+        std::array<T, GROUP_SIZE>* const group_indices)
 {
         static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
 
-        // vertex
+        const auto [value, ptr] = read_from_chars<T>(first, last);
+
+        if (value)
         {
-                const auto [value, ptr] = read_from_chars<T>(first, last);
-                if (value)
+                if (*value == 0)
                 {
-                        if (*value == 0)
-                        {
-                                error("Zero facet index");
-                        }
-                        (*group_indices)[0] = *value;
-                        first = ptr;
+                        error("Zero facet index");
                 }
-                else
-                {
-                        error("Error read facet vertex first number");
-                }
+                (*group_indices)[0] = *value;
+                return ptr;
         }
 
-        // texture and normal
-        for (unsigned a = 1; a < group_indices->size(); ++a)
+        error("Error read facet vertex first number");
+}
+
+template <std::size_t GROUP_SIZE, typename T>
+[[nodiscard]] const char* read_texture_and_normal(
+        const char* first,
+        const char* const last,
+        std::array<T, GROUP_SIZE>* const group_indices)
+{
+        static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+
+        for (std::size_t i = 1; i < group_indices->size(); ++i)
         {
                 if (first == last || ascii::is_space(*first))
                 {
-                        (*group_indices)[a] = 0;
+                        (*group_indices)[i] = 0;
                         continue;
                 }
 
@@ -78,7 +79,7 @@ const char* read_digit_group(const char* first, const char* const last, std::arr
 
                 if (first == last || ascii::is_space(*first))
                 {
-                        (*group_indices)[a] = 0;
+                        (*group_indices)[i] = 0;
                         continue;
                 }
 
@@ -89,14 +90,30 @@ const char* read_digit_group(const char* first, const char* const last, std::arr
                         {
                                 error("Zero facet index");
                         }
-                        (*group_indices)[a] = *value;
+                        (*group_indices)[i] = *value;
                         first = ptr;
                 }
                 else
                 {
-                        (*group_indices)[a] = 0;
+                        (*group_indices)[i] = 0;
                 }
         }
+
+        return first;
+}
+
+// "x/x/x"
+// "x//x"
+// "x//"
+// "x/x/"
+// "x/x"
+// "x"
+template <std::size_t GROUP_SIZE, typename T>
+const char* read_digit_group(const char* first, const char* const last, std::array<T, GROUP_SIZE>* const group_indices)
+{
+        first = read_vertex(first, last, group_indices);
+
+        first = read_texture_and_normal(first, last, group_indices);
 
         return first;
 }
