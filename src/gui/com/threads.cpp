@@ -254,16 +254,12 @@ class Impl final : public WorkerThreads
                 return threads_.size();
         }
 
-        void set_progress(
+        void add_progress_bars(
                 const unsigned id,
-                const progress::RatioList* const progress_list,
+                const std::size_t ratio_count,
                 std::list<QProgressBar>* const progress_bars)
         {
-                constexpr unsigned MAX_INT{Limits<int>::max()};
-
-                const std::vector<progress::RatioInfo> ratios = progress_list->ratios();
-
-                while (ratios.size() > progress_bars->size())
+                while (ratio_count > progress_bars->size())
                 {
                         QProgressBar& bar = progress_bars->emplace_back();
 
@@ -284,48 +280,64 @@ class Impl final : public WorkerThreads
                                         terminate_with_message(id);
                                 });
                 }
+        }
 
-                auto bar = progress_bars->begin();
+        void set_progress_bar(const unsigned id, const progress::RatioInfo& ratio, QProgressBar* const bar)
+        {
+                static constexpr unsigned MAX_INT{Limits<int>::max()};
 
-                for (std::size_t i = 0; i < ratios.size(); ++i, ++bar)
+                if (!bar->isVisible())
                 {
-                        if (!bar->isVisible())
+                        if (id == permanent_thread_id_)
                         {
-                                if (id == permanent_thread_id_)
-                                {
-                                        status_bar_->addPermanentWidget(&(*bar));
-                                }
-                                else
-                                {
-                                        status_bar_->addWidget(&(*bar));
-                                }
-                                bar->show();
-                        }
-
-                        bar->setFormat(QString::fromStdString(ratios[i].text));
-
-                        const auto maximum = ratios[i].maximum;
-
-                        if (maximum > 0)
-                        {
-                                const auto value = std::min(maximum, ratios[i].value);
-
-                                if (maximum <= MAX_INT)
-                                {
-                                        bar->setMaximum(maximum);
-                                        bar->setValue(value);
-                                }
-                                else
-                                {
-                                        bar->setMaximum(MAX_INT);
-                                        bar->setValue(std::lround((static_cast<double>(value) / maximum) * MAX_INT));
-                                }
+                                status_bar_->addPermanentWidget(bar);
                         }
                         else
                         {
-                                bar->setMaximum(0);
-                                bar->setValue(0);
+                                status_bar_->addWidget(bar);
                         }
+                        bar->show();
+                }
+
+                bar->setFormat(QString::fromStdString(ratio.text));
+
+                const auto maximum = ratio.maximum;
+
+                if (maximum > 0)
+                {
+                        const auto value = std::min(maximum, ratio.value);
+
+                        if (maximum <= MAX_INT)
+                        {
+                                bar->setMaximum(maximum);
+                                bar->setValue(value);
+                        }
+                        else
+                        {
+                                bar->setMaximum(MAX_INT);
+                                bar->setValue(std::lround((static_cast<double>(value) / maximum) * MAX_INT));
+                        }
+                }
+                else
+                {
+                        bar->setMaximum(0);
+                        bar->setValue(0);
+                }
+        }
+
+        void set_progress_bars(
+                const unsigned id,
+                const std::vector<progress::RatioInfo>& ratios,
+                std::list<QProgressBar>* const progress_bars)
+        {
+                ASSERT(ratios.size() <= progress_bars->size());
+
+                auto ratio = ratios.cbegin();
+                auto bar = progress_bars->begin();
+
+                for (; ratio != ratios.cend(); ++ratio, ++bar)
+                {
+                        set_progress_bar(id, *ratio, &(*bar));
                 }
 
                 while (bar != progress_bars->end())
@@ -335,11 +347,20 @@ class Impl final : public WorkerThreads
                 }
         }
 
+        void set_progress(
+                const unsigned id,
+                const std::vector<progress::RatioInfo>& ratios,
+                std::list<QProgressBar>* const progress_bars)
+        {
+                add_progress_bars(id, ratios.size(), progress_bars);
+                set_progress_bars(id, ratios, progress_bars);
+        }
+
         void set_progresses() override
         {
                 for (const WorkerThreads::Progress& t : progress_)
                 {
-                        set_progress(t.id, t.progress_list, t.progress_bars);
+                        set_progress(t.id, t.progress_list->ratios(), t.progress_bars);
                 }
         }
 
