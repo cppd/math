@@ -307,11 +307,11 @@ public:
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(
-        const vulkan::Device* device,
-        const vulkan::CommandPool* compute_command_pool,
-        const vulkan::Queue* compute_queue,
-        const vulkan::CommandPool* transfer_command_pool,
-        const vulkan::Queue* transfer_queue)
+        const vulkan::Device* const device,
+        const vulkan::CommandPool* const compute_command_pool,
+        const vulkan::Queue* const compute_queue,
+        const vulkan::CommandPool* const transfer_command_pool,
+        const vulkan::Queue* const transfer_queue)
 {
         return std::make_unique<DftImage>(
                 device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);

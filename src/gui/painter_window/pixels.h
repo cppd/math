@@ -201,8 +201,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void thread_busy(const unsigned thread_number, const std::array<int, N - 1>& pixel) override
         {
-                long long x = pixel[0];
-                long long y = screen_size_[1] - 1 - pixel[1];
+                const long long x = pixel[0];
+                const long long y = screen_size_[1] - 1 - pixel[1];
                 busy_indices_2d_[thread_number] = y * screen_size_[0] + x;
         }
 
@@ -242,7 +242,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         [[nodiscard]] std::optional<float> pixel_max() const override
         {
-                float max = pixel_max_.load(std::memory_order_relaxed);
+                const float max = pixel_max_.load(std::memory_order_relaxed);
                 if (max != MIN)
                 {
                         return max;

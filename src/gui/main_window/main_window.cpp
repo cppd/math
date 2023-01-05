@@ -298,7 +298,7 @@ void MainWindow::on_timer()
         actions_->set_progresses();
 }
 
-std::tuple<double, double> MainWindow::graphics_widget_position(const QSinglePointEvent* event) const
+std::tuple<double, double> MainWindow::graphics_widget_position(const QSinglePointEvent* const event) const
 {
         static_assert(std::is_floating_point_v<decltype(event->position().x())>);
         static_assert(std::is_floating_point_v<decltype(event->position().y())>);

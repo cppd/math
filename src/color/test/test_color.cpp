@@ -123,7 +123,7 @@ bool equal(
         float abs_sum = 0;
         for (int i = 0; i < 3; ++i)
         {
-                float abs = std::abs(rgb_1[i] - rgb_2[i]);
+                const float abs = std::abs(rgb_1[i] - rgb_2[i]);
                 if (!(abs <= max_error))
                 {
                         return false;

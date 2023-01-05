@@ -87,7 +87,7 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
         // Section 4.3: reprojection onto hemisphere
         const Vector<3, T> nh = [&]
         {
-                T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
+                const T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 return t[0] * t0 + t[1] * t1 + z * vh;
         }();
 

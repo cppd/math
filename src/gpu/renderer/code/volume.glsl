@@ -103,7 +103,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
                 {
                         while (volume_depth <= fragment.depth)
                         {
-                                vec3 p = image_org + s * image_dir;
+                                const vec3 p = image_org + s * image_dir;
                                 COLOR_ADD(volume_color(p));
                                 if (++s >= sample_end)
                                 {
@@ -136,7 +136,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
         for (; s < sample_end; ++s)
         {
-                vec3 p = image_org + s * image_dir;
+                const vec3 p = image_org + s * image_dir;
                 COLOR_ADD(volume_color(p));
         }
 
@@ -184,10 +184,10 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                         while (volume_depth <= fragment.depth)
                         {
                                 vec3 p = image_org + s * image_dir;
-                                float next_sign = isosurface_sign(p);
+                                const float next_sign = isosurface_sign(p);
                                 if (next_sign != prev_sign)
                                 {
-                                        vec3 prev_p = image_org + (s - 1) * image_dir;
+                                        const vec3 prev_p = image_org + (s - 1) * image_dir;
                                         p = isosurface_intersect(prev_p, p, prev_sign);
                                         prev_sign = next_sign;
 
@@ -207,12 +207,12 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                 break;
                         }
 
-                        vec3 p = image_org + s * image_dir;
-                        float next_sign = isosurface_sign(p);
+                        const vec3 p = image_org + s * image_dir;
+                        const float next_sign = isosurface_sign(p);
                         if (next_sign != prev_sign)
                         {
-                                vec4 prev_v = vec4(image_org, depth_org) + (s - 1) * vec4(image_dir, depth_dir);
-                                vec4 v = isosurface_intersect(prev_v, vec4(p, volume_depth), prev_sign);
+                                const vec4 prev_v = vec4(image_org, depth_org) + (s - 1) * vec4(image_dir, depth_dir);
+                                const vec4 v = isosurface_intersect(prev_v, vec4(p, volume_depth), prev_sign);
                                 prev_sign = next_sign;
 
                                 while (fragment.depth <= v.w)
@@ -263,13 +263,13 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
         for (; s < sample_end; ++s)
         {
                 vec3 p = image_org + s * image_dir;
-                float next_sign = isosurface_sign(p);
+                const float next_sign = isosurface_sign(p);
                 if (next_sign == prev_sign)
                 {
                         continue;
                 }
 
-                vec3 prev_p = image_org + (s - 1) * image_dir;
+                const vec3 prev_p = image_org + (s - 1) * image_dir;
                 p = isosurface_intersect(prev_p, p, prev_sign);
                 prev_sign = next_sign;
 

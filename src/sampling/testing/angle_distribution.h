@@ -212,7 +212,7 @@ public:
                         d.angle_from = bucket * BUCKET_SIZE;
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
-                        long double bucket_area =
+                        const long double bucket_area =
                                 sphere_k
                                 * geometry::shapes::sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
                         d.distribution = buckets[bucket] / bucket_area;

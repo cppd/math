@@ -179,7 +179,7 @@ void set_widget_color(QWidget* const widget, const QColor& c)
         widget->setPalette(palette);
 }
 
-// void button_strike_out(QRadioButton* button, bool strike_out)
+// void button_strike_out(QRadioButton* const button, const bool strike_out)
 // {
 //         ASSERT(button);
 //

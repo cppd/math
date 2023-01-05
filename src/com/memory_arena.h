@@ -130,7 +130,7 @@ public:
                 std::size_t index = next_index<T>(index_);
                 if (index + sizeof(T) <= BLOCK_SIZE)
                 {
-                        auto* ptr = create_object<T>(blocks_[block_].get(), index, std::forward<Args>(args)...);
+                        auto* const ptr = create_object<T>(blocks_[block_].get(), index, std::forward<Args>(args)...);
                         index_ = index + sizeof(T);
                         return ptr;
                 }
@@ -139,7 +139,7 @@ public:
                 {
                         blocks_.push_back(std::make_unique<Block>());
                 }
-                auto* ptr = create_object<T>(blocks_[block_ + 1].get(), 0, std::forward<Args>(args)...);
+                auto* const ptr = create_object<T>(blocks_[block_ + 1].get(), 0, std::forward<Args>(args)...);
                 ++block_;
                 index_ = sizeof(T);
 

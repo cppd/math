@@ -58,7 +58,7 @@ void main()
 
         for (int i = 0; i < 3; ++i)
         {
-                float v = dot(drawing.clip_plane_equation, vs[i].world_position);
+                const float v = dot(drawing.clip_plane_equation, vs[i].world_position);
                 d[i] = v;
                 s[i] = sign(v);
         }

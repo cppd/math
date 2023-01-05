@@ -87,9 +87,9 @@ bool compute_g_inv(const ivec2 p, out mat2 g_inv)
         {
                 for (int j = -RADIUS; j <= RADIUS; ++j)
                 {
-                        ivec2 p = ivec2(p.x + i, p.y + j);
+                        const ivec2 p = ivec2(p.x + i, p.y + j);
 
-                        vec2 d = get_dx_dy(p);
+                        const vec2 d = get_dx_dy(p);
 
                         sum_x2 += d.x * d.x;
                         sum_y2 += d.y * d.y;
@@ -148,9 +148,9 @@ void main()
                 {
                         for (int j = -RADIUS; j <= RADIUS; ++j)
                         {
-                                ivec2 pd = ivec2(p.x + i, p.y + j);
+                                const ivec2 pd = ivec2(p.x + i, p.y + j);
 
-                                vec2 pd_j = vec2(pd) + guess + v;
+                                const vec2 pd_j = vec2(pd) + guess + v;
 
                                 b += (get_i(pd) - get_j(pd_j)) * get_dx_dy(pd);
                         }

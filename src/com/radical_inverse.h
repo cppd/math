@@ -44,8 +44,8 @@ constexpr Result radical_inverse(unsigned long long v)
         Result base = 1;
         while (v)
         {
-                unsigned long long next = v / BASE;
-                unsigned long long digit = v - next * BASE;
+                const unsigned long long next = v / BASE;
+                const unsigned long long digit = v - next * BASE;
                 v = next;
                 reverse = reverse * BASE + digit;
                 base *= BASE_FLOAT;
