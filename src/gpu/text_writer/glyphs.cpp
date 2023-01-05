@@ -46,15 +46,8 @@ std::vector<unsigned char> font_data()
         return fonts.data(font_names.front());
 }
 
-text::FontGlyphs font_glyphs(
-        const unsigned size,
-        const vulkan::Device& device,
-        const vulkan::Queue& graphics_queue,
-        const std::vector<std::uint32_t>& family_indices)
+text::FontGlyphs font_glyphs(const unsigned size, const vulkan::Device& device)
 {
-        ASSERT(std::find(family_indices.cbegin(), family_indices.cend(), graphics_queue.family_index())
-               != family_indices.cend());
-
         const std::unique_ptr<text::Font> font = text::create_font(size, font_data());
 
         const auto max_image_dimension = device.properties().properties_10.limits.maxImageDimension2D;
@@ -80,6 +73,9 @@ Glyphs::Glyphs(
                  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
           size_(size)
 {
+        ASSERT(std::find(family_indices.cbegin(), family_indices.cend(), graphics_queue.family_index())
+               != family_indices.cend());
+
         image_.write(
                 graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, font_glyphs.image.color_format, font_glyphs.image.pixels);
@@ -91,13 +87,7 @@ Glyphs::Glyphs(
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,
         const std::vector<std::uint32_t>& family_indices)
-        : Glyphs(
-                size,
-                device,
-                graphics_command_pool,
-                graphics_queue,
-                family_indices,
-                font_glyphs(size, device, graphics_queue, family_indices))
+        : Glyphs(size, device, graphics_command_pool, graphics_queue, family_indices, font_glyphs(size, device))
 {
 }
 }
