@@ -66,54 +66,68 @@ template <std::size_t LEVEL, std::size_t N, typename T>
 void generate_pixels(
         const std::array<int, N>& screen_size,
         const std::array<int, N>& paintbrush_size,
+        const std::array<int, N>& min,
+        const std::array<int, N>& max,
         std::array<T, N>& pixel,
+        std::vector<std::array<T, N>>* const pixels)
+{
+        static_assert(LEVEL >= N && LEVEL < 2 * N);
+
+        constexpr std::size_t L_N = LEVEL - N;
+        static_assert(L_N < N);
+
+        ASSERT(min[L_N] < max[L_N] && min[L_N] >= 0 && max[L_N] <= screen_size[L_N]);
+
+        for (int i = min[L_N]; i < max[L_N]; ++i)
+        {
+                pixel[L_N] = i;
+
+                if constexpr (LEVEL + 1 < 2 * N)
+                {
+                        static_assert(L_N < N - 1);
+                        generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, min, max, pixel, pixels);
+                }
+                else
+                {
+                        static_assert(L_N == N - 1);
+                        pixels->emplace_back(pixel);
+                }
+        }
+}
+
+template <std::size_t LEVEL, std::size_t N, typename T>
+void generate_pixels(
+        const std::array<int, N>& screen_size,
+        const std::array<int, N>& paintbrush_size,
         std::array<int, N>& min,
         std::array<int, N>& max,
         std::vector<std::array<T, N>>* const pixels)
 {
-        static_assert(LEVEL < 2 * N);
+        static_assert(LEVEL < N);
 
-        if constexpr (LEVEL < N)
+        int i = 0;
+        while (i < screen_size[LEVEL])
         {
-                int i = 0;
-                while (i < screen_size[LEVEL])
+                const int next =
+                        screen_size[LEVEL] - paintbrush_size[LEVEL] >= i
+                                ? i + paintbrush_size[LEVEL]
+                                : screen_size[LEVEL];
+
+                min[LEVEL] = i;
+                max[LEVEL] = next;
+                ASSERT(min[LEVEL] < max[LEVEL]);
+
+                if constexpr (LEVEL + 1 < N)
                 {
-                        const int next =
-                                screen_size[LEVEL] - paintbrush_size[LEVEL] >= i
-                                        ? i + paintbrush_size[LEVEL]
-                                        : screen_size[LEVEL];
-
-                        min[LEVEL] = i;
-                        max[LEVEL] = next;
-                        ASSERT(min[LEVEL] < max[LEVEL]);
-
-                        generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, pixel, min, max, pixels);
-
-                        i = next;
+                        generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, min, max, pixels);
                 }
-        }
-        else
-        {
-                constexpr std::size_t L_N = LEVEL - N;
-                static_assert(L_N < N);
-
-                ASSERT(min[L_N] < max[L_N] && min[L_N] >= 0 && max[L_N] <= screen_size[L_N]);
-
-                for (int i = min[L_N]; i < max[L_N]; ++i)
+                else
                 {
-                        pixel[L_N] = i;
-
-                        if constexpr (LEVEL + 1 < 2 * N)
-                        {
-                                static_assert(L_N < N - 1);
-                                generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, pixel, min, max, pixels);
-                        }
-                        else
-                        {
-                                static_assert(L_N == N - 1);
-                                pixels->emplace_back(pixel);
-                        }
+                        std::array<T, N> pixel;
+                        generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, min, max, pixel, pixels);
                 }
+
+                i = next;
         }
 }
 
@@ -136,8 +150,7 @@ std::vector<std::array<T, N>> generate_pixels(
         std::vector<std::array<T, N>> pixels;
         pixels.reserve(pixel_count);
 
-        std::array<T, N> pixel;
-        generate_pixels<0>(screen_size, paintbrush_size, pixel, min, max, &pixels);
+        generate_pixels<0>(screen_size, paintbrush_size, min, max, &pixels);
         ASSERT(pixels.size() == pixel_count);
 
         return pixels;
