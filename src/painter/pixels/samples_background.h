@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
-#include <array>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace ns::painter::pixels
@@ -29,7 +29,7 @@ namespace ns::painter::pixels
 namespace samples_background_implementation
 {
 template <typename Color, typename Weight>
-[[nodiscard]] std::array<std::size_t, 2> fill_weights_and_find_min_max(
+[[nodiscard]] std::tuple<std::size_t, std::size_t> select_backgrounds_and_find_min_max(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<Weight>& color_weights,
         std::vector<typename Color::DataType>* const weights)
@@ -43,8 +43,8 @@ template <typename Color, typename Weight>
 
         T min = Limits<T>::infinity();
         T max = -Limits<T>::infinity();
-        std::size_t min_i = Limits<std::size_t>::max();
-        std::size_t max_i = Limits<std::size_t>::max();
+        std::size_t min_i = -1;
+        std::size_t max_i = -1;
 
         for (std::size_t i = 0; i < colors.size(); ++i)
         {
@@ -88,7 +88,7 @@ template <typename Color, typename Weight>
 template <typename T>
 [[nodiscard]] T sum_weights(const std::vector<T>& weights, const std::size_t min_i, const std::size_t max_i)
 {
-        T res = 0;
+        T res{0};
 
         if (weights.size() > 2)
         {
@@ -180,19 +180,18 @@ template <typename Color, typename Weight>
         const std::vector<Weight>& color_weights)
 {
         namespace impl = samples_background_implementation;
-        using T = typename Color::DataType;
 
-        thread_local std::vector<T> weights;
+        thread_local std::vector<typename Color::DataType> weights;
 
-        const auto [min_i, max_i] = impl::fill_weights_and_find_min_max(colors, color_weights, &weights);
+        const auto [min_i, max_i] = impl::select_backgrounds_and_find_min_max(colors, color_weights, &weights);
 
         if (weights.empty())
         {
                 return std::nullopt;
         }
 
-        const T sum = impl::sum_weights(weights, min_i, max_i);
+        const auto sum_weight = impl::sum_weights(weights, min_i, max_i);
 
-        return BackgroundSamples<Color>{sum, weights[min_i], weights[max_i]};
+        return BackgroundSamples<Color>{sum_weight, weights[min_i], weights[max_i]};
 }
 }
