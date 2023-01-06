@@ -48,34 +48,34 @@ char digit(const T value)
         return remainder + '0';
 }
 
+template <typename T>
+inline constexpr bool USE_SIGNED_LONG_LONG =
+        std::is_same_v<signed __int128, std::remove_cv_t<T>>
+        && (Limits<long long>::max() < Limits<signed __int128>::max())
+        && (Limits<long long>::lowest() > Limits<signed __int128>::lowest());
+
+template <typename T>
+inline constexpr bool USE_UNSIGNED_LONG_LONG =
+        std::is_same_v<unsigned __int128, std::remove_cv_t<T>>
+        && (Limits<unsigned long long>::max() < Limits<unsigned __int128>::max());
+
+template <typename T>
+using LONG_LONG_TYPE = std::conditional_t<
+        USE_SIGNED_LONG_LONG<T>,
+        long long,
+        std::conditional_t<USE_UNSIGNED_LONG_LONG<T>, unsigned long long, void>>;
+
 template <unsigned DIGIT_GROUP_SIZE, typename T>
 void make_string(T value, int index, [[maybe_unused]] const char separator, std::string& str)
 {
-        constexpr bool USE_LONG_LONG =
-                (std::is_same_v<__int128, std::remove_cv_t<T>>)&&(Limits<long long>::max() < Limits<__int128>::max())
-                && (Limits<long long>::lowest() > Limits<__int128>::lowest());
-
-        constexpr bool USE_UNSIGNED_LONG_LONG = (std::is_same_v<unsigned __int128, std::remove_cv_t<T>>)&&(
-                Limits<unsigned long long>::max() < Limits<unsigned __int128>::max());
-
         do
         {
-                if constexpr (USE_LONG_LONG)
+                if constexpr (USE_SIGNED_LONG_LONG<T> || USE_UNSIGNED_LONG_LONG<T>)
                 {
-                        const long long ll_value = value;
-                        if (ll_value == value)
+                        const LONG_LONG_TYPE<T> v = value;
+                        if (v == value)
                         {
-                                make_string<DIGIT_GROUP_SIZE>(ll_value, index, separator, str);
-                                return;
-                        }
-                }
-
-                if constexpr (USE_UNSIGNED_LONG_LONG)
-                {
-                        const unsigned long long ull_value = value;
-                        if (ull_value == value)
-                        {
-                                make_string<DIGIT_GROUP_SIZE>(ull_value, index, separator, str);
+                                make_string<DIGIT_GROUP_SIZE>(v, index, separator, str);
                                 return;
                         }
                 }
