@@ -137,55 +137,72 @@ bool all_vertices_are_only_on_one_side(const std::array<Vector<N, T>, V>& vertic
         return true;
 }
 
+template <typename Shape, typename ConstraintShape>
+bool shape_is_on_negative_side(const Shape& shape, const ConstraintShape& constraint_shape)
+{
+        if (size<decltype(constraint_shape.constraints().c)>() > 0)
+        {
+                const auto& constraints = constraint_shape.constraints();
+                const auto& vertices = shape.vertices();
+                for (const auto& c : constraints.c)
+                {
+                        if (all_vertices_are_on_negative_side(vertices, c))
+                        {
+                                return true;
+                        }
+                }
+        }
+        return false;
+}
+
+template <typename Shape, typename ConstraintShape>
+bool shape_is_on_one_side(const Shape& shape, const ConstraintShape& constraint_shape)
+{
+        if constexpr (ConstraintShape::SPACE_DIMENSION > ConstraintShape::SHAPE_DIMENSION)
+        {
+                static_assert(size<decltype(constraint_shape.constraints().c_eq)>() > 0);
+
+                const auto& constraints = constraint_shape.constraints();
+                const auto& vertices = shape.vertices();
+                for (const auto& c_eq : constraints.c_eq)
+                {
+                        if (all_vertices_are_only_on_one_side(vertices, c_eq))
+                        {
+                                return true;
+                        }
+                }
+        }
+        return false;
+}
+
 template <typename Shape1, typename Shape2>
 bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
-        using T = typename Shape1::DataType;
-
-        for (const Constraint<N, T>& constraint : shape_1.constraints().c)
+        if (shape_is_on_negative_side(shape_1, shape_2))
         {
-                if (all_vertices_are_on_negative_side(shape_2.vertices(), constraint))
-                {
-                        return true;
-                }
+                return true;
         }
 
-        for (const Constraint<N, T>& constraint : shape_2.constraints().c)
+        if (shape_is_on_negative_side(shape_2, shape_1))
         {
-                if (all_vertices_are_on_negative_side(shape_1.vertices(), constraint))
-                {
-                        return true;
-                }
+                return true;
         }
 
-        if constexpr (N > Shape1::SHAPE_DIMENSION)
+        if (shape_is_on_one_side(shape_1, shape_2))
         {
-                for (const Constraint<N, T>& constraint_eq : shape_1.constraints().c_eq)
-                {
-                        if (all_vertices_are_only_on_one_side(shape_2.vertices(), constraint_eq))
-                        {
-                                return true;
-                        }
-                }
+                return true;
         }
 
-        if constexpr (N > Shape2::SHAPE_DIMENSION)
+        if (shape_is_on_one_side(shape_2, shape_1))
         {
-                for (const Constraint<N, T>& constraint_eq : shape_2.constraints().c_eq)
-                {
-                        if (all_vertices_are_only_on_one_side(shape_1.vertices(), constraint_eq))
-                        {
-                                return true;
-                        }
-                }
+                return true;
         }
 
         return false;
 }
 
 // template <typename Shape>
-//         requires(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0)
+//         requires (size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0)
 // constexpr std::size_t constraint_count()
 // {
 //         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
@@ -198,7 +215,7 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 // }
 
 // template <typename Shape>
-//         requires(Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION)
+//         requires (Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION)
 // constexpr std::size_t constraint_count()
 // {
 //         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
@@ -271,7 +288,7 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 //         {
 //                 ASSERT(i == CONSTRAINT_COUNT);
 //
-//                 return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
+//                 return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::FEASIBLE);
 //         }
 //
 //         if constexpr (
@@ -287,13 +304,13 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 //
 //                 a[i] = a_v;
 //                 b[i] = b_v;
-//                 if (numerical::solve_constraints(a, b) != numerical::ConstraintSolution::Feasible)
+//                 if (numerical::solve_constraints(a, b) != numerical::ConstraintSolution::FEASIBLE)
 //                 {
 //                         return false;
 //                 }
 //                 a[i] = -a_v;
 //                 b[i] = -b_v;
-//                 return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
+//                 return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::FEASIBLE);
 //         }
 // }
 
