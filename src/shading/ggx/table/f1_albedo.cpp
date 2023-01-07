@@ -83,6 +83,27 @@ public:
         }
 };
 
+template <typename Color>
+[[nodiscard]] float scalar_albedo(const Color& color_albedo)
+{
+        const Vector<3, float> rgb = color_albedo.rgb32();
+        ASSERT(rgb[0] == rgb[1] && rgb[1] == rgb[2]);
+
+        const float r = rgb[0];
+
+        if (!(r >= 0))
+        {
+                error("Albedo " + to_string(r) + " is not non-negative");
+        }
+
+        if (!(r < 1.01f))
+        {
+                error("Albedo " + to_string(r) + " is greater than 1");
+        }
+
+        return std::min(r, 1.0f);
+}
+
 template <std::size_t N, typename T, std::size_t COUNT, typename Color, typename RandomEngine>
 void compute(
         const std::size_t roughness_index,
@@ -109,36 +130,12 @@ void compute(
         (*v)[N - 1] = cosine;
         (*v)[N - 2] = sine;
 
-        const Color color_albedo = [&]
-        {
-                if (roughness_index == 0 && cosine_index != 0)
-                {
-                        return Color(1);
-                }
-                return directional_albedo_importance_sampling(*brdf, n, *v, sample_count, engine);
-        }();
+        const Color color_albedo =
+                (roughness_index == 0 && cosine_index != 0)
+                        ? Color(1)
+                        : directional_albedo_importance_sampling(*brdf, n, *v, sample_count, engine);
 
-        const T albedo = [&]
-        {
-                const Vector<3, float> rgb = color_albedo.rgb32();
-                ASSERT(rgb[0] == rgb[1] && rgb[1] == rgb[2]);
-
-                const float r = rgb[0];
-
-                if (!(r >= 0))
-                {
-                        error("Albedo " + to_string(r) + " is not non-negative");
-                }
-
-                if (!(r < 1.01f))
-                {
-                        error("Albedo " + to_string(r) + " is greater than 1");
-                }
-
-                return std::min<decltype(r)>(r, 1);
-        }();
-
-        (*data)[roughness_index][cosine_index] = albedo;
+        (*data)[roughness_index][cosine_index] = scalar_albedo(color_albedo);
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
