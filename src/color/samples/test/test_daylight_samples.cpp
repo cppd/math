@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/test/test.h>
 
+#include <optional>
+
 namespace ns::color
 {
 namespace
@@ -42,7 +44,7 @@ public:
         }
 };
 
-void compare_d65(const double cct, const int min, const int max, const unsigned count)
+void check_parameters(const int min, const int max, const unsigned count)
 {
         if (!(min >= DAYLIGHT_SAMPLES_MIN_WAVELENGTH))
         {
@@ -63,51 +65,69 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
         {
                 error("Error count " + to_string(count));
         }
+}
+
+template <typename T>
+[[nodiscard]] std::optional<T> compare(const T d65, const T daylight)
+{
+        if (!(d65 >= 0))
+        {
+                error("D65 " + to_string(d65) + " is not positive and not zero");
+        }
+
+        if (!(daylight >= 0))
+        {
+                error("Daylight " + to_string(daylight) + " is not positive and not zero");
+        }
+
+        if (d65 == daylight)
+        {
+                return std::nullopt;
+        }
+
+        const T abs = std::abs(d65 - daylight);
+        if (!(abs < T{0.014}))
+        {
+                throw Exception(
+                        "D65 " + to_string(d65) + " and daylight " + to_string(daylight)
+                        + " are not equal, absolute error " + to_string(abs));
+        }
+
+        const T rel = abs / std::max(std::abs(d65), std::abs(daylight));
+        if (!(rel < T{3.5e-4}))
+        {
+                throw Exception(
+                        "D65 " + to_string(d65) + " and daylight " + to_string(daylight)
+                        + " are not equal, relative error " + to_string(rel));
+        }
+
+        return abs;
+}
+
+void compare_d65(const double cct, const int min, const int max, const unsigned count)
+{
+        check_parameters(min, max, count);
 
         const std::vector<double> d65 = daylight_d65_samples(min, max, count);
-        const std::vector<double> daylight = daylight_samples(cct, min, max, count);
-
-        if (d65.size() != count || daylight.size() != count)
+        if (!(d65.size() == count))
         {
-                error("Error sample count D65 " + to_string(d65.size()) + " and daylight "
-                      + to_string(daylight.size()));
+                error("D65 sample count " + to_string(d65.size()) + " is not equal to " + to_string(count));
+        }
+
+        const std::vector<double> daylight = daylight_samples(cct, min, max, count);
+        if (!(daylight.size() == count))
+        {
+                error("Daylight sample count " + to_string(daylight.size()) + " is not equal to " + to_string(count));
         }
 
         double abs_sum = 0;
         for (std::size_t i = 0; i < d65.size(); ++i)
         {
-                if (!(d65[i] >= 0))
+                const auto abs = compare(d65[i], daylight[i]);
+                if (abs)
                 {
-                        error("D65 " + to_string(d65[i]) + " is not positive and not zero");
+                        abs_sum += *abs;
                 }
-
-                if (!(daylight[i] >= 0))
-                {
-                        error("Daylight " + to_string(daylight[i]) + " is not positive and not zero");
-                }
-
-                if (d65[i] == daylight[i])
-                {
-                        continue;
-                }
-
-                const double abs = std::abs(d65[i] - daylight[i]);
-                if (!(abs < 0.014))
-                {
-                        throw Exception(
-                                "D65 " + to_string(d65[i]) + " and daylight " + to_string(daylight[i])
-                                + " are not equal, absolute error " + to_string(abs));
-                }
-
-                const double rel = abs / std::max(std::abs(d65[i]), std::abs(daylight[i]));
-                if (!(rel < 3.5e-4))
-                {
-                        throw Exception(
-                                "D65 " + to_string(d65[i]) + " and daylight " + to_string(daylight[i])
-                                + " are not equal, relative error " + to_string(rel));
-                }
-
-                abs_sum += abs;
         }
 
         if (!(abs_sum / count < 5.7e-3))
