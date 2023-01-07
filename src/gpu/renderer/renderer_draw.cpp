@@ -142,14 +142,10 @@ VkSemaphore RendererDraw::draw(
                 draw_info = {.semaphore = semaphore, .opacity = false, .transparency = false};
         }
 
-        if (volume_renderer_->has_volume() || draw_info.transparency || draw_info.opacity)
+        if (const auto buffer = volume_renderer_->command_buffer(index, draw_info.opacity, draw_info.transparency))
         {
-                const auto command_buffer =
-                        volume_renderer_->command_buffer(index, draw_info.opacity, draw_info.transparency);
-                ASSERT(command_buffer);
-
                 vulkan::queue_submit(
-                        draw_info.semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, *command_buffer, volume_semaphore_,
+                        draw_info.semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, *buffer, volume_semaphore_,
                         graphics_queue_1);
 
                 draw_info.semaphore = volume_semaphore_;

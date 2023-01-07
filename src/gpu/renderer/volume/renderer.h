@@ -51,6 +51,18 @@ class VolumeRenderer final
                 vulkan::handle::CommandBuffers image_transparency;
         };
 
+        [[nodiscard]] static std::optional<VkCommandBuffer> commands(
+                const CommandsFragments& commands,
+                unsigned index,
+                bool opacity,
+                bool transparency);
+
+        [[nodiscard]] static VkCommandBuffer commands(
+                const CommandsImage& commands,
+                unsigned index,
+                bool opacity,
+                bool transparency);
+
         const std::thread::id thread_id_ = std::this_thread::get_id();
         const VkDevice device_;
         const bool sample_shading_;

@@ -37,6 +37,48 @@ std::vector<const vulkan::ImageView*> opacity_images(const Opacity& opacity)
 }
 }
 
+std::optional<VkCommandBuffer> VolumeRenderer::commands(
+        const CommandsFragments& commands,
+        const unsigned index,
+        const bool opacity,
+        const bool transparency)
+{
+        if (opacity)
+        {
+                if (transparency)
+                {
+                        return commands.opacity_transparency[index];
+                }
+                return commands.opacity[index];
+        }
+        if (transparency)
+        {
+                return commands.transparency[index];
+        }
+        return std::nullopt;
+}
+
+VkCommandBuffer VolumeRenderer::commands(
+        const CommandsImage& commands,
+        const unsigned index,
+        const bool opacity,
+        const bool transparency)
+{
+        if (opacity)
+        {
+                if (transparency)
+                {
+                        return commands.image_opacity_transparency[index];
+                }
+                return commands.image_opacity[index];
+        }
+        if (transparency)
+        {
+                return commands.image_transparency[index];
+        }
+        return commands.image[index];
+}
+
 VolumeRenderer::VolumeRenderer(
         const vulkan::Device* const device,
         const Code& code,
@@ -302,35 +344,11 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(
         if (has_volume())
         {
                 ASSERT(commands_image_);
-                if (opacity)
-                {
-                        if (transparency)
-                        {
-                                return commands_image_->image_opacity_transparency[index];
-                        }
-                        return commands_image_->image_opacity[index];
-                }
-                if (transparency)
-                {
-                        return commands_image_->image_transparency[index];
-                }
-                return commands_image_->image[index];
+                return commands(*commands_image_, index, opacity, transparency);
         }
-        if (opacity)
-        {
-                ASSERT(commands_fragments_);
-                if (transparency)
-                {
-                        return commands_fragments_->opacity_transparency[index];
-                }
-                return commands_fragments_->opacity[index];
-        }
-        if (transparency)
-        {
-                ASSERT(commands_fragments_);
-                return commands_fragments_->transparency[index];
-        }
-        return std::nullopt;
+
+        ASSERT(commands_fragments_);
+        return commands(*commands_fragments_, index, opacity, transparency);
 }
 
 void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix)
