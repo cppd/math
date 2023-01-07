@@ -39,7 +39,7 @@ void shuffle_dimension(RandomEngine&& engine, const std::size_t dimension, T* co
 
         for (std::size_t i = data->size() - 1; i > 0; --i)
         {
-                std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(engine);
+                const std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(engine);
                 std::swap((*data)[i][dimension], (*data)[j][dimension]);
         }
 }

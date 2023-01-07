@@ -127,7 +127,7 @@ public:
 
                 static_assert(sizeof(T) <= MAX_OBJECT_SIZE);
 
-                std::size_t index = next_index<T>(index_);
+                const std::size_t index = next_index<T>(index_);
                 if (index + sizeof(T) <= BLOCK_SIZE)
                 {
                         auto* const ptr = create_object<T>(blocks_[block_].get(), index, std::forward<Args>(args)...);

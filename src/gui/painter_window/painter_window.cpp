@@ -169,7 +169,7 @@ void PainterWindow::create_sliders()
                         long long slice = 0;
                         for (int i = static_cast<int>(positions.size()) - 1; i >= 0; --i)
                         {
-                                std::size_t dimension = i + 2;
+                                const std::size_t dimension = i + 2;
                                 ASSERT(dimension < pixels_->screen_size().size());
                                 ASSERT(positions[i] >= 0 && positions[i] < pixels_->screen_size()[dimension]);
                                 slice = slice * pixels_->screen_size()[dimension] + positions[i];
