@@ -163,6 +163,33 @@ double voronoi_height(
 }
 
 template <std::size_t N>
+void check_close_to_vertex(
+        const core::DelaunayFacet<N>& facet,
+        const Vector<N, double>& pa,
+        const double pa_length,
+        const double cos_n_a,
+        const Vector<N, double>& a_to_b)
+{
+        // if PA is close to positive pole
+        if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
+        {
+                const double a_to_b_length = facet.one_sided() ? 1 : a_to_b.norm();
+                const double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
+
+                // if PA and AB are in opposite directions
+                if (cos_pa_ab < LIMIT_COSINE_FOR_INTERSECTION_PA_AB)
+                {
+                        // close to vertex
+                        return;
+                }
+
+                error("Cocone intersection not found, PA is close to positive pole");
+        }
+
+        error("Cocone intersection not found, PA is far from positive pole");
+}
+
+template <std::size_t N>
 double voronoi_edge_radius(
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const core::DelaunayFacet<N>& facet,
@@ -194,27 +221,8 @@ double voronoi_edge_radius(
         std::optional<double> max_distance = intersect_cocone_max_distance(positive_pole, pa, a_to_b);
         if (!max_distance)
         {
-                // if PA is close to positive pole
-                if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
-                {
-                        const double a_to_b_length = facet.one_sided() ? 1.0 : a_to_b.norm();
-                        const double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
-
-                        // if PA and AB are in opposite directions
-                        if (cos_pa_ab < LIMIT_COSINE_FOR_INTERSECTION_PA_AB)
-                        {
-                                // close to vertex
-                                max_distance = 0;
-                        }
-                        else
-                        {
-                                error("Cocone intersection not found, PA is close to positive pole");
-                        }
-                }
-                else
-                {
-                        error("Cocone intersection not found, PA is far from positive pole");
-                }
+                check_close_to_vertex(facet, pa, pa_length, cos_n_a, a_to_b);
+                max_distance = 0;
         }
 
         if (!std::isfinite(*max_distance))

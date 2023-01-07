@@ -78,7 +78,7 @@ public:
 };
 
 template <std::size_t N>
-bool boundary_ridge(const std::vector<bool>& interior_vertices, const core::Ridge<N>& ridge)
+[[nodiscard]] bool boundary_ridge(const std::vector<bool>& interior_vertices, const core::Ridge<N>& ridge)
 {
         for (const auto v : ridge.vertices())
         {
@@ -90,8 +90,61 @@ bool boundary_ridge(const std::vector<bool>& interior_vertices, const core::Ridg
         return false;
 }
 
+template <typename T>
+struct Angles final
+{
+        T cos_plus = 1;
+        T cos_minus = 1;
+        T sin_plus = 0;
+        T sin_minus = 0;
+};
+
 template <std::size_t N, typename T>
-bool sharp_ridge(
+[[nodiscard]] Angles<T> compute_angles(
+        const std::vector<Vector<N, T>>& points,
+        const core::Ridge<N>& ridge,
+        const core::RidgeFacets<core::DelaunayFacet<N>>& facets)
+{
+        ASSERT(!facets.empty());
+
+        const RidgeComplement basis(points, ridge.vertices(), facets.cbegin()->point());
+
+        const Vector<2, T> base = basis.coordinates(points[facets.cbegin()->point()] - points[ridge.vertices()[0]]);
+        ASSERT(is_finite(base));
+
+        Angles<T> res;
+
+        for (auto facet = std::next(facets.cbegin()); facet != facets.cend(); ++facet)
+        {
+                const Vector<2, T> v = basis.coordinates(points[facet->point()] - points[ridge.vertices()[0]]);
+                ASSERT(is_finite(v));
+
+                const T sine = cross(base, v);
+                const T cosine = dot(base, v);
+
+                if (sine >= 0)
+                {
+                        if (cosine < res.cos_plus)
+                        {
+                                res.cos_plus = cosine;
+                                res.sin_plus = sine;
+                        }
+                }
+                else
+                {
+                        if (cosine < res.cos_minus)
+                        {
+                                res.cos_minus = cosine;
+                                res.sin_minus = sine;
+                        }
+                }
+        }
+
+        return res;
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] bool sharp_ridge(
         const std::vector<Vector<N, T>>& points,
         const std::vector<bool>& interior_vertices,
         const core::Ridge<N>& ridge,
@@ -110,60 +163,25 @@ bool sharp_ridge(
                 return true;
         }
 
-        const RidgeComplement basis(points, ridge.vertices(), ridge_facets.cbegin()->point());
+        const Angles<T> angles = compute_angles(points, ridge, ridge_facets);
 
-        const Vector<2, T> base =
-                basis.coordinates(points[ridge_facets.cbegin()->point()] - points[ridge.vertices()[0]]);
-        ASSERT(is_finite(base));
-
-        T cos_plus = 1;
-        T cos_minus = 1;
-        T sin_plus = 0;
-        T sin_minus = 0;
-
-        for (auto ridge_facet = std::next(ridge_facets.cbegin()); ridge_facet != ridge_facets.cend(); ++ridge_facet)
-        {
-                const Vector<2, T> v = basis.coordinates(points[ridge_facet->point()] - points[ridge.vertices()[0]]);
-                ASSERT(is_finite(v));
-
-                const T sine = cross(base, v);
-                const T cosine = dot(base, v);
-
-                if (sine >= 0)
-                {
-                        if (cosine < cos_plus)
-                        {
-                                cos_plus = cosine;
-                                sin_plus = sine;
-                        }
-                }
-                else
-                {
-                        if (cosine < cos_minus)
-                        {
-                                cos_minus = cosine;
-                                sin_minus = sine;
-                        }
-                }
-        }
-
-        // not sharp if any angle is greater than or equal to 90 degree
-        if (cos_plus <= 0 || cos_minus <= 0)
+        // not sharp if any angle is greater than or equal to 90 degrees
+        if (angles.cos_plus <= 0 || angles.cos_minus <= 0)
         {
                 return false;
         }
 
         // if two angles are less than 90 degrees, then their sum is less 180 degrees
-        // cos(a + b) = cos(a)cos(b) - sin(a)sin(b).
+        // cos(a + b) = cos(a)cos(b) - sin(a)sin(b)
         // sin_minus <= 0, so use its absolute value
-        const T cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
+        const T cos_a_plus_b = angles.cos_plus * angles.cos_minus - std::abs(angles.sin_plus * angles.sin_minus);
 
-        // sharp if the sum is less than 90
+        // sharp if the sum is less than 90 degrees
         return cos_a_plus_b > 0;
 }
 
 template <std::size_t N>
-RidgeSet<N> prune(
+[[nodiscard]] RidgeSet<N> prune(
         const std::vector<Vector<N, double>>& points,
         const std::vector<bool>& interior_vertices,
         const std::unordered_map<const core::DelaunayFacet<N>*, int>& facet_ptr_index,
