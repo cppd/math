@@ -105,7 +105,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::vector<Vector<3, float>> pixels_original_{
                 static_cast<std::size_t>(global_index_.count()), Vector<3, float>(MIN)};
         std::vector<Spinlock> pixels_lock_{pixels_original_.size()};
-        float pixels_coef_ = 1;
+        std::atomic<float> pixels_coef_ = 1;
 
         static_assert(std::atomic<float>::is_always_lock_free);
         std::atomic<float> pixel_brightness_parameter_ = 0;
@@ -144,6 +144,22 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 }
         }
 
+        void normalize_pixels(const float coef)
+        {
+                ASSERT(pixels_original_.size() * PIXEL_SIZE == pixels_r8g8b8a8_.size());
+                std::byte* ptr = pixels_r8g8b8a8_.data();
+                for (std::size_t i = 0; i < pixels_original_.size(); ++i, ptr += PIXEL_SIZE)
+                {
+                        const std::lock_guard lg(pixels_lock_[i]);
+                        const Vector<3, float>& pixel = pixels_original_[i];
+                        if (pixel[0] != MIN)
+                        {
+                                write_r8g8b8a8(ptr, pixel * coef);
+                        }
+                }
+                ASSERT(ptr == pixels_r8g8b8a8_.data() + pixels_r8g8b8a8_.size());
+        }
+
         void normalize_pixels()
         {
                 ASSERT(std::this_thread::get_id() != thread_id_);
@@ -154,7 +170,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 while (!normalize_stop_.load(std::memory_order_relaxed))
                 {
                         if (Clock::now() - last_normalize_time < NORMALIZE_INTERVAL
-                            && pixel_brightness_parameter_.load(std::memory_order_relaxed) == brightness_parameter)
+                            && brightness_parameter == pixel_brightness_parameter_.load(std::memory_order_relaxed))
                         {
                                 std::this_thread::sleep_for(std::chrono::seconds(1));
                                 continue;
@@ -173,27 +189,13 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         pixel_max_.store(max, std::memory_order_relaxed);
 
                         const float coef = std::lerp(1 / max, 1.0f, brightness_parameter);
-                        if (pixels_coef_ == coef)
+                        if (coef == pixels_coef_.load(std::memory_order_relaxed))
                         {
                                 continue;
                         }
-                        pixels_coef_ = coef;
+                        pixels_coef_.store(coef, std::memory_order_relaxed);
 
-                        ASSERT(pixels_original_.size() * PIXEL_SIZE == pixels_r8g8b8a8_.size());
-                        std::byte* ptr = pixels_r8g8b8a8_.data();
-                        for (std::size_t i = 0; i < pixels_original_.size(); ++i)
-                        {
-                                {
-                                        const std::lock_guard lg(pixels_lock_[i]);
-                                        const Vector<3, float>& pixel = pixels_original_[i];
-                                        if (pixel[0] != MIN)
-                                        {
-                                                write_r8g8b8a8(ptr, pixel * coef);
-                                        }
-                                }
-                                ptr += PIXEL_SIZE;
-                        }
-                        ASSERT(ptr == pixels_r8g8b8a8_.data() + pixels_r8g8b8a8_.size());
+                        normalize_pixels(coef);
                 }
         }
 
@@ -220,7 +222,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 const std::lock_guard lg(pixels_lock_[index]);
                 pixels_original_[index] = rgb;
-                write_r8g8b8a8(ptr, rgb * pixels_coef_);
+                write_r8g8b8a8(ptr, rgb * pixels_coef_.load(std::memory_order_relaxed));
         }
 
         painter::Images<N - 1>* images(const long long /*pass_number*/) override
