@@ -144,7 +144,7 @@ void write_to_files(const bool shuffle)
         }
 
         {
-                StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                const StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
                 std::vector<Vector<N, T>> data;
                 std::vector<Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)
@@ -156,7 +156,7 @@ void write_to_files(const bool shuffle)
                 write_to_file(sampler_name(sampler), sampler_file_name(sampler), GRID_SIZE, data);
         }
         {
-                LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                const LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
                 std::vector<Vector<N, T>> data;
                 std::vector<Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)

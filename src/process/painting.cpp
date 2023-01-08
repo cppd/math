@@ -59,6 +59,13 @@ using Colors = std::tuple<color::Spectrum, color::Color>;
 template <std::size_t N>
 constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 
+template <typename T>
+        requires (!std::is_reference_v<T>)
+std::shared_ptr<T> move_to_shared_ptr(T&& v)
+{
+        return std::make_shared<T>(std::move(v));
+}
+
 std::array<const char*, 2> precision_names()
 {
         static_assert(2 == std::tuple_size_v<Precisions>);
@@ -142,50 +149,60 @@ std::unique_ptr<const painter::Shape<N, T, Color>> make_shape(
         return painter::shapes::create_mesh<N, T, Color>(meshes, clip_plane_equation, WRITE_LOG, &progress);
 }
 
-template <std::size_t N, typename T, typename Color, typename Parameters>
+template <std::size_t N, typename T, typename Color>
+        requires (N == 3)
 painter::scenes::StorageScene<N, T, Color> make_scene(
         std::unique_ptr<const painter::Shape<N, T, Color>> shape,
         const view::info::Camera& camera,
+        const view::info::ClipPlane& /*clip_plane*/,
+        const std::type_identity_t<T> front_light_proportion,
+        const Color& light,
+        const Color& background_light,
+        const gui::dialog::PainterParameters& parameters,
+        const gui::dialog::PainterParameters3d& dimension_parameters,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+{
+        progress::Ratio progress(nullptr);
+
+        if (parameters.cornell_box)
+        {
+                return painter::scenes::create_cornell_box_scene(
+                        std::move(shape), light, background_light,
+                        {dimension_parameters.width, dimension_parameters.height}, &progress);
+        }
+
+        return painter::scenes::create_simple_scene(
+                std::move(shape), light, background_light, clip_plane_equation, front_light_proportion,
+                dimension_parameters.width, dimension_parameters.height, to_vector<T>(camera.up),
+                to_vector<T>(camera.forward), to_vector<T>(camera.lighting), to_vector<T>(camera.view_center),
+                camera.view_width, &progress);
+}
+
+template <std::size_t N, typename T, typename Color>
+        requires (N >= 4)
+painter::scenes::StorageScene<N, T, Color> make_scene(
+        std::unique_ptr<const painter::Shape<N, T, Color>> shape,
+        const view::info::Camera& /*camera*/,
         const view::info::ClipPlane& clip_plane,
         const std::type_identity_t<T> front_light_proportion,
         const Color& light,
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
-        const Parameters& dimension_parameters,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+        const gui::dialog::PainterParametersNd& dimension_parameters,
+        const std::optional<Vector<N + 1, T>>& /*clip_plane_equation*/)
 {
-        if constexpr (N == 3)
+        progress::Ratio progress(nullptr);
+
+        if (parameters.cornell_box)
         {
-                progress::Ratio progress(nullptr);
-
-                if (parameters.cornell_box)
-                {
-                        return painter::scenes::create_cornell_box_scene(
-                                std::move(shape), light, background_light,
-                                {dimension_parameters.width, dimension_parameters.height}, &progress);
-                }
-
-                return painter::scenes::create_simple_scene(
-                        std::move(shape), light, background_light, clip_plane_equation, front_light_proportion,
-                        dimension_parameters.width, dimension_parameters.height, to_vector<T>(camera.up),
-                        to_vector<T>(camera.forward), to_vector<T>(camera.lighting), to_vector<T>(camera.view_center),
-                        camera.view_width, &progress);
+                return painter::scenes::create_cornell_box_scene(
+                        std::move(shape), light, background_light,
+                        make_array_value<int, N - 1>(dimension_parameters.max_size), &progress);
         }
-        else
-        {
-                progress::Ratio progress(nullptr);
 
-                if (parameters.cornell_box)
-                {
-                        return painter::scenes::create_cornell_box_scene(
-                                std::move(shape), light, background_light,
-                                make_array_value<int, N - 1>(dimension_parameters.max_size), &progress);
-                }
-
-                return painter::scenes::create_simple_scene(
-                        std::move(shape), light, background_light, make_clip_plane_position<T>(clip_plane),
-                        front_light_proportion, dimension_parameters.max_size, &progress);
-        }
+        return painter::scenes::create_simple_scene(
+                std::move(shape), light, background_light, make_clip_plane_position<T>(clip_plane),
+                front_light_proportion, dimension_parameters.max_size, &progress);
 }
 
 template <typename T, typename Color, std::size_t N, typename Parameters>
@@ -300,24 +317,20 @@ std::function<void(progress::RatioList*)> action_painter_function(
         static_assert(SAMPLES_PER_PIXEL<N> <= SAMPLES_PER_PIXEL_MAXIMUM<N>);
         static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
-        std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParameters3d>> parameters =
-                gui::dialog::PainterParameters3dDialog::show(
-                        hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM,
-                        SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
-                        color_names(), COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
+        const auto parameters = gui::dialog::PainterParameters3dDialog::show(
+                hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM, SAMPLES_PER_PIXEL<N>,
+                SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(), COLOR_INDEX<N>,
+                integrators_names(), INTEGRATOR_INDEX);
 
         if (!parameters)
         {
                 return nullptr;
         }
 
-        std::shared_ptr shared_objects =
-                std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
-
-        return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
+        return [=, objects = move_to_shared_ptr(std::move(objects))](progress::RatioList* const progress_list)
         {
                 thread_function(
-                        *shared_objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        *objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
                         std::get<0>(*parameters), std::get<1>(*parameters), progress_list);
         };
 }
@@ -337,24 +350,20 @@ std::function<void(progress::RatioList*)> action_painter_function(
         static_assert(SCREEN_SIZE_ND<N> <= SCREEN_SIZE_ND_MAXIMUM);
         static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
-        std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParametersNd>> parameters =
-                gui::dialog::PainterParametersNdDialog::show(
-                        N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
-                        SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX,
-                        color_names(), COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
+        const auto parameters = gui::dialog::PainterParametersNdDialog::show(
+                N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
+                SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(),
+                COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
 
         if (!parameters)
         {
                 return nullptr;
         }
 
-        std::shared_ptr shared_objects =
-                std::make_shared<std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>>(std::move(objects));
-
-        return [=, shared_objects = std::move(shared_objects)](progress::RatioList* const progress_list)
+        return [=, objects = move_to_shared_ptr(std::move(objects))](progress::RatioList* const progress_list)
         {
                 thread_function(
-                        *shared_objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
+                        *objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
                         std::get<0>(*parameters), std::get<1>(*parameters), progress_list);
         };
 }

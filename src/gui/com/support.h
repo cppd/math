@@ -73,7 +73,7 @@ Window* create_delete_on_close_window(Args&&... args)
 {
         QtObjectInDynamicMemory<Window> window(std::forward<Args>(args)...);
         window->setAttribute(Qt::WA_DeleteOnClose);
-        Window* ptr = window;
+        Window* const ptr = window;
         window.clear();
         return ptr;
 }

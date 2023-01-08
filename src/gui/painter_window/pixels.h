@@ -300,8 +300,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 {
                         const long long pixel_size = image::format_pixel_size_in_bytes(image.color_format);
                         const long long slice_size = pixel_size * screen_size_[0] * screen_size_[1];
-                        const std::byte* begin = &image.pixels[slice_number * slice_size];
-                        const std::byte* end = begin + slice_size;
+                        const std::byte* const begin = &image.pixels[slice_number * slice_size];
+                        const std::byte* const end = begin + slice_size;
                         return std::vector(begin, end);
                 };
 

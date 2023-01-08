@@ -35,14 +35,14 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        [[nodiscard]] static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
+        [[nodiscard]] static spatial::BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
         {
                 if (objects.empty())
                 {
                         error("No objects for tree");
                 }
 
-                BoundingBox<N, T> box = objects[0].bounding_box();
+                spatial::BoundingBox<N, T> box = objects[0].bounding_box();
                 for (std::size_t i = 1; i < objects.size(); ++i)
                 {
                         box.merge(objects[i].bounding_box());
@@ -50,7 +50,7 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
                 return box;
         }
 
-        BoundingBox<N, T> bounding_box_;
+        spatial::BoundingBox<N, T> bounding_box_;
         std::vector<std::remove_cvref_t<decltype(std::declval<Object>().overlap_function())>> overlap_functions_;
 
         [[nodiscard]] int count() const override
@@ -58,7 +58,7 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
                 return overlap_functions_.size();
         }
 
-        [[nodiscard]] const BoundingBox<N, T>& bounding_box() const override
+        [[nodiscard]] const spatial::BoundingBox<N, T>& bounding_box() const override
         {
                 return bounding_box_;
         }
@@ -67,7 +67,7 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
                 const Parallelotope& parallelotope,
                 const std::vector<int>& indices) const override
         {
-                ShapeOverlap p(&parallelotope);
+                spatial::ShapeOverlap p(&parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (const int index : indices)

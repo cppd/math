@@ -94,7 +94,7 @@ T test_stratified_jittered(const unsigned sample_count, const std::type_identity
 
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
-        StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
+        const StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
 
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);
@@ -119,7 +119,7 @@ T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T
 
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
-        LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
+        const LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
 
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);

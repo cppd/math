@@ -81,7 +81,7 @@ void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& 
         }
 
         std::byte* ptr = bytes.data();
-        const std::byte* end = ptr + bytes.size();
+        const std::byte* const end = ptr + bytes.size();
         while (ptr != end)
         {
                 std::array<T, 3> rgb;
@@ -125,7 +125,7 @@ void convert_to_r_component_format(
         }
 
         const std::byte* src = bytes_color.data();
-        const std::byte* end = src + bytes_color.size();
+        const std::byte* const end = src + bytes_color.size();
         std::byte* dst = bytes_r.data();
         while (src != end)
         {
