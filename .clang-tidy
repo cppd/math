@@ -73,6 +73,8 @@ CheckOptions:
   value: '0'
 - key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerToFloatingPointNarrowingConversion
   value: '0'
+- key:   misc-const-correctness.WarnPointersAsValues
+  value: '1'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-loop-convert.UseCxx20ReverseRanges
@@ -80,7 +82,7 @@ CheckOptions:
 - key:   modernize-use-auto.MinTypeNameLength
   value: '0'
 - key:   readability-function-cognitive-complexity.Threshold
-  value: '18'
+  value: '17'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
 - key:   readability-implicit-bool-conversion.AllowPointerConditions
