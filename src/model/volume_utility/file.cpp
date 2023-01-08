@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
+#include "directory.h"
+
 #include <src/com/alg.h>
 #include <src/com/arrays.h>
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
-#include <src/com/string/ascii.h>
 #include <src/image/file_load.h>
 #include <src/image/file_save.h>
 #include <src/image/flip.h>
@@ -32,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
-#include <optional>
 #include <sstream>
 #include <vector>
 
@@ -44,101 +44,6 @@ int max_digit_count_zero_based(const int count)
 {
         const int max_number = count - 1;
         return std::floor(std::log10(std::max(max_number, 1))) + 1;
-}
-
-enum class ContentType
-{
-        FILES,
-        DIRECTORIES
-};
-
-struct DirectoryContent final
-{
-        ContentType type;
-        std::vector<std::string> entries;
-};
-
-std::optional<DirectoryContent> read_directory_ascii_content(const std::filesystem::path& directory)
-{
-        if (!std::filesystem::is_directory(directory))
-        {
-                error("Directory not found " + generic_utf8_filename(directory));
-        }
-
-        std::vector<std::string> entries;
-
-        bool files = false;
-        bool directories = false;
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
-        {
-                if (entry.is_directory())
-                {
-                        if (files)
-                        {
-                                error("Mixed content found in directory " + generic_utf8_filename(directory));
-                        }
-                        directories = true;
-                }
-                else if (entry.is_regular_file())
-                {
-                        if (directories)
-                        {
-                                error("Mixed content found in directory " + generic_utf8_filename(directory));
-                        }
-                        files = true;
-                }
-                else
-                {
-                        error("Neither directory nor regular file found " + generic_utf8_filename(entry.path()));
-                }
-                entries.push_back(generic_utf8_filename(entry.path().filename()));
-                if (!ascii::is_ascii(entries.back()))
-                {
-                        error("Directory entry does not have only ASCII encoding "
-                              + generic_utf8_filename(entry.path()));
-                }
-        }
-        if (entries.empty())
-        {
-                return std::nullopt;
-        }
-        ASSERT(files != directories);
-        if (files == directories)
-        {
-                return std::nullopt;
-        }
-
-        return DirectoryContent{
-                .type = (files ? ContentType::FILES : ContentType::DIRECTORIES),
-                .entries = std::move(entries)};
-}
-
-std::vector<std::string> read_directories(const std::filesystem::path& directory)
-{
-        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
-        if (!content || content->entries.empty())
-        {
-                error("Directories not found in " + generic_utf8_filename(directory));
-        }
-        if (content->type != ContentType::DIRECTORIES)
-        {
-                error("Directory " + generic_utf8_filename(directory) + " does not contain only directories");
-        }
-        return std::move(content->entries);
-}
-
-std::vector<std::string> read_files(const std::filesystem::path& directory)
-{
-        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
-        if (!content || content->entries.empty())
-        {
-                error("Files not found in " + generic_utf8_filename(directory));
-        }
-        if (content->type != ContentType::FILES)
-        {
-                error("Directory " + generic_utf8_filename(directory) + " does not contain only files");
-        }
-        return std::move(content->entries);
 }
 
 template <std::size_t N>
@@ -256,36 +161,35 @@ void load_from_images(
 
 void find_info(const std::filesystem::path& directory, std::vector<int>* const size, image::ColorFormat* const format)
 {
-        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
-        if (!content || content->entries.empty())
+        auto directory_info = read_directory_info(directory);
+        if (!directory_info)
         {
                 error("Image files or directories not found in " + generic_utf8_filename(directory));
         }
 
-        const std::filesystem::path first =
-                directory / path_from_utf8(*std::min_element(content->entries.cbegin(), content->entries.cend()));
+        const std::filesystem::path path_to_first = directory / path_from_utf8(directory_info->first);
 
-        switch (content->type)
+        switch (directory_info->type)
         {
         case ContentType::DIRECTORIES:
         {
-                size->push_back(content->entries.size());
-                content.reset();
-                find_info(first, size, format);
+                size->push_back(directory_info->count);
+                directory_info.reset();
+                find_info(path_to_first, size, format);
                 return;
         }
         case ContentType::FILES:
         {
-                const image::Info info = image::file_info(first);
-                const auto [width, height] = info.size;
-                size->push_back(content->entries.size());
+                const image::Info file_info = image::file_info(path_to_first);
+                const auto [width, height] = file_info.size;
+                size->push_back(directory_info->count);
                 size->push_back(height);
                 size->push_back(width);
-                *format = info.format;
+                *format = file_info.format;
                 return;
         }
         }
-        error_fatal("Unknown content type " + to_string(enum_to_int(content->type)));
+        error_fatal("Unknown content type " + to_string(enum_to_int(directory_info->type)));
 }
 }
 
