@@ -33,7 +33,7 @@ std::array<Vector<N, T>, N + 1> create_simplex()
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        const Vector<N + 1, T> simplex_hyperplane_normal = Vector<N + 1, T>(1 / std::sqrt(T(N + 1)));
+        const Vector<N + 1, T> simplex_hyperplane_normal = Vector<N + 1, T>(1 / std::sqrt(static_cast<T>(N + 1)));
 
         const std::array<Vector<N + 1, T>, N> basis =
                 numerical::orthogonal_complement_of_unit_vector(simplex_hyperplane_normal);

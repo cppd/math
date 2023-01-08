@@ -305,7 +305,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         return std::vector(begin, end);
                 };
 
-                painter::ImagesReading lock(&painter_images_);
+                const painter::ImagesReading lock(&painter_images_);
 
                 const image::Image<N - 1>& rgb = lock.image_with_background();
                 const image::Image<N - 1>& rgba = lock.image_without_background();
@@ -332,7 +332,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         return std::nullopt;
                 }
 
-                painter::ImagesReading lock(&painter_images_);
+                const painter::ImagesReading lock(&painter_images_);
 
                 const image::Image<N - 1>& rgb = lock.image_with_background();
                 const image::Image<N - 1>& rgba = lock.image_without_background();

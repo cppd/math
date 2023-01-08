@@ -147,21 +147,21 @@ void test_optics_impl(T precision)
         const Vector<2, T> refracted = Vector<2, T>(sin2, -std::sqrt(1 - square(sin2))).normalized();
 
         {
-                Vector<2, T> r = reflect(v, n);
+                const Vector<2, T> r = reflect(v, n);
                 if (!cmp(r, reflected, precision))
                 {
                         error("Error reflecting 1, " + to_string(r));
                 }
         }
         {
-                Vector<2, T> r = reflect_vn(-v, n);
+                const Vector<2, T> r = reflect_vn(-v, n);
                 if (!cmp(r, reflected, precision))
                 {
                         error("Error reflecting 2, " + to_string(r));
                 }
         }
         {
-                std::optional<Vector<2, T>> r = refract(v, n, ETA);
+                const std::optional<Vector<2, T>> r = refract(v, n, ETA);
                 if (!r)
                 {
                         error("Error refracting 1, not refracted");
@@ -172,7 +172,7 @@ void test_optics_impl(T precision)
                 }
         }
         {
-                std::optional<Vector<2, T>> r = refract2(v, n, ETA);
+                const std::optional<Vector<2, T>> r = refract2(v, n, ETA);
                 if (!r)
                 {
                         error("Error refracting 2, not refracted");

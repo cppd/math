@@ -158,7 +158,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
                 res.surface += geometry::shapes::simplex_volume(vertices);
         }
 
-        model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+        const model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
 
         std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
@@ -191,7 +191,7 @@ std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         rays.resize(ray_count);
         for (Ray<N, T>& ray : rays)
         {
-                Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
+                const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                 ray = Ray<N, T>(radius * v + center, -v);
         }
         return rays;

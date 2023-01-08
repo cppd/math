@@ -45,7 +45,7 @@ std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const Boun
 
         for (const Vector<N, float>& v : mesh.vertices)
         {
-                Vector<N, float> vertex = (v - center) * scale_factor;
+                const Vector<N, float> vertex = (v - center) * scale_factor;
                 normalized_vertices.push_back(vertex);
         }
 

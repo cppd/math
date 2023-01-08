@@ -100,7 +100,7 @@ public:
                                 return;
                         }
 
-                        ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
+                        const ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
 
                         const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 

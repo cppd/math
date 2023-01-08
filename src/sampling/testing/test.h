@@ -151,7 +151,7 @@ void test_distribution_surface(
 
         progress->set(0);
 
-        SphereDistribution<N, T> buckets(progress);
+        const SphereDistribution<N, T> buckets(progress);
 
         const long long count = round_distribution_count(buckets.distribution_count(count_per_bucket));
 

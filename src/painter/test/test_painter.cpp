@@ -122,7 +122,7 @@ public:
                 {
                         error("No painter image to write to files");
                 }
-                ImagesWriting lock(images_.get());
+                const ImagesWriting lock(images_.get());
                 save_image(path_, std::move(lock.image_with_background()));
         }
 };
@@ -235,7 +235,7 @@ void test_painter(
 {
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
-                model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+                const model::mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
                 std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
 

@@ -166,7 +166,7 @@ T compute_discrepancy(
         const T box_max = std::nextafter(max, Limits<T>::max());
         const T volume = std::pow(box_max - box_min, T{N});
 
-        PointSearch<N, T> point_search(points);
+        const PointSearch<N, T> point_search(points);
 
         T max_discrepancy = Limits<T>::lowest();
         for (int i = 0; i < box_count; ++i)

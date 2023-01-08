@@ -77,7 +77,7 @@ void test_performance(RandomEngine& engine)
 {
         static constexpr int DATA_COUNT = 1'000'000;
 
-        std::vector<std::array<T, 3>> data = make_random_data<T>(DATA_COUNT, engine);
+        const std::vector<std::array<T, 3>> data = make_random_data<T>(DATA_COUNT, engine);
 
         const Clock::time_point start_time = Clock::now();
         for (const auto& v : data)

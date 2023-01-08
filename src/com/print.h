@@ -60,7 +60,7 @@ inline constexpr bool USE_UNSIGNED_LONG_LONG =
         && (Limits<unsigned long long>::max() < Limits<unsigned __int128>::max());
 
 template <typename T>
-using LONG_LONG_TYPE = std::conditional_t<
+using LongLongType = std::conditional_t<
         USE_SIGNED_LONG_LONG<T>,
         long long,
         std::conditional_t<USE_UNSIGNED_LONG_LONG<T>, unsigned long long, void>>;
@@ -72,7 +72,7 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
         {
                 if constexpr (USE_SIGNED_LONG_LONG<T> || USE_UNSIGNED_LONG_LONG<T>)
                 {
-                        const LONG_LONG_TYPE<T> v = value;
+                        const LongLongType<T> v = value;
                         if (v == value)
                         {
                                 make_string<DIGIT_GROUP_SIZE>(v, index, separator, str);

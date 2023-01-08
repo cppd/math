@@ -66,7 +66,7 @@ void test_performance(const bool shuffle)
         const long long sjs = [&]
         {
                 std::vector<Vector<N, T>> data;
-                StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                const StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
                 const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
@@ -78,7 +78,7 @@ void test_performance(const bool shuffle)
         const long long lhs = [&]
         {
                 std::vector<Vector<N, T>> data;
-                LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                const LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
                 const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {

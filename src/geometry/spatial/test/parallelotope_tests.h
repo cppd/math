@@ -172,9 +172,9 @@ void test_points(const int point_count)
         LOG("ParallelotopeAA");
 
         {
-                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-                ParallelotopeAA<N, T> p(org, edges);
+                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                const ParallelotopeAA<N, T> p(org, edges);
 
                 print_message(to_string(p));
 
@@ -186,9 +186,9 @@ void test_points(const int point_count)
         LOG("Parallelotope");
 
         {
-                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
-                std::array<Vector<N, T>, N> edges = random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-                Parallelotope<N, T> p(org, edges);
+                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const std::array<Vector<N, T>, N> edges = random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                const Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
 
@@ -200,11 +200,11 @@ void test_points(const int point_count)
         LOG("Parallelotope comparison");
 
         {
-                Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
-                ParallelotopeAA<N, T> p_aa(org, edges);
-                Parallelotope<N, T> p(org, edges);
+                const ParallelotopeAA<N, T> p_aa(org, edges);
+                const Parallelotope<N, T> p(org, edges);
 
                 print_message("#1\n" + to_string(p_aa) + "\n#2\n" + to_string(p));
 
@@ -255,7 +255,7 @@ void test_algorithms()
         LOG("ParallelotopeAA");
 
         {
-                ParallelotopeAA<N, T> p(ORG, EDGES);
+                const ParallelotopeAA<N, T> p(ORG, EDGES);
                 test_algorithms(p);
         }
 
@@ -263,7 +263,7 @@ void test_algorithms()
         LOG("Parallelotope");
 
         {
-                Parallelotope<N, T> p(ORG, EDGES);
+                const Parallelotope<N, T> p(ORG, EDGES);
                 test_algorithms(p);
         }
 

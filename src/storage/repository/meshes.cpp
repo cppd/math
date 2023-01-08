@@ -84,7 +84,7 @@ public:
         template <typename T>
         void add(const Vector<N, T>& p)
         {
-                Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
+                const Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
                 if (!integer_points_.contains(integer_point))
                 {
                         integer_points_.insert(integer_point);
@@ -194,7 +194,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_
 
         while (points.size() < point_count)
         {
-                Vector<3, double> v = geometry::shapes::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
+                const Vector<3, double> v = geometry::shapes::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
                 points.add(v);
         }
 

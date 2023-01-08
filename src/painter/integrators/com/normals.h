@@ -53,7 +53,6 @@ Normals<N, T> compute_normals(const SurfaceIntersection<N, T, Color>& surface, c
                 if (shading)
                 {
                         ASSERT(shading->is_unit());
-                        Normals<N, T> res;
                         return {geometric, (flip ? -*shading : *shading)};
                 }
         }

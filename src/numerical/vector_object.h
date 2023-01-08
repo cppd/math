@@ -112,7 +112,6 @@ public:
 
         constexpr Vector<N, T>& operator*=(const Vector<N, T>& a) &
         {
-                Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         data_[i] *= a[i];

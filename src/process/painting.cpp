@@ -370,7 +370,7 @@ std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_object
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& object)
                         {
-                                model::mesh::Reading reading(*object);
+                                const model::mesh::Reading reading(*object);
                                 if (reading.visible() && !reading.mesh().facets.empty())
                                 {
                                         dimensions.insert(N);

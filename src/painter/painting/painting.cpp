@@ -95,7 +95,7 @@ void Painting<N, T, Color, Integrator>::prepare_next_pass(const unsigned thread_
         const long long pass_number = statistics_->statistics().pass_number;
 
         {
-                ImagesWriting lock(notifier_->images(pass_number));
+                const ImagesWriting lock(notifier_->images(pass_number));
                 pixels_->images(&lock.image_with_background(), &lock.image_without_background());
         }
 

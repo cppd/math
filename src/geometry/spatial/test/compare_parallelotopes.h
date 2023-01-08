@@ -161,15 +161,15 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
                 }
         }
 
-        std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
+        const std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
         compare_vectors(orgs, "orgs");
 
-        std::array<std::array<Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
+        const std::array<std::array<Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
         compare_vectors(vectors, "vectors");
 
         const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
 
-        for (Vector<N, T> point :
+        for (const Vector<N, T>& point :
              random::parallelotope_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};
