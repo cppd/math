@@ -39,7 +39,6 @@ namespace
 //  Print[StringTemplate["{``L, ``L},"][i,
 //    ScientificForm[N[InverseErf[i], 50],
 //     NumberFormat -> (Row[{#1, "e", If[#3 == "", "0", #3]}] &)]]]]
-
 template <typename T>
 constexpr std::array INVERSE_ERF = std::to_array<std::array<T, 2>>({
         {0.02L, 1.7726395026678018482195112929313224840299869138666e-2L},
@@ -94,6 +93,41 @@ constexpr std::array INVERSE_ERF = std::to_array<std::array<T, 2>>({
 });
 
 template <typename T>
+void compare_erf_inv(const T arg, const T erf, const T erf_inverse, const T precision)
+{
+        if (arg == erf_inverse)
+        {
+                return;
+        }
+
+        const T abs = std::abs(arg - erf_inverse);
+
+        if (arg == 0 || erf_inverse == 0)
+        {
+                if (!(abs < precision))
+                {
+                        error("Absolute erf_inv error " + to_string(abs) + " is greater than " + to_string(precision));
+                }
+                return;
+        }
+
+        const T p = [&]
+        {
+                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
+                {
+                        return precision * 10;
+                }
+                return precision;
+        }();
+
+        const T rel = abs / std::max(std::abs(arg), std::abs(erf_inverse));
+        if (!(rel < p))
+        {
+                error("Relative erf_inv error " + to_string(rel) + " is greater than " + to_string(p));
+        }
+}
+
+template <typename T>
 void test_erf_inv(const T arg, const T erf, const T erf_inverse, const T precision)
 {
         if (erf == 1)
@@ -123,34 +157,7 @@ void test_erf_inv(const T arg, const T erf, const T erf_inverse, const T precisi
                 return;
         }
 
-        if (arg == erf_inverse)
-        {
-                return;
-        }
-
-        if (arg == 0 || erf_inverse == 0)
-        {
-                if (!(std::abs(arg - erf_inverse) < precision))
-                {
-                        error("Absolute erf_inv error is greater than " + to_string(precision));
-                }
-                return;
-        }
-
-        const T p = [&]
-        {
-                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
-                {
-                        return precision * 10;
-                }
-                return precision;
-        }();
-
-        const T e = std::abs((arg - erf_inverse) / arg);
-        if (!(e < p))
-        {
-                error("Relative erf_inv error " + to_string(e) + " is greater than " + to_string(p));
-        }
+        compare_erf_inv(arg, erf, erf_inverse, precision);
 }
 
 template <typename T>
@@ -224,8 +231,8 @@ void test_erf_inv_array(const std::type_identity_t<T> precision)
 
         for (const std::array<T, 2>& v : INVERSE_ERF<T>)
         {
-                const T e1 = std::abs((erf_inv(v[0]) - v[1]) / v[1]);
-                const T e2 = std::abs((erf_inv(-v[0]) - (-v[1])) / v[1]);
+                const T e1 = std::abs(erf_inv(v[0]) - v[1]) / std::max(std::abs(erf_inv(v[0])), std::abs(v[1]));
+                const T e2 = std::abs(erf_inv(-v[0]) - (-v[1])) / std::max(std::abs(erf_inv(-v[0])), std::abs(v[1]));
                 if (!(e1 < precision && e2 < precision))
                 {
                         error("Relative erf_inv error e1 = " + to_string(e1) + " e2 = " + to_string(e2)
