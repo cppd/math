@@ -102,8 +102,9 @@ painter::Integrator index_to_integrator(const std::size_t index)
                 return painter::Integrator::PT;
         case 1:
                 return painter::Integrator::BPT;
+        default:
+                error("Unknown integrator index " + to_string(index));
         }
-        error("Unknown integrator index " + to_string(index));
 }
 
 std::array<const char*, 2> integrator_names()
