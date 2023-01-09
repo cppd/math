@@ -30,16 +30,15 @@ namespace ns::painter::pixels
 {
 namespace samples_color_implementation
 {
-template <typename Color, typename Weight>
+template <typename T, typename Color>
 [[nodiscard]] std::tuple<std::size_t, std::size_t> select_colors_and_find_min_max(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<Weight>& color_weights,
+        const std::vector<T>& color_weights,
         std::vector<Color>* const samples,
         std::vector<typename Color::DataType>* const contributions,
         std::vector<typename Color::DataType>* const weights)
 {
-        using T = typename Color::DataType;
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_floating_point_v<typename Color::DataType>);
 
         ASSERT(colors.size() == color_weights.size());
 
@@ -47,8 +46,8 @@ template <typename Color, typename Weight>
         contributions->clear();
         weights->clear();
 
-        T min = Limits<T>::infinity();
-        T max = -Limits<T>::infinity();
+        typename Color::DataType min = Limits<typename Color::DataType>::infinity();
+        typename Color::DataType max = -Limits<typename Color::DataType>::infinity();
         std::size_t min_i = -1;
         std::size_t max_i = -1;
 
@@ -59,7 +58,7 @@ template <typename Color, typename Weight>
                         continue;
                 }
 
-                const T weight = color_weights[i];
+                const typename Color::DataType weight = color_weights[i];
 
                 if (!(weight > 0))
                 {
@@ -240,10 +239,10 @@ public:
         }
 };
 
-template <typename Color, typename Weight>
+template <typename T, typename Color>
 [[nodiscard]] std::optional<ColorSamples<Color>> make_color_samples(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<Weight>& color_weights)
+        const std::vector<T>& color_weights)
 {
         namespace impl = samples_color_implementation;
 
