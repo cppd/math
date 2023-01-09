@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/illuminants.h>
 #include <src/com/arrays.h>
+#include <src/com/enum.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/thread.h>
@@ -59,6 +60,8 @@ using Colors = std::tuple<color::Spectrum, color::Color>;
 template <std::size_t N>
 constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 
+constexpr painter::Integrator INTEGRATOR = painter::Integrator::PT;
+
 template <typename T>
         requires (!std::is_reference_v<T>)
 std::shared_ptr<T> move_to_shared_ptr(T&& v)
@@ -79,16 +82,19 @@ std::array<const char*, 2> color_names()
         return {std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
 }
 
-constexpr std::size_t INTEGRATOR_INDEX = 0;
-
-std::array<const char*, 2> integrators_names()
+std::size_t integrator_to_index(const painter::Integrator integrator)
 {
-        return {"PT", "BPT"};
+        switch (integrator)
+        {
+        case painter::Integrator::PT:
+                return 0;
+        case painter::Integrator::BPT:
+                return 1;
+        }
+        error("Unknown integrator " + to_string(enum_to_int(integrator)));
 }
 
-static_assert(INTEGRATOR_INDEX < std::tuple_size_v<decltype(integrators_names())>);
-
-painter::Integrator integrator_by_index(const std::size_t index)
+painter::Integrator index_to_integrator(const std::size_t index)
 {
         switch (index)
         {
@@ -96,9 +102,13 @@ painter::Integrator integrator_by_index(const std::size_t index)
                 return painter::Integrator::PT;
         case 1:
                 return painter::Integrator::BPT;
-        default:
-                error("Unknown integrator index " + to_string(index));
         }
+        error("Unknown integrator index " + to_string(index));
+}
+
+std::array<const char*, 2> integrator_names()
+{
+        return {"PT", "BPT"};
 }
 
 template <std::size_t N, typename T>
@@ -235,7 +245,7 @@ void thread_function(
         const std::string name = objects.size() != 1 ? "" : objects[0]->name();
 
         gui::painter_window::create_painter_window(
-                name, integrator_by_index(parameters.integrator_index), parameters.thread_count,
+                name, index_to_integrator(parameters.integrator_index), parameters.thread_count,
                 parameters.samples_per_pixel, parameters.flat_shading, std::move(scene));
 }
 
@@ -320,7 +330,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         const auto parameters = gui::dialog::PainterParameters3dDialog::show(
                 hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM, SAMPLES_PER_PIXEL<N>,
                 SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(), COLOR_INDEX<N>,
-                integrators_names(), INTEGRATOR_INDEX);
+                integrator_names(), integrator_to_index(INTEGRATOR));
 
         if (!parameters)
         {
@@ -353,7 +363,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         const auto parameters = gui::dialog::PainterParametersNdDialog::show(
                 N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
                 SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(),
-                COLOR_INDEX<N>, integrators_names(), INTEGRATOR_INDEX);
+                COLOR_INDEX<N>, integrator_names(), integrator_to_index(INTEGRATOR));
 
         if (!parameters)
         {
