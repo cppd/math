@@ -55,14 +55,14 @@ private:
                 int width,
                 int height,
                 int max_screen_size,
-                int default_samples_per_pixel,
+                int samples_per_pixel,
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
-                int default_precision_index,
+                int precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index,
+                int color_index,
                 const std::array<const char*, 2>& integrators,
-                int default_integrator_index,
+                int integrator_index,
                 std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters);
 
         void on_width_value_changed(int);
@@ -76,13 +76,13 @@ public:
                 int width,
                 int height,
                 int max_screen_size,
-                int default_samples_per_pixel,
+                int samples_per_pixel,
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
-                int default_precision_index,
+                int precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index,
+                int color_index,
                 const std::array<const char*, 2>& integrators,
-                int default_integrator_index);
+                int integrator_index);
 };
 }

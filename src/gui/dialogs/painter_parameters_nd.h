@@ -49,17 +49,17 @@ private:
         PainterParametersNdDialog(
                 int dimension,
                 int max_thread_count,
-                int default_screen_size,
+                int screen_size,
                 int min_screen_size,
                 int max_screen_size,
-                int default_samples_per_pixel,
+                int samples_per_pixel,
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
-                int default_precision_index,
+                int precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index,
+                int color_index,
                 const std::array<const char*, 2>& integrators,
-                int default_integrator_index,
+                int integrator_index,
                 std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters);
 
         void done(int r) override;
@@ -68,16 +68,16 @@ public:
         [[nodiscard]] static std::optional<std::tuple<PainterParameters, PainterParametersNd>> show(
                 int dimension,
                 int max_thread_count,
-                int default_screen_size,
+                int screen_size,
                 int min_screen_size,
                 int max_screen_size,
-                int default_samples_per_pixel,
+                int samples_per_pixel,
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
-                int default_precision_index,
+                int precision_index,
                 const std::array<const char*, 2>& colors,
-                int default_color_index,
+                int color_index,
                 const std::array<const char*, 2>& integrators,
-                int default_integrator_index);
+                int integrator_index);
 };
 }

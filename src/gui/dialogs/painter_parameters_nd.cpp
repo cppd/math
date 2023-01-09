@@ -29,11 +29,7 @@ namespace ns::gui::dialog
 {
 namespace
 {
-void check_parameters(
-        const int dimension,
-        const int default_screen_size,
-        const int min_screen_size,
-        const int max_screen_size)
+void check_parameters(const int dimension, const int screen_size, const int min_screen_size, const int max_screen_size)
 {
         if (!(dimension >= 4))
         {
@@ -51,9 +47,9 @@ void check_parameters(
                       + " must be greater than or equal to minimum screen size " + to_string(min_screen_size));
         }
 
-        if (!(min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
+        if (!(min_screen_size <= screen_size && screen_size <= max_screen_size))
         {
-                error("Initial screen size " + to_string(default_screen_size) + +" must be in the range ["
+                error("Initial screen size " + to_string(screen_size) + +" must be in the range ["
                       + to_string(min_screen_size) + ", " + to_string(max_screen_size) + "]");
         }
 }
@@ -62,30 +58,30 @@ void check_parameters(
 PainterParametersNdDialog::PainterParametersNdDialog(
         const int dimension,
         const int max_thread_count,
-        const int default_screen_size,
+        const int screen_size,
         const int min_screen_size,
         const int max_screen_size,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index,
+        const int integrator_index,
         std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
                   max_thread_count,
-                  default_samples_per_pixel,
+                  samples_per_pixel,
                   max_samples_per_pixel,
                   precisions,
-                  default_precision_index,
+                  precision_index,
                   colors,
-                  default_color_index,
+                  color_index,
                   integrators,
-                  default_integrator_index)),
+                  integrator_index)),
           min_screen_size_(min_screen_size),
           max_screen_size_(max_screen_size),
           parameters_(parameters)
@@ -97,7 +93,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
 
         ui_.spin_box_max_size->setMinimum(min_screen_size);
         ui_.spin_box_max_size->setMaximum(max_screen_size);
-        ui_.spin_box_max_size->setValue(default_screen_size);
+        ui_.spin_box_max_size->setValue(screen_size);
 
         ui_.vertical_layout_parameters->addWidget(parameters_widget_);
 
@@ -138,26 +134,26 @@ void PainterParametersNdDialog::done(const int r)
 std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParametersNdDialog::show(
         const int dimension,
         const int max_thread_count,
-        const int default_screen_size,
+        const int screen_size,
         const int min_screen_size,
         const int max_screen_size,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index)
+        const int integrator_index)
 {
-        check_parameters(dimension, default_screen_size, min_screen_size, max_screen_size);
+        check_parameters(dimension, screen_size, min_screen_size, max_screen_size);
 
         std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters;
 
         const QtObjectInDynamicMemory w(new PainterParametersNdDialog(
-                dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, colors,
-                default_color_index, integrators, default_integrator_index, parameters));
+                dimension, max_thread_count, screen_size, min_screen_size, max_screen_size, samples_per_pixel,
+                max_samples_per_pixel, precisions, precision_index, colors, color_index, integrators, integrator_index,
+                parameters));
 
         if (!w->exec() || w.isNull())
         {

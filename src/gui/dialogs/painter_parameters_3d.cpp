@@ -54,27 +54,27 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         const int width,
         const int height,
         const int max_screen_size,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index,
+        const int integrator_index,
         std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
                   max_thread_count,
-                  default_samples_per_pixel,
+                  samples_per_pixel,
                   max_samples_per_pixel,
                   precisions,
-                  default_precision_index,
+                  precision_index,
                   colors,
-                  default_color_index,
+                  color_index,
                   integrators,
-                  default_integrator_index)),
+                  integrator_index)),
           aspect_ratio_(static_cast<double>(width) / height),
           max_width_(aspect_ratio_ >= 1 ? max_screen_size : std::lround(max_screen_size * aspect_ratio_)),
           min_width_(std::min(max_width_, width)),
@@ -168,23 +168,22 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
         const int width,
         const int height,
         const int max_screen_size,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index)
+        const int integrator_index)
 {
         check_parameters(width, height, max_screen_size);
 
         std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 
         const QtObjectInDynamicMemory w(new PainterParameters3dDialog(
-                max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
-                precisions, default_precision_index, colors, default_color_index, integrators, default_integrator_index,
-                parameters));
+                max_thread_count, width, height, max_screen_size, samples_per_pixel, max_samples_per_pixel, precisions,
+                precision_index, colors, color_index, integrators, integrator_index, parameters));
 
         if (!w->exec() || w.isNull())
         {

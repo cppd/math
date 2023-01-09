@@ -40,20 +40,20 @@ void check_texts(const char* const name, const std::array<const char*, 2>& texts
 
         if (!(index == 0 || index == 1))
         {
-                error("Default index " + to_string(index) + " is out of range for " + name);
+                error("Index " + to_string(index) + " is out of range for " + name);
         }
 }
 
 void check_parameters(
         const int max_thread_count,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index)
+        const int integrator_index)
 {
         if (!(max_thread_count >= 1))
         {
@@ -66,17 +66,17 @@ void check_parameters(
                       + " must be greater than or equal to 1");
         }
 
-        if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
+        if (!(1 <= samples_per_pixel && samples_per_pixel <= max_samples_per_pixel))
         {
-                error("Initial samples per pixel " + to_string(default_samples_per_pixel) + " must be in the range [1, "
+                error("Initial samples per pixel " + to_string(samples_per_pixel) + " must be in the range [1, "
                       + to_string(max_samples_per_pixel) + "]");
         }
 
-        check_texts("precisions", precisions, default_precision_index);
+        check_texts("precisions", precisions, precision_index);
 
-        check_texts("colors", colors, default_color_index);
+        check_texts("colors", colors, color_index);
 
-        check_texts("integrators", integrators, default_integrator_index);
+        check_texts("integrators", integrators, integrator_index);
 }
 
 void set_buttons(const std::array<QRadioButton*, 2>& buttons, const std::array<const char*, 2>& texts, const int index)
@@ -92,7 +92,7 @@ void set_buttons(const std::array<QRadioButton*, 2>& buttons, const std::array<c
                 return;
         }
 
-        error("Default index " + to_string(index) + " is out of range");
+        error("Index " + to_string(index) + " is out of range");
 }
 
 [[nodiscard]] bool check_button_selection(const char* const name, const std::array<QRadioButton*, 2>& buttons)
@@ -117,21 +117,21 @@ void set_buttons(const std::array<QRadioButton*, 2>& buttons, const std::array<c
 PainterParametersWidget::PainterParametersWidget(
         QWidget* const parent,
         const int max_thread_count,
-        const int default_samples_per_pixel,
+        const int samples_per_pixel,
         const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        const int default_precision_index,
+        const int precision_index,
         const std::array<const char*, 2>& colors,
-        const int default_color_index,
+        const int color_index,
         const std::array<const char*, 2>& integrators,
-        int default_integrator_index)
+        const int integrator_index)
         : QWidget(parent),
           max_thread_count_(max_thread_count),
           max_samples_per_pixel_(max_samples_per_pixel)
 {
         check_parameters(
-                max_thread_count, default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index,
-                colors, default_color_index, integrators, default_integrator_index);
+                max_thread_count, samples_per_pixel, max_samples_per_pixel, precisions, precision_index, colors,
+                color_index, integrators, integrator_index);
 
         ui_.setupUi(this);
 
@@ -143,17 +143,16 @@ PainterParametersWidget::PainterParametersWidget(
 
         ui_.spin_box_samples_per_pixel->setMinimum(1);
         ui_.spin_box_samples_per_pixel->setMaximum(max_samples_per_pixel);
-        ui_.spin_box_samples_per_pixel->setValue(default_samples_per_pixel);
+        ui_.spin_box_samples_per_pixel->setValue(samples_per_pixel);
 
         ui_.check_box_flat_shading->setChecked(false);
         ui_.check_box_cornell_box->setChecked(false);
 
-        set_buttons({ui_.radio_button_precision_0, ui_.radio_button_precision_1}, precisions, default_precision_index);
+        set_buttons({ui_.radio_button_precision_0, ui_.radio_button_precision_1}, precisions, precision_index);
 
-        set_buttons({ui_.radio_button_color_0, ui_.radio_button_color_1}, colors, default_color_index);
+        set_buttons({ui_.radio_button_color_0, ui_.radio_button_color_1}, colors, color_index);
 
-        set_buttons(
-                {ui_.radio_button_integrator_0, ui_.radio_button_integrator_1}, integrators, default_integrator_index);
+        set_buttons({ui_.radio_button_integrator_0, ui_.radio_button_integrator_1}, integrators, integrator_index);
 }
 
 bool PainterParametersWidget::check()
