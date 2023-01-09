@@ -93,6 +93,11 @@ class VolumeRenderer final
 
         void create_command_buffers_fragments(VkCommandPool graphics_command_pool);
 
+        void create_command_buffers_image(
+                const VolumeObject* volume,
+                VkCommandPool graphics_command_pool,
+                const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
+
 public:
         VolumeRenderer(
                 const vulkan::Device* device,

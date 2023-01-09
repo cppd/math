@@ -222,8 +222,6 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
-
         ASSERT(render_buffers_);
 
         vulkan::CommandBufferCreateInfo info;
@@ -238,48 +236,29 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
 
-        const auto create_buffers =
-                [&](const VolumeProgramPipelineType type, vulkan::handle::CommandBuffers* const commands)
+        const auto create = [&](const VolumeProgramPipelineType type)
         {
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
                         draw_commands_fragments(type, command_buffer);
                 };
-                *commands = vulkan::create_command_buffers(info);
-                info.render_pass_commands = nullptr;
+                return vulkan::create_command_buffers(info);
         };
 
-        commands_fragments_.emplace();
-        create_buffers(VolumeProgramPipelineType::OPACITY, &commands_fragments_->opacity);
-        create_buffers(VolumeProgramPipelineType::OPACITY_TRANSPARENCY, &commands_fragments_->opacity_transparency);
-        create_buffers(VolumeProgramPipelineType::TRANSPARENCY, &commands_fragments_->transparency);
+        commands_fragments_ = {
+                .opacity = create(VolumeProgramPipelineType::OPACITY),
+                .opacity_transparency = create(VolumeProgramPipelineType::OPACITY_TRANSPARENCY),
+                .transparency = create(VolumeProgramPipelineType::TRANSPARENCY)};
 }
 
-void VolumeRenderer::create_command_buffers(const VkCommandPool graphics_command_pool)
-{
-        create_command_buffers(nullptr, graphics_command_pool, nullptr);
-}
-
-void VolumeRenderer::create_command_buffers(
+void VolumeRenderer::create_command_buffers_image(
         const VolumeObject* const volume,
         const VkCommandPool graphics_command_pool,
         const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
-
         ASSERT(render_buffers_);
-
-        delete_command_buffers();
-
-        create_command_buffers_fragments(graphics_command_pool);
-
-        if (!volume)
-        {
-                return;
-        }
-
         ASSERT(before_render_pass_commands);
 
         vulkan::CommandBufferCreateInfo info;
@@ -295,22 +274,44 @@ void VolumeRenderer::create_command_buffers(
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
 
-        const auto create_buffers =
-                [&](const VolumeProgramPipelineType type, vulkan::handle::CommandBuffers* const commands)
+        const auto create = [&](const VolumeProgramPipelineType type)
         {
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
                         draw_commands_image(type, volume, command_buffer);
                 };
-                *commands = vulkan::create_command_buffers(info);
+                return vulkan::create_command_buffers(info);
         };
 
-        commands_image_.emplace();
-        create_buffers(VolumeProgramPipelineType::IMAGE, &commands_image_->image);
-        create_buffers(VolumeProgramPipelineType::IMAGE_OPACITY, &commands_image_->image_opacity);
-        create_buffers(
-                VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY, &commands_image_->image_opacity_transparency);
-        create_buffers(VolumeProgramPipelineType::IMAGE_TRANSPARENCY, &commands_image_->image_transparency);
+        commands_image_ = {
+                .image = create(VolumeProgramPipelineType::IMAGE),
+                .image_opacity = create(VolumeProgramPipelineType::IMAGE_OPACITY),
+                .image_opacity_transparency = create(VolumeProgramPipelineType::IMAGE_OPACITY_TRANSPARENCY),
+                .image_transparency = create(VolumeProgramPipelineType::IMAGE_TRANSPARENCY)};
+}
+
+void VolumeRenderer::create_command_buffers(const VkCommandPool graphics_command_pool)
+{
+        create_command_buffers(nullptr, graphics_command_pool, nullptr);
+}
+
+void VolumeRenderer::create_command_buffers(
+        const VolumeObject* const volume,
+        const VkCommandPool graphics_command_pool,
+        const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        ASSERT(render_buffers_);
+
+        delete_command_buffers();
+
+        create_command_buffers_fragments(graphics_command_pool);
+
+        if (volume)
+        {
+                create_command_buffers_image(volume, graphics_command_pool, before_render_pass_commands);
+        }
 }
 
 void VolumeRenderer::delete_command_buffers()
