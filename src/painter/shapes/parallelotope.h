@@ -33,18 +33,21 @@ class Parallelotope final : public Shape<N, T, Color>
         const T alpha_;
         const bool alpha_nonzero_ = alpha_ > 0;
 
-        T intersection_cost() const override;
+        [[nodiscard]] T intersection_cost() const override;
 
-        std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const override;
+        [[nodiscard]] std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const override;
 
-        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
-                const override;
+        [[nodiscard]] ShapeIntersection<N, T, Color> intersect(
+                const Ray<N, T>& ray,
+                T max_distance,
+                T bounding_distance) const override;
 
-        bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;
+        [[nodiscard]] bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const override;
 
-        geometry::spatial::BoundingBox<N, T> bounding_box() const override;
+        [[nodiscard]] geometry::spatial::BoundingBox<N, T> bounding_box() const override;
 
-        std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
+        [[nodiscard]] std::function<
+                bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
                 overlap_function() const override;
 
 public:
@@ -56,12 +59,12 @@ public:
                 const Vector<N, T>& org,
                 const std::array<Vector<N, T>, N>& vectors);
 
-        const geometry::spatial::Parallelotope<N, T>& parallelotope() const;
+        [[nodiscard]] const geometry::spatial::Parallelotope<N, T>& parallelotope() const;
 
-        const LightSource<N, T, Color>* light_source() const;
+        [[nodiscard]] const LightSource<N, T, Color>* light_source() const;
 
-        T roughness() const;
+        [[nodiscard]] T roughness() const;
 
-        const shading::Colors<Color>& colors() const;
+        [[nodiscard]] const shading::Colors<Color>& colors() const;
 };
 }

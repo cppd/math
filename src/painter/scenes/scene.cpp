@@ -58,8 +58,7 @@ class Impl final : public Scene<N, T, Color>
         const std::vector<const LightSource<N, T, Color>*> light_sources_;
         const Projector<N, T>* const projector_;
         const std::optional<geometry::spatial::ConvexPolytope<N, T>> clip_polytope_;
-
-        geometry::accelerators::Bvh<N, T> bvh_;
+        const geometry::accelerators::Bvh<N, T> bvh_;
 
         [[nodiscard]] bool move_ray(
                 const std::optional<Vector<N, T>>& geometric_normal,
@@ -210,6 +209,7 @@ public:
                   clip_polytope_(clip_plane_to_clip_polytope(clip_plane_equation)),
                   bvh_(geometry::accelerators::bvh_objects(shapes_), progress)
         {
+                ASSERT(USE_CLIP_POLYTOPE == clip_polytope_.has_value());
         }
 
         Impl(const Impl&) = delete;
