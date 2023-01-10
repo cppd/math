@@ -21,89 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <optional>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter::pixels
 {
-namespace samples_background_implementation
-{
-template <typename T, typename Color>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> select_backgrounds_and_find_min_max(
-        const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights,
-        std::vector<typename Color::DataType>* const weights)
-{
-        static_assert(std::is_floating_point_v<typename Color::DataType>);
-
-        ASSERT(colors.size() == color_weights.size());
-
-        weights->clear();
-
-        typename Color::DataType min = Limits<typename Color::DataType>::infinity();
-        typename Color::DataType max = -Limits<typename Color::DataType>::infinity();
-        std::size_t min_i = -1;
-        std::size_t max_i = -1;
-
-        for (std::size_t i = 0; i < colors.size(); ++i)
-        {
-                if (colors[i])
-                {
-                        continue;
-                }
-
-                const typename Color::DataType weight = color_weights[i];
-
-                if (!(weight > 0))
-                {
-                        continue;
-                }
-
-                weights->push_back(weight);
-
-                if (weight < min)
-                {
-                        min = weight;
-                        min_i = weights->size() - 1;
-                }
-
-                if (weight > max)
-                {
-                        max = weight;
-                        max_i = weights->size() - 1;
-                }
-        }
-
-        if (!weights->empty())
-        {
-                ASSERT(min_i < weights->size());
-                ASSERT(max_i < weights->size());
-                return {min_i, max_i};
-        }
-
-        return {};
-}
-
-template <typename T>
-[[nodiscard]] T sum_weights(const std::vector<T>& weights, const std::size_t min_i, const std::size_t max_i)
-{
-        T res{0};
-
-        if (weights.size() > 2)
-        {
-                for (std::size_t i = 0; i < weights.size(); ++i)
-                {
-                        if (i != min_i && i != max_i)
-                        {
-                                res += weights[i];
-                        }
-                }
-        }
-
-        return res;
-}
-}
-
 template <typename Color>
 class BackgroundSamples final
 {
@@ -176,21 +97,5 @@ public:
 template <typename T, typename Color>
 [[nodiscard]] std::optional<BackgroundSamples<Color>> make_background_samples(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights)
-{
-        namespace impl = samples_background_implementation;
-
-        thread_local std::vector<typename Color::DataType> weights;
-
-        const auto [min_i, max_i] = impl::select_backgrounds_and_find_min_max(colors, color_weights, &weights);
-
-        if (weights.empty())
-        {
-                return std::nullopt;
-        }
-
-        const auto sum_weight = impl::sum_weights(weights, min_i, max_i);
-
-        return BackgroundSamples<Color>{sum_weight, weights[min_i], weights[max_i]};
-}
+        const std::vector<T>& color_weights);
 }
