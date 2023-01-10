@@ -33,9 +33,9 @@ class ColorSamples final
         Color max_{0};
 
         typename Color::DataType sum_weight_{0};
-        typename Color::DataType min_contribution_{Limits<decltype(min_contribution_)>::max()};
+        typename Color::DataType min_contribution_{Limits<decltype(min_contribution_)>::infinity()};
         typename Color::DataType min_weight_{0};
-        typename Color::DataType max_contribution_{Limits<decltype(max_contribution_)>::lowest()};
+        typename Color::DataType max_contribution_{-Limits<decltype(max_contribution_)>::infinity()};
         typename Color::DataType max_weight_{0};
 
 public:

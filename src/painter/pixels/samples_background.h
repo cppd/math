@@ -29,8 +29,8 @@ template <typename Color>
 class BackgroundSamples final
 {
         typename Color::DataType sum_weight_{0};
-        typename Color::DataType min_weight_{Limits<decltype(min_weight_)>::max()};
-        typename Color::DataType max_weight_{Limits<decltype(max_weight_)>::lowest()};
+        typename Color::DataType min_weight_{Limits<decltype(min_weight_)>::infinity()};
+        typename Color::DataType max_weight_{-Limits<decltype(max_weight_)>::infinity()};
 
 public:
         BackgroundSamples()
@@ -69,6 +69,12 @@ public:
         void merge(const BackgroundSamples<Color>& samples)
         {
                 ASSERT(!samples.empty());
+
+                if (empty())
+                {
+                        *this = samples;
+                        return;
+                }
 
                 sum_weight_ += samples.sum_weight_;
 
