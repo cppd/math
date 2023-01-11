@@ -75,6 +75,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //
 
+#define TEMPLATE_INSTANTIATION_C(TEMPLATE_C) \
+        TEMPLATE_C(::ns::color::Color)       \
+        TEMPLATE_C(::ns::color::Spectrum)
+
+//
+
 #define TEMPLATE_INSTANTIATION_T_C_IMPL_T(T, TEMPLATE_T_C) \
         TEMPLATE_T_C(T, ::ns::color::Color)                \
         TEMPLATE_T_C(T, ::ns::color::Spectrum)
