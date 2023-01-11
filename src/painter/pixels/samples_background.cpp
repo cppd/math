@@ -120,9 +120,10 @@ std::optional<BackgroundSamples<Color>> make_background_samples(
                 return std::nullopt;
         }
 
-        const auto sum_weight = sum_weights(weights, min_i, max_i);
-
-        return BackgroundSamples<Color>{sum_weight, weights[min_i], weights[max_i]};
+        return BackgroundSamples<Color>{
+                .sum_weight = sum_weights(weights, min_i, max_i),
+                .min_weight = weights[min_i],
+                .max_weight = weights[max_i]};
 }
 
 #define TEMPLATE_T_C(T, C)                                                    \

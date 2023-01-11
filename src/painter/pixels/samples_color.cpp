@@ -139,14 +139,15 @@ std::optional<ColorSamples<Color>> make_color_samples(
         const auto [sum, sum_weight] = sum_samples(samples, weights, min_i, max_i);
 
         return ColorSamples<Color>{
-                sum,
-                samples[min_i],
-                samples[max_i],
-                sum_weight,
-                contributions[min_i],
-                weights[min_i],
-                contributions[max_i],
-                weights[max_i]};
+                .sum = sum,
+                .min = samples[min_i],
+                .max = samples[max_i],
+                .sum_weight = sum_weight,
+                .min_weight = weights[min_i],
+                .max_weight = weights[max_i],
+                .min_contribution = contributions[min_i],
+                .max_contribution = contributions[max_i],
+        };
 }
 
 #define TEMPLATE_T_C(T, C)                                          \
