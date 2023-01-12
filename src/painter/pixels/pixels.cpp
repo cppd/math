@@ -1,0 +1,196 @@
+/*
+Copyright (C) 2017-2023 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "pixels.h"
+
+#include <src/color/color.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/settings/instantiation.h>
+
+namespace ns::painter::pixels
+{
+template <std::size_t N, typename T, typename Color>
+Vector<4, float> Pixels<N, T, Color>::rgba_color(const Pixel<Color>& pixel) const
+{
+        const auto color_alpha = pixel.color_alpha(background_contribution_);
+        if (color_alpha)
+        {
+                const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                Vector<4, float> rgba;
+                rgba[0] = rgb[0];
+                rgba[1] = rgb[1];
+                rgba[2] = rgb[2];
+                rgba[3] = std::get<1>(*color_alpha);
+                if (!is_finite(rgba))
+                {
+                        LOG("Not finite RGBA color " + to_string(rgba));
+                }
+                return rgba;
+        }
+        return Vector<4, float>(0);
+}
+
+template <std::size_t N, typename T, typename Color>
+Vector<3, float> Pixels<N, T, Color>::rgb_color(const Pixel<Color>& pixel) const
+{
+        const auto color = pixel.color(background_, background_contribution_);
+        if (color)
+        {
+                const Vector<3, float> rgb = color->rgb32();
+                if (!is_finite(rgb))
+                {
+                        LOG("Not finite RGB color " + to_string(rgb));
+                }
+                return rgb;
+        }
+        return background_rgb32_;
+}
+
+template <std::size_t N, typename T, typename Color>
+void Pixels<N, T, Color>::add_samples(
+        const std::array<int, N>& region_pixel,
+        const std::array<int, N>& sample_pixel,
+        const std::vector<Vector<N, T>>& points,
+        const std::vector<std::optional<Color>>& colors)
+{
+        const Vector<N, T> center = [&]()
+        {
+                Vector<N, T> r;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        r[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
+                }
+                return r;
+        }();
+
+        thread_local std::vector<T> weights;
+
+        filter_.compute_weights(center, points, &weights);
+
+        const auto color_samples = make_color_samples(colors, weights);
+        const auto background_samples = make_background_samples(colors, weights);
+
+        const long long index = global_index_.compute(region_pixel);
+        Pixel<Color>& pixel = pixels_[index];
+
+        const std::lock_guard lg(pixel_locks_[index]);
+        if (color_samples)
+        {
+                pixel.merge(*color_samples);
+        }
+        if (background_samples)
+        {
+                pixel.merge(*background_samples);
+        }
+        notifier_->pixel_set(region_pixel, rgb_color(pixel));
+}
+
+template <std::size_t N, typename T, typename Color>
+Pixels<N, T, Color>::Pixels(
+        const std::array<int, N>& screen_size,
+        const std::type_identity_t<Color>& background,
+        Notifier<N>* const notifier)
+        : screen_size_(screen_size),
+          background_(background.max_n(0)),
+          notifier_(notifier)
+{
+        if (!background.is_finite())
+        {
+                error("Not finite background " + to_string(background));
+        }
+
+        if (!is_finite(background_rgb32_))
+        {
+                error("Not finite background RGB " + to_string(background_rgb32_));
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
+void Pixels<N, T, Color>::add_samples(
+        const std::array<int, N>& pixel,
+        const std::vector<Vector<N, T>>& points,
+        const std::vector<std::optional<Color>>& colors)
+{
+        ASSERT(points.size() == colors.size());
+        ASSERT(!points.empty());
+
+        for (const std::optional<Color>& color : colors)
+        {
+                if (color && !color->is_finite())
+                {
+                        LOG("Not finite sample color " + to_string(*color));
+                }
+        }
+
+        pixel_region_.traverse(
+                pixel,
+                [&](const std::array<int, N>& region_pixel)
+                {
+                        add_samples(region_pixel, pixel, points, colors);
+                });
+}
+
+template <std::size_t N, typename T, typename Color>
+void Pixels<N, T, Color>::images(image::Image<N>* const image_rgb, image::Image<N>* const image_rgba) const
+{
+        constexpr std::size_t RGB_PIXEL_SIZE = 3 * sizeof(float);
+        constexpr std::size_t RGBA_PIXEL_SIZE = 4 * sizeof(float);
+
+        image_rgb->color_format = image::ColorFormat::R32G32B32;
+        image_rgb->size = screen_size_;
+        image_rgb->pixels.resize(RGB_PIXEL_SIZE * pixels_.size());
+
+        image_rgba->color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
+        image_rgba->size = screen_size_;
+        image_rgba->pixels.resize(RGBA_PIXEL_SIZE * pixels_.size());
+
+        Vector<3, float> rgb;
+        Vector<4, float> rgba;
+
+        static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
+        static_assert(sizeof(rgba) == RGBA_PIXEL_SIZE);
+
+        std::byte* ptr_rgb = image_rgb->pixels.data();
+        std::byte* ptr_rgba = image_rgba->pixels.data();
+        for (std::size_t i = 0; i < pixels_.size(); ++i)
+        {
+                {
+                        const Pixel<Color>& pixel = pixels_[i];
+                        const std::lock_guard lg(pixel_locks_[i]);
+                        rgb = rgb_color(pixel);
+                        rgba = rgba_color(pixel);
+                }
+
+                ASSERT(rgba[3] < 1 || !is_finite(rgba) || !is_finite(rgb)
+                       || (rgb[0] == rgba[0] && rgb[1] == rgba[1] && rgb[2] == rgba[2]));
+                ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == background_rgb32_));
+
+                std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);
+                ptr_rgb += RGB_PIXEL_SIZE;
+
+                std::memcpy(ptr_rgba, &rgba, RGBA_PIXEL_SIZE);
+                ptr_rgba += RGBA_PIXEL_SIZE;
+        }
+        ASSERT(ptr_rgb == image_rgb->pixels.data() + image_rgb->pixels.size());
+        ASSERT(ptr_rgba == image_rgba->pixels.data() + image_rgba->pixels.size());
+}
+
+#define TEMPLATE_N_T_C(N, T, C) template class Pixels<(N)-1, T, C>;
+
+TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE_N_T_C)
+}
