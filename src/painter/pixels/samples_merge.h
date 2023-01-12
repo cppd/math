@@ -23,22 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels
 {
 template <typename Color>
-void merge_color(ColorSamples<Color>* dst, const ColorSamples<Color>& samples);
+void merge_color_samples(ColorSamples<Color>* dst, const ColorSamples<Color>& samples);
 
 template <typename Color>
-void merge_background(BackgroundSamples<Color>* dst, const BackgroundSamples<Color>& samples);
+void merge_background_samples(BackgroundSamples<Color>* dst, const BackgroundSamples<Color>& samples);
 
-template <typename Color>
-struct PixelSamples final
-{
-        Color color;
-        typename Color::DataType color_weight;
-        typename Color::DataType background_weight;
-};
-
-template <typename Color>
-[[nodiscard]] PixelSamples<Color> merge_color_and_background(
+template <typename Color, typename ColorDataType>
+[[nodiscard]] std::optional<Color> merge_color(
         const ColorSamples<Color>& color,
         const BackgroundSamples<Color>& background,
-        typename Color::DataType background_contribution);
+        const Color& background_color,
+        ColorDataType background_contribution);
+
+template <typename Color, typename ColorDataType>
+[[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
+        const ColorSamples<Color>& color,
+        const BackgroundSamples<Color>& background,
+        ColorDataType background_contribution);
 }

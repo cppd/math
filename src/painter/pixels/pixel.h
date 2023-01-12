@@ -29,8 +29,6 @@ namespace ns::painter::pixels
 template <typename Color>
 class Pixel final
 {
-        using T = typename Color::DataType;
-
         ColorSamples<Color> color_;
         BackgroundSamples<Color> background_;
 
@@ -41,55 +39,25 @@ public:
 
         void merge(const ColorSamples<Color>& samples)
         {
-                merge_color(&color_, samples);
+                merge_color_samples(&color_, samples);
         }
 
         void merge(const BackgroundSamples<Color>& samples)
         {
-                merge_background(&background_, samples);
+                merge_background_samples(&background_, samples);
         }
 
-        [[nodiscard]] std::optional<Color> color(const Color& background_color, const T background_contribution) const
+        [[nodiscard]] std::optional<Color> color(
+                const Color& background_color,
+                const typename Color::DataType background_contribution) const
         {
-                if (color_.empty())
-                {
-                        return std::nullopt;
-                }
-
-                if (background_.empty())
-                {
-                        return color_.sum / color_.sum_weight;
-                }
-
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
-
-                const T sum = p.color_weight + p.background_weight;
-
-                if (p.color_weight == sum || (p.color_weight / sum) == 1)
-                {
-                        return p.color / sum;
-                }
-
-                return (p.color + p.background_weight * background_color) / sum;
+                return merge_color(color_, background_, background_color, background_contribution);
         }
 
-        [[nodiscard]] std::optional<std::tuple<Color, T>> color_alpha(const T background_contribution) const
+        [[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> color_alpha(
+                const typename Color::DataType background_contribution) const
         {
-                if (color_.empty())
-                {
-                        return std::nullopt;
-                }
-
-                if (background_.empty())
-                {
-                        return std::tuple<Color, T>(color_.sum / color_.sum_weight, 1);
-                }
-
-                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
-
-                const T sum = p.color_weight + p.background_weight;
-
-                return std::make_tuple(p.color / sum, p.color_weight / sum);
+                return merge_color_alpha(color_, background_, background_contribution);
         }
 };
 }
