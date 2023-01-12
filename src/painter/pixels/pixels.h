@@ -49,7 +49,7 @@ class Pixels final
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const T background_contribution_ = sample_color_contribution(background_);
+        const typename Color::DataType background_contribution_ = sample_color_contribution(background_);
 
         Notifier<N>* const notifier_;
 

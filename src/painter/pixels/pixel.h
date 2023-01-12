@@ -33,10 +33,6 @@ class Pixel final
         BackgroundSamples<Color> background_;
 
 public:
-        Pixel()
-        {
-        }
-
         void merge(const ColorSamples<Color>& samples)
         {
                 merge_color_samples(&color_, samples);
@@ -47,15 +43,17 @@ public:
                 merge_background_samples(&background_, samples);
         }
 
+        template <typename ColorDataType>
         [[nodiscard]] std::optional<Color> color(
                 const Color& background_color,
-                const typename Color::DataType background_contribution) const
+                const ColorDataType background_contribution) const
         {
                 return merge_color(color_, background_, background_color, background_contribution);
         }
 
+        template <typename ColorDataType>
         [[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> color_alpha(
-                const typename Color::DataType background_contribution) const
+                const ColorDataType background_contribution) const
         {
                 return merge_color_alpha(color_, background_, background_contribution);
         }
