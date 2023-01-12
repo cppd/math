@@ -25,40 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels
 {
 template <std::size_t N, typename T, typename Color>
-Vector<4, float> Pixels<N, T, Color>::rgba_color(const Pixel<Color>& pixel) const
+Pixels<N, T, Color>::Pixels(
+        const std::array<int, N>& screen_size,
+        const std::type_identity_t<Color>& background,
+        Notifier<N>* const notifier)
+        : screen_size_(screen_size),
+          background_(background.max_n(0)),
+          notifier_(notifier)
 {
-        const auto color_alpha = pixel.color_alpha(background_contribution_);
-        if (color_alpha)
-        {
-                const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
-                Vector<4, float> rgba;
-                rgba[0] = rgb[0];
-                rgba[1] = rgb[1];
-                rgba[2] = rgb[2];
-                rgba[3] = std::get<1>(*color_alpha);
-                if (!is_finite(rgba))
-                {
-                        LOG("Not finite RGBA color " + to_string(rgba));
-                }
-                return rgba;
-        }
-        return Vector<4, float>(0);
-}
-
-template <std::size_t N, typename T, typename Color>
-Vector<3, float> Pixels<N, T, Color>::rgb_color(const Pixel<Color>& pixel) const
-{
-        const auto color = pixel.color(background_, background_contribution_);
-        if (color)
-        {
-                const Vector<3, float> rgb = color->rgb32();
-                if (!is_finite(rgb))
-                {
-                        LOG("Not finite RGB color " + to_string(rgb));
-                }
-                return rgb;
-        }
-        return background_rgb32_;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -97,27 +71,7 @@ void Pixels<N, T, Color>::add_samples(
         {
                 pixel.merge(*background_samples);
         }
-        notifier_->pixel_set(region_pixel, rgb_color(pixel));
-}
-
-template <std::size_t N, typename T, typename Color>
-Pixels<N, T, Color>::Pixels(
-        const std::array<int, N>& screen_size,
-        const std::type_identity_t<Color>& background,
-        Notifier<N>* const notifier)
-        : screen_size_(screen_size),
-          background_(background.max_n(0)),
-          notifier_(notifier)
-{
-        if (!background.is_finite())
-        {
-                error("Not finite background " + to_string(background));
-        }
-
-        if (!is_finite(background_rgb32_))
-        {
-                error("Not finite background RGB " + to_string(background_rgb32_));
-        }
+        notifier_->pixel_set(region_pixel, pixel.color_rgb(background_));
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -172,13 +126,13 @@ void Pixels<N, T, Color>::images(image::Image<N>* const image_rgb, image::Image<
                 {
                         const Pixel<Color>& pixel = pixels_[i];
                         const std::lock_guard lg(pixel_locks_[i]);
-                        rgb = rgb_color(pixel);
-                        rgba = rgba_color(pixel);
+                        rgb = pixel.color_rgb(background_);
+                        rgba = pixel.color_rgba(background_);
                 }
 
                 ASSERT(rgba[3] < 1 || !is_finite(rgba) || !is_finite(rgb)
                        || (rgb[0] == rgba[0] && rgb[1] == rgba[1] && rgb[2] == rgba[2]));
-                ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == background_rgb32_));
+                ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == background_.color_rgb32()));
 
                 std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);
                 ptr_rgb += RGB_PIXEL_SIZE;

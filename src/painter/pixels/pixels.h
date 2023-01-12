@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color_contribution.h"
 #include "pixel.h"
 #include "pixel_filter.h"
 #include "pixel_region.h"
@@ -43,17 +42,12 @@ class Pixels final
         const GlobalIndex<N, long long> global_index_{screen_size_};
         const PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
 
-        const Color background_;
-        const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const typename Color::DataType background_contribution_ = sample_color_contribution(background_);
+        Background<Color> background_;
 
         Notifier<N>* const notifier_;
 
         std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
         mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
-
-        Vector<4, float> rgba_color(const Pixel<Color>& pixel) const;
-        Vector<3, float> rgb_color(const Pixel<Color>& pixel) const;
 
         void add_samples(
                 const std::array<int, N>& region_pixel,

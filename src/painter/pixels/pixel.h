@@ -17,15 +17,63 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "color_contribution.h"
 #include "samples_background.h"
 #include "samples_color.h"
 #include "samples_merge.h"
 
-#include <optional>
-#include <tuple>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/numerical/vector.h>
+
+#include <cmath>
 
 namespace ns::painter::pixels
 {
+template <typename Color>
+class Background final
+{
+        Color color_;
+        Vector<3, float> color_rgb32_ = color_.rgb32();
+        typename Color::DataType contribution_ = sample_color_contribution(color_);
+
+public:
+        explicit Background(const Color& color)
+                : color_(color)
+        {
+                if (!color_.is_finite())
+                {
+                        error("Not finite background " + to_string(color_));
+                }
+
+                if (!is_finite(color_rgb32_))
+                {
+                        error("Not finite background RGB " + to_string(color_rgb32_));
+                }
+
+                if (!std::isfinite(contribution_))
+                {
+                        error("Not finite background contribution " + to_string(contribution_));
+                }
+        }
+
+        [[nodiscard]] const Color& color() const
+        {
+                return color_;
+        }
+
+        [[nodiscard]] const Vector<3, float>& color_rgb32() const
+        {
+                return color_rgb32_;
+        }
+
+        [[nodiscard]] typename Color::DataType contribution() const
+        {
+                return contribution_;
+        }
+};
+
 template <typename Color>
 class Pixel final
 {
@@ -43,19 +91,39 @@ public:
                 merge_background_samples(&background_, samples);
         }
 
-        template <typename ColorDataType>
-        [[nodiscard]] std::optional<Color> color(
-                const Color& background_color,
-                const ColorDataType background_contribution) const
+        [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const
         {
-                return merge_color(color_, background_, background_color, background_contribution);
+                const auto color = merge_color(color_, background_, background.color(), background.contribution());
+                if (color)
+                {
+                        const Vector<3, float> rgb = color->rgb32();
+                        if (!is_finite(rgb))
+                        {
+                                LOG("Not finite RGB color " + to_string(rgb));
+                        }
+                        return rgb;
+                }
+                return background.color_rgb32();
         }
 
-        template <typename ColorDataType>
-        [[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> color_alpha(
-                const ColorDataType background_contribution) const
+        [[nodiscard]] Vector<4, float> color_rgba(const Background<Color>& background) const
         {
-                return merge_color_alpha(color_, background_, background_contribution);
+                const auto color_alpha = merge_color_alpha(color_, background_, background.contribution());
+                if (color_alpha)
+                {
+                        const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                        Vector<4, float> rgba;
+                        rgba[0] = rgb[0];
+                        rgba[1] = rgb[1];
+                        rgba[2] = rgb[2];
+                        rgba[3] = std::get<1>(*color_alpha);
+                        if (!is_finite(rgba))
+                        {
+                                LOG("Not finite RGBA color " + to_string(rgba));
+                        }
+                        return rgba;
+                }
+                return Vector<4, float>(0);
         }
 };
 }
