@@ -24,6 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels
 {
+namespace
+{
+template <typename T, std::size_t N>
+[[nodiscard]] Vector<N, T> region_pixel_center(
+        const std::array<int, N>& region_pixel,
+        const std::array<int, N>& sample_pixel)
+{
+        Vector<N, T> r;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                r[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
+        }
+        return r;
+}
+}
+
 template <std::size_t N, typename T, typename Color>
 Pixels<N, T, Color>::Pixels(
         const std::array<int, N>& screen_size,
@@ -42,19 +58,9 @@ void Pixels<N, T, Color>::add_samples(
         const std::vector<Vector<N, T>>& points,
         const std::vector<std::optional<Color>>& colors)
 {
-        const Vector<N, T> center = [&]()
-        {
-                Vector<N, T> r;
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        r[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
-                }
-                return r;
-        }();
-
         thread_local std::vector<T> weights;
 
-        filter_.compute_weights(center, points, &weights);
+        filter_.compute_weights(region_pixel_center<T>(region_pixel, sample_pixel), points, &weights);
 
         const auto color_samples = make_color_samples(colors, weights);
         const auto background_samples = make_background_samples(colors, weights);

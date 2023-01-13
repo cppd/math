@@ -77,53 +77,57 @@ public:
 template <typename Color>
 class Pixel final
 {
-        ColorSamples<Color> color_;
-        BackgroundSamples<Color> background_;
+        ColorSamples<Color> color_samples_;
+        BackgroundSamples<Color> background_samples_;
 
 public:
         void merge(const ColorSamples<Color>& samples)
         {
-                merge_color_samples(&color_, samples);
+                merge_color_samples(&color_samples_, samples);
         }
 
         void merge(const BackgroundSamples<Color>& samples)
         {
-                merge_background_samples(&background_, samples);
+                merge_background_samples(&background_samples_, samples);
         }
 
         [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const
         {
-                const auto color = merge_color(color_, background_, background.color(), background.contribution());
-                if (color)
+                const auto color =
+                        merge_color(color_samples_, background_samples_, background.color(), background.contribution());
+                if (!color)
                 {
-                        const Vector<3, float> rgb = color->rgb32();
-                        if (!is_finite(rgb))
-                        {
-                                LOG("Not finite RGB color " + to_string(rgb));
-                        }
-                        return rgb;
+                        return background.color_rgb32();
                 }
-                return background.color_rgb32();
+
+                const Vector<3, float> rgb = color->rgb32();
+                if (!is_finite(rgb))
+                {
+                        LOG("Not finite RGB color " + to_string(rgb));
+                }
+                return rgb;
         }
 
         [[nodiscard]] Vector<4, float> color_rgba(const Background<Color>& background) const
         {
-                const auto color_alpha = merge_color_alpha(color_, background_, background.contribution());
-                if (color_alpha)
+                const auto color_alpha =
+                        merge_color_alpha(color_samples_, background_samples_, background.contribution());
+                if (!color_alpha)
                 {
-                        const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
-                        Vector<4, float> rgba;
-                        rgba[0] = rgb[0];
-                        rgba[1] = rgb[1];
-                        rgba[2] = rgb[2];
-                        rgba[3] = std::get<1>(*color_alpha);
-                        if (!is_finite(rgba))
-                        {
-                                LOG("Not finite RGBA color " + to_string(rgba));
-                        }
-                        return rgba;
+                        return Vector<4, float>(0);
                 }
-                return Vector<4, float>(0);
+
+                const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                Vector<4, float> rgba;
+                rgba[0] = rgb[0];
+                rgba[1] = rgb[1];
+                rgba[2] = rgb[2];
+                rgba[3] = std::get<1>(*color_alpha);
+                if (!is_finite(rgba))
+                {
+                        LOG("Not finite RGBA color " + to_string(rgba));
+                }
+                return rgba;
         }
 };
 }
