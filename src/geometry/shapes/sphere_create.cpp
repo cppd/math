@@ -77,7 +77,7 @@ namespace
 //                         ASSERT(i < vertices.size());
 //                         sum += vertices[i];
 //                 }
-//                 for (unsigned i = 0; i < N; ++i)
+//                 for (std::size_t i = 0; i < N; ++i)
 //                 {
 //                         if (sum[i] == 0)
 //                         {
@@ -124,7 +124,7 @@ namespace
 //
 //                 for (const std::array<int, N>& facet : facets)
 //                 {
-//                         for (unsigned r = 0; r < N; ++r)
+//                         for (std::size_t r = 0; r < N; ++r)
 //                         {
 //                                 ASSERT(facet[r] < static_cast<int>(vertices.size()));
 //                                 std::array<int, N - 1> ridge = sort(del_elem(facet, r));
@@ -176,15 +176,15 @@ namespace
 //                 std::vector<Vector<N, float>> vertices;
 //                 std::vector<std::string> vertex_names;
 //
-//                 for (unsigned i = 0; i < N; ++i)
+//                 for (std::size_t i = 0; i < N; ++i)
 //                 {
 //                         vertices.emplace_back(0);
 //                         vertices.back()[i] = 1;
 //                         vertex_names.push_back(to_string(i));
 //                 }
-//                 for (unsigned i = 0; i < N; ++i)
+//                 for (std::size_t i = 0; i < N; ++i)
 //                 {
-//                         for (unsigned j = i + 1; j < N; ++j)
+//                         for (std::size_t j = i + 1; j < N; ++j)
 //                         {
 //                                 vertices.push_back((vertices[i] + vertices[j]).normalized());
 //                                 vertex_names.push_back(to_string(i) + (N <= 10 ? "" : "_") + to_string(j));
@@ -224,13 +224,13 @@ namespace
 //                 std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
 //
 //                 unsigned index = 0;
-//                 for (unsigned i = 0; i < N; ++i)
+//                 for (std::size_t i = 0; i < N; ++i)
 //                 {
 //                         points[index++] = facet.vertices[i];
 //                 }
-//                 for (unsigned i = 0; i < N; ++i)
+//                 for (std::size_t i = 0; i < N; ++i)
 //                 {
-//                         for (unsigned j = i + 1; j < N; ++j)
+//                         for (std::size_t j = i + 1; j < N; ++j)
 //                         {
 //                                 points[index++] = (points[i] + points[j]).normalized();
 //                         }
@@ -239,7 +239,7 @@ namespace
 //                 for (const std::array<int, N>& indices : facets_)
 //                 {
 //                         Facet<N, T>& f = facets->emplace_back();
-//                         for (unsigned i = 0; i < N; ++i)
+//                         for (std::size_t i = 0; i < N; ++i)
 //                         {
 //                                 ASSERT(indices[i] < static_cast<int>(points.size()));
 //                                 f.vertices[i] = points[indices[i]];

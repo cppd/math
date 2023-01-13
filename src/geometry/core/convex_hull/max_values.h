@@ -37,7 +37,7 @@ inline constexpr int MAX_DETERMINANT_PARABOLOID = []
         static_assert(BITS > 0);
 
         unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
+        for (std::size_t i = 2; i <= N; ++i)
         {
                 f *= i;
         }
@@ -61,7 +61,7 @@ inline constexpr int MAX_DETERMINANT = []
         static_assert(BITS > 0);
 
         unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
+        for (std::size_t i = 2; i <= N; ++i)
         {
                 f *= i;
         }

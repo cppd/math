@@ -49,7 +49,7 @@ std::vector<Vector<N, float>> random_data(const bool zero, const int count, cons
                 v[N - 1] = 0;
                 do
                 {
-                        for (unsigned i = 0; i < ((zero) ? (N - 1) : N); ++i)
+                        for (std::size_t i = 0; i < ((zero) ? (N - 1) : N); ++i)
                         {
                                 v[i] = urd(engine);
                         }
@@ -111,7 +111,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::v
                         error("Convex hull empty facets");
                 }
 
-                constexpr unsigned MIN_POINT_COUNT = N + 1;
+                constexpr std::size_t MIN_POINT_COUNT = N + 1;
                 if (points.size() < MIN_POINT_COUNT)
                 {
                         error("Convex hull point count " + to_string(points.size())

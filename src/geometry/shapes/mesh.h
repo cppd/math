@@ -41,7 +41,7 @@ void create_mesh(
         for (const std::array<Vector<N, T>, N>& vertices : facets)
         {
                 std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         auto iter = map.find(vertices[i]);
                         if (iter == map.cend())

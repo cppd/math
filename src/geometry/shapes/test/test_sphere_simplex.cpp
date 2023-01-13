@@ -119,15 +119,15 @@ std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>&
 {
         std::uniform_int_distribution<unsigned> uid(0, N);
         std::array<Vector<N + 1, T>, N> r;
-        const unsigned k = uid(engine);
-        for (unsigned n = 0; n < N; ++n)
+        const std::size_t k = uid(engine);
+        for (std::size_t n = 0; n < N; ++n)
         {
-                for (unsigned i = 0; i < k; ++i)
+                for (std::size_t i = 0; i < k; ++i)
                 {
                         r[n][i] = a[n][i];
                 }
                 r[n][k] = 0;
-                for (unsigned i = k + 1; i < N + 1; ++i)
+                for (std::size_t i = k + 1; i < N + 1; ++i)
                 {
                         r[n][i] = a[n][i - 1];
                 }

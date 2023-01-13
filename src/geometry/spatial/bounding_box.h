@@ -247,7 +247,7 @@ public:
                 const Vector<N, T> d = diagonal();
                 T max = d[0];
                 unsigned res = 0;
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         if (d[i] > max)
                         {

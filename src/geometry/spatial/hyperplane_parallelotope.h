@@ -109,7 +109,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         }
         plane_.d = dot(plane_.n, org_);
 
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 std::swap(plane_.n, vectors_[i]);
                 planes_[i].n = numerical::orthogonal_complement(vectors_);
@@ -147,7 +147,7 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
-        for (unsigned i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
+        for (std::size_t i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
         {
                 const T len = planes_[i].n.norm();
 
@@ -175,7 +175,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& ray) 
 
         const Vector<N, T> point = ray.point(t);
 
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 const T d = planes_[i].distance(point);
                 if (!(d > 0 && d < 1))

@@ -39,19 +39,19 @@ std::array<Vector<N, T>, N + 1> create_simplex()
                 numerical::orthogonal_complement_of_unit_vector(simplex_hyperplane_normal);
 
         std::array<Vector<N + 1, T>, N + 1> vertices;
-        for (unsigned i = 0; i < N + 1; ++i)
+        for (std::size_t i = 0; i < N + 1; ++i)
         {
                 vertices[i] = Vector<N + 1, T>(0);
         }
-        for (unsigned i = 0; i < N + 1; ++i)
+        for (std::size_t i = 0; i < N + 1; ++i)
         {
                 vertices[i][i] = 1;
         }
 
         std::array<Vector<N, T>, N + 1> result;
-        for (unsigned i = 0; i < N + 1; ++i)
+        for (std::size_t i = 0; i < N + 1; ++i)
         {
-                for (unsigned n = 0; n < N; ++n)
+                for (std::size_t n = 0; n < N; ++n)
                 {
                         result[i][n] = dot(vertices[i], basis[n]);
                 }
@@ -62,14 +62,14 @@ std::array<Vector<N, T>, N + 1> create_simplex()
 
 namespace regular_polytopes_implementation
 {
-template <unsigned I, std::size_t N, typename T>
+template <std::size_t I, std::size_t N, typename T>
 void create_cross_polytope_facets(Vector<N, T>* const point, std::vector<std::array<Vector<N, T>, N>>* const facets)
 {
         static_assert(I <= N);
         if constexpr (I == N)
         {
                 std::array<Vector<N, T>, N>& facet = facets->emplace_back();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         facet[i] = Vector<N, T>(0);
                         facet[i][i] = (*point)[i];
@@ -91,7 +91,7 @@ std::vector<std::array<Vector<N, T>, N>> create_cross_polytope()
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        constexpr unsigned FACET_COUNT = 1 << N;
+        constexpr std::size_t FACET_COUNT = 1 << N;
 
         std::vector<std::array<Vector<N, T>, N>> facets;
         facets.reserve(FACET_COUNT);

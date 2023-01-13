@@ -272,8 +272,8 @@ void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, 
 
         LOG("");
 
-        constexpr unsigned CLONE_COUNT = 1 << N;
-        constexpr unsigned OBJECT_COUNT = (1 + CLONE_COUNT);
+        constexpr std::size_t CLONE_COUNT = 1 << N;
+        constexpr std::size_t OBJECT_COUNT = (1 + CLONE_COUNT);
         LOG("------- " + space_name(N) + ", " + to_string(OBJECT_COUNT) + " objects -------");
         test_algorithms(bound_object, OBJECT_COUNT, clone_object(points, CLONE_COUNT), progress);
 }

@@ -134,7 +134,7 @@ public:
         {
                 std::string s = "org = " + to_string(p.org()) + "\n";
                 const std::array<Vector<N, T>, N> vectors = p.vectors();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         s += "vector[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
                 }
@@ -145,14 +145,14 @@ public:
 template <std::size_t N, typename T>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes)
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!(sizes[i] > 0))
                 {
                         error("Axis-aligned parallelotope sizes " + to_string(sizes));
                 }
         }
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 planes_[i].d1 = org[i];
                 planes_[i].d2 = org[i] + sizes[i];
@@ -162,14 +162,14 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array
 template <std::size_t N, typename T>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max)
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!(max[i] - min[i] > 0))
                 {
                         error("Axis-aligned parallelotope min " + to_string(min) + ", max " + to_string(max));
                 }
         }
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 planes_[i].d1 = min[i];
                 planes_[i].d2 = max[i];
@@ -184,7 +184,7 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
-        for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
+        for (std::size_t i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
                 result.c[c_i].a = NORMALS_POSITIVE[i];
                 result.c[c_i].b = -planes_[i].d1;
@@ -203,7 +203,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& ray, con
         T near = 0;
         T far = max_distance;
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T s = ray.dir()[i];
                 const T d = ray.org()[i];
@@ -267,7 +267,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& point) const
         T min_distance = Limits<T>::max();
 
         Vector<N, T> n;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 {
                         const T distance = std::abs(point[i] - planes_[i].d1);
@@ -296,7 +296,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& point) const
 template <std::size_t N, typename T>
 bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& point) const
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (point[i] < planes_[i].d1)
                 {
@@ -340,7 +340,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         std::array<ParallelotopeAA, DIVISIONS> result;
 
         Vector<N, T> middle_d;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 middle_d[i] = (planes_[i].d1 + planes_[i].d2) / static_cast<T>(2);
         }
@@ -365,7 +365,7 @@ template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::length() const
 {
         Vector<N, T> s;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 s[i] = planes_[i].d2 - planes_[i].d1;
         }
@@ -376,7 +376,7 @@ template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::org() const
 {
         Vector<N, T> v;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 v[i] = planes_[i].d1;
         }
@@ -399,7 +399,7 @@ template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::min() const
 {
         Vector<N, T> v;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 v[i] = planes_[i].d1;
         }
@@ -410,7 +410,7 @@ template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::max() const
 {
         Vector<N, T> v;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 v[i] = planes_[i].d2;
         }

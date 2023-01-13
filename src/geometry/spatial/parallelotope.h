@@ -137,7 +137,7 @@ public:
         {
                 std::string s = "org = " + to_string(p.org()) + "\n";
                 const std::array<Vector<N, T>, N>& vectors = p.vectors();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         s += "vector[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
                 }
@@ -188,7 +188,7 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
         // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
         // d = dot(org, normal)
         // Vector n is directed outward and is for the plane with d2 parameter.
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 planes_[i].n = numerical::orthogonal_complement(del_elem(vectors_, i)).normalized();
                 if (dot(planes_[i].n, vectors_[i]) < 0)
@@ -208,7 +208,7 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
-        for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
+        for (std::size_t i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
                 result.c[c_i].a = planes_[i].n;
                 result.c[c_i].b = -planes_[i].d1;
@@ -227,7 +227,7 @@ std::optional<T> Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const
         T near = 0;
         T far = max_distance;
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T s = dot(ray.dir(), planes_[i].n);
                 const T d = dot(ray.org(), planes_[i].n);
@@ -291,7 +291,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& point) const
         T min_distance = Limits<T>::max();
 
         Vector<N, T> n;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T d = dot(point, planes_[i].n);
 
@@ -326,7 +326,7 @@ Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& point) const
 
         unsigned plane_index = Limits<unsigned>::max();
         T plane_distance = Limits<T>::max();
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T d = dot(point, planes_[i].n);
 
@@ -361,7 +361,7 @@ Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& point) const
 template <std::size_t N, typename T>
 bool Parallelotope<N, T>::inside(const Vector<N, T>& point) const
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T d = dot(point, planes_[i].n);
 
@@ -410,7 +410,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
 
         std::array<Vector<N, T>, N> half_vectors;
         Vector<N, T> middle_d;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 half_vectors[i] = vectors_[i] / static_cast<T>(2);
                 middle_d[i] = (planes_[i].d2 + planes_[i].d1) / static_cast<T>(2);
@@ -419,7 +419,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         for (Parallelotope& p : result)
         {
                 p.vectors_ = half_vectors;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         p.planes_[i].n = planes_[i].n;
                 }
@@ -433,7 +433,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         {
                 ASSERT(count < result.size());
                 result[count].org_ = org;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         result[count].planes_[i].d1 = d1[i];
                         result[count].planes_[i].d2 = d2[i];

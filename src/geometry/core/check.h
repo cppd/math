@@ -80,7 +80,7 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
         std::unordered_map<std::array<int, N - 1>, int, Hash> ridges;
         for (const std::array<int, N>& facet : facets)
         {
-                for (unsigned r = 0; r < N; ++r)
+                for (std::size_t r = 0; r < N; ++r)
                 {
                         const std::array<int, N - 1> ridge = sort(del_elem(facet, r));
                         ++ridges[ridge];
@@ -128,7 +128,7 @@ void check_euler_characteristic(
         oss << " is not equal to " << expected_euler_characteristic;
 
         std::array<long long, N> counts = simplex_counts(facets);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 oss << '\n' << i << "-simplex count = " << counts[i];
         }
