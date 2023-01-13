@@ -111,17 +111,17 @@ std::tuple<std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>, T> compute_buc
         for (const BvhObject<N, T>& object : objects)
         {
                 cost += object.intersection_cost();
-                const unsigned bucket = center_bounds.bucket(object);
-                if (buckets[bucket])
+                const unsigned index = center_bounds.bucket(object);
+                auto& bucket = buckets[index];
+                if (bucket)
                 {
-                        buckets[bucket]->bounds.merge(object.bounds());
-                        sum[bucket] += object.intersection_cost();
+                        bucket->bounds.merge(object.bounds());
+                        sum[index] += object.intersection_cost();
                 }
                 else
                 {
-                        buckets[bucket].emplace();
-                        buckets[bucket]->bounds = object.bounds();
-                        sum[bucket] = object.intersection_cost();
+                        bucket.emplace().bounds = object.bounds();
+                        sum[index] = object.intersection_cost();
                 }
         }
         ASSERT(buckets.front());
@@ -129,9 +129,9 @@ std::tuple<std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>, T> compute_buc
 
         for (std::size_t i = 0; i < BUCKET_COUNT; ++i)
         {
-                if (buckets[i])
+                if (auto& bucket = buckets[i])
                 {
-                        buckets[i]->cost = sum[i];
+                        bucket->cost = sum[i];
                 }
         }
 
