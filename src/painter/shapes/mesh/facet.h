@@ -86,7 +86,7 @@ public:
                 const std::array<T, N> dots = [&]
                 {
                         std::array<T, N> res;
-                        for (unsigned i = 0; i < N; ++i)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
                                 res[i] = dot(normals[n_[i]], simplex_.normal());
                         }
@@ -119,7 +119,7 @@ public:
                 }
 
                 normal_type_ = NormalType::REVERSE;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         reverse_normal_[i] = dots[i] < 0;
                 }
@@ -142,7 +142,7 @@ public:
                 if (has_texcoord())
                 {
                         std::array<Vector<N - 1, T>, N> texcoords;
-                        for (unsigned i = 0; i < N; ++i)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
                                 texcoords[i] = mesh_texcoords[t_[i]];
                         }
@@ -164,7 +164,7 @@ public:
                 case NormalType::USE:
                 {
                         std::array<Vector<N, T>, N> normals;
-                        for (unsigned i = 0; i < N; ++i)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
                                 normals[i] = mesh_normals[n_[i]];
                         }
@@ -173,7 +173,7 @@ public:
                 case NormalType::REVERSE:
                 {
                         std::array<Vector<N, T>, N> normals;
-                        for (unsigned i = 0; i < N; ++i)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
                                 normals[i] = reverse_normal_[i] ? -mesh_normals[n_[i]] : mesh_normals[n_[i]];
                         }

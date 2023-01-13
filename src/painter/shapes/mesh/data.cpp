@@ -40,14 +40,14 @@ template <std::size_t N>
         std::array<int, N> r;
         if (add)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         r[i] = offset + src[i];
                 }
         }
         else
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         r[i] = -1;
                 }
@@ -59,7 +59,7 @@ template <std::size_t N>
 [[nodiscard]] std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
 {
         std::array<int, N> r;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 r[i] = offset + src[i];
         }

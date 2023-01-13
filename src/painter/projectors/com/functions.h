@@ -31,14 +31,14 @@ void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector
 {
         constexpr T LIMIT_COS = Limits<T>::epsilon() * 100;
 
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 if (!(std::abs(dot(screen_axes[i], camera_dir)) <= LIMIT_COS))
                 {
                         error("The screen axis " + to_string(i) + " is not orthogonal to the camera direction");
                 }
 
-                for (unsigned j = i + 1; j < N - 1; ++j)
+                for (std::size_t j = i + 1; j < N - 1; ++j)
                 {
                         if (!(std::abs(dot(screen_axes[i], screen_axes[j])) <= LIMIT_COS))
                         {
@@ -53,7 +53,7 @@ template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> normalize_axes(const std::array<Vector<N, T>, N - 1>& axes)
 {
         std::array<Vector<N, T>, N - 1> result;
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 result[i] = axes[i].normalized();
         }
@@ -64,7 +64,7 @@ template <typename T, std::size_t N>
 Vector<N, T> screen_org(const std::array<int, N>& screen_size)
 {
         Vector<N, T> org;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (screen_size[i] < 1)
                 {
@@ -79,7 +79,7 @@ template <std::size_t N, typename T>
 Vector<N, T> screen_dir(const std::array<Vector<N, T>, N - 1>& screen_axes, const Vector<N - 1, T>& screen_point)
 {
         Vector<N, T> dir = screen_axes[0] * screen_point[0];
-        for (unsigned i = 1; i < N - 1; ++i)
+        for (std::size_t i = 1; i < N - 1; ++i)
         {
                 dir.multiply_add(screen_axes[i], screen_point[i]);
         }

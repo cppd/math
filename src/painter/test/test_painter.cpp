@@ -288,28 +288,28 @@ void test_painter(const int samples_per_pixel, const std::string& file_name, con
 
 void test_painter_file()
 {
-        constexpr unsigned N = 4;
+        constexpr std::size_t N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
         test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, 1000, 100);
 }
 
 void test_painter_file(const std::string& file_name)
 {
-        constexpr unsigned N = 4;
+        constexpr std::size_t N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
         test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, file_name, 100);
 }
 
 void test_painter_window()
 {
-        constexpr unsigned N = 4;
+        constexpr std::size_t N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
         test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, 1000, 500);
 }
 
 void test_painter_window(const std::string& file_name)
 {
-        constexpr unsigned N = 4;
+        constexpr std::size_t N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
         test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, file_name, 500);
 }
