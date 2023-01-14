@@ -42,30 +42,32 @@ template <typename Color>
         ASSERT(!color.empty());
         ASSERT(!background.empty());
 
-        Merge<Color>
-                res{.color = color.sum, .color_weight = color.sum_weight, .background_weight = background.sum_weight};
+        Merge<Color> res{
+                .color = color.sum(),
+                .color_weight = color.sum_weight(),
+                .background_weight = background.sum_weight()};
 
-        const auto background_min_contribution = background.min_weight * background_contribution;
-        const auto background_max_contribution = background.max_weight * background_contribution;
+        const auto background_min_contribution = background.min_weight() * background_contribution;
+        const auto background_max_contribution = background.max_weight() * background_contribution;
 
-        if (background_min_contribution < color.min_contribution)
+        if (background_min_contribution < color.min_contribution())
         {
-                res.color += color.min;
-                res.color_weight += color.min_weight;
+                res.color += color.min();
+                res.color_weight += color.min_weight();
         }
         else
         {
-                res.background_weight += background.min_weight;
+                res.background_weight += background.min_weight();
         }
 
-        if (background_max_contribution > color.max_contribution)
+        if (background_max_contribution > color.max_contribution())
         {
-                res.color += color.max;
-                res.color_weight += color.max_weight;
+                res.color += color.max();
+                res.color_weight += color.max_weight();
         }
         else
         {
-                res.background_weight += background.max_weight;
+                res.background_weight += background.max_weight();
         }
 
         return res;
@@ -73,74 +75,117 @@ template <typename Color>
 }
 
 template <typename Color>
-void merge_color_samples(ColorSamples<Color>* const dst, const ColorSamples<Color>& samples)
+ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        ASSERT(!samples.empty());
-
-        dst->sum += samples.sum;
-        dst->sum_weight += samples.sum_weight;
-
-        if (samples.min_contribution < dst->min_contribution)
+        if (a.empty())
         {
-                dst->sum += dst->min;
-                dst->sum_weight += dst->min_weight;
-                dst->min = samples.min;
-                dst->min_contribution = samples.min_contribution;
-                dst->min_weight = samples.min_weight;
+                if (b.empty())
+                {
+                        return {};
+                }
+                return b;
+        }
+
+        if (b.empty())
+        {
+                if (a.empty())
+                {
+                        return {};
+                }
+                return a;
+        }
+
+        Color sum = a.sum() + b.sum();
+        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
+
+        const ColorSamples<Color>* min = nullptr;
+        const ColorSamples<Color>* max = nullptr;
+
+        if (a.min_contribution() < b.min_contribution())
+        {
+                sum += b.min();
+                sum_weight += b.min_weight();
+                min = &a;
         }
         else
         {
-                dst->sum += samples.min;
-                dst->sum_weight += samples.min_weight;
+                sum += a.min();
+                sum_weight += a.min_weight();
+                min = &b;
         }
 
-        if (samples.max_contribution > dst->max_contribution)
+        if (a.max_contribution() > b.max_contribution())
         {
-                dst->sum += dst->max;
-                dst->sum_weight += dst->max_weight;
-                dst->max = samples.max;
-                dst->max_contribution = samples.max_contribution;
-                dst->max_weight = samples.max_weight;
+                sum += b.max();
+                sum_weight += b.max_weight();
+                max = &a;
         }
         else
         {
-                dst->sum += samples.max;
-                dst->sum_weight += samples.max_weight;
+                sum += a.max();
+                sum_weight += a.max_weight();
+                max = &b;
         }
+
+        return {sum,
+                min->min(),
+                max->max(),
+                sum_weight,
+                min->min_weight(),
+                max->max_weight(),
+                min->min_contribution(),
+                max->max_contribution()};
 }
 
 template <typename Color>
-void merge_background_samples(BackgroundSamples<Color>* const dst, const BackgroundSamples<Color>& samples)
+BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
-        ASSERT(!samples.empty());
-
-        if (dst->empty())
+        if (a.empty())
         {
-                *dst = samples;
-                return;
+                if (b.empty())
+                {
+                        return {};
+                }
+                return b;
         }
 
-        dst->sum_weight += samples.sum_weight;
-
-        if (samples.min_weight < dst->min_weight)
+        if (b.empty())
         {
-                dst->sum_weight += dst->min_weight;
-                dst->min_weight = samples.min_weight;
+                if (a.empty())
+                {
+                        return {};
+                }
+                return a;
+        }
+
+        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
+
+        const BackgroundSamples<Color>* min = nullptr;
+        const BackgroundSamples<Color>* max = nullptr;
+
+        if (a.min_weight() < b.min_weight())
+        {
+                sum_weight += b.min_weight();
+                min = &a;
         }
         else
         {
-                dst->sum_weight += samples.min_weight;
+                sum_weight += a.min_weight();
+                min = &b;
         }
 
-        if (samples.max_weight > dst->max_weight)
+        if (a.max_weight() > b.max_weight())
         {
-                dst->sum_weight += dst->max_weight;
-                dst->max_weight = samples.max_weight;
+                sum_weight += b.max_weight();
+                max = &a;
         }
         else
         {
-                dst->sum_weight += samples.max_weight;
+                sum_weight += a.max_weight();
+                max = &b;
         }
+
+        return {sum_weight, min->min_weight(), max->max_weight()};
 }
 
 template <typename Color, typename ColorDataType>
@@ -159,7 +204,7 @@ std::optional<Color> merge_color(
 
         if (background.empty())
         {
-                return color.sum / color.sum_weight;
+                return color.sum() / color.sum_weight();
         }
 
         const Merge<Color> p = merge_color_and_background(color, background, background_contribution);
@@ -189,7 +234,7 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
 
         if (background.empty())
         {
-                return std::tuple(color.sum / color.sum_weight, static_cast<typename Color::DataType>(1));
+                return std::tuple(color.sum() / color.sum_weight(), static_cast<typename Color::DataType>(1));
         }
 
         const Merge<Color> p = merge_color_and_background(color, background, background_contribution);
@@ -200,8 +245,9 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
 }
 
 #define TEMPLATE_C(C)                                                                                 \
-        template void merge_color_samples(ColorSamples<C>*, const ColorSamples<C>&);                  \
-        template void merge_background_samples(BackgroundSamples<C>*, const BackgroundSamples<C>&);   \
+        template ColorSamples<C> merge_color_samples(const ColorSamples<C>&, const ColorSamples<C>&); \
+        template BackgroundSamples<C> merge_background_samples(                                       \
+                const BackgroundSamples<C>&, const BackgroundSamples<C>&);                            \
         template std::optional<C> merge_color(                                                        \
                 const ColorSamples<C>&, const BackgroundSamples<C>&, const C&, typename C::DataType); \
         template std::optional<std::tuple<C, typename C::DataType>> merge_color_alpha(                \

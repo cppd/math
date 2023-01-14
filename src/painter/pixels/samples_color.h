@@ -25,22 +25,89 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels
 {
 template <typename Color>
-struct ColorSamples final
+class ColorSamples final
 {
-        Color sum{0};
-        Color min{0};
-        Color max{0};
+        Color sum_{0};
+        Color min_{0};
+        Color max_{0};
 
-        typename Color::DataType sum_weight{0};
-        typename Color::DataType min_weight{0};
-        typename Color::DataType max_weight{0};
+        typename Color::DataType sum_weight_{0};
+        typename Color::DataType min_weight_{0};
+        typename Color::DataType max_weight_{0};
 
-        typename Color::DataType min_contribution{Limits<decltype(min_contribution)>::infinity()};
-        typename Color::DataType max_contribution{-Limits<decltype(max_contribution)>::infinity()};
+        typename Color::DataType min_contribution_{Limits<typename Color::DataType>::infinity()};
+        typename Color::DataType max_contribution_{-Limits<typename Color::DataType>::infinity()};
+
+public:
+        ColorSamples()
+        {
+        }
+
+        template <typename T>
+                requires (std::is_same_v<T, typename Color::DataType>)
+        ColorSamples(
+                const Color& sum,
+                const Color& min,
+                const Color& max,
+                const T sum_weight,
+                const T min_weight,
+                const T max_weight,
+                const T min_contribution,
+                const T max_contribution)
+                : sum_(sum),
+                  min_(min),
+                  max_(max),
+                  sum_weight_(sum_weight),
+                  min_weight_(min_weight),
+                  max_weight_(max_weight),
+                  min_contribution_(min_contribution),
+                  max_contribution_(max_contribution)
+        {
+        }
 
         [[nodiscard]] bool empty() const
         {
-                return min_contribution > max_contribution;
+                return min_contribution_ > max_contribution_;
+        }
+
+        [[nodiscard]] const Color& sum() const
+        {
+                return sum_;
+        }
+
+        [[nodiscard]] const Color& min() const
+        {
+                return min_;
+        }
+
+        [[nodiscard]] const Color& max() const
+        {
+                return max_;
+        }
+
+        [[nodiscard]] typename Color::DataType sum_weight() const
+        {
+                return sum_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_weight() const
+        {
+                return min_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_weight() const
+        {
+                return max_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_contribution() const
+        {
+                return min_contribution_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_contribution() const
+        {
+                return max_contribution_;
         }
 };
 

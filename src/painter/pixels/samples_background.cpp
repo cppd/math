@@ -55,7 +55,6 @@ template <typename T, typename Color>
                 }
 
                 const typename Color::DataType weight = color_weights[i];
-
                 if (!(weight > 0))
                 {
                         continue;
@@ -120,10 +119,7 @@ std::optional<BackgroundSamples<Color>> make_background_samples(
                 return std::nullopt;
         }
 
-        return BackgroundSamples<Color>{
-                .sum_weight = sum_weights(weights, min_i, max_i),
-                .min_weight = weights[min_i],
-                .max_weight = weights[max_i]};
+        return BackgroundSamples<Color>{sum_weights(weights, min_i, max_i), weights[min_i], weights[max_i]};
 }
 
 #define TEMPLATE_T_C(T, C)                                                    \

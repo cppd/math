@@ -25,15 +25,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels
 {
 template <typename Color>
-struct BackgroundSamples final
+class BackgroundSamples final
 {
-        typename Color::DataType sum_weight{0};
-        typename Color::DataType min_weight{Limits<decltype(min_weight)>::infinity()};
-        typename Color::DataType max_weight{-Limits<decltype(max_weight)>::infinity()};
+        typename Color::DataType sum_weight_{0};
+        typename Color::DataType min_weight_{Limits<typename Color::DataType>::infinity()};
+        typename Color::DataType max_weight_{-Limits<typename Color::DataType>::infinity()};
+
+public:
+        BackgroundSamples()
+        {
+        }
+
+        template <typename T>
+                requires (std::is_same_v<T, typename Color::DataType>)
+        BackgroundSamples(const T sum_weight, const T min_weight, const T max_weight)
+                : sum_weight_(sum_weight),
+                  min_weight_(min_weight),
+                  max_weight_(max_weight)
+        {
+        }
 
         [[nodiscard]] bool empty() const
         {
-                return min_weight > max_weight;
+                return min_weight_ > max_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType sum_weight() const
+        {
+                return sum_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType min_weight() const
+        {
+                return min_weight_;
+        }
+
+        [[nodiscard]] typename Color::DataType max_weight() const
+        {
+                return max_weight_;
         }
 };
 

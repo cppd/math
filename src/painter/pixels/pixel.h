@@ -36,12 +36,12 @@ class Pixel final
 public:
         void merge(const ColorSamples<Color>& samples)
         {
-                merge_color_samples(&color_samples_, samples);
+                color_samples_ = merge_color_samples(color_samples_, samples);
         }
 
         void merge(const BackgroundSamples<Color>& samples)
         {
-                merge_background_samples(&background_samples_, samples);
+                background_samples_ = merge_background_samples(background_samples_, samples);
         }
 
         [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const

@@ -55,20 +55,20 @@ template <typename T, typename Color>
 
         for (std::size_t i = 0; i < colors.size(); ++i)
         {
-                if (!colors[i])
+                const auto& color = colors[i];
+                if (!color)
                 {
                         continue;
                 }
 
                 const typename Color::DataType weight = color_weights[i];
-
                 if (!(weight > 0))
                 {
                         continue;
                 }
 
-                samples->push_back(weight * (*colors[i]));
-                contributions->push_back(weight * sample_color_contribution(*colors[i]));
+                samples->push_back(weight * (*color));
+                contributions->push_back(weight * sample_color_contribution(*color));
                 weights->push_back(weight);
 
                 if (contributions->back() < min)
@@ -139,15 +139,14 @@ std::optional<ColorSamples<Color>> make_color_samples(
         const auto [sum, sum_weight] = sum_samples(samples, weights, min_i, max_i);
 
         return ColorSamples<Color>{
-                .sum = sum,
-                .min = samples[min_i],
-                .max = samples[max_i],
-                .sum_weight = sum_weight,
-                .min_weight = weights[min_i],
-                .max_weight = weights[max_i],
-                .min_contribution = contributions[min_i],
-                .max_contribution = contributions[max_i],
-        };
+                sum,
+                samples[min_i],
+                samples[max_i],
+                sum_weight,
+                weights[min_i],
+                weights[max_i],
+                contributions[min_i],
+                contributions[max_i]};
 }
 
 #define TEMPLATE_T_C(T, C)                                          \
