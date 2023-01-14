@@ -25,7 +25,7 @@ namespace ns::painter::pixels
 namespace pixel_region_implementation
 {
 template <std::size_t N>
-std::array<int, N> max_values_for_size(const std::array<int, N>& size)
+[[nodiscard]] std::array<int, N> max_values_for_size(const std::array<int, N>& size)
 {
         std::array<int, N> max;
         for (std::size_t i = 0; i < N; ++i)

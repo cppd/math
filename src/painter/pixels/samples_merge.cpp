@@ -34,7 +34,7 @@ struct Merge final
 };
 
 template <typename Color>
-Merge<Color> merge_color_and_background(
+[[nodiscard]] Merge<Color> merge_color_and_background(
         const ColorSamples<Color>& color,
         const BackgroundSamples<Color>& background,
         const typename Color::DataType background_contribution)

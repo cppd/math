@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "background.h"
 #include "pixel.h"
 #include "pixel_filter.h"
 #include "pixel_region.h"
@@ -37,13 +38,10 @@ template <std::size_t N, typename T, typename Color>
 class Pixels final
 {
         const PixelFilter<N, T> filter_;
-
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
         const PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
-
-        Background<Color> background_;
-
+        const Background<Color> background_;
         Notifier<N>* const notifier_;
 
         std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};

@@ -36,7 +36,7 @@ namespace ns::painter::pixels
 template <typename T>
 class Gaussian final
 {
-        static T gaussian(T alpha, T v)
+        [[nodiscard]] static T gaussian(const T alpha, const T v)
         {
                 return std::exp(alpha * v * v);
         }
