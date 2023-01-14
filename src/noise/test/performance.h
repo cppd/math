@@ -53,7 +53,7 @@ std::vector<Vector<N, T>> random_data(const int count)
 }
 
 template <std::size_t N, typename T>
-void test_performance(const std::string_view name, T (*noise)(const Vector<N, T>&))
+void test_performance(const std::string_view name, T (&noise)(const Vector<N, T>&))
 {
         constexpr int DATA_COUNT = 1'000'000;
         constexpr int COUNT = 32;
