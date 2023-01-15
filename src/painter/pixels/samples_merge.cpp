@@ -34,6 +34,35 @@ struct Merge final
 };
 
 template <typename Color>
+[[nodiscard]] Merge<Color> merge_color_and_background_sum_only(
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples,
+        const Background<Color>& background)
+{
+        ASSERT(background_samples.sum_only());
+
+        const auto background_contribution = background_samples.sum_weight() * background.contribution();
+
+        if (background_contribution < color_samples.min_contribution())
+        {
+                return {.color = color_samples.sum() + color_samples.min(),
+                        .color_weight = color_samples.sum_weight() + color_samples.min_weight(),
+                        .background_weight = 0};
+        }
+
+        if (background_contribution > color_samples.max_contribution())
+        {
+                return {.color = color_samples.sum() + color_samples.max(),
+                        .color_weight = color_samples.sum_weight() + color_samples.max_weight(),
+                        .background_weight = 0};
+        }
+
+        return {.color = color_samples.sum(),
+                .color_weight = color_samples.sum_weight(),
+                .background_weight = background_samples.sum_weight()};
+}
+
+template <typename Color>
 [[nodiscard]] Merge<Color> merge_color_and_background(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
@@ -41,6 +70,11 @@ template <typename Color>
 {
         ASSERT(!color_samples.empty());
         ASSERT(!background_samples.empty());
+
+        if (background_samples.sum_only())
+        {
+                return merge_color_and_background_sum_only(color_samples, background_samples, background);
+        }
 
         Merge<Color> res{
                 .color = color_samples.sum(),
@@ -138,57 +172,6 @@ ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const Colo
 }
 
 template <typename Color>
-BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
-{
-        if (a.empty())
-        {
-                if (b.empty())
-                {
-                        return {};
-                }
-                return b;
-        }
-
-        if (b.empty())
-        {
-                if (a.empty())
-                {
-                        return {};
-                }
-                return a;
-        }
-
-        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
-
-        const BackgroundSamples<Color>* min = nullptr;
-        const BackgroundSamples<Color>* max = nullptr;
-
-        if (a.min_weight() < b.min_weight())
-        {
-                sum_weight += b.min_weight();
-                min = &a;
-        }
-        else
-        {
-                sum_weight += a.min_weight();
-                min = &b;
-        }
-
-        if (a.max_weight() > b.max_weight())
-        {
-                sum_weight += b.max_weight();
-                max = &a;
-        }
-        else
-        {
-                sum_weight += a.max_weight();
-                max = &b;
-        }
-
-        return {sum_weight, min->min_weight(), max->max_weight()};
-}
-
-template <typename Color>
 std::optional<Color> merge_color(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
@@ -242,8 +225,6 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
 
 #define TEMPLATE_C(C)                                                                                 \
         template ColorSamples<C> merge_color_samples(const ColorSamples<C>&, const ColorSamples<C>&); \
-        template BackgroundSamples<C> merge_background_samples(                                       \
-                const BackgroundSamples<C>&, const BackgroundSamples<C>&);                            \
         template std::optional<C> merge_color(                                                        \
                 const ColorSamples<C>&, const BackgroundSamples<C>&, const Background<C>&);           \
         template std::optional<std::tuple<C, typename C::DataType>> merge_color_alpha(                \

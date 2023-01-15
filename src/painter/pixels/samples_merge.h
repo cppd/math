@@ -29,11 +29,6 @@ template <typename Color>
 [[nodiscard]] ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b);
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_background_samples(
-        const BackgroundSamples<Color>& a,
-        const BackgroundSamples<Color>& b);
-
-template <typename Color>
 [[nodiscard]] std::optional<Color> merge_color(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
