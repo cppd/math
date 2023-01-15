@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "background.h"
 #include "samples_background.h"
 #include "samples_color.h"
+
+#include <optional>
 
 namespace ns::painter::pixels
 {
@@ -30,16 +33,15 @@ template <typename Color>
         const BackgroundSamples<Color>& a,
         const BackgroundSamples<Color>& b);
 
-template <typename Color, typename ColorDataType>
+template <typename Color>
 [[nodiscard]] std::optional<Color> merge_color(
-        const ColorSamples<Color>& color,
-        const BackgroundSamples<Color>& background,
-        const Color& background_color,
-        ColorDataType background_contribution);
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples,
+        const Background<Color>& background);
 
-template <typename Color, typename ColorDataType>
+template <typename Color>
 [[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
-        const ColorSamples<Color>& color,
-        const BackgroundSamples<Color>& background,
-        ColorDataType background_contribution);
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples,
+        const Background<Color>& background);
 }

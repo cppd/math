@@ -46,8 +46,7 @@ public:
 
         [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const
         {
-                const auto color =
-                        merge_color(color_samples_, background_samples_, background.color(), background.contribution());
+                const auto color = merge_color(color_samples_, background_samples_, background);
                 if (!color)
                 {
                         return background.color_rgb32();
@@ -63,8 +62,7 @@ public:
 
         [[nodiscard]] Vector<4, float> color_rgba(const Background<Color>& background) const
         {
-                const auto color_alpha =
-                        merge_color_alpha(color_samples_, background_samples_, background.contribution());
+                const auto color_alpha = merge_color_alpha(color_samples_, background_samples_, background);
                 if (!color_alpha)
                 {
                         return Vector<4, float>(0);
