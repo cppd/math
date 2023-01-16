@@ -54,6 +54,8 @@ public:
         BackgroundSamples(const T min_weight, const T max_weight)
                 : BackgroundSamples(T{0}, min_weight, max_weight)
         {
+                ASSERT(max_weight_ >= min_weight_);
+                ASSERT(min_weight_ > 0);
         }
 
         template <typename T>
