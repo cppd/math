@@ -26,9 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels
 {
 template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b);
-
-template <typename Color>
 [[nodiscard]] std::optional<Color> merge_color(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,

@@ -109,69 +109,6 @@ template <typename Color>
 }
 
 template <typename Color>
-ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
-{
-        if (a.empty())
-        {
-                if (b.empty())
-                {
-                        return {};
-                }
-                return b;
-        }
-
-        if (b.empty())
-        {
-                if (a.empty())
-                {
-                        return {};
-                }
-                return a;
-        }
-
-        Color sum = a.sum() + b.sum();
-        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
-
-        const ColorSamples<Color>* min = nullptr;
-        const ColorSamples<Color>* max = nullptr;
-
-        if (a.min_contribution() < b.min_contribution())
-        {
-                sum += b.min();
-                sum_weight += b.min_weight();
-                min = &a;
-        }
-        else
-        {
-                sum += a.min();
-                sum_weight += a.min_weight();
-                min = &b;
-        }
-
-        if (a.max_contribution() > b.max_contribution())
-        {
-                sum += b.max();
-                sum_weight += b.max_weight();
-                max = &a;
-        }
-        else
-        {
-                sum += a.max();
-                sum_weight += a.max_weight();
-                max = &b;
-        }
-
-        return {sum,
-                min->min(),
-                max->max(),
-                sum_weight,
-                min->min_weight(),
-                max->max_weight(),
-                min->min_contribution(),
-                max->max_contribution()};
-}
-
-template <typename Color>
 std::optional<Color> merge_color(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
@@ -223,11 +160,10 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
         return std::tuple(p.color / sum, p.color_weight / sum);
 }
 
-#define TEMPLATE_C(C)                                                                                 \
-        template ColorSamples<C> merge_color_samples(const ColorSamples<C>&, const ColorSamples<C>&); \
-        template std::optional<C> merge_color(                                                        \
-                const ColorSamples<C>&, const BackgroundSamples<C>&, const Background<C>&);           \
-        template std::optional<std::tuple<C, typename C::DataType>> merge_color_alpha(                \
+#define TEMPLATE_C(C)                                                                       \
+        template std::optional<C> merge_color(                                              \
+                const ColorSamples<C>&, const BackgroundSamples<C>&, const Background<C>&); \
+        template std::optional<std::tuple<C, typename C::DataType>> merge_color_alpha(      \
                 const ColorSamples<C>&, const BackgroundSamples<C>&, const Background<C>&);
 
 TEMPLATE_INSTANTIATION_C(TEMPLATE_C)
