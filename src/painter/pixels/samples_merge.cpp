@@ -34,12 +34,65 @@ struct Merge final
 };
 
 template <typename Color>
+[[nodiscard]] Merge<Color> merge_color_sum_only_and_background_sum_only(
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples)
+{
+        ASSERT(color_samples.sum_only());
+        ASSERT(background_samples.sum_only());
+
+        return {.color = color_samples.sum(),
+                .color_weight = color_samples.sum_weight(),
+                .background_weight = background_samples.sum_weight()};
+}
+
+template <typename Color>
+[[nodiscard]] Merge<Color> merge_color_sum_only_and_background(
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples,
+        const Background<Color>& background)
+{
+        ASSERT(color_samples.sum_only());
+
+        if (background_samples.sum_only())
+        {
+                return merge_color_sum_only_and_background_sum_only(color_samples, background_samples);
+        }
+
+        const auto background_min_contribution = background_samples.min_weight() * background.contribution();
+        const auto background_max_contribution = background_samples.max_weight() * background.contribution();
+
+        if (color_samples.sum_contribution() < background_min_contribution)
+        {
+                return {.color = Color{},
+                        .color_weight = 0,
+                        .background_weight = background_samples.sum_weight() + background_samples.min_weight()};
+        }
+
+        if (color_samples.sum_contribution() > background_max_contribution)
+        {
+                return {.color = Color{},
+                        .color_weight = 0,
+                        .background_weight = background_samples.sum_weight() + background_samples.max_weight()};
+        }
+
+        return {.color = color_samples.sum(),
+                .color_weight = color_samples.sum_weight(),
+                .background_weight = background_samples.sum_weight()};
+}
+
+template <typename Color>
 [[nodiscard]] Merge<Color> merge_color_and_background_sum_only(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
         ASSERT(background_samples.sum_only());
+
+        if (color_samples.sum_only())
+        {
+                return merge_color_sum_only_and_background_sum_only(color_samples, background_samples);
+        }
 
         const auto background_contribution = background_samples.sum_weight() * background.contribution();
 
@@ -63,18 +116,13 @@ template <typename Color>
 }
 
 template <typename Color>
-[[nodiscard]] Merge<Color> merge_color_and_background(
+[[nodiscard]] Merge<Color> merge_color_full_and_background_full(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
-        ASSERT(!color_samples.empty());
-        ASSERT(!background_samples.empty());
-
-        if (background_samples.sum_only())
-        {
-                return merge_color_and_background_sum_only(color_samples, background_samples, background);
-        }
+        ASSERT(color_samples.full());
+        ASSERT(background_samples.full());
 
         Merge<Color> res{
                 .color = color_samples.sum(),
@@ -106,6 +154,33 @@ template <typename Color>
 
         return res;
 }
+
+template <typename Color>
+[[nodiscard]] Merge<Color> merge_color_and_background(
+        const ColorSamples<Color>& color_samples,
+        const BackgroundSamples<Color>& background_samples,
+        const Background<Color>& background)
+{
+        ASSERT(!color_samples.empty());
+        ASSERT(!background_samples.empty());
+
+        if (color_samples.full() && background_samples.full())
+        {
+                return merge_color_full_and_background_full(color_samples, background_samples, background);
+        }
+
+        if (color_samples.sum_only())
+        {
+                return merge_color_sum_only_and_background(color_samples, background_samples, background);
+        }
+
+        if (background_samples.sum_only())
+        {
+                return merge_color_and_background_sum_only(color_samples, background_samples, background);
+        }
+
+        error("Failed to merge color and background samples");
+}
 }
 
 template <typename Color>
@@ -133,6 +208,11 @@ std::optional<Color> merge_color(
                 return p.color / sum;
         }
 
+        if (p.background_weight == sum || (p.background_weight / sum) == 1)
+        {
+                return background.color();
+        }
+
         return (p.color + p.background_weight * background.color()) / sum;
 }
 
@@ -154,6 +234,11 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
         }
 
         const Merge<Color> p = merge_color_and_background(color_samples, background_samples, background);
+
+        if (p.color_weight == 0)
+        {
+                return std::nullopt;
+        }
 
         const auto sum = p.color_weight + p.background_weight;
 
