@@ -34,30 +34,13 @@ struct Merge final
 };
 
 template <typename Color>
-[[nodiscard]] Merge<Color> merge_color_sum_only_and_background_sum_only(
-        const ColorSamples<Color>& color_samples,
-        const BackgroundSamples<Color>& background_samples)
-{
-        ASSERT(color_samples.sum_only());
-        ASSERT(background_samples.sum_only());
-
-        return {.color = color_samples.sum(),
-                .color_weight = color_samples.sum_weight(),
-                .background_weight = background_samples.sum_weight()};
-}
-
-template <typename Color>
-[[nodiscard]] Merge<Color> merge_color_sum_only_and_background(
+[[nodiscard]] Merge<Color> merge_color_sum_only_and_background_full(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
         ASSERT(color_samples.sum_only());
-
-        if (background_samples.sum_only())
-        {
-                return merge_color_sum_only_and_background_sum_only(color_samples, background_samples);
-        }
+        ASSERT(background_samples.full());
 
         const auto background_min_contribution = background_samples.min_weight() * background.contribution();
         const auto background_max_contribution = background_samples.max_weight() * background.contribution();
@@ -82,17 +65,13 @@ template <typename Color>
 }
 
 template <typename Color>
-[[nodiscard]] Merge<Color> merge_color_and_background_sum_only(
+[[nodiscard]] Merge<Color> merge_color_full_and_background_sum_only(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
         ASSERT(background_samples.sum_only());
-
-        if (color_samples.sum_only())
-        {
-                return merge_color_sum_only_and_background_sum_only(color_samples, background_samples);
-        }
+        ASSERT(color_samples.full());
 
         const auto background_contribution = background_samples.sum_weight() * background.contribution();
 
@@ -164,19 +143,18 @@ template <typename Color>
         ASSERT(!color_samples.empty());
         ASSERT(!background_samples.empty());
 
-        if (color_samples.full() && background_samples.full())
+        if (color_samples.full())
         {
-                return merge_color_full_and_background_full(color_samples, background_samples, background);
+                if (background_samples.full())
+                {
+                        return merge_color_full_and_background_full(color_samples, background_samples, background);
+                }
+                return merge_color_full_and_background_sum_only(color_samples, background_samples, background);
         }
 
-        if (color_samples.sum_only())
+        if (background_samples.full())
         {
-                return merge_color_sum_only_and_background(color_samples, background_samples, background);
-        }
-
-        if (background_samples.sum_only())
-        {
-                return merge_color_and_background_sum_only(color_samples, background_samples, background);
+                return merge_color_sum_only_and_background_full(color_samples, background_samples, background);
         }
 
         error("Failed to merge color and background samples");
@@ -196,7 +174,16 @@ std::optional<Color> merge_color(
 
         if (background_samples.empty())
         {
+                if (!color_samples.full())
+                {
+                        return std::nullopt;
+                }
                 return color_samples.sum() / color_samples.sum_weight();
+        }
+
+        if (color_samples.sum_only() && background_samples.sum_only())
+        {
+                return std::nullopt;
         }
 
         const Merge<Color> p = merge_color_and_background(color_samples, background_samples, background);
@@ -229,8 +216,17 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
 
         if (background_samples.empty())
         {
+                if (!color_samples.full())
+                {
+                        return std::nullopt;
+                }
                 constexpr typename Color::DataType ALPHA{1};
                 return std::tuple(color_samples.sum() / color_samples.sum_weight(), ALPHA);
+        }
+
+        if (color_samples.sum_only() && background_samples.sum_only())
+        {
+                return std::nullopt;
         }
 
         const Merge<Color> p = merge_color_and_background(color_samples, background_samples, background);
