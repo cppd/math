@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "samples_color.h"
+#include "color.h"
 
-#include "color_contribution.h"
+#include "../color_contribution.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace ns::painter::pixels
+namespace ns::painter::pixels::samples
 {
 namespace
 {

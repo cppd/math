@@ -18,12 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "background.h"
-#include "samples_background.h"
-#include "samples_color.h"
+#include "color.h"
+
+#include "../background.h"
 
 #include <optional>
 
-namespace ns::painter::pixels
+namespace ns::painter::pixels::samples
 {
 template <typename Color>
 [[nodiscard]] std::optional<Color> merge_color(

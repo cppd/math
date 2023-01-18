@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::painter::pixels
+namespace ns::painter::pixels::samples
 {
 template <typename Color>
 class ColorSamples final

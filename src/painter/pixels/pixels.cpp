@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pixels.h"
 
+#include "samples/background.h"
+#include "samples/color.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -62,8 +65,8 @@ void Pixels<N, T, Color>::add_samples(
 
         filter_.compute_weights(region_pixel_center<T>(region_pixel, sample_pixel), points, &weights);
 
-        const auto color_samples = make_color_samples(colors, weights);
-        const auto background_samples = make_background_samples(colors, weights);
+        const auto color_samples = samples::make_color_samples(colors, weights);
+        const auto background_samples = samples::make_background_samples(colors, weights);
 
         const long long index = global_index_.compute(region_pixel);
         Pixel<Color>& pixel = pixels_[index];

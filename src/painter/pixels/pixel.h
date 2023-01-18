@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "background.h"
-#include "samples_background.h"
-#include "samples_color.h"
-#include "samples_merge.h"
+
+#include "samples/background.h"
+#include "samples/color.h"
+#include "samples/merge.h"
 
 #include <src/com/log.h>
 #include <src/numerical/vector.h>
@@ -30,23 +31,23 @@ namespace ns::painter::pixels
 template <typename Color>
 class Pixel final
 {
-        ColorSamples<Color> color_samples_;
-        BackgroundSamples<Color> background_samples_;
+        samples::ColorSamples<Color> color_samples_;
+        samples::BackgroundSamples<Color> background_samples_;
 
 public:
-        void merge(const ColorSamples<Color>& samples)
+        void merge(const samples::ColorSamples<Color>& samples)
         {
-                color_samples_ = merge_color_samples(color_samples_, samples);
+                color_samples_ = samples::merge_color_samples(color_samples_, samples);
         }
 
-        void merge(const BackgroundSamples<Color>& samples)
+        void merge(const samples::BackgroundSamples<Color>& samples)
         {
-                background_samples_ = merge_background_samples(background_samples_, samples);
+                background_samples_ = samples::merge_background_samples(background_samples_, samples);
         }
 
         [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const
         {
-                const auto color = merge_color(color_samples_, background_samples_, background);
+                const auto color = samples::merge_color(color_samples_, background_samples_, background);
                 if (!color)
                 {
                         return background.color_rgb32();
@@ -62,7 +63,7 @@ public:
 
         [[nodiscard]] Vector<4, float> color_rgba(const Background<Color>& background) const
         {
-                const auto color_alpha = merge_color_alpha(color_samples_, background_samples_, background);
+                const auto color_alpha = samples::merge_color_alpha(color_samples_, background_samples_, background);
                 if (!color_alpha)
                 {
                         return Vector<4, float>(0);
