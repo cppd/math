@@ -122,120 +122,6 @@ template <typename Color>
 
         return res;
 }
-
-template <typename Color>
-ColorSamples<Color> merge_samples_empty(const ColorSamples<Color>& a)
-{
-        if (a.empty())
-        {
-                return ColorSamples<Color>{};
-        }
-        return a;
-}
-
-template <typename Color>
-ColorSamples<Color> merge_samples_sum_only(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
-{
-        ASSERT(a.sum_only() && !b.empty());
-
-        if (b.sum_only())
-        {
-                const auto create = [](const ColorSamples<Color>& min, const ColorSamples<Color>& max)
-                {
-                        return ColorSamples{
-                                min.sum(),
-                                max.sum(),
-                                min.sum_weight(),
-                                max.sum_weight(),
-                                min.sum_contribution(),
-                                max.sum_contribution()};
-                };
-                if (a.sum_contribution() < b.sum_contribution())
-                {
-                        return create(a, b);
-                }
-                return create(b, a);
-        }
-
-        ASSERT(b.full());
-        if (a.sum_contribution() < b.min_contribution())
-        {
-                return {b.sum() + b.min(),
-                        a.sum(),
-                        b.max(),
-                        b.sum_weight() + b.min_weight(),
-                        a.sum_weight(),
-                        b.max_weight(),
-                        a.sum_contribution(),
-                        b.max_contribution()};
-        }
-        if (a.sum_contribution() > b.max_contribution())
-        {
-                return {b.sum() + b.max(),
-                        b.min(),
-                        a.sum(),
-                        b.sum_weight() + b.max_weight(),
-                        b.min_weight(),
-                        a.sum_weight(),
-                        b.min_contribution(),
-                        a.sum_contribution()};
-        }
-        return {a.sum() + b.sum(),
-                b.min(),
-                b.max(),
-                a.sum_weight() + b.sum_weight(),
-                b.min_weight(),
-                b.max_weight(),
-                b.min_contribution(),
-                b.max_contribution()};
-}
-
-template <typename Color>
-ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
-{
-        ASSERT(a.full() && b.full());
-
-        Color sum = a.sum() + b.sum();
-        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
-
-        const ColorSamples<Color>* min = nullptr;
-        const ColorSamples<Color>* max = nullptr;
-
-        if (a.min_contribution() < b.min_contribution())
-        {
-                sum += b.min();
-                sum_weight += b.min_weight();
-                min = &a;
-        }
-        else
-        {
-                sum += a.min();
-                sum_weight += a.min_weight();
-                min = &b;
-        }
-
-        if (a.max_contribution() > b.max_contribution())
-        {
-                sum += b.max();
-                sum_weight += b.max_weight();
-                max = &a;
-        }
-        else
-        {
-                sum += a.max();
-                sum_weight += a.max_weight();
-                max = &b;
-        }
-
-        return {sum,
-                min->min(),
-                max->max(),
-                sum_weight,
-                min->min_weight(),
-                max->max_weight(),
-                min->min_contribution(),
-                max->max_contribution()};
-}
 }
 
 template <typename T, typename Color>
@@ -277,38 +163,9 @@ std::optional<ColorSamples<Color>> make_color_samples(
                 contributions[min_i], contributions[max_i]);
 }
 
-template <typename Color>
-ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
-{
-        if (a.full() && b.full())
-        {
-                return merge_samples_full(a, b);
-        }
-        if (a.empty())
-        {
-                return merge_samples_empty(b);
-        }
-        if (b.empty())
-        {
-                return merge_samples_empty(a);
-        }
-        if (a.sum_only())
-        {
-                return merge_samples_sum_only(a, b);
-        }
-        if (b.sum_only())
-        {
-                return merge_samples_sum_only(b, a);
-        }
-        error("Failed to merge color samples");
-}
-
 #define TEMPLATE_T_C(T, C)                                          \
         template std::optional<ColorSamples<C>> make_color_samples( \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
 
-#define TEMPLATE_C(C) template ColorSamples<C> merge_color_samples(const ColorSamples<C>&, const ColorSamples<C>&);
-
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)
-TEMPLATE_INSTANTIATION_C(TEMPLATE_C)
 }

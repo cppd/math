@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/type/limit.h>
 
 #include <optional>
 #include <vector>
@@ -187,7 +186,4 @@ template <typename T, typename Color>
 [[nodiscard]] std::optional<ColorSamples<Color>> make_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& color_weights);
-
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b);
 }
