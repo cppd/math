@@ -90,21 +90,24 @@ void compare_intersections(const Ray<N, T>& ray, const Parallelotope&... p)
 
         std::array<std::optional<T>, sizeof...(Parallelotope)> intersections{p.intersect(ray)...};
 
+        const auto& first = intersections[0];
+
         for (std::size_t i = 1; i < sizeof...(Parallelotope); ++i)
         {
-                if (intersections[i].has_value() != intersections[0].has_value())
+                const auto& intersection = intersections[i];
+                if (intersection.has_value() != first.has_value())
                 {
                         error("Error intersection comparison\n" + to_string(ray));
                 }
-                if (!intersections[i])
+                if (!intersection)
                 {
                         continue;
                 }
-                if (!equal(*intersections[i], *intersections[0]))
+                if (!equal(*intersection, *first))
                 {
                         std::string s = "Error intersection distance comparison.\n";
-                        s += "Distance[" + to_string(i) + "] = " + to_string(*intersections[i]) + "\n";
-                        s += "Distance[0] = " + to_string(*intersections[0]) + "\n";
+                        s += "Distance[" + to_string(i) + "] = " + to_string(*intersection) + "\n";
+                        s += "Distance[0] = " + to_string(*first) + "\n";
                         s += "Ray = " + to_string(ray);
                         error(s);
                 }

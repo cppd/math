@@ -50,7 +50,8 @@ Slices<DIMENSION, N> create_slices(const std::vector<std::optional<int>>& slice_
         std::size_t slice = 0;
         for (std::size_t dimension = 0; dimension < slice_coordinates.size(); ++dimension)
         {
-                if (!slice_coordinates[dimension])
+                const auto& coordinates = slice_coordinates[dimension];
+                if (!coordinates)
                 {
                         continue;
                 }
@@ -59,8 +60,8 @@ Slices<DIMENSION, N> create_slices(const std::vector<std::optional<int>>& slice_
                         error("Error slice parameters");
                 }
                 res.slices[slice].dimension = dimension;
-                res.slices[slice].coordinate = *slice_coordinates[dimension];
-                res.object_name += '(' + to_string(dimension) + ',' + to_string(*slice_coordinates[dimension]) + ')';
+                res.slices[slice].coordinate = *coordinates;
+                res.object_name += '(' + to_string(dimension) + ',' + to_string(*coordinates) + ')';
                 ++slice;
         }
 

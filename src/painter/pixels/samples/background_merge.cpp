@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/settings/instantiation.h>
 
-#include <optional>
-
 namespace ns::painter::pixels::samples
 {
 namespace
