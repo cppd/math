@@ -176,19 +176,19 @@ void read_lib(
 
         const std::filesystem::path lib_dir = lib_name.parent_path();
 
-        const std::size_t line_count = lines.size();
-        const double line_count_reciprocal = 1.0 / line_count;
+        const std::size_t count = lines.size();
+        const double count_reciprocal = 1.0 / count;
 
         ReadLib<N> read_lib(&lib_dir, mesh, material_index, image_index);
 
-        for (std::size_t line = 0; line < line_count; ++line)
+        for (std::size_t i = 0; i < count; ++i)
         {
-                if ((line & 0xfff) == 0xfff)
+                if ((i & 0xfff) == 0xfff)
                 {
-                        progress->set(line * line_count_reciprocal);
+                        progress->set(i * count_reciprocal);
                 }
 
-                const Split split = split_string(lines.c_str_view(line));
+                const Split split = split_string(lines.c_str_view(i));
 
                 try
                 {
@@ -199,13 +199,13 @@ void read_lib(
                 }
                 catch (const std::exception& e)
                 {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(i) + ": "
                               + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
                               + e.what());
                 }
                 catch (...)
                 {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(i) + ": "
                               + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
                               + "Unknown error");
                 }

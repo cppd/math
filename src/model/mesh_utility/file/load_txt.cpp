@@ -47,29 +47,29 @@ void read_points_thread(
         std::vector<Vector<N, float>>* const vertices,
         progress::Ratio* const progress)
 {
-        const std::size_t line_count = lines.size();
-        const double line_count_reciprocal = 1.0 / line_count;
+        const std::size_t count = lines.size();
+        const double count_reciprocal = 1.0 / count;
 
-        for (std::size_t line = thread_num; line < line_count; line += thread_count)
+        for (std::size_t i = thread_num; i < count; i += thread_count)
         {
-                if ((line & 0xfff) == 0xfff)
+                if ((i & 0xfff) == 0xfff)
                 {
-                        progress->set(line * line_count_reciprocal);
+                        progress->set(i * count_reciprocal);
                 }
 
-                const char* const str = lines.c_str(line);
+                const char* const str = lines.c_str(i);
 
                 try
                 {
-                        read(str, &(*vertices)[line]);
+                        read(str, &(*vertices)[i]);
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line) + ": " + str + "\n" + e.what());
+                        error("Line " + to_string(i) + ": " + str + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line) + ": " + str + "\n" + "Unknown error");
+                        error("Line " + to_string(i) + ": " + str + "\n" + "Unknown error");
                 }
         }
 }

@@ -70,31 +70,30 @@ void read_obj_stage_one(
         std::vector<std::optional<obj::Line<N, T>>>* const obj_lines,
         progress::Ratio* const progress)
 {
-        const std::size_t line_count = lines.size();
-        const double line_count_reciprocal = 1.0 / line_count;
+        const std::size_t count = lines.size();
+        const double count_reciprocal = 1.0 / count;
 
-        for (std::size_t line = thread_num; line < line_count; line += thread_count)
+        for (std::size_t i = thread_num; i < count; i += thread_count)
         {
-                if ((line & 0xfff) == 0xfff)
+                if ((i & 0xfff) == 0xfff)
                 {
-                        progress->set(line * line_count_reciprocal);
+                        progress->set(i * count_reciprocal);
                 }
 
-                const obj::Split split = obj::split_string(lines.c_str_view(line));
+                const obj::Split split = obj::split_string(lines.c_str_view(i));
 
                 try
                 {
-                        (*obj_lines)[line] =
-                                obj::read_line<N, T>(split.first, split.second_b, split.second_e, counters);
+                        (*obj_lines)[i] = obj::read_line<N, T>(split.first, split.second_b, split.second_e, counters);
                 }
                 catch (const std::exception& e)
                 {
-                        error("Line " + to_string(line) + ": " + std::string(split.first) + " "
+                        error("Line " + to_string(i) + ": " + std::string(split.first) + " "
                               + std::string(split.second_b, split.second_e) + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Line " + to_string(line) + ": " + std::string(split.first) + " "
+                        error("Line " + to_string(i) + ": " + std::string(split.first) + " "
                               + std::string(split.second_b, split.second_e) + "\n" + "Unknown error");
                 }
         }
@@ -114,21 +113,21 @@ void read_obj_stage_two(
         mesh->normals.reserve(counters.normal);
         mesh->facets.reserve(counters.facet);
 
-        const std::size_t line_count = obj_lines.size();
-        const double line_count_reciprocal = 1.0 / obj_lines.size();
+        const std::size_t count = obj_lines.size();
+        const double count_reciprocal = 1.0 / obj_lines.size();
 
         obj::LineProcess<N> visitor(material_index, library_names, mesh);
 
-        for (std::size_t line = 0; line < line_count; ++line)
+        for (std::size_t i = 0; i < count; ++i)
         {
-                if ((line & 0xfff) == 0xfff)
+                if ((i & 0xfff) == 0xfff)
                 {
-                        progress->set(line * line_count_reciprocal);
+                        progress->set(i * count_reciprocal);
                 }
 
-                if (obj_lines[line])
+                if (obj_lines[i])
                 {
-                        std::visit(visitor, *obj_lines[line]);
+                        std::visit(visitor, *obj_lines[i]);
                 }
         }
 }
