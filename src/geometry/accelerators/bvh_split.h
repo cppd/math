@@ -145,11 +145,14 @@ std::array<Bucket<N, T>, BUCKET_COUNT - 1> incremental_bucket_sum_forward(
         static_assert(BUCKET_COUNT >= 2);
 
         std::array<Bucket<N, T>, BUCKET_COUNT - 1> res;
-        ASSERT(buckets.front());
-        res.front() = *buckets.front();
+        {
+                const auto& bucket = buckets.front();
+                ASSERT(bucket);
+                res.front() = *bucket;
+        }
         for (unsigned i = 1; i < BUCKET_COUNT - 1; ++i)
         {
-                const std::optional<Bucket<N, T>>& bucket = buckets[i];
+                const auto& bucket = buckets[i];
                 const Bucket<N, T>& previous = res[i - 1];
                 Bucket<N, T>& current = res[i];
                 if (!bucket)
@@ -169,11 +172,14 @@ std::array<Bucket<N, T>, BUCKET_COUNT - 1> incremental_bucket_sum_backward(
         static_assert(BUCKET_COUNT >= 2);
 
         std::array<Bucket<N, T>, BUCKET_COUNT - 1> res;
-        ASSERT(buckets.back());
-        res.back() = *buckets.back();
+        {
+                const auto& bucket = buckets.back();
+                ASSERT(bucket);
+                res.back() = *bucket;
+        }
         for (unsigned i = BUCKET_COUNT - 2; i > 0; --i)
         {
-                const std::optional<Bucket<N, T>>& bucket = buckets[i];
+                const auto& bucket = buckets[i];
                 const Bucket<N, T>& previous = res[i];
                 Bucket<N, T>& current = res[i - 1];
                 if (!bucket)
