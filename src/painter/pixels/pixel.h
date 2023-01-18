@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "background.h"
 
-#include "samples/background.h"
+#include "samples/background_merge.h"
 #include "samples/color.h"
 #include "samples/merge.h"
 
