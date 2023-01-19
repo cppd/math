@@ -26,16 +26,6 @@ namespace ns::painter::pixels::samples
 namespace
 {
 template <typename Color>
-ColorSamples<Color> merge_samples_empty(const ColorSamples<Color>& a)
-{
-        if (a.empty())
-        {
-                return ColorSamples<Color>{};
-        }
-        return a;
-}
-
-template <typename Color>
 ColorSamples<Color> merge_samples_sum_only(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
         ASSERT(a.sum_only() && !b.empty());
@@ -149,11 +139,11 @@ ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const Colo
         }
         if (a.empty())
         {
-                return merge_samples_empty(b);
+                return b;
         }
         if (b.empty())
         {
-                return merge_samples_empty(a);
+                return a;
         }
         if (a.sum_only())
         {
