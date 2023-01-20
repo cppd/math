@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "color.h"
+#include "color_create.h"
 
 #include "../color_contribution.h"
 
@@ -125,7 +125,7 @@ template <typename Color>
 }
 
 template <typename T, typename Color>
-std::optional<ColorSamples<Color>> make_color_samples(
+std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& color_weights)
 {
@@ -163,8 +163,8 @@ std::optional<ColorSamples<Color>> make_color_samples(
                 contributions[min_i], contributions[max_i]);
 }
 
-#define TEMPLATE_T_C(T, C)                                          \
-        template std::optional<ColorSamples<C>> make_color_samples( \
+#define TEMPLATE_T_C(T, C)                                            \
+        template std::optional<ColorSamples<C>> create_color_samples( \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
 
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)

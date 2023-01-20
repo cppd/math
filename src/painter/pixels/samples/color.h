@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <optional>
-#include <vector>
+#include <type_traits>
 
 namespace ns::painter::pixels::samples
 {
@@ -181,9 +180,4 @@ public:
                 return max_contribution_;
         }
 };
-
-template <typename T, typename Color>
-[[nodiscard]] std::optional<ColorSamples<Color>> make_color_samples(
-        const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights);
 }

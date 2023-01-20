@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "samples/background.h"
 #include "samples/background_merge.h"
+#include "samples/color.h"
 #include "samples/color_merge.h"
 #include "samples/merge.h"
 
