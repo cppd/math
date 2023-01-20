@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "background.h"
+#include "background_create.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -111,7 +111,7 @@ template <typename T>
 }
 
 template <typename T, typename Color>
-std::optional<BackgroundSamples<Color>> make_background_samples(
+std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& color_weights)
 {
@@ -137,8 +137,8 @@ std::optional<BackgroundSamples<Color>> make_background_samples(
         return BackgroundSamples<Color>{sum_weights(weights, min_i, max_i), weights[min_i], weights[max_i]};
 }
 
-#define TEMPLATE_T_C(T, C)                                                    \
-        template std::optional<BackgroundSamples<C>> make_background_samples( \
+#define TEMPLATE_T_C(T, C)                                                      \
+        template std::optional<BackgroundSamples<C>> create_background_samples( \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
 
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)
