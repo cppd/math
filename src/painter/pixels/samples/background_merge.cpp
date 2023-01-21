@@ -26,71 +26,79 @@ namespace ns::painter::pixels::samples
 namespace
 {
 template <typename Color>
-BackgroundSamples<Color> merge_samples_sum_only(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
+BackgroundSamples<Color> merge_samples_one_sample(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
-        ASSERT(a.sum_only() && !b.empty());
+        static_assert(BackgroundSamples<Color>::size() == 2);
 
-        if (b.sum_only())
+        ASSERT(a.count() == 1 && !b.empty());
+
+        if (b.count() == 1)
         {
-                if (a.sum_weight() < b.sum_weight())
+                if (a.weight(0) < b.weight(0))
                 {
-                        return {a.sum_weight(), b.sum_weight()};
+                        return BackgroundSamples<Color>({a.weight(0), b.weight(0)}, 2);
                 }
-                return {b.sum_weight(), a.sum_weight()};
+                return BackgroundSamples<Color>({b.weight(0), a.weight(0)}, 2);
         }
 
-        ASSERT(b.full());
-        if (a.sum_weight() < b.min_weight())
+        ASSERT(b.count() == 2);
+        if (a.weight(0) < b.weight(0))
         {
-                return {b.sum_weight() + b.min_weight(), a.sum_weight(), b.max_weight()};
+                return BackgroundSamples<Color>(
+                        (b.full() ? b.weight_sum() : 0) + b.weight(0), {a.weight(0), b.weight(1)});
         }
-        if (a.sum_weight() > b.max_weight())
+        if (a.weight(0) > b.weight(1))
         {
-                return {b.sum_weight() + b.max_weight(), b.min_weight(), a.sum_weight()};
+                return BackgroundSamples<Color>(
+                        (b.full() ? b.weight_sum() : 0) + b.weight(1), {b.weight(0), a.weight(0)});
         }
-        return {a.sum_weight() + b.sum_weight(), b.min_weight(), b.max_weight()};
+        return BackgroundSamples<Color>(a.weight(0) + (b.full() ? b.weight_sum() : 0), {b.weight(0), b.weight(1)});
 }
 
 template <typename Color>
 BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
-        ASSERT(a.full() && b.full());
+        static_assert(BackgroundSamples<Color>::size() == 2);
 
-        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
+        ASSERT(a.count() == 2 && b.count() == 2);
+
+        typename Color::DataType sum = (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
 
         const BackgroundSamples<Color>* min = nullptr;
         const BackgroundSamples<Color>* max = nullptr;
 
-        if (a.min_weight() < b.min_weight())
+        if (a.weight(0) < b.weight(0))
         {
-                sum_weight += b.min_weight();
+                sum += b.weight(0);
                 min = &a;
         }
         else
         {
-                sum_weight += a.min_weight();
+                sum += a.weight(0);
                 min = &b;
         }
 
-        if (a.max_weight() > b.max_weight())
+        if (a.weight(1) > b.weight(1))
         {
-                sum_weight += b.max_weight();
+                sum += b.weight(1);
                 max = &a;
         }
         else
         {
-                sum_weight += a.max_weight();
+                sum += a.weight(1);
                 max = &b;
         }
 
-        return {sum_weight, min->min_weight(), max->max_weight()};
+        return BackgroundSamples<Color>(sum, {min->weight(0), max->weight(1)});
 }
 }
 
 template <typename Color>
 BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
-        if (a.full() && b.full())
+        static_assert(BackgroundSamples<Color>::size() == 2);
+
+        if (a.count() == 2 && b.count() == 2)
         {
                 return merge_samples_full(a, b);
         }
@@ -102,13 +110,13 @@ BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>
         {
                 return a;
         }
-        if (a.sum_only())
+        if (a.count() == 1)
         {
-                return merge_samples_sum_only(a, b);
+                return merge_samples_one_sample(a, b);
         }
-        if (b.sum_only())
+        if (b.count() == 1)
         {
-                return merge_samples_sum_only(b, a);
+                return merge_samples_one_sample(b, a);
         }
         error("Failed to merge background samples");
 }

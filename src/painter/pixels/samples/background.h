@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <algorithm>
+#include <array>
 #include <type_traits>
 
 namespace ns::painter::pixels::samples
@@ -26,78 +28,70 @@ namespace ns::painter::pixels::samples
 template <typename Color>
 class BackgroundSamples final
 {
-        static constexpr typename Color::DataType EMPTY = -1;
-        static constexpr typename Color::DataType SUM_ONLY = -2;
+        static constexpr std::size_t COUNT = 2;
+        static_assert(COUNT >= 2);
+        static_assert(COUNT % 2 == 0);
 
-        typename Color::DataType sum_weight_{0};
-        typename Color::DataType min_weight_{EMPTY};
-        typename Color::DataType max_weight_{EMPTY};
+        static constexpr typename Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
+
+        typename Color::DataType weight_sum_;
+        std::array<typename Color::DataType, COUNT> weights_;
 
 public:
+        static constexpr std::size_t size()
+        {
+                return COUNT;
+        }
+
         BackgroundSamples()
+                : weight_sum_(EMPTY)
         {
         }
 
-        template <typename T>
-                requires (std::is_same_v<T, typename Color::DataType>)
-        explicit BackgroundSamples(const T sum_weight)
-                : sum_weight_(sum_weight),
-                  min_weight_(SUM_ONLY),
-                  max_weight_(SUM_ONLY)
+        BackgroundSamples(const std::array<typename Color::DataType, COUNT>& weights, const std::size_t count)
+                : weight_sum_(-static_cast<int>(count)),
+                  weights_(weights)
         {
+                ASSERT(weight_sum_ < 0);
+                ASSERT(weight_sum_ > EMPTY);
+                ASSERT(std::is_sorted(weights_.cbegin(), weights_.cbegin() + count));
         }
 
-        template <typename T>
-                requires (std::is_same_v<T, typename Color::DataType>)
-        BackgroundSamples(const T min_weight, const T max_weight)
-                : BackgroundSamples(T{0}, min_weight, max_weight)
+        BackgroundSamples(
+                const typename Color::DataType weight_sum,
+                const std::array<typename Color::DataType, COUNT>& weights)
+                : weight_sum_(weight_sum),
+                  weights_(weights)
         {
-                ASSERT(max_weight_ >= min_weight_);
-                ASSERT(min_weight_ > 0);
-        }
-
-        template <typename T>
-                requires (std::is_same_v<T, typename Color::DataType>)
-        BackgroundSamples(const T sum_weight, const T min_weight, const T max_weight)
-                : sum_weight_(sum_weight),
-                  min_weight_(min_weight),
-                  max_weight_(max_weight)
-        {
-                ASSERT(max_weight_ >= min_weight_);
-                ASSERT(min_weight_ > 0);
+                ASSERT(weight_sum_ >= 0);
+                ASSERT(std::is_sorted(weights_.cbegin(), weights_.cend()));
         }
 
         [[nodiscard]] bool empty() const
         {
-                return min_weight_ == EMPTY;
-        }
-
-        [[nodiscard]] bool sum_only() const
-        {
-                return min_weight_ == SUM_ONLY;
+                return weight_sum_ == EMPTY;
         }
 
         [[nodiscard]] bool full() const
         {
-                return min_weight_ > 0;
+                return weight_sum_ >= 0;
         }
 
-        [[nodiscard]] typename Color::DataType sum_weight() const
+        [[nodiscard]] std::size_t count() const
         {
-                ASSERT(!empty());
-                return sum_weight_;
+                return full() ? COUNT : (empty() ? 0 : -weight_sum_);
         }
 
-        [[nodiscard]] typename Color::DataType min_weight() const
-        {
-                ASSERT(full());
-                return min_weight_;
-        }
-
-        [[nodiscard]] typename Color::DataType max_weight() const
+        [[nodiscard]] typename Color::DataType weight_sum() const
         {
                 ASSERT(full());
-                return max_weight_;
+                return weight_sum_;
+        }
+
+        [[nodiscard]] typename Color::DataType weight(const std::size_t index) const
+        {
+                ASSERT(index < count());
+                return weights_[index];
         }
 };
 }

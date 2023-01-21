@@ -91,7 +91,7 @@ template <typename T, typename Color>
 }
 
 template <typename T>
-[[nodiscard]] T sum_weights(const std::vector<T>& weights, const std::size_t min_i, const std::size_t max_i)
+[[nodiscard]] T weight_sum(const std::vector<T>& weights, const std::size_t min_i, const std::size_t max_i)
 {
         T res{0};
 
@@ -115,6 +115,8 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& color_weights)
 {
+        static_assert(BackgroundSamples<Color>::size() == 2);
+
         thread_local std::vector<typename Color::DataType> weights;
 
         const auto [min_i, max_i] = select_backgrounds_and_find_min_max(colors, color_weights, &weights);
@@ -126,15 +128,15 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
 
         if (weights.size() == 1)
         {
-                return BackgroundSamples<Color>{weights.front()};
+                return BackgroundSamples<Color>({weights.front()}, 1);
         }
 
         if (weights.size() == 2)
         {
-                return BackgroundSamples<Color>{weights[min_i], weights[max_i]};
+                return BackgroundSamples<Color>({weights[min_i], weights[max_i]}, 2);
         }
 
-        return BackgroundSamples<Color>{sum_weights(weights, min_i, max_i), weights[min_i], weights[max_i]};
+        return BackgroundSamples<Color>(weight_sum(weights, min_i, max_i), {weights[min_i], weights[max_i]});
 }
 
 #define TEMPLATE_T_C(T, C)                                                      \
