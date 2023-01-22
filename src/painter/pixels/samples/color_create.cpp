@@ -129,6 +129,8 @@ std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& color_weights)
 {
+        static_assert(ColorSamples<Color>::size() == 2);
+
         thread_local std::vector<Color> samples;
         thread_local std::vector<typename Color::DataType> contributions;
         thread_local std::vector<typename Color::DataType> weights;
@@ -146,21 +148,21 @@ std::optional<ColorSamples<Color>> create_color_samples(
 
         if (samples.size() == 1)
         {
-                return ColorSamples<Color>(samples.front(), weights.front(), contributions.front());
+                return ColorSamples<Color>({samples.front()}, {weights.front()}, {contributions.front()}, 1);
         }
 
         if (samples.size() == 2)
         {
                 return ColorSamples<Color>(
-                        samples[min_i], samples[max_i], weights[min_i], weights[max_i], contributions[min_i],
-                        contributions[max_i]);
+                        {samples[min_i], samples[max_i]}, {weights[min_i], weights[max_i]},
+                        {contributions[min_i], contributions[max_i]}, 2);
         }
 
         const auto [sum_samples, sum_weights] = sum_samples_and_weights(samples, weights, min_i, max_i);
 
         return ColorSamples<Color>(
-                sum_samples, samples[min_i], samples[max_i], sum_weights, weights[min_i], weights[max_i],
-                contributions[min_i], contributions[max_i]);
+                sum_samples, {samples[min_i], samples[max_i]}, sum_weights, {weights[min_i], weights[max_i]},
+                {contributions[min_i], contributions[max_i]});
 }
 
 #define TEMPLATE_T_C(T, C)                                            \

@@ -26,114 +26,130 @@ namespace ns::painter::pixels::samples
 namespace
 {
 template <typename Color>
-ColorSamples<Color> merge_samples_sum_only(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+ColorSamples<Color> merge_two_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        ASSERT(a.sum_only() && !b.empty());
+        static_assert(ColorSamples<Color>::size() == 2);
 
-        if (b.sum_only())
+        ASSERT(a.count() == 1 && b.count() == 1);
+
+        const auto create = [](const ColorSamples<Color>& min, const ColorSamples<Color>& max)
         {
-                const auto create = [](const ColorSamples<Color>& min, const ColorSamples<Color>& max)
-                {
-                        return ColorSamples{
-                                min.sum(),
-                                max.sum(),
-                                min.sum_weight(),
-                                max.sum_weight(),
-                                min.sum_contribution(),
-                                max.sum_contribution()};
+                return ColorSamples<Color>{
+                        {       min.color(0),        max.color(0)},
+                        {      min.weight(0),       max.weight(0)},
+                        {min.contribution(0), max.contribution(0)},
+                        2
                 };
-                if (a.sum_contribution() < b.sum_contribution())
-                {
-                        return create(a, b);
-                }
-                return create(b, a);
+        };
+
+        if (a.contribution(0) < b.contribution(0))
+        {
+                return create(a, b);
         }
 
-        ASSERT(b.full());
-        if (a.sum_contribution() < b.min_contribution())
+        return create(b, a);
+}
+
+template <typename Color>
+ColorSamples<Color> merge_samples_one_sample(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+{
+        static_assert(ColorSamples<Color>::size() == 2);
+
+        ASSERT(a.count() == 1 && !b.empty());
+
+        if (b.count() == 1)
         {
-                return {b.sum() + b.min(),
-                        a.sum(),
-                        b.max(),
-                        b.sum_weight() + b.min_weight(),
-                        a.sum_weight(),
-                        b.max_weight(),
-                        a.sum_contribution(),
-                        b.max_contribution()};
+                return merge_two_samples(a, b);
         }
-        if (a.sum_contribution() > b.max_contribution())
+
+        ASSERT(b.count() == 2);
+
+        if (a.contribution(0) < b.contribution(0))
         {
-                return {b.sum() + b.max(),
-                        b.min(),
-                        a.sum(),
-                        b.sum_weight() + b.max_weight(),
-                        b.min_weight(),
-                        a.sum_weight(),
-                        b.min_contribution(),
-                        a.sum_contribution()};
+                return {
+                        (b.full() ? b.color_sum() : Color(0)) + b.color(0),
+                        {       a.color(0),        b.color(1)},
+                        (b.full() ? b.weight_sum() : 0) + b.weight(0),
+                        {      a.weight(0),       b.weight(1)},
+                        {a.contribution(0), b.contribution(1)}
+                };
         }
-        return {a.sum() + b.sum(),
-                b.min(),
-                b.max(),
-                a.sum_weight() + b.sum_weight(),
-                b.min_weight(),
-                b.max_weight(),
-                b.min_contribution(),
-                b.max_contribution()};
+
+        if (a.contribution(0) > b.contribution(1))
+        {
+                return {
+                        (b.full() ? b.color_sum() : Color(0)) + b.color(1),
+                        {       b.color(0),        a.color(0)},
+                        (b.full() ? b.weight_sum() : 0) + b.weight(1),
+                        {      b.weight(0),       a.weight(0)},
+                        {b.contribution(0), a.contribution(0)}
+                };
+        }
+
+        return {
+                a.color(0) + (b.full() ? b.color_sum() : Color(0)),
+                {       b.color(0),        b.color(1)},
+                a.weight(0) + (b.full() ? b.weight_sum() : 0),
+                {      b.weight(0),       b.weight(1)},
+                {b.contribution(0), b.contribution(1)}
+        };
 }
 
 template <typename Color>
 ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        ASSERT(a.full() && b.full());
+        static_assert(ColorSamples<Color>::size() == 2);
 
-        Color sum = a.sum() + b.sum();
-        typename Color::DataType sum_weight = a.sum_weight() + b.sum_weight();
+        ASSERT(a.count() == 2 && b.count() == 2);
+
+        Color sum_color = (a.full() ? a.color_sum() : Color(0)) + (b.full() ? b.color_sum() : Color(0));
+        typename Color::DataType sum_weight = (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
 
         const ColorSamples<Color>* min = nullptr;
         const ColorSamples<Color>* max = nullptr;
 
-        if (a.min_contribution() < b.min_contribution())
+        if (a.contribution(0) < b.contribution(0))
         {
-                sum += b.min();
-                sum_weight += b.min_weight();
+                sum_color += b.color(0);
+                sum_weight += b.weight(0);
                 min = &a;
         }
         else
         {
-                sum += a.min();
-                sum_weight += a.min_weight();
+                sum_color += a.color(0);
+                sum_weight += a.weight(0);
                 min = &b;
         }
 
-        if (a.max_contribution() > b.max_contribution())
+        if (a.contribution(1) > b.contribution(1))
         {
-                sum += b.max();
-                sum_weight += b.max_weight();
+                sum_color += b.color(1);
+                sum_weight += b.weight(1);
                 max = &a;
         }
         else
         {
-                sum += a.max();
-                sum_weight += a.max_weight();
+                sum_color += a.color(1);
+                sum_weight += a.weight(1);
                 max = &b;
         }
 
-        return {sum,
-                min->min(),
-                max->max(),
+        return {
+                sum_color,
+                {       min->color(0),        max->color(1)},
                 sum_weight,
-                min->min_weight(),
-                max->max_weight(),
-                min->min_contribution(),
-                max->max_contribution()};
+                {      min->weight(0),       max->weight(1)},
+                {min->contribution(0), max->contribution(1)}
+        };
 }
 }
 
 template <typename Color>
 ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        if (a.full() && b.full())
+        static_assert(ColorSamples<Color>::size() == 2);
+
+        if (a.count() == 2 && b.count() == 2)
         {
                 return merge_samples_full(a, b);
         }
@@ -145,13 +161,13 @@ ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const Colo
         {
                 return a;
         }
-        if (a.sum_only())
+        if (a.count() == 1)
         {
-                return merge_samples_sum_only(a, b);
+                return merge_samples_one_sample(a, b);
         }
-        if (b.sum_only())
+        if (b.count() == 1)
         {
-                return merge_samples_sum_only(b, a);
+                return merge_samples_one_sample(b, a);
         }
         error("Failed to merge color samples");
 }
