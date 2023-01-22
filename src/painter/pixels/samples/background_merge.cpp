@@ -26,6 +26,21 @@ namespace ns::painter::pixels::samples
 namespace
 {
 template <typename Color>
+BackgroundSamples<Color> merge_two_samples(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
+{
+        static_assert(BackgroundSamples<Color>::size() == 2);
+
+        ASSERT(a.count() == 1 && b.count() == 1);
+
+        if (a.weight(0) < b.weight(0))
+        {
+                return BackgroundSamples<Color>({a.weight(0), b.weight(0)}, 2);
+        }
+
+        return BackgroundSamples<Color>({b.weight(0), a.weight(0)}, 2);
+}
+
+template <typename Color>
 BackgroundSamples<Color> merge_samples_one_sample(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
         static_assert(BackgroundSamples<Color>::size() == 2);
@@ -34,24 +49,23 @@ BackgroundSamples<Color> merge_samples_one_sample(const BackgroundSamples<Color>
 
         if (b.count() == 1)
         {
-                if (a.weight(0) < b.weight(0))
-                {
-                        return BackgroundSamples<Color>({a.weight(0), b.weight(0)}, 2);
-                }
-                return BackgroundSamples<Color>({b.weight(0), a.weight(0)}, 2);
+                return merge_two_samples(a, b);
         }
 
         ASSERT(b.count() == 2);
+
         if (a.weight(0) < b.weight(0))
         {
                 return BackgroundSamples<Color>(
                         (b.full() ? b.weight_sum() : 0) + b.weight(0), {a.weight(0), b.weight(1)});
         }
+
         if (a.weight(0) > b.weight(1))
         {
                 return BackgroundSamples<Color>(
                         (b.full() ? b.weight_sum() : 0) + b.weight(1), {b.weight(0), a.weight(0)});
         }
+
         return BackgroundSamples<Color>(a.weight(0) + (b.full() ? b.weight_sum() : 0), {b.weight(0), b.weight(1)});
 }
 
