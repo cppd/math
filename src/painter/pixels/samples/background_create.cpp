@@ -37,7 +37,7 @@ struct Sample final
 };
 
 template <typename T, typename Color>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> select_backgrounds_and_find_min_max(
+void select_backgrounds(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights,
         std::vector<Sample<Color>>* const samples)
@@ -47,11 +47,6 @@ template <typename T, typename Color>
         ASSERT(colors.size() == weights.size());
 
         samples->clear();
-
-        typename Color::DataType min = Limits<decltype(min)>::infinity();
-        typename Color::DataType max = -Limits<decltype(max)>::infinity();
-        std::size_t min_i = -1;
-        std::size_t max_i = -1;
 
         for (std::size_t i = 0; i < colors.size(); ++i)
         {
@@ -67,27 +62,43 @@ template <typename T, typename Color>
                 }
 
                 samples->push_back({.weight = weight});
+        }
+}
+
+template <typename Color>
+[[nodiscard]] std::tuple<std::size_t, std::size_t> find_min_max(const std::vector<Sample<Color>>& samples)
+{
+        static_assert(std::is_floating_point_v<typename Color::DataType>);
+
+        if (samples.empty() || samples.size() == 1)
+        {
+                return {};
+        }
+
+        typename Color::DataType min = Limits<decltype(min)>::infinity();
+        typename Color::DataType max = -Limits<decltype(max)>::infinity();
+        std::size_t min_i = -1;
+        std::size_t max_i = -1;
+
+        for (std::size_t i = 0; i < samples.size(); ++i)
+        {
+                const auto weight = samples[i].weight;
 
                 if (weight < min)
                 {
                         min = weight;
-                        min_i = samples->size() - 1;
+                        min_i = i;
                 }
 
                 if (weight > max)
                 {
                         max = weight;
-                        max_i = samples->size() - 1;
+                        max_i = i;
                 }
         }
 
-        if (samples->empty() || samples->size() == 1)
-        {
-                return {};
-        }
-
-        ASSERT(min_i < samples->size());
-        ASSERT(max_i < samples->size());
+        ASSERT(min_i < samples.size());
+        ASSERT(max_i < samples.size());
         if (min_i == max_i)
         {
                 // all elements are equal
@@ -128,7 +139,7 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
 
         thread_local std::vector<Sample<Color>> samples;
 
-        const auto [min_i, max_i] = select_backgrounds_and_find_min_max(colors, weights, &samples);
+        select_backgrounds(colors, weights, &samples);
 
         if (samples.empty())
         {
@@ -140,7 +151,7 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
                 return BackgroundSamples<Color>({samples.front().weight}, 1);
         }
 
-        ASSERT(!(min_i == max_i));
+        const auto [min_i, max_i] = find_min_max(samples);
 
         const auto min = samples[min_i];
         const auto max = samples[max_i];
