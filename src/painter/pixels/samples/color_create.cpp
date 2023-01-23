@@ -41,7 +41,7 @@ struct Sample final
 };
 
 template <typename T, typename Color>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> select_colors_and_find_min_max(
+void select_colors(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights,
         std::vector<Sample<Color>>* const samples)
@@ -51,11 +51,6 @@ template <typename T, typename Color>
         ASSERT(colors.size() == weights.size());
 
         samples->clear();
-
-        typename Color::DataType min = Limits<decltype(min)>::infinity();
-        typename Color::DataType max = -Limits<decltype(max)>::infinity();
-        std::size_t min_i = -1;
-        std::size_t max_i = -1;
 
         for (std::size_t i = 0; i < colors.size(); ++i)
         {
@@ -75,29 +70,43 @@ template <typename T, typename Color>
                         {.color = weight * (*color),
                          .weight = weight,
                          .contribution = weight * sample_color_contribution(*color)});
+        }
+}
 
-                const auto contribution = samples->back().contribution;
+template <typename Color>
+[[nodiscard]] std::tuple<std::size_t, std::size_t> find_min_max(const std::vector<Sample<Color>>& samples)
+{
+        static_assert(std::is_floating_point_v<typename Color::DataType>);
+
+        if (samples.empty() || samples.size() == 1)
+        {
+                return {};
+        }
+
+        typename Color::DataType min = Limits<decltype(min)>::infinity();
+        typename Color::DataType max = -Limits<decltype(max)>::infinity();
+        std::size_t min_i = -1;
+        std::size_t max_i = -1;
+
+        for (std::size_t i = 0; i < samples.size(); ++i)
+        {
+                const auto contribution = samples[i].contribution;
 
                 if (contribution < min)
                 {
                         min = contribution;
-                        min_i = samples->size() - 1;
+                        min_i = i;
                 }
 
                 if (contribution > max)
                 {
                         max = contribution;
-                        max_i = samples->size() - 1;
+                        max_i = i;
                 }
         }
 
-        if (samples->empty() || samples->size() == 1)
-        {
-                return {};
-        }
-
-        ASSERT(min_i < samples->size());
-        ASSERT(max_i < samples->size());
+        ASSERT(min_i < samples.size());
+        ASSERT(max_i < samples.size());
         if (min_i == max_i)
         {
                 // all contributions are equal
@@ -139,7 +148,7 @@ std::optional<ColorSamples<Color>> create_color_samples(
 
         thread_local std::vector<Sample<Color>> samples;
 
-        const auto [min_i, max_i] = select_colors_and_find_min_max(colors, weights, &samples);
+        select_colors(colors, weights, &samples);
 
         if (samples.empty())
         {
@@ -152,7 +161,7 @@ std::optional<ColorSamples<Color>> create_color_samples(
                 return ColorSamples<Color>({sample.color}, {sample.weight}, {sample.contribution}, 1);
         }
 
-        ASSERT(!(min_i == max_i));
+        const auto [min_i, max_i] = find_min_max(samples);
 
         const auto& min = samples[min_i];
         const auto& max = samples[max_i];
