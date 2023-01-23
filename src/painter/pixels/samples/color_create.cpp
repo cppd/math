@@ -32,21 +32,25 @@ namespace ns::painter::pixels::samples
 {
 namespace
 {
+template <typename Color>
+struct Sample final
+{
+        Color color;
+        typename Color::DataType weight;
+        typename Color::DataType contribution;
+};
+
 template <typename T, typename Color>
 [[nodiscard]] std::tuple<std::size_t, std::size_t> select_colors_and_find_min_max(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights,
-        std::vector<Color>* const samples,
-        std::vector<typename Color::DataType>* const contributions,
-        std::vector<typename Color::DataType>* const weights)
+        const std::vector<T>& weights,
+        std::vector<Sample<Color>>* const samples)
 {
         static_assert(std::is_floating_point_v<typename Color::DataType>);
 
-        ASSERT(colors.size() == color_weights.size());
+        ASSERT(colors.size() == weights.size());
 
         samples->clear();
-        contributions->clear();
-        weights->clear();
 
         typename Color::DataType min = Limits<decltype(min)>::infinity();
         typename Color::DataType max = -Limits<decltype(max)>::infinity();
@@ -61,25 +65,28 @@ template <typename T, typename Color>
                         continue;
                 }
 
-                const typename Color::DataType weight = color_weights[i];
+                const typename Color::DataType weight = weights[i];
                 if (!(weight > 0))
                 {
                         continue;
                 }
 
-                samples->push_back(weight * (*color));
-                contributions->push_back(weight * sample_color_contribution(*color));
-                weights->push_back(weight);
+                samples->push_back(
+                        {.color = weight * (*color),
+                         .weight = weight,
+                         .contribution = weight * sample_color_contribution(*color)});
 
-                if (contributions->back() < min)
+                const auto contribution = samples->back().contribution;
+
+                if (contribution < min)
                 {
-                        min = contributions->back();
+                        min = contribution;
                         min_i = samples->size() - 1;
                 }
 
-                if (contributions->back() > max)
+                if (contribution > max)
                 {
-                        max = contributions->back();
+                        max = contribution;
                         max_i = samples->size() - 1;
                 }
         }
@@ -100,9 +107,8 @@ template <typename T, typename Color>
 }
 
 template <typename Color>
-[[nodiscard]] std::tuple<Color, typename Color::DataType> sum_samples_and_weights(
-        const std::vector<Color>& samples,
-        const std::vector<typename Color::DataType>& weights,
+[[nodiscard]] std::tuple<Color, typename Color::DataType> sum_color_and_weight(
+        const std::vector<Sample<Color>>& samples,
         const std::size_t min_i,
         const std::size_t max_i)
 {
@@ -114,8 +120,8 @@ template <typename Color>
                 {
                         if (i != min_i && i != max_i)
                         {
-                                std::get<0>(res) += samples[i];
-                                std::get<1>(res) += weights[i];
+                                std::get<0>(res) += samples[i].color;
+                                std::get<1>(res) += samples[i].weight;
                         }
                 }
         }
@@ -127,19 +133,13 @@ template <typename Color>
 template <typename T, typename Color>
 std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights)
+        const std::vector<T>& weights)
 {
         static_assert(ColorSamples<Color>::size() == 2);
 
-        thread_local std::vector<Color> samples;
-        thread_local std::vector<typename Color::DataType> contributions;
-        thread_local std::vector<typename Color::DataType> weights;
+        thread_local std::vector<Sample<Color>> samples;
 
-        const auto [min_i, max_i] =
-                select_colors_and_find_min_max(colors, color_weights, &samples, &contributions, &weights);
-
-        ASSERT(samples.size() == contributions.size());
-        ASSERT(contributions.size() == weights.size());
+        const auto [min_i, max_i] = select_colors_and_find_min_max(colors, weights, &samples);
 
         if (samples.empty())
         {
@@ -148,21 +148,26 @@ std::optional<ColorSamples<Color>> create_color_samples(
 
         if (samples.size() == 1)
         {
-                return ColorSamples<Color>({samples.front()}, {weights.front()}, {contributions.front()}, 1);
+                const auto& sample = samples.front();
+                return ColorSamples<Color>({sample.color}, {sample.weight}, {sample.contribution}, 1);
         }
+
+        ASSERT(!(min_i == max_i));
+
+        const auto& min = samples[min_i];
+        const auto& max = samples[max_i];
 
         if (samples.size() == 2)
         {
                 return ColorSamples<Color>(
-                        {samples[min_i], samples[max_i]}, {weights[min_i], weights[max_i]},
-                        {contributions[min_i], contributions[max_i]}, 2);
+                        {min.color, max.color}, {min.weight, max.weight}, {min.contribution, max.contribution}, 2);
         }
 
-        const auto [sum_samples, sum_weights] = sum_samples_and_weights(samples, weights, min_i, max_i);
+        const auto [color_sum, weight_sum] = sum_color_and_weight(samples, min_i, max_i);
 
         return ColorSamples<Color>(
-                sum_samples, {samples[min_i], samples[max_i]}, sum_weights, {weights[min_i], weights[max_i]},
-                {contributions[min_i], contributions[max_i]});
+                color_sum, {min.color, max.color}, weight_sum, {min.weight, max.weight},
+                {min.contribution, max.contribution});
 }
 
 #define TEMPLATE_T_C(T, C)                                            \
