@@ -30,17 +30,23 @@ namespace ns::painter::pixels::samples
 {
 namespace
 {
+template <typename Color>
+struct Sample final
+{
+        typename Color::DataType weight;
+};
+
 template <typename T, typename Color>
 [[nodiscard]] std::tuple<std::size_t, std::size_t> select_backgrounds_and_find_min_max(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights,
-        std::vector<typename Color::DataType>* const weights)
+        const std::vector<T>& weights,
+        std::vector<Sample<Color>>* const samples)
 {
         static_assert(std::is_floating_point_v<typename Color::DataType>);
 
-        ASSERT(colors.size() == color_weights.size());
+        ASSERT(colors.size() == weights.size());
 
-        weights->clear();
+        samples->clear();
 
         typename Color::DataType min = Limits<decltype(min)>::infinity();
         typename Color::DataType max = -Limits<decltype(max)>::infinity();
@@ -54,34 +60,34 @@ template <typename T, typename Color>
                         continue;
                 }
 
-                const typename Color::DataType weight = color_weights[i];
+                const typename Color::DataType weight = weights[i];
                 if (!(weight > 0))
                 {
                         continue;
                 }
 
-                weights->push_back(weight);
+                samples->push_back({.weight = weight});
 
                 if (weight < min)
                 {
                         min = weight;
-                        min_i = weights->size() - 1;
+                        min_i = samples->size() - 1;
                 }
 
                 if (weight > max)
                 {
                         max = weight;
-                        max_i = weights->size() - 1;
+                        max_i = samples->size() - 1;
                 }
         }
 
-        if (weights->empty() || weights->size() == 1)
+        if (samples->empty() || samples->size() == 1)
         {
                 return {};
         }
 
-        ASSERT(min_i < weights->size());
-        ASSERT(max_i < weights->size());
+        ASSERT(min_i < samples->size());
+        ASSERT(max_i < samples->size());
         if (min_i == max_i)
         {
                 // all elements are equal
@@ -90,18 +96,21 @@ template <typename T, typename Color>
         return {min_i, max_i};
 }
 
-template <typename T>
-[[nodiscard]] T weight_sum(const std::vector<T>& weights, const std::size_t min_i, const std::size_t max_i)
+template <typename Color>
+[[nodiscard]] typename Color::DataType sum_weight(
+        const std::vector<Sample<Color>>& samples,
+        const std::size_t min_i,
+        const std::size_t max_i)
 {
-        T res{0};
+        typename Color::DataType res{0};
 
-        if (weights.size() > 2)
+        if (samples.size() > 2)
         {
-                for (std::size_t i = 0; i < weights.size(); ++i)
+                for (std::size_t i = 0; i < samples.size(); ++i)
                 {
                         if (i != min_i && i != max_i)
                         {
-                                res += weights[i];
+                                res += samples[i].weight;
                         }
                 }
         }
@@ -113,30 +122,37 @@ template <typename T>
 template <typename T, typename Color>
 std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights)
+        const std::vector<T>& weights)
 {
         static_assert(BackgroundSamples<Color>::size() == 2);
 
-        thread_local std::vector<typename Color::DataType> weights;
+        thread_local std::vector<Sample<Color>> samples;
 
-        const auto [min_i, max_i] = select_backgrounds_and_find_min_max(colors, color_weights, &weights);
+        const auto [min_i, max_i] = select_backgrounds_and_find_min_max(colors, weights, &samples);
 
-        if (weights.empty())
+        if (samples.empty())
         {
                 return std::nullopt;
         }
 
-        if (weights.size() == 1)
+        if (samples.size() == 1)
         {
-                return BackgroundSamples<Color>({weights.front()}, 1);
+                return BackgroundSamples<Color>({samples.front().weight}, 1);
         }
 
-        if (weights.size() == 2)
+        ASSERT(!(min_i == max_i));
+
+        const auto min = samples[min_i];
+        const auto max = samples[max_i];
+
+        if (samples.size() == 2)
         {
-                return BackgroundSamples<Color>({weights[min_i], weights[max_i]}, 2);
+                return BackgroundSamples<Color>({min.weight, max.weight}, 2);
         }
 
-        return BackgroundSamples<Color>(weight_sum(weights, min_i, max_i), {weights[min_i], weights[max_i]});
+        const auto weight_sum = sum_weight(samples, min_i, max_i);
+
+        return BackgroundSamples<Color>(weight_sum, {min.weight, max.weight});
 }
 
 #define TEMPLATE_T_C(T, C)                                                      \

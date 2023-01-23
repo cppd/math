@@ -27,5 +27,5 @@ namespace ns::painter::pixels::samples
 template <typename T, typename Color>
 [[nodiscard]] std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& color_weights);
+        const std::vector<T>& weights);
 }
