@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color_create.h"
 
+#include "sort.h"
+
 #include "../color_contribution.h"
 
 #include <src/color/color.h>
@@ -24,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
 
+#include <numeric>
 #include <optional>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter::pixels::samples
@@ -74,48 +76,6 @@ void select_colors(
 }
 
 template <typename Color>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> find_min_max(const std::vector<Sample<Color>>& samples)
-{
-        static_assert(std::is_floating_point_v<typename Color::DataType>);
-
-        if (samples.empty() || samples.size() == 1)
-        {
-                return {};
-        }
-
-        typename Color::DataType min = Limits<decltype(min)>::infinity();
-        typename Color::DataType max = -Limits<decltype(max)>::infinity();
-        std::size_t min_i = -1;
-        std::size_t max_i = -1;
-
-        for (std::size_t i = 0; i < samples.size(); ++i)
-        {
-                const auto contribution = samples[i].contribution;
-
-                if (contribution < min)
-                {
-                        min = contribution;
-                        min_i = i;
-                }
-
-                if (contribution > max)
-                {
-                        max = contribution;
-                        max_i = i;
-                }
-        }
-
-        ASSERT(min_i < samples.size());
-        ASSERT(max_i < samples.size());
-        if (min_i == max_i)
-        {
-                // all contributions are equal
-                return {0, 1};
-        }
-        return {min_i, max_i};
-}
-
-template <typename Color>
 [[nodiscard]] std::tuple<Color, typename Color::DataType> sum_color_and_weight(
         const std::vector<Sample<Color>>& samples,
         const std::size_t min_i,
@@ -161,7 +121,21 @@ std::optional<ColorSamples<Color>> create_color_samples(
                 return ColorSamples<Color>({sample.color}, {sample.weight}, {sample.contribution}, 1);
         }
 
-        const auto [min_i, max_i] = find_min_max(samples);
+        thread_local std::vector<int> indices;
+
+        indices.resize(samples.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        const auto [min_i, max_i] = find_min_max(
+                indices,
+                [](const int a, const int b)
+                {
+                        return samples[a].contribution < samples[b].contribution;
+                },
+                [](const int a, const int b)
+                {
+                        return samples[a].contribution > samples[b].contribution;
+                });
 
         const auto& min = samples[min_i];
         const auto& max = samples[max_i];

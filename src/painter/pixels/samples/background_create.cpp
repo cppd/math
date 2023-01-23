@@ -17,13 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "background_create.h"
 
+#include "sort.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
 
+#include <numeric>
 #include <optional>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter::pixels::samples
@@ -63,48 +65,6 @@ void select_backgrounds(
 
                 samples->push_back({.weight = weight});
         }
-}
-
-template <typename Color>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> find_min_max(const std::vector<Sample<Color>>& samples)
-{
-        static_assert(std::is_floating_point_v<typename Color::DataType>);
-
-        if (samples.empty() || samples.size() == 1)
-        {
-                return {};
-        }
-
-        typename Color::DataType min = Limits<decltype(min)>::infinity();
-        typename Color::DataType max = -Limits<decltype(max)>::infinity();
-        std::size_t min_i = -1;
-        std::size_t max_i = -1;
-
-        for (std::size_t i = 0; i < samples.size(); ++i)
-        {
-                const auto weight = samples[i].weight;
-
-                if (weight < min)
-                {
-                        min = weight;
-                        min_i = i;
-                }
-
-                if (weight > max)
-                {
-                        max = weight;
-                        max_i = i;
-                }
-        }
-
-        ASSERT(min_i < samples.size());
-        ASSERT(max_i < samples.size());
-        if (min_i == max_i)
-        {
-                // all elements are equal
-                return {0, 1};
-        }
-        return {min_i, max_i};
 }
 
 template <typename Color>
@@ -151,7 +111,21 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
                 return BackgroundSamples<Color>({samples.front().weight}, 1);
         }
 
-        const auto [min_i, max_i] = find_min_max(samples);
+        thread_local std::vector<int> indices;
+
+        indices.resize(samples.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        const auto [min_i, max_i] = find_min_max(
+                indices,
+                [](const int a, const int b)
+                {
+                        return samples[a].weight < samples[b].weight;
+                },
+                [](const int a, const int b)
+                {
+                        return samples[a].weight > samples[b].weight;
+                });
 
         const auto min = samples[min_i];
         const auto max = samples[max_i];
