@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <algorithm>
 #include <tuple>
 #include <vector>
 
@@ -56,4 +57,24 @@ template <typename Less, typename Greater>
         return {min_i, max_i};
 }
 
+template <std::size_t COUNT, typename T, typename Less, typename Greater>
+void sort_samples(std::vector<T>* const samples, const Less less, const Greater greater)
+{
+        static_assert(COUNT >= 2);
+        static_assert(COUNT % 2 == 0);
+
+        if (samples->size() <= 1)
+        {
+                return;
+        }
+
+        if (samples->size() <= COUNT * 2)
+        {
+                std::sort(samples->begin(), samples->end(), less);
+                return;
+        }
+
+        std::partial_sort(samples->begin(), samples->begin() + COUNT / 2, samples->end(), less);
+        std::partial_sort(samples->rbegin(), samples->rbegin() + COUNT / 2, samples->rend() - COUNT / 2, greater);
+}
 }
