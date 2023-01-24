@@ -86,23 +86,23 @@ template <typename Color>
 
         const std::size_t max_sum_i_s = samples.size() - COUNT / 2;
 
+        std::size_t i_r = 0;
         std::size_t i_s = 0;
-        std::size_t i_w = 0;
         typename Color::DataType sum = 0;
 
-        while (i_w < COUNT / 2)
+        while (i_r < COUNT / 2)
         {
-                weights[i_w++] = samples[i_s++].weight;
+                weights[i_r++] = samples[i_s++].weight;
         }
         while (i_s < max_sum_i_s)
         {
                 sum += samples[i_s++].weight;
         }
-        while (i_w < COUNT)
+        while (i_r < COUNT)
         {
-                weights[i_w++] = samples[i_s++].weight;
+                weights[i_r++] = samples[i_s++].weight;
         }
-        ASSERT(i_w == weights.size());
+        ASSERT(i_r == COUNT);
         ASSERT(i_s == samples.size());
 
         return BackgroundSamples<Color>(sum, weights);
