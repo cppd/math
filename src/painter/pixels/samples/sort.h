@@ -17,46 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
-
 #include <algorithm>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter::pixels::samples
 {
-template <typename Less, typename Greater>
-[[nodiscard]] std::tuple<std::size_t, std::size_t> find_min_max(
-        const std::vector<int>& values,
-        const Less less,
-        const Greater greater)
-{
-        ASSERT(values.size() >= 2);
-
-        int min_i = 0;
-        int max_i = 0;
-
-        for (int i = 1, size = static_cast<int>(values.size()); i < size; ++i)
-        {
-                if (less(i, min_i))
-                {
-                        min_i = i;
-                }
-
-                if (greater(i, max_i))
-                {
-                        max_i = i;
-                }
-        }
-
-        if (min_i == max_i)
-        {
-                // all elements are equal
-                return {0, 1};
-        }
-        return {min_i, max_i};
-}
-
 template <std::size_t COUNT, typename T, typename Less, typename Greater>
 void sort_samples(std::vector<T>* const samples, const Less less, const Greater greater)
 {

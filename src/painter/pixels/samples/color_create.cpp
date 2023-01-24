@@ -76,26 +76,64 @@ void select_colors(
 }
 
 template <typename Color>
-[[nodiscard]] std::tuple<Color, typename Color::DataType> sum_color_and_weight(
+[[nodiscard]] ColorSamples<Color> create_samples(
         const std::vector<Sample<Color>>& samples,
-        const std::size_t min_i,
-        const std::size_t max_i)
+        const std::vector<int>& indices)
 {
-        std::tuple<Color, typename Color::DataType> res{0, 0};
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
 
-        if (samples.size() > 2)
+        ASSERT(samples.size() == indices.size());
+
+        std::array<Color, COUNT> colors;
+        std::array<typename Color::DataType, COUNT> weights;
+        std::array<typename Color::DataType, COUNT> contributions;
+
+        if (samples.size() <= COUNT)
         {
                 for (std::size_t i = 0; i < samples.size(); ++i)
                 {
-                        if (i != min_i && i != max_i)
-                        {
-                                std::get<0>(res) += samples[i].color;
-                                std::get<1>(res) += samples[i].weight;
-                        }
+                        const Sample<Color>& sample = samples[indices[i]];
+                        colors[i] = sample.color;
+                        weights[i] = sample.weight;
+                        contributions[i] = sample.contribution;
                 }
+                return ColorSamples<Color>(colors, weights, contributions, samples.size());
         }
 
-        return res;
+        const std::size_t max_sum_i_s = samples.size() - COUNT / 2;
+
+        std::size_t i_r{0};
+        std::size_t i_s{0};
+        Color sum_color{0};
+        typename Color::DataType sum_weight{0};
+
+        while (i_r < COUNT / 2)
+        {
+                const Sample<Color>& sample = samples[indices[i_s++]];
+                colors[i_r] = sample.color;
+                weights[i_r] = sample.weight;
+                contributions[i_r] = sample.contribution;
+                ++i_r;
+        }
+        while (i_s < max_sum_i_s)
+        {
+                const Sample<Color>& sample = samples[indices[i_s++]];
+                sum_color += sample.color;
+                sum_weight += sample.weight;
+        }
+        while (i_r < COUNT)
+        {
+                const Sample<Color>& sample = samples[indices[i_s++]];
+                colors[i_r] = sample.color;
+                weights[i_r] = sample.weight;
+                contributions[i_r] = sample.contribution;
+                ++i_r;
+        }
+        ASSERT(i_r == COUNT);
+        ASSERT(i_s == samples.size());
+
+        return ColorSamples<Color>(sum_color, colors, sum_weight, weights, contributions);
 }
 }
 
@@ -104,7 +142,7 @@ std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
-        static_assert(ColorSamples<Color>::size() == 2);
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
 
         thread_local std::vector<Sample<Color>> samples;
 
@@ -126,8 +164,8 @@ std::optional<ColorSamples<Color>> create_color_samples(
         indices.resize(samples.size());
         std::iota(indices.begin(), indices.end(), 0);
 
-        const auto [min_i, max_i] = find_min_max(
-                indices,
+        sort_samples<COUNT>(
+                &indices,
                 [](const int a, const int b)
                 {
                         return samples[a].contribution < samples[b].contribution;
@@ -137,20 +175,7 @@ std::optional<ColorSamples<Color>> create_color_samples(
                         return samples[a].contribution > samples[b].contribution;
                 });
 
-        const auto& min = samples[min_i];
-        const auto& max = samples[max_i];
-
-        if (samples.size() == 2)
-        {
-                return ColorSamples<Color>(
-                        {min.color, max.color}, {min.weight, max.weight}, {min.contribution, max.contribution}, 2);
-        }
-
-        const auto [color_sum, weight_sum] = sum_color_and_weight(samples, min_i, max_i);
-
-        return ColorSamples<Color>(
-                color_sum, {min.color, max.color}, weight_sum, {min.weight, max.weight},
-                {min.contribution, max.contribution});
+        return create_samples(samples, indices);
 }
 
 #define TEMPLATE_T_C(T, C)                                            \
