@@ -68,25 +68,44 @@ void select_backgrounds(
 }
 
 template <typename Color>
-[[nodiscard]] typename Color::DataType sum_weight(
-        const std::vector<Sample<Color>>& samples,
-        const std::size_t min_i,
-        const std::size_t max_i)
+[[nodiscard]] BackgroundSamples<Color> create_samples(const std::vector<Sample<Color>>& samples)
 {
-        typename Color::DataType res{0};
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
 
-        if (samples.size() > 2)
+        std::array<typename Color::DataType, COUNT> weights;
+
+        if (samples.size() <= COUNT)
         {
                 for (std::size_t i = 0; i < samples.size(); ++i)
                 {
-                        if (i != min_i && i != max_i)
-                        {
-                                res += samples[i].weight;
-                        }
+                        weights[i] = samples[i].weight;
                 }
+                return BackgroundSamples<Color>(weights, samples.size());
         }
 
-        return res;
+        const std::size_t max_sum_i_s = samples.size() - COUNT / 2;
+
+        std::size_t i_s = 0;
+        std::size_t i_w = 0;
+        typename Color::DataType sum = 0;
+
+        while (i_w < COUNT / 2)
+        {
+                weights[i_w++] = samples[i_s++].weight;
+        }
+        while (i_s < max_sum_i_s)
+        {
+                sum += samples[i_s++].weight;
+        }
+        while (i_w < COUNT)
+        {
+                weights[i_w++] = samples[i_s++].weight;
+        }
+        ASSERT(i_w == weights.size());
+        ASSERT(i_s == samples.size());
+
+        return BackgroundSamples<Color>(sum, weights);
 }
 }
 
@@ -95,7 +114,7 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
-        static_assert(BackgroundSamples<Color>::size() == 2);
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
 
         thread_local std::vector<Sample<Color>> samples;
 
@@ -111,33 +130,19 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
                 return BackgroundSamples<Color>({samples.front().weight}, 1);
         }
 
-        thread_local std::vector<int> indices;
-
-        indices.resize(samples.size());
-        std::iota(indices.begin(), indices.end(), 0);
-
-        const auto [min_i, max_i] = find_min_max(
-                indices,
-                [](const int a, const int b)
+        static_assert(sizeof(Sample<Color>) == sizeof(typename Color::DataType));
+        sort_samples<COUNT>(
+                &samples,
+                [](const Sample<Color> a, const Sample<Color> b)
                 {
-                        return samples[a].weight < samples[b].weight;
+                        return a.weight < b.weight;
                 },
-                [](const int a, const int b)
+                [](const Sample<Color> a, const Sample<Color> b)
                 {
-                        return samples[a].weight > samples[b].weight;
+                        return a.weight > b.weight;
                 });
 
-        const auto min = samples[min_i];
-        const auto max = samples[max_i];
-
-        if (samples.size() == 2)
-        {
-                return BackgroundSamples<Color>({min.weight, max.weight}, 2);
-        }
-
-        const auto weight_sum = sum_weight(samples, min_i, max_i);
-
-        return BackgroundSamples<Color>(weight_sum, {min.weight, max.weight});
+        return create_samples(samples);
 }
 
 #define TEMPLATE_T_C(T, C)                                                      \
