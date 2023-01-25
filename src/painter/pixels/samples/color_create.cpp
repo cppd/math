@@ -43,7 +43,7 @@ struct Sample final
 };
 
 template <typename T, typename Color>
-void select_colors(
+void select_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights,
         std::vector<Sample<Color>>* const samples)
@@ -76,7 +76,31 @@ void select_colors(
 }
 
 template <typename Color>
-[[nodiscard]] ColorSamples<Color> create_samples(
+[[nodiscard]] ColorSamples<Color> create_samples_without_sum(
+        const std::vector<Sample<Color>>& samples,
+        const std::vector<int>& indices)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+
+        ASSERT(samples.size() == indices.size());
+        ASSERT(!samples.empty() && samples.size() <= COUNT);
+
+        std::array<Color, COUNT> colors;
+        std::array<typename Color::DataType, COUNT> weights;
+        std::array<typename Color::DataType, COUNT> contributions;
+
+        for (std::size_t i = 0; i < samples.size(); ++i)
+        {
+                const Sample<Color>& sample = samples[indices[i]];
+                colors[i] = sample.color;
+                weights[i] = sample.weight;
+                contributions[i] = sample.contribution;
+        }
+        return {colors, weights, contributions, samples.size()};
+}
+
+template <typename Color>
+[[nodiscard]] ColorSamples<Color> create_samples_with_sum(
         const std::vector<Sample<Color>>& samples,
         const std::vector<int>& indices)
 {
@@ -84,29 +108,17 @@ template <typename Color>
         static_assert(COUNT % 2 == 0);
 
         ASSERT(samples.size() == indices.size());
+        ASSERT(samples.size() > COUNT);
 
+        const std::size_t sum_end{samples.size() - COUNT / 2};
+        std::size_t i_r{0};
+        std::size_t i_s{0};
+
+        Color sum_color{0};
+        typename Color::DataType sum_weight{0};
         std::array<Color, COUNT> colors;
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
-
-        if (samples.size() <= COUNT)
-        {
-                for (std::size_t i = 0; i < samples.size(); ++i)
-                {
-                        const Sample<Color>& sample = samples[indices[i]];
-                        colors[i] = sample.color;
-                        weights[i] = sample.weight;
-                        contributions[i] = sample.contribution;
-                }
-                return ColorSamples<Color>(colors, weights, contributions, samples.size());
-        }
-
-        const std::size_t max_sum_i_s = samples.size() - COUNT / 2;
-
-        std::size_t i_r{0};
-        std::size_t i_s{0};
-        Color sum_color{0};
-        typename Color::DataType sum_weight{0};
 
         while (i_r < COUNT / 2)
         {
@@ -116,7 +128,7 @@ template <typename Color>
                 contributions[i_r] = sample.contribution;
                 ++i_r;
         }
-        while (i_s < max_sum_i_s)
+        while (i_s < sum_end)
         {
                 const Sample<Color>& sample = samples[indices[i_s++]];
                 sum_color += sample.color;
@@ -133,7 +145,43 @@ template <typename Color>
         ASSERT(i_r == COUNT);
         ASSERT(i_s == samples.size());
 
-        return ColorSamples<Color>(sum_color, colors, sum_weight, weights, contributions);
+        return {sum_color, colors, sum_weight, weights, contributions};
+}
+
+template <typename Color>
+ColorSamples<Color> create_samples(std::vector<Sample<Color>>&& samples)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+
+        ASSERT(!samples.empty());
+
+        if (samples.size() == 1)
+        {
+                const auto& sample = samples.front();
+                return {{sample.color}, {sample.weight}, {sample.contribution}, 1};
+        }
+
+        thread_local std::vector<int> indices;
+        indices.resize(samples.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        sort_samples<COUNT>(
+                &indices,
+                [&](const int a, const int b)
+                {
+                        return samples[a].contribution < samples[b].contribution;
+                },
+                [&](const int a, const int b)
+                {
+                        return samples[a].contribution > samples[b].contribution;
+                });
+
+        if (samples.size() <= COUNT)
+        {
+                return create_samples_without_sum(samples, indices);
+        }
+
+        return create_samples_with_sum(samples, indices);
 }
 }
 
@@ -142,40 +190,16 @@ std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         thread_local std::vector<Sample<Color>> samples;
 
-        select_colors(colors, weights, &samples);
+        select_color_samples(colors, weights, &samples);
 
         if (samples.empty())
         {
                 return std::nullopt;
         }
 
-        if (samples.size() == 1)
-        {
-                const auto& sample = samples.front();
-                return ColorSamples<Color>({sample.color}, {sample.weight}, {sample.contribution}, 1);
-        }
-
-        thread_local std::vector<int> indices;
-
-        indices.resize(samples.size());
-        std::iota(indices.begin(), indices.end(), 0);
-
-        sort_samples<COUNT>(
-                &indices,
-                [](const int a, const int b)
-                {
-                        return samples[a].contribution < samples[b].contribution;
-                },
-                [](const int a, const int b)
-                {
-                        return samples[a].contribution > samples[b].contribution;
-                });
-
-        return create_samples(samples, indices);
+        return create_samples(std::move(samples));
 }
 
 #define TEMPLATE_T_C(T, C)                                            \
