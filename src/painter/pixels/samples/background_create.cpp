@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
 
-#include <numeric>
 #include <optional>
 #include <vector>
 
@@ -32,17 +31,11 @@ namespace ns::painter::pixels::samples
 {
 namespace
 {
-template <typename Color>
-struct Sample final
-{
-        typename Color::DataType weight;
-};
-
 template <typename T, typename Color>
-void select_backgrounds(
+void select_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights,
-        std::vector<Sample<Color>>* const samples)
+        std::vector<typename Color::DataType>* const samples)
 {
         static_assert(std::is_floating_point_v<typename Color::DataType>);
 
@@ -63,49 +56,88 @@ void select_backgrounds(
                         continue;
                 }
 
-                samples->push_back({.weight = weight});
+                samples->push_back(weight);
         }
 }
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> create_samples(const std::vector<Sample<Color>>& samples)
+[[nodiscard]] BackgroundSamples<Color> create_samples_without_sum(
+        const std::vector<typename Color::DataType>& sample_weights)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+
+        ASSERT(!sample_weights.empty() && sample_weights.size() <= COUNT);
+
+        std::array<typename Color::DataType, COUNT> weights;
+        for (std::size_t i = 0; i < sample_weights.size(); ++i)
+        {
+                weights[i] = sample_weights[i];
+        }
+        return {weights, sample_weights.size()};
+}
+
+template <typename Color>
+[[nodiscard]] BackgroundSamples<Color> create_samples_with_sum(
+        const std::vector<typename Color::DataType>& sample_weight)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
         static_assert(COUNT % 2 == 0);
 
-        std::array<typename Color::DataType, COUNT> weights;
+        ASSERT(sample_weight.size() > COUNT);
 
-        if (samples.size() <= COUNT)
-        {
-                for (std::size_t i = 0; i < samples.size(); ++i)
-                {
-                        weights[i] = samples[i].weight;
-                }
-                return BackgroundSamples<Color>(weights, samples.size());
-        }
-
-        const std::size_t max_sum_i_s = samples.size() - COUNT / 2;
-
+        const std::size_t max_sum_i_s = sample_weight.size() - COUNT / 2;
         std::size_t i_r = 0;
         std::size_t i_s = 0;
         typename Color::DataType sum = 0;
+        std::array<typename Color::DataType, COUNT> weights;
 
         while (i_r < COUNT / 2)
         {
-                weights[i_r++] = samples[i_s++].weight;
+                weights[i_r++] = sample_weight[i_s++];
         }
         while (i_s < max_sum_i_s)
         {
-                sum += samples[i_s++].weight;
+                sum += sample_weight[i_s++];
         }
         while (i_r < COUNT)
         {
-                weights[i_r++] = samples[i_s++].weight;
+                weights[i_r++] = sample_weight[i_s++];
         }
         ASSERT(i_r == COUNT);
-        ASSERT(i_s == samples.size());
+        ASSERT(i_s == sample_weight.size());
 
-        return BackgroundSamples<Color>(sum, weights);
+        return {sum, weights};
+}
+
+template <typename Color>
+[[nodiscard]] BackgroundSamples<Color> create_samples(std::vector<typename Color::DataType>&& sample_weights)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+
+        ASSERT(!sample_weights.empty());
+
+        if (sample_weights.size() == 1)
+        {
+                return {{sample_weights.front()}, 1};
+        }
+
+        sort_samples<COUNT>(
+                &sample_weights,
+                [](const auto a, const auto b)
+                {
+                        return a < b;
+                },
+                [](const auto a, const auto b)
+                {
+                        return a > b;
+                });
+
+        if (sample_weights.size() <= COUNT)
+        {
+                return create_samples_without_sum<Color>(sample_weights);
+        }
+
+        return create_samples_with_sum<Color>(sample_weights);
 }
 }
 
@@ -114,35 +146,16 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+        thread_local std::vector<typename Color::DataType> sample_weights;
 
-        thread_local std::vector<Sample<Color>> samples;
+        select_background_samples(colors, weights, &sample_weights);
 
-        select_backgrounds(colors, weights, &samples);
-
-        if (samples.empty())
+        if (sample_weights.empty())
         {
                 return std::nullopt;
         }
 
-        if (samples.size() == 1)
-        {
-                return BackgroundSamples<Color>({samples.front().weight}, 1);
-        }
-
-        static_assert(sizeof(Sample<Color>) == sizeof(typename Color::DataType));
-        sort_samples<COUNT>(
-                &samples,
-                [](const Sample<Color> a, const Sample<Color> b)
-                {
-                        return a.weight < b.weight;
-                },
-                [](const Sample<Color> a, const Sample<Color> b)
-                {
-                        return a.weight > b.weight;
-                });
-
-        return create_samples(samples);
+        return create_samples<Color>(std::move(sample_weights));
 }
 
 #define TEMPLATE_T_C(T, C)                                                      \
