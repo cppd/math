@@ -63,10 +63,9 @@ constexpr std::size_t COLOR_INDEX = (N == 3) ? 0 : 1;
 constexpr painter::Integrator INTEGRATOR = painter::Integrator::PT;
 
 template <typename T>
-        requires (!std::is_reference_v<T>)
-std::shared_ptr<T> move_to_shared_ptr(T&& v)
+std::shared_ptr<std::vector<T>> move_to_shared_ptr(std::vector<T>&& v)
 {
-        return std::make_shared<T>(std::move(v));
+        return std::make_shared<std::vector<T>>(std::move(v));
 }
 
 std::array<const char*, 2> precision_names()
