@@ -110,40 +110,39 @@ template <typename Color>
         ASSERT(samples.size() == indices.size());
         ASSERT(samples.size() > COUNT);
 
-        const std::size_t sum_end{samples.size() - COUNT / 2};
-        std::size_t i_r{0};
-        std::size_t i_s{0};
-
         Color sum_color{0};
         typename Color::DataType sum_weight{0};
         std::array<Color, COUNT> colors;
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        while (i_r < COUNT / 2)
+        std::size_t sample_i = 0;
+
+        for (std::size_t i = 0; i < COUNT / 2; ++i, ++sample_i)
         {
-                const Sample<Color>& sample = samples[indices[i_s++]];
-                colors[i_r] = sample.color;
-                weights[i_r] = sample.weight;
-                contributions[i_r] = sample.contribution;
-                ++i_r;
+                const Sample<Color>& sample = samples[indices[sample_i]];
+                colors[i] = sample.color;
+                weights[i] = sample.weight;
+                contributions[i] = sample.contribution;
         }
-        while (i_s < sum_end)
+
+        const std::size_t sum_end = samples.size() - COUNT / 2;
+        for (; sample_i < sum_end; ++sample_i)
         {
-                const Sample<Color>& sample = samples[indices[i_s++]];
+                const Sample<Color>& sample = samples[indices[sample_i]];
                 sum_color += sample.color;
                 sum_weight += sample.weight;
         }
-        while (i_r < COUNT)
+
+        for (std::size_t i = COUNT / 2; i < COUNT; ++i, ++sample_i)
         {
-                const Sample<Color>& sample = samples[indices[i_s++]];
-                colors[i_r] = sample.color;
-                weights[i_r] = sample.weight;
-                contributions[i_r] = sample.contribution;
-                ++i_r;
+                const Sample<Color>& sample = samples[indices[sample_i]];
+                colors[i] = sample.color;
+                weights[i] = sample.weight;
+                contributions[i] = sample.contribution;
         }
-        ASSERT(i_r == COUNT);
-        ASSERT(i_s == samples.size());
+
+        ASSERT(sample_i == samples.size());
 
         return {sum_color, colors, sum_weight, weights, contributions};
 }
