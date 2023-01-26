@@ -122,7 +122,7 @@ template <typename Color>
                 return {{sample_weights.front()}, 1};
         }
 
-        sort_samples<COUNT>(
+        partial_sort<COUNT>(
                 &sample_weights,
                 [](const auto a, const auto b)
                 {

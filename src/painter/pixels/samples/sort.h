@@ -23,23 +23,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::pixels::samples
 {
 template <std::size_t COUNT, typename T, typename Less, typename Greater>
-void sort_samples(std::vector<T>* const samples, const Less less, const Greater greater)
+void partial_sort(std::vector<T>* const data, const Less less, const Greater greater)
 {
         static_assert(COUNT >= 2);
         static_assert(COUNT % 2 == 0);
 
-        if (samples->size() <= 1)
+        if (data->size() <= 1)
         {
                 return;
         }
 
-        if (samples->size() <= COUNT * 2)
+        if (data->size() <= COUNT * 2)
         {
-                std::sort(samples->begin(), samples->end(), less);
+                std::sort(data->begin(), data->end(), less);
                 return;
         }
 
-        std::partial_sort(samples->begin(), samples->begin() + COUNT / 2, samples->end(), less);
-        std::partial_sort(samples->rbegin(), samples->rbegin() + COUNT / 2, samples->rend() - COUNT / 2, greater);
+        std::partial_sort(data->begin(), data->begin() + COUNT / 2, data->end(), less);
+
+        std::partial_sort(data->rbegin(), data->rbegin() + COUNT / 2, data->rend() - COUNT / 2, greater);
 }
 }

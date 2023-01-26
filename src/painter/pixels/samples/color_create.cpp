@@ -165,7 +165,7 @@ ColorSamples<Color> create_samples(std::vector<Sample<Color>>&& samples)
         indices.resize(samples.size());
         std::iota(indices.begin(), indices.end(), 0);
 
-        sort_samples<COUNT>(
+        partial_sort<COUNT>(
                 &indices,
                 [&](const int a, const int b)
                 {
