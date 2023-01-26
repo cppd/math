@@ -85,27 +85,28 @@ template <typename Color>
 
         ASSERT(sample_weight.size() > COUNT);
 
-        const std::size_t sum_end{sample_weight.size() - COUNT / 2};
-        std::size_t i_r{0};
-        std::size_t i_s{0};
-
         typename Color::DataType sum{0};
         std::array<typename Color::DataType, COUNT> weights;
 
-        while (i_r < COUNT / 2)
+        std::size_t sample_i = 0;
+
+        for (std::size_t i = 0; i < COUNT / 2; ++i, ++sample_i)
         {
-                weights[i_r++] = sample_weight[i_s++];
+                weights[i] = sample_weight[sample_i];
         }
-        while (i_s < sum_end)
+
+        const std::size_t sum_end = sample_weight.size() - COUNT / 2;
+        for (; sample_i < sum_end; ++sample_i)
         {
-                sum += sample_weight[i_s++];
+                sum += sample_weight[sample_i];
         }
-        while (i_r < COUNT)
+
+        for (std::size_t i = COUNT / 2; i < COUNT; ++i, ++sample_i)
         {
-                weights[i_r++] = sample_weight[i_s++];
+                weights[i] = sample_weight[sample_i];
         }
-        ASSERT(i_r == COUNT);
-        ASSERT(i_s == sample_weight.size());
+
+        ASSERT(sample_i == sample_weight.size());
 
         return {sum, weights};
 }
