@@ -15,21 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "background_create.h"
-#include "color_create.h"
-
-#include <src/test/test.h>
-
 namespace ns::painter::pixels::samples::test
 {
-namespace
-{
-void test()
-{
-        test_background_create();
-        test_color_create();
-}
-
-TEST_SMALL("Painter Samples", test)
-}
+void test_color_create();
 }
