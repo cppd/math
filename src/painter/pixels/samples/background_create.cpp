@@ -160,9 +160,42 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
         return create_samples<Color>(std::move(sample_weights));
 }
 
+template <typename Color>
+BackgroundSamples<Color> create_background_samples(
+        const std::array<typename Color::DataType, BackgroundSamples<Color>::size()>& a_weights,
+        const std::size_t a_count,
+        const std::array<typename Color::DataType, BackgroundSamples<Color>::size()>& b_weights,
+        const std::size_t b_count)
+{
+        ASSERT(a_count > 0);
+        ASSERT(b_count > 0);
+
+        thread_local std::vector<typename Color::DataType> sample_weights;
+
+        sample_weights.clear();
+
+        for (std::size_t i = 0; i < a_count; ++i)
+        {
+                sample_weights.push_back(a_weights[i]);
+        }
+
+        for (std::size_t i = 0; i < b_count; ++i)
+        {
+                sample_weights.push_back(b_weights[i]);
+        }
+
+        return create_samples<Color>(std::move(sample_weights));
+}
+
 #define TEMPLATE_T_C(T, C)                                                      \
         template std::optional<BackgroundSamples<C>> create_background_samples( \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
 
+#define TEMPLATE_C(C)                                                                               \
+        template BackgroundSamples<C> create_background_samples(                                    \
+                const std::array<typename C::DataType, BackgroundSamples<C>::size()>&, std::size_t, \
+                const std::array<typename C::DataType, BackgroundSamples<C>::size()>&, std::size_t);
+
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)
+TEMPLATE_INSTANTIATION_C(TEMPLATE_C)
 }

@@ -92,5 +92,11 @@ public:
                 ASSERT(index < count());
                 return weights_[index];
         }
+
+        [[nodiscard]] const std::array<typename Color::DataType, COUNT>& weights() const
+        {
+                ASSERT(!empty());
+                return weights_;
+        }
 };
 }

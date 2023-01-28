@@ -28,4 +28,11 @@ template <typename T, typename Color>
 [[nodiscard]] std::optional<BackgroundSamples<Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights);
+
+template <typename Color>
+[[nodiscard]] BackgroundSamples<Color> create_background_samples(
+        const std::array<typename Color::DataType, BackgroundSamples<Color>::size()>& a_weights,
+        std::size_t a_count,
+        const std::array<typename Color::DataType, BackgroundSamples<Color>::size()>& b_weights,
+        std::size_t b_count);
 }
