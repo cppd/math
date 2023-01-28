@@ -96,51 +96,107 @@ ColorSamples<Color> merge_samples_one_sample(const ColorSamples<Color>& a, const
 }
 
 template <typename Color>
+Color samples_color_sum(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+{
+        if (a.full())
+        {
+                if (b.full())
+                {
+                        return a.color_sum() + b.color_sum();
+                }
+                return a.color_sum();
+        }
+        if (b.full())
+        {
+                return b.color_sum();
+        }
+        return Color(0);
+}
+
+template <typename Color>
+typename Color::DataType samples_weight_sum(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+{
+        return (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
+}
+
+template <typename Color>
 ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        static_assert(ColorSamples<Color>::size() == 2);
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
+        static_assert(COUNT >= 2);
 
-        ASSERT(a.count() == 2 && b.count() == 2);
+        ASSERT(a.count() == COUNT);
+        ASSERT(b.count() == COUNT);
 
-        Color sum_color = (a.full() ? a.color_sum() : Color(0)) + (b.full() ? b.color_sum() : Color(0));
-        typename Color::DataType sum_weight = (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
+        Color sum_color = samples_color_sum(a, b);
+        typename Color::DataType sum_weight = samples_weight_sum(a, b);
 
-        const ColorSamples<Color>* min = nullptr;
-        const ColorSamples<Color>* max = nullptr;
+        std::array<Color, COUNT> colors;
+        std::array<typename Color::DataType, COUNT> weights;
+        std::array<typename Color::DataType, COUNT> contributions;
 
-        if (a.contribution(0) < b.contribution(0))
+        const auto copy = [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
         {
-                sum_color += b.color(0);
-                sum_weight += b.weight(0);
-                min = &a;
-        }
-        else
-        {
-                sum_color += a.color(0);
-                sum_weight += a.weight(0);
-                min = &b;
-        }
-
-        if (a.contribution(1) > b.contribution(1))
-        {
-                sum_color += b.color(1);
-                sum_weight += b.weight(1);
-                max = &a;
-        }
-        else
-        {
-                sum_color += a.color(1);
-                sum_weight += a.weight(1);
-                max = &b;
-        }
-
-        return {
-                sum_color,
-                {       min->color(0),        max->color(1)},
-                sum_weight,
-                {      min->weight(0),       max->weight(1)},
-                {min->contribution(0), max->contribution(1)}
+                colors[to] = samples.color(from);
+                weights[to] = samples.weight(from);
+                contributions[to] = samples.contribution(from);
         };
+
+        const auto sum = [&](const std::size_t index, const ColorSamples<Color>& samples)
+        {
+                sum_color += samples.color(index);
+                sum_weight += samples.weight(index);
+        };
+
+        std::size_t a_i = 0;
+        std::size_t b_i = 0;
+
+        a_i = 0;
+        b_i = 0;
+        for (std::size_t i = 0; i < COUNT / 2; ++i)
+        {
+                if (a.contribution(a_i) < b.contribution(b_i))
+                {
+                        copy(i, a_i++, a);
+                }
+                else
+                {
+                        copy(i, b_i++, b);
+                }
+        }
+        while (a_i < COUNT / 2)
+        {
+                sum(a_i++, a);
+        }
+        while (b_i < COUNT / 2)
+        {
+                sum(b_i++, b);
+        }
+
+        a_i = COUNT - 1;
+        b_i = COUNT - 1;
+        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
+        {
+                if (a.contribution(a_i) > b.contribution(b_i))
+                {
+                        copy(i, a_i--, a);
+                }
+                else
+                {
+                        copy(i, b_i--, b);
+                }
+        }
+        while (a_i >= COUNT / 2)
+        {
+                sum(a_i--, a);
+        }
+        while (b_i >= COUNT / 2)
+        {
+                sum(b_i--, b);
+        }
+
+        return {sum_color, colors, sum_weight, weights, contributions};
 }
 }
 
