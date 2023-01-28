@@ -28,4 +28,15 @@ template <typename T, typename Color>
 [[nodiscard]] std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights);
+
+template <typename Color>
+[[nodiscard]] ColorSamples<Color> create_color_samples(
+        const std::array<Color, ColorSamples<Color>::size()>& a_colors,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& a_weights,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& a_contributions,
+        std::size_t a_count,
+        const std::array<Color, ColorSamples<Color>::size()>& b_colors,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& b_weights,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& b_contributions,
+        std::size_t b_count);
 }

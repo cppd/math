@@ -201,9 +201,50 @@ std::optional<ColorSamples<Color>> create_color_samples(
         return create_samples(std::move(samples));
 }
 
+template <typename Color>
+ColorSamples<Color> create_color_samples(
+        const std::array<Color, ColorSamples<Color>::size()>& a_colors,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& a_weights,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& a_contributions,
+        const std::size_t a_count,
+        const std::array<Color, ColorSamples<Color>::size()>& b_colors,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& b_weights,
+        const std::array<typename Color::DataType, ColorSamples<Color>::size()>& b_contributions,
+        const std::size_t b_count)
+{
+        ASSERT(a_count > 0);
+        ASSERT(b_count > 0);
+
+        thread_local std::vector<Sample<Color>> samples;
+
+        samples.clear();
+
+        for (std::size_t i = 0; i < a_count; ++i)
+        {
+                samples.push_back({.color = a_colors[i], .weight = a_weights[i], .contribution = a_contributions[i]});
+        }
+
+        for (std::size_t i = 0; i < b_count; ++i)
+        {
+                samples.push_back({.color = b_colors[i], .weight = b_weights[i], .contribution = b_contributions[i]});
+        }
+
+        return create_samples(std::move(samples));
+}
+
 #define TEMPLATE_T_C(T, C)                                            \
         template std::optional<ColorSamples<C>> create_color_samples( \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
 
+#define TEMPLATE_C(C)                                                                          \
+        template ColorSamples<C> create_color_samples(                                         \
+                const std::array<C, ColorSamples<C>::size()>&,                                 \
+                const std::array<typename C::DataType, ColorSamples<C>::size()>&,              \
+                const std::array<typename C::DataType, ColorSamples<C>::size()>&, std::size_t, \
+                const std::array<C, ColorSamples<C>::size()>&,                                 \
+                const std::array<typename C::DataType, ColorSamples<C>::size()>&,              \
+                const std::array<typename C::DataType, ColorSamples<C>::size()>&, std::size_t);
+
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)
+TEMPLATE_INSTANTIATION_C(TEMPLATE_C)
 }
