@@ -86,7 +86,7 @@ function(set_compiler_warnings source_files)
                         -Werror
                         -Weverything
                         $<$<COMPILE_LANGUAGE:CXX>:
-                        -Wno-c++98-compat
+                        -Wno-c++20-compat-pedantic
                         -Wno-c++98-compat-pedantic
                         -Wno-conversion
                         -Wno-double-promotion
