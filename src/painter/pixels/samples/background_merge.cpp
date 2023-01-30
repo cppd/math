@@ -75,6 +75,76 @@ typename Color::DataType samples_weight_sum(const BackgroundSamples<Color>& a, c
         return (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
 }
 
+template <typename Color, typename Copy, typename Sum>
+void merge_low_full(
+        const BackgroundSamples<Color>& a,
+        const BackgroundSamples<Color>& b,
+        const Copy copy,
+        const Sum sum)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+
+        std::size_t a_i = 0;
+        std::size_t b_i = 0;
+
+        for (std::size_t i = 0; i < COUNT / 2; ++i)
+        {
+                if (a.weight(a_i) < b.weight(b_i))
+                {
+                        copy(i, a_i++, a);
+                }
+                else
+                {
+                        copy(i, b_i++, b);
+                }
+        }
+
+        while (a_i < COUNT / 2)
+        {
+                sum(a_i++, a);
+        }
+
+        while (b_i < COUNT / 2)
+        {
+                sum(b_i++, b);
+        }
+}
+
+template <typename Color, typename Copy, typename Sum>
+void merge_high_full(
+        const BackgroundSamples<Color>& a,
+        const BackgroundSamples<Color>& b,
+        const Copy copy,
+        const Sum sum)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+
+        std::size_t a_i = COUNT - 1;
+        std::size_t b_i = COUNT - 1;
+
+        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
+        {
+                if (a.weight(a_i) > b.weight(b_i))
+                {
+                        copy(i, a_i--, a);
+                }
+                else
+                {
+                        copy(i, b_i--, b);
+                }
+        }
+
+        while (a_i >= COUNT / 2)
+        {
+                sum(a_i--, a);
+        }
+
+        while (b_i >= COUNT / 2)
+        {
+                sum(b_i--, b);
+        }
+}
+
 template <typename Color>
 BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
@@ -90,6 +160,7 @@ BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, c
 
         const auto copy = [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
         {
+                ASSERT(to < COUNT);
                 weights[to] = samples.weight(from);
         };
 
@@ -98,52 +169,8 @@ BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, c
                 sum_weight += samples.weight(index);
         };
 
-        std::size_t a_i = 0;
-        std::size_t b_i = 0;
-
-        a_i = 0;
-        b_i = 0;
-        for (std::size_t i = 0; i < COUNT / 2; ++i)
-        {
-                if (a.weight(a_i) < b.weight(b_i))
-                {
-                        copy(i, a_i++, a);
-                }
-                else
-                {
-                        copy(i, b_i++, b);
-                }
-        }
-        while (a_i < COUNT / 2)
-        {
-                sum(a_i++, a);
-        }
-        while (b_i < COUNT / 2)
-        {
-                sum(b_i++, b);
-        }
-
-        a_i = COUNT - 1;
-        b_i = COUNT - 1;
-        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
-        {
-                if (a.weight(a_i) > b.weight(b_i))
-                {
-                        copy(i, a_i--, a);
-                }
-                else
-                {
-                        copy(i, b_i--, b);
-                }
-        }
-        while (a_i >= COUNT / 2)
-        {
-                sum(a_i--, a);
-        }
-        while (b_i >= COUNT / 2)
-        {
-                sum(b_i--, b);
-        }
+        merge_low_full(a, b, copy, sum);
+        merge_high_full(a, b, copy, sum);
 
         return BackgroundSamples<Color>(sum_weight, weights);
 }
