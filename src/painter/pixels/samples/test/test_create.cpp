@@ -15,19 +15,80 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "color_create.h"
-
 #include "compare.h"
 
 #include "../../color_contribution.h"
+#include "../background_create.h"
 #include "../color_create.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/test/test.h>
 
 namespace ns::painter::pixels::samples::test
 {
-void test_color_create()
+namespace
+{
+void test_background()
+{
+        std::vector<std::optional<color::Color>> colors;
+        std::vector<color::Color::DataType> weights;
+
+        {
+                colors = {};
+                weights = {};
+                const auto samples = create_background_samples(colors, weights);
+                if (samples)
+                {
+                        error("Error creating empty");
+                }
+        }
+        {
+                colors = {{}};
+                weights = {1};
+                const auto samples = create_background_samples(colors, weights);
+                if (!samples || samples->empty() || samples->full())
+                {
+                        error("Error creating samples from 1 sample");
+                }
+                compare_weights({1}, *samples);
+        }
+        {
+                colors = {{}, {}};
+                weights = {2, 1};
+                const auto samples = create_background_samples(colors, weights);
+                if (!samples || samples->empty() || samples->full())
+                {
+                        error("Error creating samples from 2 samples");
+                }
+                compare_weights({1, 2}, *samples);
+        }
+        {
+                colors = {{}, color::Color(1), {}, {}};
+                weights = {3, 100, 1, 2};
+                const auto samples = create_background_samples(colors, weights);
+                if (!samples || samples->empty() || !samples->full())
+                {
+                        error("Error creating samples from 3 samples");
+                }
+                compare_weights({1, 3}, *samples);
+                compare_weight_sum(2, *samples);
+        }
+        {
+                colors = {color::Color(1), {}, {}, {}, color::Color(1), {}};
+                weights = {100, 3, 2, 4, 100, 1};
+                const auto samples = create_background_samples(colors, weights);
+                if (!samples || samples->empty() || !samples->full())
+                {
+                        error("Error creating samples from 4 samples");
+                }
+                compare_weights({1, 4}, *samples);
+                compare_weight_sum(2 + 3, *samples);
+        }
+}
+
+void test_color()
 {
         using T = color::Color::DataType;
 
@@ -104,5 +165,16 @@ void test_color_create()
                 compare_color_sum(T{1.1} * color::Color(0.25) + T{1.2} * color::Color(0.5), *samples);
                 compare_weight_sum(T{1.1} + T{1.2}, *samples);
         }
+}
+
+void test_create()
+{
+        LOG("Test pixel create samples");
+        test_background();
+        test_color();
+        LOG("Test pixel create samples passed");
+}
+
+TEST_SMALL("Pixel Create Samples", test_create)
 }
 }

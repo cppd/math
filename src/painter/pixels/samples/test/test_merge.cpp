@@ -15,28 +15,94 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "color_merge.h"
-
 #include "compare.h"
 
+#include "../background_merge.h"
 #include "../color_merge.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/test/test.h>
 
 namespace ns::painter::pixels::samples::test
 {
 namespace
 {
-template <typename T>
-void test(const ColorSamples<color::Color>& a, const ColorSamples<color::Color>& b, const T& test)
+template <typename T, typename Test>
+void test(const T& a, const T& b, const Test& test)
 {
         test(a, b);
         test(b, a);
 }
+
+void test_background()
+{
+        using S = BackgroundSamples<color::Color>;
+
+        test(S(), S(),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     if (!s.empty())
+                     {
+                             error("Error merging empty");
+                     }
+             });
+
+        test(S({1, 2}, 2), S(),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     if (s.empty() || s.full())
+                     {
+                             error("Error merging empty and non-empty");
+                     }
+                     compare_weights({1, 2}, s);
+             });
+
+        test(S({1}, 1), S({1, 2}, 2),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     compare_weights({1, 2}, s);
+                     compare_weight_sum(1, s);
+             });
+
+        test(S({1, 2}, 2), S({1, 3}, 2),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     compare_weights({1, 3}, s);
+                     compare_weight_sum(3, s);
+             });
+
+        test(S(1, {2, 3}), S({1}, 1),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     compare_weights({1, 3}, s);
+                     compare_weight_sum(3, s);
+             });
+
+        test(S(1, {2, 3}), S({1, 2}, 2),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     compare_weights({1, 3}, s);
+                     compare_weight_sum(5, s);
+             });
+
+        test(S(1, {2, 4}), S(3, {1, 3}),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_background_samples<color::Color>(a, b);
+                     compare_weights({1, 4}, s);
+                     compare_weight_sum(9, s);
+             });
 }
 
-void test_color_merge()
+void test_color()
 {
         using C = color::Color;
         using S = ColorSamples<color::Color>;
@@ -118,5 +184,16 @@ void test_color_merge()
                      compare_color_sum(C(9), s);
                      compare_weight_sum(9, s);
              });
+}
+
+void test_merge()
+{
+        LOG("Test pixel merge samples");
+        test_background();
+        test_color();
+        LOG("Test pixel merge samples passed");
+}
+
+TEST_SMALL("Pixel Merge Samples", test_merge)
 }
 }
