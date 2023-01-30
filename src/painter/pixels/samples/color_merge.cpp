@@ -119,6 +119,68 @@ typename Color::DataType samples_weight_sum(const ColorSamples<Color>& a, const 
         return (a.full() ? a.weight_sum() : 0) + (b.full() ? b.weight_sum() : 0);
 }
 
+template <typename Color, typename Copy, typename Sum>
+void merge_low_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b, const Copy copy, const Sum sum)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+
+        std::size_t a_i = 0;
+        std::size_t b_i = 0;
+
+        for (std::size_t i = 0; i < COUNT / 2; ++i)
+        {
+                if (a.contribution(a_i) < b.contribution(b_i))
+                {
+                        copy(i, a_i++, a);
+                }
+                else
+                {
+                        copy(i, b_i++, b);
+                }
+        }
+
+        while (a_i < COUNT / 2)
+        {
+                sum(a_i++, a);
+        }
+
+        while (b_i < COUNT / 2)
+        {
+                sum(b_i++, b);
+        }
+}
+
+template <typename Color, typename Copy, typename Sum>
+void merge_high_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b, const Copy copy, const Sum sum)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+
+        std::size_t a_i = COUNT - 1;
+        std::size_t b_i = COUNT - 1;
+
+        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
+        {
+                if (a.contribution(a_i) > b.contribution(b_i))
+                {
+                        copy(i, a_i--, a);
+                }
+                else
+                {
+                        copy(i, b_i--, b);
+                }
+        }
+
+        while (a_i >= COUNT / 2)
+        {
+                sum(a_i--, a);
+        }
+
+        while (b_i >= COUNT / 2)
+        {
+                sum(b_i--, b);
+        }
+}
+
 template <typename Color>
 ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
@@ -149,52 +211,8 @@ ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const Color
                 sum_weight += samples.weight(index);
         };
 
-        std::size_t a_i = 0;
-        std::size_t b_i = 0;
-
-        a_i = 0;
-        b_i = 0;
-        for (std::size_t i = 0; i < COUNT / 2; ++i)
-        {
-                if (a.contribution(a_i) < b.contribution(b_i))
-                {
-                        copy(i, a_i++, a);
-                }
-                else
-                {
-                        copy(i, b_i++, b);
-                }
-        }
-        while (a_i < COUNT / 2)
-        {
-                sum(a_i++, a);
-        }
-        while (b_i < COUNT / 2)
-        {
-                sum(b_i++, b);
-        }
-
-        a_i = COUNT - 1;
-        b_i = COUNT - 1;
-        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
-        {
-                if (a.contribution(a_i) > b.contribution(b_i))
-                {
-                        copy(i, a_i--, a);
-                }
-                else
-                {
-                        copy(i, b_i--, b);
-                }
-        }
-        while (a_i >= COUNT / 2)
-        {
-                sum(a_i--, a);
-        }
-        while (b_i >= COUNT / 2)
-        {
-                sum(b_i--, b);
-        }
+        merge_low_full(a, b, copy, sum);
+        merge_high_full(a, b, copy, sum);
 
         return {sum_color, colors, sum_weight, weights, contributions};
 }
