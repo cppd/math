@@ -17,44 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "background_create.h"
 
+#include "compare.h"
+
 #include "../background_create.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
-#include <src/com/print.h>
 
 namespace ns::painter::pixels::samples::test
 {
-namespace
-{
-void compare_weights(const std::vector<color::Color::DataType>& weights, const BackgroundSamples<color::Color>& samples)
-{
-        if (!(samples.count() == weights.size()))
-        {
-                error("Error sample count " + to_string(samples.count()) + " is not equal to weight count "
-                      + to_string(weights.size()));
-        }
-
-        for (std::size_t i = 0; i < weights.size(); ++i)
-        {
-                if (!(samples.weight(i) == weights[i]))
-                {
-                        error("Sample weight " + to_string(samples.weight(i)) + " is not equal to "
-                              + to_string(weights[i]) + ", index " + to_string(i));
-                }
-        }
-}
-
-void compare_weight_sum(const color::Color::DataType weight_sum, const BackgroundSamples<color::Color>& samples)
-{
-        if (!(samples.weight_sum() == weight_sum))
-        {
-                error("Sample weight sum " + to_string(samples.weight_sum()) + " is not equal to "
-                      + to_string(weight_sum));
-        }
-}
-}
-
 void test_background_create()
 {
         std::vector<std::optional<color::Color>> colors;
