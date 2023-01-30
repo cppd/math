@@ -83,6 +83,8 @@ void merge_low_full(
         const Sum sum)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
+        static_assert(COUNT >= 2);
 
         std::size_t a_i = 0;
         std::size_t b_i = 0;
@@ -118,6 +120,8 @@ void merge_high_full(
         const Sum sum)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
+        static_assert(COUNT >= 2);
 
         std::size_t a_i = COUNT - 1;
         std::size_t b_i = COUNT - 1;
@@ -145,12 +149,49 @@ void merge_high_full(
         }
 }
 
-template <typename Color>
-BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
+template <typename Color, typename Copy>
+void merge(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b, const Copy copy)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-        static_assert(COUNT % 2 == 0);
-        static_assert(COUNT >= 2);
+
+        const std::size_t a_size = a.count();
+        const std::size_t b_size = b.count();
+
+        ASSERT(a_size + b_size <= COUNT);
+
+        std::size_t i = 0;
+        std::size_t a_i = 0;
+        std::size_t b_i = 0;
+
+        while (a_i < a_size && b_i < b_size)
+        {
+                if (a.weight(a_i) < b.weight(b_i))
+                {
+                        copy(i++, a_i++, a);
+                }
+                else
+                {
+                        copy(i++, b_i++, b);
+                }
+        }
+
+        while (a_i < a_size)
+        {
+                copy(i++, a_i++, a);
+        }
+
+        while (b_i < b_size)
+        {
+                copy(i++, b_i++, b);
+        }
+}
+
+template <typename Color>
+[[nodiscard]] BackgroundSamples<Color> merge_samples_full(
+        const BackgroundSamples<Color>& a,
+        const BackgroundSamples<Color>& b)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
 
         ASSERT(a.count() == COUNT);
         ASSERT(b.count() == COUNT);
@@ -174,30 +215,62 @@ BackgroundSamples<Color> merge_samples_full(const BackgroundSamples<Color>& a, c
 
         return BackgroundSamples<Color>(sum_weight, weights);
 }
+
+template <typename Color>
+[[nodiscard]] BackgroundSamples<Color> merge_samples_partial(
+        const BackgroundSamples<Color>& a,
+        const BackgroundSamples<Color>& b)
+{
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+
+        ASSERT(!a.empty() && !b.empty());
+
+        const std::size_t a_b_count = a.count() + b.count();
+        ASSERT(a_b_count <= COUNT);
+
+        std::array<typename Color::DataType, COUNT> weights;
+
+        merge(a, b,
+              [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
+              {
+                      ASSERT(to < a_b_count);
+                      weights[to] = samples.weight(from);
+              });
+
+        return BackgroundSamples<Color>(weights, a_b_count);
+}
 }
 
 template <typename Color>
 BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
-        static_assert(BackgroundSamples<Color>::size() == 2);
+        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
+        static_assert(COUNT == 2);
 
-        if (a.count() == 2 && b.count() == 2)
+        const std::size_t a_count = a.count();
+        const std::size_t b_count = b.count();
+
+        if (a_count == COUNT && b_count == COUNT)
         {
                 return merge_samples_full(a, b);
         }
-        if (a.empty())
+        if (a_count == 0)
         {
                 return b;
         }
-        if (b.empty())
+        if (b_count == 0)
         {
                 return a;
         }
-        if (a.count() == 1)
+        if (a_count + b_count <= COUNT)
+        {
+                return merge_samples_partial(a, b);
+        }
+        if (a_count == 1)
         {
                 return merge_samples_one_sample(a, b);
         }
-        if (b.count() == 1)
+        if (b_count == 1)
         {
                 return merge_samples_one_sample(b, a);
         }
