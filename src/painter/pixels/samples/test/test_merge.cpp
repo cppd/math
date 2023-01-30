@@ -36,14 +36,15 @@ void test(const T& a, const T& b, const Test& test)
         test(b, a);
 }
 
+template <typename C>
 void test_background()
 {
-        using S = BackgroundSamples<color::Color>;
+        using S = BackgroundSamples<C>;
 
         test(S(), S(),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      if (!s.empty())
                      {
                              error("Error merging empty");
@@ -53,7 +54,7 @@ void test_background()
         test(S({1, 2}, 2), S(),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      if (s.empty() || s.full())
                      {
                              error("Error merging empty and non-empty");
@@ -64,7 +65,7 @@ void test_background()
         test(S({1}, 1), S({1, 2}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      compare_weights({1, 2}, s);
                      compare_weight_sum(1, s);
              });
@@ -72,7 +73,7 @@ void test_background()
         test(S({1, 2}, 2), S({1, 3}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      compare_weights({1, 3}, s);
                      compare_weight_sum(3, s);
              });
@@ -80,7 +81,7 @@ void test_background()
         test(S(1, {2, 3}), S({1}, 1),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      compare_weights({1, 3}, s);
                      compare_weight_sum(3, s);
              });
@@ -88,7 +89,7 @@ void test_background()
         test(S(1, {2, 3}), S({1, 2}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      compare_weights({1, 3}, s);
                      compare_weight_sum(5, s);
              });
@@ -96,21 +97,21 @@ void test_background()
         test(S(1, {2, 4}), S(3, {1, 3}),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_background_samples<color::Color>(a, b);
+                     const auto s = merge_background_samples(a, b);
                      compare_weights({1, 4}, s);
                      compare_weight_sum(9, s);
              });
 }
 
+template <typename C>
 void test_color()
 {
-        using C = color::Color;
-        using S = ColorSamples<color::Color>;
+        using S = ColorSamples<C>;
 
         test(S(), S(),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      if (!s.empty())
                      {
                              error("Error merging empty");
@@ -120,7 +121,7 @@ void test_color()
         test(S({C(1), C(2)}, {1, 2}, {1, 2}, 2), S(),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      if (s.empty() || s.full())
                      {
                              error("Error merging empty and non-empty");
@@ -133,7 +134,7 @@ void test_color()
         test(S({C(1)}, {1}, {1}, 1), S({C(1), C(2)}, {1, 2}, {1, 2}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      compare_colors({C(1), C(2)}, s);
                      compare_weights({1, 2}, s);
                      compare_contributions({1, 2}, s);
@@ -144,7 +145,7 @@ void test_color()
         test(S({C(1), C(2)}, {1, 2}, {1, 2}, 2), S({C(1), C(3)}, {1, 3}, {1, 3}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      compare_colors({C(1), C(3)}, s);
                      compare_weights({1, 3}, s);
                      compare_contributions({1, 3}, s);
@@ -155,7 +156,7 @@ void test_color()
         test(S(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S({C(1)}, {1}, {1}, 1),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      compare_colors({C(1), C(3)}, s);
                      compare_weights({1, 3}, s);
                      compare_contributions({1, 3}, s);
@@ -166,7 +167,7 @@ void test_color()
         test(S(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S({C(1), C(2)}, {1, 2}, {1, 2}, 2),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      compare_colors({C(1), C(3)}, s);
                      compare_weights({1, 3}, s);
                      compare_contributions({1, 3}, s);
@@ -177,7 +178,7 @@ void test_color()
         test(S(C(1), {C(2), C(4)}, 1, {2, 4}, {2, 4}), S(C(3), {C(1), C(3)}, 3, {1, 3}, {1, 3}),
              [](const auto& a, const auto& b)
              {
-                     const auto s = merge_color_samples<color::Color>(a, b);
+                     const auto s = merge_color_samples(a, b);
                      compare_colors({C(1), C(4)}, s);
                      compare_weights({1, 4}, s);
                      compare_contributions({1, 4}, s);
@@ -186,11 +187,18 @@ void test_color()
              });
 }
 
+template <typename C>
+void test()
+{
+        test_background<C>();
+        test_color<C>();
+}
+
 void test_merge()
 {
         LOG("Test pixel merge samples");
-        test_background();
-        test_color();
+        test<color::Color>();
+        test<color::Spectrum>();
         LOG("Test pixel merge samples passed");
 }
 

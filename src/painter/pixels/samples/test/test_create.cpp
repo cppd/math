@@ -30,10 +30,13 @@ namespace ns::painter::pixels::samples::test
 {
 namespace
 {
+template <typename C>
 void test_background()
 {
-        std::vector<std::optional<color::Color>> colors;
-        std::vector<color::Color::DataType> weights;
+        using T = typename C::DataType;
+
+        std::vector<std::optional<C>> colors;
+        std::vector<T> weights;
 
         {
                 colors = {};
@@ -65,7 +68,7 @@ void test_background()
                 compare_weights({1, 2}, *samples);
         }
         {
-                colors = {{}, color::Color(1), {}, {}};
+                colors = {{}, C(1), {}, {}};
                 weights = {3, 100, 1, 2};
                 const auto samples = create_background_samples(colors, weights);
                 if (!samples || samples->empty() || !samples->full())
@@ -76,7 +79,7 @@ void test_background()
                 compare_weight_sum(2, *samples);
         }
         {
-                colors = {color::Color(1), {}, {}, {}, color::Color(1), {}};
+                colors = {C(1), {}, {}, {}, C(1), {}};
                 weights = {100, 3, 2, 4, 100, 1};
                 const auto samples = create_background_samples(colors, weights);
                 if (!samples || samples->empty() || !samples->full())
@@ -88,12 +91,13 @@ void test_background()
         }
 }
 
+template <typename C>
 void test_color()
 {
-        using T = color::Color::DataType;
+        using T = typename C::DataType;
 
-        std::vector<std::optional<color::Color>> colors;
-        std::vector<color::Color::DataType> weights;
+        std::vector<std::optional<C>> colors;
+        std::vector<T> weights;
 
         {
                 colors = {};
@@ -105,73 +109,77 @@ void test_color()
                 }
         }
         {
-                colors = {color::Color(0.5)};
+                colors = {C(0.5)};
                 weights = {1};
                 const auto samples = create_color_samples(colors, weights);
                 if (!samples || samples->empty() || samples->full())
                 {
                         error("Error creating samples from 1 sample");
                 }
-                compare_colors({color::Color(0.5)}, *samples);
+                compare_colors({C(0.5)}, *samples);
                 compare_weights({1}, *samples);
-                compare_contributions({1 * sample_color_contribution(color::Color(0.5))}, *samples);
+                compare_contributions({1 * sample_color_contribution(C(0.5))}, *samples);
         }
         {
-                colors = {color::Color(0.5), color::Color(0.25)};
+                colors = {C(0.5), C(0.25)};
                 weights = {1, 1.1};
                 const auto samples = create_color_samples(colors, weights);
                 if (!samples || samples->empty() || samples->full())
                 {
                         error("Error creating samples from 2 samples");
                 }
-                compare_colors({T{1.1} * color::Color(0.25), T{1} * color::Color(0.5)}, *samples);
+                compare_colors({T{1.1} * C(0.25), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
                 compare_contributions(
-                        {T{1.1} * sample_color_contribution(color::Color(0.25)),
-                         T{1} * sample_color_contribution(color::Color(0.5))},
+                        {T{1.1} * sample_color_contribution(C(0.25)), T{1} * sample_color_contribution(C(0.5))},
                         *samples);
         }
         {
-                colors = {color::Color(0.5), color::Color(0.125), {}, color::Color(0.25)};
+                colors = {C(0.5), C(0.125), {}, C(0.25)};
                 weights = {1, 1.1, 10, 1.2};
                 const auto samples = create_color_samples(colors, weights);
                 if (!samples || samples->empty() || !samples->full())
                 {
                         error("Error creating samples from 3 samples");
                 }
-                compare_colors({T{1.1} * color::Color(0.125), T{1} * color::Color(0.5)}, *samples);
+                compare_colors({T{1.1} * C(0.125), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
                 compare_contributions(
-                        {T{1.1} * sample_color_contribution(color::Color(0.125)),
-                         T{1} * sample_color_contribution(color::Color(0.5))},
+                        {T{1.1} * sample_color_contribution(C(0.125)), T{1} * sample_color_contribution(C(0.5))},
                         *samples);
-                compare_color_sum(T{1.2} * color::Color(0.25), *samples);
+                compare_color_sum(T{1.2} * C(0.25), *samples);
                 compare_weight_sum(1.2, *samples);
         }
         {
-                colors = {{}, color::Color(1), {}, color::Color(0.25), color::Color(0.5), color::Color(0.125)};
+                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
                 weights = {10, 1, 10, 1.1, 1.2, 1.3};
                 const auto samples = create_color_samples(colors, weights);
                 if (!samples || samples->empty() || !samples->full())
                 {
                         error("Error creating samples from 4 samples");
                 }
-                compare_colors({T{1.3} * color::Color(0.125), T{1} * color::Color(1)}, *samples);
+                compare_colors({T{1.3} * C(0.125), T{1} * C(1)}, *samples);
                 compare_weights({1.3, 1}, *samples);
                 compare_contributions(
-                        {T{1.3} * sample_color_contribution(color::Color(0.125)),
-                         T{1} * sample_color_contribution(color::Color(1))},
+                        {T{1.3} * sample_color_contribution(C(0.125)), T{1} * sample_color_contribution(C(1))},
                         *samples);
-                compare_color_sum(T{1.1} * color::Color(0.25) + T{1.2} * color::Color(0.5), *samples);
+                compare_color_sum(T{1.1} * C(0.25) + T{1.2} * C(0.5), *samples);
                 compare_weight_sum(T{1.1} + T{1.2}, *samples);
         }
+}
+
+template <typename C>
+void test()
+{
+        test_background<C>();
+        test_color<C>();
 }
 
 void test_create()
 {
         LOG("Test pixel create samples");
-        test_background();
-        test_color();
+        test<color::Color>();
+        test<color::Spectrum>();
         LOG("Test pixel create samples passed");
 }
 
