@@ -123,6 +123,8 @@ template <typename Color, typename Copy, typename Sum>
 void merge_low_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b, const Copy copy, const Sum sum)
 {
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
+        static_assert(COUNT >= 2);
 
         std::size_t a_i = 0;
         std::size_t b_i = 0;
@@ -154,6 +156,8 @@ template <typename Color, typename Copy, typename Sum>
 void merge_high_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b, const Copy copy, const Sum sum)
 {
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+        static_assert(COUNT % 2 == 0);
+        static_assert(COUNT >= 2);
 
         std::size_t a_i = COUNT - 1;
         std::size_t b_i = COUNT - 1;
@@ -181,12 +185,47 @@ void merge_high_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b,
         }
 }
 
-template <typename Color>
-ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+template <typename Color, typename Copy>
+void merge(const ColorSamples<Color>& a, const ColorSamples<Color>& b, const Copy copy)
 {
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-        static_assert(COUNT % 2 == 0);
-        static_assert(COUNT >= 2);
+
+        const std::size_t a_size = a.count();
+        const std::size_t b_size = b.count();
+
+        ASSERT(a_size + b_size <= COUNT);
+
+        std::size_t i = 0;
+        std::size_t a_i = 0;
+        std::size_t b_i = 0;
+
+        while (a_i < a_size && b_i < b_size)
+        {
+                if (a.contribution(a_i) < b.contribution(b_i))
+                {
+                        copy(i++, a_i++, a);
+                }
+                else
+                {
+                        copy(i++, b_i++, b);
+                }
+        }
+
+        while (a_i < a_size)
+        {
+                copy(i++, a_i++, a);
+        }
+
+        while (b_i < b_size)
+        {
+                copy(i++, b_i++, b);
+        }
+}
+
+template <typename Color>
+[[nodiscard]] ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
 
         ASSERT(a.count() == COUNT);
         ASSERT(b.count() == COUNT);
@@ -200,6 +239,7 @@ ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const Color
 
         const auto copy = [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
         {
+                ASSERT(to < COUNT);
                 colors[to] = samples.color(from);
                 weights[to] = samples.weight(from);
                 contributions[to] = samples.contribution(from);
@@ -216,30 +256,64 @@ ColorSamples<Color> merge_samples_full(const ColorSamples<Color>& a, const Color
 
         return {sum_color, colors, sum_weight, weights, contributions};
 }
+
+template <typename Color>
+[[nodiscard]] ColorSamples<Color> merge_samples_partial(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+{
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+
+        ASSERT(!a.empty() && !b.empty());
+
+        const std::size_t a_b_count = a.count() + b.count();
+        ASSERT(a_b_count <= COUNT);
+
+        std::array<Color, COUNT> colors;
+        std::array<typename Color::DataType, COUNT> weights;
+        std::array<typename Color::DataType, COUNT> contributions;
+
+        merge(a, b,
+              [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
+              {
+                      ASSERT(to < a_b_count);
+                      colors[to] = samples.color(from);
+                      weights[to] = samples.weight(from);
+                      contributions[to] = samples.contribution(from);
+              });
+
+        return {colors, weights, contributions, a_b_count};
+}
 }
 
 template <typename Color>
 ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
-        static_assert(ColorSamples<Color>::size() == 2);
+        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
+        static_assert(COUNT == 2);
 
-        if (a.count() == 2 && b.count() == 2)
+        const std::size_t a_count = a.count();
+        const std::size_t b_count = b.count();
+
+        if (a_count == COUNT && b_count == COUNT)
         {
                 return merge_samples_full(a, b);
         }
-        if (a.empty())
+        if (a_count == 0)
         {
                 return b;
         }
-        if (b.empty())
+        if (b_count == 0)
         {
                 return a;
         }
-        if (a.count() == 1)
+        if (a_count + b_count <= COUNT)
+        {
+                return merge_samples_partial(a, b);
+        }
+        if (a_count == 1)
         {
                 return merge_samples_one_sample(a, b);
         }
-        if (b.count() == 1)
+        if (b_count == 1)
         {
                 return merge_samples_one_sample(b, a);
         }
