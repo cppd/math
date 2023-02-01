@@ -34,9 +34,7 @@ typename Color::DataType samples_weight_sum(const BackgroundSamples<Color>& a, c
 }
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_samples_full(
-        const BackgroundSamples<Color>& a,
-        const BackgroundSamples<Color>& b)
+[[nodiscard]] BackgroundSamples<Color> merge_full(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
 
@@ -59,11 +57,11 @@ template <typename Color>
                         sum_weight += samples.weight(index);
                 });
 
-        return BackgroundSamples<Color>(sum_weight, weights);
+        return {sum_weight, weights};
 }
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_samples_partial(
+[[nodiscard]] BackgroundSamples<Color> merge_partial(
         const BackgroundSamples<Color>& a,
         const BackgroundSamples<Color>& b)
 {
@@ -88,13 +86,11 @@ template <typename Color>
                         sum_weight += samples.weight(index);
                 });
 
-        return BackgroundSamples<Color>(sum_weight, weights);
+        return {sum_weight, weights};
 }
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_samples(
-        const BackgroundSamples<Color>& a,
-        const BackgroundSamples<Color>& b)
+[[nodiscard]] BackgroundSamples<Color> merge(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
 
@@ -114,7 +110,7 @@ template <typename Color>
                         weights[to] = samples.weight(from);
                 });
 
-        return BackgroundSamples<Color>(weights, count);
+        return {weights, count};
 }
 }
 
@@ -130,7 +126,7 @@ BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>
 
         if (a_count == COUNT && b_count == COUNT)
         {
-                return merge_samples_full(a, b);
+                return merge_full(a, b);
         }
         if (a_count == 0)
         {
@@ -142,11 +138,11 @@ BackgroundSamples<Color> merge_background_samples(const BackgroundSamples<Color>
         }
         if (a_count + b_count <= COUNT)
         {
-                return merge_samples(a, b);
+                return merge(a, b);
         }
         if (a_count + b_count < 2 * COUNT)
         {
-                return merge_samples_partial(a, b);
+                return merge_partial(a, b);
         }
         error("Failed to merge background samples");
 }
