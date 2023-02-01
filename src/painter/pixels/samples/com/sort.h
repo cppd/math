@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <vector>
 
-namespace ns::painter::pixels::samples
+namespace ns::painter::pixels::samples::com
 {
 template <std::size_t COUNT, typename T, typename Less, typename Greater>
 void partial_sort(std::vector<T>* const data, const Less less, const Greater greater)

@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color_create.h"
 
-#include "sort.h"
-
 #include "../color_contribution.h"
+#include "com/sort.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -164,7 +163,7 @@ ColorSamples<Color> create_samples(std::vector<Sample<Color>>&& samples)
         indices.resize(samples.size());
         std::iota(indices.begin(), indices.end(), 0);
 
-        partial_sort<COUNT>(
+        com::partial_sort<COUNT>(
                 &indices,
                 [&](const int a, const int b)
                 {

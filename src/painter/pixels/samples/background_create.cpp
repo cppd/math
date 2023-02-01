@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "background_create.h"
 
-#include "sort.h"
+#include "com/sort.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -123,7 +123,7 @@ template <typename Color>
                 return {{sample_weights.front()}, 1};
         }
 
-        partial_sort<COUNT>(
+        com::partial_sort<COUNT>(
                 &sample_weights,
                 [](const auto a, const auto b)
                 {
