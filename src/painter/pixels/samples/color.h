@@ -127,23 +127,5 @@ public:
                 ASSERT(index < count());
                 return contributions_[index];
         }
-
-        [[nodiscard]] const std::array<Color, COUNT>& colors() const
-        {
-                ASSERT(!empty());
-                return colors_;
-        }
-
-        [[nodiscard]] const std::array<typename Color::DataType, COUNT>& weights() const
-        {
-                ASSERT(!empty());
-                return weights_;
-        }
-
-        [[nodiscard]] const std::array<typename Color::DataType, COUNT>& contributions() const
-        {
-                ASSERT(!empty());
-                return contributions_;
-        }
 };
 }
