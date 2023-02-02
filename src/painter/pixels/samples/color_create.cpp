@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "color_create.h"
 
 #include "../color_contribution.h"
+#include "com/create.h"
 #include "com/sort.h"
 
 #include <src/color/color.h>
@@ -82,19 +83,21 @@ template <typename Color>
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
 
         ASSERT(samples.size() == indices.size());
-        ASSERT(!samples.empty() && samples.size() <= COUNT);
 
         std::array<Color, COUNT> colors;
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        for (std::size_t i = 0; i < samples.size(); ++i)
-        {
-                const Sample<Color>& sample = samples[indices[i]];
-                colors[i] = sample.color;
-                weights[i] = sample.weight;
-                contributions[i] = sample.contribution;
-        }
+        com::create_without_sum<ColorSamples<Color>>(
+                samples.size(),
+                [&](const std::size_t index)
+                {
+                        const Sample<Color>& sample = samples[indices[index]];
+                        colors[index] = sample.color;
+                        weights[index] = sample.weight;
+                        contributions[index] = sample.contribution;
+                });
+
         return {colors, weights, contributions, samples.size()};
 }
 
@@ -104,10 +107,8 @@ template <typename Color>
         const std::vector<int>& indices)
 {
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-        static_assert(COUNT % 2 == 0);
 
         ASSERT(samples.size() == indices.size());
-        ASSERT(samples.size() > COUNT);
 
         Color sum_color{0};
         typename Color::DataType sum_weight{0};
@@ -115,33 +116,21 @@ template <typename Color>
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        std::size_t sample_i = 0;
-
-        for (std::size_t i = 0; i < COUNT / 2; ++i, ++sample_i)
-        {
-                const Sample<Color>& sample = samples[indices[sample_i]];
-                colors[i] = sample.color;
-                weights[i] = sample.weight;
-                contributions[i] = sample.contribution;
-        }
-
-        const std::size_t sum_end = samples.size() - COUNT / 2;
-        for (; sample_i < sum_end; ++sample_i)
-        {
-                const Sample<Color>& sample = samples[indices[sample_i]];
-                sum_color += sample.color;
-                sum_weight += sample.weight;
-        }
-
-        for (std::size_t i = COUNT / 2; i < COUNT; ++i, ++sample_i)
-        {
-                const Sample<Color>& sample = samples[indices[sample_i]];
-                colors[i] = sample.color;
-                weights[i] = sample.weight;
-                contributions[i] = sample.contribution;
-        }
-
-        ASSERT(sample_i == samples.size());
+        com::create_with_sum<ColorSamples<Color>>(
+                samples.size(),
+                [&](const std::size_t to, const std::size_t from)
+                {
+                        const Sample<Color>& sample = samples[indices[from]];
+                        colors[to] = sample.color;
+                        weights[to] = sample.weight;
+                        contributions[to] = sample.contribution;
+                },
+                [&](const std::size_t index)
+                {
+                        const Sample<Color>& sample = samples[indices[index]];
+                        sum_color += sample.color;
+                        sum_weight += sample.weight;
+                });
 
         return {sum_color, colors, sum_weight, weights, contributions};
 }
