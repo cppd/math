@@ -20,9 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "background.h"
 
 #include "samples/background.h"
-#include "samples/background_merge.h"
 #include "samples/color.h"
-#include "samples/color_merge.h"
+#include "samples/merge.h"
 #include "samples/merge_color.h"
 
 #include <src/com/log.h>
@@ -39,12 +38,12 @@ class Pixel final
 public:
         void merge(const samples::ColorSamples<Color>& samples)
         {
-                color_samples_ = samples::merge_color_samples(color_samples_, samples);
+                color_samples_ = samples::merge_samples(color_samples_, samples);
         }
 
         void merge(const samples::BackgroundSamples<Color>& samples)
         {
-                background_samples_ = samples::merge_background_samples(background_samples_, samples);
+                background_samples_ = samples::merge_samples(background_samples_, samples);
         }
 
         [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const

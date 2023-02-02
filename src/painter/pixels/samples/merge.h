@@ -17,10 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color.h"
-
 namespace ns::painter::pixels::samples
 {
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_color_samples(const ColorSamples<Color>& a, const ColorSamples<Color>& b);
+template <typename Samples>
+[[nodiscard]] Samples merge_samples(const Samples& a, const Samples& b);
 }
