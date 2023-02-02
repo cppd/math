@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "background_create.h"
 
+#include "com/create.h"
 #include "com/sort.h"
 
 #include <src/color/color.h>
@@ -66,47 +67,37 @@ template <typename Color>
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
 
-        ASSERT(!sample_weights.empty() && sample_weights.size() <= COUNT);
-
         std::array<typename Color::DataType, COUNT> weights;
-        for (std::size_t i = 0; i < sample_weights.size(); ++i)
-        {
-                weights[i] = sample_weights[i];
-        }
+
+        com::create_without_sum<BackgroundSamples<Color>>(
+                sample_weights.size(),
+                [&](const std::size_t index)
+                {
+                        weights[index] = sample_weights[index];
+                });
+
         return {weights, sample_weights.size()};
 }
 
 template <typename Color>
 [[nodiscard]] BackgroundSamples<Color> create_samples_with_sum(
-        const std::vector<typename Color::DataType>& sample_weight)
+        const std::vector<typename Color::DataType>& sample_weights)
 {
         static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-        static_assert(COUNT % 2 == 0);
-
-        ASSERT(sample_weight.size() > COUNT);
 
         typename Color::DataType sum{0};
         std::array<typename Color::DataType, COUNT> weights;
 
-        std::size_t sample_i = 0;
-
-        for (std::size_t i = 0; i < COUNT / 2; ++i, ++sample_i)
-        {
-                weights[i] = sample_weight[sample_i];
-        }
-
-        const std::size_t sum_end = sample_weight.size() - COUNT / 2;
-        for (; sample_i < sum_end; ++sample_i)
-        {
-                sum += sample_weight[sample_i];
-        }
-
-        for (std::size_t i = COUNT / 2; i < COUNT; ++i, ++sample_i)
-        {
-                weights[i] = sample_weight[sample_i];
-        }
-
-        ASSERT(sample_i == sample_weight.size());
+        com::create_with_sum<BackgroundSamples<Color>>(
+                sample_weights.size(),
+                [&](const std::size_t to, const std::size_t from)
+                {
+                        weights[to] = sample_weights[from];
+                },
+                [&](const std::size_t index)
+                {
+                        sum += sample_weights[index];
+                });
 
         return {sum, weights};
 }
