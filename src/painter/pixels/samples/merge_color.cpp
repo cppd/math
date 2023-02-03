@@ -141,7 +141,7 @@ template <typename Color>
 }
 
 template <typename Color>
-[[nodiscard]] Merge<Color> merge_color_and_background(
+[[nodiscard]] std::optional<Merge<Color>> merge_color_and_background(
         const ColorSamples<Color>& color_samples,
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
@@ -149,8 +149,28 @@ template <typename Color>
         static_assert(ColorSamples<Color>::size() == 2);
         static_assert(BackgroundSamples<Color>::size() == 2);
 
-        ASSERT(!color_samples.empty());
-        ASSERT(!background_samples.empty());
+        if (color_samples.empty())
+        {
+                return std::nullopt;
+        }
+
+        if (background_samples.empty())
+        {
+                if (!color_samples.full())
+                {
+                        return std::nullopt;
+                }
+
+                return Merge<Color>{
+                        .color = color_samples.color_sum(),
+                        .color_weight = color_samples.weight_sum(),
+                        .background_weight = 0};
+        }
+
+        if (color_samples.count() == 1 && background_samples.count() == 1)
+        {
+                return std::nullopt;
+        }
 
         if (color_samples.count() == 2)
         {
@@ -176,43 +196,26 @@ std::optional<Color> merge_color(
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
-        static_assert(ColorSamples<Color>::size() == 2);
-        static_assert(BackgroundSamples<Color>::size() == 2);
+        const auto p = merge_color_and_background(color_samples, background_samples, background);
 
-        if (color_samples.empty())
+        if (!p)
         {
                 return std::nullopt;
         }
 
-        if (background_samples.empty())
+        const auto sum = p->color_weight + p->background_weight;
+
+        if (p->color_weight == sum || (p->color_weight / sum) == 1)
         {
-                if (!color_samples.full())
-                {
-                        return std::nullopt;
-                }
-                return color_samples.color_sum() / color_samples.weight_sum();
+                return p->color / sum;
         }
 
-        if (color_samples.count() == 1 && background_samples.count() == 1)
-        {
-                return std::nullopt;
-        }
-
-        const Merge<Color> p = merge_color_and_background(color_samples, background_samples, background);
-
-        const auto sum = p.color_weight + p.background_weight;
-
-        if (p.color_weight == sum || (p.color_weight / sum) == 1)
-        {
-                return p.color / sum;
-        }
-
-        if (p.background_weight == sum || (p.background_weight / sum) == 1)
+        if (p->background_weight == sum || (p->background_weight / sum) == 1)
         {
                 return background.color();
         }
 
-        return (p.color + p.background_weight * background.color()) / sum;
+        return (p->color + p->background_weight * background.color()) / sum;
 }
 
 template <typename Color>
@@ -221,39 +224,16 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
         const BackgroundSamples<Color>& background_samples,
         const Background<Color>& background)
 {
-        static_assert(ColorSamples<Color>::size() == 2);
-        static_assert(BackgroundSamples<Color>::size() == 2);
+        const auto p = merge_color_and_background(color_samples, background_samples, background);
 
-        if (color_samples.empty())
+        if (!p || p->color_weight == 0)
         {
                 return std::nullopt;
         }
 
-        if (background_samples.empty())
-        {
-                if (!color_samples.full())
-                {
-                        return std::nullopt;
-                }
-                constexpr typename Color::DataType ALPHA{1};
-                return std::tuple(color_samples.color_sum() / color_samples.weight_sum(), ALPHA);
-        }
+        const auto sum = p->color_weight + p->background_weight;
 
-        if (color_samples.count() == 1 && background_samples.count() == 1)
-        {
-                return std::nullopt;
-        }
-
-        const Merge<Color> p = merge_color_and_background(color_samples, background_samples, background);
-
-        if (p.color_weight == 0)
-        {
-                return std::nullopt;
-        }
-
-        const auto sum = p.color_weight + p.background_weight;
-
-        return std::tuple(p.color / sum, p.color_weight / sum);
+        return std::tuple(p->color / sum, p->color_weight / sum);
 }
 
 #define TEMPLATE_C(C)                                                                       \
