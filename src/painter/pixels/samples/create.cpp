@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../color_contribution.h"
 #include "com/create.h"
+#include "com/select.h"
 #include "com/sort.h"
 
 #include <src/color/color.h>
@@ -44,27 +45,6 @@ struct ColorSample final
         typename Color::DataType weight;
         typename Color::DataType contribution;
 };
-
-template <bool COLOR, typename Color, typename T, typename Select>
-void select_samples(const std::vector<std::optional<Color>>& colors, const std::vector<T>& weights, const Select select)
-{
-        ASSERT(colors.size() == weights.size());
-
-        for (std::size_t i = 0; i < colors.size(); ++i)
-        {
-                if (COLOR != colors[i].has_value())
-                {
-                        continue;
-                }
-
-                if (!(weights[i] > 0))
-                {
-                        continue;
-                }
-
-                select(i);
-        }
-}
 
 template <typename Color>
 [[nodiscard]] BackgroundSamples<Color> create_samples_without_sum(const std::vector<BackgroundSample<Color>>& samples)
@@ -242,7 +222,7 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
         thread_local std::vector<BackgroundSample<Color>> samples;
         samples.clear();
 
-        select_samples</*COLOR=*/false>(
+        com::select_samples</*COLOR=*/false>(
                 colors, weights,
                 [&](const std::size_t index)
                 {
@@ -266,7 +246,7 @@ std::optional<ColorSamples<Color>> create_color_samples(
         thread_local std::vector<ColorSample<Color>> samples;
         samples.clear();
 
-        select_samples</*COLOR=*/true>(
+        com::select_samples</*COLOR=*/true>(
                 colors, weights,
                 [&](const std::size_t index)
                 {
