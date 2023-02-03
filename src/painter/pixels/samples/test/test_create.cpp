@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compare.h"
 
 #include "../../color_contribution.h"
-#include "../background_create.h"
-#include "../color_create.h"
+#include "../create.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>

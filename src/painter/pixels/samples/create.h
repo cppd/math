@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "background.h"
+#include "color.h"
 
 #include <optional>
 #include <vector>
@@ -26,6 +27,11 @@ namespace ns::painter::pixels::samples
 {
 template <typename T, typename Color>
 [[nodiscard]] std::optional<BackgroundSamples<Color>> create_background_samples(
+        const std::vector<std::optional<Color>>& colors,
+        const std::vector<T>& weights);
+
+template <typename T, typename Color>
+[[nodiscard]] std::optional<ColorSamples<Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights);
 }
