@@ -182,21 +182,7 @@ template <typename A, typename B, typename Greater, typename Copy>
 }
 
 template <typename A, typename B, typename Less, typename Greater, typename Copy, typename Sum>
-void merge_full(const A& a, const B& b, const Less less, const Greater greater, const Copy copy, const Sum sum)
-{
-        static_assert(A::size() == B::size());
-
-        namespace impl = merge_implementation;
-
-        ASSERT(a.count() == A::size());
-        ASSERT(b.count() == A::size());
-
-        impl::merge_full_low(a, b, less, copy, sum);
-        impl::merge_full_high(a, b, greater, copy, sum);
-}
-
-template <typename A, typename B, typename Less, typename Greater, typename Copy, typename Sum>
-void merge_partial(const A& a, const B& b, const Less less, const Greater greater, const Copy copy, const Sum sum)
+void merge_with_sum(const A& a, const B& b, const Less less, const Greater greater, const Copy copy, const Sum sum)
 {
         static_assert(A::size() == B::size());
 
@@ -204,6 +190,13 @@ void merge_partial(const A& a, const B& b, const Less less, const Greater greate
 
         const std::size_t a_size = a.count();
         const std::size_t b_size = b.count();
+
+        if (a_size == A::size() && b_size == A::size())
+        {
+                impl::merge_full_low(a, b, less, copy, sum);
+                impl::merge_full_high(a, b, greater, copy, sum);
+                return;
+        }
 
         ASSERT(a_size > 0 && b_size > 0);
         ASSERT(a_size + b_size > A::size());

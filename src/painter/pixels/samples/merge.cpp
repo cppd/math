@@ -72,76 +72,7 @@ template <typename Samples>
 }
 
 template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_full(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
-{
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
-        typename Color::DataType sum_weight = samples_weight_sum(a, b);
-        std::array<typename Color::DataType, COUNT> weights;
-
-        com::merge_full(
-                a, b,
-                [&](const std::size_t a_index, const std::size_t b_index)
-                {
-                        return a.weight(a_index) < b.weight(b_index);
-                },
-                [&](const std::size_t a_index, const std::size_t b_index)
-                {
-                        return a.weight(a_index) > b.weight(b_index);
-                },
-                [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
-                {
-                        ASSERT(to < COUNT);
-                        weights[to] = samples.weight(from);
-                },
-                [&](const std::size_t index, const BackgroundSamples<Color>& samples)
-                {
-                        sum_weight += samples.weight(index);
-                });
-
-        return {sum_weight, weights};
-}
-
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_full(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
-{
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
-        Color sum_color = samples_color_sum(a, b);
-        typename Color::DataType sum_weight = samples_weight_sum(a, b);
-
-        std::array<Color, COUNT> colors;
-        std::array<typename Color::DataType, COUNT> weights;
-        std::array<typename Color::DataType, COUNT> contributions;
-
-        com::merge_full(
-                a, b,
-                [&](const std::size_t a_index, const std::size_t b_index)
-                {
-                        return a.contribution(a_index) < b.contribution(b_index);
-                },
-                [&](const std::size_t a_index, const std::size_t b_index)
-                {
-                        return a.contribution(a_index) > b.contribution(b_index);
-                },
-                [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
-                {
-                        ASSERT(to < COUNT);
-                        colors[to] = samples.color(from);
-                        weights[to] = samples.weight(from);
-                        contributions[to] = samples.contribution(from);
-                },
-                [&](const std::size_t index, const ColorSamples<Color>& samples)
-                {
-                        sum_color += samples.color(index);
-                        sum_weight += samples.weight(index);
-                });
-
-        return {sum_color, colors, sum_weight, weights, contributions};
-}
-
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_partial(
+[[nodiscard]] BackgroundSamples<Color> merge_with_sum(
         const BackgroundSamples<Color>& a,
         const BackgroundSamples<Color>& b)
 {
@@ -150,7 +81,7 @@ template <typename Color>
         typename Color::DataType sum_weight = samples_weight_sum(a, b);
         std::array<typename Color::DataType, COUNT> weights;
 
-        com::merge_partial(
+        com::merge_with_sum(
                 a, b,
                 [&](const std::size_t a_index, const std::size_t b_index)
                 {
@@ -174,7 +105,7 @@ template <typename Color>
 }
 
 template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_partial(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+[[nodiscard]] ColorSamples<Color> merge_with_sum(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
 {
         static constexpr std::size_t COUNT = ColorSamples<Color>::size();
 
@@ -185,7 +116,7 @@ template <typename Color>
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        com::merge_partial(
+        com::merge_with_sum(
                 a, b,
                 [&](const std::size_t a_index, const std::size_t b_index)
                 {
@@ -268,15 +199,14 @@ template <typename Samples>
 Samples merge_samples(const Samples& a, const Samples& b)
 {
         static constexpr std::size_t COUNT = Samples::size();
-        static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
         const std::size_t a_count = a.count();
         const std::size_t b_count = b.count();
 
-        if (a_count == COUNT && b_count == COUNT)
+        if (a_count + b_count > COUNT)
         {
-                return merge_full(a, b);
+                return merge_with_sum(a, b);
         }
 
         if (a_count == 0)
@@ -289,17 +219,7 @@ Samples merge_samples(const Samples& a, const Samples& b)
                 return a;
         }
 
-        if (a_count + b_count <= COUNT)
-        {
-                return merge(a, b);
-        }
-
-        if (a_count + b_count < 2 * COUNT)
-        {
-                return merge_partial(a, b);
-        }
-
-        error("Failed to merge samples");
+        return merge(a, b);
 }
 
 #define TEMPLATE_C(C)                                                                                          \
