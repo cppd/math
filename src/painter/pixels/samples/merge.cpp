@@ -81,9 +81,13 @@ template <typename Color>
 
         com::merge_full(
                 a, b,
-                [](const BackgroundSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.weight(index);
+                        return a.weight(a_index) < b.weight(b_index);
+                },
+                [&](const std::size_t a_index, const std::size_t b_index)
+                {
+                        return a.weight(a_index) > b.weight(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
                 {
@@ -112,9 +116,13 @@ template <typename Color>
 
         com::merge_full(
                 a, b,
-                [](const ColorSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.contribution(index);
+                        return a.contribution(a_index) < b.contribution(b_index);
+                },
+                [&](const std::size_t a_index, const std::size_t b_index)
+                {
+                        return a.contribution(a_index) > b.contribution(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
                 {
@@ -144,9 +152,13 @@ template <typename Color>
 
         com::merge_partial(
                 a, b,
-                [](const BackgroundSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.weight(index);
+                        return a.weight(a_index) < b.weight(b_index);
+                },
+                [&](const std::size_t a_index, const std::size_t b_index)
+                {
+                        return a.weight(a_index) > b.weight(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
                 {
@@ -175,9 +187,13 @@ template <typename Color>
 
         com::merge_partial(
                 a, b,
-                [](const ColorSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.contribution(index);
+                        return a.contribution(a_index) < b.contribution(b_index);
+                },
+                [&](const std::size_t a_index, const std::size_t b_index)
+                {
+                        return a.contribution(a_index) > b.contribution(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
                 {
@@ -206,9 +222,9 @@ template <typename Color>
 
         com::merge(
                 a, b,
-                [](const BackgroundSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.weight(index);
+                        return a.weight(a_index) < b.weight(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
                 {
@@ -232,9 +248,9 @@ template <typename Color>
 
         com::merge(
                 a, b,
-                [](const ColorSamples<Color>& samples, const std::size_t index)
+                [&](const std::size_t a_index, const std::size_t b_index)
                 {
-                        return samples.contribution(index);
+                        return a.contribution(a_index) < b.contribution(b_index);
                 },
                 [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
                 {
