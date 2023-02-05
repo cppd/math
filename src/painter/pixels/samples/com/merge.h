@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "info.h"
+
 #include <src/com/error.h>
 
 #include <array>
@@ -31,7 +33,8 @@ using Signed = std::make_signed_t<std::size_t>;
 template <typename A, typename B, typename Less, typename Copy, typename Sum>
 void merge_full_low(const A& a, const B& b, const Less less, const Copy copy, const Sum sum)
 {
-        static constexpr std::size_t COUNT = A::size();
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
@@ -64,7 +67,8 @@ void merge_full_low(const A& a, const B& b, const Less less, const Copy copy, co
 template <typename A, typename B, typename Greater, typename Copy, typename Sum>
 void merge_full_high(const A& a, const B& b, const Greater greater, const Copy copy, const Sum sum)
 {
-        static constexpr std::size_t COUNT = A::size();
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
@@ -103,7 +107,8 @@ template <typename A, typename B, typename Less, typename Copy>
         const Less less,
         const Copy copy)
 {
-        static constexpr std::size_t COUNT = A::size();
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
@@ -147,7 +152,8 @@ template <typename A, typename B, typename Greater, typename Copy>
         const Greater greater,
         const Copy copy)
 {
-        static constexpr std::size_t COUNT = A::size();
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
@@ -184,14 +190,15 @@ template <typename A, typename B, typename Greater, typename Copy>
 template <typename A, typename B, typename Less, typename Greater, typename Copy, typename Sum>
 void merge_with_sum(const A& a, const B& b, const Less less, const Greater greater, const Copy copy, const Sum sum)
 {
-        static_assert(A::size() == B::size());
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
 
         namespace impl = merge_implementation;
 
         const std::size_t a_size = a.count();
         const std::size_t b_size = b.count();
 
-        if (a_size == A::size() && b_size == A::size())
+        if (a_size == COUNT && b_size == COUNT)
         {
                 impl::merge_full_low(a, b, less, copy, sum);
                 impl::merge_full_high(a, b, greater, copy, sum);
@@ -199,8 +206,8 @@ void merge_with_sum(const A& a, const B& b, const Less less, const Greater great
         }
 
         ASSERT(a_size > 0 && b_size > 0);
-        ASSERT(a_size + b_size > A::size());
-        ASSERT(a_size + b_size < 2 * A::size());
+        ASSERT(a_size + b_size > COUNT);
+        ASSERT(a_size + b_size < 2 * COUNT);
 
         const auto [a_low, b_low] = impl::merge_partial_low(a, b, a_size, b_size, less, copy);
         const auto [a_high, b_high] = impl::merge_partial_high(a, b, a_size, b_size, a_low, b_low, greater, copy);
@@ -219,13 +226,14 @@ void merge_with_sum(const A& a, const B& b, const Less less, const Greater great
 template <typename A, typename B, typename Less, typename Copy>
 void merge(const A& a, const B& b, const Less less, const Copy copy)
 {
-        static_assert(A::size() == B::size());
+        static_assert(Info<A>::COUNT == Info<B>::COUNT);
+        static constexpr std::size_t COUNT = Info<A>::COUNT;
 
         const std::size_t a_size = a.count();
         const std::size_t b_size = b.count();
 
         ASSERT(a_size > 0 && b_size > 0);
-        ASSERT(a_size + b_size <= A::size());
+        ASSERT(a_size + b_size <= COUNT);
 
         std::size_t i = 0;
         std::size_t a_i = 0;

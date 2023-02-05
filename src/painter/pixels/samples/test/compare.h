@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels::samples::test
 {
-template <typename Color, template <typename> typename Samples>
-void compare_weights(const std::vector<typename Color::DataType>& weights, const Samples<Color>& samples)
+template <std::size_t COUNT, typename Color, template <std::size_t, typename> typename Samples>
+void compare_weights(const std::vector<typename Color::DataType>& weights, const Samples<COUNT, Color>& samples)
 {
         if (!(samples.count() == weights.size()))
         {
@@ -43,8 +43,8 @@ void compare_weights(const std::vector<typename Color::DataType>& weights, const
         }
 }
 
-template <typename Color, template <typename> typename Samples>
-void compare_weight_sum(const typename Color::DataType weight_sum, const Samples<Color>& samples)
+template <std::size_t COUNT, typename Color, template <std::size_t, typename> typename Samples>
+void compare_weight_sum(const typename Color::DataType weight_sum, const Samples<COUNT, Color>& samples)
 {
         if (!(samples.weight_sum() == weight_sum))
         {
@@ -53,8 +53,8 @@ void compare_weight_sum(const typename Color::DataType weight_sum, const Samples
         }
 }
 
-template <typename Color, template <typename> typename Samples>
-void compare_colors(const std::vector<Color>& colors, const Samples<Color>& samples)
+template <std::size_t COUNT, typename Color, template <std::size_t, typename> typename Samples>
+void compare_colors(const std::vector<Color>& colors, const Samples<COUNT, Color>& samples)
 {
         if (!(samples.count() == colors.size()))
         {
@@ -72,8 +72,8 @@ void compare_colors(const std::vector<Color>& colors, const Samples<Color>& samp
         }
 }
 
-template <typename Color, template <typename> typename Samples>
-void compare_color_sum(const Color& color_sum, const Samples<Color>& samples)
+template <std::size_t COUNT, typename Color, template <std::size_t, typename> typename Samples>
+void compare_color_sum(const Color& color_sum, const Samples<COUNT, Color>& samples)
 {
         if (!(samples.color_sum() == color_sum))
         {
@@ -82,8 +82,10 @@ void compare_color_sum(const Color& color_sum, const Samples<Color>& samples)
         }
 }
 
-template <typename Color, template <typename> typename Samples>
-void compare_contributions(const std::vector<typename Color::DataType>& contributions, const Samples<Color>& samples)
+template <std::size_t COUNT, typename Color, template <std::size_t, typename> typename Samples>
+void compare_contributions(
+        const std::vector<typename Color::DataType>& contributions,
+        const Samples<COUNT, Color>& samples)
 {
         if (!(samples.count() == contributions.size()))
         {

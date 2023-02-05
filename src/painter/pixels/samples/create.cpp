@@ -46,14 +46,13 @@ struct ColorSample final
         typename Color::DataType contribution;
 };
 
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> create_samples_without_sum(const std::vector<BackgroundSample<Color>>& samples)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] BackgroundSamples<COUNT, Color> create_samples_without_sum(
+        const std::vector<BackgroundSample<Color>>& samples)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
         std::array<typename Color::DataType, COUNT> weights;
 
-        com::create_without_sum<BackgroundSamples<Color>>(
+        com::create_without_sum<BackgroundSamples<COUNT, Color>>(
                 samples.size(),
                 [&](const std::size_t index)
                 {
@@ -63,20 +62,18 @@ template <typename Color>
         return {weights, samples.size()};
 }
 
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> create_samples_without_sum(
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] ColorSamples<COUNT, Color> create_samples_without_sum(
         const std::vector<ColorSample<Color>>& samples,
         const std::vector<int>& indices)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         ASSERT(samples.size() == indices.size());
 
         std::array<Color, COUNT> colors;
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        com::create_without_sum<ColorSamples<Color>>(
+        com::create_without_sum<ColorSamples<COUNT, Color>>(
                 samples.size(),
                 [&](const std::size_t index)
                 {
@@ -89,15 +86,14 @@ template <typename Color>
         return {colors, weights, contributions, samples.size()};
 }
 
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> create_samples_with_sum(const std::vector<BackgroundSample<Color>>& samples)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] BackgroundSamples<COUNT, Color> create_samples_with_sum(
+        const std::vector<BackgroundSample<Color>>& samples)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
         typename Color::DataType sum{0};
         std::array<typename Color::DataType, COUNT> weights;
 
-        com::create_with_sum<BackgroundSamples<Color>>(
+        com::create_with_sum<BackgroundSamples<COUNT, Color>>(
                 samples.size(),
                 [&](const std::size_t to, const std::size_t from)
                 {
@@ -111,13 +107,11 @@ template <typename Color>
         return {sum, weights};
 }
 
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> create_samples_with_sum(
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] ColorSamples<COUNT, Color> create_samples_with_sum(
         const std::vector<ColorSample<Color>>& samples,
         const std::vector<int>& indices)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         ASSERT(samples.size() == indices.size());
 
         Color sum_color{0};
@@ -126,7 +120,7 @@ template <typename Color>
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        com::create_with_sum<ColorSamples<Color>>(
+        com::create_with_sum<ColorSamples<COUNT, Color>>(
                 samples.size(),
                 [&](const std::size_t to, const std::size_t from)
                 {
@@ -145,11 +139,9 @@ template <typename Color>
         return {sum_color, colors, sum_weight, weights, contributions};
 }
 
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> create_samples(std::vector<BackgroundSample<Color>>* const samples)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] BackgroundSamples<COUNT, Color> create_samples(std::vector<BackgroundSample<Color>>* const samples)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
         ASSERT(!samples->empty());
 
         if (samples->size() == 1)
@@ -171,17 +163,15 @@ template <typename Color>
 
         if (samples->size() <= COUNT)
         {
-                return create_samples_without_sum<Color>(*samples);
+                return create_samples_without_sum<COUNT>(*samples);
         }
 
-        return create_samples_with_sum<Color>(*samples);
+        return create_samples_with_sum<COUNT>(*samples);
 }
 
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> create_samples(const std::vector<ColorSample<Color>>* const samples)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] ColorSamples<COUNT, Color> create_samples(const std::vector<ColorSample<Color>>* const samples)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         ASSERT(!samples->empty());
 
         if (samples->size() == 1)
@@ -207,15 +197,15 @@ template <typename Color>
 
         if (samples->size() <= COUNT)
         {
-                return create_samples_without_sum(*samples, indices);
+                return create_samples_without_sum<COUNT>(*samples, indices);
         }
 
-        return create_samples_with_sum(*samples, indices);
+        return create_samples_with_sum<COUNT>(*samples, indices);
 }
 }
 
-template <typename T, typename Color>
-std::optional<BackgroundSamples<Color>> create_background_samples(
+template <std::size_t COUNT, typename T, typename Color>
+std::optional<BackgroundSamples<COUNT, Color>> create_background_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
@@ -235,11 +225,11 @@ std::optional<BackgroundSamples<Color>> create_background_samples(
                 return std::nullopt;
         }
 
-        return create_samples(&samples);
+        return create_samples<COUNT>(&samples);
 }
 
-template <typename T, typename Color>
-std::optional<ColorSamples<Color>> create_color_samples(
+template <std::size_t COUNT, typename T, typename Color>
+std::optional<ColorSamples<COUNT, Color>> create_color_samples(
         const std::vector<std::optional<Color>>& colors,
         const std::vector<T>& weights)
 {
@@ -263,14 +253,18 @@ std::optional<ColorSamples<Color>> create_color_samples(
                 return std::nullopt;
         }
 
-        return create_samples(&samples);
+        return create_samples<COUNT>(&samples);
 }
 
-#define TEMPLATE_T_C(T, C)                                                      \
-        template std::optional<BackgroundSamples<C>> create_background_samples( \
-                const std::vector<std::optional<C>>&, const std::vector<T>&);   \
-        template std::optional<ColorSamples<C>> create_color_samples(           \
+#define TEMPLATE_T_C_COUNT(T, C, COUNT)                                                  \
+        template std::optional<BackgroundSamples<(COUNT), C>> create_background_samples( \
+                const std::vector<std::optional<C>>&, const std::vector<T>&);            \
+        template std::optional<ColorSamples<(COUNT), C>> create_color_samples(           \
                 const std::vector<std::optional<C>>&, const std::vector<T>&);
+
+#define TEMPLATE_T_C(T, C)          \
+        TEMPLATE_T_C_COUNT(T, C, 2) \
+        TEMPLATE_T_C_COUNT(T, C, 4)
 
 TEMPLATE_INSTANTIATION_T_C(TEMPLATE_T_C)
 }

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "background.h"
 #include "color.h"
 
+#include "com/info.h"
 #include "com/merge.h"
 
 #include <src/color/color.h>
@@ -71,13 +72,11 @@ template <typename Samples>
                 });
 }
 
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge_with_sum(
-        const BackgroundSamples<Color>& a,
-        const BackgroundSamples<Color>& b)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] BackgroundSamples<COUNT, Color> merge_with_sum(
+        const BackgroundSamples<COUNT, Color>& a,
+        const BackgroundSamples<COUNT, Color>& b)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
         typename Color::DataType sum_weight = samples_weight_sum(a, b);
         std::array<typename Color::DataType, COUNT> weights;
 
@@ -91,12 +90,12 @@ template <typename Color>
                 {
                         return a.weight(a_index) > b.weight(b_index);
                 },
-                [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
+                [&](const std::size_t to, const std::size_t from, const BackgroundSamples<COUNT, Color>& samples)
                 {
                         ASSERT(to < COUNT);
                         weights[to] = samples.weight(from);
                 },
-                [&](const std::size_t index, const BackgroundSamples<Color>& samples)
+                [&](const std::size_t index, const BackgroundSamples<COUNT, Color>& samples)
                 {
                         sum_weight += samples.weight(index);
                 });
@@ -104,11 +103,11 @@ template <typename Color>
         return {sum_weight, weights};
 }
 
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge_with_sum(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] ColorSamples<COUNT, Color> merge_with_sum(
+        const ColorSamples<COUNT, Color>& a,
+        const ColorSamples<COUNT, Color>& b)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         Color sum_color = samples_color_sum(a, b);
         typename Color::DataType sum_weight = samples_weight_sum(a, b);
 
@@ -126,14 +125,14 @@ template <typename Color>
                 {
                         return a.contribution(a_index) > b.contribution(b_index);
                 },
-                [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
+                [&](const std::size_t to, const std::size_t from, const ColorSamples<COUNT, Color>& samples)
                 {
                         ASSERT(to < COUNT);
                         colors[to] = samples.color(from);
                         weights[to] = samples.weight(from);
                         contributions[to] = samples.contribution(from);
                 },
-                [&](const std::size_t index, const ColorSamples<Color>& samples)
+                [&](const std::size_t index, const ColorSamples<COUNT, Color>& samples)
                 {
                         sum_color += samples.color(index);
                         sum_weight += samples.weight(index);
@@ -142,11 +141,11 @@ template <typename Color>
         return {sum_color, colors, sum_weight, weights, contributions};
 }
 
-template <typename Color>
-[[nodiscard]] BackgroundSamples<Color> merge(const BackgroundSamples<Color>& a, const BackgroundSamples<Color>& b)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] BackgroundSamples<COUNT, Color> merge(
+        const BackgroundSamples<COUNT, Color>& a,
+        const BackgroundSamples<COUNT, Color>& b)
 {
-        static constexpr std::size_t COUNT = BackgroundSamples<Color>::size();
-
         const std::size_t count = a.count() + b.count();
 
         std::array<typename Color::DataType, COUNT> weights;
@@ -157,7 +156,7 @@ template <typename Color>
                 {
                         return a.weight(a_index) < b.weight(b_index);
                 },
-                [&](const std::size_t to, const std::size_t from, const BackgroundSamples<Color>& samples)
+                [&](const std::size_t to, const std::size_t from, const BackgroundSamples<COUNT, Color>& samples)
                 {
                         ASSERT(to < count);
                         weights[to] = samples.weight(from);
@@ -166,11 +165,9 @@ template <typename Color>
         return {weights, count};
 }
 
-template <typename Color>
-[[nodiscard]] ColorSamples<Color> merge(const ColorSamples<Color>& a, const ColorSamples<Color>& b)
+template <std::size_t COUNT, typename Color>
+[[nodiscard]] ColorSamples<COUNT, Color> merge(const ColorSamples<COUNT, Color>& a, const ColorSamples<COUNT, Color>& b)
 {
-        static constexpr std::size_t COUNT = ColorSamples<Color>::size();
-
         const std::size_t count = a.count() + b.count();
 
         std::array<Color, COUNT> colors;
@@ -183,7 +180,7 @@ template <typename Color>
                 {
                         return a.contribution(a_index) < b.contribution(b_index);
                 },
-                [&](const std::size_t to, const std::size_t from, const ColorSamples<Color>& samples)
+                [&](const std::size_t to, const std::size_t from, const ColorSamples<COUNT, Color>& samples)
                 {
                         ASSERT(to < count);
                         colors[to] = samples.color(from);
@@ -198,7 +195,7 @@ template <typename Color>
 template <typename Samples>
 Samples merge_samples(const Samples& a, const Samples& b)
 {
-        static constexpr std::size_t COUNT = Samples::size();
+        static constexpr std::size_t COUNT = com::Info<Samples>::COUNT;
         static_assert(COUNT >= 2);
 
         const std::size_t a_count = a.count();
@@ -222,9 +219,15 @@ Samples merge_samples(const Samples& a, const Samples& b)
         return merge(a, b);
 }
 
-#define TEMPLATE_C(C)                                                                                          \
-        template BackgroundSamples<C> merge_samples(const BackgroundSamples<C>&, const BackgroundSamples<C>&); \
-        template ColorSamples<C> merge_samples(const ColorSamples<C>&, const ColorSamples<C>&);
+#define TEMPLATE_C_COUNT(C, COUNT)                                                           \
+        template BackgroundSamples<(COUNT), C> merge_samples(                                \
+                const BackgroundSamples<(COUNT), C>&, const BackgroundSamples<(COUNT), C>&); \
+        template ColorSamples<(COUNT), C> merge_samples(                                     \
+                const ColorSamples<(COUNT), C>&, const ColorSamples<(COUNT), C>&);
+
+#define TEMPLATE_C(C)          \
+        TEMPLATE_C_COUNT(C, 2) \
+        TEMPLATE_C_COUNT(C, 4)
 
 TEMPLATE_INSTANTIATION_C(TEMPLATE_C)
 }

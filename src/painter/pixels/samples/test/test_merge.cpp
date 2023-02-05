@@ -53,7 +53,7 @@ void test(const T& a, const T& b, const Test& test)
 template <typename C>
 void test_background()
 {
-        using S = BackgroundSamples<C>;
+        using S = BackgroundSamples<2, C>;
 
         test(S(), S(),
              [](const auto& a, const auto& b)
@@ -117,7 +117,7 @@ void test_background()
 template <typename C>
 void test_color()
 {
-        using S = ColorSamples<C>;
+        using S = ColorSamples<2, C>;
 
         test(S(), S(),
              [](const auto& a, const auto& b)

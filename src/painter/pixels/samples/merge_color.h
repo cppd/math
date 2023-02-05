@@ -26,15 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels::samples
 {
-template <typename Color>
+template <std::size_t COUNT, typename Color>
 [[nodiscard]] std::optional<Color> merge_color(
-        const ColorSamples<Color>& color_samples,
-        const BackgroundSamples<Color>& background_samples,
+        const ColorSamples<COUNT, Color>& color_samples,
+        const BackgroundSamples<COUNT, Color>& background_samples,
         const Background<Color>& background);
 
-template <typename Color>
+template <std::size_t COUNT, typename Color>
 [[nodiscard]] std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
-        const ColorSamples<Color>& color_samples,
-        const BackgroundSamples<Color>& background_samples,
+        const ColorSamples<COUNT, Color>& color_samples,
+        const BackgroundSamples<COUNT, Color>& background_samples,
         const Background<Color>& background);
 }

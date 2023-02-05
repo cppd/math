@@ -17,21 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "background.h"
-#include "color.h"
+#include <cstddef>
 
-#include <optional>
-#include <vector>
-
-namespace ns::painter::pixels::samples
+namespace ns::painter::pixels::samples::com
 {
-template <std::size_t COUNT, typename T, typename Color>
-[[nodiscard]] std::optional<BackgroundSamples<COUNT, Color>> create_background_samples(
-        const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& weights);
+template <typename T>
+struct Info;
 
-template <std::size_t COUNT, typename T, typename Color>
-[[nodiscard]] std::optional<ColorSamples<COUNT, Color>> create_color_samples(
-        const std::vector<std::optional<Color>>& colors,
-        const std::vector<T>& weights);
+template <template <std::size_t, typename> typename Samples, std::size_t N, typename Color>
+struct Info<Samples<N, Color>>
+{
+        static constexpr std::size_t COUNT = N;
+};
 }

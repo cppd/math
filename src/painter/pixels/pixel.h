@@ -29,19 +29,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels
 {
-template <typename Color>
+template <std::size_t COUNT, typename Color>
 class Pixel final
 {
-        samples::ColorSamples<Color> color_samples_;
-        samples::BackgroundSamples<Color> background_samples_;
+        samples::ColorSamples<COUNT, Color> color_samples_;
+        samples::BackgroundSamples<COUNT, Color> background_samples_;
 
 public:
-        void merge(const samples::ColorSamples<Color>& samples)
+        void merge(const samples::ColorSamples<COUNT, Color>& samples)
         {
                 color_samples_ = samples::merge_samples(color_samples_, samples);
         }
 
-        void merge(const samples::BackgroundSamples<Color>& samples)
+        void merge(const samples::BackgroundSamples<COUNT, Color>& samples)
         {
                 background_samples_ = samples::merge_samples(background_samples_, samples);
         }

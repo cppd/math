@@ -24,10 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels::samples
 {
-template <typename Color>
+template <std::size_t COUNT, typename Color>
 class BackgroundSamples final
 {
-        static constexpr std::size_t COUNT = 2;
         static_assert(COUNT >= 2);
         static_assert(COUNT % 2 == 0);
 
@@ -37,11 +36,6 @@ class BackgroundSamples final
         std::array<typename Color::DataType, COUNT> weights_;
 
 public:
-        static constexpr std::size_t size()
-        {
-                return COUNT;
-        }
-
         BackgroundSamples()
                 : weight_sum_(EMPTY)
         {

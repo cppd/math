@@ -17,14 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "info.h"
+
 #include <src/com/error.h>
 
 namespace ns::painter::pixels::samples::com
 {
-template <typename T, typename Copy>
+template <typename Samples, typename Copy>
 void create_without_sum(const std::size_t count, const Copy copy)
 {
-        ASSERT(count > 0 && count <= T::size());
+        ASSERT(count > 0 && count <= Info<Samples>::COUNT);
 
         for (std::size_t i = 0; i < count; ++i)
         {
@@ -32,10 +34,10 @@ void create_without_sum(const std::size_t count, const Copy copy)
         }
 }
 
-template <typename T, typename Copy, typename Sum>
+template <typename Samples, typename Copy, typename Sum>
 void create_with_sum(const std::size_t count, const Copy copy, const Sum sum)
 {
-        static constexpr std::size_t COUNT = T::size();
+        static constexpr std::size_t COUNT = Info<Samples>::COUNT;
         static_assert(COUNT % 2 == 0);
 
         ASSERT(count > COUNT);

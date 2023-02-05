@@ -64,11 +64,11 @@ void Pixels<N, T, Color>::add_samples(
 
         filter_.compute_weights(region_pixel_center<T>(region_pixel, sample_pixel), points, &weights);
 
-        const auto color_samples = samples::create_color_samples(colors, weights);
-        const auto background_samples = samples::create_background_samples(colors, weights);
+        const auto color_samples = samples::create_color_samples<PIXEL_SAMPLE_COUNT>(colors, weights);
+        const auto background_samples = samples::create_background_samples<PIXEL_SAMPLE_COUNT>(colors, weights);
 
         const long long index = global_index_.compute(region_pixel);
-        Pixel<Color>& pixel = pixels_[index];
+        Pixel<PIXEL_SAMPLE_COUNT, Color>& pixel = pixels_[index];
 
         const std::lock_guard lg(pixel_locks_[index]);
         if (color_samples)
@@ -132,7 +132,7 @@ void Pixels<N, T, Color>::images(image::Image<N>* const image_rgb, image::Image<
         for (std::size_t i = 0; i < pixels_.size(); ++i)
         {
                 {
-                        const Pixel<Color>& pixel = pixels_[i];
+                        const Pixel<PIXEL_SAMPLE_COUNT, Color>& pixel = pixels_[i];
                         const std::lock_guard lg(pixel_locks_[i]);
                         rgb = pixel.color_rgb(background_);
                         rgba = pixel.color_rgba(background_);

@@ -77,7 +77,7 @@ void test_background()
         {
                 colors = {};
                 weights = {};
-                const auto samples = create_background_samples(colors, weights);
+                const auto samples = create_background_samples<2>(colors, weights);
                 if (samples)
                 {
                         error("Error creating empty samples");
@@ -86,21 +86,21 @@ void test_background()
         {
                 colors = {{}};
                 weights = {1};
-                const auto samples = create_background_samples(colors, weights);
+                const auto samples = create_background_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 1);
                 compare_weights({1}, *samples);
         }
         {
                 colors = {{}, {}};
                 weights = {2, 1};
-                const auto samples = create_background_samples(colors, weights);
+                const auto samples = create_background_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 2);
                 compare_weights({1, 2}, *samples);
         }
         {
                 colors = {{}, C(1), {}, {}};
                 weights = {3, 100, 1, 2};
-                const auto samples = create_background_samples(colors, weights);
+                const auto samples = create_background_samples<2>(colors, weights);
                 check_full(samples, 3);
                 compare_weights({1, 3}, *samples);
                 compare_weight_sum(2, *samples);
@@ -108,7 +108,7 @@ void test_background()
         {
                 colors = {C(1), {}, {}, {}, C(1), {}};
                 weights = {100, 3, 2, 4, 100, 1};
-                const auto samples = create_background_samples(colors, weights);
+                const auto samples = create_background_samples<2>(colors, weights);
                 check_full(samples, 4);
                 compare_weights({1, 4}, *samples);
                 compare_weight_sum(2 + 3, *samples);
@@ -126,7 +126,7 @@ void test_color()
         {
                 colors = {};
                 weights = {};
-                const auto samples = create_color_samples(colors, weights);
+                const auto samples = create_color_samples<2>(colors, weights);
                 if (samples)
                 {
                         error("Error creating empty samples");
@@ -135,7 +135,7 @@ void test_color()
         {
                 colors = {C(0.5)};
                 weights = {1};
-                const auto samples = create_color_samples(colors, weights);
+                const auto samples = create_color_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 1);
                 compare_colors({C(0.5)}, *samples);
                 compare_weights({1}, *samples);
@@ -144,7 +144,7 @@ void test_color()
         {
                 colors = {C(0.5), C(0.25)};
                 weights = {1, 1.1};
-                const auto samples = create_color_samples(colors, weights);
+                const auto samples = create_color_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 2);
                 compare_colors({T{1.1} * C(0.25), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
@@ -155,7 +155,7 @@ void test_color()
         {
                 colors = {C(0.5), C(0.125), {}, C(0.25)};
                 weights = {1, 1.1, 10, 1.2};
-                const auto samples = create_color_samples(colors, weights);
+                const auto samples = create_color_samples<2>(colors, weights);
                 check_full(samples, 3);
                 compare_colors({T{1.1} * C(0.125), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
@@ -168,7 +168,7 @@ void test_color()
         {
                 colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
                 weights = {10, 1, 10, 1.1, 1.2, 1.3};
-                const auto samples = create_color_samples(colors, weights);
+                const auto samples = create_color_samples<2>(colors, weights);
                 check_full(samples, 4);
                 compare_colors({T{1.3} * C(0.125), T{1} * C(1)}, *samples);
                 compare_weights({1.3, 1}, *samples);
