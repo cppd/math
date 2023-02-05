@@ -30,6 +30,19 @@ namespace ns::painter::pixels::samples::test
 {
 namespace
 {
+void check_merging_empty_and_non_empty(const auto& samples)
+{
+        if (samples.empty())
+        {
+                error("Error merging empty and non-empty: result is empty");
+        }
+
+        if (samples.full())
+        {
+                error("Error merging empty and non-empty: result is full");
+        }
+}
+
 template <typename T, typename Test>
 void test(const T& a, const T& b, const Test& test)
 {
@@ -48,7 +61,7 @@ void test_background()
                      const auto s = merge_samples(a, b);
                      if (!s.empty())
                      {
-                             error("Error merging empty");
+                             error("Error merging empty: result is not empty");
                      }
              });
 
@@ -56,10 +69,7 @@ void test_background()
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
-                     if (s.empty() || s.full())
-                     {
-                             error("Error merging empty and non-empty");
-                     }
+                     check_merging_empty_and_non_empty(s);
                      compare_weights({1, 2}, s);
              });
 
@@ -115,7 +125,7 @@ void test_color()
                      const auto s = merge_samples(a, b);
                      if (!s.empty())
                      {
-                             error("Error merging empty");
+                             error("Error merging empty: result is not empty");
                      }
              });
 
@@ -123,10 +133,7 @@ void test_color()
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
-                     if (s.empty() || s.full())
-                     {
-                             error("Error merging empty and non-empty");
-                     }
+                     check_merging_empty_and_non_empty(s);
                      compare_colors({C(1), C(2)}, s);
                      compare_weights({1, 2}, s);
                      compare_contributions({1, 2}, s);

@@ -23,12 +23,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/test/test.h>
 
 namespace ns::painter::pixels::samples::test
 {
 namespace
 {
+void check_not_empty_not_full(const auto& samples, const int count)
+{
+        if (!samples)
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": no data");
+        }
+
+        if (samples->empty())
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": empty");
+        }
+
+        if (samples->full())
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": full");
+        }
+}
+
+void check_full(const auto& samples, const int count)
+{
+        if (!samples)
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": no data");
+        }
+
+        if (samples->empty())
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": empty");
+        }
+
+        if (!samples->full())
+        {
+                error("Error creating samples from sample count " + to_string(count) + ": not full");
+        }
+}
+
 template <typename C>
 void test_background()
 {
@@ -43,37 +80,28 @@ void test_background()
                 const auto samples = create_background_samples(colors, weights);
                 if (samples)
                 {
-                        error("Error creating empty");
+                        error("Error creating empty samples");
                 }
         }
         {
                 colors = {{}};
                 weights = {1};
                 const auto samples = create_background_samples(colors, weights);
-                if (!samples || samples->empty() || samples->full())
-                {
-                        error("Error creating samples from 1 sample");
-                }
+                check_not_empty_not_full(samples, 1);
                 compare_weights({1}, *samples);
         }
         {
                 colors = {{}, {}};
                 weights = {2, 1};
                 const auto samples = create_background_samples(colors, weights);
-                if (!samples || samples->empty() || samples->full())
-                {
-                        error("Error creating samples from 2 samples");
-                }
+                check_not_empty_not_full(samples, 2);
                 compare_weights({1, 2}, *samples);
         }
         {
                 colors = {{}, C(1), {}, {}};
                 weights = {3, 100, 1, 2};
                 const auto samples = create_background_samples(colors, weights);
-                if (!samples || samples->empty() || !samples->full())
-                {
-                        error("Error creating samples from 3 samples");
-                }
+                check_full(samples, 3);
                 compare_weights({1, 3}, *samples);
                 compare_weight_sum(2, *samples);
         }
@@ -81,10 +109,7 @@ void test_background()
                 colors = {C(1), {}, {}, {}, C(1), {}};
                 weights = {100, 3, 2, 4, 100, 1};
                 const auto samples = create_background_samples(colors, weights);
-                if (!samples || samples->empty() || !samples->full())
-                {
-                        error("Error creating samples from 4 samples");
-                }
+                check_full(samples, 4);
                 compare_weights({1, 4}, *samples);
                 compare_weight_sum(2 + 3, *samples);
         }
@@ -104,17 +129,14 @@ void test_color()
                 const auto samples = create_color_samples(colors, weights);
                 if (samples)
                 {
-                        error("Error creating empty");
+                        error("Error creating empty samples");
                 }
         }
         {
                 colors = {C(0.5)};
                 weights = {1};
                 const auto samples = create_color_samples(colors, weights);
-                if (!samples || samples->empty() || samples->full())
-                {
-                        error("Error creating samples from 1 sample");
-                }
+                check_not_empty_not_full(samples, 1);
                 compare_colors({C(0.5)}, *samples);
                 compare_weights({1}, *samples);
                 compare_contributions({1 * sample_color_contribution(C(0.5))}, *samples);
@@ -123,10 +145,7 @@ void test_color()
                 colors = {C(0.5), C(0.25)};
                 weights = {1, 1.1};
                 const auto samples = create_color_samples(colors, weights);
-                if (!samples || samples->empty() || samples->full())
-                {
-                        error("Error creating samples from 2 samples");
-                }
+                check_not_empty_not_full(samples, 2);
                 compare_colors({T{1.1} * C(0.25), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
                 compare_contributions(
@@ -137,10 +156,7 @@ void test_color()
                 colors = {C(0.5), C(0.125), {}, C(0.25)};
                 weights = {1, 1.1, 10, 1.2};
                 const auto samples = create_color_samples(colors, weights);
-                if (!samples || samples->empty() || !samples->full())
-                {
-                        error("Error creating samples from 3 samples");
-                }
+                check_full(samples, 3);
                 compare_colors({T{1.1} * C(0.125), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
                 compare_contributions(
@@ -153,10 +169,7 @@ void test_color()
                 colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
                 weights = {10, 1, 10, 1.1, 1.2, 1.3};
                 const auto samples = create_color_samples(colors, weights);
-                if (!samples || samples->empty() || !samples->full())
-                {
-                        error("Error creating samples from 4 samples");
-                }
+                check_full(samples, 4);
                 compare_colors({T{1.3} * C(0.125), T{1} * C(1)}, *samples);
                 compare_weights({1.3, 1}, *samples);
                 compare_contributions(

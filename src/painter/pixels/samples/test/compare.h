@@ -29,7 +29,7 @@ void compare_weights(const std::vector<typename Color::DataType>& weights, const
 {
         if (!(samples.count() == weights.size()))
         {
-                error("Error sample count " + to_string(samples.count()) + " is not equal to weight count "
+                error("Sample count " + to_string(samples.count()) + " is not equal to weight count "
                       + to_string(weights.size()));
         }
 
@@ -58,7 +58,7 @@ void compare_colors(const std::vector<Color>& colors, const Samples<Color>& samp
 {
         if (!(samples.count() == colors.size()))
         {
-                error("Error sample count " + to_string(samples.count()) + " is not equal to color count "
+                error("Sample count " + to_string(samples.count()) + " is not equal to color count "
                       + to_string(colors.size()));
         }
 
@@ -87,7 +87,7 @@ void compare_contributions(const std::vector<typename Color::DataType>& contribu
 {
         if (!(samples.count() == contributions.size()))
         {
-                error("Error sample count " + to_string(samples.count()) + " is not equal to contribution count "
+                error("Sample count " + to_string(samples.count()) + " is not equal to contribution count "
                       + to_string(contributions.size()));
         }
 
