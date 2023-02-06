@@ -37,7 +37,7 @@ namespace ns::painter::pixels
 template <std::size_t N, typename T, typename Color>
 class Pixels final
 {
-        static constexpr std::size_t FILTER_SAMPLE_COUNT = 2;
+        static constexpr std::size_t FILTER_SAMPLE_COUNT = 4;
 
         const PixelFilter<N, T> filter_;
         const std::array<int, N> screen_size_;
