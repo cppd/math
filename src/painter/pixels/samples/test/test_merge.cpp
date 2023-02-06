@@ -53,9 +53,10 @@ void test(const T& a, const T& b, const Test& test)
 template <typename C>
 void test_background()
 {
-        using S = BackgroundSamples<2, C>;
+        using S2 = BackgroundSamples<2, C>;
+        using S4 = BackgroundSamples<4, C>;
 
-        test(S(), S(),
+        test(S2(), S2(),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -65,7 +66,7 @@ void test_background()
                      }
              });
 
-        test(S({1, 2}, 2), S(),
+        test(S2({1, 2}, 2), S2(),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -73,7 +74,7 @@ void test_background()
                      compare_weights({1, 2}, s);
              });
 
-        test(S({1}, 1), S({1, 2}, 2),
+        test(S2({1}, 1), S2({1, 2}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -81,7 +82,7 @@ void test_background()
                      compare_weight_sum(1, s);
              });
 
-        test(S({1, 2}, 2), S({1, 3}, 2),
+        test(S2({1, 2}, 2), S2({1, 3}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -89,7 +90,7 @@ void test_background()
                      compare_weight_sum(3, s);
              });
 
-        test(S(1, {2, 3}), S({1}, 1),
+        test(S2(1, {2, 3}), S2({1}, 1),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -97,7 +98,7 @@ void test_background()
                      compare_weight_sum(3, s);
              });
 
-        test(S(1, {2, 3}), S({1, 2}, 2),
+        test(S2(1, {2, 3}), S2({1, 2}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -105,21 +106,45 @@ void test_background()
                      compare_weight_sum(5, s);
              });
 
-        test(S(1, {2, 4}), S(3, {1, 3}),
+        test(S2(1, {2, 4}), S2(3, {1, 3}),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
                      compare_weights({1, 4}, s);
                      compare_weight_sum(9, s);
              });
+
+        test(S4({2, 4}, 2), S4({1, 3}, 2),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_weights({1, 2, 3, 4}, s);
+             });
+
+        test(S4({2, 4}, 2), S4(3, {1, 3, 5, 7}),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_weights({1, 2, 5, 7}, s);
+                     compare_weight_sum(3 + 3 + 4, s);
+             });
+
+        test(S4(1, {2, 4, 6, 8}), S4(3, {1, 3, 5, 7}),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_weights({1, 2, 7, 8}, s);
+                     compare_weight_sum(1 + 3 + 3 + 4 + 5 + 6, s);
+             });
 }
 
 template <typename C>
 void test_color()
 {
-        using S = ColorSamples<2, C>;
+        using S2 = ColorSamples<2, C>;
+        using S4 = ColorSamples<4, C>;
 
-        test(S(), S(),
+        test(S2(), S2(),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -129,7 +154,7 @@ void test_color()
                      }
              });
 
-        test(S({C(1), C(2)}, {1, 2}, {1, 2}, 2), S(),
+        test(S2({C(1), C(2)}, {1, 2}, {1, 2}, 2), S2(),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -139,7 +164,7 @@ void test_color()
                      compare_contributions({1, 2}, s);
              });
 
-        test(S({C(1)}, {1}, {1}, 1), S({C(1), C(2)}, {1, 2}, {1, 2}, 2),
+        test(S2({C(1)}, {1}, {1}, 1), S2({C(1), C(2)}, {1, 2}, {1, 2}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -150,7 +175,7 @@ void test_color()
                      compare_weight_sum(1, s);
              });
 
-        test(S({C(1), C(2)}, {1, 2}, {1, 2}, 2), S({C(1), C(3)}, {1, 3}, {1, 3}, 2),
+        test(S2({C(1), C(2)}, {1, 2}, {1, 2}, 2), S2({C(1), C(3)}, {1, 3}, {1, 3}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -161,7 +186,7 @@ void test_color()
                      compare_weight_sum(3, s);
              });
 
-        test(S(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S({C(1)}, {1}, {1}, 1),
+        test(S2(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S2({C(1)}, {1}, {1}, 1),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -172,7 +197,7 @@ void test_color()
                      compare_weight_sum(3, s);
              });
 
-        test(S(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S({C(1), C(2)}, {1, 2}, {1, 2}, 2),
+        test(S2(C(1), {C(2), C(3)}, 1, {2, 3}, {2, 3}), S2({C(1), C(2)}, {1, 2}, {1, 2}, 2),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -183,7 +208,7 @@ void test_color()
                      compare_weight_sum(5, s);
              });
 
-        test(S(C(1), {C(2), C(4)}, 1, {2, 4}, {2, 4}), S(C(3), {C(1), C(3)}, 3, {1, 3}, {1, 3}),
+        test(S2(C(1), {C(2), C(4)}, 1, {2, 4}, {2, 4}), S2(C(3), {C(1), C(3)}, 3, {1, 3}, {1, 3}),
              [](const auto& a, const auto& b)
              {
                      const auto s = merge_samples(a, b);
@@ -192,6 +217,38 @@ void test_color()
                      compare_contributions({1, 4}, s);
                      compare_color_sum(C(9), s);
                      compare_weight_sum(9, s);
+             });
+
+        test(S4({C(2), C(4)}, {2, 4}, {2, 4}, 2), S4({C(1), C(3)}, {1, 3}, {1, 3}, 2),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_colors({C(1), C(2), C(3), C(4)}, s);
+                     compare_weights({1, 2, 3, 4}, s);
+                     compare_contributions({1, 2, 3, 4}, s);
+             });
+
+        test(S4({C(2), C(4)}, {2, 4}, {2, 4}, 2), S4(C(3), {C(1), C(3), C(5), C(7)}, 3, {1, 3, 5, 7}, {1, 3, 5, 7}),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_colors({C(1), C(2), C(5), C(7)}, s);
+                     compare_weights({1, 2, 5, 7}, s);
+                     compare_contributions({1, 2, 5, 7}, s);
+                     compare_color_sum(C(3) + C(3) + C(4), s);
+                     compare_weight_sum(3 + 3 + 4, s);
+             });
+
+        test(S4(C(1), {C(2), C(4), C(6), C(8)}, 1, {2, 4, 6, 8}, {2, 4, 6, 8}),
+             S4(C(3), {C(1), C(3), C(5), C(7)}, 3, {1, 3, 5, 7}, {1, 3, 5, 7}),
+             [](const auto& a, const auto& b)
+             {
+                     const auto s = merge_samples(a, b);
+                     compare_colors({C(1), C(2), C(7), C(8)}, s);
+                     compare_weights({1, 2, 7, 8}, s);
+                     compare_contributions({1, 2, 7, 8}, s);
+                     compare_color_sum(C(1) + C(3) + C(3) + C(4) + C(5) + C(6), s);
+                     compare_weight_sum(1 + 3 + 3 + 4 + 5 + 6, s);
              });
 }
 
