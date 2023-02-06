@@ -37,7 +37,7 @@ namespace ns::painter::pixels
 template <std::size_t N, typename T, typename Color>
 class Pixels final
 {
-        static constexpr std::size_t PIXEL_SAMPLE_COUNT = 2;
+        static constexpr std::size_t FILTER_SAMPLE_COUNT = 2;
 
         const PixelFilter<N, T> filter_;
         const std::array<int, N> screen_size_;
@@ -46,7 +46,7 @@ class Pixels final
         const Background<Color> background_;
         Notifier<N>* const notifier_;
 
-        std::vector<Pixel<PIXEL_SAMPLE_COUNT, Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
+        std::vector<Pixel<FILTER_SAMPLE_COUNT, Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
         mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
 
         void add_samples(
