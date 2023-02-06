@@ -143,6 +143,11 @@ void test_color()
 {
         using T = typename C::DataType;
 
+        const auto scc = [](const C& c)
+        {
+                return sample_color_contribution(c);
+        };
+
         std::vector<std::optional<C>> colors;
         std::vector<T> weights;
 
@@ -162,7 +167,7 @@ void test_color()
                 check_not_empty_not_full(samples, 1);
                 compare_colors({C(0.5)}, *samples);
                 compare_weights({1}, *samples);
-                compare_contributions({1 * sample_color_contribution(C(0.5))}, *samples);
+                compare_contributions({1 * scc(C(0.5))}, *samples);
         }
         {
                 colors = {C(0.5), C(0.25)};
@@ -171,9 +176,7 @@ void test_color()
                 check_not_empty_not_full(samples, 2);
                 compare_colors({T{1.1} * C(0.25), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
-                compare_contributions(
-                        {T{1.1} * sample_color_contribution(C(0.25)), T{1} * sample_color_contribution(C(0.5))},
-                        *samples);
+                compare_contributions({T{1.1} * scc(C(0.25)), T{1} * scc(C(0.5))}, *samples);
         }
         {
                 colors = {C(0.5), C(0.125), {}, C(0.25)};
@@ -182,9 +185,7 @@ void test_color()
                 check_full(samples, 3);
                 compare_colors({T{1.1} * C(0.125), T{1} * C(0.5)}, *samples);
                 compare_weights({1.1, 1}, *samples);
-                compare_contributions(
-                        {T{1.1} * sample_color_contribution(C(0.125)), T{1} * sample_color_contribution(C(0.5))},
-                        *samples);
+                compare_contributions({T{1.1} * scc(C(0.125)), T{1} * scc(C(0.5))}, *samples);
                 compare_color_sum(T{1.2} * C(0.25), *samples);
                 compare_weight_sum(1.2, *samples);
         }
@@ -195,9 +196,7 @@ void test_color()
                 check_full(samples, 4);
                 compare_colors({T{1.3} * C(0.125), T{1} * C(1)}, *samples);
                 compare_weights({1.3, 1}, *samples);
-                compare_contributions(
-                        {T{1.3} * sample_color_contribution(C(0.125)), T{1} * sample_color_contribution(C(1))},
-                        *samples);
+                compare_contributions({T{1.3} * scc(C(0.125)), T{1} * scc(C(1))}, *samples);
                 compare_color_sum(T{1.1} * C(0.25) + T{1.2} * C(0.5), *samples);
                 compare_weight_sum(T{1.1} + T{1.2}, *samples);
         }
@@ -209,8 +208,7 @@ void test_color()
                 compare_colors({T{1.3} * C(0.125), T{1.1} * C(0.25), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
                 compare_weights({1.3, 1.1, 1.2, 1}, *samples);
                 compare_contributions(
-                        {T{1.3} * sample_color_contribution(C(0.125)), T{1.1} * sample_color_contribution(C(0.25)),
-                         T{1.2} * sample_color_contribution(C(0.5)), T{1} * sample_color_contribution(C(1))},
+                        {T{1.3} * scc(C(0.125)), T{1.1} * scc(C(0.25)), T{1.2} * scc(C(0.5)), T{1} * scc(C(1))},
                         *samples);
         }
         {
@@ -221,8 +219,7 @@ void test_color()
                 compare_colors({T{1.4} * C(1.0 / 16), T{1.3} * C(0.125), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
                 compare_weights({1.4, 1.3, 1.2, 1}, *samples);
                 compare_contributions(
-                        {T{1.4} * sample_color_contribution(C(1.0 / 16)), T{1.3} * sample_color_contribution(C(0.125)),
-                         T{1.2} * sample_color_contribution(C(0.5)), T{1} * sample_color_contribution(C(1))},
+                        {T{1.4} * scc(C(1.0 / 16)), T{1.3} * scc(C(0.125)), T{1.2} * scc(C(0.5)), T{1} * scc(C(1))},
                         *samples);
                 compare_color_sum(T{1.1} * C(0.25), *samples);
                 compare_weight_sum(T{1.1}, *samples);
@@ -235,9 +232,7 @@ void test_color()
                 compare_colors({T{1.4} * C(1.0 / 32), T{1.5} * C(1.0 / 16), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
                 compare_weights({1.4, 1.5, 1.2, 1}, *samples);
                 compare_contributions(
-                        {T{1.4} * sample_color_contribution(C(1.0 / 32)),
-                         T{1.5} * sample_color_contribution(C(1.0 / 16)), T{1.2} * sample_color_contribution(C(0.5)),
-                         T{1} * sample_color_contribution(C(1))},
+                        {T{1.4} * scc(C(1.0 / 32)), T{1.5} * scc(C(1.0 / 16)), T{1.2} * scc(C(0.5)), T{1} * scc(C(1))},
                         *samples);
                 compare_color_sum(T{1.3} * C(0.125) + T{1.1} * C(0.25), *samples);
                 compare_weight_sum(T{1.3} + T{1.1}, *samples);
