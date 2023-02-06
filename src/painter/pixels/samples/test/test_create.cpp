@@ -113,6 +113,29 @@ void test_background()
                 compare_weights({1, 4}, *samples);
                 compare_weight_sum(2 + 3, *samples);
         }
+        {
+                colors = {C(1), {}, {}, {}, C(1), {}};
+                weights = {100, 3, 2, 4, 100, 1};
+                const auto samples = create_background_samples<4>(colors, weights);
+                check_not_empty_not_full(samples, 4);
+                compare_weights({1, 2, 3, 4}, *samples);
+        }
+        {
+                colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}};
+                weights = {100, 3, 2, 4, 100, 5, 100, 1};
+                const auto samples = create_background_samples<4>(colors, weights);
+                check_full(samples, 5);
+                compare_weights({1, 2, 4, 5}, *samples);
+                compare_weight_sum(3, *samples);
+        }
+        {
+                colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}, {}};
+                weights = {100, 3, 2, 4, 100, 5, 100, 1, 6};
+                const auto samples = create_background_samples<4>(colors, weights);
+                check_full(samples, 6);
+                compare_weights({1, 2, 5, 6}, *samples);
+                compare_weight_sum(3 + 4, *samples);
+        }
 }
 
 template <typename C>
@@ -177,6 +200,47 @@ void test_color()
                         *samples);
                 compare_color_sum(T{1.1} * C(0.25) + T{1.2} * C(0.5), *samples);
                 compare_weight_sum(T{1.1} + T{1.2}, *samples);
+        }
+        {
+                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
+                weights = {10, 1, 10, 1.1, 1.2, 1.3};
+                const auto samples = create_color_samples<4>(colors, weights);
+                check_not_empty_not_full(samples, 4);
+                compare_colors({T{1.3} * C(0.125), T{1.1} * C(0.25), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
+                compare_weights({1.3, 1.1, 1.2, 1}, *samples);
+                compare_contributions(
+                        {T{1.3} * sample_color_contribution(C(0.125)), T{1.1} * sample_color_contribution(C(0.25)),
+                         T{1.2} * sample_color_contribution(C(0.5)), T{1} * sample_color_contribution(C(1))},
+                        *samples);
+        }
+        {
+                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 16), {}};
+                weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10};
+                const auto samples = create_color_samples<4>(colors, weights);
+                check_full(samples, 5);
+                compare_colors({T{1.4} * C(1.0 / 16), T{1.3} * C(0.125), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
+                compare_weights({1.4, 1.3, 1.2, 1}, *samples);
+                compare_contributions(
+                        {T{1.4} * sample_color_contribution(C(1.0 / 16)), T{1.3} * sample_color_contribution(C(0.125)),
+                         T{1.2} * sample_color_contribution(C(0.5)), T{1} * sample_color_contribution(C(1))},
+                        *samples);
+                compare_color_sum(T{1.1} * C(0.25), *samples);
+                compare_weight_sum(T{1.1}, *samples);
+        }
+        {
+                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 32), {}, C(1.0 / 16)};
+                weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10, 1.5};
+                const auto samples = create_color_samples<4>(colors, weights);
+                check_full(samples, 6);
+                compare_colors({T{1.4} * C(1.0 / 32), T{1.5} * C(1.0 / 16), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
+                compare_weights({1.4, 1.5, 1.2, 1}, *samples);
+                compare_contributions(
+                        {T{1.4} * sample_color_contribution(C(1.0 / 32)),
+                         T{1.5} * sample_color_contribution(C(1.0 / 16)), T{1.2} * sample_color_contribution(C(0.5)),
+                         T{1} * sample_color_contribution(C(1))},
+                        *samples);
+                compare_color_sum(T{1.3} * C(0.125) + T{1.1} * C(0.25), *samples);
+                compare_weight_sum(T{1.3} + T{1.1}, *samples);
         }
 }
 
