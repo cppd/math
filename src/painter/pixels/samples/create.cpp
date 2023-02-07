@@ -50,14 +50,14 @@ template <std::size_t COUNT, typename Color>
 [[nodiscard]] BackgroundSamples<COUNT, Color> create_samples_without_sum(
         const std::vector<BackgroundSample<Color>>& samples)
 {
+        ASSERT(samples.size() <= COUNT);
+
         std::array<typename Color::DataType, COUNT> weights;
 
-        com::create_without_sum<BackgroundSamples<COUNT, Color>>(
-                samples.size(),
-                [&](const std::size_t index)
-                {
-                        weights[index] = samples[index].weight;
-                });
+        for (std::size_t i = 0; i < samples.size(); ++i)
+        {
+                weights[i] = samples[i].weight;
+        }
 
         return {weights, samples.size()};
 }
@@ -67,21 +67,20 @@ template <std::size_t COUNT, typename Color>
         const std::vector<ColorSample<Color>>& samples,
         const std::vector<int>& indices)
 {
+        ASSERT(samples.size() <= COUNT);
         ASSERT(samples.size() == indices.size());
 
         std::array<Color, COUNT> colors;
         std::array<typename Color::DataType, COUNT> weights;
         std::array<typename Color::DataType, COUNT> contributions;
 
-        com::create_without_sum<ColorSamples<COUNT, Color>>(
-                samples.size(),
-                [&](const std::size_t index)
-                {
-                        const ColorSample<Color>& sample = samples[indices[index]];
-                        colors[index] = sample.color;
-                        weights[index] = sample.weight;
-                        contributions[index] = sample.contribution;
-                });
+        for (std::size_t i = 0; i < samples.size(); ++i)
+        {
+                const ColorSample<Color>& sample = samples[indices[i]];
+                colors[i] = sample.color;
+                weights[i] = sample.weight;
+                contributions[i] = sample.contribution;
+        }
 
         return {colors, weights, contributions, samples.size()};
 }
@@ -144,12 +143,6 @@ template <std::size_t COUNT, typename Color>
 {
         ASSERT(!samples->empty());
 
-        if (samples->size() == 1)
-        {
-                const auto& sample = samples->front();
-                return {{sample.weight}, 1};
-        }
-
         com::partial_sort<COUNT>(
                 samples,
                 [](const auto a, const auto b)
@@ -173,12 +166,6 @@ template <std::size_t COUNT, typename Color>
 [[nodiscard]] ColorSamples<COUNT, Color> create_samples(const std::vector<ColorSample<Color>>* const samples)
 {
         ASSERT(!samples->empty());
-
-        if (samples->size() == 1)
-        {
-                const auto& sample = samples->front();
-                return {{sample.color}, {sample.weight}, {sample.contribution}, 1};
-        }
 
         thread_local std::vector<int> indices;
         indices.resize(samples->size());

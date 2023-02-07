@@ -23,17 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::pixels::samples::com
 {
-template <typename Samples, typename Copy>
-void create_without_sum(const std::size_t count, const Copy copy)
-{
-        ASSERT(count > 0 && count <= Info<Samples>::COUNT);
-
-        for (std::size_t i = 0; i < count; ++i)
-        {
-                copy(i);
-        }
-}
-
 template <typename Samples, typename Copy, typename Sum>
 void create_with_sum(const std::size_t count, const Copy copy, const Sum sum)
 {
