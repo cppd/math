@@ -227,13 +227,12 @@ template <typename A, typename B, typename Less, typename Copy>
 void merge(const A& a, const B& b, const Less less, const Copy copy)
 {
         static_assert(Info<A>::COUNT == Info<B>::COUNT);
-        static constexpr std::size_t COUNT = Info<A>::COUNT;
 
         const std::size_t a_size = a.count();
         const std::size_t b_size = b.count();
 
         ASSERT(a_size > 0 && b_size > 0);
-        ASSERT(a_size + b_size <= COUNT);
+        ASSERT(a_size + b_size <= Info<A>::COUNT);
 
         std::size_t i = 0;
         std::size_t a_i = 0;
