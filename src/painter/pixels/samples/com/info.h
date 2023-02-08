@@ -25,7 +25,7 @@ template <typename T>
 struct Info;
 
 template <template <std::size_t, typename> typename Samples, std::size_t N, typename Color>
-struct Info<Samples<N, Color>>
+struct Info<Samples<N, Color>> final
 {
         static constexpr std::size_t COUNT = N;
 };
