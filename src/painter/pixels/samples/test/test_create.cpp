@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compare.h"
 
 #include "../../color_contribution.h"
+#include "../com/info.h"
 #include "../create.h"
 
 #include <src/color/color.h>
@@ -30,53 +31,75 @@ namespace ns::painter::pixels::samples::test
 {
 namespace
 {
-void check_not_empty_not_full(const auto& samples, const int count)
+template <typename Samples>
+void check_not_empty_not_full(const Samples& samples, const int count)
 {
+        static constexpr auto COUNT = com::Info<typename Samples::value_type>::COUNT;
+
         if (!samples)
         {
-                error("Error creating samples from sample count " + to_string(count) + ": no data");
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": no data");
         }
 
         if (samples->empty())
         {
-                error("Error creating samples from sample count " + to_string(count) + ": empty");
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": empty");
         }
 
         if (samples->full())
         {
-                error("Error creating samples from sample count " + to_string(count) + ": full");
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": full");
+        }
+
+        if (!(samples->count() > 0 && samples->count() <= COUNT))
+        {
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": sample count = " + to_string(samples->count()));
         }
 }
 
-void check_full(const auto& samples, const int count)
+template <typename Samples>
+void check_full(const Samples& samples, const int count)
 {
+        static constexpr auto COUNT = com::Info<typename Samples::value_type>::COUNT;
+
         if (!samples)
         {
-                error("Error creating samples from sample count " + to_string(count) + ": no data");
+                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": no data");
         }
 
         if (samples->empty())
         {
-                error("Error creating samples from sample count " + to_string(count) + ": empty");
+                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": empty");
         }
 
         if (!samples->full())
         {
-                error("Error creating samples from sample count " + to_string(count) + ": not full");
+                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": not full");
+        }
+
+        if (!(samples->count() > 0 && samples->count() <= COUNT))
+        {
+                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": sample count = " + to_string(samples->count()));
         }
 }
 
 template <typename C>
 void test_background()
 {
-        using T = typename C::DataType;
-
-        std::vector<std::optional<C>> colors;
-        std::vector<T> weights;
+        using Colors = std::vector<std::optional<C>>;
+        using Weights = std::vector<typename C::DataType>;
 
         {
-                colors = {};
-                weights = {};
+                const Colors colors = {};
+                const Weights weights = {};
                 const auto samples = create_background_samples<2>(colors, weights);
                 if (samples)
                 {
@@ -84,53 +107,53 @@ void test_background()
                 }
         }
         {
-                colors = {{}};
-                weights = {1};
+                const Colors colors = {{}};
+                const Weights weights = {1};
                 const auto samples = create_background_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 1);
                 compare_weights({1}, *samples);
         }
         {
-                colors = {{}, {}};
-                weights = {2, 1};
+                const Colors colors = {{}, {}};
+                const Weights weights = {2, 1};
                 const auto samples = create_background_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 2);
                 compare_weights({1, 2}, *samples);
         }
         {
-                colors = {{}, C(1), {}, {}};
-                weights = {3, 100, 1, 2};
+                const Colors colors = {{}, C(1), {}, {}};
+                const Weights weights = {3, 100, 1, 2};
                 const auto samples = create_background_samples<2>(colors, weights);
                 check_full(samples, 3);
                 compare_weights({1, 3}, *samples);
                 compare_weight_sum(2, *samples);
         }
         {
-                colors = {C(1), {}, {}, {}, C(1), {}};
-                weights = {100, 3, 2, 4, 100, 1};
+                const Colors colors = {C(1), {}, {}, {}, C(1), {}};
+                const Weights weights = {100, 3, 2, 4, 100, 1};
                 const auto samples = create_background_samples<2>(colors, weights);
                 check_full(samples, 4);
                 compare_weights({1, 4}, *samples);
                 compare_weight_sum(2 + 3, *samples);
         }
         {
-                colors = {C(1), {}, {}, {}, C(1), {}};
-                weights = {100, 3, 2, 4, 100, 1};
+                const Colors colors = {C(1), {}, {}, {}, C(1), {}};
+                const Weights weights = {100, 3, 2, 4, 100, 1};
                 const auto samples = create_background_samples<4>(colors, weights);
                 check_not_empty_not_full(samples, 4);
                 compare_weights({1, 2, 3, 4}, *samples);
         }
         {
-                colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}};
-                weights = {100, 3, 2, 4, 100, 5, 100, 1};
+                const Colors colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}};
+                const Weights weights = {100, 3, 2, 4, 100, 5, 100, 1};
                 const auto samples = create_background_samples<4>(colors, weights);
                 check_full(samples, 5);
                 compare_weights({1, 2, 4, 5}, *samples);
                 compare_weight_sum(3, *samples);
         }
         {
-                colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}, {}};
-                weights = {100, 3, 2, 4, 100, 5, 100, 1, 6};
+                const Colors colors = {C(1), {}, {}, {}, C(1), {}, C(1), {}, {}};
+                const Weights weights = {100, 3, 2, 4, 100, 5, 100, 1, 6};
                 const auto samples = create_background_samples<4>(colors, weights);
                 check_full(samples, 6);
                 compare_weights({1, 2, 5, 6}, *samples);
@@ -142,18 +165,17 @@ template <typename C>
 void test_color()
 {
         using T = typename C::DataType;
+        using Colors = std::vector<std::optional<C>>;
+        using Weights = std::vector<typename C::DataType>;
 
         const auto scc = [](const C& c)
         {
                 return sample_color_contribution(c);
         };
 
-        std::vector<std::optional<C>> colors;
-        std::vector<T> weights;
-
         {
-                colors = {};
-                weights = {};
+                const Colors colors = {};
+                const Weights weights = {};
                 const auto samples = create_color_samples<2>(colors, weights);
                 if (samples)
                 {
@@ -161,8 +183,8 @@ void test_color()
                 }
         }
         {
-                colors = {C(0.5)};
-                weights = {1};
+                const Colors colors = {C(0.5)};
+                const Weights weights = {1};
                 const auto samples = create_color_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 1);
                 compare_colors({C(0.5)}, *samples);
@@ -170,8 +192,8 @@ void test_color()
                 compare_contributions({1 * scc(C(0.5))}, *samples);
         }
         {
-                colors = {C(0.5), C(0.25)};
-                weights = {1, 1.1};
+                const Colors colors = {C(0.5), C(0.25)};
+                const Weights weights = {1, 1.1};
                 const auto samples = create_color_samples<2>(colors, weights);
                 check_not_empty_not_full(samples, 2);
                 compare_colors({T{1.1} * C(0.25), T{1} * C(0.5)}, *samples);
@@ -179,8 +201,8 @@ void test_color()
                 compare_contributions({T{1.1} * scc(C(0.25)), T{1} * scc(C(0.5))}, *samples);
         }
         {
-                colors = {C(0.5), C(0.125), {}, C(0.25)};
-                weights = {1, 1.1, 10, 1.2};
+                const Colors colors = {C(0.5), C(0.125), {}, C(0.25)};
+                const Weights weights = {1, 1.1, 10, 1.2};
                 const auto samples = create_color_samples<2>(colors, weights);
                 check_full(samples, 3);
                 compare_colors({T{1.1} * C(0.125), T{1} * C(0.5)}, *samples);
@@ -190,8 +212,8 @@ void test_color()
                 compare_weight_sum(1.2, *samples);
         }
         {
-                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
-                weights = {10, 1, 10, 1.1, 1.2, 1.3};
+                const Colors colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
+                const Weights weights = {10, 1, 10, 1.1, 1.2, 1.3};
                 const auto samples = create_color_samples<2>(colors, weights);
                 check_full(samples, 4);
                 compare_colors({T{1.3} * C(0.125), T{1} * C(1)}, *samples);
@@ -201,8 +223,8 @@ void test_color()
                 compare_weight_sum(T{1.1} + T{1.2}, *samples);
         }
         {
-                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
-                weights = {10, 1, 10, 1.1, 1.2, 1.3};
+                const Colors colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125)};
+                const Weights weights = {10, 1, 10, 1.1, 1.2, 1.3};
                 const auto samples = create_color_samples<4>(colors, weights);
                 check_not_empty_not_full(samples, 4);
                 compare_colors({T{1.3} * C(0.125), T{1.1} * C(0.25), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
@@ -212,8 +234,8 @@ void test_color()
                         *samples);
         }
         {
-                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 16), {}};
-                weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10};
+                const Colors colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 16), {}};
+                const Weights weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10};
                 const auto samples = create_color_samples<4>(colors, weights);
                 check_full(samples, 5);
                 compare_colors({T{1.4} * C(1.0 / 16), T{1.3} * C(0.125), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
@@ -225,8 +247,8 @@ void test_color()
                 compare_weight_sum(T{1.1}, *samples);
         }
         {
-                colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 32), {}, C(1.0 / 16)};
-                weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10, 1.5};
+                const Colors colors = {{}, C(1), {}, C(0.25), C(0.5), C(0.125), {}, C(1.0 / 32), {}, C(1.0 / 16)};
+                const Weights weights = {10, 1, 10, 1.1, 1.2, 1.3, 10, 1.4, 10, 1.5};
                 const auto samples = create_color_samples<4>(colors, weights);
                 check_full(samples, 6);
                 compare_colors({T{1.4} * C(1.0 / 32), T{1.5} * C(1.0 / 16), T{1.2} * C(0.5), T{1} * C(1)}, *samples);
