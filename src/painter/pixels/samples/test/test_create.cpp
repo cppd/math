@@ -32,7 +32,7 @@ namespace ns::painter::pixels::samples::test
 namespace
 {
 template <typename Samples>
-void check_not_empty_not_full(const Samples& samples, const int count)
+void check_not_empty(const Samples& samples, const int count)
 {
         static constexpr auto COUNT = com::Info<typename Samples::value_type>::COUNT;
 
@@ -46,12 +46,6 @@ void check_not_empty_not_full(const Samples& samples, const int count)
         {
                 error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
                       + ": empty");
-        }
-
-        if (samples->full())
-        {
-                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
-                      + ": full");
         }
 
         if (!(samples->count() > 0 && samples->count() <= COUNT))
@@ -62,32 +56,30 @@ void check_not_empty_not_full(const Samples& samples, const int count)
 }
 
 template <typename Samples>
+void check_not_empty_not_full(const Samples& samples, const int count)
+{
+        static constexpr auto COUNT = com::Info<typename Samples::value_type>::COUNT;
+
+        check_not_empty(samples, count);
+
+        if (samples->full())
+        {
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                      + ": full");
+        }
+}
+
+template <typename Samples>
 void check_full(const Samples& samples, const int count)
 {
         static constexpr auto COUNT = com::Info<typename Samples::value_type>::COUNT;
 
-        if (!samples)
-        {
-                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
-                      + ": no data");
-        }
-
-        if (samples->empty())
-        {
-                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
-                      + ": empty");
-        }
+        check_not_empty(samples, count);
 
         if (!samples->full())
         {
-                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
+                error("Error creating samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
                       + ": not full");
-        }
-
-        if (!(samples->count() > 0 && samples->count() <= COUNT))
-        {
-                error("Error creating full samples<" + to_string(COUNT) + "> from sample count " + to_string(count)
-                      + ": sample count = " + to_string(samples->count()));
         }
 }
 
