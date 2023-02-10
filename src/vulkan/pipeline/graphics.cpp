@@ -65,8 +65,8 @@ VkViewport create_viewport(const GraphicsPipelineCreateInfo& info)
         viewport.y = info.viewport.value().y0();
         viewport.width = info.viewport.value().width();
         viewport.height = info.viewport.value().height();
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = 0;
+        viewport.maxDepth = 1;
         return viewport;
 }
 
@@ -100,13 +100,13 @@ VkPipelineRasterizationStateCreateInfo create_rasterization_state_info(const Gra
         create_info.depthClampEnable = VK_FALSE;
         create_info.rasterizerDiscardEnable = VK_FALSE;
         create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        create_info.lineWidth = 1.0f;
+        create_info.lineWidth = 1;
         create_info.cullMode = VK_CULL_MODE_NONE;
         create_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
         create_info.depthBiasEnable = info.depth_bias ? VK_TRUE : VK_FALSE;
-        // create_info.depthBiasConstantFactor = 0.0f;
-        // create_info.depthBiasClamp = 0.0f;
-        // create_info.depthBiasSlopeFactor = 0.0f;
+        // create_info.depthBiasConstantFactor = 0;
+        // create_info.depthBiasClamp = 0;
+        // create_info.depthBiasSlopeFactor = 0;
         return create_info;
 }
 
@@ -122,7 +122,7 @@ VkPipelineMultisampleStateCreateInfo create_multisample_state_info(const Graphic
                         error("Sample shading required but not supported");
                 }
                 create_info.sampleShadingEnable = VK_TRUE;
-                create_info.minSampleShading = 1.0f;
+                create_info.minSampleShading = 1;
                 LOG("Sample shading enabled");
         }
         else
@@ -177,10 +177,10 @@ VkPipelineColorBlendStateCreateInfo create_color_blend_state_info(
         // create_info.logicOp = VK_LOGIC_OP_COPY;
         create_info.attachmentCount = attachment_count;
         create_info.pAttachments = attachments;
-        // create_info.blendConstants[0] = 0.0f;
-        // create_info.blendConstants[1] = 0.0f;
-        // create_info.blendConstants[2] = 0.0f;
-        // create_info.blendConstants[3] = 0.0f;
+        // create_info.blendConstants[0] = 0;
+        // create_info.blendConstants[1] = 0;
+        // create_info.blendConstants[2] = 0;
+        // create_info.blendConstants[3] = 0;
         return create_info;
 }
 
@@ -222,8 +222,8 @@ VkPipelineDepthStencilStateCreateInfo create_depth_stencil_state_info(const Grap
         create_info.depthWriteEnable = info.depth_write ? VK_TRUE : VK_FALSE;
         create_info.depthCompareOp = VK_COMPARE_OP_LESS;
         create_info.depthBoundsTestEnable = VK_FALSE;
-        // create_info.minDepthBounds = 0.0f;
-        // create_info.maxDepthBounds = 1.0f;
+        // create_info.minDepthBounds = 0;
+        // create_info.maxDepthBounds = 1;
         create_info.stencilTestEnable = VK_FALSE;
         // create_info.front = {};
         // create_info.back = {};
