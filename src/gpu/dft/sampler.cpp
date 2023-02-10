@@ -38,9 +38,9 @@ vulkan::handle::Sampler create_sampler(const VkDevice device)
         create_info.compareEnable = VK_FALSE;
 
         create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        create_info.mipLodBias = 0.0f;
-        create_info.minLod = 0.0f;
-        create_info.maxLod = 0.0f;
+        create_info.mipLodBias = 0;
+        create_info.minLod = 0;
+        create_info.maxLod = 0;
 
         return {device, create_info};
 }
