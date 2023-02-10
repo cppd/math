@@ -125,9 +125,9 @@ void read_obj_stage_two(
                         progress->set(i * count_reciprocal);
                 }
 
-                if (obj_lines[i])
+                if (const auto& line = obj_lines[i])
                 {
-                        std::visit(visitor, *obj_lines[i]);
+                        std::visit(visitor, *line);
                 }
         }
 }
