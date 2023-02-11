@@ -137,21 +137,21 @@ void MeshRenderer::create_render_buffers(
 
         for (const bool transparent : {false, true})
         {
-                render_pipelines(transparent).emplace();
+                Pipelines& pipelines = render_pipelines(transparent).emplace();
 
-                render_pipelines(transparent)->triangles = triangles_program_.create_pipeline(
+                pipelines.triangles = triangles_program_.create_pipeline(
                         render_pass, sample_count, sample_shading_, viewport, transparent);
 
-                render_pipelines(transparent)->triangle_lines = triangle_lines_program_.create_pipeline(
+                pipelines.triangle_lines = triangle_lines_program_.create_pipeline(
                         render_pass, sample_count, sample_shading_, viewport, transparent);
 
-                render_pipelines(transparent)->normals = normals_program_.create_pipeline(
+                pipelines.normals = normals_program_.create_pipeline(
                         render_pass, sample_count, sample_shading_, viewport, transparent);
 
-                render_pipelines(transparent)->points = points_program_.create_pipeline(
+                pipelines.points = points_program_.create_pipeline(
                         render_pass, sample_count, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, viewport, transparent);
 
-                render_pipelines(transparent)->lines = points_program_.create_pipeline(
+                pipelines.lines = points_program_.create_pipeline(
                         render_pass, sample_count, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, viewport, transparent);
         }
 }
@@ -257,29 +257,26 @@ void MeshRenderer::draw_commands(
 
         ASSERT(render_pipelines(transparent));
 
+        const Pipelines& pipelines = *render_pipelines(transparent);
+
         commands_triangles(
-                meshes, command_buffer, render_pipelines(transparent)->triangles, transparent, triangles_program_,
-                triangles_shared_memory_);
+                meshes, command_buffer, pipelines.triangles, transparent, triangles_program_, triangles_shared_memory_);
 
-        commands_lines(
-                meshes, command_buffer, render_pipelines(transparent)->lines, transparent, points_program_,
-                points_shared_memory_);
+        commands_lines(meshes, command_buffer, pipelines.lines, transparent, points_program_, points_shared_memory_);
 
-        commands_points(
-                meshes, command_buffer, render_pipelines(transparent)->points, transparent, points_program_,
-                points_shared_memory_);
+        commands_points(meshes, command_buffer, pipelines.points, transparent, points_program_, points_shared_memory_);
 
         if (show_clip_plane_lines)
         {
                 commands_triangle_lines(
-                        meshes, command_buffer, render_pipelines(transparent)->triangle_lines, transparent,
-                        triangle_lines_program_, triangle_lines_shared_memory_);
+                        meshes, command_buffer, pipelines.triangle_lines, transparent, triangle_lines_program_,
+                        triangle_lines_shared_memory_);
         }
 
         if (show_normals)
         {
                 commands_normals(
-                        meshes, command_buffer, render_pipelines(transparent)->normals, transparent, normals_program_,
+                        meshes, command_buffer, pipelines.normals, transparent, normals_program_,
                         normals_shared_memory_);
         }
 }
