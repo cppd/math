@@ -68,7 +68,7 @@ unsigned tree_max_depth()
                 static constexpr double SUM = 1e9;
                 static constexpr double RATIO = power<N>(2);
                 const double n = geometric_progression_n(RATIO, SUM);
-                return std::max(2.0, std::floor(n));
+                return std::max<unsigned>(2, std::floor(n));
         }
 }
 
