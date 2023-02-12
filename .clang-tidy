@@ -67,8 +67,8 @@ CheckOptions:
   value: 'glibc'
 - key:   cppcoreguidelines-macro-usage.CheckCapsOnly
   value: '1'
-- key:   cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
-  value: '0'
+- key:   cppcoreguidelines-narrowing-conversions.PedanticMode
+  value: '1'
 - key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
   value: '0'
 - key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerToFloatingPointNarrowingConversion
@@ -77,8 +77,6 @@ CheckOptions:
   value: '1'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
-- key:   modernize-loop-convert.UseCxx20ReverseRanges
-  value: '0'
 - key:   modernize-use-auto.MinTypeNameLength
   value: '0'
 - key:   readability-function-cognitive-complexity.Threshold
