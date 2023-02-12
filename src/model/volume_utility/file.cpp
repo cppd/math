@@ -42,8 +42,8 @@ namespace
 {
 int max_digit_count_zero_based(const int count)
 {
-        const int max_number = count - 1;
-        return std::floor(std::log10(std::max(max_number, 1))) + 1;
+        const double max_number = std::max(count - 1, 1);
+        return 1 + std::floor(std::log10(max_number));
 }
 
 template <std::size_t N>

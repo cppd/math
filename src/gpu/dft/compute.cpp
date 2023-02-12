@@ -127,7 +127,8 @@ class DftImage final : public ComputeImage
                 const int height = rectangle.height();
 
                 copy_output_memory_.set(dft_->buffer(), output.image_view());
-                copy_output_program_.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));
+                copy_output_program_.create_pipeline(
+                        GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (static_cast<long long>(width) * height));
 
                 copy_groups_ = group_count({width, height}, GROUP_SIZE_2D);
 
