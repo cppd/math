@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fft.h"
 
+#include "function.h"
+
 #include "shaders/bit_reverse.h"
 #include "shaders/fft_global.h"
 #include "shaders/fft_shared.h"
