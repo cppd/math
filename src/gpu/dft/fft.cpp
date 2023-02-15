@@ -130,6 +130,45 @@ public:
         }
 };
 
+class BitReverse final
+{
+        BitReverseProgram bit_reverse_program_;
+        BitReverseMemory bit_reverse_memory_;
+        int bit_reverse_groups_;
+        VkBuffer buffer_ = VK_NULL_HANDLE;
+
+public:
+        BitReverse(const vulkan::Device& device, const unsigned n, const unsigned data_size)
+                : bit_reverse_program_(device.handle()),
+                  bit_reverse_memory_(device.handle(), bit_reverse_program_.descriptor_set_layout()),
+                  bit_reverse_groups_(group_count<unsigned>(data_size, GROUP_SIZE_1D))
+        {
+                ASSERT(std::has_single_bit(n));
+
+                const std::uint32_t n_mask = n - 1;
+                const std::uint32_t n_bits = std::bit_width(n) - 1;
+
+                bit_reverse_program_.create_pipeline(GROUP_SIZE_1D, data_size, n_mask, n_bits);
+        }
+
+        void set(const vulkan::Buffer& buffer)
+        {
+                bit_reverse_memory_.set(buffer);
+                buffer_ = buffer.handle();
+        }
+
+        void commands(const VkCommandBuffer command_buffer) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_.pipeline());
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_.pipeline_layout(),
+                        BitReverseMemory::set_number(), 1, &bit_reverse_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, bit_reverse_groups_, 1, 1);
+
+                buffer_barrier(command_buffer, buffer_);
+        }
+};
+
 class Impl final : public Fft
 {
         unsigned n_;
@@ -138,10 +177,7 @@ class Impl final : public Fft
         bool only_shared_;
 
         std::optional<Shared> shared_;
-
-        std::optional<BitReverseProgram> bit_reverse_program_;
-        std::optional<BitReverseMemory> bit_reverse_memory_;
-        int bit_reverse_groups_;
+        std::optional<BitReverse> bit_reverse_;
 
         std::optional<FftGlobalProgram> fft_g_program_;
         std::vector<FftGlobalBuffer> fft_g_data_buffer_;
@@ -149,17 +185,6 @@ class Impl final : public Fft
         int fft_g_groups_;
 
         VkBuffer buffer_ = VK_NULL_HANDLE;
-
-        void commands_bit_reverse(const VkCommandBuffer command_buffer) const
-        {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_->pipeline());
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_->pipeline_layout(),
-                        BitReverseMemory::set_number(), 1, &bit_reverse_memory_->descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, bit_reverse_groups_, 1, 1);
-
-                buffer_barrier(command_buffer, buffer_);
-        }
 
         void commands_fft_g(const VkCommandBuffer command_buffer, const bool inverse) const
         {
@@ -191,7 +216,7 @@ class Impl final : public Fft
                 {
                         return;
                 }
-                bit_reverse_memory_->set(data.buffer());
+                bit_reverse_->set(data.buffer());
                 for (const FftGlobalMemory& m : fft_g_memory_)
                 {
                         m.set(data.buffer());
@@ -213,7 +238,7 @@ class Impl final : public Fft
 
                 // n is greater than shared_size. First bit reverse
                 // then compute, because calculations are in place.
-                commands_bit_reverse(command_buffer);
+                bit_reverse_->commands(command_buffer);
                 shared_->commands(command_buffer, inverse);
                 commands_fft_g(command_buffer, inverse);
         }
@@ -280,13 +305,7 @@ public:
 
                 //
 
-                const std::uint32_t n_mask = n - 1;
-                const std::uint32_t n_bits = std::bit_width(n) - 1;
-
-                bit_reverse_program_.emplace(device.handle());
-                bit_reverse_program_->create_pipeline(GROUP_SIZE_1D, data_size_, n_mask, n_bits);
-                bit_reverse_memory_.emplace(device.handle(), bit_reverse_program_->descriptor_set_layout());
-                bit_reverse_groups_ = group_count<unsigned>(data_size_, GROUP_SIZE_1D);
+                bit_reverse_.emplace(device, n_, data_size_);
 
                 //
 
