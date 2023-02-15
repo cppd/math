@@ -85,46 +85,47 @@ void buffer_barrier(const VkCommandBuffer command_buffer, const VkBuffer buffer)
                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
-class Shared final
+class FftShared final
 {
-        FftSharedProgram fft_program_;
-        FftSharedMemory fft_memory_;
-        int fft_groups_;
+        FftSharedProgram program_;
+        FftSharedMemory memory_;
+        int group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
-        Shared(const vulkan::Device& device,
-               const unsigned n,
-               const unsigned data_size,
-               const unsigned n_shared,
-               const bool reverse_input)
-                : fft_program_(device.handle()),
-                  fft_memory_(device.handle(), fft_program_.descriptor_set_layout()),
-                  fft_groups_(group_count(data_size, n_shared))
+        FftShared(
+                const vulkan::Device& device,
+                const unsigned n,
+                const unsigned data_size,
+                const unsigned n_shared,
+                const bool reverse_input)
+                : program_(device.handle()),
+                  memory_(device.handle(), program_.descriptor_set_layout()),
+                  group_count_(group_count(data_size, n_shared))
         {
                 ASSERT(std::has_single_bit(n));
 
                 const std::uint32_t n_mask = n - 1;
                 const std::uint32_t n_bits = std::bit_width(n) - 1;
 
-                fft_program_.create_pipelines(
+                program_.create_pipelines(
                         data_size, n, n_mask, n_bits, n_shared, reverse_input,
                         group_size(n, device.properties().properties_10.limits));
         }
 
         void set(const vulkan::Buffer& buffer)
         {
-                fft_memory_.set(buffer);
+                memory_.set(buffer);
                 buffer_ = buffer.handle();
         }
 
         void commands(const VkCommandBuffer command_buffer, const bool inverse) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_program_.pipeline(inverse));
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_program_.pipeline_layout(),
-                        FftSharedMemory::set_number(), 1, &fft_memory_.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, fft_groups_, 1, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline_layout(),
+                        FftSharedMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, group_count_, 1, 1);
 
                 buffer_barrier(command_buffer, buffer_);
         }
@@ -132,80 +133,80 @@ public:
 
 class BitReverse final
 {
-        BitReverseProgram bit_reverse_program_;
-        BitReverseMemory bit_reverse_memory_;
-        int bit_reverse_groups_;
+        BitReverseProgram program_;
+        BitReverseMemory memory_;
+        int group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
         BitReverse(const vulkan::Device& device, const unsigned n, const unsigned data_size)
-                : bit_reverse_program_(device.handle()),
-                  bit_reverse_memory_(device.handle(), bit_reverse_program_.descriptor_set_layout()),
-                  bit_reverse_groups_(group_count<unsigned>(data_size, GROUP_SIZE_1D))
+                : program_(device.handle()),
+                  memory_(device.handle(), program_.descriptor_set_layout()),
+                  group_count_(group_count<unsigned>(data_size, GROUP_SIZE_1D))
         {
                 ASSERT(std::has_single_bit(n));
 
                 const std::uint32_t n_mask = n - 1;
                 const std::uint32_t n_bits = std::bit_width(n) - 1;
 
-                bit_reverse_program_.create_pipeline(GROUP_SIZE_1D, data_size, n_mask, n_bits);
+                program_.create_pipeline(GROUP_SIZE_1D, data_size, n_mask, n_bits);
         }
 
         void set(const vulkan::Buffer& buffer)
         {
-                bit_reverse_memory_.set(buffer);
+                memory_.set(buffer);
                 buffer_ = buffer.handle();
         }
 
         void commands(const VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_.pipeline_layout(),
-                        BitReverseMemory::set_number(), 1, &bit_reverse_memory_.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, bit_reverse_groups_, 1, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline_layout(),
+                        BitReverseMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, group_count_, 1, 1);
 
                 buffer_barrier(command_buffer, buffer_);
         }
 };
 
-class Global final
+class FftGlobal final
 {
-        FftGlobalProgram fft_g_program_;
-        std::vector<FftGlobalBuffer> fft_g_data_buffer_;
-        std::vector<FftGlobalMemory> fft_g_memory_;
-        int fft_g_groups_;
+        FftGlobalProgram program_;
+        std::vector<FftGlobalBuffer> buffers_;
+        std::vector<FftGlobalMemory> memories_;
+        int group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
-        Global(const vulkan::Device& device,
-               const unsigned n,
-               const unsigned data_size,
-               const unsigned n_shared,
-               const std::vector<std::uint32_t>& family_indices)
-                : fft_g_program_(device.handle()),
-                  fft_g_groups_(group_count<unsigned>(data_size / 2, GROUP_SIZE_1D))
+        FftGlobal(
+                const vulkan::Device& device,
+                const unsigned n,
+                const unsigned data_size,
+                const unsigned n_shared,
+                const std::vector<std::uint32_t>& family_indices)
+                : program_(device.handle()),
+                  group_count_(group_count<unsigned>(data_size / 2, GROUP_SIZE_1D))
         {
-                fft_g_program_.create_pipelines(GROUP_SIZE_1D, data_size, n);
+                program_.create_pipelines(GROUP_SIZE_1D, data_size, n);
 
                 unsigned m_div_2 = n_shared; // half the size of DFT
                 float two_pi_div_m = PI<float> / m_div_2;
                 for (; m_div_2 < n; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
-                        const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
-                        fft_g_memory_.emplace_back(
-                                device.handle(), fft_g_program_.descriptor_set_layout(), buffer.buffer());
+                        const FftGlobalBuffer& buffer = buffers_.emplace_back(device, family_indices);
+                        memories_.emplace_back(device.handle(), program_.descriptor_set_layout(), buffer.buffer());
                         buffer.set(two_pi_div_m, m_div_2);
                 }
 
-                ASSERT(!fft_g_memory_.empty());
-                ASSERT(fft_g_memory_.size() == fft_g_data_buffer_.size());
-                ASSERT(n == (n_shared << fft_g_memory_.size()));
+                ASSERT(!memories_.empty());
+                ASSERT(memories_.size() == buffers_.size());
+                ASSERT(n == (n_shared << memories_.size()));
         }
 
         void set(const vulkan::Buffer& buffer)
         {
-                for (const FftGlobalMemory& m : fft_g_memory_)
+                for (const FftGlobalMemory& m : memories_)
                 {
                         m.set(buffer);
                 }
@@ -214,14 +215,14 @@ public:
 
         void commands(const VkCommandBuffer command_buffer, const bool inverse) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_.pipeline(inverse));
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline(inverse));
 
-                for (const FftGlobalMemory& m : fft_g_memory_)
+                for (const FftGlobalMemory& m : memories_)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline_layout(),
                                 FftGlobalMemory::set_number(), 1, &m.descriptor_set(), 0, nullptr);
-                        vkCmdDispatch(command_buffer, fft_g_groups_, 1, 1);
+                        vkCmdDispatch(command_buffer, group_count_, 1, 1);
 
                         buffer_barrier(command_buffer, buffer_);
                 }
@@ -234,9 +235,9 @@ class Impl final : public Fft
         unsigned data_size_;
         bool only_shared_;
 
-        std::optional<Shared> shared_;
+        std::optional<FftShared> fft_shared_;
         std::optional<BitReverse> bit_reverse_;
-        std::optional<Global> global_;
+        std::optional<FftGlobal> fft_global_;
 
         void set_data(const ComplexNumberBuffer& data) override
         {
@@ -247,7 +248,7 @@ class Impl final : public Fft
 
                 ASSERT(data.size() >= data_size_);
 
-                shared_->set(data.buffer());
+                fft_shared_->set(data.buffer());
 
                 if (only_shared_)
                 {
@@ -255,7 +256,7 @@ class Impl final : public Fft
                 }
 
                 bit_reverse_->set(data.buffer());
-                global_->set(data.buffer());
+                fft_global_->set(data.buffer());
         }
 
         void commands(const VkCommandBuffer command_buffer, const bool inverse) const override
@@ -267,15 +268,15 @@ class Impl final : public Fft
 
                 if (only_shared_)
                 {
-                        shared_->commands(command_buffer, inverse);
+                        fft_shared_->commands(command_buffer, inverse);
                         return;
                 }
 
                 // n is greater than shared_size. First bit reverse
                 // then compute, because calculations are in place.
                 bit_reverse_->commands(command_buffer);
-                shared_->commands(command_buffer, inverse);
-                global_->commands(command_buffer, inverse);
+                fft_shared_->commands(command_buffer, inverse);
+                fft_global_->commands(command_buffer, inverse);
         }
 
         void run_for_data(
@@ -329,7 +330,7 @@ public:
                 data_size_ = count * n;
                 only_shared_ = (n_ <= n_shared);
 
-                shared_.emplace(
+                fft_shared_.emplace(
                         device, n_, data_size_, n_shared,
                         /*reverse_input=*/only_shared_);
 
@@ -339,7 +340,7 @@ public:
                 }
 
                 bit_reverse_.emplace(device, n_, data_size_);
-                global_.emplace(device, n_, data_size_, n_shared, family_indices);
+                fft_global_.emplace(device, n_, data_size_, n_shared, family_indices);
         }
 };
 }
