@@ -169,38 +169,74 @@ public:
         }
 };
 
-class Impl final : public Fft
+class Global final
 {
-        unsigned n_;
-        unsigned data_size_;
-        unsigned n_shared_;
-        bool only_shared_;
-
-        std::optional<Shared> shared_;
-        std::optional<BitReverse> bit_reverse_;
-
-        std::optional<FftGlobalProgram> fft_g_program_;
+        FftGlobalProgram fft_g_program_;
         std::vector<FftGlobalBuffer> fft_g_data_buffer_;
         std::vector<FftGlobalMemory> fft_g_memory_;
         int fft_g_groups_;
-
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
-        void commands_fft_g(const VkCommandBuffer command_buffer, const bool inverse) const
+public:
+        Global(const vulkan::Device& device,
+               const unsigned n,
+               const unsigned data_size,
+               const unsigned n_shared,
+               const std::vector<std::uint32_t>& family_indices)
+                : fft_g_program_(device.handle()),
+                  fft_g_groups_(group_count<unsigned>(data_size / 2, GROUP_SIZE_1D))
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_->pipeline(inverse));
+                fft_g_program_.create_pipelines(GROUP_SIZE_1D, data_size, n);
+
+                unsigned m_div_2 = n_shared; // half the size of DFT
+                float two_pi_div_m = PI<float> / m_div_2;
+                for (; m_div_2 < n; two_pi_div_m /= 2, m_div_2 <<= 1)
+                {
+                        const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
+                        fft_g_memory_.emplace_back(
+                                device.handle(), fft_g_program_.descriptor_set_layout(), buffer.buffer());
+                        buffer.set(two_pi_div_m, m_div_2);
+                }
+
+                ASSERT(!fft_g_memory_.empty());
+                ASSERT(fft_g_memory_.size() == fft_g_data_buffer_.size());
+                ASSERT(n == (n_shared << fft_g_memory_.size()));
+        }
+
+        void set(const vulkan::Buffer& buffer)
+        {
+                for (const FftGlobalMemory& m : fft_g_memory_)
+                {
+                        m.set(buffer);
+                }
+                buffer_ = buffer.handle();
+        }
+
+        void commands(const VkCommandBuffer command_buffer, const bool inverse) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_.pipeline(inverse));
+
                 for (const FftGlobalMemory& m : fft_g_memory_)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_->pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_.pipeline_layout(),
                                 FftGlobalMemory::set_number(), 1, &m.descriptor_set(), 0, nullptr);
                         vkCmdDispatch(command_buffer, fft_g_groups_, 1, 1);
 
                         buffer_barrier(command_buffer, buffer_);
                 }
         }
+};
 
-        //
+class Impl final : public Fft
+{
+        unsigned n_;
+        unsigned data_size_;
+        bool only_shared_;
+
+        std::optional<Shared> shared_;
+        std::optional<BitReverse> bit_reverse_;
+        std::optional<Global> global_;
 
         void set_data(const ComplexNumberBuffer& data) override
         {
@@ -210,17 +246,16 @@ class Impl final : public Fft
                 }
 
                 ASSERT(data.size() >= data_size_);
-                buffer_ = data.buffer().handle();
+
                 shared_->set(data.buffer());
+
                 if (only_shared_)
                 {
                         return;
                 }
+
                 bit_reverse_->set(data.buffer());
-                for (const FftGlobalMemory& m : fft_g_memory_)
-                {
-                        m.set(data.buffer());
-                }
+                global_->set(data.buffer());
         }
 
         void commands(const VkCommandBuffer command_buffer, const bool inverse) const override
@@ -240,7 +275,7 @@ class Impl final : public Fft
                 // then compute, because calculations are in place.
                 bit_reverse_->commands(command_buffer);
                 shared_->commands(command_buffer, inverse);
-                commands_fft_g(command_buffer, inverse);
+                global_->commands(command_buffer, inverse);
         }
 
         void run_for_data(
@@ -283,19 +318,19 @@ public:
                 {
                         error("FFT size " + std::to_string(n) + " is not positive");
                 }
+
                 if (!std::has_single_bit(n))
                 {
                         error("FFT size " + std::to_string(n) + " is not an integral power of 2");
                 }
 
-                data_size_ = count * n;
-                n_shared_ = shared_size(n, device.properties().properties_10.limits);
-                only_shared_ = n_ <= n_shared_;
+                const unsigned n_shared = shared_size(n, device.properties().properties_10.limits);
 
-                //
+                data_size_ = count * n;
+                only_shared_ = (n_ <= n_shared);
 
                 shared_.emplace(
-                        device, n_, data_size_, n_shared_,
+                        device, n_, data_size_, n_shared,
                         /*reverse_input=*/only_shared_);
 
                 if (only_shared_)
@@ -303,28 +338,8 @@ public:
                         return;
                 }
 
-                //
-
                 bit_reverse_.emplace(device, n_, data_size_);
-
-                //
-
-                fft_g_program_.emplace(device.handle());
-                fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
-                fft_g_groups_ = group_count<unsigned>(data_size_ / 2, GROUP_SIZE_1D);
-
-                unsigned m_div_2 = n_shared_; // half the size of DFT
-                float two_pi_div_m = PI<float> / m_div_2;
-                for (; m_div_2 < n_; two_pi_div_m /= 2, m_div_2 <<= 1)
-                {
-                        const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
-                        fft_g_memory_.emplace_back(
-                                device.handle(), fft_g_program_->descriptor_set_layout(), buffer.buffer());
-                        buffer.set(two_pi_div_m, m_div_2);
-                }
-                ASSERT(!fft_g_memory_.empty());
-                ASSERT(fft_g_memory_.size() == fft_g_data_buffer_.size());
-                ASSERT(n_ == (n_shared_ << fft_g_memory_.size()));
+                global_.emplace(device, n_, data_size_, n_shared, family_indices);
         }
 };
 }
