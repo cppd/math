@@ -453,7 +453,7 @@ std::array<int, 2> find_dimensions(const TestSize test_size)
         }
         case TestSize::LARGE:
         {
-                const int n1 = 3001;
+                const int n1 = 6007;
                 const int n2 = 997;
                 return {n1, n2};
         }
