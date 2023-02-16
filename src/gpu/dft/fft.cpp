@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/group_count.h>
+#include <src/com/print.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
@@ -34,14 +35,14 @@ namespace ns::gpu::dft
 {
 namespace
 {
-constexpr const int GROUP_SIZE_1D = 256;
+constexpr unsigned GROUP_SIZE_1D = 256;
 
-unsigned shared_size(const int dft_size, const VkPhysicalDeviceLimits& limits)
+unsigned shared_size(const unsigned dft_size, const VkPhysicalDeviceLimits& limits)
 {
         return dft::shared_size<std::complex<float>>(dft_size, limits.maxComputeSharedMemorySize);
 }
 
-int group_size(const int dft_size, const VkPhysicalDeviceLimits& limits)
+unsigned group_size(const unsigned dft_size, const VkPhysicalDeviceLimits& limits)
 {
         return dft::group_size<std::complex<float>>(
                 dft_size, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
@@ -89,7 +90,7 @@ class FftShared final
 {
         FftSharedProgram program_;
         FftSharedMemory memory_;
-        int group_count_;
+        unsigned group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
@@ -135,14 +136,14 @@ class BitReverse final
 {
         BitReverseProgram program_;
         BitReverseMemory memory_;
-        int group_count_;
+        unsigned group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
         BitReverse(const vulkan::Device& device, const unsigned n, const unsigned data_size)
                 : program_(device.handle()),
                   memory_(device.handle(), program_.descriptor_set_layout()),
-                  group_count_(group_count<unsigned>(data_size, GROUP_SIZE_1D))
+                  group_count_(group_count(data_size, GROUP_SIZE_1D))
         {
                 ASSERT(std::has_single_bit(n));
 
@@ -175,7 +176,7 @@ class FftGlobal final
         FftGlobalProgram program_;
         std::vector<FftGlobalBuffer> buffers_;
         std::vector<FftGlobalMemory> memories_;
-        int group_count_;
+        unsigned group_count_;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
 public:
@@ -186,7 +187,7 @@ public:
                 const unsigned n_shared,
                 const std::vector<std::uint32_t>& family_indices)
                 : program_(device.handle()),
-                  group_count_(group_count<unsigned>(data_size / 2, GROUP_SIZE_1D))
+                  group_count_(group_count(data_size / 2, GROUP_SIZE_1D))
         {
                 program_.create_pipelines(GROUP_SIZE_1D, data_size, n);
 
@@ -231,7 +232,6 @@ public:
 
 class Impl final : public Fft
 {
-        unsigned n_;
         unsigned data_size_;
         bool only_shared_;
 
@@ -241,12 +241,16 @@ class Impl final : public Fft
 
         void set_data(const ComplexNumberBuffer& data) override
         {
-                if (n_ == 1)
+                if (!fft_shared_)
                 {
                         return;
                 }
 
-                ASSERT(data.size() >= data_size_);
+                if (!(data.size() >= data_size_))
+                {
+                        error("FFT buffer size " + to_string(data.size())
+                              + " must be greater than or equal to data size " + to_string(data_size_));
+                }
 
                 fft_shared_->set(data.buffer());
 
@@ -261,7 +265,7 @@ class Impl final : public Fft
 
         void commands(const VkCommandBuffer command_buffer, const bool inverse) const override
         {
-                if (n_ == 1)
+                if (!fft_shared_)
                 {
                         return;
                 }
@@ -272,7 +276,7 @@ class Impl final : public Fft
                         return;
                 }
 
-                // n is greater than shared_size. First bit reverse
+                // n is greater than shared size. First bit reverse
                 // then compute, because calculations are in place.
                 bit_reverse_->commands(command_buffer);
                 fft_shared_->commands(command_buffer, inverse);
@@ -286,12 +290,16 @@ class Impl final : public Fft
                 const VkCommandPool pool,
                 const VkQueue queue) override
         {
-                if (n_ == 1)
+                if (!fft_shared_)
                 {
                         return;
                 }
 
-                ASSERT(data.size() == data_size_);
+                if (!(data.size() == data_size_))
+                {
+                        error("FFT buffer size " + to_string(data.size()) + " must be equal to data size "
+                              + to_string(data_size_));
+                }
 
                 set_data(data);
 
@@ -308,30 +316,29 @@ public:
              const std::vector<std::uint32_t>& family_indices,
              const unsigned count,
              const unsigned n)
-                : n_(n)
         {
-                if (n_ == 1)
+                if (n == 1)
                 {
                         return;
                 }
 
                 if (n <= 0)
                 {
-                        error("FFT size " + std::to_string(n) + " is not positive");
+                        error("FFT size " + to_string(n) + " is not positive");
                 }
 
                 if (!std::has_single_bit(n))
                 {
-                        error("FFT size " + std::to_string(n) + " is not an integral power of 2");
+                        error("FFT size " + to_string(n) + " is not an integral power of 2");
                 }
 
                 const unsigned n_shared = shared_size(n, device.properties().properties_10.limits);
 
                 data_size_ = count * n;
-                only_shared_ = (n_ <= n_shared);
+                only_shared_ = (n <= n_shared);
 
                 fft_shared_.emplace(
-                        device, n_, data_size_, n_shared,
+                        device, n, data_size_, n_shared,
                         /*reverse_input=*/only_shared_);
 
                 if (only_shared_)
@@ -339,8 +346,8 @@ public:
                         return;
                 }
 
-                bit_reverse_.emplace(device, n_, data_size_);
-                fft_global_.emplace(device, n_, data_size_, n_shared, family_indices);
+                bit_reverse_.emplace(device, n, data_size_);
+                fft_global_.emplace(device, n, data_size_, n_shared, family_indices);
         }
 };
 }
