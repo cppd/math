@@ -53,7 +53,7 @@ const Mouse::MouseButtonInfo& Mouse::info(const MouseButton button) const
         {
                 return iter->second;
         }
-        static constexpr const MouseButtonInfo INFO{};
+        static constexpr MouseButtonInfo INFO{};
         return INFO;
 }
 

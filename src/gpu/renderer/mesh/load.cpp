@@ -505,8 +505,8 @@ std::vector<MaterialBuffer> load_materials(
 
         // material for vertices without material
         constexpr Vector3f COLOR(0);
-        constexpr const bool USE_TEXTURE = false;
-        constexpr const bool USE_MATERIAL = false;
+        constexpr bool USE_TEXTURE = false;
+        constexpr bool USE_MATERIAL = false;
         buffers.emplace_back(device, command_pool, queue, family_indices, COLOR, USE_TEXTURE, USE_MATERIAL);
 
         return buffers;
