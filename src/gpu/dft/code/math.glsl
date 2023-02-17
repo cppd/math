@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 const float PI = 3.1415926535897932384626433832795028841971693993751;
 
-uint bit_reverse(const uint i, const uint bits)
+uint bit_reverse(const uint value, const uint bit_width)
 {
-        return bitfieldReverse(i) >> (32 - bits);
+        return bitfieldReverse(value) >> (32 - bit_width);
 }
 
 vec2 complex_mul(const vec2 a, const vec2 b)

@@ -42,8 +42,10 @@ shared vec2 shared_data[SHARED_SIZE];
 
 void copy_global_to_shared()
 {
-        for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
+        uint local = gl_LocalInvocationID.x;
+        uint global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
+
+        while (local < SHARED_SIZE && global < DATA_SIZE)
         {
                 if (REVERSE_INPUT)
                 {
@@ -54,15 +56,23 @@ void copy_global_to_shared()
                 {
                         shared_data[local] = global_data[global];
                 }
+
+                local += gl_WorkGroupSize.x;
+                global += gl_WorkGroupSize.x;
         }
 }
 
 void copy_shared_to_global()
 {
-        for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
+        uint local = gl_LocalInvocationID.x;
+        uint global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
+
+        while (local < SHARED_SIZE && global < DATA_SIZE)
         {
                 global_data[global] = !INVERSE ? shared_data[local] : (shared_data[local] / N_MAX);
+
+                local += gl_WorkGroupSize.x;
+                global += gl_WorkGroupSize.x;
         }
 }
 
@@ -83,6 +93,7 @@ void main()
         {
                 return;
         }
+
         if (DATA_SIZE <= gl_WorkGroupID.x * SHARED_SIZE)
         {
                 return;

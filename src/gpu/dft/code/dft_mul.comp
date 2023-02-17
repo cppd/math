@@ -62,6 +62,7 @@ vec2 mul_data(const vec2 x, const int l, const int n)
 
         const float factor = float(remainder) / n;
         const precise float theta = (INVERSE ? PI : -PI) * factor;
+
         if ((quotient & 1) == 0)
         {
                 const vec2 k = vec2(cos(theta), sin(theta));
