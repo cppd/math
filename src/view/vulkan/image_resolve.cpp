@@ -25,17 +25,16 @@ namespace ns::view
 {
 namespace
 {
-void begin_command_buffer(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
 
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
+        commands();
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 }
@@ -64,12 +63,13 @@ ImageResolve::ImageResolve(
                         vulkan::make_extent(render_buffers.width(), render_buffers.height()),
                         usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
 
-                begin_command_buffer(command_buffers_[i]);
+                const auto commands = [&]()
+                {
+                        render_buffers.commands_color_resolve(
+                                command_buffers_[i], images_[i].image().handle(), image_layout, rectangle, i);
+                };
 
-                render_buffers.commands_color_resolve(
-                        command_buffers_[i], images_[i].image().handle(), image_layout, rectangle, i);
-
-                end_command_buffer(command_buffers_[i]);
+                record_commands(command_buffers_[i], commands);
         }
 }
 
