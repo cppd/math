@@ -74,16 +74,16 @@ vulkan::DeviceFunctionality device_functionality()
         return res;
 }
 
-void begin_command_buffer(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
 
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
+        commands();
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
@@ -240,12 +240,13 @@ class DftVector final : public ComputeVector
                 {
                         const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        begin_command_buffer(command_buffer);
+                        const auto commands = [&]()
+                        {
+                                const bool inverse = (index == DftType::INVERSE);
+                                dft_->compute_commands(command_buffer, inverse);
+                        };
 
-                        const bool inverse = (index == DftType::INVERSE);
-                        dft_->compute_commands(command_buffer, inverse);
-
-                        end_command_buffer(command_buffer);
+                        record_commands(command_buffer, commands);
                 }
 
                 width_ = width;

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fft.h"
 
+#include "barriers.h"
 #include "function.h"
 
 #include "shaders/bit_reverse.h"
@@ -49,41 +50,23 @@ unsigned group_size(const unsigned dft_size, const VkPhysicalDeviceLimits& limit
                 limits.maxComputeSharedMemorySize);
 }
 
-void begin_commands(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
 {
+        const vulkan::handle::CommandBuffer command_buffer(device, pool);
+
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
 
-void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
-{
+        commands(command_buffer);
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
         vulkan::queue_submit(command_buffer, queue);
         VULKAN_CHECK(vkQueueWaitIdle(queue));
-}
-
-void buffer_barrier(const VkCommandBuffer command_buffer, const VkBuffer buffer)
-{
-        ASSERT(command_buffer != VK_NULL_HANDLE);
-        ASSERT(buffer != VK_NULL_HANDLE);
-
-        VkBufferMemoryBarrier barrier = {};
-        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = buffer;
-        barrier.offset = 0;
-        barrier.size = VK_WHOLE_SIZE;
-
-        vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 class FftShared final
@@ -303,12 +286,12 @@ class Impl final : public Fft
 
                 set_data(data);
 
-                const vulkan::handle::CommandBuffer command_buffer(device, pool);
-                begin_commands(command_buffer);
-
-                commands(command_buffer, inverse);
-
-                end_commands(queue, command_buffer);
+                run_commands(
+                        device, pool, queue,
+                        [&](const VkCommandBuffer command_buffer)
+                        {
+                                commands(command_buffer, inverse);
+                        });
         }
 
 public:
