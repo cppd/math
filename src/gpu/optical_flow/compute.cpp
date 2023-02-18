@@ -64,17 +64,16 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         return result;
 }
 
-void begin_command_buffer(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
 
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
+        commands();
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
@@ -227,11 +226,12 @@ class Impl final : public Compute
 
                 const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
-                begin_command_buffer(command_buffer);
+                const auto commands = [&]()
+                {
+                        commands_compute_image_pyramid(0, command_buffer);
+                };
 
-                commands_compute_image_pyramid(0, command_buffer);
-
-                end_command_buffer(command_buffer);
+                record_commands(command_buffer, commands);
         }
 
         void create_command_buffers(const VkBuffer top_flow)
@@ -243,17 +243,18 @@ class Impl final : public Compute
                 {
                         const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        begin_command_buffer(command_buffer);
+                        const auto commands = [&]()
+                        {
+                                // i — previous image, 1-i — current image
+                                commands_compute_image_pyramid(1 - index, command_buffer);
+                                commands_compute_dxdy(index, command_buffer);
 
-                        // i — previous image, 1-i — current image
-                        commands_compute_image_pyramid(1 - index, command_buffer);
-                        commands_compute_dxdy(index, command_buffer);
+                                commands_images_to_sampler_layout(1 - index, command_buffer);
+                                commands_compute_optical_flow(index, command_buffer, top_flow);
+                                commands_images_to_general_layout(1 - index, command_buffer);
+                        };
 
-                        commands_images_to_sampler_layout(1 - index, command_buffer);
-                        commands_compute_optical_flow(index, command_buffer, top_flow);
-                        commands_images_to_general_layout(1 - index, command_buffer);
-
-                        end_command_buffer(command_buffer);
+                        record_commands(command_buffer, commands);
                 }
         }
 
