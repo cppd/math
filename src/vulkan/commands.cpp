@@ -25,17 +25,36 @@ namespace ns::vulkan
 {
 namespace
 {
-void begin_command_buffer(const VkCommandBuffer command_buffer)
+void record_commands(
+        const CommandBufferCreateInfo& info,
+        const VkCommandBuffer command_buffer,
+        const VkRenderPassBeginInfo& render_pass_info)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
 
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
+        if (info.before_render_pass_commands)
+        {
+                info.before_render_pass_commands(command_buffer);
+        }
+
+        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        if (info.render_pass_commands)
+        {
+                info.render_pass_commands(command_buffer);
+        }
+
+        vkCmdEndRenderPass(command_buffer);
+
+        if (info.after_render_pass_commands)
+        {
+                info.after_render_pass_commands(command_buffer);
+        }
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 }
@@ -64,28 +83,7 @@ handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& inf
         {
                 render_pass_info.framebuffer = (*info.framebuffers)[i];
 
-                begin_command_buffer(buffers[i]);
-
-                if (info.before_render_pass_commands)
-                {
-                        info.before_render_pass_commands(buffers[i]);
-                }
-
-                vkCmdBeginRenderPass(buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-                if (info.render_pass_commands)
-                {
-                        info.render_pass_commands(buffers[i]);
-                }
-
-                vkCmdEndRenderPass(buffers[i]);
-
-                if (info.after_render_pass_commands)
-                {
-                        info.after_render_pass_commands(buffers[i]);
-                }
-
-                end_command_buffer(buffers[i]);
+                record_commands(info, buffers[i], render_pass_info);
         }
 
         return buffers;
