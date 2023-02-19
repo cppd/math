@@ -38,17 +38,21 @@ VkDeviceAddress acceleration_structure_device_address(
         return vkGetAccelerationStructureDeviceAddressKHR(device, &info);
 }
 
-void begin_commands(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
 {
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
+        const handle::CommandBuffer command_buffer(device, pool);
 
-void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
-{
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands(command_buffer);
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
         queue_submit(command_buffer, queue);
         VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
@@ -119,13 +123,12 @@ void build_acceleration_structure(
 
         const std::vector<VkAccelerationStructureBuildRangeInfoKHR*> build_range_infos = {&build_range_info};
 
-        const handle::CommandBuffer command_buffer(device, compute_command_pool.handle());
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &build_geometry_info, build_range_infos.data());
+        };
 
-        begin_commands(command_buffer);
-
-        vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &build_geometry_info, build_range_infos.data());
-
-        end_commands(compute_queue.handle(), command_buffer);
+        run_commands(device, compute_command_pool.handle(), compute_queue.handle(), commands);
 }
 
 void check_data(const std::span<const Vector3f>& vertices, const std::span<const std::uint32_t>& indices)
