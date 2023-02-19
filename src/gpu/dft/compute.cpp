@@ -77,10 +77,11 @@ vulkan::DeviceFunctionality device_functionality()
 template <typename Commands>
 void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
 {
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
 
         commands();
 

@@ -55,11 +55,11 @@ void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue
 {
         const vulkan::handle::CommandBuffer command_buffer(device, pool);
 
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
 
         commands(command_buffer);
 
