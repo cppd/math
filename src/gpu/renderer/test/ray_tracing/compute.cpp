@@ -40,6 +40,27 @@ void save_to_file(const std::string_view name, const image::Image<2>& image)
         image::save(settings::test_directory() / path_from_utf8(name), image::ImageView<2>(image));
 }
 
+template <typename Commands>
+vulkan::handle::CommandBuffer create_command_buffer(
+        const VkDevice device,
+        const VkCommandPool compute_command_pool,
+        const Commands& commands)
+{
+        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands(command_buffer);
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
+        return command_buffer;
+}
+
 vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
         const VkDevice device,
         const VkCommandPool compute_command_pool,
@@ -48,25 +69,18 @@ vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
         const unsigned width,
         const unsigned height)
 {
-        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline());
 
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline_layout(),
+                        memory.set_number(), 1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
 
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+                program.command_trace_rays(command_buffer, width, height, 1);
+        };
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline());
-
-        vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline_layout(), memory.set_number(),
-                1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
-
-        program.command_trace_rays(command_buffer, width, height, 1);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        return command_buffer;
+        return create_command_buffer(device, compute_command_pool, commands);
 }
 
 vulkan::handle::CommandBuffer create_ray_query_command_buffer(
@@ -77,25 +91,18 @@ vulkan::handle::CommandBuffer create_ray_query_command_buffer(
         const unsigned width,
         const unsigned height)
 {
-        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline());
 
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline_layout(), memory.set_number(),
+                        1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
 
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+                vkCmdDispatch(command_buffer, group_count(width, GROUP_SIZE), group_count(height, GROUP_SIZE), 1);
+        };
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline());
-
-        vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline_layout(), memory.set_number(),
-                1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
-
-        vkCmdDispatch(command_buffer, group_count(width, GROUP_SIZE), group_count(height, GROUP_SIZE), 1);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        return command_buffer;
+        return create_command_buffer(device, compute_command_pool, commands);
 }
 }
 
