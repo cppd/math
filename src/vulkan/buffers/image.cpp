@@ -29,23 +29,28 @@ namespace ns::vulkan
 {
 namespace
 {
-void begin_command_buffer(const VkCommandBuffer command_buffer)
-{
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
-
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-}
-
 bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
 {
         return (usage & bits) == bits;
+}
+
+template <typename Commands>
+void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
+{
+        const handle::CommandBuffer command_buffer(device, pool);
+
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands(command_buffer);
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
+        queue_submit(command_buffer, queue);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 }
 
@@ -142,16 +147,12 @@ void transition_image_layout(
         const VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         const VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-        const handle::CommandBuffer command_buffer(device, command_pool);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        };
 
-        begin_command_buffer(command_buffer);
-
-        vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-        end_command_buffer(command_buffer);
-
-        queue_submit(command_buffer, queue);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
+        run_commands(device, command_pool, queue, commands);
 }
 
 VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)

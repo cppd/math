@@ -212,17 +212,19 @@ void cmd_copy_image_to_buffer(
         vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
 }
 
-void begin_commands(const VkCommandBuffer command_buffer)
+template <typename Commands>
+void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
 {
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        const handle::CommandBuffer command_buffer(device, pool);
 
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
-{
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands(command_buffer);
+
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
         queue_submit(command_buffer, queue);
@@ -253,16 +255,19 @@ void write_data_to_buffer(
 
         copy_host_to_device(staging_device_memory, 0, size, data);
 
-        const handle::CommandBuffer command_buffer(device, command_pool.handle());
-        begin_commands(command_buffer);
+        //
 
         VkBufferCopy copy = {};
         copy.srcOffset = 0;
         copy.dstOffset = offset;
         copy.size = size;
-        vkCmdCopyBuffer(command_buffer, staging_buffer.handle(), buffer, 1, &copy);
 
-        end_commands(queue.handle(), command_buffer);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                vkCmdCopyBuffer(command_buffer, staging_buffer.handle(), buffer, 1, &copy);
+        };
+
+        run_commands(device, command_pool.handle(), queue.handle(), commands);
 }
 
 void staging_image_write(
@@ -294,18 +299,18 @@ void staging_image_write(
 
         //
 
-        const handle::CommandBuffer command_buffer(device, command_pool.handle());
-        begin_commands(command_buffer);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                cmd_transition_image_layout(
+                        aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        cmd_transition_image_layout(
-                aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.handle(), extent);
 
-        cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.handle(), extent);
+                cmd_transition_image_layout(
+                        aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
+        };
 
-        cmd_transition_image_layout(
-                aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
-
-        end_commands(queue.handle(), command_buffer);
+        run_commands(device, command_pool.handle(), queue.handle(), commands);
 }
 
 void staging_image_read(
@@ -333,18 +338,18 @@ void staging_image_read(
 
         //
 
-        const handle::CommandBuffer command_buffer(device, command_pool.handle());
-        begin_commands(command_buffer);
+        const auto commands = [&](const VkCommandBuffer command_buffer)
+        {
+                cmd_transition_image_layout(
+                        aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-        cmd_transition_image_layout(
-                aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+                cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.handle(), image, extent);
 
-        cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.handle(), image, extent);
+                cmd_transition_image_layout(
+                        aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
+        };
 
-        cmd_transition_image_layout(
-                aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
-
-        end_commands(queue.handle(), command_buffer);
+        run_commands(device, command_pool.handle(), queue.handle(), commands);
 
         //
 
