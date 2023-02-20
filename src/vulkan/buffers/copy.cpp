@@ -20,10 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "create.h"
 #include "memory.h"
 
+#include "../commands.h"
 #include "../create.h"
-#include "../error.h"
 #include "../memory.h"
-#include "../queue.h"
 
 #include <src/com/container.h>
 
@@ -210,25 +209,6 @@ void cmd_copy_image_to_buffer(
         region.imageExtent = extent;
 
         vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
-}
-
-template <typename Commands>
-void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
-{
-        const handle::CommandBuffer command_buffer(device, pool);
-
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands(command_buffer);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        queue_submit(command_buffer, queue);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 }
 
