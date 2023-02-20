@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration_structure.h"
 
-#include "error.h"
+#include "commands.h"
 #include "extensions.h"
-#include "queue.h"
 
 #include <src/com/container.h>
 #include <src/com/print.h>
@@ -36,25 +35,6 @@ VkDeviceAddress acceleration_structure_device_address(
         info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
         info.accelerationStructure = acceleration_structure;
         return vkGetAccelerationStructureDeviceAddressKHR(device, &info);
-}
-
-template <typename Commands>
-void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
-{
-        const handle::CommandBuffer command_buffer(device, pool);
-
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands(command_buffer);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        queue_submit(command_buffer, queue);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 VkAccelerationStructureBuildSizesInfoKHR acceleration_structure_build_sizes(
