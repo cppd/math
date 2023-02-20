@@ -26,8 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/group_count.h>
 #include <src/image/file_save.h>
 #include <src/settings/directory.h>
-#include <src/vulkan/error.h>
-#include <src/vulkan/queue.h>
+#include <src/vulkan/commands.h>
 
 namespace ns::gpu::renderer::test
 {
@@ -40,30 +39,10 @@ void save_to_file(const std::string_view name, const image::Image<2>& image)
         image::save(settings::test_directory() / path_from_utf8(name), image::ImageView<2>(image));
 }
 
-template <typename Commands>
-vulkan::handle::CommandBuffer create_command_buffer(
+void run_ray_tracing_commands(
         const VkDevice device,
         const VkCommandPool compute_command_pool,
-        const Commands& commands)
-{
-        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
-
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands(command_buffer);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        return command_buffer;
-}
-
-vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
-        const VkDevice device,
-        const VkCommandPool compute_command_pool,
+        const VkQueue queue,
         const RayTracingProgram& program,
         const RayTracingMemory& memory,
         const unsigned width,
@@ -80,12 +59,13 @@ vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
                 program.command_trace_rays(command_buffer, width, height, 1);
         };
 
-        return create_command_buffer(device, compute_command_pool, commands);
+        vulkan::run_commands(device, compute_command_pool, queue, commands);
 }
 
-vulkan::handle::CommandBuffer create_ray_query_command_buffer(
+void run_ray_query_commands(
         const VkDevice device,
         const VkCommandPool compute_command_pool,
+        const VkQueue queue,
         const RayQueryProgram& program,
         const RayTracingMemory& memory,
         const unsigned width,
@@ -102,7 +82,7 @@ vulkan::handle::CommandBuffer create_ray_query_command_buffer(
                 vkCmdDispatch(command_buffer, group_count(width, GROUP_SIZE), group_count(height, GROUP_SIZE), 1);
         };
 
-        return create_command_buffer(device, compute_command_pool, commands);
+        vulkan::run_commands(device, compute_command_pool, queue, commands);
 }
 }
 
@@ -124,12 +104,9 @@ image::Image<2> ray_tracing(
         memory.set_acceleration_structure(acceleration_structure);
         memory.set_image(ray_tracing_image.image_view());
 
-        const vulkan::handle::CommandBuffer command_buffer = create_ray_tracing_command_buffer(
-                device.handle(), compute_command_pool.handle(), program, memory, ray_tracing_image.width(),
-                ray_tracing_image.height());
-
-        vulkan::queue_submit(command_buffer, compute_queue.handle());
-        VULKAN_CHECK(vkQueueWaitIdle(compute_queue.handle()));
+        run_ray_tracing_commands(
+                device.handle(), compute_command_pool.handle(), compute_queue.handle(), program, memory,
+                ray_tracing_image.width(), ray_tracing_image.height());
 
         image::Image<2> image = ray_tracing_image.image();
         save_to_file(file_name, image);
@@ -154,12 +131,9 @@ image::Image<2> ray_query(
         memory.set_acceleration_structure(acceleration_structure);
         memory.set_image(ray_tracing_image.image_view());
 
-        const vulkan::handle::CommandBuffer command_buffer = create_ray_query_command_buffer(
-                device, compute_command_pool.handle(), program, memory, ray_tracing_image.width(),
-                ray_tracing_image.height());
-
-        vulkan::queue_submit(command_buffer, compute_queue.handle());
-        VULKAN_CHECK(vkQueueWaitIdle(compute_queue.handle()));
+        run_ray_query_commands(
+                device, compute_command_pool.handle(), compute_queue.handle(), program, memory,
+                ray_tracing_image.width(), ray_tracing_image.height());
 
         image::Image<2> image = ray_tracing_image.image();
         save_to_file(file_name, image);
