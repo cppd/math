@@ -53,6 +53,7 @@ There are errors in chapter 13 when calculating H2
 
 #include <src/com/error.h>
 #include <src/com/group_count.h>
+#include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device/device_compute.h>
 #include <src/vulkan/error.h>
@@ -72,20 +73,6 @@ vulkan::DeviceFunctionality device_functionality()
         vulkan::DeviceFunctionality res;
         res.required_features.features_13.maintenance4 = VK_TRUE;
         return res;
-}
-
-template <typename Commands>
-void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
-{
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands();
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
 class DftImage final : public ComputeImage
@@ -247,7 +234,7 @@ class DftVector final : public ComputeVector
                                 dft_->compute_commands(command_buffer, inverse);
                         };
 
-                        record_commands(command_buffer, commands);
+                        vulkan::record_commands(command_buffer, commands);
                 }
 
                 width_ = width;

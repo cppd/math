@@ -18,28 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image_resolve.h"
 
 #include <src/image/alpha.h>
+#include <src/vulkan/commands.h>
 #include <src/vulkan/error.h>
-#include <src/vulkan/queue.h>
 
 namespace ns::view
 {
-namespace
-{
-template <typename Commands>
-void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
-{
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands();
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-}
-}
-
 ImageResolve::ImageResolve(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
@@ -70,7 +53,7 @@ ImageResolve::ImageResolve(
                                 command_buffers_[i], images_[i].image().handle(), image_layout, rectangle, i);
                 };
 
-                record_commands(command_buffers_[i], commands);
+                vulkan::record_commands(command_buffers_[i], commands);
         }
 }
 

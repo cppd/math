@@ -27,8 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/group_count.h>
 #include <src/com/print.h>
-#include <src/vulkan/error.h>
-#include <src/vulkan/queue.h>
+#include <src/vulkan/commands.h>
 
 #include <bit>
 
@@ -48,25 +47,6 @@ unsigned group_size(const unsigned dft_size, const VkPhysicalDeviceLimits& limit
         return dft::group_size<std::complex<float>>(
                 dft_size, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
-}
-
-template <typename Commands>
-void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
-{
-        const vulkan::handle::CommandBuffer command_buffer(device, pool);
-
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands(command_buffer);
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-
-        vulkan::queue_submit(command_buffer, queue);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 class FftShared final
@@ -286,7 +266,7 @@ class Impl final : public Fft
 
                 set_data(data);
 
-                run_commands(
+                vulkan::run_commands(
                         device, pool, queue,
                         [&](const VkCommandBuffer command_buffer)
                         {

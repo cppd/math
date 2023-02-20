@@ -40,7 +40,7 @@ Packt Publishing, 2015.
 #include "shaders/sobel.h"
 
 #include <src/numerical/vector.h>
-#include <src/vulkan/error.h>
+#include <src/vulkan/commands.h>
 #include <src/vulkan/queue.h>
 
 #include <array>
@@ -62,20 +62,6 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
                 result.push_back(&buffer.buffer());
         }
         return result;
-}
-
-template <typename Commands>
-void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
-{
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
-
-        commands();
-
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
 class Impl final : public Compute
@@ -232,7 +218,7 @@ class Impl final : public Compute
                         commands_compute_image_pyramid(0, command_buffer);
                 };
 
-                record_commands(command_buffer, commands);
+                vulkan::record_commands(command_buffer, commands);
         }
 
         void create_command_buffers(const VkBuffer top_flow)
@@ -255,7 +241,7 @@ class Impl final : public Compute
                                 commands_images_to_general_layout(1 - index, command_buffer);
                         };
 
-                        record_commands(command_buffer, commands);
+                        vulkan::record_commands(command_buffer, commands);
                 }
         }
 
