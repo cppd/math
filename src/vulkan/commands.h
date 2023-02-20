@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "error.h"
 #include "objects.h"
+#include "queue.h"
 
 #include <functional>
 #include <optional>
@@ -42,4 +44,37 @@ struct CommandBufferCreateInfo final
 };
 
 handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info);
+
+template <typename Commands>
+void record_commands(const VkCommandBuffer command_buffer, const Commands& commands)
+{
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands();
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+}
+
+template <typename Commands>
+void run_commands(const VkDevice device, const VkCommandPool pool, const VkQueue queue, const Commands& commands)
+{
+        const handle::CommandBuffer command_buffer(device, pool);
+
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &info));
+
+        commands(command_buffer);
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
+        queue_submit(command_buffer, queue);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
+}
 }
