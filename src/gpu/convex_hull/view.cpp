@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
+#include "barrier.h"
 #include "compute.h"
 #include "size.h"
 
@@ -67,6 +68,19 @@ class Impl final : public View
         void reset_timer() override
         {
                 start_time_ = Clock::now();
+        }
+
+        void compute_commands(const VkCommandBuffer command_buffer) const
+        {
+                compute_->compute_commands(command_buffer);
+
+                buffer_barrier(
+                        command_buffer, points_->buffer().handle(), VK_ACCESS_SHADER_READ_BIT,
+                        VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+
+                buffer_barrier(
+                        command_buffer, indirect_buffer_.buffer().handle(), VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                        VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
         void draw_commands(const VkCommandBuffer command_buffer) const
@@ -126,11 +140,11 @@ class Impl final : public View
                 info.render_pass = render_buffers->render_pass().handle();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = graphics_command_pool_;
-                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
+                info.before_render_pass_commands = [this](const VkCommandBuffer command_buffer)
                 {
-                        compute_->compute_commands(command_buffer);
+                        compute_commands(command_buffer);
                 };
-                info.render_pass_commands = [this](VkCommandBuffer command_buffer)
+                info.render_pass_commands = [this](const VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
                 };

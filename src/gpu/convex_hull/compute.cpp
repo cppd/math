@@ -63,8 +63,6 @@ class Impl final : public Compute
         const vulkan::Device* const device_;
 
         std::optional<vulkan::BufferWithMemory> lines_buffer_;
-        VkBuffer points_buffer_ = VK_NULL_HANDLE;
-        VkBuffer point_count_buffer_ = VK_NULL_HANDLE;
 
         unsigned prepare_group_count_ = 0;
         PrepareProgram prepare_program_;
@@ -115,14 +113,6 @@ class Impl final : public Compute
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, filter_program_.pipeline_layout(),
                         FilterMemory::set_number(), 1, &filter_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 1, 1, 1);
-
-                //
-
-                buffer_barrier(
-                        command_buffer, points_buffer_, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                buffer_barrier(
-                        command_buffer, point_count_buffer_, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                        VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
         void create_buffers(
@@ -150,8 +140,6 @@ class Impl final : public Compute
                 lines_buffer_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_, std::vector({family_index}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sizeof(std::int32_t) * 2 * height);
-                points_buffer_ = points_buffer.handle();
-                point_count_buffer_ = point_count_buffer.handle();
 
                 prepare_memory_.set_object_image(objects.image_view());
                 prepare_memory_.set_lines(lines_buffer_->buffer());
@@ -181,8 +169,6 @@ class Impl final : public Compute
                 prepare_program_.delete_pipeline();
                 prepare_group_count_ = 0;
 
-                points_buffer_ = VK_NULL_HANDLE;
-                point_count_buffer_ = VK_NULL_HANDLE;
                 lines_buffer_.reset();
         }
 
