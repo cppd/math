@@ -26,6 +26,7 @@ Princeton University Press, 2011.
 
 #include "compute.h"
 
+#include "barrier.h"
 #include "size.h"
 
 #include "shaders/filter.h"
@@ -53,29 +54,6 @@ int group_size_prepare(const int width, const VkPhysicalDeviceLimits& limits)
         return convex_hull::group_size_prepare(
                 width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
-}
-
-void buffer_barrier(
-        const VkCommandBuffer command_buffer,
-        const VkBuffer buffer,
-        const VkAccessFlags dst_access_mask,
-        const VkPipelineStageFlags dst_stage_mask)
-{
-        ASSERT(buffer != VK_NULL_HANDLE);
-
-        VkBufferMemoryBarrier barrier = {};
-        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-        barrier.dstAccessMask = dst_access_mask;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = buffer;
-        barrier.offset = 0;
-        barrier.size = VK_WHOLE_SIZE;
-
-        vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
-                nullptr, 1, &barrier, 0, nullptr);
 }
 
 class Impl final : public Compute
