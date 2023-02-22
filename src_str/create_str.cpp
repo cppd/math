@@ -213,7 +213,7 @@ void spr(const char* const input_name, const char* const output_name)
         }
 }
 
-void cat(const std::span<const char*>& input_names, const char* const output_name)
+void cat(const std::span<const char*> input_names, const char* const output_name)
 {
         std::string s;
         for (const char* const name : input_names)
