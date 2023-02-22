@@ -98,7 +98,7 @@ void load_from_images(
         const std::filesystem::path& directory,
         const image::ColorFormat image_format,
         const std::array<int, N>& image_size,
-        const std::span<std::byte>& image_bytes,
+        const std::span<std::byte> image_bytes,
         progress::Ratio* const progress,
         unsigned* const current,
         const unsigned count)

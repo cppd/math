@@ -37,9 +37,5 @@ template <typename Path>
 [[nodiscard]] Image<2> load_rgba(const Path& path);
 
 template <typename Path>
-void load(
-        const Path& path,
-        ColorFormat color_format,
-        const std::array<int, 2>& size,
-        const std::span<std::byte>& pixels);
+void load(const Path& path, ColorFormat color_format, const std::array<int, 2>& size, std::span<std::byte> pixels);
 }

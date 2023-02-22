@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image::conv
 {
-void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r8_srgb_to_r32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint8_t;
 
@@ -47,7 +47,7 @@ void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>*
         }
 }
 
-void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r16_to_r32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint16_t;
 
@@ -70,7 +70,7 @@ void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* con
         }
 }
 
-void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint8_t;
 
@@ -96,7 +96,7 @@ void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vect
         }
 }
 
-void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r16g16b16_to_r32g32b32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint16_t;
 
@@ -122,7 +122,7 @@ void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector
         }
 }
 
-void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint16_t;
 
@@ -148,7 +148,7 @@ void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::v
         }
 }
 
-void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint8_t;
 
@@ -177,7 +177,7 @@ void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std:
         }
 }
 
-void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint16_t;
 
@@ -203,7 +203,7 @@ void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::
         }
 }
 
-void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         using From = std::uint16_t;
 
@@ -232,7 +232,7 @@ void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, 
         }
 }
 
-void copy(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
+void copy(const std::span<const std::byte> bytes, std::vector<float>* const floats)
 {
         const unsigned component_count = bytes.size() / sizeof(float);
         ASSERT(bytes.size() == (component_count * sizeof(float)));

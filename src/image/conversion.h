@@ -27,13 +27,13 @@ namespace ns::image
 {
 void format_conversion(
         ColorFormat from_format,
-        const std::span<const std::byte>& from,
+        std::span<const std::byte> from,
         ColorFormat to_format,
-        const std::span<std::byte>& to);
+        std::span<std::byte> to);
 
 void format_conversion(
         ColorFormat from_format,
-        const std::span<const std::byte>& from,
+        std::span<const std::byte> from,
         ColorFormat to_format,
         std::vector<std::byte>* to);
 }

@@ -84,7 +84,7 @@ public:
                 VkDevice device,
                 const CommandPool& compute_command_pool,
                 const Queue& compute_queue,
-                const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const;
+                std::span<const VkTransformMatrixKHR> bottom_level_matrices) const;
 };
 
 BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
@@ -92,8 +92,8 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const Vector3f>& vertices,
-        const std::span<const std::uint32_t>& indices,
+        std::span<const Vector3f> vertices,
+        std::span<const std::uint32_t> indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix);
 
 TopLevelAccelerationStructure create_top_level_acceleration_structure(
@@ -101,6 +101,6 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const std::uint64_t>& bottom_level_references,
-        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices);
+        std::span<const std::uint64_t> bottom_level_references,
+        std::span<const VkTransformMatrixKHR> bottom_level_matrices);
 }

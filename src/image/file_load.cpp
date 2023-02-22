@@ -47,7 +47,7 @@ void check_size(
         }
 }
 
-void load_image(QImage* const image, const ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_image(QImage* const image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         check_size(image->width(), image->height(), color_format, bytes.size());
 
@@ -62,7 +62,7 @@ void load_image(QImage* const image, const ColorFormat color_format, const std::
         }
 }
 
-void load_image_alpha(QImage* const image, const ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_image_alpha(QImage* const image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         ASSERT(color_format == ColorFormat::R16G16B16_SRGB);
 
@@ -88,7 +88,7 @@ void load_image_alpha(QImage* const image, const ColorFormat color_format, const
         }
 }
 
-void load_1(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_1(QImage&& image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -114,7 +114,7 @@ void load_1(QImage&& image, const ColorFormat color_format, const std::span<std:
         }
 }
 
-void load_3(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_3(QImage&& image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -140,7 +140,7 @@ void load_3(QImage&& image, const ColorFormat color_format, const std::span<std:
         }
 }
 
-void load_4(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_4(QImage&& image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -276,7 +276,7 @@ void load(
         const Path& path,
         const ColorFormat color_format,
         const std::array<int, 2>& size,
-        const std::span<std::byte>& pixels)
+        const std::span<std::byte> pixels)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -335,5 +335,5 @@ Image<2> load_rgba(const Path& path)
 
 template Info file_info(const std::filesystem::path&);
 template Image<2> load_rgba(const std::filesystem::path&);
-template void load(const std::filesystem::path&, ColorFormat, const std::array<int, 2>&, const std::span<std::byte>&);
+template void load(const std::filesystem::path&, ColorFormat, const std::array<int, 2>&, std::span<std::byte>);
 }

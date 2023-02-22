@@ -260,7 +260,7 @@ void staging_image_write(
         const VkImageLayout new_image_layout,
         const VkImageAspectFlags aspect_flag,
         const VkExtent3D extent,
-        const std::span<const std::byte>& data)
+        const std::span<const std::byte> data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
@@ -303,7 +303,7 @@ void staging_image_read(
         const VkImageLayout new_image_layout,
         const VkImageAspectFlags aspect_flag,
         const VkExtent3D extent,
-        const std::span<std::byte>& data)
+        const std::span<std::byte> data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 

@@ -29,7 +29,7 @@ namespace ns::image
 namespace
 {
 template <typename T>
-std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes, const T alpha)
+std::vector<std::byte> add_alpha(const std::span<const std::byte> bytes, const T alpha)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -57,7 +57,7 @@ std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes, const 
 }
 
 template <typename T>
-std::vector<std::byte> delete_alpha(const std::span<const std::byte>& bytes)
+std::vector<std::byte> delete_alpha(const std::span<const std::byte> bytes)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -83,7 +83,7 @@ std::vector<std::byte> delete_alpha(const std::span<const std::byte>& bytes)
 }
 
 template <typename T>
-void set_alpha(const std::span<std::byte>& bytes, const T alpha)
+void set_alpha(const std::span<std::byte> bytes, const T alpha)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 

@@ -31,7 +31,7 @@ namespace ns::vulkan
 namespace
 {
 void check_pixel_buffer_size(
-        const std::span<const std::byte>& pixels,
+        const std::span<const std::byte> pixels,
         const image::ColorFormat color_format,
         const VkExtent3D extent)
 {
@@ -111,7 +111,7 @@ void write_pixels_to_image(
         const VkImageLayout old_layout,
         const VkImageLayout new_layout,
         const image::ColorFormat color_format,
-        const std::span<const std::byte>& pixels)
+        const std::span<const std::byte> pixels)
 {
         const auto write = [&](const std::span<const std::byte>& data)
         {

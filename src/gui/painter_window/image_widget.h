@@ -44,6 +44,6 @@ public:
 
         [[nodiscard]] QSize size_difference() const;
 
-        void update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices);
+        void update(std::span<const std::byte> pixels_r8g8b8a8, const std::vector<long long>& busy_indices);
 };
 }

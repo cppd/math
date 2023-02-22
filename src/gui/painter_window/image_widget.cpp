@@ -64,7 +64,7 @@ QSize ImageWidget::size_difference() const
         return difference;
 }
 
-void ImageWidget::update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices)
+void ImageWidget::update(const std::span<const std::byte> pixels_r8g8b8a8, const std::vector<long long>& busy_indices)
 {
         unsigned char* const image_bits = image_2d_.bits();
 

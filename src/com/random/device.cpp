@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-void read_system_random(const std::span<std::byte>& bytes)
+void read_system_random(const std::span<std::byte> bytes)
 {
         constexpr const char* DEV_RANDOM = "/dev/urandom";
 
@@ -92,7 +92,7 @@ public:
 };
 }
 
-void read_system_random(const std::span<std::byte>& bytes)
+void read_system_random(const std::span<std::byte> bytes)
 {
         Provider provider;
         if (!::CryptGenRandom(provider, bytes.size(), reinterpret_cast<BYTE*>(bytes.data())))

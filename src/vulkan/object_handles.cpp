@@ -168,7 +168,7 @@ void ShaderModule::move(ShaderModule* const from) noexcept
         from->shader_module_ = VK_NULL_HANDLE;
 }
 
-ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code)
+ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t> code)
         : device_(device)
 {
         static_assert(sizeof(std::uint32_t) == 4);

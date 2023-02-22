@@ -43,7 +43,7 @@ void staging_image_write(
         VkImageLayout new_image_layout,
         VkImageAspectFlags aspect_flag,
         VkExtent3D extent,
-        const std::span<const std::byte>& data);
+        std::span<const std::byte> data);
 
 void staging_image_read(
         VkDevice device,
@@ -55,5 +55,5 @@ void staging_image_read(
         VkImageLayout new_image_layout,
         VkImageAspectFlags aspect_flag,
         VkExtent3D extent,
-        const std::span<std::byte>& data);
+        std::span<std::byte> data);
 }

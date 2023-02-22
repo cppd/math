@@ -23,37 +23,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image::conv
 {
-void r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32_to_r8_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32_to_r16(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32_to_r16(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r16g16b16(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r16g16b16_srgb(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void r32g32b32a32_to_r32g32b32(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void r32g32b32a32_to_r32g32b32(const std::vector<float>& floats, std::span<std::byte> bytes);
 
-void copy(const std::vector<float>& floats, const std::span<std::byte>& bytes);
+void copy(const std::vector<float>& floats, std::span<std::byte> bytes);
 }

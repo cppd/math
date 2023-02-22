@@ -57,7 +57,7 @@ class Interpolation final
         std::span<const DataType> data_;
 
 public:
-        constexpr Interpolation(const std::array<int, N>& size, const std::span<const DataType>& data)
+        constexpr Interpolation(const std::array<int, N>& size, const std::span<const DataType> data)
                 : global_index_(size),
                   size_(size),
                   max_(max(size)),

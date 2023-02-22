@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r8g8b8a8(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = std::uint8_t;
 
@@ -79,7 +79,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, flo
         }
 }
 
-void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = std::uint8_t;
 
@@ -131,7 +131,7 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
         }
 }
 
-void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r16g16b16a16(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = std::uint16_t;
 
@@ -182,7 +182,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3,
         }
 }
 
-void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = std::uint16_t;
 
@@ -233,7 +233,7 @@ void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vect
         }
 }
 
-void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = std::uint16_t;
 
@@ -285,7 +285,7 @@ void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, c
         }
 }
 
-void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r32g32b32a32(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = float;
 
@@ -335,7 +335,7 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Vector<3,
         }
 }
 
-void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
+void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte> bytes, const Vector<3, float>& rgb)
 {
         using T = float;
 

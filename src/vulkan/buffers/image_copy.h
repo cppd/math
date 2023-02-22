@@ -38,7 +38,7 @@ void write_pixels_to_image(
         VkImageLayout old_layout,
         VkImageLayout new_layout,
         image::ColorFormat color_format,
-        const std::span<const std::byte>& pixels);
+        std::span<const std::byte> pixels);
 
 void read_pixels_from_image(
         VkDevice device,

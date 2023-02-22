@@ -96,7 +96,7 @@ struct Bucket final
 
 template <std::size_t N, typename T>
 std::tuple<std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>, T> compute_buckets_and_cost(
-        const std::span<const BvhObject<N, T>>& objects,
+        const std::span<const BvhObject<N, T>> objects,
         const CenterBounds<N, T>& center_bounds)
 {
         static_assert(BUCKET_COUNT >= 2);
@@ -237,7 +237,7 @@ std::tuple<T, unsigned> minimum_surface_area_heuristic_split(
 
 template <std::size_t N, typename T>
 auto partition(
-        const std::span<BvhObject<N, T>>& objects,
+        const std::span<BvhObject<N, T>> objects,
         const CenterBounds<N, T>& center_bounds,
         const unsigned split_index)
 {
@@ -265,7 +265,7 @@ struct BvhSplit final
 
 template <std::size_t N, typename T>
 std::optional<BvhSplit<N, T>> split(
-        const std::span<BvhObject<N, T>>& objects,
+        const std::span<BvhObject<N, T>> objects,
         const spatial::BoundingBox<N, T>& bounds,
         const T& interior_node_traversal_cost)
 {

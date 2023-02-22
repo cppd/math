@@ -99,7 +99,7 @@ void save_image(
         const std::size_t height,
         const QImage::Format q_format,
         const ColorFormat color_format,
-        const std::span<const std::byte>& bytes,
+        const std::span<const std::byte> bytes,
         const std::string& file_name)
 {
         check_size(width, height, color_format, bytes.size());
@@ -127,7 +127,7 @@ void save_image_alpha(
         const std::size_t height,
         const QImage::Format q_format,
         const ColorFormat color_format,
-        const std::span<const std::byte>& bytes,
+        const std::span<const std::byte> bytes,
         const std::string& file_name)
 {
         ASSERT(color_format == ColorFormat::R16G16B16_SRGB);

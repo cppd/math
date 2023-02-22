@@ -111,7 +111,7 @@ void build_acceleration_structure(
         run_commands(device, compute_command_pool.handle(), compute_queue.handle(), commands);
 }
 
-void check_data(const std::span<const Vector3f>& vertices, const std::span<const std::uint32_t>& indices)
+void check_data(const std::span<const Vector3f> vertices, const std::span<const std::uint32_t> indices)
 {
         if (vertices.empty())
         {
@@ -130,8 +130,8 @@ void check_data(const std::span<const Vector3f>& vertices, const std::span<const
 }
 
 void check_data(
-        const std::span<const std::uint64_t>& bottom_level_references,
-        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
+        const std::span<const std::uint64_t> bottom_level_references,
+        const std::span<const VkTransformMatrixKHR> bottom_level_matrices)
 {
         if (bottom_level_references.size() != bottom_level_matrices.size())
         {
@@ -171,7 +171,7 @@ void TopLevelAccelerationStructure::update_matrices(
         const VkDevice device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
-        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const
+        const std::span<const VkTransformMatrixKHR> bottom_level_matrices) const
 {
         if (bottom_level_matrices.size() != geometry_primitive_count_)
         {
@@ -202,8 +202,8 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const Vector3f>& vertices,
-        const std::span<const std::uint32_t>& indices,
+        const std::span<const Vector3f> vertices,
+        const std::span<const std::uint32_t> indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix)
 {
         check_data(vertices, indices);
@@ -297,8 +297,8 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const std::uint64_t>& bottom_level_references,
-        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
+        const std::span<const std::uint64_t> bottom_level_references,
+        const std::span<const VkTransformMatrixKHR> bottom_level_matrices)
 {
         constexpr std::size_t MIN_BUFFER_SIZE = 1;
 

@@ -25,7 +25,7 @@ namespace ns::image
 namespace
 {
 template <typename T, std::size_t COUNT>
-void swap_rb(const std::span<std::byte>& bytes)
+void swap_rb(const std::span<std::byte> bytes)
 {
         static_assert(COUNT >= 3);
 

@@ -304,9 +304,9 @@ void conversion(
 
 void format_conversion(
         const ColorFormat from_format,
-        const std::span<const std::byte>& from,
+        const std::span<const std::byte> from,
         const ColorFormat to_format,
-        const std::span<std::byte>& to)
+        const std::span<std::byte> to)
 {
         ASSERT(from.data());
         ASSERT(to.data());
@@ -342,7 +342,7 @@ void format_conversion(
 
 void format_conversion(
         const ColorFormat from_format,
-        const std::span<const std::byte>& from,
+        const std::span<const std::byte> from,
         const ColorFormat to_format,
         std::vector<std::byte>* const to)
 {

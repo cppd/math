@@ -23,21 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image::conv
 {
-void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r8_srgb_to_r32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r16_to_r32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r8g8b8_srgb_to_r32g32b32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r16g16b16_to_r32g32b32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r16g16b16_srgb_to_r32g32b32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r8g8b8a8_srgb_to_r32g32b32a32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r16g16b16a16_to_r32g32b32a32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void r16g16b16a16_srgb_to_r32g32b32a32(std::span<const std::byte> bytes, std::vector<float>* floats);
 
-void copy(const std::span<const std::byte>& bytes, std::vector<float>* floats);
+void copy(std::span<const std::byte> bytes, std::vector<float>* floats);
 }

@@ -41,7 +41,7 @@ bool finite(const T& v)
 }
 
 template <typename T, std::size_t COLOR_COUNT, std::size_t SKIP_COUNT>
-std::optional<T> max(const std::span<const std::byte>& bytes)
+std::optional<T> max(const std::span<const std::byte> bytes)
 {
         static_assert(COLOR_COUNT > 0);
 

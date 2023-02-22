@@ -51,7 +51,7 @@ struct ImageView final
         ImageView(
                 const std::array<int, N>& size,
                 const ColorFormat color_format,
-                const std::span<const std::byte>& pixels)
+                const std::span<const std::byte> pixels)
                 : size(size),
                   color_format(color_format),
                   pixels(pixels)

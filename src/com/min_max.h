@@ -28,7 +28,7 @@ namespace ns
 namespace min_max_implementation
 {
 template <bool COMPUTE_MIN, unsigned COUNT, typename T>
-constexpr T min_max_value_array(const std::span<const T>& p)
+constexpr T min_max_value_array(const std::span<const T> p)
 {
         ASSERT(!p.empty());
         ASSERT(p.size() % COUNT == 0);
@@ -76,7 +76,7 @@ constexpr T min_max_value_array(const std::span<const T>& p)
 }
 
 template <bool COMPUTE_MIN, typename T>
-constexpr T min_max_value(const std::span<const T>& p)
+constexpr T min_max_value(const std::span<const T> p)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
@@ -115,7 +115,7 @@ constexpr T min_max_value(const std::span<const T>& p)
 }
 
 template <typename T>
-constexpr T min_value(const std::span<const T>& p)
+constexpr T min_value(const std::span<const T> p)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
         if (p.empty())
@@ -126,7 +126,7 @@ constexpr T min_value(const std::span<const T>& p)
 }
 
 template <typename T>
-constexpr T max_value(const std::span<const T>& p)
+constexpr T max_value(const std::span<const T> p)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
         if (p.empty())

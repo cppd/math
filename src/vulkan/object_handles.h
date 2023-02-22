@@ -168,7 +168,7 @@ class ShaderModule final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(ShaderModule, shader_module_)
 
-        ShaderModule(VkDevice device, const std::span<const std::uint32_t>& code);
+        ShaderModule(VkDevice device, std::span<const std::uint32_t> code);
 };
 
 class RenderPass final

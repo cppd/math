@@ -104,7 +104,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         void create_buffers(
                 const vulkan::Device& device,
-                const std::span<const VkFormat>& depth_formats,
+                std::span<const VkFormat> depth_formats,
                 unsigned buffer_count,
                 VkSampleCountFlagBits sample_count,
                 const std::vector<std::uint32_t>& attachment_family_indices);
@@ -194,7 +194,7 @@ Impl::Impl(
 
 void Impl::create_buffers(
         const vulkan::Device& device,
-        const std::span<const VkFormat>& depth_formats,
+        const std::span<const VkFormat> depth_formats,
         const unsigned buffer_count,
         const VkSampleCountFlagBits sample_count,
         const std::vector<std::uint32_t>& family_indices)
