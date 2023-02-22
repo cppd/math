@@ -31,12 +31,14 @@ public:
         virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
+
         virtual void create_buffers(
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) = 0;
+
         virtual void delete_buffers() = 0;
 };
 

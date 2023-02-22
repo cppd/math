@@ -158,6 +158,7 @@ class Impl final : public Compute
                         images.push_back(dx_[i].image().handle());
                         images.push_back(dy_[i].image().handle());
                 }
+
                 image_barrier(
                         command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
                         VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);

@@ -40,6 +40,7 @@ public:
                 const vulkan::ImageWithMemory& input,
                 const Region<2, int>& source_rectangle,
                 const Region<2, int>& draw_rectangle) = 0;
+
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) const = 0;

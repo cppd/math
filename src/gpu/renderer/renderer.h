@@ -54,6 +54,7 @@ public:
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
                 const Region<2, int>& viewport) = 0;
+
         virtual void delete_buffers() = 0;
 };
 

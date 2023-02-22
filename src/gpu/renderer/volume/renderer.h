@@ -118,13 +118,16 @@ public:
                 const vulkan::ImageWithMemory& transparency_heads_image,
                 const vulkan::Buffer& transparency_nodes,
                 const Opacity& opacity);
+
         void delete_buffers();
 
         void create_command_buffers(VkCommandPool graphics_command_pool);
+
         void create_command_buffers(
                 const VolumeObject* volume,
                 VkCommandPool graphics_command_pool,
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
+
         void delete_command_buffers();
 
         void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image);

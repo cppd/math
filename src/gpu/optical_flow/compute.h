@@ -31,6 +31,7 @@ public:
         virtual ~Compute() = default;
 
         virtual VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) = 0;
+
         virtual void create_buffers(
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
@@ -39,6 +40,7 @@ public:
                 unsigned top_point_count_y,
                 const vulkan::Buffer& top_points,
                 const vulkan::Buffer& top_flow) = 0;
+
         virtual void delete_buffers() = 0;
 
         virtual void reset() = 0;

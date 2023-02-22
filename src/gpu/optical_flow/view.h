@@ -39,6 +39,7 @@ public:
                 const vulkan::ImageWithMemory& input,
                 double window_ppi,
                 const Region<2, int>& rectangle) = 0;
+
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(

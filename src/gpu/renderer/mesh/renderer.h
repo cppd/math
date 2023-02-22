@@ -111,6 +111,7 @@ public:
                 const vulkan::Buffer& transparency_nodes,
                 const Opacity& opacity,
                 const Region<2, int>& viewport);
+
         void delete_render_buffers();
 
         void create_shadow_mapping_buffers(
@@ -122,6 +123,7 @@ public:
                 unsigned width,
                 unsigned height,
                 double zoom);
+
         void delete_shadow_mapping_buffers();
 
         void create_render_command_buffers(
@@ -131,11 +133,13 @@ public:
                 bool show_normals,
                 const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
                 const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands);
+
         void delete_render_command_buffers();
 
         void create_shadow_mapping_command_buffers(
                 const std::vector<const MeshObject*>& meshes,
                 VkCommandPool graphics_command_pool);
+
         void delete_shadow_mapping_command_buffers();
 
         void set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
