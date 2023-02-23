@@ -64,6 +64,91 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         return result;
 }
 
+class ImagePyramid final
+{
+        VkDevice device_;
+
+        GrayscaleProgram grayscale_program_;
+        GrayscaleMemory grayscale_memory_;
+        Vector2i grayscale_groups_;
+
+        DownsampleProgram downsample_program_;
+        std::vector<DownsampleMemory> downsample_memory_;
+        std::vector<Vector2i> downsample_groups_;
+
+public:
+        explicit ImagePyramid(const VkDevice device)
+                : device_(device),
+                  grayscale_program_(device),
+                  grayscale_memory_(device, grayscale_program_.descriptor_set_layout()),
+                  downsample_program_(device)
+        {
+        }
+
+        void create_buffers(
+                const VkSampler sampler,
+                const vulkan::ImageWithMemory& input,
+                const Region<2, int>& rectangle,
+                const std::vector<Vector2i>& sizes,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
+        {
+                grayscale_groups_ = grayscale_groups(GROUP_SIZE, sizes);
+                downsample_groups_ = downsample_groups(GROUP_SIZE, sizes);
+
+                grayscale_program_.create_pipeline(GROUP_SIZE[0], GROUP_SIZE[1], rectangle);
+                grayscale_memory_.set_src(sampler, input.image_view());
+                grayscale_memory_.set_dst(images[0][0].image_view(), images[1][0].image_view());
+
+                downsample_program_.create_pipeline(GROUP_SIZE[0], GROUP_SIZE[1]);
+                downsample_memory_ =
+                        create_downsample_memory(device_, downsample_program_.descriptor_set_layout(), images);
+        }
+
+        void delete_buffers()
+        {
+                grayscale_program_.delete_pipeline();
+                downsample_program_.delete_pipeline();
+
+                downsample_memory_.clear();
+                downsample_memory_.clear();
+        }
+
+        void commands(
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
+                const int index,
+                const VkCommandBuffer command_buffer)
+        {
+                ASSERT(index == 0 || index == 1);
+                ASSERT(downsample_memory_.size() == downsample_groups_.size());
+                ASSERT(downsample_memory_.size() + 1 == images[index].size());
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline());
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline_layout(),
+                        GrayscaleMemory::set_number(), 1, &grayscale_memory_.descriptor_set(index), 0, nullptr);
+                vkCmdDispatch(command_buffer, grayscale_groups_[0], grayscale_groups_[1], 1);
+
+                image_barrier(
+                        command_buffer, images[index][0].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+
+                for (std::size_t i = 0; i < downsample_groups_.size(); ++i)
+                {
+                        vkCmdBindPipeline(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline());
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline_layout(),
+                                DownsampleMemory::set_number(), 1, &downsample_memory_[i].descriptor_set(index), 0,
+                                nullptr);
+                        vkCmdDispatch(command_buffer, downsample_groups_[i][0], downsample_groups_[i][1], 1);
+
+                        image_barrier(
+                                command_buffer, images[index][i + 1].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
+                                VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                }
+        }
+};
+
 class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -84,13 +169,7 @@ class Impl final : public Compute
         std::vector<vulkan::ImageWithMemory> dy_;
         std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
-        GrayscaleProgram grayscale_program_;
-        GrayscaleMemory grayscale_memory_;
-        Vector2i grayscale_groups_;
-
-        DownsampleProgram downsample_program_;
-        std::vector<DownsampleMemory> downsample_memory_;
-        std::vector<Vector2i> downsample_groups_;
+        ImagePyramid program_image_pyramid_;
 
         SobelProgram sobel_program_;
         std::vector<SobelMemory> sobel_memory_;
@@ -102,38 +181,6 @@ class Impl final : public Compute
         std::vector<Vector2i> flow_groups_;
 
         int i_index_ = -1;
-
-        void commands_compute_image_pyramid(const int index, const VkCommandBuffer command_buffer)
-        {
-                ASSERT(index == 0 || index == 1);
-                ASSERT(downsample_memory_.size() == downsample_groups_.size());
-                ASSERT(downsample_memory_.size() + 1 == images_[index].size());
-
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline());
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline_layout(),
-                        GrayscaleMemory::set_number(), 1, &grayscale_memory_.descriptor_set(index), 0, nullptr);
-                vkCmdDispatch(command_buffer, grayscale_groups_[0], grayscale_groups_[1], 1);
-
-                image_barrier(
-                        command_buffer, images_[index][0].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
-
-                for (std::size_t i = 0; i < downsample_groups_.size(); ++i)
-                {
-                        vkCmdBindPipeline(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline());
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline_layout(),
-                                DownsampleMemory::set_number(), 1, &downsample_memory_[i].descriptor_set(index), 0,
-                                nullptr);
-                        vkCmdDispatch(command_buffer, downsample_groups_[i][0], downsample_groups_[i][1], 1);
-
-                        image_barrier(
-                                command_buffer, images_[index][i + 1].image().handle(), VK_IMAGE_LAYOUT_GENERAL,
-                                VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
-                }
-        }
 
         void commands_compute_dxdy(const int index, const VkCommandBuffer command_buffer) const
         {
@@ -216,7 +263,7 @@ class Impl final : public Compute
 
                 const auto commands = [&]()
                 {
-                        commands_compute_image_pyramid(0, command_buffer);
+                        program_image_pyramid_.commands(images_, 0, command_buffer);
                 };
 
                 vulkan::record_commands(command_buffer, commands);
@@ -234,7 +281,7 @@ class Impl final : public Compute
                         const auto commands = [&]()
                         {
                                 // i — previous image, 1-i — current image
-                                commands_compute_image_pyramid(1 - index, command_buffer);
+                                program_image_pyramid_.commands(images_, 1 - index, command_buffer);
                                 commands_compute_dxdy(index, command_buffer);
 
                                 commands_images_to_sampler_layout(1 - index, command_buffer);
@@ -322,19 +369,11 @@ class Impl final : public Compute
 
                 flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
 
+                program_image_pyramid_.create_buffers(sampler, input, rectangle, sizes, images_);
+
                 constexpr Vector2i GROUPS = GROUP_SIZE;
                 constexpr int GROUPS_X = GROUP_SIZE[0];
                 constexpr int GROUPS_Y = GROUP_SIZE[1];
-
-                grayscale_groups_ = grayscale_groups(GROUPS, sizes);
-                grayscale_program_.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
-                grayscale_memory_.set_src(sampler, input.image_view());
-                grayscale_memory_.set_dst(images_[0][0].image_view(), images_[1][0].image_view());
-
-                downsample_groups_ = downsample_groups(GROUPS, sizes);
-                downsample_program_.create_pipeline(GROUPS_X, GROUPS_Y);
-                downsample_memory_ = create_downsample_memory(
-                        device_->handle(), downsample_program_.descriptor_set_layout(), images_);
 
                 sobel_groups_ = sobel_groups(GROUPS, sizes);
                 sobel_program_.create_pipeline(GROUPS_X, GROUPS_Y);
@@ -363,8 +402,8 @@ class Impl final : public Compute
                 command_buffer_first_pyramid_.reset();
                 command_buffers_.reset();
 
-                grayscale_program_.delete_pipeline();
-                downsample_program_.delete_pipeline();
+                program_image_pyramid_.delete_buffers();
+
                 sobel_program_.delete_pipeline();
                 flow_program_.delete_pipeline();
 
@@ -373,8 +412,6 @@ class Impl final : public Compute
                 dx_.clear();
                 dy_.clear();
                 flow_buffers_.clear();
-                downsample_memory_.clear();
-                downsample_memory_.clear();
                 sobel_memory_.clear();
                 flow_memory_.clear();
         }
@@ -393,9 +430,7 @@ public:
                   compute_queue_(compute_queue),
                   semaphore_first_pyramid_(device_->handle()),
                   semaphore_(device_->handle()),
-                  grayscale_program_(device_->handle()),
-                  grayscale_memory_(device_->handle(), grayscale_program_.descriptor_set_layout()),
-                  downsample_program_(device_->handle()),
+                  program_image_pyramid_(device_->handle()),
                   sobel_program_(device_->handle()),
                   flow_program_(device_->handle())
         {
