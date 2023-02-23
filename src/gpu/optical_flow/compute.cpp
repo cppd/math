@@ -149,6 +149,72 @@ public:
         }
 };
 
+class Sobel final
+{
+        VkDevice device_;
+
+        SobelProgram sobel_program_;
+        std::vector<SobelMemory> sobel_memory_;
+        std::vector<Vector2i> sobel_groups_;
+
+public:
+        explicit Sobel(const VkDevice device)
+                : device_(device),
+                  sobel_program_(device_)
+        {
+        }
+
+        void create_buffers(
+                const std::vector<Vector2i>& sizes,
+                const std::vector<vulkan::ImageWithMemory>& dx,
+                const std::vector<vulkan::ImageWithMemory>& dy,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
+        {
+                sobel_groups_ = sobel_groups(GROUP_SIZE, sizes);
+                sobel_program_.create_pipeline(GROUP_SIZE[0], GROUP_SIZE[1]);
+                sobel_memory_ = create_sobel_memory(device_, sobel_program_.descriptor_set_layout(), images, dx, dy);
+        }
+
+        void delete_buffers()
+        {
+                sobel_program_.delete_pipeline();
+                sobel_memory_.clear();
+        }
+
+        void commands(
+                const std::vector<vulkan::ImageWithMemory>& dx,
+                const std::vector<vulkan::ImageWithMemory>& dy,
+                const int index,
+                const VkCommandBuffer command_buffer) const
+        {
+                ASSERT(index == 0 || index == 1);
+                ASSERT(sobel_memory_.size() == sobel_groups_.size());
+                ASSERT(sobel_groups_.size() == dx.size());
+                ASSERT(sobel_groups_.size() == dy.size());
+
+                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline());
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline_layout(),
+                                SobelMemory::set_number(), 1, &sobel_memory_[i].descriptor_set(index), 0, nullptr);
+                        vkCmdDispatch(command_buffer, sobel_groups_[i][0], sobel_groups_[i][1], 1);
+                }
+
+                std::vector<VkImage> images;
+                images.reserve(dx.size() + dy.size());
+                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
+                {
+                        images.push_back(dx[i].image().handle());
+                        images.push_back(dy[i].image().handle());
+                }
+
+                image_barrier(
+                        command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+        }
+};
+
 class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -170,10 +236,7 @@ class Impl final : public Compute
         std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
         ImagePyramid program_image_pyramid_;
-
-        SobelProgram sobel_program_;
-        std::vector<SobelMemory> sobel_memory_;
-        std::vector<Vector2i> sobel_groups_;
+        Sobel program_sobel_;
 
         FlowProgram flow_program_;
         std::vector<FlowDataBuffer> flow_buffer_;
@@ -181,35 +244,6 @@ class Impl final : public Compute
         std::vector<Vector2i> flow_groups_;
 
         int i_index_ = -1;
-
-        void commands_compute_dxdy(const int index, const VkCommandBuffer command_buffer) const
-        {
-                ASSERT(index == 0 || index == 1);
-                ASSERT(sobel_memory_.size() == sobel_groups_.size());
-                ASSERT(sobel_groups_.size() == dx_.size());
-                ASSERT(sobel_groups_.size() == dy_.size());
-
-                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline());
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline_layout(),
-                                SobelMemory::set_number(), 1, &sobel_memory_[i].descriptor_set(index), 0, nullptr);
-                        vkCmdDispatch(command_buffer, sobel_groups_[i][0], sobel_groups_[i][1], 1);
-                }
-
-                std::vector<VkImage> images;
-                images.reserve(dx_.size() + dy_.size());
-                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
-                {
-                        images.push_back(dx_[i].image().handle());
-                        images.push_back(dy_[i].image().handle());
-                }
-
-                image_barrier(
-                        command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
-                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
-        }
 
         void commands_compute_optical_flow(
                 const int index,
@@ -282,7 +316,7 @@ class Impl final : public Compute
                         {
                                 // i — previous image, 1-i — current image
                                 program_image_pyramid_.commands(images_, 1 - index, command_buffer);
-                                commands_compute_dxdy(index, command_buffer);
+                                program_sobel_.commands(dx_, dy_, index, command_buffer);
 
                                 commands_images_to_sampler_layout(1 - index, command_buffer);
                                 commands_compute_optical_flow(index, command_buffer, top_flow);
@@ -370,15 +404,11 @@ class Impl final : public Compute
                 flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
 
                 program_image_pyramid_.create_buffers(sampler, input, rectangle, sizes, images_);
+                program_sobel_.create_buffers(sizes, dx_, dy_, images_);
 
                 constexpr Vector2i GROUPS = GROUP_SIZE;
                 constexpr int GROUPS_X = GROUP_SIZE[0];
                 constexpr int GROUPS_Y = GROUP_SIZE[1];
-
-                sobel_groups_ = sobel_groups(GROUPS, sizes);
-                sobel_program_.create_pipeline(GROUPS_X, GROUPS_Y);
-                sobel_memory_ = create_sobel_memory(
-                        device_->handle(), sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
 
                 flow_groups_ = flow_groups(GROUPS, sizes, {top_point_count_x, top_point_count_y});
                 flow_program_.create_pipeline(
@@ -403,8 +433,8 @@ class Impl final : public Compute
                 command_buffers_.reset();
 
                 program_image_pyramid_.delete_buffers();
+                program_sobel_.delete_buffers();
 
-                sobel_program_.delete_pipeline();
                 flow_program_.delete_pipeline();
 
                 images_[0].clear();
@@ -412,7 +442,6 @@ class Impl final : public Compute
                 dx_.clear();
                 dy_.clear();
                 flow_buffers_.clear();
-                sobel_memory_.clear();
                 flow_memory_.clear();
         }
 
@@ -431,7 +460,7 @@ public:
                   semaphore_first_pyramid_(device_->handle()),
                   semaphore_(device_->handle()),
                   program_image_pyramid_(device_->handle()),
-                  sobel_program_(device_->handle()),
+                  program_sobel_(device_->handle()),
                   flow_program_(device_->handle())
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
