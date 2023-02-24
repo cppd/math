@@ -215,40 +215,57 @@ public:
         }
 };
 
-class Impl final : public Compute
+class Flow final
 {
-        const std::thread::id thread_id_ = std::this_thread::get_id();
-
         const vulkan::Device* const device_;
-
-        const vulkan::CommandPool* const compute_command_pool_;
-        const vulkan::Queue* const compute_queue_;
-
-        vulkan::handle::Semaphore semaphore_first_pyramid_;
-        vulkan::handle::Semaphore semaphore_;
-
-        std::optional<vulkan::handle::CommandBuffer> command_buffer_first_pyramid_;
-        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
-
-        std::array<std::vector<vulkan::ImageWithMemory>, 2> images_;
-        std::vector<vulkan::ImageWithMemory> dx_;
-        std::vector<vulkan::ImageWithMemory> dy_;
-        std::vector<vulkan::BufferWithMemory> flow_buffers_;
-
-        ImagePyramid program_image_pyramid_;
-        Sobel program_sobel_;
 
         FlowProgram flow_program_;
         std::vector<FlowDataBuffer> flow_buffer_;
         std::vector<FlowMemory> flow_memory_;
         std::vector<Vector2i> flow_groups_;
 
-        int i_index_ = -1;
+        std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
-        void commands_compute_optical_flow(
-                const int index,
-                const VkCommandBuffer command_buffer,
-                const VkBuffer top_flow) const
+public:
+        explicit Flow(const vulkan::Device* const device)
+                : device_(device),
+                  flow_program_(device_->handle())
+        {
+        }
+
+        void create_buffers(
+                const VkSampler sampler,
+                const std::uint32_t family_index,
+                const std::vector<Vector2i>& sizes,
+                const unsigned top_point_count_x,
+                const unsigned top_point_count_y,
+                const vulkan::Buffer& top_points,
+                const vulkan::Buffer& top_flow,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
+                const std::vector<vulkan::ImageWithMemory>& dx,
+                const std::vector<vulkan::ImageWithMemory>& dy)
+        {
+                flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
+
+                flow_groups_ = flow_groups(GROUP_SIZE, sizes, {top_point_count_x, top_point_count_y});
+
+                flow_program_.create_pipeline(
+                        GROUP_SIZE[0], GROUP_SIZE[1], RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
+
+                std::tie(flow_buffer_, flow_memory_) = create_flow_memory(
+                        *device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
+                        to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
+                        images, dx, dy);
+        }
+
+        void delete_buffers()
+        {
+                flow_program_.delete_pipeline();
+                flow_buffers_.clear();
+                flow_memory_.clear();
+        }
+
+        void commands(const int index, const VkCommandBuffer command_buffer, const VkBuffer top_flow) const
         {
                 ASSERT(index == 0 || index == 1);
                 ASSERT(flow_memory_.size() == flow_groups_.size());
@@ -267,6 +284,32 @@ class Impl final : public Compute
                                 VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
+};
+
+class Impl final : public Compute
+{
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+
+        const vulkan::Device* const device_;
+
+        const vulkan::CommandPool* const compute_command_pool_;
+        const vulkan::Queue* const compute_queue_;
+
+        vulkan::handle::Semaphore semaphore_first_pyramid_;
+        vulkan::handle::Semaphore semaphore_;
+
+        std::optional<vulkan::handle::CommandBuffer> command_buffer_first_pyramid_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
+
+        std::array<std::vector<vulkan::ImageWithMemory>, 2> images_;
+        std::vector<vulkan::ImageWithMemory> dx_;
+        std::vector<vulkan::ImageWithMemory> dy_;
+
+        ImagePyramid program_image_pyramid_;
+        Sobel program_sobel_;
+        Flow program_flow_;
+
+        int i_index_ = -1;
 
         void commands_images_to_sampler_layout(const int index, const VkCommandBuffer command_buffer)
         {
@@ -319,7 +362,7 @@ class Impl final : public Compute
                                 program_sobel_.commands(dx_, dy_, index, command_buffer);
 
                                 commands_images_to_sampler_layout(1 - index, command_buffer);
-                                commands_compute_optical_flow(index, command_buffer, top_flow);
+                                program_flow_.commands(index, command_buffer, top_flow);
                                 commands_images_to_general_layout(1 - index, command_buffer);
                         };
 
@@ -401,22 +444,12 @@ class Impl final : public Compute
                         *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,
                         VK_IMAGE_USAGE_STORAGE_BIT);
 
-                flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
-
                 program_image_pyramid_.create_buffers(sampler, input, rectangle, sizes, images_);
+
                 program_sobel_.create_buffers(sizes, dx_, dy_, images_);
 
-                constexpr Vector2i GROUPS = GROUP_SIZE;
-                constexpr int GROUPS_X = GROUP_SIZE[0];
-                constexpr int GROUPS_Y = GROUP_SIZE[1];
-
-                flow_groups_ = flow_groups(GROUPS, sizes, {top_point_count_x, top_point_count_y});
-                flow_program_.create_pipeline(
-                        GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
-
-                std::tie(flow_buffer_, flow_memory_) = create_flow_memory(
-                        *device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
-                        to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
+                program_flow_.create_buffers(
+                        sampler, family_index, sizes, top_point_count_x, top_point_count_y, top_points, top_flow,
                         images_, dx_, dy_);
 
                 create_command_buffer_first_pyramid();
@@ -434,15 +467,12 @@ class Impl final : public Compute
 
                 program_image_pyramid_.delete_buffers();
                 program_sobel_.delete_buffers();
-
-                flow_program_.delete_pipeline();
+                program_flow_.delete_buffers();
 
                 images_[0].clear();
                 images_[1].clear();
                 dx_.clear();
                 dy_.clear();
-                flow_buffers_.clear();
-                flow_memory_.clear();
         }
 
         void reset() override
@@ -461,7 +491,7 @@ public:
                   semaphore_(device_->handle()),
                   program_image_pyramid_(device_->handle()),
                   program_sobel_(device_->handle()),
-                  flow_program_(device_->handle())
+                  program_flow_(device_)
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
         }
