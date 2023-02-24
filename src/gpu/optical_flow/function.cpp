@@ -65,29 +65,6 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
         return sizes;
 }
 
-Vector2i grayscale_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
-{
-        return group_count(sizes[0], group_size);
-}
-
-std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
-{
-        if (sizes.size() <= 1)
-        {
-                return {};
-        }
-
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size() - 1);
-
-        for (std::size_t i = 1; i < sizes.size(); ++i)
-        {
-                groups.push_back(group_count(sizes[i], group_size));
-        }
-
-        return groups;
-}
-
 std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
 {
         std::vector<Vector2i> groups;

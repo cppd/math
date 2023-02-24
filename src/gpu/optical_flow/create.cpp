@@ -136,25 +136,6 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         return buffers;
 }
 
-std::vector<DownsampleMemory> create_downsample_memory(
-        const VkDevice device,
-        const VkDescriptorSetLayout descriptor_set_layout,
-        const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
-{
-        ASSERT(images[0].size() == images[1].size());
-
-        std::vector<DownsampleMemory> downsample_images;
-
-        for (std::size_t i = 1; i < images[0].size(); ++i)
-        {
-                downsample_images.emplace_back(device, descriptor_set_layout);
-                downsample_images.back().set_big(images[0][i - 1].image_view(), images[1][i - 1].image_view());
-                downsample_images.back().set_small(images[0][i].image_view(), images[1][i].image_view());
-        }
-
-        return downsample_images;
-}
-
 std::vector<SobelMemory> create_sobel_memory(
         const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,

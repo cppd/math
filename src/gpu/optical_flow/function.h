@@ -25,10 +25,6 @@ namespace ns::gpu::optical_flow
 {
 std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size);
 
-Vector2i grayscale_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes);
-
-std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes);
-
 std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes);
 
 std::vector<Vector2i> flow_groups(
