@@ -65,19 +65,6 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
         return sizes;
 }
 
-std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
-{
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size());
-
-        for (const Vector2i& size : sizes)
-        {
-                groups.push_back(group_count(size, group_size));
-        }
-
-        return groups;
-}
-
 std::vector<Vector2i> flow_groups(
         const Vector2i& group_size,
         const std::vector<Vector2i>& sizes,

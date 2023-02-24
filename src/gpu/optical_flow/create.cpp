@@ -136,30 +136,6 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         return buffers;
 }
 
-std::vector<SobelMemory> create_sobel_memory(
-        const VkDevice device,
-        const VkDescriptorSetLayout descriptor_set_layout,
-        const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
-        const std::vector<vulkan::ImageWithMemory>& dx,
-        const std::vector<vulkan::ImageWithMemory>& dy)
-{
-        ASSERT(images[0].size() == images[1].size());
-        ASSERT(images[0].size() == dx.size());
-        ASSERT(images[0].size() == dy.size());
-
-        std::vector<SobelMemory> sobel_images;
-
-        for (std::size_t i = 0; i < images[0].size(); ++i)
-        {
-                sobel_images.emplace_back(device, descriptor_set_layout);
-                sobel_images.back().set_i(images[0][i].image_view(), images[1][i].image_view());
-                sobel_images.back().set_dx(dx[i].image_view());
-                sobel_images.back().set_dy(dy[i].image_view());
-        }
-
-        return sobel_images;
-}
-
 std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_memory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,

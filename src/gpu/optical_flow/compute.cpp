@@ -35,8 +35,8 @@ Packt Publishing, 2015.
 #include "option.h"
 
 #include "compute/image_pyramid.h"
+#include "compute/sobel.h"
 #include "shaders/flow.h"
-#include "shaders/sobel.h"
 
 #include <src/numerical/vector.h>
 #include <src/vulkan/commands.h>
@@ -62,72 +62,6 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         }
         return result;
 }
-
-class Sobel final
-{
-        VkDevice device_;
-
-        SobelProgram sobel_program_;
-        std::vector<SobelMemory> sobel_memory_;
-        std::vector<Vector2i> sobel_groups_;
-
-public:
-        explicit Sobel(const VkDevice device)
-                : device_(device),
-                  sobel_program_(device_)
-        {
-        }
-
-        void create_buffers(
-                const std::vector<Vector2i>& sizes,
-                const std::vector<vulkan::ImageWithMemory>& dx,
-                const std::vector<vulkan::ImageWithMemory>& dy,
-                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
-        {
-                sobel_groups_ = sobel_groups(GROUP_SIZE, sizes);
-                sobel_program_.create_pipeline(GROUP_SIZE[0], GROUP_SIZE[1]);
-                sobel_memory_ = create_sobel_memory(device_, sobel_program_.descriptor_set_layout(), images, dx, dy);
-        }
-
-        void delete_buffers()
-        {
-                sobel_program_.delete_pipeline();
-                sobel_memory_.clear();
-        }
-
-        void commands(
-                const std::vector<vulkan::ImageWithMemory>& dx,
-                const std::vector<vulkan::ImageWithMemory>& dy,
-                const int index,
-                const VkCommandBuffer command_buffer) const
-        {
-                ASSERT(index == 0 || index == 1);
-                ASSERT(sobel_memory_.size() == sobel_groups_.size());
-                ASSERT(sobel_groups_.size() == dx.size());
-                ASSERT(sobel_groups_.size() == dy.size());
-
-                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline());
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline_layout(),
-                                SobelMemory::set_number(), 1, &sobel_memory_[i].descriptor_set(index), 0, nullptr);
-                        vkCmdDispatch(command_buffer, sobel_groups_[i][0], sobel_groups_[i][1], 1);
-                }
-
-                std::vector<VkImage> images;
-                images.reserve(dx.size() + dy.size());
-                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
-                {
-                        images.push_back(dx[i].image().handle());
-                        images.push_back(dy[i].image().handle());
-                }
-
-                image_barrier(
-                        command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
-                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
-        }
-};
 
 class Flow final
 {
@@ -220,7 +154,7 @@ class Impl final : public Compute
         std::vector<vulkan::ImageWithMemory> dy_;
 
         compute::ImagePyramid program_image_pyramid_;
-        Sobel program_sobel_;
+        compute::Sobel program_sobel_;
         Flow program_flow_;
 
         int i_index_ = -1;
