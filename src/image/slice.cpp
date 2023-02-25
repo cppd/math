@@ -48,10 +48,10 @@ std::array<Slice, S> sort_slices(const Image<N>& image, const std::array<Slice, 
                 }
         }
 
-        std::array<Slice, S> result = slices;
+        std::array<Slice, S> res = slices;
 
         std::sort(
-                result.begin(), result.end(),
+                res.begin(), res.end(),
                 [](const Slice& a, const Slice& b)
                 {
                         return a.dimension < b.dimension;
@@ -59,13 +59,13 @@ std::array<Slice, S> sort_slices(const Image<N>& image, const std::array<Slice, 
 
         for (std::size_t i = 0; i < S - 1; ++i)
         {
-                if (result[i].dimension == result[i + 1].dimension)
+                if (res[i].dimension == res[i + 1].dimension)
                 {
-                        error("Not unique dimension " + to_string(result[i].dimension));
+                        error("Not unique dimension " + to_string(res[i].dimension));
                 }
         }
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, std::size_t S>

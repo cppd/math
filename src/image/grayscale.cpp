@@ -213,9 +213,9 @@ void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& 
 template <std::size_t N>
 Image<N> convert_to_r_component_format(const Image<N>& image)
 {
-        Image<N> result;
+        Image<N> res;
 
-        result.color_format = [&]()
+        res.color_format = [&]()
         {
                 switch (image.color_format)
                 {
@@ -242,10 +242,10 @@ Image<N> convert_to_r_component_format(const Image<N>& image)
                 unknown_color_format_error(image.color_format);
         }();
 
-        result.size = image.size;
-        result.pixels = convert_to_r_component_format(image.color_format, image.pixels);
+        res.size = image.size;
+        res.pixels = convert_to_r_component_format(image.color_format, image.pixels);
 
-        return result;
+        return res;
 }
 
 #define TEMPLATE(N) template Image<(N)> convert_to_r_component_format(const Image<(N)>&);

@@ -38,11 +38,11 @@ std::vector<std::byte> add_alpha(const std::span<const std::byte> bytes, const T
                 error("Error data size (" + to_string(bytes.size()) + ") for adding alpha");
         }
 
-        std::vector<std::byte> result(4 * (bytes.size() / 3));
+        std::vector<std::byte> res(4 * (bytes.size() / 3));
 
         const std::byte* src = bytes.data();
         const std::byte* const src_end = src + bytes.size();
-        std::byte* dst = result.data();
+        std::byte* dst = res.data();
         while (src != src_end)
         {
                 std::memcpy(dst, src, 3 * sizeof(T));
@@ -51,9 +51,9 @@ std::vector<std::byte> add_alpha(const std::span<const std::byte> bytes, const T
                 dst += sizeof(T);
                 src += 3 * sizeof(T);
         }
-        ASSERT(dst == result.data() + result.size());
+        ASSERT(dst == res.data() + res.size());
 
-        return result;
+        return res;
 }
 
 template <typename T>
@@ -66,20 +66,20 @@ std::vector<std::byte> delete_alpha(const std::span<const std::byte> bytes)
                 error("Error data size (" + to_string(bytes.size()) + ") for deleting alpha");
         }
 
-        std::vector<std::byte> result(3 * (bytes.size() / 4));
+        std::vector<std::byte> res(3 * (bytes.size() / 4));
 
         const std::byte* src = bytes.data();
         const std::byte* const src_end = src + bytes.size();
-        std::byte* dst = result.data();
+        std::byte* dst = res.data();
         while (src != src_end)
         {
                 std::memcpy(dst, src, 3 * sizeof(T));
                 src += 4 * sizeof(T);
                 dst += 3 * sizeof(T);
         }
-        ASSERT(dst == result.data() + result.size());
+        ASSERT(dst == res.data() + res.size());
 
-        return result;
+        return res;
 }
 
 template <typename T>
@@ -183,32 +183,30 @@ void set_alpha(const ColorFormat color_format, const std::span<std::byte>& bytes
 template <std::size_t N>
 Image<N> add_alpha(const Image<N>& image, float alpha)
 {
-        Image<N> result;
+        Image<N> res;
 
         alpha = std::clamp(alpha, 0.0f, 1.0f);
 
-        result.size = image.size;
+        res.size = image.size;
 
         switch (image.color_format)
         {
         case ColorFormat::R8G8B8_SRGB:
-                result.color_format = ColorFormat::R8G8B8A8_SRGB;
-                result.pixels = add_alpha<std::uint8_t>(image.pixels, std::lround(alpha * Limits<std::uint8_t>::max()));
-                return result;
+                res.color_format = ColorFormat::R8G8B8A8_SRGB;
+                res.pixels = add_alpha<std::uint8_t>(image.pixels, std::lround(alpha * Limits<std::uint8_t>::max()));
+                return res;
         case ColorFormat::R16G16B16:
-                result.color_format = ColorFormat::R16G16B16A16;
-                result.pixels =
-                        add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
-                return result;
+                res.color_format = ColorFormat::R16G16B16A16;
+                res.pixels = add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
+                return res;
         case ColorFormat::R16G16B16_SRGB:
-                result.color_format = ColorFormat::R16G16B16A16_SRGB;
-                result.pixels =
-                        add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
-                return result;
+                res.color_format = ColorFormat::R16G16B16A16_SRGB;
+                res.pixels = add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
+                return res;
         case ColorFormat::R32G32B32:
-                result.color_format = ColorFormat::R32G32B32A32;
-                result.pixels = add_alpha<float>(image.pixels, alpha);
-                return result;
+                res.color_format = ColorFormat::R32G32B32A32;
+                res.pixels = add_alpha<float>(image.pixels, alpha);
+                return res;
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
@@ -228,28 +226,28 @@ Image<N> add_alpha(const Image<N>& image, float alpha)
 template <std::size_t N>
 Image<N> delete_alpha(const Image<N>& image)
 {
-        Image<N> result;
+        Image<N> res;
 
-        result.size = image.size;
+        res.size = image.size;
 
         switch (image.color_format)
         {
         case ColorFormat::R8G8B8A8_SRGB:
-                result.color_format = ColorFormat::R8G8B8_SRGB;
-                result.pixels = delete_alpha<std::uint8_t>(image.pixels);
-                return result;
+                res.color_format = ColorFormat::R8G8B8_SRGB;
+                res.pixels = delete_alpha<std::uint8_t>(image.pixels);
+                return res;
         case ColorFormat::R16G16B16A16:
-                result.color_format = ColorFormat::R16G16B16;
-                result.pixels = delete_alpha<std::uint16_t>(image.pixels);
-                return result;
+                res.color_format = ColorFormat::R16G16B16;
+                res.pixels = delete_alpha<std::uint16_t>(image.pixels);
+                return res;
         case ColorFormat::R16G16B16A16_SRGB:
-                result.color_format = ColorFormat::R16G16B16_SRGB;
-                result.pixels = delete_alpha<std::uint16_t>(image.pixels);
-                return result;
+                res.color_format = ColorFormat::R16G16B16_SRGB;
+                res.pixels = delete_alpha<std::uint16_t>(image.pixels);
+                return res;
         case ColorFormat::R32G32B32A32:
-                result.color_format = ColorFormat::R32G32B32;
-                result.pixels = delete_alpha<float>(image.pixels);
-                return result;
+                res.color_format = ColorFormat::R32G32B32;
+                res.pixels = delete_alpha<float>(image.pixels);
+                return res;
         case ColorFormat::R8G8B8_SRGB:
         case ColorFormat::R16G16B16:
         case ColorFormat::R16G16B16_SRGB:

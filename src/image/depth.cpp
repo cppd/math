@@ -57,11 +57,11 @@ template <std::size_t N>
 
         if (color_format != image.color_format)
         {
-                Image<N> result;
-                result.size = image.size;
-                result.color_format = color_format;
-                format_conversion(image.color_format, image.pixels, result.color_format, &result.pixels);
-                return result;
+                Image<N> res;
+                res.size = image.size;
+                res.color_format = color_format;
+                format_conversion(image.color_format, image.pixels, res.color_format, &res.pixels);
+                return res;
         }
 
         return image;
