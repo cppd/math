@@ -87,31 +87,6 @@ FlowInfo flow_info(
 }
 }
 
-std::vector<vulkan::ImageWithMemory> create_images(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const std::vector<Vector2i>& sizes,
-        const VkFormat format,
-        const std::uint32_t family_index,
-        const VkImageUsageFlags usage)
-{
-        std::vector<vulkan::ImageWithMemory> images;
-        images.reserve(sizes.size());
-
-        const std::vector<std::uint32_t> family_indices({compute_command_pool.family_index(), family_index});
-        const std::vector<VkFormat> formats({format});
-        for (const Vector2i& s : sizes)
-        {
-                images.emplace_back(
-                        device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, compute_command_pool,
-                        compute_queue);
-        }
-
-        return images;
-}
-
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
         const std::vector<Vector2i>& sizes,

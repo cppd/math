@@ -65,24 +65,6 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
         return sizes;
 }
 
-std::vector<Vector2i> flow_groups(
-        const Vector2i& group_size,
-        const std::vector<Vector2i>& sizes,
-        const Vector2i& top_point_count)
-{
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size());
-
-        groups.push_back(group_count(top_point_count, group_size));
-
-        for (std::size_t i = 1; i < sizes.size(); ++i)
-        {
-                groups.push_back(group_count(sizes[i], group_size));
-        }
-
-        return groups;
-}
-
 TopLevelPoints create_top_level_points(
         const int width,
         const int height,

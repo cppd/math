@@ -30,13 +30,12 @@ Packt Publishing, 2015.
 #include "compute.h"
 
 #include "barriers.h"
-#include "create.h"
 #include "function.h"
 #include "option.h"
 
+#include "compute/flow.h"
 #include "compute/image_pyramid.h"
 #include "compute/sobel.h"
-#include "shaders/flow.h"
 
 #include <src/numerical/vector.h>
 #include <src/vulkan/commands.h>
@@ -52,87 +51,30 @@ namespace
 {
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::BufferWithMemory>& buffers)
+std::vector<vulkan::ImageWithMemory> create_images(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const std::vector<Vector2i>& sizes,
+        const VkFormat format,
+        const std::uint32_t family_index,
+        const VkImageUsageFlags usage)
 {
-        std::vector<const vulkan::Buffer*> result;
-        result.reserve(buffers.size());
-        for (const vulkan::BufferWithMemory& buffer : buffers)
+        std::vector<vulkan::ImageWithMemory> images;
+        images.reserve(sizes.size());
+
+        const std::vector<std::uint32_t> family_indices({compute_command_pool.family_index(), family_index});
+        const std::vector<VkFormat> formats({format});
+        for (const Vector2i& s : sizes)
         {
-                result.push_back(&buffer.buffer());
+                images.emplace_back(
+                        device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, compute_command_pool,
+                        compute_queue);
         }
-        return result;
+
+        return images;
 }
-
-class Flow final
-{
-        const vulkan::Device* const device_;
-
-        FlowProgram flow_program_;
-        std::vector<FlowDataBuffer> flow_buffer_;
-        std::vector<FlowMemory> flow_memory_;
-        std::vector<Vector2i> flow_groups_;
-
-        std::vector<vulkan::BufferWithMemory> flow_buffers_;
-
-public:
-        explicit Flow(const vulkan::Device* const device)
-                : device_(device),
-                  flow_program_(device_->handle())
-        {
-        }
-
-        void create_buffers(
-                const VkSampler sampler,
-                const std::uint32_t family_index,
-                const std::vector<Vector2i>& sizes,
-                const unsigned top_point_count_x,
-                const unsigned top_point_count_y,
-                const vulkan::Buffer& top_points,
-                const vulkan::Buffer& top_flow,
-                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
-                const std::vector<vulkan::ImageWithMemory>& dx,
-                const std::vector<vulkan::ImageWithMemory>& dy)
-        {
-                flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
-
-                flow_groups_ = flow_groups(GROUP_SIZE, sizes, {top_point_count_x, top_point_count_y});
-
-                flow_program_.create_pipeline(
-                        GROUP_SIZE[0], GROUP_SIZE[1], RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
-
-                std::tie(flow_buffer_, flow_memory_) = create_flow_memory(
-                        *device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
-                        to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
-                        images, dx, dy);
-        }
-
-        void delete_buffers()
-        {
-                flow_program_.delete_pipeline();
-                flow_buffers_.clear();
-                flow_memory_.clear();
-        }
-
-        void commands(const int index, const VkCommandBuffer command_buffer, const VkBuffer top_flow) const
-        {
-                ASSERT(index == 0 || index == 1);
-                ASSERT(flow_memory_.size() == flow_groups_.size());
-                ASSERT(flow_buffers_.size() + 1 == flow_groups_.size());
-
-                for (int i = static_cast<int>(flow_groups_.size()) - 1; i >= 0; --i)
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, flow_program_.pipeline());
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, flow_program_.pipeline_layout(),
-                                FlowMemory::set_number(), 1, &flow_memory_[i].descriptor_set(index), 0, nullptr);
-                        vkCmdDispatch(command_buffer, flow_groups_[i][0], flow_groups_[i][1], 1);
-
-                        buffer_barrier(
-                                command_buffer, (i != 0) ? flow_buffers_[i - 1].buffer().handle() : top_flow,
-                                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-                }
-        }
-};
 
 class Impl final : public Compute
 {
@@ -155,7 +97,7 @@ class Impl final : public Compute
 
         compute::ImagePyramid program_image_pyramid_;
         compute::Sobel program_sobel_;
-        Flow program_flow_;
+        compute::Flow program_flow_;
 
         int i_index_ = -1;
 

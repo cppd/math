@@ -25,11 +25,6 @@ namespace ns::gpu::optical_flow
 {
 std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size);
 
-std::vector<Vector2i> flow_groups(
-        const Vector2i& group_size,
-        const std::vector<Vector2i>& sizes,
-        const Vector2i& top_point_count);
-
 struct TopLevelPoints final
 {
         int count_x;

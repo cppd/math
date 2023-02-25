@@ -17,9 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shaders/downsample.h"
-#include "shaders/flow.h"
-#include "shaders/sobel.h"
+#include "../shaders/flow.h"
 
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
@@ -29,15 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<vulkan::ImageWithMemory> create_images(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const std::vector<Vector2i>& sizes,
-        VkFormat format,
-        std::uint32_t family_index,
-        VkImageUsageFlags usage);
-
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
         const std::vector<Vector2i>& sizes,
