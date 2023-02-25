@@ -90,7 +90,7 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
 
         static constexpr std::size_t EDGE_COUNT = impl::EDGE_COUNT<M>;
 
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> res;
 
         unsigned count = 0;
         std::array<bool, M> dimensions;
@@ -101,18 +101,18 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
                 {
                         if (dimensions[i])
                         {
-                                ASSERT(count < result.size());
-                                result[count][0] = p;
-                                result[count][1] = vectors[i];
+                                ASSERT(count < res.size());
+                                res[count][0] = p;
+                                res[count][1] = vectors[i];
                                 ++count;
                         }
                 }
         };
 
         impl::edges<M - 1>(org, vectors, &dimensions, f);
-        ASSERT(count == result.size());
+        ASSERT(count == res.size());
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -128,7 +128,7 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
 
         const Vector<N, T> diagonal = max - min;
 
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> res;
 
         unsigned count = 0;
         Vector<N, T> p;
@@ -140,18 +140,18 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
                 {
                         if (dimensions[i])
                         {
-                                ASSERT(count < result.size());
-                                result[count][0] = p;
-                                result[count][1] = Vector<N, T>(0);
-                                result[count][1][i] = diagonal[i];
+                                ASSERT(count < res.size());
+                                res[count][0] = p;
+                                res[count][1] = Vector<N, T>(0);
+                                res[count][1][i] = diagonal[i];
                                 ++count;
                         }
                 }
         };
 
         impl::edges<N - 1>(min, max, &p, &dimensions, f);
-        ASSERT(count == result.size());
+        ASSERT(count == res.size());
 
-        return result;
+        return res;
 }
 }

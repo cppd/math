@@ -51,12 +51,12 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
 
         const std::array<Vector<N, T>, N> simplex_vertices = [&]()
         {
-                std::array<Vector<N, T>, N> result;
-                for (Vector<N, T>& v : result)
+                std::array<Vector<N, T>, N> res;
+                for (Vector<N, T>& v : res)
                 {
                         v = sampling::uniform_on_sphere<N, T>(engine);
                 }
-                return result;
+                return res;
         }();
 
         const T sphere_area = SPHERE_AREA<N, T>;
@@ -118,21 +118,21 @@ template <std::size_t N, typename T, typename RandomEngine>
 std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& engine)
 {
         std::uniform_int_distribution<unsigned> uid(0, N);
-        std::array<Vector<N + 1, T>, N> r;
+        std::array<Vector<N + 1, T>, N> res;
         const std::size_t k = uid(engine);
         for (std::size_t n = 0; n < N; ++n)
         {
                 for (std::size_t i = 0; i < k; ++i)
                 {
-                        r[n][i] = a[n][i];
+                        res[n][i] = a[n][i];
                 }
-                r[n][k] = 0;
+                res[n][k] = 0;
                 for (std::size_t i = k + 1; i < N + 1; ++i)
                 {
-                        r[n][i] = a[n][i - 1];
+                        res[n][i] = a[n][i - 1];
                 }
         }
-        return r;
+        return res;
 }
 
 template <typename T>

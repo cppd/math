@@ -58,14 +58,14 @@ class HyperplaneSimplex final
 
         [[nodiscard]] Vector<N, T> barycentric_coordinates(const Vector<N, T>& point) const
         {
-                Vector<N, T> result;
-                result[N - 1] = 1;
+                Vector<N, T> res;
+                res[N - 1] = 1;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        result[i] = barycentric_coordinate(point, i);
-                        result[N - 1] -= result[i];
+                        res[i] = barycentric_coordinate(point, i);
+                        res[N - 1] -= res[i];
                 }
-                return result;
+                return res;
         }
 
 public:
@@ -134,7 +134,7 @@ public:
         // vertices must be the same as in the set function
         [[nodiscard]] Constraints<N, T, N, 1> constraints(const std::array<Vector<N, T>, N>& vertices) const
         {
-                Constraints<N, T, N, 1> result;
+                Constraints<N, T, N, 1> res;
 
                 // Planes n * x - d have vectors n directed inward.
                 // Points are inside if n * x - d >= 0 or -d + n * x >= 0.
@@ -143,8 +143,8 @@ public:
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         const T len = planes_[i].n.norm();
-                        result.c[i].a = planes_[i].n / len;
-                        result.c[i].b = -planes_[i].d / len;
+                        res.c[i].a = planes_[i].n / len;
+                        res.c[i].b = -planes_[i].d / len;
                 }
 
                 {
@@ -160,14 +160,14 @@ public:
 
                         // normal must be directed to vertex N - 1
                         const bool to_vertex = dot(vertices[N - 1], n) - d >= 0;
-                        result.c[N - 1].a = to_vertex ? n : -n;
-                        result.c[N - 1].b = to_vertex ? -d : d;
+                        res.c[N - 1].a = to_vertex ? n : -n;
+                        res.c[N - 1].b = to_vertex ? -d : d;
                 }
 
-                result.c_eq[0].a = plane_.n;
-                result.c_eq[0].b = -plane_.d;
+                res.c_eq[0].a = plane_.n;
+                res.c_eq[0].b = -plane_.d;
 
-                return result;
+                return res;
         }
 
         [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray) const
@@ -207,12 +207,12 @@ public:
         {
                 const Vector<N, T> bc = barycentric_coordinates(point);
 
-                Vector<M, T> result = bc[0] * data[0];
+                Vector<M, T> res = bc[0] * data[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        result.multiply_add(bc[i], data[i]);
+                        res.multiply_add(bc[i], data[i]);
                 }
-                return result;
+                return res;
         }
 };
 }

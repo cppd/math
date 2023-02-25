@@ -204,20 +204,20 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 {
-        Constraints<N, T, 2 * N, 0> result;
+        Constraints<N, T, 2 * N, 0> res;
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (std::size_t i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                result.c[c_i].a = planes_[i].n;
-                result.c[c_i].b = -planes_[i].d1;
+                res.c[c_i].a = planes_[i].n;
+                res.c[c_i].b = -planes_[i].d1;
 
-                result.c[c_i + 1].a = -planes_[i].n;
-                result.c[c_i + 1].b = planes_[i].d2;
+                res.c[c_i + 1].a = -planes_[i].n;
+                res.c[c_i + 1].b = planes_[i].d2;
         }
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -406,7 +406,7 @@ void Parallelotope<N, T>::binary_division_impl(
 template <std::size_t N, typename T>
 std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
 {
-        std::array<Parallelotope, DIVISIONS> result;
+        std::array<Parallelotope, DIVISIONS> res;
 
         std::array<Vector<N, T>, N> half_vectors;
         Vector<N, T> middle_d;
@@ -416,7 +416,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
                 middle_d[i] = (planes_[i].d2 + planes_[i].d1) / static_cast<T>(2);
         }
 
-        for (Parallelotope& p : result)
+        for (Parallelotope& p : res)
         {
                 p.vectors_ = half_vectors;
                 for (std::size_t i = 0; i < N; ++i)
@@ -429,23 +429,23 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         Vector<N, T> d2;
         unsigned count = 0;
 
-        const auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org)
+        const auto f = [&count, &res, &d1, &d2](const Vector<N, T>& org)
         {
-                ASSERT(count < result.size());
-                result[count].org_ = org;
+                ASSERT(count < res.size());
+                res[count].org_ = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        result[count].planes_[i].d1 = d1[i];
-                        result[count].planes_[i].d2 = d2[i];
+                        res[count].planes_[i].d1 = d1[i];
+                        res[count].planes_[i].d2 = d2[i];
                 }
                 ++count;
         };
 
         binary_division_impl<N - 1>(org_, &d1, &d2, half_vectors, middle_d, f);
 
-        ASSERT(count == result.size());
+        ASSERT(count == res.size());
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>

@@ -143,7 +143,7 @@ void HyperplaneParallelotope<N, T>::set_normal_direction(const Vector<N, T>& dir
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() const
 {
-        Constraints<N, T, 2 * (N - 1), 1> result;
+        Constraints<N, T, 2 * (N - 1), 1> res;
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
@@ -151,17 +151,17 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
         {
                 const T len = planes_[i].n.norm();
 
-                result.c[c_i].a = planes_[i].n / len;
-                result.c[c_i].b = -planes_[i].d / len;
+                res.c[c_i].a = planes_[i].n / len;
+                res.c[c_i].b = -planes_[i].d / len;
 
-                result.c[c_i + 1].a = -planes_[i].n / len;
-                result.c[c_i + 1].b = dot(org_ + vectors_[i], planes_[i].n) / len;
+                res.c[c_i + 1].a = -planes_[i].n / len;
+                res.c[c_i + 1].b = dot(org_ + vectors_[i], planes_[i].n) / len;
         }
 
-        result.c_eq[0].a = plane_.n;
-        result.c_eq[0].b = -plane_.d;
+        res.c_eq[0].a = plane_.n;
+        res.c_eq[0].b = -plane_.d;
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -216,21 +216,21 @@ void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> HyperplaneParallelotope<N, T>::vertices() const
 {
-        std::array<Vector<N, T>, VERTEX_COUNT> result;
+        std::array<Vector<N, T>, VERTEX_COUNT> res;
 
         unsigned count = 0;
 
-        const auto f = [&count, &result](const Vector<N, T>& p)
+        const auto f = [&count, &res](const Vector<N, T>& p)
         {
-                ASSERT(count < result.size());
-                result[count++] = p;
+                ASSERT(count < res.size());
+                res[count++] = p;
         };
 
         vertices_impl<N - 2>(org_, f);
 
-        ASSERT(count == result.size());
+        ASSERT(count == res.size());
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>

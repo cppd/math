@@ -48,16 +48,16 @@ std::array<Vector<N, T>, N + 1> create_simplex()
                 vertices[i][i] = 1;
         }
 
-        std::array<Vector<N, T>, N + 1> result;
+        std::array<Vector<N, T>, N + 1> res;
         for (std::size_t i = 0; i < N + 1; ++i)
         {
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        result[i][n] = dot(vertices[i], basis[n]);
+                        res[i][n] = dot(vertices[i], basis[n]);
                 }
-                result[i].normalize();
+                res[i].normalize();
         }
-        return result;
+        return res;
 }
 
 namespace regular_polytopes_implementation

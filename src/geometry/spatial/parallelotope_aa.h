@@ -180,20 +180,20 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, 
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 {
-        Constraints<N, T, 2 * N, 0> result;
+        Constraints<N, T, 2 * N, 0> res;
 
         // Planes n * x - d have vectors n directed outward.
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (std::size_t i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                result.c[c_i].a = NORMALS_POSITIVE[i];
-                result.c[c_i].b = -planes_[i].d1;
+                res.c[c_i].a = NORMALS_POSITIVE[i];
+                res.c[c_i].b = -planes_[i].d1;
 
-                result.c[c_i + 1].a = NORMALS_NEGATIVE[i];
-                result.c[c_i + 1].b = planes_[i].d2;
+                res.c[c_i + 1].a = NORMALS_NEGATIVE[i];
+                res.c[c_i + 1].b = planes_[i].d2;
         }
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -337,7 +337,7 @@ void ParallelotopeAA<N, T>::binary_division_impl(
 template <std::size_t N, typename T>
 std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> ParallelotopeAA<N, T>::binary_division() const
 {
-        std::array<ParallelotopeAA, DIVISIONS> result;
+        std::array<ParallelotopeAA, DIVISIONS> res;
 
         Vector<N, T> middle_d;
         for (std::size_t i = 0; i < N; ++i)
@@ -348,17 +348,17 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         unsigned count = 0;
         std::array<Planes, N> p;
 
-        const auto f = [&count, &result, &p]()
+        const auto f = [&count, &res, &p]()
         {
-                ASSERT(count < result.size());
-                result[count++].planes_ = p;
+                ASSERT(count < res.size());
+                res[count++].planes_ = p;
         };
 
         binary_division_impl<N - 1>(&p, middle_d, f);
 
-        ASSERT(count == result.size());
+        ASSERT(count == res.size());
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
