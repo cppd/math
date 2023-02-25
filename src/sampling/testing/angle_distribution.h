@@ -109,16 +109,16 @@ class AngleDistribution final
                         }
                 }
 
-                std::vector<long long> result(BUCKET_COUNT, 0);
+                std::vector<long long> res(BUCKET_COUNT, 0);
                 for (const std::vector<long long>& buckets : thread_buckets)
                 {
                         ASSERT(buckets.size() == BUCKET_COUNT);
                         for (std::size_t i = 0; i < BUCKET_COUNT; ++i)
                         {
-                                result[i] += buckets[i];
+                                res[i] += buckets[i];
                         }
                 }
-                return result;
+                return res;
         }
 
         template <typename RandomVector>

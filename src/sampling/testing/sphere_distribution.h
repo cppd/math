@@ -119,16 +119,16 @@ class SphereDistribution final
                         check_sphere_intersections(intersection_count, missed_intersection_count);
                 }
 
-                std::vector<SphereBucket<N, T>> result(sphere_mesh_.facet_count());
+                std::vector<SphereBucket<N, T>> res(sphere_mesh_.facet_count());
                 for (const std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                 {
-                        ASSERT(buckets.size() == result.size());
-                        for (std::size_t i = 0; i < result.size(); ++i)
+                        ASSERT(buckets.size() == res.size());
+                        for (std::size_t i = 0; i < res.size(); ++i)
                         {
-                                result[i].merge(buckets[i]);
+                                res[i].merge(buckets[i]);
                         }
                 }
-                return result;
+                return res;
         }
 
         template <typename RandomVector, typename PDF>

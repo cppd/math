@@ -199,13 +199,13 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const Vector<N, T>
 
         const Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(engine, power);
 
-        Vector<N, T> result = coordinates[N - 1] * normal;
+        Vector<N, T> res = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                result.multiply_add(coordinates[i], orthonormal_basis[i]);
+                res.multiply_add(coordinates[i], orthonormal_basis[i]);
         }
 
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>

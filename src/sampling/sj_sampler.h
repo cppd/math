@@ -135,13 +135,13 @@ class StratifiedJitteredSampler final
         {
                 ASSERT(count >= 1);
 
-                std::vector<std::array<int, N>> result;
+                std::vector<std::array<int, N>> res;
                 std::array<int, N> tuple;
 
-                product<N - 1>(count, &tuple, &result);
-                ASSERT(result.size() == std::pow(count, N));
+                product<N - 1>(count, &tuple, &res);
+                ASSERT(res.size() == std::pow(count, N));
 
-                return result;
+                return res;
         }
 
         std::vector<T> offsets_;
