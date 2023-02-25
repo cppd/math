@@ -60,12 +60,12 @@ class DiscretePoints final
         {
                 static_assert(std::is_floating_point_v<T>);
 
-                Vector<N, int> r;
+                Vector<N, int> res;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        r[i] = std::lround(v[i] * factor);
+                        res[i] = std::lround(v[i] * factor);
                 }
-                return r;
+                return res;
         }
 
         template <typename T>

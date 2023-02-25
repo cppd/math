@@ -55,12 +55,12 @@ Vector<N, T> random_normal(RandomEngine& engine)
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_v(const Vector<N, T>& normal, RandomEngine& engine)
 {
-        Vector<N, T> r = sampling::uniform_on_sphere<N, T>(engine).normalized();
-        if (dot(r, normal) < 0)
+        Vector<N, T> res = sampling::uniform_on_sphere<N, T>(engine).normalized();
+        if (dot(res, normal) < 0)
         {
-                return -r;
+                return -res;
         }
-        return r;
+        return res;
 }
 
 //

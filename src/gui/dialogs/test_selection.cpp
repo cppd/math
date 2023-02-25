@@ -26,11 +26,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <regex>
 #include <sstream>
+#include <tuple>
 
 namespace ns::gui::dialog
 {
 namespace
 {
+struct Item final
+{
+        std::string name;
+        QListWidgetItem* item;
+        std::string lower_text;
+
+        Item(std::string&& name, QListWidgetItem* const item)
+                : name(std::move(name)),
+                  item(item),
+                  lower_text(item->text().toLower().toStdString())
+        {
+        }
+};
+
 void set_window_size(QDialog* const dialog)
 {
         const QSize size = dialog->screen()->geometry().size();
@@ -45,24 +60,63 @@ void set_window_size(QDialog* const dialog)
                 dialog->resize(v, v);
         }
 }
+
+std::tuple<std::vector<std::regex>, bool> make_regex(const QString& text)
+{
+        bool error_found = false;
+        std::vector<std::regex> regex;
+        std::istringstream iss(text.simplified().toLower().toStdString());
+        std::string s;
+        while (iss >> s)
+        {
+                try
+                {
+                        regex.emplace_back(std::move(s));
+                }
+                catch (...)
+                {
+                        error_found = true;
+                }
+        }
+
+        return {regex, error_found};
+}
+
+std::vector<std::string> make_substr(const QString& text)
+{
+        std::vector<std::string> res;
+        std::istringstream iss(text.simplified().toLower().toStdString());
+        std::string s;
+        while (iss >> s)
+        {
+                res.push_back(std::move(s));
+        }
+        return res;
+}
+
+bool contains(const Item& item, const std::vector<std::regex>& regex)
+{
+        return std::all_of(
+                regex.cbegin(), regex.cend(),
+                [&](const std::regex& r)
+                {
+                        return std::regex_search(item.lower_text, r);
+                });
+}
+
+bool contains(const Item& item, const std::vector<std::string>& substr)
+{
+        return std::all_of(
+                substr.cbegin(), substr.cend(),
+                [&](const std::string& s)
+                {
+                        return item.lower_text.find(s) != std::string::npos;
+                });
+}
 }
 
 class TestSelectionParametersDialog::Items final
 {
-        struct Item final
-        {
-                std::string name;
-                QListWidgetItem* item;
-                std::string lower_text;
-
-                Item(std::string&& name, QListWidgetItem* const item)
-                        : name(std::move(name)),
-                          item(item),
-                          lower_text(item->text().toLower().toStdString())
-                {
-                }
-        };
-
         std::vector<Item> items_;
 
 public:
@@ -77,10 +131,10 @@ public:
                 items_.emplace_back(std::move(name), item);
         }
 
-        void check(const bool checked)
+        void check(const bool checked) const
         {
                 const Qt::CheckState check_state = checked ? Qt::Checked : Qt::Unchecked;
-                for (Item& item : items_)
+                for (const Item& item : items_)
                 {
                         if (!item.item->isHidden())
                         {
@@ -89,72 +143,25 @@ public:
                 }
         }
 
-        bool filter_regex(const QString& text)
+        [[nodiscard]] bool filter_regex(const QString& text) const
         {
-                bool res = true;
+                const auto [regex, error_found] = make_regex(text);
 
-                const std::vector<std::regex> regex = [&]
+                for (const Item& item : items_)
                 {
-                        std::vector<std::regex> r;
-                        std::istringstream iss(text.simplified().toLower().toStdString());
-                        std::string s;
-                        while (iss >> s)
-                        {
-                                try
-                                {
-                                        r.emplace_back(std::move(s));
-                                }
-                                catch (...)
-                                {
-                                        res = false;
-                                }
-                        }
-                        return r;
-                }();
-
-                for (Item& item : items_)
-                {
-                        bool contains = true;
-                        for (const std::regex& r : regex)
-                        {
-                                if (!std::regex_search(item.lower_text, r))
-                                {
-                                        contains = false;
-                                        break;
-                                }
-                        }
-                        item.item->setHidden(!contains);
+                        item.item->setHidden(!contains(item, regex));
                 }
 
-                return res;
+                return !error_found;
         }
 
-        void filter_substr(const QString& text)
+        void filter_substr(const QString& text) const
         {
-                const std::vector<std::string> substr = [&]
-                {
-                        std::vector<std::string> r;
-                        std::istringstream iss(text.simplified().toLower().toStdString());
-                        std::string s;
-                        while (iss >> s)
-                        {
-                                r.push_back(std::move(s));
-                        }
-                        return r;
-                }();
+                const auto substr = make_substr(text);
 
-                for (Item& item : items_)
+                for (const Item& item : items_)
                 {
-                        bool contains = true;
-                        for (const std::string& s : substr)
-                        {
-                                if (item.lower_text.find(s) == std::string::npos)
-                                {
-                                        contains = false;
-                                        break;
-                                }
-                        }
-                        item.item->setHidden(!contains);
+                        item.item->setHidden(!contains(item, substr));
                 }
         }
 

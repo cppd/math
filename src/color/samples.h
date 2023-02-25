@@ -91,16 +91,16 @@ public:
 
         [[nodiscard]] Derived clamp(const T& low, const T& high) const
         {
-                Derived r;
-                r.data_ = data_.clamp(low, high);
-                return r;
+                Derived res;
+                res.data_ = data_.clamp(low, high);
+                return res;
         }
 
         [[nodiscard]] Derived max_n(const T& v) const
         {
-                Derived r;
-                r.data_ = data_.max_n(v);
-                return r;
+                Derived res;
+                res.data_ = data_.max_n(v);
+                return res;
         }
 
         [[nodiscard]] bool is_black() const
@@ -262,51 +262,51 @@ public:
 
         [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, const T& t)
         {
-                Derived r;
-                r.data_ = ::ns::interpolation(a.data_, b.data_, t);
-                return r;
+                Derived res;
+                res.data_ = ::ns::interpolation(a.data_, b.data_, t);
+                return res;
         }
 
         [[nodiscard]] friend Derived max(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = max(a.data_, b.data_);
-                return r;
+                Derived res;
+                res.data_ = max(a.data_, b.data_);
+                return res;
         }
 
         [[nodiscard]] friend Derived min(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = min(a.data_, b.data_);
-                return r;
+                Derived res;
+                res.data_ = min(a.data_, b.data_);
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator+(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = a.data_ + b.data_;
-                return r;
+                Derived res;
+                res.data_ = a.data_ + b.data_;
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator-(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = a.data_ - b.data_;
-                return r;
+                Derived res;
+                res.data_ = a.data_ - b.data_;
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = a.data_ * b.data_;
-                return r;
+                Derived res;
+                res.data_ = a.data_ * b.data_;
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const T& b)
         {
-                Derived r;
-                r.data_ = a.data_ * b;
-                return r;
+                Derived res;
+                res.data_ = a.data_ * b;
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator*(const T& b, const Derived& a)
@@ -316,16 +316,16 @@ public:
 
         [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const T& b)
         {
-                Derived r;
-                r.data_ = a.data_ / b;
-                return r;
+                Derived res;
+                res.data_ = a.data_ / b;
+                return res;
         }
 
         [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const Derived& b)
         {
-                Derived r;
-                r.data_ = a.data_ / b.data_;
-                return r;
+                Derived res;
+                res.data_ = a.data_ / b.data_;
+                return res;
         }
 };
 }

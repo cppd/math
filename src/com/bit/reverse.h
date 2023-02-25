@@ -71,14 +71,14 @@ template <typename T>
 constexpr T bit_reverse(const int bit_count, T v)
 {
         static_assert(std::is_integral_v<T>);
-        T r = 0;
+        T res = 0;
         for (int b = 0; b < bit_count; ++b)
         {
-                r <<= 1;
-                r |= (v & 0x1);
+                res <<= 1;
+                res |= (v & 0x1);
                 v >>= 1;
         }
-        return r;
+        return res;
 }
 
 constexpr std::uint8_t bit_reverse_8(const std::uint8_t v)

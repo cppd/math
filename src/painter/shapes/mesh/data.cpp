@@ -37,33 +37,33 @@ namespace
 template <std::size_t N>
 [[nodiscard]] std::array<int, N> add_offset(const std::array<int, N>& src, const int offset, const bool add)
 {
-        std::array<int, N> r;
+        std::array<int, N> res;
         if (add)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        r[i] = offset + src[i];
+                        res[i] = offset + src[i];
                 }
         }
         else
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        r[i] = -1;
+                        res[i] = -1;
                 }
         }
-        return r;
+        return res;
 }
 
 template <std::size_t N>
 [[nodiscard]] std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
 {
-        std::array<int, N> r;
+        std::array<int, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                r[i] = offset + src[i];
+                res[i] = offset + src[i];
         }
-        return r;
+        return res;
 }
 
 template <std::size_t N, typename T>

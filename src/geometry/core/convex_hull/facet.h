@@ -63,11 +63,11 @@ public:
 
         [[nodiscard]] unsigned find_index_for_point(const int point) const
         {
-                for (std::size_t r = 0; r < N; ++r)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (vertices_[r] == point)
+                        if (vertices_[i] == point)
                         {
-                                return r;
+                                return i;
                         }
                 }
                 error("Local index not found for point " + to_string(point));

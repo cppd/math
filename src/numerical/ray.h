@@ -80,18 +80,18 @@ public:
 
         [[nodiscard]] Ray<N, T> reversed() const
         {
-                Ray<N, T> r;
-                r.org_ = org_;
-                r.dir_ = -dir_;
-                return r;
+                Ray<N, T> res;
+                res.org_ = org_;
+                res.dir_ = -dir_;
+                return res;
         }
 
         [[nodiscard]] Ray<N, T> moved(const T& t) const
         {
-                Ray<N, T> r;
-                r.org_ = this->point(t);
-                r.dir_ = dir_;
-                return r;
+                Ray<N, T> res;
+                res.org_ = this->point(t);
+                res.dir_ = dir_;
+                return res;
         }
 };
 

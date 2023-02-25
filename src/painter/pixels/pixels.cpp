@@ -33,12 +33,12 @@ template <typename T, std::size_t N>
         const std::array<int, N>& region_pixel,
         const std::array<int, N>& sample_pixel)
 {
-        Vector<N, T> r;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                r[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
+                res[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
         }
-        return r;
+        return res;
 }
 }
 

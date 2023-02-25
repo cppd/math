@@ -66,12 +66,12 @@ public:
         {
                 static_assert(N >= 1);
 
-                T r = std::max(T{0}, gaussian(alpha_, p[0]) - exp_);
+                T res = std::max(T{0}, gaussian(alpha_, p[0]) - exp_);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        r *= std::max(T{0}, gaussian(alpha_, p[i]) - exp_);
+                        res *= std::max(T{0}, gaussian(alpha_, p[i]) - exp_);
                 }
-                return r;
+                return res;
         }
 };
 }

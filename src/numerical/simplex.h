@@ -396,9 +396,9 @@ std::optional<ConstraintSolution> simplex_iterations(
                         return ConstraintSolution::CYCLING;
                 }
 
-                if (const auto r = simplex_iteration(*e, a, b, c, v, map_n, map_m))
+                if (const auto res = simplex_iteration(*e, a, b, c, v, map_n, map_m))
                 {
-                        return r;
+                        return res;
                 }
 
                 if constexpr (WITH_PRINT)

@@ -58,22 +58,22 @@ constexpr T binary_exponent(const int e) noexcept
 {
         if (e > 0)
         {
-                T r = 1;
+                T res = 1;
                 for (int i = 1; i <= e; ++i)
                 {
-                        r *= 2;
+                        res *= 2;
                 }
-                return r;
+                return res;
         }
 
         if (e < 0)
         {
-                T r = 1;
+                T res = 1;
                 for (int i = -1; i >= e; --i)
                 {
-                        r /= 2;
+                        res /= 2;
                 }
-                return r;
+                return res;
         }
 
         return 1;

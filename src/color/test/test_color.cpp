@@ -58,9 +58,9 @@ struct Check final
         static_assert(
                 []
                 {
-                        RGB<T> r(0.1, 0.2, 0.3);
-                        r += RGB<T>(0.4, 0.5, 0.6);
-                        return r;
+                        RGB<T> res(0.1, 0.2, 0.3);
+                        res += RGB<T>(0.4, 0.5, 0.6);
+                        return res;
                 }()
                 == RGB<T>(T{0.1} + T{0.4}, T{0.2} + T{0.5}, T{0.3} + T{0.6}));
 
@@ -70,9 +70,9 @@ struct Check final
         static_assert(
                 []
                 {
-                        RGB<T> r(0.4, 0.5, 0.6);
-                        r -= RGB<T>(0.1, 0.2, 0.3);
-                        return r;
+                        RGB<T> res(0.4, 0.5, 0.6);
+                        res -= RGB<T>(0.1, 0.2, 0.3);
+                        return res;
                 }()
                 == RGB<T>(T{0.4} - T{0.1}, T{0.5} - T{0.2}, T{0.6} - T{0.3}));
 
@@ -82,9 +82,9 @@ struct Check final
         static_assert(
                 []
                 {
-                        RGB<T> r(0.1, 0.2, 0.3);
-                        r *= RGB<T>(0.4, 0.5, 0.6);
-                        return r;
+                        RGB<T> res(0.1, 0.2, 0.3);
+                        res *= RGB<T>(0.4, 0.5, 0.6);
+                        return res;
                 }()
                 == RGB<T>(T{0.1} * T{0.4}, T{0.2} * T{0.5}, T{0.3} * T{0.6}));
 
@@ -92,9 +92,9 @@ struct Check final
         static_assert(
                 []
                 {
-                        RGB<T> r(0.1, 0.2, 0.3);
-                        r *= 4.1;
-                        return r;
+                        RGB<T> res(0.1, 0.2, 0.3);
+                        res *= 4.1;
+                        return res;
                 }()
                 == RGB<T>(T{0.1} * T{4.1}, T{0.2} * T{4.1}, T{0.3} * T{4.1}));
 
@@ -102,9 +102,9 @@ struct Check final
         static_assert(
                 []
                 {
-                        RGB<T> r(0.1, 0.2, 0.3);
-                        r /= 4.1;
-                        return r;
+                        RGB<T> res(0.1, 0.2, 0.3);
+                        res /= 4.1;
+                        return res;
                 }()
                 == RGB<T>(T{0.1} / T{4.1}, T{0.2} / T{4.1}, T{0.3} / T{4.1}));
 

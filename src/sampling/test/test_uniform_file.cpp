@@ -41,13 +41,13 @@ namespace impl = sphere_implementation;
 
 std::string replace_space(const std::string_view s)
 {
-        std::string r;
-        r.reserve(s.size());
+        std::string res;
+        res.reserve(s.size());
         for (const char c : s)
         {
-                r += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
+                res += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
         }
-        return r;
+        return res;
 }
 
 template <std::size_t N, typename T>

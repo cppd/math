@@ -74,8 +74,8 @@ int run_application(int argc, char** const argv)
 
         create_delete_on_close_window<gui::main_window::MainWindow>()->show();
 
-        const int r = Application::exec();
+        const int res = Application::exec();
 
-        return r;
+        return res;
 }
 }
