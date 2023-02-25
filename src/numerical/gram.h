@@ -27,18 +27,18 @@ Matrix<M, M, T> gram_matrix(const std::array<Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
-        Matrix<M, M, T> result;
+        Matrix<M, M, T> res;
 
         for (std::size_t r = 0; r < M; ++r)
         {
-                result(r, r) = dot(vectors[r], vectors[r]);
+                res(r, r) = dot(vectors[r], vectors[r]);
                 for (std::size_t c = r + 1; c < M; ++c)
                 {
-                        result(r, c) = dot(vectors[r], vectors[c]);
-                        result(c, r) = result(r, c);
+                        res(r, c) = dot(vectors[r], vectors[c]);
+                        res(c, r) = res(r, c);
                 }
         }
 
-        return result;
+        return res;
 }
 }

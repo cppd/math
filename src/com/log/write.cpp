@@ -186,11 +186,11 @@ class Log final
 
         std::string write(const std::string_view text, const std::string_view description) noexcept
         {
-                std::string result = format_.format(text, description);
-                std::cerr << result;
-                file_ << result;
-                result.pop_back();
-                return result;
+                std::string res = format_.format(text, description);
+                std::cerr << res;
+                file_ << res;
+                res.pop_back();
+                return res;
         }
 
 public:

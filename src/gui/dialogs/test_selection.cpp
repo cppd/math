@@ -91,7 +91,8 @@ public:
 
         bool filter_regex(const QString& text)
         {
-                bool result = true;
+                bool res = true;
+
                 const std::vector<std::regex> regex = [&]
                 {
                         std::vector<std::regex> r;
@@ -105,11 +106,12 @@ public:
                                 }
                                 catch (...)
                                 {
-                                        result = false;
+                                        res = false;
                                 }
                         }
                         return r;
                 }();
+
                 for (Item& item : items_)
                 {
                         bool contains = true;
@@ -123,7 +125,8 @@ public:
                         }
                         item.item->setHidden(!contains);
                 }
-                return result;
+
+                return res;
         }
 
         void filter_substr(const QString& text)
@@ -139,6 +142,7 @@ public:
                         }
                         return r;
                 }();
+
                 for (Item& item : items_)
                 {
                         bool contains = true;
@@ -156,15 +160,15 @@ public:
 
         [[nodiscard]] std::vector<std::string> selected() const
         {
-                std::vector<std::string> names;
+                std::vector<std::string> res;
                 for (const Item& item : items_)
                 {
                         if (!item.item->isHidden() && item.item->checkState() == Qt::Checked)
                         {
-                                names.push_back(item.name);
+                                res.push_back(item.name);
                         }
                 }
-                return names;
+                return res;
         }
 };
 

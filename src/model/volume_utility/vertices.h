@@ -66,19 +66,19 @@ std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
                 vectors[i] = transform(vectors[i]);
         }
 
-        std::array<Vector<N, double>, (1 << N)> result;
+        std::array<Vector<N, double>, (1 << N)> res;
         unsigned vertex_count = 0;
 
         impl::vertices(
                 org, vectors,
-                [&vertex_count, &result](const Vector<N, double>& p)
+                [&vertex_count, &res](const Vector<N, double>& p)
                 {
-                        ASSERT(vertex_count < result.size());
-                        result[vertex_count++] = p;
+                        ASSERT(vertex_count < res.size());
+                        res[vertex_count++] = p;
                 });
 
-        ASSERT(vertex_count == result.size());
+        ASSERT(vertex_count == res.size());
 
-        return result;
+        return res;
 }
 }

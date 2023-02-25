@@ -224,7 +224,7 @@ class Impl final : public WorkerThreads
                 const std::string& description,
                 std::function<Function()>&& function) override
         {
-                bool result = false;
+                bool res = false;
                 catch_all(
                         description,
                         [&]()
@@ -234,9 +234,9 @@ class Impl final : public WorkerThreads
                                         return;
                                 }
                                 start(id, description, function());
-                                result = true;
+                                res = true;
                         });
-                return result;
+                return res;
         }
 
         void terminate_all() override

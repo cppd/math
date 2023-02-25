@@ -149,15 +149,15 @@ std::vector<ResultType> average(
                 return std::vector(count, DEFAULT_VALUE<ResultType>);
         }
 
-        std::vector<ResultType> result;
-        result.reserve(count);
+        std::vector<ResultType> res;
+        res.reserve(count);
 
         std::size_t dst_i;
         T dst_prev;
         T dst_next;
         std::size_t src_i;
 
-        init(waves, from, to, count, dst_i, dst_prev, dst_next, src_i, result);
+        init(waves, from, to, count, dst_i, dst_prev, dst_next, src_i, res);
 
         T prev_wave = std::max(waves[src_i - 1], dst_prev);
         T sum = 0;
@@ -174,7 +174,7 @@ std::vector<ResultType> average(
 
                 sum += compute_area(waves, samples, prev_wave, dst_next, src_i);
                 ASSERT(dst_next - dst_prev > 0);
-                result.push_back(sum / (dst_next - dst_prev));
+                res.push_back(sum / (dst_next - dst_prev));
                 sum = 0;
                 prev_wave = dst_next;
                 move_dst(from, to, count, dst_i, dst_prev, dst_next);
@@ -183,16 +183,16 @@ std::vector<ResultType> average(
         if (dst_i <= count)
         {
                 ASSERT(dst_next - dst_prev > 0);
-                result.push_back(sum / (dst_next - dst_prev));
-                while (result.size() < count)
+                res.push_back(sum / (dst_next - dst_prev));
+                while (res.size() < count)
                 {
-                        result.push_back(DEFAULT_VALUE<ResultType>);
+                        res.push_back(DEFAULT_VALUE<ResultType>);
                 }
         }
 
-        ASSERT(result.size() == count);
+        ASSERT(res.size() == count);
 
-        return result;
+        return res;
 }
 
 #define AVERAGE_INSTANTIATION(T1, T2)                                                                         \

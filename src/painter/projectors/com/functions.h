@@ -52,12 +52,12 @@ void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> normalize_axes(const std::array<Vector<N, T>, N - 1>& axes)
 {
-        std::array<Vector<N, T>, N - 1> result;
+        std::array<Vector<N, T>, N - 1> res;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                result[i] = axes[i].normalized();
+                res[i] = axes[i].normalized();
         }
-        return result;
+        return res;
 }
 
 template <typename T, std::size_t N>

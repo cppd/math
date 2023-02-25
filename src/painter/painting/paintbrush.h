@@ -37,12 +37,12 @@ std::optional<std::array<Dst, N>> to_type(const std::optional<std::array<T, N>>&
         static_assert(!std::is_same_v<Dst, T>);
         if (p)
         {
-                std::array<Dst, N> result;
+                std::array<Dst, N> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        result[i] = (*p)[i];
+                        res[i] = (*p)[i];
                 }
-                return result;
+                return res;
         }
         return std::nullopt;
 }

@@ -82,8 +82,8 @@ void merge(T1* const v1, T2&& v2)
 template <typename Result, typename... T>
 Result merge(T&&... data)
 {
-        Result result;
-        (merge_implementation::merge(&result, std::forward<T>(data)), ...);
-        return result;
+        Result res;
+        (merge_implementation::merge(&res, std::forward<T>(data)), ...);
+        return res;
 }
 }

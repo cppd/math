@@ -51,16 +51,16 @@ public:
                 static_assert(std::is_nothrow_move_assignable_v<T>);
                 static_assert(std::is_nothrow_destructible_v<T>);
 
-                std::vector<T> result;
+                std::vector<T> res;
                 {
                         const std::lock_guard lg(lock_);
                         while (!queue_.empty())
                         {
-                                result.push_back(std::move(queue_.front()));
+                                res.push_back(std::move(queue_.front()));
                                 queue_.pop();
                         }
                 }
-                return result;
+                return res;
         }
 };
 

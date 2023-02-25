@@ -45,18 +45,18 @@ std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_si
                 const int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
-                        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
-                        std::get<0>(result) = Region<2, int>({frame, frame}, {w, h});
-                        std::get<1>(result) = Region<2, int>({width - frame - w, frame}, {w, h});
-                        check(std::get<0>(result), width, height);
-                        check(*std::get<1>(result), width, height);
-                        return result;
+                        std::tuple<Region<2, int>, std::optional<Region<2, int>>> res;
+                        std::get<0>(res) = Region<2, int>({frame, frame}, {w, h});
+                        std::get<1>(res) = Region<2, int>({width - frame - w, frame}, {w, h});
+                        check(std::get<0>(res), width, height);
+                        check(*std::get<1>(res), width, height);
+                        return res;
                 }
         }
 
-        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
-        std::get<0>(result) = Region<2, int>({0, 0}, {width, height});
-        check(std::get<0>(result), width, height);
-        return result;
+        std::tuple<Region<2, int>, std::optional<Region<2, int>>> res;
+        std::get<0>(res) = Region<2, int>({0, 0}, {width, height});
+        check(std::get<0>(res), width, height);
+        return res;
 }
 }
