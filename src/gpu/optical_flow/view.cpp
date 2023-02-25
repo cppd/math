@@ -41,15 +41,10 @@ class Impl final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        // const bool sample_shading_;
-
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
         const vulkan::CommandPool* const compute_command_pool_;
-        // const vulkan::Queue* const compute_queue_;
-        // const vulkan::CommandPool* const transfer_command_pool_;
-        // const vulkan::Queue* const transfer_queue_;
 
         vulkan::handle::Semaphore signal_semaphore_;
         ViewProgram program_;
@@ -86,6 +81,22 @@ class Impl final : public View
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_lines_);
                 vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
+        }
+
+        void set_matrix(const Region<2, int>& rectangle) const
+        {
+                // (0, 0) is top left
+                const double left = 0;
+                const double right = rectangle.width();
+                const double bottom = rectangle.height();
+                const double top = 0;
+                const double near = 1;
+                const double far = -1;
+
+                const Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                const Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
+
+                buffer_.set_matrix(p * t);
         }
 
         void create_buffers(
@@ -135,16 +146,7 @@ class Impl final : public View
                         sampler_, input, rectangle, top_level.count_x, top_level.count_y, top_points_->buffer(),
                         top_flow_->buffer());
 
-                // (0, 0) is top left
-                const double left = 0;
-                const double right = rectangle.width();
-                const double bottom = rectangle.height();
-                const double top = 0;
-                const double near = 1;
-                const double far = -1;
-                const Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                const Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
-                buffer_.set_matrix(p * t);
+                set_matrix(rectangle);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = device_->handle();
@@ -228,14 +230,10 @@ public:
              const vulkan::CommandPool* const /*transfer_command_pool*/,
              const vulkan::Queue* const /*transfer_queue*/,
              const bool /*sample_shading*/)
-                : // sample_shading_(sample_shading),
-                  device_(device),
+                : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   compute_command_pool_(compute_command_pool),
-                  // compute_queue_(compute_queue),
-                  // transfer_command_pool_(transfer_command_pool),
-                  // transfer_queue_(transfer_queue),
                   signal_semaphore_(device_->handle()),
                   program_(device_),
                   buffer_(*device_, {graphics_queue->family_index()}),

@@ -27,27 +27,25 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-Vector2i grayscale_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
+Vector2i grayscale_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
 {
         return group_count(sizes[0], group_size);
 }
 
-std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
+std::vector<Vector2i> downsample_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
 {
         if (sizes.size() <= 1)
         {
                 return {};
         }
 
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size() - 1);
-
+        std::vector<Vector2i> res;
+        res.reserve(sizes.size() - 1);
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                groups.push_back(group_count(sizes[i], group_size));
+                res.push_back(group_count(sizes[i], group_size));
         }
-
-        return groups;
+        return res;
 }
 
 std::vector<DownsampleMemory> create_downsample_memory(
@@ -57,16 +55,15 @@ std::vector<DownsampleMemory> create_downsample_memory(
 {
         ASSERT(images[0].size() == images[1].size());
 
-        std::vector<DownsampleMemory> downsample_images;
-
+        std::vector<DownsampleMemory> res;
+        res.reserve(images[0].size());
         for (std::size_t i = 1; i < images[0].size(); ++i)
         {
-                downsample_images.emplace_back(device, descriptor_set_layout);
-                downsample_images.back().set_big(images[0][i - 1].image_view(), images[1][i - 1].image_view());
-                downsample_images.back().set_small(images[0][i].image_view(), images[1][i].image_view());
+                res.emplace_back(device, descriptor_set_layout);
+                res.back().set_big(images[0][i - 1].image_view(), images[1][i - 1].image_view());
+                res.back().set_small(images[0][i].image_view(), images[1][i].image_view());
         }
-
-        return downsample_images;
+        return res;
 }
 }
 

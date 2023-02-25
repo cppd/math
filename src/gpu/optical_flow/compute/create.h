@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::gpu::optical_flow
+namespace ns::gpu::optical_flow::compute
 {
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,

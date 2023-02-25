@@ -31,31 +31,31 @@ namespace
 {
 std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::BufferWithMemory>& buffers)
 {
-        std::vector<const vulkan::Buffer*> result;
-        result.reserve(buffers.size());
+        std::vector<const vulkan::Buffer*> res;
+        res.reserve(buffers.size());
         for (const vulkan::BufferWithMemory& buffer : buffers)
         {
-                result.push_back(&buffer.buffer());
+                res.push_back(&buffer.buffer());
         }
-        return result;
+        return res;
 }
 
 std::vector<Vector2i> flow_groups(
-        const Vector2i& group_size,
+        const Vector2i group_size,
         const std::vector<Vector2i>& sizes,
-        const Vector2i& top_point_count)
+        const Vector2i top_point_count)
 {
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size());
+        std::vector<Vector2i> res;
+        res.reserve(sizes.size());
 
-        groups.push_back(group_count(top_point_count, group_size));
+        res.push_back(group_count(top_point_count, group_size));
 
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                groups.push_back(group_count(sizes[i], group_size));
+                res.push_back(group_count(sizes[i], group_size));
         }
 
-        return groups;
+        return res;
 }
 }
 

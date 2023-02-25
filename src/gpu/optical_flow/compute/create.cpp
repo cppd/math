@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::gpu::optical_flow
+namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
@@ -92,23 +92,24 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const std::vector<Vector2i>& sizes,
         const std::uint32_t family_index)
 {
-        std::vector<vulkan::BufferWithMemory> buffers;
         if (sizes.size() <= 1)
         {
                 return {};
         }
-        buffers.reserve(sizes.size() - 1);
+
+        std::vector<vulkan::BufferWithMemory> res;
+        res.reserve(sizes.size() - 1);
 
         const std::vector<std::uint32_t> family_indices({family_index});
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
                 const std::size_t buffer_size = sizeof(Vector2f) * sizes[i][0] * sizes[i][1];
-                buffers.emplace_back(
+                res.emplace_back(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
         }
 
-        return buffers;
+        return res;
 }
 
 std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_memory(
@@ -141,31 +142,34 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
 
         const std::vector<std::uint32_t> family_indices{family_index};
 
-        std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> result;
-        std::vector<FlowDataBuffer>& flow_buffer = std::get<0>(result);
-        std::vector<FlowMemory>& flow_memory = std::get<1>(result);
+        std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> res;
+
+        std::get<0>(res).reserve(size);
+        std::get<1>(res).reserve(size);
 
         for (std::size_t i = 0; i < size; ++i)
         {
                 const FlowInfo info =
                         flow_info(i, top_points, top_flow, flow_buffers, sizes, top_point_count_x, top_point_count_y);
 
-                flow_buffer.emplace_back(device, family_indices);
-                flow_memory.emplace_back(device.handle(), descriptor_set_layout, flow_buffer[i].buffer());
+                const FlowDataBuffer& buffer = std::get<0>(res).emplace_back(device, family_indices);
 
-                flow_buffer[i].set(info.data);
+                const FlowMemory& memory =
+                        std::get<1>(res).emplace_back(device.handle(), descriptor_set_layout, buffer.buffer());
 
-                flow_memory[i].set_top_points(*info.top_points_ptr);
-                flow_memory[i].set_flow(*info.flow_ptr);
-                flow_memory[i].set_flow_guess(*info.flow_guess_ptr);
+                buffer.set(info.data);
 
-                flow_memory[i].set_dx(dx[i].image_view());
-                flow_memory[i].set_dy(dy[i].image_view());
-                flow_memory[i].set_i(images[0][i].image_view(), images[1][i].image_view());
-                flow_memory[i].set_j(sampler, images[1][i].image_view(), images[0][i].image_view());
+                memory.set_top_points(*info.top_points_ptr);
+                memory.set_flow(*info.flow_ptr);
+                memory.set_flow_guess(*info.flow_guess_ptr);
+
+                memory.set_dx(dx[i].image_view());
+                memory.set_dy(dy[i].image_view());
+                memory.set_i(images[0][i].image_view(), images[1][i].image_view());
+                memory.set_j(sampler, images[1][i].image_view(), images[0][i].image_view());
         }
 
-        return result;
+        return res;
 }
 
 }

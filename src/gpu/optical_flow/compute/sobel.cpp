@@ -27,17 +27,15 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
+std::vector<Vector2i> sobel_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
 {
-        std::vector<Vector2i> groups;
-        groups.reserve(sizes.size());
-
+        std::vector<Vector2i> res;
+        res.reserve(sizes.size());
         for (const Vector2i& size : sizes)
         {
-                groups.push_back(group_count(size, group_size));
+                res.push_back(group_count(size, group_size));
         }
-
-        return groups;
+        return res;
 }
 
 std::vector<SobelMemory> create_sobel_memory(
@@ -51,17 +49,16 @@ std::vector<SobelMemory> create_sobel_memory(
         ASSERT(images[0].size() == dx.size());
         ASSERT(images[0].size() == dy.size());
 
-        std::vector<SobelMemory> sobel_images;
-
+        std::vector<SobelMemory> res;
+        res.reserve(images[0].size());
         for (std::size_t i = 0; i < images[0].size(); ++i)
         {
-                sobel_images.emplace_back(device, descriptor_set_layout);
-                sobel_images.back().set_i(images[0][i].image_view(), images[1][i].image_view());
-                sobel_images.back().set_dx(dx[i].image_view());
-                sobel_images.back().set_dy(dy[i].image_view());
+                res.emplace_back(device, descriptor_set_layout);
+                res.back().set_i(images[0][i].image_view(), images[1][i].image_view());
+                res.back().set_dx(dx[i].image_view());
+                res.back().set_dy(dy[i].image_view());
         }
-
-        return sobel_images;
+        return res;
 }
 }
 

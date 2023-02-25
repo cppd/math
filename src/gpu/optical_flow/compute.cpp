@@ -60,20 +60,19 @@ std::vector<vulkan::ImageWithMemory> create_images(
         const std::uint32_t family_index,
         const VkImageUsageFlags usage)
 {
-        std::vector<vulkan::ImageWithMemory> images;
-        images.reserve(sizes.size());
-
         const std::vector<std::uint32_t> family_indices({compute_command_pool.family_index(), family_index});
         const std::vector<VkFormat> formats({format});
+
+        std::vector<vulkan::ImageWithMemory> res;
+        res.reserve(sizes.size());
         for (const Vector2i& s : sizes)
         {
-                images.emplace_back(
+                res.emplace_back(
                         device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, compute_command_pool,
                         compute_queue);
         }
-
-        return images;
+        return res;
 }
 
 class Impl final : public Compute
