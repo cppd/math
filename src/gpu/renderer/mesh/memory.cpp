@@ -34,8 +34,8 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
 
         const VkImageView no_texture = textures.back().image_view().handle();
 
-        std::vector<MaterialMemory::MaterialInfo> materials;
-        materials.reserve(mesh.materials.size() + 1);
+        std::vector<MaterialMemory::MaterialInfo> res;
+        res.reserve(mesh.materials.size() + 1);
 
         for (std::size_t i = 0; i < mesh.materials.size(); ++i)
         {
@@ -43,19 +43,19 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
 
                 ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 
-                MaterialMemory::MaterialInfo& m = materials.emplace_back();
+                MaterialMemory::MaterialInfo& m = res.emplace_back();
                 m.buffer = material_buffers[i].buffer().handle();
                 m.buffer_size = material_buffers[i].buffer().size();
                 m.texture =
                         (mesh_material.image >= 0) ? textures[mesh_material.image].image_view().handle() : no_texture;
         }
 
-        MaterialMemory::MaterialInfo& m = materials.emplace_back();
+        MaterialMemory::MaterialInfo& m = res.emplace_back();
         m.buffer = material_buffers.back().buffer().handle();
         m.buffer_size = material_buffers.back().buffer().size();
         m.texture = no_texture;
 
-        return materials;
+        return res;
 }
 }
 
@@ -64,16 +64,16 @@ std::unordered_map<VkDescriptorSetLayout, MeshMemory> create_mesh_memory(
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
         const vulkan::Buffer& mesh_buffer)
 {
-        std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory;
+        std::unordered_map<VkDescriptorSetLayout, MeshMemory> res;
 
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts)
         {
                 MeshMemory memory(
                         device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, mesh_buffer);
-                mesh_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+                res.emplace(layout.descriptor_set_layout, std::move(memory));
         }
 
-        return mesh_memory;
+        return res;
 }
 
 std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory(
@@ -92,16 +92,16 @@ std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory
                 return {};
         }
 
-        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> material_memory;
+        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> res;
 
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts)
         {
                 MaterialMemory memory(
                         device, texture_sampler, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
                         material_info);
-                material_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+                res.emplace(layout.descriptor_set_layout, std::move(memory));
         }
 
-        return material_memory;
+        return res;
 }
 }

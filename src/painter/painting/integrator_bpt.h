@@ -53,13 +53,13 @@ class IntegratorBPT final
                 const integrators::bpt::LightDistributionBase<N, T, Color>* const light_distribution_base,
                 const unsigned thread_count)
         {
-                std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions;
-                light_distributions.reserve(thread_count);
+                std::vector<integrators::bpt::LightDistribution<N, T, Color>> res;
+                res.reserve(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
-                        light_distributions.emplace_back(light_distribution_base);
+                        res.emplace_back(light_distribution_base);
                 }
-                return light_distributions;
+                return res;
         }
 
         const Scene<N, T, Color>* const scene_;

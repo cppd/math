@@ -136,14 +136,14 @@ public:
                 const T length = std::sqrt(1 - square(n));
                 const Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(engine);
 
-                Vector<N, T> coordinates;
+                Vector<N, T> res;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        coordinates[i] = v[i];
+                        res[i] = v[i];
                 }
-                coordinates[N - 1] = n;
+                res[N - 1] = n;
 
-                return coordinates;
+                return res;
         }
 
         static PowerCosineOnHemisphere& instance(const T power)
@@ -181,14 +181,14 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_id
         const T new_length_squared = 1 - square(n);
         v *= std::sqrt(new_length_squared / v_length_square);
 
-        Vector<N, T> coordinates;
+        Vector<N, T> res;
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                coordinates[i] = v[i];
+                res[i] = v[i];
         }
-        coordinates[N - 1] = n;
+        res[N - 1] = n;
 
-        return coordinates;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>

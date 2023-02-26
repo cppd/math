@@ -49,9 +49,9 @@ std::array<Vector<N, T>, COUNT> random_vectors(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
 
-        std::array<Vector<N, T>, COUNT> vectors;
+        std::array<Vector<N, T>, COUNT> res;
 
-        for (Vector<N, T>& v : vectors)
+        for (Vector<N, T>& v : res)
         {
                 T norm;
                 do
@@ -65,7 +65,7 @@ std::array<Vector<N, T>, COUNT> random_vectors(RandomEngine& engine)
                 } while (!(norm > 0));
         }
 
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>

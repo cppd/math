@@ -34,32 +34,32 @@ constexpr PCG::result_type PCG_INIT_VALUE{12345};
 template <typename RandomEngine>
 std::vector<unsigned> permutation_table(const unsigned size, RandomEngine& engine)
 {
-        std::vector<unsigned> data(2ull * size);
+        std::vector<unsigned> res(2ull * size);
 
-        const auto middle = data.begin() + data.size() / 2;
+        const auto middle = res.begin() + res.size() / 2;
 
-        std::iota(data.begin(), middle, 0);
-        std::shuffle(data.begin(), middle, engine);
-        std::copy(data.begin(), middle, middle);
+        std::iota(res.begin(), middle, 0);
+        std::shuffle(res.begin(), middle, engine);
+        std::copy(res.begin(), middle, middle);
 
-        return data;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> gradient_table(const unsigned size, RandomEngine& engine)
 {
-        std::vector<Vector<N, T>> data;
-        data.reserve(size);
+        std::vector<Vector<N, T>> res;
+        res.reserve(size);
 
         for (unsigned i = 0; i < size; ++i)
         {
                 static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
                 // using double to make identical vectors for different types
                 const Vector<N, double> random = sampling::uniform_on_sphere<N, double>(engine);
-                data.push_back(to_vector<T>(random));
+                res.push_back(to_vector<T>(random));
         }
 
-        return data;
+        return res;
 }
 }
 

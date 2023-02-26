@@ -304,10 +304,10 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear() const
 
 std::vector<VkClearValue> Impl::clear_values(const Vector<3, float>& rgb) const
 {
-        std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::create_color_clear_value(format_, rgb);
-        clear_values[1] = vulkan::create_depth_stencil_clear_value();
-        return clear_values;
+        std::vector<VkClearValue> res(2);
+        res[0] = vulkan::create_color_clear_value(format_, rgb);
+        res[1] = vulkan::create_depth_stencil_clear_value();
+        return res;
 }
 
 unsigned Impl::width() const

@@ -45,13 +45,13 @@ Fonts::Fonts()
 
 std::vector<std::string> Fonts::names() const
 {
-        std::vector<std::string> names;
-        names.reserve(fonts_.size());
+        std::vector<std::string> res;
+        res.reserve(fonts_.size());
         for (const auto& e : fonts_)
         {
-                names.emplace_back(e.first);
+                res.emplace_back(e.first);
         }
-        return names;
+        return res;
 }
 
 std::vector<unsigned char> Fonts::data(const std::string_view name) const

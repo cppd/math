@@ -282,15 +282,13 @@ std::unique_ptr<model::mesh::Mesh<N>> sphere(const unsigned facet_count)
 template <typename T>
 std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 {
-        std::vector<std::string> names;
-        names.reserve(map.size());
-
+        std::vector<std::string> res;
+        res.reserve(map.size());
         for (const auto& e : map)
         {
-                names.push_back(e.first);
+                res.push_back(e.first);
         }
-
-        return names;
+        return res;
 }
 
 template <std::size_t N>

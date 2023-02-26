@@ -73,35 +73,35 @@ void run(
 
 std::vector<std::string> Tests::small_names() const
 {
-        std::vector<std::string> names;
-        names.reserve(small_tests_.size());
+        std::vector<std::string> res;
+        res.reserve(small_tests_.size());
         for (const auto& [name, test] : small_tests_)
         {
-                names.emplace_back(name);
+                res.emplace_back(name);
         }
-        return names;
+        return res;
 }
 
 std::vector<std::string> Tests::large_names() const
 {
-        std::vector<std::string> names;
-        names.reserve(large_tests_.size());
+        std::vector<std::string> res;
+        res.reserve(large_tests_.size());
         for (const auto& [name, test] : large_tests_)
         {
-                names.emplace_back(name);
+                res.emplace_back(name);
         }
-        return names;
+        return res;
 }
 
 std::vector<std::string> Tests::performance_names() const
 {
-        std::vector<std::string> names;
-        names.reserve(performance_tests_.size());
+        std::vector<std::string> res;
+        res.reserve(performance_tests_.size());
         for (const auto& [name, test] : performance_tests_)
         {
-                names.emplace_back(name);
+                res.emplace_back(name);
         }
-        return names;
+        return res;
 }
 
 void Tests::run_small(const std::string& name, progress::Ratios* const progress_ratios) const

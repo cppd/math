@@ -37,9 +37,9 @@ Colors<Color> compute_metalness(const Color& surface_color, const T metalness)
         static constexpr Color F0(0.05);
         static constexpr Color BLACK(0);
 
-        Colors<Color> colors;
-        colors.f0 = interpolation(F0, surface_color, metalness);
-        colors.rho_ss = interpolation(surface_color, BLACK, metalness);
-        return colors;
+        Colors<Color> res;
+        res.f0 = interpolation(F0, surface_color, metalness);
+        res.rho_ss = interpolation(surface_color, BLACK, metalness);
+        return res;
 }
 }

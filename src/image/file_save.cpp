@@ -38,12 +38,12 @@ constexpr std::string_view WRITE_FORMAT = "png";
 
 std::set<std::string> supported_formats()
 {
-        std::set<std::string> formats;
+        std::set<std::string> res;
         for (const QByteArray& a : QImageWriter::supportedImageFormats())
         {
-                formats.insert(QString(a).toLower().toStdString());
+                res.insert(QString(a).toLower().toStdString());
         }
-        return formats;
+        return res;
 }
 
 void check_write_format_support(const std::string_view format)

@@ -235,8 +235,8 @@ void random_number(long long* const v, RandomEngine& engine)
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<Vector<N, T>, N - 1> random_vectors(RandomEngine& engine)
 {
-        std::array<Vector<N, T>, N - 1> vectors;
-        for (Vector<N, T>& v : vectors)
+        std::array<Vector<N, T>, N - 1> res;
+        for (Vector<N, T>& v : res)
         {
                 bool not_zero = false;
                 do
@@ -248,7 +248,7 @@ std::array<Vector<N, T>, N - 1> random_vectors(RandomEngine& engine)
                         }
                 } while (!not_zero);
         }
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T>

@@ -27,12 +27,12 @@ namespace pixel_region_implementation
 template <std::size_t N>
 [[nodiscard]] std::array<int, N> max_values_for_size(const std::array<int, N>& size)
 {
-        std::array<int, N> max;
+        std::array<int, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                max[i] = size[i] - 1;
+                res[i] = size[i] - 1;
         }
-        return max;
+        return res;
 }
 
 template <std::size_t I, std::size_t N, typename F>

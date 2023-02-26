@@ -160,22 +160,22 @@ public:
 
         [[nodiscard]] T norm_1() const
         {
-                T sum = std::abs(data_[0]);
+                T res = std::abs(data_[0]);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        sum += std::abs(data_[i]);
+                        res += std::abs(data_[i]);
                 }
-                return sum;
+                return res;
         }
 
         [[nodiscard]] T norm_infinity() const
         {
-                T max = std::abs(data_[0]);
+                T res = std::abs(data_[0]);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        max = std::max(std::abs(data_[i]), max);
+                        res = std::max(std::abs(data_[i]), res);
                 }
-                return max;
+                return res;
         }
 
         [[nodiscard]] T norm_squared() const

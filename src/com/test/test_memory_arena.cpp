@@ -63,12 +63,13 @@ public:
 template <typename T, typename Distribution>
 std::vector<const Interface<T>*> create_data(const std::size_t object_count, PCG engine, Distribution d)
 {
-        std::vector<const Interface<T>*> pointers;
+        std::vector<const Interface<T>*> res;
+        res.reserve(object_count);
         for (std::size_t i = 0; i < object_count; ++i)
         {
-                pointers.push_back(make_arena_ptr<Impl<T>>(d(engine)));
+                res.push_back(make_arena_ptr<Impl<T>>(d(engine)));
         }
-        return pointers;
+        return res;
 }
 
 template <typename T, typename Distribution>

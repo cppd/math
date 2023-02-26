@@ -224,14 +224,14 @@ std::unordered_map<QImage::Format, ColorFormat> q_image_format_to_color_format_m
 
 std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> color_format_to_q_image_format_map()
 {
-        std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> map;
+        std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> res;
 
         for (const auto& [q_format, color_format] : q_image_format_to_color_format_map())
         {
-                map[color_format].insert(q_format);
+                res[color_format].insert(q_format);
         }
 
-        return map;
+        return res;
 }
 
 ColorFormat q_format_to_color_format(const QImage::Format format)
@@ -264,6 +264,7 @@ Info file_info(const Path& path)
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
         const QImage image = open_image(path);
+
         Info info;
         info.size[0] = image.width();
         info.size[1] = image.height();

@@ -119,13 +119,12 @@ public:
         {
                 check_input_type<T>();
 
-                IndexType global_index = p[0];
+                IndexType res = p[0];
                 for (unsigned i = 1; i < N; ++i)
                 {
-                        global_index += strides_[i] * p[i];
+                        res += strides_[i] * p[i];
                 }
-
-                return global_index;
+                return res;
         }
 };
 }

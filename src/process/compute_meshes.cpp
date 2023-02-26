@@ -45,11 +45,11 @@ template <typename T>
 std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
-        std::string text;
-        text += reinterpret_cast<const char*>(u8"ρ ") + to_string_fixed(rho, 3);
-        text += "; ";
-        text += reinterpret_cast<const char*>(u8"α ") + to_string_fixed(alpha, 3);
-        return text;
+        std::string res;
+        res += reinterpret_cast<const char*>(u8"ρ ") + to_string_fixed(rho, 3);
+        res += "; ";
+        res += reinterpret_cast<const char*>(u8"α ") + to_string_fixed(alpha, 3);
+        return res;
 }
 
 template <std::size_t N>
@@ -209,12 +209,12 @@ std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> create_manifol
         progress::Ratio progress(progress_list);
         const Clock::time_point start_time = Clock::now();
 
-        std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> manifold_constructor =
+        std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> res =
                 geometry::reconstruction::create_manifold_constructor(points, &progress);
 
         LOG("Manifold constructor created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
-        return manifold_constructor;
+        return res;
 }
 
 template <std::size_t N>

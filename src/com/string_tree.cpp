@@ -51,7 +51,7 @@ std::size_t StringTree::add(const std::size_t parent, std::string s)
 
 std::string StringTree::text(const unsigned indent) const
 {
-        std::string s;
+        std::string res;
 
         std::stack<std::tuple<std::size_t, unsigned>> stack({
                 {ROOT_NODE, 0}
@@ -64,13 +64,13 @@ std::string StringTree::text(const unsigned indent) const
 
                 if (level > 0)
                 {
-                        if (!s.empty())
+                        if (!res.empty())
                         {
-                                s += '\n';
+                                res += '\n';
                         }
                         const unsigned level_indent = (level - 1) * indent;
-                        s += std::string(level_indent, ' ');
-                        s += nodes_[index].name;
+                        res += std::string(level_indent, ' ');
+                        res += nodes_[index].name;
                 }
 
                 for (auto iter = nodes_[index].children.crbegin(); iter != nodes_[index].children.crend(); ++iter)
@@ -79,6 +79,6 @@ std::string StringTree::text(const unsigned indent) const
                 }
         }
 
-        return s;
+        return res;
 }
 }

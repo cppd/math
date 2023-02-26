@@ -33,13 +33,6 @@ void sort_and_unique(T* const v)
         v->erase(std::unique(v->begin(), v->end()), v->end());
 }
 
-// template <typename T, typename Less, typename Equal>
-// void sort_and_unique(T* const v, const Less& less, const Equal& equal)
-// {
-//         std::sort(v->begin(), v->end(), less);
-//         v->erase(std::unique(v->begin(), v->end(), equal), v->end());
-// }
-
 template <typename T>
         requires (!std::is_pointer_v<T>)
 [[nodiscard]] T sort_and_unique(T v)
@@ -95,13 +88,13 @@ template <typename Result, typename Data>
                 error("Empty container for multiply all");
         }
 
-        Result value = data[0];
+        Result res = data[0];
         for (std::size_t i = 1; i < data.size(); ++i)
         {
-                value *= data[i];
+                res *= data[i];
         }
 
-        return value;
+        return res;
 }
 
 template <typename Result, typename Data>

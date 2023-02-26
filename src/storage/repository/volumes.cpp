@@ -244,15 +244,13 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
 template <typename T>
 std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 {
-        std::vector<std::string> names;
-        names.reserve(map.size());
-
+        std::vector<std::string> res;
+        res.reserve(map.size());
         for (const auto& e : map)
         {
-                names.push_back(e.first);
+                res.push_back(e.first);
         }
-
-        return names;
+        return res;
 }
 
 template <std::size_t N>

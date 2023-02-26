@@ -41,16 +41,16 @@ std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory
         const vulkan::Buffer& buffer_coordinates,
         const vulkan::Buffer& buffer_volume)
 {
-        std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory;
+        std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> res;
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts)
         {
                 VolumeImageMemory memory = VolumeImageMemory(
                         device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, buffer_coordinates,
                         buffer_volume);
 
-                image_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+                res.emplace(layout.descriptor_set_layout, std::move(memory));
         }
-        return image_memory;
+        return res;
 }
 
 vulkan::ImageWithMemory create_transfer_function(

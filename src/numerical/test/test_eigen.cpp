@@ -81,13 +81,13 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigne
         PCG engine;
         std::uniform_real_distribution<T> urd(min, max);
 
-        std::vector<MatrixWithDeterminant<N, T>> matrices;
-        matrices.reserve(count);
+        std::vector<MatrixWithDeterminant<N, T>> res;
+        res.reserve(count);
         for (std::size_t i = 0; i < count; ++i)
         {
-                set_matrix(&matrices.emplace_back(), urd, engine);
+                set_matrix(&res.emplace_back(), urd, engine);
         }
-        return matrices;
+        return res;
 }
 
 void test_eigen_defined()

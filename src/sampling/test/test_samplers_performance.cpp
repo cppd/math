@@ -43,14 +43,14 @@ constexpr int one_dimension_sample_count()
         {
         case 2:
         case 3:
-                return 5u;
+                return 5;
         case 4:
-                return 4u;
+                return 4;
         case 5:
         case 6:
-                return 3u;
+                return 3;
         default:
-                return 2u;
+                return 2;
         }
 }
 

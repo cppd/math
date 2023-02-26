@@ -48,14 +48,14 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& engine)
 
         const T n = std::sqrt(1 - v_length_square);
 
-        Vector<N, T> coordinates;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                coordinates[i] = v[i];
+                res[i] = v[i];
         }
-        coordinates[N - 1] = n;
+        res[N - 1] = n;
 
-        return coordinates;
+        return res;
 }
 
 template <typename RandomEngine, std::size_t N, typename T>

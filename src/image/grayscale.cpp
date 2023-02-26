@@ -142,10 +142,10 @@ std::vector<std::byte> convert_to_r_component_format(
         const ColorFormat color_format,
         const std::span<const std::byte> bytes)
 {
-        std::vector<std::byte> bytes_r;
-        bytes_r.resize(bytes.size() / format_component_count(color_format));
-        convert_to_r_component_format<T>(color_format, bytes, bytes_r);
-        return bytes_r;
+        std::vector<std::byte> res;
+        res.resize(bytes.size() / format_component_count(color_format));
+        convert_to_r_component_format<T>(color_format, bytes, res);
+        return res;
 }
 
 std::vector<std::byte> convert_to_r_component_format(

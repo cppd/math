@@ -59,20 +59,19 @@ constexpr T min_max_value_array(const std::span<const T> p)
                 ptr += COUNT;
         }
 
-        T cmp = m[0];
+        T res = m[0];
         for (unsigned i = 1; i < COUNT; ++i)
         {
                 if constexpr (COMPUTE_MIN)
                 {
-                        cmp = std::min(cmp, m[i]);
+                        res = std::min(res, m[i]);
                 }
                 else
                 {
-                        cmp = std::max(cmp, m[i]);
+                        res = std::max(res, m[i]);
                 }
         }
-
-        return cmp;
+        return res;
 }
 
 template <bool COMPUTE_MIN, typename T>
@@ -84,17 +83,17 @@ constexpr T min_max_value(const std::span<const T> p)
         constexpr unsigned COUNT = std::is_same_v<T, float> ? 8 : 4;
 
         const T* ptr = p.data();
-        T cmp;
+        T res;
 
         if (p.size() >= 2 * COUNT)
         {
                 const std::size_t count = (p.size() / COUNT) * COUNT;
-                cmp = min_max_value_array<COMPUTE_MIN, COUNT>(std::span<const T>(p.data(), count));
+                res = min_max_value_array<COMPUTE_MIN, COUNT>(std::span<const T>(p.data(), count));
                 ptr += count;
         }
         else
         {
-                cmp = *ptr++;
+                res = *ptr++;
         }
 
         const T* const end = p.data() + p.size();
@@ -102,15 +101,15 @@ constexpr T min_max_value(const std::span<const T> p)
         {
                 if constexpr (COMPUTE_MIN)
                 {
-                        cmp = std::min(cmp, *ptr++);
+                        res = std::min(res, *ptr++);
                 }
                 else
                 {
-                        cmp = std::max(cmp, *ptr++);
+                        res = std::max(res, *ptr++);
                 }
         }
 
-        return cmp;
+        return res;
 }
 }
 

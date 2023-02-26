@@ -39,13 +39,13 @@ namespace
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> random_data(const int count, RandomEngine& engine)
 {
-        std::vector<Vector<N, T>> data;
-        data.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                data.push_back(sampling::uniform_on_sphere<N, T>(engine));
+                res.push_back(sampling::uniform_on_sphere<N, T>(engine));
         }
-        return data;
+        return res;
 }
 
 template <int COUNT, std::size_t N, typename T, typename F>

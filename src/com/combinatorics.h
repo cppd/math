@@ -36,29 +36,30 @@ inline constexpr int BINOMIAL = []
         constexpr unsigned __int128 MAX = Limits<int>::max();
 
         constexpr unsigned __int128 K = (R <= N / 2) ? (N - R) : R;
-        unsigned __int128 m = 1;
+
+        unsigned __int128 res = 1;
         for (unsigned __int128 i = N; i > K; --i)
         {
-                const unsigned __int128 v = m * i;
-                if ((v / i) != m)
+                const unsigned __int128 v = res * i;
+                if ((v / i) != res)
                 {
                         error("Binomial overflow");
                 }
-                m = v;
+                res = v;
         }
 
         static_assert(N >= K);
         for (unsigned __int128 i = N - K; i > 1; --i)
         {
-                m /= i;
+                res /= i;
         }
 
-        if (m > MAX)
+        if (res > MAX)
         {
                 error("Binomial result overflow");
         }
 
-        return m;
+        return res;
 }();
 
 template <int N, int R>
@@ -91,16 +92,16 @@ inline constexpr std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> COMBIN
 template <unsigned N>
 inline constexpr unsigned long long FACTORIAL = []
 {
-        unsigned long long m = 1;
+        unsigned long long res = 1;
         for (unsigned i = 2; i <= N; ++i)
         {
-                const unsigned long long v = m * i;
-                if ((v / i) != m)
+                const unsigned long long v = res * i;
+                if ((v / i) != res)
                 {
                         error("Factorial overflow");
                 }
-                m = v;
+                res = v;
         }
-        return m;
+        return res;
 }();
 }

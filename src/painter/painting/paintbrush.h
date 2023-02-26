@@ -188,6 +188,7 @@ std::vector<std::array<T, N>> generate_pixels(std::array<int, N> screen_size, co
         paintbrush_size[N - 1] = 1;
 
         std::reverse(screen_size.begin(), screen_size.end());
+
         std::vector<std::array<T, N>> pixels = generate_pixels<T>(screen_size, paintbrush_size);
         std::reverse(screen_size.begin(), screen_size.end());
 
