@@ -68,16 +68,16 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
                 const std::vector<int>& indices) const override
         {
                 spatial::ShapeOverlap p(&parallelotope);
-                std::vector<int> intersections;
-                intersections.reserve(indices.size());
+                std::vector<int> res;
+                res.reserve(indices.size());
                 for (const int index : indices)
                 {
                         if (overlap_functions_[index](p))
                         {
-                                intersections.push_back(index);
+                                res.push_back(index);
                         }
                 }
-                return intersections;
+                return res;
         }
 
 public:

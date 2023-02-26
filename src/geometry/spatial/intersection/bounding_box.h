@@ -66,6 +66,7 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
+
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {

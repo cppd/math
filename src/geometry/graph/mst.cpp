@@ -102,16 +102,13 @@ std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<
 template <std::size_t N>
 std::vector<WeightedEdge> weight_edges(const std::vector<Vector<N, float>>& points, const std::vector<Edge2>& edges)
 {
-        std::vector<WeightedEdge> weighted_edges;
-
-        weighted_edges.reserve(edges.size());
-
+        std::vector<WeightedEdge> res;
+        res.reserve(edges.size());
         for (const Edge2& edge : edges)
         {
-                weighted_edges.emplace_back(points, edge);
+                res.emplace_back(points, edge);
         }
-
-        return weighted_edges;
+        return res;
 }
 
 std::vector<std::array<int, 2>> kruskal(

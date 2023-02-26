@@ -292,12 +292,12 @@ std::unordered_set<Vector<N, float>> create_initial_vertex_set(const std::vector
 {
         static_assert(N >= 4);
 
-        std::unordered_set<Vector<N, float>> vertex_set;
+        std::unordered_set<Vector<N, float>> res;
         for (const std::array<Vector<N, T>, N>& vertices : facets)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        vertex_set.insert(to_vector<float>(vertices[i].normalized()));
+                        res.insert(to_vector<float>(vertices[i].normalized()));
                 }
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -305,11 +305,11 @@ std::unordered_set<Vector<N, float>> create_initial_vertex_set(const std::vector
                         {
                                 const Vector<N, T>& v1 = vertices[i];
                                 const Vector<N, T>& v2 = vertices[j];
-                                vertex_set.insert(to_vector<float>((v1 + v2).normalized()));
+                                res.insert(to_vector<float>((v1 + v2).normalized()));
                         }
                 }
         }
-        return vertex_set;
+        return res;
 }
 
 template <std::size_t N>

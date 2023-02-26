@@ -287,12 +287,12 @@ void create_horizon_facets(
 template <typename T>
 std::size_t calculate_facet_count(const std::vector<T>& facets)
 {
-        std::size_t sum = 0;
+        std::size_t res = 0;
         for (const T& facet : facets)
         {
-                sum += facet.size();
+                res += facet.size();
         }
-        return sum;
+        return res;
 }
 
 template <std::size_t N, typename S, typename C>

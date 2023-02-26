@@ -62,6 +62,7 @@ template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& ball)
 {
         const T radius = std::sqrt(ball.radius_squared());
+
         std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(ball.normal());
         for (Vector<N, T>& v : vectors)
         {
@@ -82,6 +83,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int p
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
+
         for (int i = 0; i < point_count; ++i)
         {
                 const Vector<N, T> point = ball.center() + sampling::uniform_in_sphere(engine, vectors);

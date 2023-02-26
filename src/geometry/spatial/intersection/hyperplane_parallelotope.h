@@ -69,6 +69,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
+
         for (int i = 0; i < point_count; ++i)
         {
                 const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(engine, p.vectors());

@@ -62,14 +62,14 @@ std::vector<Vector<N, T>> internal_points(const int count, RandomEngine& engine)
         Vector<N, T> v;
         T v_length_square;
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
                 sampling::uniform_in_sphere(engine, v, v_length_square);
-                points.push_back(v * (MIN_D<T> / 2));
+                res.push_back(v * (MIN_D<T> / 2));
         }
-        return points;
+        return res;
 }
 
 template <typename T>

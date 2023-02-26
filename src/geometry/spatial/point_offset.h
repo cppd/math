@@ -37,12 +37,13 @@ template <std::size_t N, typename T>
         namespace impl = point_offset_implementation;
 
         const T ray_offset = (dot(normal, ray.dir()) < 0) ? -impl::OFFSET<T> : impl::OFFSET<T>;
-        Vector<N, T> org;
+
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                org[i] = ray.org()[i] + std::abs(ray.org()[i]) * ray_offset * normal[i];
+                res[i] = ray.org()[i] + std::abs(ray.org()[i]) * ray_offset * normal[i];
         }
-        return org;
+        return res;
 }
 
 template <std::size_t N, typename T>

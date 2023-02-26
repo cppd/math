@@ -41,18 +41,18 @@ std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, Sour
 {
         static_assert(std::tuple_size_v<PointType> == N + 1);
 
-        std::vector<PointType> data(points.size());
+        std::vector<PointType> res(points.size());
         for (std::size_t i = 0; i < points.size(); ++i)
         {
-                data[i][N] = 0;
+                res[i][N] = 0;
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        data[i][n] = points[i][n];
+                        res[i][n] = points[i][n];
                         // multipication using data type of the 'data'
-                        data[i][N] += data[i][n] * data[i][n];
+                        res[i][N] += res[i][n] * res[i][n];
                 }
         }
-        return data;
+        return res;
 }
 
 template <typename PointType, std::size_t N, typename SourceType>
@@ -60,15 +60,15 @@ std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& p
 {
         static_assert(std::tuple_size_v<PointType> == N);
 
-        std::vector<PointType> data(points.size());
+        std::vector<PointType> res(points.size());
         for (std::size_t i = 0; i < points.size(); ++i)
         {
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        data[i][n] = points[i][n];
+                        res[i][n] = points[i][n];
                 }
         }
-        return data;
+        return res;
 }
 
 template <std::size_t N, typename Data, typename Compute>
@@ -211,14 +211,14 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
                 LOG(ch::convex_hull_type_description<N>());
         }
 
-        std::vector<ConvexHullSimplex<N>> facets = compute_convex_hull(convex_hull_points, progress);
+        std::vector<ConvexHullSimplex<N>> res = compute_convex_hull(convex_hull_points, progress);
 
         if (write_log)
         {
                 LOG("Convex hull in " + space_name(N) + " integer done");
         }
 
-        return facets;
+        return res;
 }
 
 #define TEMPLATE_DELAUNAY(N) \

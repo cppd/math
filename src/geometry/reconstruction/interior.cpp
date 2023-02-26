@@ -196,12 +196,12 @@ std::vector<bool> find_interior_facets(
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
 
-        std::vector<bool> cocone_facets(facet_data.size());
+        std::vector<bool> res(facet_data.size());
         for (std::size_t i = 0; i < facet_data.size(); ++i)
         {
-                cocone_facets[i] = interior_facet(delaunay_facets, facet_data, interior_vertices, i);
+                res[i] = interior_facet(delaunay_facets, facet_data, interior_vertices, i);
         }
-        return cocone_facets;
+        return res;
 }
 
 #define TEMPLATE(N)                                                                                                 \

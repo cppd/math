@@ -74,13 +74,13 @@ unsigned tree_max_depth()
 
 std::vector<int> zero_based_indices(const int count)
 {
-        std::vector<int> indices;
-        indices.reserve(count);
+        std::vector<int> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                indices.push_back(i);
+                res.push_back(i);
         }
-        return indices;
+        return res;
 }
 
 double maximum_box_count(const unsigned box_count, const unsigned max_depth)

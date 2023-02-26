@@ -104,6 +104,7 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
+
         for (int i = 0; i < point_count; ++i)
         {
                 const Vector<N, T> point = sampling::uniform_in_simplex(engine, simplex.vertices);

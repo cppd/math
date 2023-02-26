@@ -60,6 +60,7 @@ std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point
 
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
+
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {

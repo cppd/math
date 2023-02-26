@@ -47,13 +47,13 @@ std::vector<Vector<N, T>> parallelotope_external_points(
                 return v;
         };
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(random_point());
+                res.push_back(random_point());
         }
-        return points;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -78,13 +78,13 @@ std::vector<Vector<N, T>> parallelotope_external_points(
                 return v;
         };
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(random_point());
+                res.push_back(random_point());
         }
-        return points;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -106,13 +106,13 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
                 return v;
         };
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(random_point());
+                res.push_back(random_point());
         }
-        return points;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -134,13 +134,13 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
                 return v;
         };
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(random_point());
+                res.push_back(random_point());
         }
-        return points;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -176,17 +176,17 @@ std::vector<Vector<N, T>> parallelotope_cover_points(
                 return v;
         };
 
-        std::vector<Vector<N, T>> points;
-        points.reserve(count * (1 + N * 2));
+        std::vector<Vector<N, T>> res;
+        res.reserve(count * (1 + N * 2));
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(cover_point());
+                res.push_back(cover_point());
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        points.push_back(plane_point(n));
-                        points.push_back(vectors[n] + plane_point(n));
+                        res.push_back(plane_point(n));
+                        res.push_back(vectors[n] + plane_point(n));
                 }
         }
-        return points;
+        return res;
 }
 }

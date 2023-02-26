@@ -71,12 +71,12 @@ bool cocone_facet(const ManifoldFacet<N>& facet)
 template <std::size_t N>
 std::vector<bool> find_cocone_facets(const std::vector<ManifoldFacet<N>>& facets)
 {
-        std::vector<bool> cocone_facets(facets.size());
+        std::vector<bool> res(facets.size());
         for (std::size_t i = 0; i < facets.size(); ++i)
         {
-                cocone_facets[i] = cocone_facet(facets[i]);
+                res[i] = cocone_facet(facets[i]);
         }
-        return cocone_facets;
+        return res;
 }
 
 template <std::size_t N>
@@ -84,15 +84,15 @@ std::vector<std::array<int, N>> create_facets(
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
 {
-        std::vector<std::array<int, N>> facets;
+        std::vector<std::array<int, N>> res;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if (cocone_facets[i])
                 {
-                        facets.push_back(delaunay_facets[i].vertices());
+                        res.push_back(delaunay_facets[i].vertices());
                 }
         }
-        return facets;
+        return res;
 }
 
 template <std::size_t N>
