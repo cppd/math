@@ -65,12 +65,13 @@ std::unordered_set<std::string> find_extensions(const VkPhysicalDevice device)
         std::vector<VkExtensionProperties> extensions(count);
         VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data()));
 
-        std::unordered_set<std::string> extension_set;
-        for (const VkExtensionProperties& properties : extensions)
+        std::unordered_set<std::string> res;
+        res.reserve(extensions.size());
+        for (const VkExtensionProperties& extension : extensions)
         {
-                extension_set.emplace(properties.extensionName);
+                res.emplace(extension.extensionName);
         }
-        return extension_set;
+        return res;
 }
 
 template <typename T>

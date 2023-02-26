@@ -26,16 +26,16 @@ namespace
 {
 std::uint32_t find_format_count(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
-        std::uint32_t format_count;
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, nullptr));
-        return format_count;
+        std::uint32_t count;
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, nullptr));
+        return count;
 }
 
 std::uint32_t find_present_mode_count(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
-        std::uint32_t mode_count;
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &mode_count, nullptr));
-        return mode_count;
+        std::uint32_t count;
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, nullptr));
+        return count;
 }
 }
 

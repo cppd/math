@@ -32,9 +32,8 @@ std::vector<std::uint32_t> distribute_device_queues(
         const std::uint32_t device_queue_count,
         std::unordered_map<std::uint32_t, std::uint32_t>* const queue_count)
 {
-        std::vector<std::uint32_t> queues;
-
-        queues.reserve(count);
+        std::vector<std::uint32_t> res;
+        res.reserve(count);
         for (std::uint32_t i = 0; i < count; ++i)
         {
                 std::uint32_t& device_queue = (*queue_count)[family_index];
@@ -42,11 +41,10 @@ std::vector<std::uint32_t> distribute_device_queues(
                 {
                         device_queue = 0;
                 }
-                queues.push_back(device_queue);
+                res.push_back(device_queue);
                 ++device_queue;
         }
-
-        return queues;
+        return res;
 }
 
 std::map<std::uint32_t, std::map<std::uint32_t, std::string>> create_queue_description_map(
@@ -108,30 +106,29 @@ std::string create_queue_description_string(
 
 QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& infos)
 {
-        QueueDistribution distribution;
+        QueueDistribution res;
 
         for (const QueueFamilyInfo& info : infos)
         {
-                distribution.index_to_count[info.family_index] = std::min(
-                        distribution.index_to_count[info.family_index] + info.queue_count,
+                res.index_to_count[info.family_index] = std::min(
+                        res.index_to_count[info.family_index] + info.queue_count,
                         physical_device.queue_families()[info.family_index].queueCount);
         }
 
-        distribution.device_queues.reserve(infos.size());
+        res.device_queues.reserve(infos.size());
 
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
 
         for (const QueueFamilyInfo& info : infos)
         {
                 std::vector<std::uint32_t> device_queues = distribute_device_queues(
-                        info.queue_count, info.family_index, distribution.index_to_count[info.family_index],
-                        &queue_count);
+                        info.queue_count, info.family_index, res.index_to_count[info.family_index], &queue_count);
 
-                distribution.device_queues.push_back(
+                res.device_queues.push_back(
                         {.family_index = info.family_index, .device_queues = std::move(device_queues)});
         }
 
-        return distribution;
+        return res;
 }
 
 std::string device_queues_description(
@@ -157,11 +154,11 @@ std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
         const VkDevice device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
 {
-        std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues;
+        std::unordered_map<std::uint32_t, std::vector<VkQueue>> res;
 
         for (const auto& [family_index, queue_count] : queue_families)
         {
-                const auto [iter, inserted] = queues.try_emplace(family_index);
+                const auto [iter, inserted] = res.try_emplace(family_index);
 
                 if (!inserted)
                 {
@@ -183,6 +180,6 @@ std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
                 }
         }
 
-        return queues;
+        return res;
 }
 }

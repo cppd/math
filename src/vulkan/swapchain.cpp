@@ -125,9 +125,9 @@ std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, c
 
 std::uint32_t find_image_count(const VkDevice device, const VkSwapchainKHR swapchain)
 {
-        std::uint32_t image_count;
-        VULKAN_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr));
-        return image_count;
+        std::uint32_t count;
+        VULKAN_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &count, nullptr));
+        return count;
 }
 
 std::vector<VkImage> swapchain_images(const VkDevice device, const VkSwapchainKHR swapchain)

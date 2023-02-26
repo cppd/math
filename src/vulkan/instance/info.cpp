@@ -36,12 +36,13 @@ std::unordered_set<std::string> supported_instance_extensions()
         std::vector<VkExtensionProperties> extensions(extension_count);
         VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data()));
 
-        std::unordered_set<std::string> extension_set;
-        for (const VkExtensionProperties& e : extensions)
+        std::unordered_set<std::string> res;
+        res.reserve(extensions.size());
+        for (const VkExtensionProperties& extension : extensions)
         {
-                extension_set.emplace(e.extensionName);
+                res.emplace(extension.extensionName);
         }
-        return extension_set;
+        return res;
 }
 
 std::unordered_set<std::string> supported_instance_layers()
@@ -57,12 +58,13 @@ std::unordered_set<std::string> supported_instance_layers()
         std::vector<VkLayerProperties> layers(layer_count);
         VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, layers.data()));
 
-        std::unordered_set<std::string> layer_set;
-        for (const VkLayerProperties& l : layers)
+        std::unordered_set<std::string> res;
+        res.reserve(layers.size());
+        for (const VkLayerProperties& layer : layers)
         {
-                layer_set.emplace(l.layerName);
+                res.emplace(layer.layerName);
         }
-        return layer_set;
+        return res;
 }
 
 std::uint32_t supported_instance_api_version()

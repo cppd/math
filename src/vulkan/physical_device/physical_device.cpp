@@ -81,11 +81,11 @@ std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surf
         std::uint32_t family_count;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, nullptr);
 
-        std::vector<bool> presentation_support(family_count, false);
+        std::vector<bool> res(family_count, false);
 
         if (surface == VK_NULL_HANDLE)
         {
-                return presentation_support;
+                return res;
         }
 
         for (std::uint32_t family_index = 0; family_index < family_count; ++family_index)
@@ -93,10 +93,10 @@ std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surf
                 VkBool32 supported;
                 VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface, &supported));
 
-                presentation_support[family_index] = (supported == VK_TRUE);
+                res[family_index] = (supported == VK_TRUE);
         }
 
-        return presentation_support;
+        return res;
 }
 
 int device_priority(const PhysicalDevice& physical_device)

@@ -191,11 +191,11 @@ PhysicalDeviceFeatures make_features(
         const PhysicalDeviceFeatures& optional,
         const PhysicalDeviceFeatures& supported)
 {
-        PhysicalDeviceFeatures result_features = {};
+        PhysicalDeviceFeatures res = {};
 
         try
         {
-                set_features<true>(required, supported, &result_features);
+                set_features<true>(required, supported, &res);
         }
         catch (const FeatureIsNotSupported& e)
         {
@@ -204,14 +204,14 @@ PhysicalDeviceFeatures make_features(
 
         try
         {
-                set_features<false>(optional, supported, &result_features);
+                set_features<false>(optional, supported, &res);
         }
         catch (const FeatureIsNotSupported&)
         {
                 error("Exception when setting optional device features");
         }
 
-        return result_features;
+        return res;
 }
 
 bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported)

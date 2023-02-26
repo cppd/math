@@ -106,16 +106,16 @@ void write_descriptor_set(
 std::unordered_map<std::uint32_t, std::uint32_t> create_binding_map(
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-        std::unordered_map<std::uint32_t, std::uint32_t> map;
+        std::unordered_map<std::uint32_t, std::uint32_t> res;
         for (std::size_t index = 0; index < bindings.size(); ++index)
         {
-                if (!map.emplace(bindings[index].binding, index).second)
+                if (!res.emplace(bindings[index].binding, index).second)
                 {
                         error("Multiple binding " + to_string(bindings[index].binding)
                               + " in descriptor set layout bindings");
                 }
         }
-        return map;
+        return res;
 }
 }
 

@@ -25,20 +25,20 @@ namespace
 {
 std::vector<VkPipelineShaderStageCreateInfo> create_info(const std::vector<const Shader*>& shaders)
 {
-        std::vector<VkPipelineShaderStageCreateInfo> info;
-        info.reserve(shaders.size());
+        std::vector<VkPipelineShaderStageCreateInfo> res;
+        res.reserve(shaders.size());
 
         for (const Shader* const shader : shaders)
         {
                 ASSERT(shader);
-                auto& v = info.emplace_back();
+                auto& v = res.emplace_back();
                 v.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
                 v.stage = shader->stage();
                 v.module = shader->module();
                 v.pName = shader->entry_point_name();
         }
 
-        return info;
+        return res;
 }
 
 void set_info_pointers(
