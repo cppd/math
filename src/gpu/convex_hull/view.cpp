@@ -42,28 +42,51 @@ namespace
 {
 constexpr double ANGULAR_FREQUENCY = 5 * (2 * PI<double>);
 
+vulkan::BufferWithMemory create_indirect_buffer(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue)
+{
+        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
+
+        vulkan::BufferWithMemory buffer(
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, {graphics_command_pool.family_index()},
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
+                        | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                sizeof(VkDrawIndirectCommand));
+
+        VkDrawIndirectCommand command = {};
+        command.vertexCount = 0;
+        command.instanceCount = 1;
+        command.firstVertex = 0;
+        command.firstInstance = 0;
+
+        buffer.write(graphics_command_pool, graphics_queue, data_size(command), data_pointer(command));
+
+        return buffer;
+}
+
 class Impl final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const bool sample_shading_;
+        const std::uint32_t family_index_;
+        const vulkan::Device* const device_;
+        const VkCommandPool graphics_command_pool_;
+        const vulkan::handle::Semaphore semaphore_;
+        const ViewDataBuffer data_buffer_;
+        const ViewProgram program_;
+        const ViewMemory memory_;
+        const vulkan::BufferWithMemory indirect_buffer_;
+
         Clock::time_point start_time_ = Clock::now();
 
-        const std::uint32_t family_index_;
-
-        const vulkan::Device* const device_;
-        VkCommandPool graphics_command_pool_;
-
-        vulkan::handle::Semaphore semaphore_;
-        ViewDataBuffer data_buffer_;
-        ViewProgram program_;
-        ViewMemory memory_;
         std::optional<vulkan::BufferWithMemory> points_;
-        vulkan::BufferWithMemory indirect_buffer_;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
-        std::unique_ptr<Compute> compute_;
+        const std::unique_ptr<Compute> compute_;
 
         void reset_timer() override
         {
@@ -185,16 +208,6 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        static VkDrawIndirectCommand draw_indirect_command_data()
-        {
-                VkDrawIndirectCommand command = {};
-                command.vertexCount = 0;
-                command.instanceCount = 1;
-                command.firstVertex = 0;
-                command.firstInstance = 0;
-                return command;
-        }
-
 public:
         Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
@@ -208,18 +221,9 @@ public:
                   data_buffer_(*device_, {family_index_}),
                   program_(device_),
                   memory_(device_->handle(), program_.descriptor_set_layout(), data_buffer_.buffer()),
-                  indirect_buffer_(
-                          vulkan::BufferMemoryType::DEVICE_LOCAL,
-                          *device_,
-                          {family_index_},
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
-                                  | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          sizeof(VkDrawIndirectCommand)),
+                  indirect_buffer_(create_indirect_buffer(*device_, *graphics_command_pool, *graphics_queue)),
                   compute_(create_compute(device_))
         {
-                ASSERT(graphics_command_pool->family_index() == graphics_queue->family_index());
-                const VkDrawIndirectCommand data = draw_indirect_command_data();
-                indirect_buffer_.write(*graphics_command_pool, *graphics_queue, data_size(data), data_pointer(data));
         }
 
         ~Impl() override
