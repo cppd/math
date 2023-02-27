@@ -46,11 +46,12 @@ class Impl final : public View
         const vulkan::Queue* const graphics_queue_;
         const vulkan::CommandPool* const compute_command_pool_;
 
-        vulkan::handle::Semaphore signal_semaphore_;
-        ViewProgram program_;
-        ViewDataBuffer buffer_;
-        ViewMemory memory_;
-        vulkan::handle::Sampler sampler_;
+        const vulkan::handle::Semaphore signal_semaphore_;
+        const ViewProgram program_;
+        const ViewDataBuffer buffer_;
+        const ViewMemory memory_;
+        const vulkan::handle::Sampler sampler_;
+
         std::optional<vulkan::BufferWithMemory> top_points_;
         std::optional<vulkan::BufferWithMemory> top_flow_;
         std::optional<vulkan::handle::Pipeline> pipeline_points_;
@@ -59,7 +60,7 @@ class Impl final : public View
 
         int top_point_count_;
 
-        std::unique_ptr<Compute> compute_;
+        const std::unique_ptr<Compute> compute_;
 
         void draw_commands(const VkCommandBuffer command_buffer) const
         {
