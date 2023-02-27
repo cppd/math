@@ -57,10 +57,11 @@ class Impl final : public View
         const vulkan::BufferWithMemory indirect_buffer_;
 
         std::optional<vulkan::BufferWithMemory> vertex_buffer_;
-        RenderBuffers2D* render_buffers_ = nullptr;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
         std::optional<Glyphs> glyphs_;
+
+        RenderBuffers2D* render_buffers_ = nullptr;
 
         void set_color(const color::Color& color) const override
         {

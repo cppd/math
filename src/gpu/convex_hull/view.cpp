@@ -80,13 +80,13 @@ class Impl final : public View
         const ViewMemory memory_;
         const vulkan::BufferWithMemory indirect_buffer_;
 
-        Clock::time_point start_time_ = Clock::now();
-
         std::optional<vulkan::BufferWithMemory> points_;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         const std::unique_ptr<Compute> compute_;
+
+        Clock::time_point start_time_ = Clock::now();
 
         void reset_timer() override
         {

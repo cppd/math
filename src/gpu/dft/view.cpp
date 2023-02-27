@@ -70,7 +70,6 @@ class Impl final : public View
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
-        const std::uint32_t graphics_family_index_;
         const vulkan::handle::Semaphore signal_semaphore_;
         const ViewDataBuffer data_buffer_;
         const ViewProgram program_;
@@ -117,7 +116,7 @@ class Impl final : public View
                 ASSERT(source_rectangle.height() == draw_rectangle.height());
 
                 image_.emplace(
-                        *device_, std::vector({graphics_family_index_}), std::vector({IMAGE_FORMAT}),
+                        *device_, std::vector({graphics_queue_->family_index()}), std::vector({IMAGE_FORMAT}),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(source_rectangle.width(), source_rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -128,7 +127,7 @@ class Impl final : public View
                 pipeline_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), draw_rectangle);
 
-                compute_->create_buffers(sampler_, input, *image_, source_rectangle, graphics_family_index_);
+                compute_->create_buffers(sampler_, input, *image_, source_rectangle, graphics_queue_->family_index());
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = device_->handle();
@@ -170,7 +169,7 @@ class Impl final : public View
 
                 //
 
-                ASSERT(queue.family_index() == graphics_family_index_);
+                ASSERT(queue.family_index() == graphics_queue_->family_index());
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(
@@ -205,9 +204,8 @@ public:
                 : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
-                  graphics_family_index_(graphics_queue->family_index()),
                   signal_semaphore_(device_->handle()),
-                  data_buffer_(*device_, {graphics_queue->family_index()}),
+                  data_buffer_(*device_, {graphics_queue_->family_index()}),
                   program_(device_),
                   memory_(device_->handle(), program_.descriptor_set_layout(), data_buffer_.buffer()),
                   sampler_(create_sampler(device_->handle())),

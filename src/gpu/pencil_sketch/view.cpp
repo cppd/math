@@ -71,7 +71,6 @@ class Impl final : public View
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
-        const std::uint32_t graphics_family_index_;
         const vulkan::handle::Semaphore signal_semaphore_;
         const ViewProgram program_;
         const ViewMemory memory_;
@@ -82,7 +81,7 @@ class Impl final : public View
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
-        std::unique_ptr<Compute> compute_;
+        const std::unique_ptr<Compute> compute_;
 
         void draw_commands(const VkCommandBuffer command_buffer) const
         {
@@ -114,7 +113,7 @@ class Impl final : public View
                 //
 
                 image_.emplace(
-                        *device_, std::vector({graphics_family_index_}), std::vector({IMAGE_FORMAT}),
+                        *device_, std::vector({graphics_queue_->family_index()}), std::vector({IMAGE_FORMAT}),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(rectangle.width(), rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -167,7 +166,7 @@ class Impl final : public View
 
                 //
 
-                ASSERT(queue.family_index() == graphics_family_index_);
+                ASSERT(queue.family_index() == graphics_queue_->family_index());
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(
@@ -187,7 +186,6 @@ public:
                 : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
-                  graphics_family_index_(graphics_queue->family_index()),
                   signal_semaphore_(device_->handle()),
                   program_(device_),
                   memory_(device_->handle(), program_.descriptor_set_layout()),
