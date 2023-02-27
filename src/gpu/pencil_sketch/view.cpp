@@ -49,25 +49,36 @@ constexpr std::array VERTICES = std::to_array<ViewVertex>
 
 static_assert(VERTICES.size() == 4);
 
+vulkan::BufferWithMemory create_vertices(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue)
+{
+        vulkan::BufferWithMemory vertices(
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device,
+                std::vector({graphics_queue.family_index() /*, transfer_queue_.family_index()*/}),
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(VERTICES));
+
+        vertices.write(graphics_command_pool, graphics_queue, data_size(VERTICES), data_pointer(VERTICES));
+
+        return vertices;
+}
+
 class Impl final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        // const bool sample_shading_;
-
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
-        // const vulkan::CommandPool* const transfer_command_pool_;
-        // const vulkan::Queue* const transfer_queue_;
-        std::uint32_t graphics_family_index_;
+        const std::uint32_t graphics_family_index_;
+        const vulkan::handle::Semaphore signal_semaphore_;
+        const ViewProgram program_;
+        const ViewMemory memory_;
+        const vulkan::handle::Sampler sampler_;
+        const vulkan::BufferWithMemory vertices_;
 
-        vulkan::handle::Semaphore signal_semaphore_;
-        ViewProgram program_;
-        ViewMemory memory_;
-        std::unique_ptr<vulkan::BufferWithMemory> vertices_;
-        vulkan::handle::Sampler sampler_;
-        std::unique_ptr<vulkan::ImageWithMemory> image_;
+        std::optional<vulkan::ImageWithMemory> image_;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
@@ -85,7 +96,7 @@ class Impl final : public View
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                const std::array<VkBuffer, 1> buffers{vertices_->buffer().handle()};
+                const std::array<VkBuffer, 1> buffers{vertices_.buffer().handle()};
                 const std::array<VkDeviceSize, 1> offsets{0};
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
@@ -102,7 +113,7 @@ class Impl final : public View
 
                 //
 
-                image_ = std::make_unique<vulkan::ImageWithMemory>(
+                image_.emplace(
                         *device_, std::vector({graphics_family_index_}), std::vector({IMAGE_FORMAT}),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(rectangle.width(), rectangle.height()),
@@ -166,17 +177,6 @@ class Impl final : public View
                 return signal_semaphore_;
         }
 
-        void create_vertices()
-        {
-                vertices_.reset();
-                vertices_ = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
-                        std::vector({graphics_queue_->family_index() /*, transfer_queue_.family_index()*/}),
-                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(VERTICES));
-                vertices_->write(
-                        *graphics_command_pool_, *graphics_queue_, data_size(VERTICES), data_pointer(VERTICES));
-        }
-
 public:
         Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
@@ -184,20 +184,17 @@ public:
              const vulkan::CommandPool* const /*transfer_command_pool*/,
              const vulkan::Queue* const /*transfer_queue*/,
              const bool /*sample_shading*/)
-                : // sample_shading_(sample_shading),
-                  device_(device),
+                : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
-                  // transfer_command_pool_(transfer_command_pool),
-                  // transfer_queue_(transfer_queue),
                   graphics_family_index_(graphics_queue->family_index()),
                   signal_semaphore_(device_->handle()),
                   program_(device_),
                   memory_(device_->handle(), program_.descriptor_set_layout()),
                   sampler_(create_sampler(device_->handle())),
+                  vertices_(create_vertices(*device_, *graphics_command_pool_, *graphics_queue_)),
                   compute_(create_compute(device_))
         {
-                create_vertices();
         }
 
         ~Impl() override
