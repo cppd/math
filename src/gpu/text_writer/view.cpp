@@ -46,23 +46,20 @@ class Impl final : public View
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const bool sample_shading_;
-
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
-
-        vulkan::handle::Semaphore semaphore_;
-        vulkan::handle::Sampler sampler_;
-        Program program_;
-        Buffer buffer_;
-        Memory memory_;
+        const vulkan::handle::Semaphore semaphore_;
+        const vulkan::handle::Sampler sampler_;
+        const Program program_;
+        const Buffer buffer_;
+        const Memory memory_;
+        const vulkan::BufferWithMemory indirect_buffer_;
 
         std::optional<vulkan::BufferWithMemory> vertex_buffer_;
-        vulkan::BufferWithMemory indirect_buffer_;
         RenderBuffers2D* render_buffers_ = nullptr;
         std::optional<vulkan::handle::Pipeline> pipeline_;
         std::optional<vulkan::handle::CommandBuffers> command_buffers_;
-
         std::optional<Glyphs> glyphs_;
 
         void set_color(const color::Color& color) const override
@@ -236,19 +233,19 @@ public:
                   program_(device_),
                   buffer_(*device_, {graphics_queue->family_index()}),
                   memory_(device_->handle(), program_.descriptor_set_layout(), buffer_.buffer()),
+                  indirect_buffer_(
+                          vulkan::BufferMemoryType::HOST_VISIBLE,
+                          *device_,
+                          {graphics_queue->family_index()},
+                          VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                          sizeof(VkDrawIndirectCommand)),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,
                           *device_,
                           std::vector({graphics_queue->family_index()}),
                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                          VERTEX_BUFFER_FIRST_SIZE),
-                  indirect_buffer_(
-                          vulkan::BufferMemoryType::HOST_VISIBLE,
-                          *device_,
-                          {graphics_queue->family_index()},
-                          VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                          sizeof(VkDrawIndirectCommand))
+                          VERTEX_BUFFER_FIRST_SIZE)
         {
                 set_color(color);
         }
