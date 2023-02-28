@@ -44,15 +44,13 @@ ImageProcess::ImageProcess(
 {
         convex_hull_ = gpu::convex_hull::create_view(device, graphics_command_pool, graphics_queue, sample_shading);
 
-        pencil_sketch_ = gpu::pencil_sketch::create_view(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+        pencil_sketch_ = gpu::pencil_sketch::create_view(device, graphics_command_pool, graphics_queue);
 
         dft_ = gpu::dft::create_view(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue);
 
         optical_flow_ = gpu::optical_flow::create_view(
-                device, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
-                transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue);
 
         resolve_semaphores_.resize(image_count);
         for (std::array<vulkan::handle::Semaphore, 2>& semaphores : resolve_semaphores_)

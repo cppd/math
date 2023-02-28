@@ -433,8 +433,6 @@ public:
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,
                           &device_graphics_.graphics_compute_queue(0),
-                          &transfer_command_pool_,
-                          &device_graphics_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
                           DEFAULT_TEXT_COLOR)),
                   image_process_(

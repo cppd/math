@@ -199,8 +199,7 @@ public:
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
-             const vulkan::Queue* const transfer_queue,
-             const bool /*sample_shading*/)
+             const vulkan::Queue* const transfer_queue)
                 : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
@@ -241,10 +240,9 @@ std::unique_ptr<View> create_view(
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
-        const vulkan::Queue* const transfer_queue,
-        const bool sample_shading)
+        const vulkan::Queue* const transfer_queue)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue);
 }
 }

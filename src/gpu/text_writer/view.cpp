@@ -221,8 +221,6 @@ public:
         Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
-             const vulkan::CommandPool* const /*transfer_command_pool*/,
-             const vulkan::Queue* const /*transfer_queue*/,
              const bool sample_shading,
              const color::Color& color)
                 : sample_shading_(sample_shading),
@@ -269,13 +267,9 @@ std::unique_ptr<View> create_view(
         const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
-        const vulkan::CommandPool* const transfer_command_pool,
-        const vulkan::Queue* const transfer_queue,
         const bool sample_shading,
         const color::Color& color)
 {
-        return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
-                color);
+        return std::make_unique<Impl>(device, graphics_command_pool, graphics_queue, sample_shading, color);
 }
 }
