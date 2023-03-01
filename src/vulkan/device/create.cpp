@@ -136,21 +136,21 @@ handle::Device create_device(
                 ++i;
         }
 
-        VkDeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        VkDeviceCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-        create_info.queueCreateInfoCount = queue_create_infos.size();
-        create_info.pQueueCreateInfos = queue_create_infos.data();
+        info.queueCreateInfoCount = queue_create_infos.size();
+        info.pQueueCreateInfos = queue_create_infos.data();
 
         const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
-        create_info.enabledExtensionCount = extensions.size();
-        create_info.ppEnabledExtensionNames = extensions.data();
+        info.enabledExtensionCount = extensions.size();
+        info.ppEnabledExtensionNames = extensions.data();
 
         VkPhysicalDeviceFeatures2 features_2;
         PhysicalDeviceFeatures features;
         make_physical_device_features(required_features, &features_2, &features);
-        create_info.pNext = &features_2;
+        info.pNext = &features_2;
 
-        return {physical_device->device(), create_info};
+        return {physical_device->device(), info};
 }
 }

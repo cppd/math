@@ -29,31 +29,31 @@ namespace
 {
 VkPipelineVertexInputStateCreateInfo create_vertex_input_state_info(const GraphicsPipelineCreateInfo& info)
 {
-        VkPipelineVertexInputStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        VkPipelineVertexInputStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
         if (!info.binding_descriptions.empty())
         {
-                create_info.vertexBindingDescriptionCount = info.binding_descriptions.size();
-                create_info.pVertexBindingDescriptions = info.binding_descriptions.data();
+                res.vertexBindingDescriptionCount = info.binding_descriptions.size();
+                res.pVertexBindingDescriptions = info.binding_descriptions.data();
         }
 
         if (!info.attribute_descriptions.empty())
         {
-                create_info.vertexAttributeDescriptionCount = info.attribute_descriptions.size();
-                create_info.pVertexAttributeDescriptions = info.attribute_descriptions.data();
+                res.vertexAttributeDescriptionCount = info.attribute_descriptions.size();
+                res.pVertexAttributeDescriptions = info.attribute_descriptions.data();
         }
 
-        return create_info;
+        return res;
 }
 
 VkPipelineInputAssemblyStateCreateInfo create_input_assembly_state_info(const GraphicsPipelineCreateInfo& info)
 {
-        VkPipelineInputAssemblyStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        create_info.topology = info.primitive_topology.value();
-        create_info.primitiveRestartEnable = VK_FALSE;
-        return create_info;
+        VkPipelineInputAssemblyStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        res.topology = info.primitive_topology.value();
+        res.primitiveRestartEnable = VK_FALSE;
+        return res;
 }
 
 VkViewport create_viewport(const GraphicsPipelineCreateInfo& info)
@@ -84,55 +84,55 @@ VkPipelineViewportStateCreateInfo create_viewport_state_info(
         const VkViewport* const viewport,
         const VkRect2D* const scissor)
 {
-        VkPipelineViewportStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        create_info.viewportCount = 1;
-        create_info.pViewports = viewport;
-        create_info.scissorCount = 1;
-        create_info.pScissors = scissor;
-        return create_info;
+        VkPipelineViewportStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        res.viewportCount = 1;
+        res.pViewports = viewport;
+        res.scissorCount = 1;
+        res.pScissors = scissor;
+        return res;
 }
 
 VkPipelineRasterizationStateCreateInfo create_rasterization_state_info(const GraphicsPipelineCreateInfo& info)
 {
-        VkPipelineRasterizationStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        create_info.depthClampEnable = VK_FALSE;
-        create_info.rasterizerDiscardEnable = VK_FALSE;
-        create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        create_info.lineWidth = 1;
-        create_info.cullMode = VK_CULL_MODE_NONE;
-        create_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
-        create_info.depthBiasEnable = info.depth_bias ? VK_TRUE : VK_FALSE;
-        // create_info.depthBiasConstantFactor = 0;
-        // create_info.depthBiasClamp = 0;
-        // create_info.depthBiasSlopeFactor = 0;
-        return create_info;
+        VkPipelineRasterizationStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        res.depthClampEnable = VK_FALSE;
+        res.rasterizerDiscardEnable = VK_FALSE;
+        res.polygonMode = VK_POLYGON_MODE_FILL;
+        res.lineWidth = 1;
+        res.cullMode = VK_CULL_MODE_NONE;
+        res.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        res.depthBiasEnable = info.depth_bias ? VK_TRUE : VK_FALSE;
+        // res.depthBiasConstantFactor = 0;
+        // res.depthBiasClamp = 0;
+        // res.depthBiasSlopeFactor = 0;
+        return res;
 }
 
 VkPipelineMultisampleStateCreateInfo create_multisample_state_info(const GraphicsPipelineCreateInfo& info)
 {
-        VkPipelineMultisampleStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        create_info.rasterizationSamples = info.sample_count.value();
+        VkPipelineMultisampleStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        res.rasterizationSamples = info.sample_count.value();
         if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
         {
                 if (!info.device->features().features_10.sampleRateShading)
                 {
                         error("Sample shading required but not supported");
                 }
-                create_info.sampleShadingEnable = VK_TRUE;
-                create_info.minSampleShading = 1;
+                res.sampleShadingEnable = VK_TRUE;
+                res.minSampleShading = 1;
                 LOG("Sample shading enabled");
         }
         else
         {
-                create_info.sampleShadingEnable = VK_FALSE;
+                res.sampleShadingEnable = VK_FALSE;
         }
-        // create_info.pSampleMask = nullptr;
-        // create_info.alphaToCoverageEnable = VK_FALSE;
-        // create_info.alphaToOneEnable = VK_FALSE;
-        return create_info;
+        // res.pSampleMask = nullptr;
+        // res.alphaToCoverageEnable = VK_FALSE;
+        // res.alphaToOneEnable = VK_FALSE;
+        return res;
 }
 
 std::vector<VkPipelineColorBlendAttachmentState> create_color_blend_attachment_states(
@@ -171,17 +171,17 @@ VkPipelineColorBlendStateCreateInfo create_color_blend_state_info(
         const uint32_t attachment_count,
         const VkPipelineColorBlendAttachmentState* const attachments)
 {
-        VkPipelineColorBlendStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        create_info.logicOpEnable = VK_FALSE;
-        // create_info.logicOp = VK_LOGIC_OP_COPY;
-        create_info.attachmentCount = attachment_count;
-        create_info.pAttachments = attachments;
-        // create_info.blendConstants[0] = 0;
-        // create_info.blendConstants[1] = 0;
-        // create_info.blendConstants[2] = 0;
-        // create_info.blendConstants[3] = 0;
-        return create_info;
+        VkPipelineColorBlendStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        res.logicOpEnable = VK_FALSE;
+        // res.logicOp = VK_LOGIC_OP_COPY;
+        res.attachmentCount = attachment_count;
+        res.pAttachments = attachments;
+        // res.blendConstants[0] = 0;
+        // res.blendConstants[1] = 0;
+        // res.blendConstants[2] = 0;
+        // res.blendConstants[3] = 0;
+        return res;
 }
 
 class DynamicStates final
@@ -216,18 +216,18 @@ public:
 
 VkPipelineDepthStencilStateCreateInfo create_depth_stencil_state_info(const GraphicsPipelineCreateInfo& info)
 {
-        VkPipelineDepthStencilStateCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        create_info.depthTestEnable = info.depth_test ? VK_TRUE : VK_FALSE;
-        create_info.depthWriteEnable = info.depth_write ? VK_TRUE : VK_FALSE;
-        create_info.depthCompareOp = VK_COMPARE_OP_LESS;
-        create_info.depthBoundsTestEnable = VK_FALSE;
-        // create_info.minDepthBounds = 0;
-        // create_info.maxDepthBounds = 1;
-        create_info.stencilTestEnable = VK_FALSE;
-        // create_info.front = {};
-        // create_info.back = {};
-        return create_info;
+        VkPipelineDepthStencilStateCreateInfo res = {};
+        res.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        res.depthTestEnable = info.depth_test ? VK_TRUE : VK_FALSE;
+        res.depthWriteEnable = info.depth_write ? VK_TRUE : VK_FALSE;
+        res.depthCompareOp = VK_COMPARE_OP_LESS;
+        res.depthBoundsTestEnable = VK_FALSE;
+        // res.minDepthBounds = 0;
+        // res.maxDepthBounds = 1;
+        res.stencilTestEnable = VK_FALSE;
+        // res.front = {};
+        // res.back = {};
+        return res;
 }
 }
 

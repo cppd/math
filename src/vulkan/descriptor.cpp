@@ -50,14 +50,14 @@ handle::DescriptorPool create_descriptor_pool(
                 error("Empty descriptor pool sizes");
         }
 
-        VkDescriptorPoolCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        create_info.poolSizeCount = pool_sizes.size();
-        create_info.pPoolSizes = pool_sizes.data();
-        create_info.maxSets = max_sets;
-        create_info.flags = flags;
+        VkDescriptorPoolCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        info.poolSizeCount = pool_sizes.size();
+        info.pPoolSizes = pool_sizes.data();
+        info.maxSets = max_sets;
+        info.flags = flags;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 void write_descriptor_set(
@@ -123,12 +123,12 @@ handle::DescriptorSetLayout create_descriptor_set_layout(
         const VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-        VkDescriptorSetLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        create_info.bindingCount = bindings.size();
-        create_info.pBindings = bindings.data();
+        VkDescriptorSetLayoutCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        info.bindingCount = bindings.size();
+        info.pBindings = bindings.data();
 
-        return {device, create_info};
+        return {device, info};
 }
 
 Descriptors::Descriptors(

@@ -160,34 +160,34 @@ handle::SwapchainKHR create_swapchain_khr(
 
         sort_and_unique(&family_indices);
 
-        VkSwapchainCreateInfoKHR create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        create_info.surface = surface;
-        create_info.minImageCount = image_count;
-        create_info.imageFormat = surface_format.format;
-        create_info.imageColorSpace = surface_format.colorSpace;
-        create_info.imageExtent = extent;
-        create_info.imageArrayLayers = 1;
-        create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        VkSwapchainCreateInfoKHR info = {};
+        info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        info.surface = surface;
+        info.minImageCount = image_count;
+        info.imageFormat = surface_format.format;
+        info.imageColorSpace = surface_format.colorSpace;
+        info.imageExtent = extent;
+        info.imageArrayLayers = 1;
+        info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         if (family_indices.size() > 1)
         {
-                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+                info.queueFamilyIndexCount = family_indices.size();
+                info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
-                create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        create_info.preTransform = transform;
-        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        create_info.presentMode = present_mode;
-        create_info.clipped = VK_TRUE;
-        create_info.oldSwapchain = VK_NULL_HANDLE;
+        info.preTransform = transform;
+        info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        info.presentMode = present_mode;
+        info.clipped = VK_TRUE;
+        info.oldSwapchain = VK_NULL_HANDLE;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 handle::ImageView create_image_view(
@@ -196,22 +196,22 @@ handle::ImageView create_image_view(
         const VkFormat format,
         const VkImageAspectFlags aspect_flags)
 {
-        VkImageViewCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        create_info.image = image;
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        create_info.format = format;
-        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.subresourceRange.aspectMask = aspect_flags;
-        create_info.subresourceRange.baseMipLevel = 0;
-        create_info.subresourceRange.levelCount = 1;
-        create_info.subresourceRange.baseArrayLayer = 0;
-        create_info.subresourceRange.layerCount = 1;
+        VkImageViewCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        info.image = image;
+        info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        info.format = format;
+        info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.subresourceRange.aspectMask = aspect_flags;
+        info.subresourceRange.baseMipLevel = 0;
+        info.subresourceRange.levelCount = 1;
+        info.subresourceRange.baseArrayLayer = 0;
+        info.subresourceRange.layerCount = 1;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 std::string extent_to_string(const VkExtent2D extent)

@@ -86,6 +86,15 @@ void check_extension_support(const std::unordered_set<std::string>& required_ext
                 }
         }
 }
+
+std::string instance_info(const std::vector<const char*>& extensions, const std::vector<const char*>& layers)
+{
+        std::string s;
+        s = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
+        s += '\n';
+        s += "Vulkan instance layers: {" + strings_to_sorted_string(layers, ", ") + "}";
+        return s;
+}
 }
 
 handle::Instance create_instance(
@@ -98,6 +107,11 @@ handle::Instance create_instance(
         check_layer_support(required_layers);
         check_extension_support(required_extensions);
 
+        const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
+        const std::vector<const char*> layers = strings_to_char_pointers(required_layers);
+
+        LOG(instance_info(extensions, layers));
+
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         app_info.pApplicationName = settings::APPLICATION_NAME;
@@ -109,21 +123,10 @@ handle::Instance create_instance(
         VkInstanceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         create_info.pApplicationInfo = &app_info;
-
-        const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
-        const std::vector<const char*> layers = strings_to_char_pointers(required_layers);
-
-        std::string info;
-
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
-        info = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions, ", ") + "}";
-
         create_info.enabledLayerCount = layers.size();
         create_info.ppEnabledLayerNames = layers.data();
-        info += "\nVulkan instance layers: {" + strings_to_sorted_string(layers, ", ") + "}";
-
-        LOG(info);
 
         return handle::Instance(create_info);
 }

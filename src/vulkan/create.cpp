@@ -33,19 +33,19 @@ handle::PipelineLayout create_pipeline_layout(
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
         const std::vector<VkPushConstantRange>* const push_constant_ranges)
 {
-        VkPipelineLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        VkPipelineLayoutCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-        create_info.setLayoutCount = descriptor_set_layouts.size();
-        create_info.pSetLayouts = descriptor_set_layouts.data();
+        info.setLayoutCount = descriptor_set_layouts.size();
+        info.pSetLayouts = descriptor_set_layouts.data();
 
         if (push_constant_ranges)
         {
-                create_info.pushConstantRangeCount = push_constant_ranges->size();
-                create_info.pPushConstantRanges = push_constant_ranges->data();
+                info.pushConstantRangeCount = push_constant_ranges->size();
+                info.pPushConstantRanges = push_constant_ranges->data();
         }
 
-        return {device, create_info};
+        return {device, info};
 }
 
 handle::PipelineLayout create_pipeline_layout(
@@ -134,21 +134,21 @@ std::vector<handle::Fence> create_fences(const VkDevice device, const int count,
 
 CommandPool create_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
 {
-        VkCommandPoolCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        create_info.queueFamilyIndex = queue_family_index;
+        VkCommandPoolCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        info.queueFamilyIndex = queue_family_index;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 CommandPool create_transient_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
 {
-        VkCommandPoolCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        create_info.queueFamilyIndex = queue_family_index;
-        create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        VkCommandPoolCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        info.queueFamilyIndex = queue_family_index;
+        info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 handle::Framebuffer create_framebuffer(
@@ -158,16 +158,16 @@ handle::Framebuffer create_framebuffer(
         const std::uint32_t height,
         const std::vector<VkImageView>& attachments)
 {
-        VkFramebufferCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        create_info.renderPass = render_pass;
-        create_info.attachmentCount = attachments.size();
-        create_info.pAttachments = attachments.data();
-        create_info.width = width;
-        create_info.height = height;
-        create_info.layers = 1;
+        VkFramebufferCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info.renderPass = render_pass;
+        info.attachmentCount = attachments.size();
+        info.pAttachments = attachments.data();
+        info.width = width;
+        info.height = height;
+        info.layers = 1;
 
-        return {device, create_info};
+        return {device, info};
 }
 
 VkClearValue create_color_clear_value(const VkFormat format, const Vector<4, float>& rgba)

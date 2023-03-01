@@ -24,15 +24,15 @@ namespace ns::gpu::renderer
 {
 vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device, const bool anisotropy)
 {
-        VkSamplerCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        VkSamplerCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 
-        create_info.magFilter = VK_FILTER_LINEAR;
-        create_info.minFilter = VK_FILTER_LINEAR;
+        info.magFilter = VK_FILTER_LINEAR;
+        info.minFilter = VK_FILTER_LINEAR;
 
-        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
         if (anisotropy)
         {
@@ -40,50 +40,50 @@ vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device
                 {
                         error("Sampler anisotropy required but not supported");
                 }
-                create_info.anisotropyEnable = VK_TRUE;
-                create_info.maxAnisotropy = 16;
+                info.anisotropyEnable = VK_TRUE;
+                info.maxAnisotropy = 16;
                 LOG("Anisotropy enabled");
         }
         else
         {
-                create_info.anisotropyEnable = VK_FALSE;
+                info.anisotropyEnable = VK_FALSE;
         }
 
-        create_info.unnormalizedCoordinates = VK_FALSE;
+        info.unnormalizedCoordinates = VK_FALSE;
 
-        create_info.compareEnable = VK_FALSE;
+        info.compareEnable = VK_FALSE;
 
-        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        create_info.mipLodBias = 0;
-        create_info.minLod = 0;
-        create_info.maxLod = 0;
+        info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        info.mipLodBias = 0;
+        info.minLod = 0;
+        info.maxLod = 0;
 
-        return {device.handle(), create_info};
+        return {device.handle(), info};
 }
 
 vulkan::handle::Sampler create_mesh_shadow_sampler(const VkDevice device)
 {
-        VkSamplerCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        VkSamplerCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 
-        create_info.magFilter = VK_FILTER_LINEAR;
-        create_info.minFilter = VK_FILTER_LINEAR;
+        info.magFilter = VK_FILTER_LINEAR;
+        info.minFilter = VK_FILTER_LINEAR;
 
-        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
-        create_info.anisotropyEnable = VK_FALSE;
+        info.anisotropyEnable = VK_FALSE;
 
-        create_info.unnormalizedCoordinates = VK_FALSE;
+        info.unnormalizedCoordinates = VK_FALSE;
 
-        create_info.compareEnable = VK_FALSE;
+        info.compareEnable = VK_FALSE;
 
-        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        create_info.mipLodBias = 0;
-        create_info.minLod = 0;
-        create_info.maxLod = 0;
+        info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        info.mipLodBias = 0;
+        info.minLod = 0;
+        info.maxLod = 0;
 
-        return {device, create_info};
+        return {device, info};
 }
 }

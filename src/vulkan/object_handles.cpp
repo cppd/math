@@ -178,11 +178,11 @@ ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uin
                 error("Shader code size must be greater than 0");
         }
 
-        VkShaderModuleCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        create_info.codeSize = code.size_bytes();
-        create_info.pCode = code.data();
-        VULKAN_CHECK(vkCreateShaderModule(device, &create_info, nullptr, &shader_module_));
+        VkShaderModuleCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        info.codeSize = code.size_bytes();
+        info.pCode = code.data();
+        VULKAN_CHECK(vkCreateShaderModule(device, &info, nullptr, &shader_module_));
 }
 
 //
@@ -352,9 +352,9 @@ void Semaphore::move(Semaphore* const from) noexcept
 Semaphore::Semaphore(const VkDevice device)
         : device_(device)
 {
-        VkSemaphoreCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        VULKAN_CHECK(vkCreateSemaphore(device, &create_info, nullptr, &semaphore_));
+        VkSemaphoreCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        VULKAN_CHECK(vkCreateSemaphore(device, &info, nullptr, &semaphore_));
 }
 
 //
@@ -379,13 +379,13 @@ void Fence::move(Fence* const from) noexcept
 Fence::Fence(const VkDevice device, const bool signaled)
         : device_(device)
 {
-        VkFenceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkFenceCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         if (signaled)
         {
-                create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+                info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         }
-        VULKAN_CHECK(vkCreateFence(device, &create_info, nullptr, &fence_));
+        VULKAN_CHECK(vkCreateFence(device, &info, nullptr, &fence_));
 }
 
 //

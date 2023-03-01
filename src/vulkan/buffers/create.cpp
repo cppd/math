@@ -104,24 +104,24 @@ Buffer create_buffer(
 
         sort_and_unique(&family_indices);
 
-        VkBufferCreateInfo create_info = {};
+        VkBufferCreateInfo info = {};
 
-        create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        create_info.size = size;
-        create_info.usage = usage;
+        info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        info.size = size;
+        info.usage = usage;
 
         if (family_indices.size() > 1)
         {
-                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                info.queueFamilyIndexCount = family_indices.size();
+                info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
-                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return {device, create_info};
+        return {device, info};
 }
 
 Image create_image(
@@ -144,72 +144,71 @@ Image create_image(
 
         sort_and_unique(&family_indices);
 
-        VkImageCreateInfo create_info = {};
+        VkImageCreateInfo info = {};
 
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        create_info.imageType = type;
-        create_info.extent = extent;
-        create_info.mipLevels = 1;
-        create_info.arrayLayers = 1;
-        create_info.format = format;
-        create_info.tiling = tiling;
-        create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        create_info.usage = usage;
-        create_info.samples = samples;
-        // create_info.flags = 0;
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        info.imageType = type;
+        info.extent = extent;
+        info.mipLevels = 1;
+        info.arrayLayers = 1;
+        info.format = format;
+        info.tiling = tiling;
+        info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        info.usage = usage;
+        info.samples = samples;
 
         if (family_indices.size() > 1)
         {
-                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                info.queueFamilyIndexCount = family_indices.size();
+                info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
-                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return {device, create_info};
+        return {device, info};
 }
 
 ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_flags)
 {
-        VkImageViewCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        VkImageViewCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 
-        create_info.image = image.handle();
+        info.image = image.handle();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (image.type())
         {
         case VK_IMAGE_TYPE_1D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
+                info.viewType = VK_IMAGE_VIEW_TYPE_1D;
                 break;
         case VK_IMAGE_TYPE_2D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                info.viewType = VK_IMAGE_VIEW_TYPE_2D;
                 break;
         case VK_IMAGE_TYPE_3D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+                info.viewType = VK_IMAGE_VIEW_TYPE_3D;
                 break;
         default:
                 error("Unknown image type " + image_type_to_string(image.type()));
         }
 #pragma GCC diagnostic pop
 
-        create_info.format = image.format();
+        info.format = image.format();
 
-        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-        create_info.subresourceRange.aspectMask = aspect_flags;
-        create_info.subresourceRange.baseMipLevel = 0;
-        create_info.subresourceRange.levelCount = 1;
-        create_info.subresourceRange.baseArrayLayer = 0;
-        create_info.subresourceRange.layerCount = 1;
+        info.subresourceRange.aspectMask = aspect_flags;
+        info.subresourceRange.baseMipLevel = 0;
+        info.subresourceRange.levelCount = 1;
+        info.subresourceRange.baseArrayLayer = 0;
+        info.subresourceRange.layerCount = 1;
 
-        return {image, create_info};
+        return {image, info};
 }
 }
