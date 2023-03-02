@@ -38,13 +38,13 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
-                        v.multiply_add(vectors[i], rnd);
+                        res.multiply_add(vectors[i], rnd);
                 }
-                return v;
+                return res;
         };
 
         std::vector<Vector<N, T>> res;
@@ -69,13 +69,13 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
-                        v[i] += diagonal[i] * rnd;
+                        res[i] += diagonal[i] * rnd;
                 }
-                return v;
+                return res;
         };
 
         std::vector<Vector<N, T>> res;
@@ -98,12 +98,12 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        v.multiply_add(vectors[i], urd(engine));
+                        res.multiply_add(vectors[i], urd(engine));
                 }
-                return v;
+                return res;
         };
 
         std::vector<Vector<N, T>> res;
@@ -126,12 +126,12 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        v[i] += diagonal[i] * urd(engine);
+                        res[i] += diagonal[i] * urd(engine);
                 }
-                return v;
+                return res;
         };
 
         std::vector<Vector<N, T>> res;
@@ -155,25 +155,25 @@ std::vector<Vector<N, T>> parallelotope_cover_points(
 
         const auto cover_point = [&]()
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        v.multiply_add(vectors[i], cover_urd(engine));
+                        res.multiply_add(vectors[i], cover_urd(engine));
                 }
-                return v;
+                return res;
         };
 
         const auto plane_point = [&](const std::size_t n)
         {
-                Vector<N, T> v = org;
+                Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         if (i != n)
                         {
-                                v.multiply_add(vectors[i], len_urd(engine));
+                                res.multiply_add(vectors[i], len_urd(engine));
                         }
                 }
-                return v;
+                return res;
         };
 
         std::vector<Vector<N, T>> res;

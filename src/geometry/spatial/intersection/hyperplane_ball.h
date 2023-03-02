@@ -63,12 +63,12 @@ std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& b
 {
         const T radius = std::sqrt(ball.radius_squared());
 
-        std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(ball.normal());
-        for (Vector<N, T>& v : vectors)
+        std::array<Vector<N, T>, N - 1> res = numerical::orthogonal_complement_of_unit_vector(ball.normal());
+        for (Vector<N, T>& v : res)
         {
                 v *= radius;
         }
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>

@@ -32,33 +32,33 @@ std::vector<std::vector<int>> find_delaunay_object_facets(
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets)
 {
-        std::vector<std::vector<int>> facets;
-        facets.resize(delaunay_objects.size());
+        std::vector<std::vector<int>> res;
+        res.resize(delaunay_objects.size());
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
-                facets[delaunay_facets[i].delaunay(0)].push_back(i);
+                res[delaunay_facets[i].delaunay(0)].push_back(i);
                 if (delaunay_facets[i].one_sided())
                 {
                         continue;
                 }
-                facets[delaunay_facets[i].delaunay(1)].push_back(i);
+                res[delaunay_facets[i].delaunay(1)].push_back(i);
         }
-        return facets;
+        return res;
 }
 
 template <std::size_t N>
 std::stack<int> find_external_facets(const std::vector<core::DelaunayFacet<N>>& delaunay_facets)
 {
-        std::stack<int> facets;
+        std::stack<int> res;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if (!delaunay_facets[i].one_sided())
                 {
                         continue;
                 }
-                facets.push(i);
+                res.push(i);
         }
-        return facets;
+        return res;
 }
 
 template <std::size_t N>

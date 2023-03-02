@@ -173,7 +173,7 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
 {
         const Clock::time_point start_time = Clock::now();
 
-        std::vector<ConvexHullSimplex<N>> facets = compute_convex_hull(points, progress, write_log);
+        std::vector<ConvexHullSimplex<N>> res = compute_convex_hull(points, progress, write_log);
 
         const double time = duration_from(start_time);
 
@@ -182,12 +182,12 @@ std::vector<ConvexHullSimplex<N>> create_convex_hull(
         if (write_info)
         {
                 s += ", source points = " + to_string_digit_groups(points.size());
-                s += ", points = " + to_string_digit_groups(point_count(facets));
-                s += ", facets = " + to_string_digit_groups(facets.size());
+                s += ", points = " + to_string_digit_groups(point_count(res));
+                s += ", facets = " + to_string_digit_groups(res.size());
         }
         LOG(s);
 
-        return facets;
+        return res;
 }
 
 template <std::size_t N>

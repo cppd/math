@@ -190,12 +190,12 @@ template <std::size_t N, typename DataType, typename ComputeType>
         const Vector<N, DataType>& from = points[from_index];
         const Vector<N, DataType>& to = points[to_index];
 
-        ComputeType d = v[0] * (to[0] - from[0]);
+        ComputeType res = v[0] * (to[0] - from[0]);
         for (std::size_t i = 1; i < N; ++i)
         {
-                d += v[i] * (to[i] - from[i]);
+                res += v[i] * (to[i] - from[i]);
         }
-        return d;
+        return res;
 }
 
 template <std::size_t N, typename DataType>

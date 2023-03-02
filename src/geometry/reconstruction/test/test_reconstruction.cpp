@@ -55,12 +55,12 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
         {
                 return sampling::uniform_on_sphere<N, T>(engine);
         }
-        Vector<N, T> v;
+        Vector<N, T> res;
         do
         {
-                v = sampling::uniform_on_sphere<N, T>(engine);
-        } while (last_axis(v) < LAST_AXIS_VALUE);
-        return v;
+                res = sampling::uniform_on_sphere<N, T>(engine);
+        } while (last_axis(res) < LAST_AXIS_VALUE);
+        return res;
 }
 
 template <std::size_t N>
@@ -68,9 +68,9 @@ std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_coun
 {
         PCG engine(point_count);
 
-        std::vector<Vector<N, float>> points;
-
-        while (points.size() < point_count)
+        std::vector<Vector<N, float>> res;
+        res.reserve(point_count);
+        for (unsigned i = 0; i < point_count; ++i)
         {
                 Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 const double cos = last_axis(v);
@@ -78,10 +78,9 @@ std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_coun
                 {
                         v[N - 1] *= 1 - std::abs(0.5 * power<5>(cos));
                 }
-                points.push_back(to_vector<float>(v));
+                res.push_back(to_vector<float>(v));
         }
-
-        return points;
+        return res;
 }
 
 template <std::size_t N>
@@ -95,26 +94,22 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 
         const unsigned all_object_count = (1 + clone_count);
 
-        std::vector<Vector<N, float>> clones(points.begin(), points.end());
-
-        clones.reserve(points.size() * all_object_count);
-
+        std::vector<Vector<N, float>> res(points.begin(), points.end());
+        res.reserve(points.size() * all_object_count);
         for (unsigned clone = 0; clone < clone_count; ++clone)
         {
-                Vector<N, float> vec_shift;
+                Vector<N, float> shift;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        vec_shift[i] = ((1 << i) & clone) ? SHIFT : -SHIFT;
+                        shift[i] = ((1 << i) & clone) ? SHIFT : -SHIFT;
                 }
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        clones.push_back(points[i] + vec_shift);
+                        res.push_back(points[i] + shift);
                 }
         }
-
-        ASSERT(clones.size() == points.size() * all_object_count);
-
-        return clones;
+        ASSERT(res.size() == points.size() * all_object_count);
+        return res;
 }
 
 template <std::size_t N>

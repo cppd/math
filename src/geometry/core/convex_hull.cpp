@@ -81,8 +81,8 @@ std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
 
         const std::vector<Vector<N, S>> data = create_points<Vector<N, S>>(points.points());
 
-        std::vector<DelaunaySimplex<N>> simplices;
-        simplices.reserve(convex_hull_facets.size());
+        std::vector<DelaunaySimplex<N>> res;
+        res.reserve(convex_hull_facets.size());
 
         for (const auto& facet : convex_hull_facets)
         {
@@ -102,10 +102,10 @@ std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
                                             .template ortho_fp<double>();
                 }
 
-                simplices.emplace_back(points.restore_indices(vertices), orthos);
+                res.emplace_back(points.restore_indices(vertices), orthos);
         }
 
-        return simplices;
+        return res;
 }
 
 template <std::size_t N, typename Data, typename Compute>
@@ -113,13 +113,13 @@ std::vector<ConvexHullSimplex<N>> convex_hull_simplices(
         const ch::ConvexHullPoints<N>& points,
         const ch::FacetList<ch::Facet<N, Data, Compute>>& convex_hull_facets)
 {
-        std::vector<ConvexHullSimplex<N>> facets;
-        facets.reserve(convex_hull_facets.size());
+        std::vector<ConvexHullSimplex<N>> res;
+        res.reserve(convex_hull_facets.size());
         for (const auto& facet : convex_hull_facets)
         {
-                facets.emplace_back(points.restore_indices(facet.vertices()), facet.template ortho_fp<double>());
+                res.emplace_back(points.restore_indices(facet.vertices()), facet.template ortho_fp<double>());
         }
-        return facets;
+        return res;
 }
 
 template <std::size_t N>

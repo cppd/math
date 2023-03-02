@@ -47,9 +47,9 @@ struct Test final
         static constexpr Vector<4, T> MERGE_POINT{Vector<4, T>(5, -5, 5, -5)};
         static constexpr BoundingBox<4, T> BOX_MERGE_POINT = []
         {
-                BoundingBox<4, T> b(BOX);
-                b.merge(MERGE_POINT);
-                return b;
+                BoundingBox<4, T> res(BOX);
+                res.merge(MERGE_POINT);
+                return res;
         }();
         static_assert(BOX_MERGE_POINT.min() == Vector<4, T>(-5, -5, -7, -5));
         static_assert(BOX_MERGE_POINT.max() == Vector<4, T>(5, 6, 5, 8));
@@ -60,9 +60,9 @@ struct Test final
                 BoundingBox<4, T>(Vector<4, T>(4, -3, 2, -1), Vector<4, T>(-4, 5, -6, 7))};
         static constexpr BoundingBox<4, T> BOX_MERGE_BOX = []
         {
-                BoundingBox<4, T> b(BOX);
-                b.merge(MERGE_BOX);
-                return b;
+                BoundingBox<4, T> res(BOX);
+                res.merge(MERGE_BOX);
+                return res;
         }();
         static_assert(BOX_MERGE_BOX.min() == Vector<4, T>(-5, -3, -7, -4));
         static_assert(BOX_MERGE_BOX.max() == Vector<4, T>(4, 6, 3, 8));

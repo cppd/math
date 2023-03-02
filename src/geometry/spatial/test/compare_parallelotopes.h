@@ -70,14 +70,14 @@ Vector<N, T> random_direction(RandomEngine& engine)
         // equal probability is not needed
         while (true)
         {
-                Vector<N, T> direction;
+                Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
+                        res[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
                 }
-                if (direction.norm() > 0)
+                if (res.norm() > 0)
                 {
-                        return direction;
+                        return res;
                 }
         }
 }

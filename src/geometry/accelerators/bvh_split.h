@@ -241,15 +241,15 @@ auto partition(
         const CenterBounds<N, T>& center_bounds,
         const unsigned split_index)
 {
-        const auto p = std::partition(
+        const auto res = std::partition(
                 objects.begin(), objects.end(),
                 [&](const BvhObject<N, T>& object)
                 {
                         return center_bounds.bucket(object) <= split_index;
                 });
-        ASSERT(p != objects.begin());
-        ASSERT(p != objects.end());
-        return p;
+        ASSERT(res != objects.begin());
+        ASSERT(res != objects.end());
+        return res;
 }
 }
 

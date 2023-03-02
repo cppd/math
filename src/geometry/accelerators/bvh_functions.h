@@ -28,12 +28,12 @@ auto compute_bounds(const T& objects)
 {
         ASSERT(!objects.empty());
 
-        spatial::BoundingBox box{objects.front().bounds()};
+        spatial::BoundingBox res{objects.front().bounds()};
         for (auto iter = std::next(objects.begin()); iter != objects.end(); ++iter)
         {
-                box.merge(iter->bounds());
+                res.merge(iter->bounds());
         }
-        return box;
+        return res;
 }
 
 template <typename T>
@@ -41,11 +41,11 @@ auto compute_center_bounds(const T& objects)
 {
         ASSERT(!objects.empty());
 
-        spatial::BoundingBox box{objects.front().center()};
+        spatial::BoundingBox res{objects.front().center()};
         for (auto iter = std::next(objects.begin()); iter != objects.end(); ++iter)
         {
-                box.merge(iter->center());
+                res.merge(iter->center());
         }
-        return box;
+        return res;
 }
 }

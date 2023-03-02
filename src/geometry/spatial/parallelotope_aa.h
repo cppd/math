@@ -375,12 +375,12 @@ T ParallelotopeAA<N, T>::length() const
 template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::org() const
 {
-        Vector<N, T> v;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                v[i] = planes_[i].d1;
+                res[i] = planes_[i].d1;
         }
-        return v;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -398,23 +398,23 @@ std::array<Vector<N, T>, N> ParallelotopeAA<N, T>::vectors() const
 template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::min() const
 {
-        Vector<N, T> v;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                v[i] = planes_[i].d1;
+                res[i] = planes_[i].d1;
         }
-        return v;
+        return res;
 }
 
 template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::max() const
 {
-        Vector<N, T> v;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                v[i] = planes_[i].d2;
+                res[i] = planes_[i].d2;
         }
-        return v;
+        return res;
 }
 
 template <std::size_t N, typename T>

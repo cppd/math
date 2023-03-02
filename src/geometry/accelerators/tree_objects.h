@@ -42,12 +42,12 @@ class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parall
                         error("No objects for tree");
                 }
 
-                spatial::BoundingBox<N, T> box = objects[0].bounding_box();
+                spatial::BoundingBox<N, T> res = objects[0].bounding_box();
                 for (std::size_t i = 1; i < objects.size(); ++i)
                 {
-                        box.merge(objects[i].bounding_box());
+                        res.merge(objects[i].bounding_box());
                 }
-                return box;
+                return res;
         }
 
         spatial::BoundingBox<N, T> bounding_box_;
