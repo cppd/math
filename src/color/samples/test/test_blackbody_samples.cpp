@@ -115,6 +115,22 @@ void check_not_equal_to_a(const double t, const int min, const int max, const un
         error("Samples T " + to_string(t) + " are equal to A");
 }
 
+void compare(const double a, const double b)
+{
+        if (a == b)
+        {
+                return;
+        }
+
+        const double rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
+        if (rel <= 1e-4)
+        {
+                return;
+        }
+
+        error(to_string(a) + " and " + to_string(b) + " are not equal, relative error " + to_string(rel));
+}
+
 void test_blackbody_a()
 {
         constexpr int MIN = 300;
@@ -139,7 +155,7 @@ void test_blackbody()
         //       from*(10^-9), to*(10^-9)}], 20]/((to - from)*10^-9);
         // samples[t_] :=
         //   For[i = 300, i <= 900, i += 100,
-        //    Print[StringTemplate["check(s[``], ``);"][(i - 300)/100,
+        //    Print[StringTemplate["compare(s[``], ``);"][(i - 300)/100,
         //      sample[i, i + 100, t]]]];
         // samples[2500]
         // Print[]
@@ -161,53 +177,38 @@ void test_blackbody()
                 return samples;
         };
 
-        const auto check = [](const double a, const double b)
-        {
-                if (a == b)
-                {
-                        return;
-                }
-
-                const double rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
-                if (!(rel <= 1e-4))
-                {
-                        error(to_string(a) + " and " + to_string(b) + " are not equal, relative error "
-                              + to_string(rel));
-                }
-        };
-
         {
                 const std::vector<double> s = create_samples(2500);
 
-                check(s[0], 2219657013.027439273);
-                check(s[1], 19483839638.005915767);
-                check(s[2], 68854464152.855891984);
-                check(s[3], 146928790023.21432077);
-                check(s[4], 232952898577.32847785);
-                check(s[5], 307265555756.99660445);
-                check(s[6], 359901370617.50418974);
+                compare(s[0], 2219657013.027439273);
+                compare(s[1], 19483839638.005915767);
+                compare(s[2], 68854464152.855891984);
+                compare(s[3], 146928790023.21432077);
+                compare(s[4], 232952898577.32847785);
+                compare(s[5], 307265555756.99660445);
+                compare(s[6], 359901370617.50418974);
         }
         {
                 const std::vector<double> s = create_samples(5000);
 
-                check(s[0], 6078107017608.684778);
-                check(s[1], 10674670821992.012707);
-                check(s[2], 12620210738678.418189);
-                check(s[3], 12372781941105.233611);
-                check(s[4], 11050257294927.665769);
-                check(s[5], 9412601727248.6755504);
-                check(s[6], 7831446403960.3563022);
+                compare(s[0], 6078107017608.684778);
+                compare(s[1], 10674670821992.012707);
+                compare(s[2], 12620210738678.418189);
+                compare(s[3], 12372781941105.233611);
+                compare(s[4], 11050257294927.665769);
+                compare(s[5], 9412601727248.6755504);
+                compare(s[6], 7831446403960.3563022);
         }
         {
                 const std::vector<double> s = create_samples(10000);
 
-                check(s[0], 374768627776526.39008);
-                check(s[1], 275904770099344.50964);
-                check(s[2], 187828065206941.95844);
-                check(s[3], 126860939212006.91784);
-                check(s[4], 86954109703749.831053);
-                check(s[5], 60896183490731.818712);
-                check(s[6], 43620954692038.648322);
+                compare(s[0], 374768627776526.39008);
+                compare(s[1], 275904770099344.50964);
+                compare(s[2], 187828065206941.95844);
+                compare(s[3], 126860939212006.91784);
+                compare(s[4], 86954109703749.831053);
+                compare(s[5], 60896183490731.818712);
+                compare(s[6], 43620954692038.648322);
         }
 }
 
