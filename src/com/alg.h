@@ -111,13 +111,13 @@ template <typename Result, typename Data>
                 error("Empty container for add all");
         }
 
-        Result value = data[0];
+        Result res = data[0];
         for (std::size_t i = 1; i < data.size(); ++i)
         {
-                value += data[i];
+                res += data[i];
         }
 
-        return value;
+        return res;
 }
 
 // template <typename T1, typename T2>

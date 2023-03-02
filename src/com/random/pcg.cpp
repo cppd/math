@@ -25,16 +25,16 @@ namespace
 {
 std::array<std::uint32_t, 4> random_data()
 {
-        std::array<std::uint32_t, 4> data;
-        read_system_random(std::as_writable_bytes(std::span(data)));
-        return data;
+        std::array<std::uint32_t, 4> res;
+        read_system_random(std::as_writable_bytes(std::span(res)));
+        return res;
 }
 
 std::array<std::uint32_t, 4> random_data(std::seed_seq& seed_seq)
 {
-        std::array<std::uint32_t, 4> data;
-        seed_seq.generate(data.begin(), data.end());
-        return data;
+        std::array<std::uint32_t, 4> res;
+        seed_seq.generate(res.begin(), res.end());
+        return res;
 }
 
 template <typename T>
@@ -42,26 +42,26 @@ template <typename T>
 std::array<std::uint32_t, 4> random_data(const T value)
 {
         std::seed_seq seed_seq({value});
-        std::array<std::uint32_t, 4> data;
-        seed_seq.generate(data.begin(), data.end());
-        return data;
+        std::array<std::uint32_t, 4> res;
+        seed_seq.generate(res.begin(), res.end());
+        return res;
 }
 
 //
 
 std::uint64_t state(const std::uint32_t v1, const std::uint32_t v2)
 {
-        std::uint64_t state = v1;
-        state |= static_cast<std::uint64_t>(v2) << 32;
-        return state;
+        std::uint64_t res = v1;
+        res |= static_cast<std::uint64_t>(v2) << 32;
+        return res;
 }
 
 std::uint64_t increment(const std::uint32_t v1, const std::uint32_t v2)
 {
-        std::uint64_t increment = v1;
-        increment |= static_cast<std::uint64_t>(v2) << 32;
-        increment |= 1;
-        return increment;
+        std::uint64_t res = v1;
+        res |= static_cast<std::uint64_t>(v2) << 32;
+        res |= 1;
+        return res;
 }
 }
 

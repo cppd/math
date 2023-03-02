@@ -62,12 +62,12 @@ void test_min_max(RandomEngine& engine)
 {
         const std::vector<T> data = [&]
         {
-                std::vector<T> t(std::uniform_int_distribution<std::size_t>(1, 100)(engine));
-                for (T& v : t)
+                std::vector<T> res(std::uniform_int_distribution<std::size_t>(1, 100)(engine));
+                for (T& v : res)
                 {
                         v = std::uniform_real_distribution<T>(-10, 10)(engine);
                 }
-                return t;
+                return res;
         }();
 
         {
@@ -89,12 +89,12 @@ void test_min_max_performance(RandomEngine& engine)
 
         const std::vector<T> data = [&]
         {
-                std::vector<T> t(200'000'000);
-                for (T& v : t)
+                std::vector<T> res(200'000'000);
+                for (T& v : res)
                 {
                         v = std::uniform_real_distribution<T>(-10, 10)(engine);
                 }
-                return t;
+                return res;
         }();
 
         {
