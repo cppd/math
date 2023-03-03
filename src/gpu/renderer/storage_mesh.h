@@ -58,8 +58,7 @@ class StorageMesh final : private StorageEvents<MeshObject>
         {
                 MeshObject* const ptr = [&]
                 {
-                        MeshObject* const p = storage_.object(object.id());
-                        if (p)
+                        if (MeshObject* const p = storage_.object(object.id()))
                         {
                                 return p;
                         }

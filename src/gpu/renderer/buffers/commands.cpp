@@ -54,17 +54,17 @@ void commands_init_uint32_storage_image(
                 nullptr, 1, &barrier);
 
         {
-                const VkClearColorValue clear_color = [&]
+                const VkClearColorValue color = [&]
                 {
-                        VkClearColorValue color;
-                        color.uint32[0] = value;
-                        return color;
+                        VkClearColorValue res;
+                        res.uint32[0] = value;
+                        return res;
                 }();
 
                 const VkImageSubresourceRange range = barrier.subresourceRange;
 
                 vkCmdClearColorImage(
-                        command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1,
+                        command_buffer, image.image().handle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &color, 1,
                         &range);
         }
 

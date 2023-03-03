@@ -58,8 +58,7 @@ class StorageVolume final : private StorageEvents<VolumeObject>
         {
                 VolumeObject* const ptr = [&]
                 {
-                        VolumeObject* const p = storage_.object(object.id());
-                        if (p)
+                        if (VolumeObject* const p = storage_.object(object.id()))
                         {
                                 return p;
                         }

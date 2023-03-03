@@ -101,15 +101,16 @@ std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
         });
         constexpr std::array INDICES_1 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
 
-        std::vector<vulkan::BottomLevelAccelerationStructure> bottom_level;
+        std::vector<vulkan::BottomLevelAccelerationStructure> res;
+        res.reserve(2);
 
-        bottom_level.push_back(create_bottom_level_acceleration_structure(
+        res.push_back(create_bottom_level_acceleration_structure(
                 device, compute_command_pool, compute_queue, family_indices, VERTICES_0, INDICES_0, std::nullopt));
 
-        bottom_level.push_back(create_bottom_level_acceleration_structure(
+        res.push_back(create_bottom_level_acceleration_structure(
                 device, compute_command_pool, compute_queue, family_indices, VERTICES_1, INDICES_1, std::nullopt));
 
-        return bottom_level;
+        return res;
 }
 
 std::vector<VkTransformMatrixKHR> create_matrices()
@@ -121,10 +122,7 @@ std::vector<VkTransformMatrixKHR> create_matrices()
                 {{1, 0, 0, -0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}
         };
 
-        std::vector<VkTransformMatrixKHR> matrices;
-        matrices.push_back(MATRIX_0);
-        matrices.push_back(MATRIX_1);
-        return matrices;
+        return {MATRIX_0, MATRIX_1};
 }
 
 vulkan::TopLevelAccelerationStructure create_top_level(
@@ -137,6 +135,7 @@ vulkan::TopLevelAccelerationStructure create_top_level(
 {
         std::vector<std::uint64_t> references;
         references.reserve(bottom_level.size());
+
         for (const vulkan::BottomLevelAccelerationStructure& v : bottom_level)
         {
                 references.push_back(v.device_address());
