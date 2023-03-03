@@ -66,9 +66,9 @@ LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sam
 {
         if (!visible(point))
         {
-                LightSourceArriveSample<N, T, Color> sample;
-                sample.pdf = 0;
-                return sample;
+                LightSourceArriveSample<N, T, Color> res;
+                res.pdf = 0;
+                return res;
         }
 
         const Vector<N, T> direction = sample_location(engine) - point;
@@ -92,18 +92,18 @@ LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
 {
         if (!visible(point))
         {
-                LightSourceArriveInfo<T, Color> info;
-                info.pdf = 0;
-                return info;
+                LightSourceArriveInfo<T, Color> res;
+                res.pdf = 0;
+                return res;
         }
 
         const Ray<N, T> ray(point, l);
         const auto intersection = parallelotope_.intersect(ray);
         if (!intersection)
         {
-                LightSourceArriveInfo<T, Color> info;
-                info.pdf = 0;
-                return info;
+                LightSourceArriveInfo<T, Color> res;
+                res.pdf = 0;
+                return res;
         }
 
         const T cos = -dot(ray.dir(), parallelotope_.normal());
