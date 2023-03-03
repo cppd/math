@@ -51,14 +51,14 @@ float opacity_depth()
 
 OpacityFragment opacity_fragment()
 {
-        OpacityFragment f;
-        f.v_0 = imageLoad(opacity_0, ivec2(gl_FragCoord.xy), gl_SampleID).xy;
-        f.v_1 = g_opacity_fragment_v_1;
+        OpacityFragment res;
+        res.v_0 = imageLoad(opacity_0, ivec2(gl_FragCoord.xy), gl_SampleID).xy;
+        res.v_1 = g_opacity_fragment_v_1;
 #ifdef RAY_TRACING
-        f.v_2 = imageLoad(opacity_2, ivec2(gl_FragCoord.xy), gl_SampleID);
-        f.v_3 = imageLoad(opacity_3, ivec2(gl_FragCoord.xy), gl_SampleID).xy;
+        res.v_2 = imageLoad(opacity_2, ivec2(gl_FragCoord.xy), gl_SampleID);
+        res.v_3 = imageLoad(opacity_3, ivec2(gl_FragCoord.xy), gl_SampleID).xy;
 #endif
-        return f;
+        return res;
 }
 
 #else

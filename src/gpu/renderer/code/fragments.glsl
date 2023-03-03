@@ -157,50 +157,50 @@ struct Fragment
 
 Fragment to_fragment(const TransparencyFragment fragment)
 {
-        Fragment data;
+        Fragment res;
 
-        data.color = unpackUnorm4x8(fragment.color_rgba);
+        res.color = unpackUnorm4x8(fragment.color_rgba);
         {
                 const vec4 v = unpackUnorm4x8(fragment.metalness_roughness_ambient_edge_factor);
-                data.metalness = v[0];
-                data.roughness = v[1];
-                data.ambient = v[2];
-                data.edge_factor = v[3];
+                res.metalness = v[0];
+                res.roughness = v[1];
+                res.ambient = v[2];
+                res.edge_factor = v[3];
         }
-        data.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
-        data.depth = fragment.depth;
+        res.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
+        res.depth = fragment.depth;
 
 #ifdef RAY_TRACING
-        data.world_position = vec3(fragment.world_position_x, fragment.world_position_y, fragment.world_position_z);
-        data.geometric_normal =
+        res.world_position = vec3(fragment.world_position_x, fragment.world_position_y, fragment.world_position_z);
+        res.geometric_normal =
                 vec3(fragment.geometric_normal_x, fragment.geometric_normal_y, fragment.geometric_normal_z);
 #endif
 
-        return data;
+        return res;
 }
 
 Fragment to_fragment(const OpacityFragment fragment)
 {
-        Fragment data;
+        Fragment res;
 
-        data.color = unpackUnorm4x8(fragment.v_0[0]);
+        res.color = unpackUnorm4x8(fragment.v_0[0]);
         {
                 const vec4 v = unpackUnorm4x8(fragment.v_0[1]);
-                data.metalness = v[0];
-                data.roughness = v[1];
-                data.ambient = v[2];
-                data.edge_factor = v[3];
+                res.metalness = v[0];
+                res.roughness = v[1];
+                res.ambient = v[2];
+                res.edge_factor = v[3];
         }
-        data.n = fragment.v_1.xyz;
-        data.depth = fragment.v_1.w;
+        res.n = fragment.v_1.xyz;
+        res.depth = fragment.v_1.w;
 
 #ifdef RAY_TRACING
-        data.world_position = fragment.v_2.xyz;
-        data.geometric_normal.x = fragment.v_2.w;
-        data.geometric_normal.yz = fragment.v_3;
+        res.world_position = fragment.v_2.xyz;
+        res.geometric_normal.x = fragment.v_2.w;
+        res.geometric_normal.yz = fragment.v_3;
 #endif
 
-        return data;
+        return res;
 }
 
 #endif
