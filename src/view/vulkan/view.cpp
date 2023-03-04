@@ -395,6 +395,9 @@ class Impl final
                         message_warning("Unsupported sample count " + to_string(sample_count));
                         return;
                 }
+
+                device_graphics_.device().wait_idle();
+
                 delete_swapchain_buffers();
                 sample_count_flag_ = *flag;
                 create_swapchain_buffers();
