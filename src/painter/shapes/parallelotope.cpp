@@ -91,6 +91,11 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return false;
         }
 
+        [[nodiscard]] T alpha(const Vector<N, T>& /*point*/) const override
+        {
+                return obj_->alpha();
+        }
+
 public:
         explicit SurfaceImpl(const Parallelotope<N, T, Color>* const obj)
                 : obj_(obj)
@@ -190,6 +195,12 @@ template <std::size_t N, typename T, typename Color>
 const shading::Colors<Color>& Parallelotope<N, T, Color>::colors() const
 {
         return colors_;
+}
+
+template <std::size_t N, typename T, typename Color>
+T Parallelotope<N, T, Color>::alpha() const
+{
+        return alpha_;
 }
 
 #define TEMPLATE(N, T, C) template class Parallelotope<(N), T, C>;

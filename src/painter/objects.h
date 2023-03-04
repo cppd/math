@@ -89,6 +89,8 @@ public:
                 const Vector<N, T>& v) const = 0;
 
         [[nodiscard]] virtual bool is_specular(const Vector<N, T>& point) const = 0;
+
+        [[nodiscard]] virtual T alpha(const Vector<N, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -160,6 +162,11 @@ public:
         [[nodiscard]] decltype(auto) is_specular() const
         {
                 return surface_->is_specular(point_);
+        }
+
+        [[nodiscard]] decltype(auto) alpha() const
+        {
+                return surface_->alpha(point_);
         }
 };
 

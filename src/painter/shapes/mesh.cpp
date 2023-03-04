@@ -132,6 +132,15 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return false;
         }
 
+        [[nodiscard]] T alpha(const Vector<N, T>& /*point*/) const override
+        {
+                ASSERT(facet_->material() >= 0);
+
+                const mesh::Material<T, Color>& material = mesh_->materials[facet_->material()];
+
+                return material.alpha();
+        }
+
 public:
         SurfaceImpl(const mesh::Mesh<N, T, Color>* const mesh, const mesh::Facet<N, T>* const facet)
                 : mesh_(mesh),

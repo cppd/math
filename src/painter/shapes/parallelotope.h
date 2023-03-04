@@ -66,5 +66,7 @@ public:
         [[nodiscard]] T roughness() const;
 
         [[nodiscard]] const shading::Colors<Color>& colors() const;
+
+        [[nodiscard]] T alpha() const;
 };
 }
