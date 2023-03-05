@@ -27,11 +27,11 @@ Elsevier, 2017.
 #include "bpt.h"
 
 #include "connect.h"
-#include "surface_sample.h"
 #include "vertex.h"
 #include "vertex_pdf.h"
 
 #include "../com/normals.h"
+#include "../com/surface_sample.h"
 #include "../com/visibility.h"
 
 #include <src/color/color.h>
@@ -106,7 +106,7 @@ void walk(
                         return;
                 }
 
-                const auto sample = surface_sample(surface, -ray.dir(), normals, engine);
+                const auto sample = surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
                 if (!sample)
                 {
                         if (surface.light_source())

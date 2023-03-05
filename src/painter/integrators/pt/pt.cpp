@@ -26,9 +26,9 @@ Elsevier, 2017.
 #include "pt.h"
 
 #include "direct_lighting.h"
-#include "surface_sample.h"
 
 #include "../com/normals.h"
+#include "../com/surface_sample.h"
 #include "../com/visibility.h"
 
 #include <src/color/color.h>
