@@ -41,23 +41,25 @@ namespace ns::painter::integrators::pt
 {
 namespace
 {
-template <typename Color, typename RandomEngine>
-bool terminate(RandomEngine& engine, const int depth, Color* const beta)
+template <typename Color>
+bool terminate(const int depth, Color* const beta, PCG& engine)
 {
+        using T = typename Color::DataType;
+
         if (depth < 4)
         {
                 return false;
         }
 
-        const auto luminance = beta->luminance();
+        const T luminance = beta->luminance();
         if (!(luminance > 0))
         {
                 return true;
         }
 
-        using T = decltype(luminance);
         static constexpr T MIN = 0.05;
         static constexpr T MAX = 0.95;
+
         const T p = std::clamp(1 - luminance, MIN, MAX);
         if (std::bernoulli_distribution(p)(engine))
         {
@@ -121,7 +123,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
                 beta *= sample->beta;
 
-                if (terminate(engine, depth, &beta))
+                if (terminate(depth, &beta, engine))
                 {
                         break;
                 }
