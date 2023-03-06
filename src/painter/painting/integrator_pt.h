@@ -42,6 +42,12 @@ class IntegratorPT final
         const SamplerStratifiedJittered<N - 1, T> sampler_;
         Paintbrush<N - 1> paintbrush_;
 
+        [[nodiscard]] bool integrate(
+                unsigned thread_number,
+                PCG& engine,
+                std::vector<Vector<N - 1, T>>& sample_points,
+                std::vector<std::optional<Color>>& sample_colors);
+
 public:
         IntegratorPT(
                 const Scene<N, T, Color>* scene,

@@ -65,44 +65,55 @@ void IntegratorPT<FLAT_SHADING, N, T, Color>::next_pass()
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+bool IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(
+        const unsigned thread_number,
+        PCG& engine,
+        std::vector<Vector<N - 1, T>>& sample_points,
+        std::vector<std::optional<Color>>& sample_colors)
+{
+        MemoryArena::thread_local_instance().clear();
+
+        if (*stop_)
+        {
+                return false;
+        }
+
+        const std::optional<std::array<int, N - 1>> pixel = paintbrush_.next_pixel();
+        if (!pixel)
+        {
+                return false;
+        }
+
+        const ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
+
+        const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
+
+        sampler_.generate(engine, &sample_points);
+        sample_colors.resize(sample_points.size());
+
+        const long long ray_count = scene_->thread_ray_count();
+
+        for (std::size_t i = 0; i < sample_points.size(); ++i)
+        {
+                const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
+                sample_colors[i] = integrators::pt::pt<FLAT_SHADING>(*scene_, ray, engine);
+        }
+
+        pixels_->add_samples(*pixel, sample_points, sample_colors);
+        statistics_->pixel_done(scene_->thread_ray_count() - ray_count, sample_points.size());
+
+        return true;
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(const unsigned thread_number)
 {
         thread_local PCG engine;
         thread_local std::vector<Vector<N - 1, T>> sample_points;
         thread_local std::vector<std::optional<Color>> sample_colors;
 
-        while (true)
+        while (integrate(thread_number, engine, sample_points, sample_colors))
         {
-                MemoryArena::thread_local_instance().clear();
-
-                if (*stop_)
-                {
-                        return;
-                }
-
-                const std::optional<std::array<int, N - 1>> pixel = paintbrush_.next_pixel();
-                if (!pixel)
-                {
-                        return;
-                }
-
-                const ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
-
-                const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
-
-                sampler_.generate(engine, &sample_points);
-                sample_colors.resize(sample_points.size());
-
-                const long long ray_count = scene_->thread_ray_count();
-
-                for (std::size_t i = 0; i < sample_points.size(); ++i)
-                {
-                        const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = integrators::pt::pt<FLAT_SHADING>(*scene_, ray, engine);
-                }
-
-                pixels_->add_samples(*pixel, sample_points, sample_colors);
-                statistics_->pixel_done(scene_->thread_ray_count() - ray_count, sample_points.size());
         }
 }
 
