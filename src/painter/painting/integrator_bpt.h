@@ -46,6 +46,12 @@ class IntegratorBPT final
         const integrators::bpt::LightDistributionBase<N, T, Color> light_distribution_base_;
         std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions_;
 
+        [[nodiscard]] bool integrate(
+                unsigned thread_number,
+                PCG& engine,
+                std::vector<Vector<N - 1, T>>& sample_points,
+                std::vector<std::optional<Color>>& sample_colors);
+
 public:
         IntegratorBPT(
                 const Scene<N, T, Color>* scene,
