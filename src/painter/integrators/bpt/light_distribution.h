@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <cmath>
+#include <memory>
 #include <random>
 #include <unordered_map>
 
@@ -30,16 +31,27 @@ namespace ns::painter::integrators::bpt
 {
 namespace light_distribution_implementation
 {
-template <std::size_t N, typename T, typename Color, typename LightPower>
-[[nodiscard]] std::discrete_distribution<int> create_distribution(
-        const Scene<N, T, Color>& scene,
-        const LightPower& light_power)
+inline constexpr bool EQUAL_LIGHT_POWER = true;
+
+template <std::size_t N, typename T, typename Color>
+[[nodiscard]] T light_power(const LightSource<N, T, Color>& light)
 {
-        const auto& lights = scene.light_sources();
+        if (EQUAL_LIGHT_POWER)
+        {
+                return 1;
+        }
+        return light.power().luminance();
+}
+
+template <std::size_t N, typename T, typename Color>
+[[nodiscard]] std::discrete_distribution<int> create_distribution(
+        const std::vector<const LightSource<N, T, Color>*>& lights)
+{
         if (lights.empty())
         {
                 error("No light sources");
         }
+
         std::vector<T> powers;
         powers.reserve(lights.size());
         for (const LightSource<N, T, Color>* const light : lights)
@@ -72,46 +84,19 @@ struct LightDistributionSample final
 template <std::size_t N, typename T, typename Color>
 class LightDistributionBase final
 {
-        template <std::size_t, typename, typename>
-        friend class LightDistribution;
-
-        std::discrete_distribution<int> distribution_;
-
         std::vector<LightDistributionSample<N, T, Color>> samples_;
         std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf_;
 
-        [[nodiscard]] const std::discrete_distribution<int>& distribution() const
-        {
-                return distribution_;
-        }
-
-        template <typename RandomEngine>
-        [[nodiscard]] LightDistributionSample<N, T, Color> sample(
-                std::discrete_distribution<int>& distribution,
-                RandomEngine& engine) const
-        {
-                return samples_[distribution(engine)];
-        }
-
-        [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
-        {
-                const auto iter = light_pdf_.find(light);
-                if (iter != light_pdf_.cend())
-                {
-                        return iter->second;
-                }
-                error("Light not found in light distribution");
-        }
-
 public:
-        template <typename LightPower>
-        LightDistributionBase(const Scene<N, T, Color>& scene, const LightPower& light_power)
-                : distribution_(light_distribution_implementation::create_distribution(scene, light_power))
+        LightDistributionBase(
+                const std::vector<const LightSource<N, T, Color>*>& lights,
+                const std::discrete_distribution<int>& distribution)
         {
-                const std::vector<T> probabilities =
-                        light_distribution_implementation::create_probabilities<T>(distribution_);
+                ASSERT(distribution.probabilities().size() == lights.size());
 
-                const auto& lights = scene.light_sources();
+                const std::vector<T> probabilities =
+                        light_distribution_implementation::create_probabilities<T>(distribution);
+
                 ASSERT(probabilities.size() == lights.size());
 
                 samples_.reserve(lights.size());
@@ -123,25 +108,42 @@ public:
                         light_pdf_[lights[i]] = probabilities[i];
                 }
         }
+
+        [[nodiscard]] LightDistributionSample<N, T, Color> sample(const int index) const
+        {
+                return samples_[index];
+        }
+
+        [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
+        {
+                const auto iter = light_pdf_.find(light);
+                if (iter != light_pdf_.cend())
+                {
+                        return iter->second;
+                }
+                error("Light not found in light distribution");
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
 class LightDistribution final
 {
-        const LightDistributionBase<N, T, Color>* base_;
+        std::shared_ptr<const LightDistributionBase<N, T, Color>> base_;
         std::discrete_distribution<int> distribution_;
 
 public:
-        explicit LightDistribution(const LightDistributionBase<N, T, Color>* const base)
-                : base_(base),
-                  distribution_(base->distribution())
+        LightDistribution(
+                std::shared_ptr<const LightDistributionBase<N, T, Color>> base,
+                std::discrete_distribution<int> distribution)
+                : base_(std::move(base)),
+                  distribution_(std::move(distribution))
         {
         }
 
         template <typename RandomEngine>
         [[nodiscard]] LightDistributionSample<N, T, Color> sample(RandomEngine& engine)
         {
-                return base_->sample(distribution_, engine);
+                return base_->sample(distribution_(engine));
         }
 
         [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
@@ -149,4 +151,25 @@ public:
                 return base_->pdf(light);
         }
 };
+
+template <std::size_t N, typename T, typename Color>
+[[nodiscard]] std::vector<LightDistribution<N, T, Color>> create_light_distributions(
+        const Scene<N, T, Color>& scene,
+        const unsigned count)
+{
+        const auto& lights = scene.light_sources();
+
+        const std::discrete_distribution<int> distribution =
+                light_distribution_implementation::create_distribution(lights);
+
+        const auto base = std::make_shared<const LightDistributionBase<N, T, Color>>(lights, distribution);
+
+        std::vector<LightDistribution<N, T, Color>> res;
+        res.reserve(count);
+        for (unsigned i = 0; i < count; ++i)
+        {
+                res.emplace_back(base, distribution);
+        }
+        return res;
+}
 }

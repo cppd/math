@@ -43,7 +43,6 @@ class IntegratorBPT final
         const SamplerStratifiedJittered<N - 1, T> sampler_;
         Paintbrush<N - 1> paintbrush_;
 
-        const integrators::bpt::LightDistributionBase<N, T, Color> light_distribution_base_;
         std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions_;
 
         [[nodiscard]] bool integrate(

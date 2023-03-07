@@ -31,31 +31,6 @@ namespace ns::painter::painting
 namespace
 {
 constexpr int PANTBRUSH_WIDTH = 20;
-constexpr bool EQUAL_LIGHT_POWER = true;
-
-template <std::size_t N, typename T, typename Color>
-T light_power(const LightSource<N, T, Color>& light_source)
-{
-        if (EQUAL_LIGHT_POWER)
-        {
-                return 1;
-        }
-        return light_source.power().luminance();
-}
-
-template <std::size_t N, typename T, typename Color>
-std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions(
-        const integrators::bpt::LightDistributionBase<N, T, Color>* const light_distribution_base,
-        const unsigned thread_count)
-{
-        std::vector<integrators::bpt::LightDistribution<N, T, Color>> res;
-        res.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-                res.emplace_back(light_distribution_base);
-        }
-        return res;
-}
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -75,8 +50,7 @@ IntegratorBPT<FLAT_SHADING, N, T, Color>::IntegratorBPT(
           pixels_(pixels),
           sampler_(samples_per_pixel),
           paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH),
-          light_distribution_base_(*scene_, light_power<N, T, Color>),
-          light_distributions_(light_distributions(&light_distribution_base_, thread_count))
+          light_distributions_(integrators::bpt::create_light_distributions(*scene, thread_count))
 {
         ASSERT(scene_);
         ASSERT(stop_);
