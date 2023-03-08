@@ -19,61 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../objects.h"
 
-#include <src/com/alg.h>
-#include <src/com/error.h>
-
-#include <cmath>
 #include <memory>
 #include <random>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::painter::integrators::bpt
 {
-namespace light_distribution_implementation
-{
-inline constexpr bool EQUAL_LIGHT_POWER = true;
-
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] T light_power(const LightSource<N, T, Color>& light)
-{
-        if (EQUAL_LIGHT_POWER)
-        {
-                return 1;
-        }
-        return light.power().luminance();
-}
-
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::discrete_distribution<int> create_distribution(
-        const std::vector<const LightSource<N, T, Color>*>& lights)
-{
-        if (lights.empty())
-        {
-                error("No light sources");
-        }
-
-        std::vector<T> powers;
-        powers.reserve(lights.size());
-        for (const LightSource<N, T, Color>* const light : lights)
-        {
-                powers.push_back(light_power(*light));
-        }
-        return std::discrete_distribution<int>(powers.cbegin(), powers.cend());
-}
-
-template <typename T>
-[[nodiscard]] std::vector<T> create_probabilities(const std::discrete_distribution<int>& distribution)
-{
-        const std::vector<double> probabilities = distribution.probabilities();
-        const auto sum = add_all<double>(probabilities);
-        if (!(std::abs(sum - 1) < 1e-10))
-        {
-                error("Probability sum " + to_string(sum) + " is not equal to 1");
-        }
-        return {probabilities.cbegin(), probabilities.cend()};
-}
-}
-
 template <std::size_t N, typename T, typename Color>
 struct LightDistributionSample final
 {
@@ -89,24 +41,11 @@ class LightDistributionBase final
 
 public:
         LightDistributionBase(
-                const std::vector<const LightSource<N, T, Color>*>& lights,
-                const std::discrete_distribution<int>& distribution)
+                std::vector<LightDistributionSample<N, T, Color>> samples,
+                std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf)
+                : samples_(std::move(samples)),
+                  light_pdf_(std::move(light_pdf))
         {
-                ASSERT(distribution.probabilities().size() == lights.size());
-
-                const std::vector<T> probabilities =
-                        light_distribution_implementation::create_probabilities<T>(distribution);
-
-                ASSERT(probabilities.size() == lights.size());
-
-                samples_.reserve(lights.size());
-                light_pdf_.reserve(lights.size());
-                for (std::size_t i = 0; i < lights.size(); ++i)
-                {
-                        samples_.push_back(
-                                LightDistributionSample<N, T, Color>{.light = lights[i], .pdf = probabilities[i]});
-                        light_pdf_[lights[i]] = probabilities[i];
-                }
         }
 
         [[nodiscard]] LightDistributionSample<N, T, Color> sample(const int index) const
@@ -155,21 +94,5 @@ public:
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::vector<LightDistribution<N, T, Color>> create_light_distributions(
         const Scene<N, T, Color>& scene,
-        const unsigned count)
-{
-        const auto& lights = scene.light_sources();
-
-        const std::discrete_distribution<int> distribution =
-                light_distribution_implementation::create_distribution(lights);
-
-        const auto base = std::make_shared<const LightDistributionBase<N, T, Color>>(lights, distribution);
-
-        std::vector<LightDistribution<N, T, Color>> res;
-        res.reserve(count);
-        for (unsigned i = 0; i < count; ++i)
-        {
-                res.emplace_back(base, distribution);
-        }
-        return res;
-}
+        unsigned count);
 }
