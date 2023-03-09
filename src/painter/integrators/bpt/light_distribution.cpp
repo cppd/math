@@ -59,7 +59,8 @@ template <std::size_t N, typename T, typename Color>
         {
                 powers.push_back(light_power(*light));
         }
-        return std::discrete_distribution<int>(powers.cbegin(), powers.cend());
+
+        return {powers.cbegin(), powers.cend()};
 }
 
 template <typename T>
@@ -75,58 +76,41 @@ template <typename T>
 
         return {probabilities.cbegin(), probabilities.cend()};
 }
+}
 
 template <std::size_t N, typename T, typename Color>
-std::shared_ptr<const LightDistributionBase<N, T, Color>> create_light_distribution_base(
+std::shared_ptr<const typename LightDistribution<N, T, Color>::Base> LightDistribution<N, T, Color>::create_base(
         const std::vector<const LightSource<N, T, Color>*>& lights,
         const std::discrete_distribution<int>& distribution)
 {
         ASSERT(distribution.probabilities().size() == lights.size());
 
         const std::vector<T> probabilities = create_probabilities<T>(distribution);
-
         ASSERT(probabilities.size() == lights.size());
 
-        std::vector<LightDistributionSample<N, T, Color>> samples;
-        std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf;
+        auto base = std::make_shared<Base>();
 
-        samples.reserve(lights.size());
-        light_pdf.reserve(lights.size());
+        base->samples.reserve(lights.size());
+        base->light_pdf.reserve(lights.size());
 
         for (std::size_t i = 0; i < lights.size(); ++i)
         {
-                samples.push_back(LightDistributionSample<N, T, Color>{.light = lights[i], .pdf = probabilities[i]});
-                light_pdf[lights[i]] = probabilities[i];
+                base->samples.push_back({.light = lights[i], .pdf = probabilities[i]});
+                base->light_pdf[lights[i]] = probabilities[i];
         }
 
-        return std::make_shared<const LightDistributionBase<N, T, Color>>(std::move(samples), std::move(light_pdf));
-}
+        return base;
 }
 
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::vector<LightDistribution<N, T, Color>> create_light_distributions(
-        const Scene<N, T, Color>& scene,
-        const unsigned count)
+LightDistribution<N, T, Color>::LightDistribution(const std::vector<const LightSource<N, T, Color>*>& lights)
+        : distribution_(create_distribution(lights)),
+          base_(create_base(lights, distribution_))
 {
-        const auto& lights = scene.light_sources();
-
-        const std::discrete_distribution<int> distribution = create_distribution(lights);
-
-        const std::shared_ptr<const LightDistributionBase<N, T, Color>> base =
-                create_light_distribution_base(lights, distribution);
-
-        std::vector<LightDistribution<N, T, Color>> res;
-        res.reserve(count);
-        for (unsigned i = 0; i < count; ++i)
-        {
-                res.emplace_back(base, distribution);
-        }
-        return res;
 }
 
-#define TEMPLATE(N, T, C)                                                              \
-        template std::vector<LightDistribution<(N), T, C>> create_light_distributions( \
-                const Scene<(N), T, C>&, unsigned);
+#define TEMPLATE(N, T, C) \
+        template LightDistribution<(N), T, C>::LightDistribution(const std::vector<const LightSource<(N), T, C>*>&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

@@ -34,65 +34,38 @@ struct LightDistributionSample final
 };
 
 template <std::size_t N, typename T, typename Color>
-class LightDistributionBase final
+class LightDistribution final
 {
-        std::vector<LightDistributionSample<N, T, Color>> samples_;
-        std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf_;
+        struct Base final
+        {
+                std::vector<LightDistributionSample<N, T, Color>> samples;
+                std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf;
+        };
+
+        [[nodiscard]] static std::shared_ptr<const Base> create_base(
+                const std::vector<const LightSource<N, T, Color>*>& lights,
+                const std::discrete_distribution<int>& distribution);
+
+        std::discrete_distribution<int> distribution_;
+        std::shared_ptr<const Base> base_;
 
 public:
-        LightDistributionBase(
-                std::vector<LightDistributionSample<N, T, Color>> samples,
-                std::unordered_map<const LightSource<N, T, Color>*, T> light_pdf)
-                : samples_(std::move(samples)),
-                  light_pdf_(std::move(light_pdf))
-        {
-        }
+        explicit LightDistribution(const std::vector<const LightSource<N, T, Color>*>& lights);
 
-        [[nodiscard]] LightDistributionSample<N, T, Color> sample(const int index) const
+        template <typename RandomEngine>
+        [[nodiscard]] LightDistributionSample<N, T, Color> sample(RandomEngine& engine)
         {
-                return samples_[index];
+                return base_->samples[distribution_(engine)];
         }
 
         [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
         {
-                const auto iter = light_pdf_.find(light);
-                if (iter != light_pdf_.cend())
+                const auto iter = base_->light_pdf.find(light);
+                if (iter != base_->light_pdf.cend())
                 {
                         return iter->second;
                 }
                 error("Light not found in light distribution");
         }
 };
-
-template <std::size_t N, typename T, typename Color>
-class LightDistribution final
-{
-        std::shared_ptr<const LightDistributionBase<N, T, Color>> base_;
-        std::discrete_distribution<int> distribution_;
-
-public:
-        LightDistribution(
-                std::shared_ptr<const LightDistributionBase<N, T, Color>> base,
-                std::discrete_distribution<int> distribution)
-                : base_(std::move(base)),
-                  distribution_(std::move(distribution))
-        {
-        }
-
-        template <typename RandomEngine>
-        [[nodiscard]] LightDistributionSample<N, T, Color> sample(RandomEngine& engine)
-        {
-                return base_->sample(distribution_(engine));
-        }
-
-        [[nodiscard]] T pdf(const LightSource<N, T, Color>* const light) const
-        {
-                return base_->pdf(light);
-        }
-};
-
-template <std::size_t N, typename T, typename Color>
-[[nodiscard]] std::vector<LightDistribution<N, T, Color>> create_light_distributions(
-        const Scene<N, T, Color>& scene,
-        unsigned count);
 }

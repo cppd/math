@@ -50,7 +50,7 @@ IntegratorBPT<FLAT_SHADING, N, T, Color>::IntegratorBPT(
           pixels_(pixels),
           sampler_(samples_per_pixel),
           paintbrush_(projector_->screen_size(), PANTBRUSH_WIDTH),
-          light_distributions_(integrators::bpt::create_light_distributions(*scene, thread_count))
+          light_distributions_(thread_count, integrators::bpt::LightDistribution(scene->light_sources()))
 {
         ASSERT(scene_);
         ASSERT(stop_);
