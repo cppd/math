@@ -86,10 +86,9 @@ std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::opt
                 return std::nullopt;
         }
 
-        BoundingBox<N> b;
-        b.min = min;
-        b.max = max;
-        return b;
+        return {
+                {.min = min, .max = max}
+        };
 }
 }
 
@@ -130,10 +129,9 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        BoundingBox<N> b;
-        b.min = min;
-        b.max = max;
-        return b;
+        return {
+                {.min = min, .max = max}
+        };
 }
 
 template <std::size_t N>
@@ -173,10 +171,9 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        BoundingBox<N> b;
-        b.min = min;
-        b.max = max;
-        return b;
+        return {
+                {.min = min, .max = max}
+        };
 }
 
 template <std::size_t N>
@@ -214,10 +211,9 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        BoundingBox<N> b;
-        b.min = min;
-        b.max = max;
-        return b;
+        return {
+                {.min = min, .max = max}
+        };
 }
 
 template <std::size_t N>
