@@ -77,9 +77,8 @@ std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
                 return std::nullopt;
         }
 
-        BoundingBox<N> b;
-        b.min = min;
-        b.max = max;
-        return b;
+        return {
+                {.min = min, .max = max}
+        };
 }
 }
