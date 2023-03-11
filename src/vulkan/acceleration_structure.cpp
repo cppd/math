@@ -111,6 +111,54 @@ void build_acceleration_structure(
         run_commands(device, compute_command_pool.handle(), compute_queue.handle(), commands);
 }
 
+BufferWithMemory create_vertex_buffer(
+        const Device& device,
+        const std::vector<std::uint32_t>& family_indices,
+        const std::span<const Vector3f> vertices)
+{
+        constexpr VkBufferUsageFlags USAGE =
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+        BufferWithMemory res(BufferMemoryType::HOST_VISIBLE, device, family_indices, USAGE, data_size(vertices));
+        BufferMapper(res).write(vertices);
+        return res;
+}
+
+BufferWithMemory create_index_buffer(
+        const Device& device,
+        const std::vector<std::uint32_t>& family_indices,
+        const std::span<const std::uint32_t> indices)
+{
+        constexpr VkBufferUsageFlags USAGE =
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+        BufferWithMemory res(BufferMemoryType::HOST_VISIBLE, device, family_indices, USAGE, data_size(indices));
+        BufferMapper(res).write(indices);
+        return res;
+}
+
+std::optional<BufferWithMemory> create_transform_matrix_buffer(
+        const Device& device,
+        const std::vector<std::uint32_t>& family_indices,
+        const std::optional<VkTransformMatrixKHR>& transform_matrix)
+{
+        if (!transform_matrix)
+        {
+                return {};
+        }
+
+        constexpr VkBufferUsageFlags USAGE =
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+        std::optional<BufferWithMemory> res;
+        res.emplace(BufferMemoryType::HOST_VISIBLE, device, family_indices, USAGE, data_size(*transform_matrix));
+        BufferMapper(*res).write(*transform_matrix);
+        return res;
+}
+
 void check_data(const std::span<const Vector3f> vertices, const std::span<const std::uint32_t> indices)
 {
         if (vertices.empty())
@@ -212,35 +260,12 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
 
         const std::vector<std::uint32_t> buffer_family_indices = {compute_queue.family_index()};
 
-        const BufferWithMemory vertex_buffer(
-                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
-                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                        | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                data_size(vertices));
-        BufferMapper(vertex_buffer).write(vertices);
+        const BufferWithMemory vertex_buffer = create_vertex_buffer(device, buffer_family_indices, vertices);
 
-        const BufferWithMemory index_buffer(
-                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
-                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                        | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                data_size(indices));
-        BufferMapper(index_buffer).write(indices);
+        const BufferWithMemory index_buffer = create_index_buffer(device, buffer_family_indices, indices);
 
-        const std::optional<BufferWithMemory> transform_matrix_buffer = [&]
-        {
-                if (transform_matrix)
-                {
-                        std::optional<BufferWithMemory> buffer;
-                        buffer.emplace(
-                                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
-                                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                                        | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                                data_size(*transform_matrix));
-                        BufferMapper(*buffer).write(*transform_matrix);
-                        return buffer;
-                }
-                return std::optional<BufferWithMemory>();
-        }();
+        const std::optional<BufferWithMemory> transform_matrix_buffer =
+                create_transform_matrix_buffer(device, buffer_family_indices, transform_matrix);
 
         VkAccelerationStructureGeometryKHR geometry{};
         geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
