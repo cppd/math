@@ -163,7 +163,9 @@ std::optional<std::tuple<Color, typename Color::DataType>> merge_color_alpha(
 
         const auto sum = p->color_weight + p->background_weight;
 
-        return std::tuple(p->color / sum, p->color_weight / sum);
+        return {
+                {p->color / sum, p->color_weight / sum}
+        };
 }
 
 #define TEMPLATE_C_COUNT(C, COUNT)                                                                            \

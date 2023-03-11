@@ -96,7 +96,9 @@ class Impl final : public Scene<N, T, Color>
                                         ray_intersection(*shapes, indices, ray, max);
                                 if (info.surface)
                                 {
-                                        return std::tuple{info.distance, info.surface};
+                                        return {
+                                                {info.distance, info.surface}
+                                        };
                                 }
                                 return {};
                         });

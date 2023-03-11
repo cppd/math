@@ -302,11 +302,12 @@ std::optional<BvhSplit<N, T>> split(
 
         const auto p = impl::partition(objects, center_bounds, split_index);
 
-        return BvhSplit<N, T>{
-                .objects_min = std::span(objects.data(), p - objects.begin()),
-                .objects_max = std::span(std::to_address(p), objects.end() - p),
-                .bounds_min = forward_sum[split_index].bounds,
-                .bounds_max = backward_sum[split_index].bounds,
-                .axis = center_bounds.axis()};
+        return {
+                {.objects_min = std::span(objects.data(), p - objects.begin()),
+                 .objects_max = std::span(std::to_address(p), objects.end() - p),
+                 .bounds_min = forward_sum[split_index].bounds,
+                 .bounds_max = backward_sum[split_index].bounds,
+                 .axis = center_bounds.axis()}
+        };
 }
 }

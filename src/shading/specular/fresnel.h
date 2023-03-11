@@ -93,7 +93,9 @@ std::optional<FresnelDielectric<T>> fresnel_dielectric(
         const T reflected = T{0.5} * (square(r_parallel) + square(r_perpendicular));
         const T transmitted = 1 - reflected;
 
-        return FresnelDielectric<T>(reflected, transmitted);
+        return {
+                {reflected, transmitted}
+        };
 }
 
 // Physically Based Rendering, 8.2.1 Fresnel reflectance.

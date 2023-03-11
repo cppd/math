@@ -149,7 +149,9 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
                 return {};
         }
 
-        return ConnectS1<N, T, Color>{.color = *color, .light_vertex = light};
+        return {
+                {.color = *color, .light_vertex = light}
+        };
 }
 
 template <std::size_t N, typename T, typename Color>

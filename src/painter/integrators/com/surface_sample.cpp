@@ -62,15 +62,15 @@ std::optional<Sample<WITH_PDF, N, T, Color>> surface_sample(
 
         if constexpr (WITH_PDF)
         {
-                return SurfaceSamplePdf<N, T, Color>{
-                        .beta = beta,
-                        .l = l,
-                        .pdf_forward = sample.pdf,
-                        .pdf_reversed = surface.pdf(n, l, v)};
+                return {
+                        {.beta = beta, .l = l, .pdf_forward = sample.pdf, .pdf_reversed = surface.pdf(n, l, v)}
+                };
         }
         else
         {
-                return SurfaceSample<N, T, Color>{.beta = beta, .l = l};
+                return {
+                        {.beta = beta, .l = l}
+                };
         }
 }
 }
