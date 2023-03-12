@@ -20,9 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry.h"
 #include "image.h"
 
-#include "../shading_parameters.h"
 #include "buffers/volume.h"
 #include "shaders/descriptors.h"
+
+#include "../shading_parameters.h"
 
 #include <src/com/alg.h>
 #include <src/com/merge.h>

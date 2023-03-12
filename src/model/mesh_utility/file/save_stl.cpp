@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_stl.h"
 
+#include "stl/swap.h"
+
 #include "../bounding_box.h"
 #include "../file_info.h"
 #include "../unique.h"
 #include "../vertices.h"
-#include "stl/swap.h"
 
 #include <src/com/chrono.h>
 #include <src/com/container.h>

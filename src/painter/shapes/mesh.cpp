@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "../objects.h"
 #include "mesh/data.h"
+
+#include "../objects.h"
 
 #include <src/color/color.h>
 #include <src/com/chrono.h>

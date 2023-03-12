@@ -19,12 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object.h"
 
-#include "../buffers/ggx_f1_albedo.h"
-#include "../buffers/opacity.h"
-#include "../code/code.h"
 #include "buffers/coordinates.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_volume.h"
+
+#include "../buffers/ggx_f1_albedo.h"
+#include "../buffers/opacity.h"
+#include "../code/code.h"
 
 #include <src/gpu/render_buffers.h>
 

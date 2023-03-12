@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "data_read.h"
 #include "mesh_facet.h"
 
-#include "../position.h"
 #include "stl/swap.h"
+
+#include "../position.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>

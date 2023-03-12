@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "load.h"
 #include "memory.h"
 
-#include "../shading_parameters.h"
 #include "buffers/material.h"
 #include "buffers/mesh.h"
 #include "shaders/descriptors.h"
+
+#include "../shading_parameters.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>

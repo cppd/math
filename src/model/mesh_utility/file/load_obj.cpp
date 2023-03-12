@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "lines.h"
 #include "mesh_facet.h"
 
-#include "../position.h"
 #include "obj/counters.h"
 #include "obj/data_read.h"
 #include "obj/line.h"
 #include "obj/load_lib.h"
 #include "obj/name.h"
+
+#include "../position.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>

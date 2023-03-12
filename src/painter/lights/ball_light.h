@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
 #include "com/spotlight.h"
+
+#include "../objects.h"
 
 #include <src/geometry/spatial/hyperplane_ball.h>
 
