@@ -62,15 +62,17 @@ FixNamespaceComments: false
 IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^"ui_.+\.h"$'
-    Priority:        30
+    Priority:        40
   - Regex:           '^"[^\/\\]*"$'
     Priority:        10
-  - Regex:           '^".*"$'
+  - Regex:           '^"[^\.].*"$'
     Priority:        20
+  - Regex:           '^".*"$'
+    Priority:        30
   - Regex:           '^<src\/.*>$'
-    Priority:        40
-  - Regex:           '^<.*>$'
     Priority:        50
+  - Regex:           '^<.*>$'
+    Priority:        60
 IndentAccessModifiers: false
 IndentCaseBlocks: false
 IndentCaseLabels: false
