@@ -27,8 +27,9 @@ Elsevier, 2017.
 #include "bpt.h"
 
 #include "connect.h"
-#include "vertex.h"
 #include "vertex_pdf.h"
+
+#include "vertex/vertex.h"
 
 #include "../com/normals.h"
 #include "../com/surface_sample.h"
@@ -78,7 +79,7 @@ void walk(
         const T pdf,
         Ray<N, T> ray,
         PCG& engine,
-        std::vector<Vertex<N, T, Color>>* const path)
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
         ASSERT(!path->empty());
 
@@ -100,8 +101,8 @@ void walk(
                         if (camera_path)
                         {
                                 path->emplace_back(
-                                        std::in_place_type<InfiniteLight<N, T, Color>>, &scene, &light_distribution,
-                                        ray, beta, pdf_forward);
+                                        std::in_place_type<vertex::InfiniteLight<N, T, Color>>, &scene,
+                                        &light_distribution, ray, beta, pdf_forward);
                         }
                         return;
                 }
@@ -111,7 +112,7 @@ void walk(
                 {
                         if (surface.light_source())
                         {
-                                Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                                vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
                                 set_forward_pdf(path->back(), &next, pdf_forward);
                                 path->push_back(std::move(next));
                         }
@@ -119,8 +120,8 @@ void walk(
                 }
 
                 {
-                        Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
-                        Vertex<N, T, Color>& prev = path->back();
+                        vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                        vertex::Vertex<N, T, Color>& prev = path->back();
                         set_forward_pdf(prev, &next, pdf_forward);
                         set_reversed_pdf(&prev, std::as_const(next), sample->pdf_reversed);
                         path->push_back(std::move(next));
@@ -150,11 +151,11 @@ void generate_camera_path(
         const LightDistribution<N, T, Color>& light_distribution,
         const Ray<N, T>& ray,
         PCG& engine,
-        std::vector<Vertex<N, T, Color>>* const path)
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
-        path->emplace_back(std::in_place_type<Camera<N, T, Color>>, ray.dir());
+        path->emplace_back(std::in_place_type<vertex::Camera<N, T, Color>>, ray.dir());
 
         walk<FLAT_SHADING>(
                 /*camera_path=*/true, scene, light_distribution, /*beta=*/Color{1}, /*pdf=*/T{1}, ray, engine, path);
@@ -165,7 +166,7 @@ void generate_light_path(
         const Scene<N, T, Color>& scene,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine,
-        std::vector<Vertex<N, T, Color>>* const path)
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
@@ -178,7 +179,7 @@ void generate_light_path(
         }
 
         path->emplace_back(
-                std::in_place_type<Light<N, T, Color>>, distribution.light,
+                std::in_place_type<vertex::Light<N, T, Color>>, distribution.light,
                 sample.infinite_distance ? std::optional<Vector<N, T>>() : sample.ray.org(), sample.ray.dir(), sample.n,
                 distribution.pdf, sample.pdf_pos, sample.pdf_dir);
 
@@ -198,8 +199,8 @@ std::optional<Color> bpt(
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine)
 {
-        thread_local std::vector<Vertex<N, T, Color>> camera_path;
-        thread_local std::vector<Vertex<N, T, Color>> light_path;
+        thread_local std::vector<vertex::Vertex<N, T, Color>> camera_path;
+        thread_local std::vector<vertex::Vertex<N, T, Color>> light_path;
 
         generate_camera_path<FLAT_SHADING>(scene, light_distribution, ray, engine, &camera_path);
         ASSERT(camera_path.size() <= MAX_DEPTH + 1);
@@ -210,7 +211,7 @@ std::optional<Color> bpt(
                 return Color(0);
         }
 
-        if (camera_path.size() == 2 && std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[1]))
+        if (camera_path.size() == 2 && std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[1]))
         {
                 return {};
         }

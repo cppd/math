@@ -33,11 +33,11 @@ namespace ns::painter::integrators::bpt
 namespace
 {
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N, T, Color>& camera_path_vertex)
+std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const vertex::Vertex<N, T, Color>& camera_path_vertex)
 {
         return std::visit(
                 Visitors{
-                        [](const Surface<N, T, Color>& surface) -> std::optional<Color>
+                        [](const vertex::Surface<N, T, Color>& surface) -> std::optional<Color>
                         {
                                 if (!surface.is_light())
                                 {
@@ -49,15 +49,15 @@ std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const Vertex<N
                                 }
                                 return {};
                         },
-                        [](const Camera<N, T, Color>&) -> std::optional<Color>
+                        [](const vertex::Camera<N, T, Color>&) -> std::optional<Color>
                         {
                                 error("Last camera path vertex is a camera");
                         },
-                        [](const Light<N, T, Color>&) -> std::optional<Color>
+                        [](const vertex::Light<N, T, Color>&) -> std::optional<Color>
                         {
                                 error("Last camera path vertex is an light");
                         },
-                        [&scene](const InfiniteLight<N, T, Color>& infinite_light) -> std::optional<Color>
+                        [&scene](const vertex::InfiniteLight<N, T, Color>& infinite_light) -> std::optional<Color>
                         {
                                 std::optional<Color> res;
                                 for (const LightSource<N, T, Color>* const light : scene.light_sources())
@@ -80,12 +80,12 @@ template <std::size_t N, typename T, typename Color>
 struct ConnectS1 final
 {
         Color color;
-        Light<N, T, Color> light_vertex;
+        vertex::Light<N, T, Color> light_vertex;
 };
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> compute_color_s_1(
-        const Surface<N, T, Color>& surface,
+        const vertex::Surface<N, T, Color>& surface,
         const Ray<N, T>& ray_to_light,
         const LightDistributionSample<N, T, Color>& distribution,
         const LightSourceArriveSample<N, T, Color>& sample)
@@ -106,12 +106,12 @@ std::optional<Color> compute_color_s_1(
 template <std::size_t N, typename T, typename Color>
 std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const Scene<N, T, Color>& scene,
-        const Vertex<N, T, Color>& camera_vertex,
+        const vertex::Vertex<N, T, Color>& camera_vertex,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine)
 {
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_vertex)));
-        const auto& surface = std::get<Surface<N, T, Color>>(camera_vertex);
+        ASSERT((std::holds_alternative<vertex::Surface<N, T, Color>>(camera_vertex)));
+        const auto& surface = std::get<vertex::Surface<N, T, Color>>(camera_vertex);
         if (!surface.is_connectible())
         {
                 return {};
@@ -126,13 +126,13 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
                 return {};
         }
 
-        const Light<N, T, Color> light = [&]()
+        const vertex::Light<N, T, Color> light = [&]()
         {
                 const auto position =
                         sample.distance ? std::optional<Vector<N, T>>(surface.pos() + sample.l * (*sample.distance))
                                         : std::nullopt;
 
-                return Light<N, T, Color>(
+                return vertex::Light<N, T, Color>(
                         distribution.light, distribution.pdf, sample.pdf, position, -sample.l, std::nullopt, surface);
         }();
 
@@ -155,7 +155,9 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> compute_color(const Surface<N, T, Color>& light, const Surface<N, T, Color>& camera)
+std::optional<Color> compute_color(
+        const vertex::Surface<N, T, Color>& light,
+        const vertex::Surface<N, T, Color>& camera)
 {
         const Vector<N, T> v = light.pos() - camera.pos();
         const T distance = v.norm();
@@ -191,18 +193,18 @@ std::optional<Color> compute_color(const Surface<N, T, Color>& light, const Surf
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
-        const Vertex<N, T, Color>& light_vertex,
-        const Vertex<N, T, Color>& camera_vertex)
+        const vertex::Vertex<N, T, Color>& light_vertex,
+        const vertex::Vertex<N, T, Color>& camera_vertex)
 {
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(light_vertex)));
-        const auto& light = std::get<Surface<N, T, Color>>(light_vertex);
+        ASSERT((std::holds_alternative<vertex::Surface<N, T, Color>>(light_vertex)));
+        const auto& light = std::get<vertex::Surface<N, T, Color>>(light_vertex);
         if (!light.is_connectible())
         {
                 return {};
         }
 
-        ASSERT((std::holds_alternative<Surface<N, T, Color>>(camera_vertex)));
-        const auto& camera = std::get<Surface<N, T, Color>>(camera_vertex);
+        ASSERT((std::holds_alternative<vertex::Surface<N, T, Color>>(camera_vertex)));
+        const auto& camera = std::get<vertex::Surface<N, T, Color>>(camera_vertex);
         if (!camera.is_connectible())
         {
                 return {};
@@ -226,8 +228,8 @@ std::optional<Color> connect(
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
-        const std::vector<Vertex<N, T, Color>>& light_path,
-        const std::vector<Vertex<N, T, Color>>& camera_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
         const int s,
         const int t,
         LightDistribution<N, T, Color>& light_distribution,
@@ -237,13 +239,13 @@ std::optional<Color> connect(
         ASSERT(t >= 2);
 
         std::optional<Color> color;
-        const std::vector<Vertex<N, T, Color>>* connected_light_path = &light_path;
+        const std::vector<vertex::Vertex<N, T, Color>>* connected_light_path = &light_path;
 
         if (s == 0)
         {
                 color = connect_s_0(scene, camera_path[t - 1]);
         }
-        else if (std::holds_alternative<InfiniteLight<N, T, Color>>(camera_path[t - 1]))
+        else if (std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[t - 1]))
         {
                 return {};
         }
@@ -255,7 +257,7 @@ std::optional<Color> connect(
                         return {};
                 }
                 color = std::move(connection->color);
-                thread_local std::vector<Vertex<N, T, Color>> path;
+                thread_local std::vector<vertex::Vertex<N, T, Color>> path;
                 path.clear();
                 path.push_back(std::move(connection->light_vertex));
                 connected_light_path = &path;
@@ -275,10 +277,10 @@ std::optional<Color> connect(
         return color;
 }
 
-#define TEMPLATE(N, T, C)                                                                                              \
-        template std::optional<C> connect(                                                                             \
-                const Scene<(N), T, C>&, const std::vector<Vertex<(N), T, C>>&, const std::vector<Vertex<(N), T, C>>&, \
-                int, int, LightDistribution<(N), T, C>&, PCG&);
+#define TEMPLATE(N, T, C)                                                               \
+        template std::optional<C> connect(                                              \
+                const Scene<(N), T, C>&, const std::vector<vertex::Vertex<(N), T, C>>&, \
+                const std::vector<vertex::Vertex<(N), T, C>>&, int, int, LightDistribution<(N), T, C>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

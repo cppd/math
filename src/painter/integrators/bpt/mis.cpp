@@ -26,7 +26,6 @@ Elsevier, 2017.
 
 #include "mis.h"
 
-#include "vertex.h"
 #include "vertex_pdf.h"
 
 #include <src/color/color.h>
@@ -59,7 +58,10 @@ struct Node
 };
 
 template <std::size_t N, typename T, typename Color>
-void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, std::vector<Node<T>>* const nodes)
+void make_nodes(
+        const std::vector<vertex::Vertex<N, T, Color>>& path,
+        const int count,
+        std::vector<Node<T>>* const nodes)
 {
         nodes->clear();
 
@@ -67,19 +69,19 @@ void make_nodes(const std::vector<Vertex<N, T, Color>>& path, const int count, s
         {
                 std::visit(
                         Visitors{
-                                [&](const Surface<N, T, Color>& v)
+                                [&](const vertex::Surface<N, T, Color>& v)
                                 {
                                         nodes->emplace_back(v.pdf_forward(), v.pdf_reversed(), v.is_connectible());
                                 },
-                                [&](const Camera<N, T, Color>& v)
+                                [&](const vertex::Camera<N, T, Color>& v)
                                 {
                                         nodes->emplace_back(EMPTY<T>, EMPTY<T>, v.is_connectible());
                                 },
-                                [&](const Light<N, T, Color>& v)
+                                [&](const vertex::Light<N, T, Color>& v)
                                 {
                                         nodes->emplace_back(v.pdf_forward(), v.pdf_reversed(), v.is_connectible());
                                 },
-                                [&](const InfiniteLight<N, T, Color>& v)
+                                [&](const vertex::InfiniteLight<N, T, Color>& v)
                                 {
                                         nodes->emplace_back(v.pdf_forward(), v.pdf_origin(), v.is_connectible());
                                 }},
@@ -98,8 +100,8 @@ void set_connectible(std::vector<Node<T>>* const nodes)
 
 template <std::size_t N, typename T, typename Color>
 void set_reversed(
-        const std::vector<Vertex<N, T, Color>>& light,
-        const std::vector<Vertex<N, T, Color>>& camera,
+        const std::vector<vertex::Vertex<N, T, Color>>& light,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera,
         const int s,
         const int t,
         std::vector<Node<T>>* const light_nodes,
@@ -199,8 +201,8 @@ T camera_sum(const std::vector<Node<T>>& camera)
 
 template <std::size_t N, typename T, typename Color>
 T mis_weight(
-        const std::vector<Vertex<N, T, Color>>& light_path,
-        const std::vector<Vertex<N, T, Color>>& camera_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
         const int s,
         const int t)
 {
@@ -226,8 +228,10 @@ T mis_weight(
         return 1 / (1 + light_sum(light_nodes) + camera_sum(camera_nodes));
 }
 
-#define TEMPLATE(N, T, C) \
-        template T mis_weight(const std::vector<Vertex<(N), T, C>>&, const std::vector<Vertex<(N), T, C>>&, int, int);
+#define TEMPLATE(N, T, C)                                                                                          \
+        template T mis_weight(                                                                                     \
+                const std::vector<vertex::Vertex<(N), T, C>>&, const std::vector<vertex::Vertex<(N), T, C>>&, int, \
+                int);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

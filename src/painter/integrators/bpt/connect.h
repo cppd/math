@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "light_distribution.h"
-#include "vertex.h"
+
+#include "vertex/vertex.h"
 
 #include "../../objects.h"
 
@@ -30,8 +31,8 @@ namespace ns::painter::integrators::bpt
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
-        const std::vector<Vertex<N, T, Color>>& light_path,
-        const std::vector<Vertex<N, T, Color>>& camera_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
         int s,
         int t,
         LightDistribution<N, T, Color>& light_distribution,

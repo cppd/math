@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::painter::integrators::bpt
+namespace ns::painter::integrators::bpt::vertex
 {
 template <std::size_t N, typename T, typename Normal>
 [[nodiscard]] T solid_angle_pdf_to_area_pdf(

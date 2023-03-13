@@ -17,16 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vertex/vertex.h"
+#include "camera.h"
+#include "infinite_light.h"
+#include "light.h"
+#include "surface.h"
 
-#include <vector>
+#include <variant>
 
-namespace ns::painter::integrators::bpt
+namespace ns::painter::integrators::bpt::vertex
 {
 template <std::size_t N, typename T, typename Color>
-[[nodiscard]] T mis_weight(
-        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
-        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
-        int s,
-        int t);
+using Vertex = std::variant<Surface<N, T, Color>, Camera<N, T, Color>, Light<N, T, Color>, InfiniteLight<N, T, Color>>;
 }
