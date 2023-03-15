@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "memory.h"
 
 #include "../commands.h"
-#include "../create.h"
-#include "../memory.h"
 
 #include <src/com/container.h>
 
@@ -32,6 +30,41 @@ namespace ns::vulkan
 {
 namespace
 {
+class StagingBuffer final
+{
+        Buffer buffer_;
+        handle::DeviceMemory memory_;
+
+public:
+        StagingBuffer(
+                const VkDevice device,
+                const VkPhysicalDevice physical_device,
+                const std::uint32_t family_index,
+                const VkDeviceSize size,
+                const VkBufferUsageFlags usage)
+                : buffer_(create_buffer(device, size, usage, {family_index})),
+                  memory_(create_device_memory(
+                          device,
+                          physical_device,
+                          buffer_.handle(),
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          0 /*allocate_flags*/))
+        {
+        }
+
+        [[nodiscard]] VkBuffer buffer() const&& = delete;
+        [[nodiscard]] VkBuffer buffer() const&
+        {
+                return buffer_.handle();
+        }
+
+        [[nodiscard]] const handle::DeviceMemory& memory() const&& = delete;
+        [[nodiscard]] const handle::DeviceMemory& memory() const&
+        {
+                return memory_;
+        }
+};
+
 void copy_host_to_device(
         const handle::DeviceMemory& device_memory,
         const VkDeviceSize offset,
@@ -224,16 +257,12 @@ void write_data_to_buffer(
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
-        const Buffer staging_buffer(
-                create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
-
-        const handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer.handle(),
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
+        const StagingBuffer staging_buffer(
+                device, physical_device, queue.family_index(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
         //
 
-        copy_host_to_device(staging_device_memory, 0, size, data);
+        copy_host_to_device(staging_buffer.memory(), 0, size, data);
 
         //
 
@@ -244,7 +273,7 @@ void write_data_to_buffer(
 
         const auto commands = [&](const VkCommandBuffer command_buffer)
         {
-                vkCmdCopyBuffer(command_buffer, staging_buffer.handle(), buffer, 1, &copy);
+                vkCmdCopyBuffer(command_buffer, staging_buffer.buffer(), buffer, 1, &copy);
         };
 
         run_commands(device, command_pool.handle(), queue.handle(), commands);
@@ -266,16 +295,12 @@ void staging_image_write(
 
         const VkDeviceSize size = data_size(data);
 
-        const Buffer staging_buffer(
-                create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
-
-        const handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer.handle(),
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
+        const StagingBuffer staging_buffer(
+                device, physical_device, queue.family_index(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
         //
 
-        copy_host_to_device(staging_device_memory, 0, size, data_pointer(data));
+        copy_host_to_device(staging_buffer.memory(), 0, size, data_pointer(data));
 
         //
 
@@ -284,7 +309,7 @@ void staging_image_write(
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-                cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.handle(), extent);
+                cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.buffer(), extent);
 
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
@@ -309,12 +334,8 @@ void staging_image_read(
 
         const VkDeviceSize size = data_size(data);
 
-        const Buffer staging_buffer(
-                create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
-
-        const handle::DeviceMemory staging_device_memory(create_device_memory(
-                device, physical_device, staging_buffer.handle(),
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
+        const StagingBuffer staging_buffer(
+                device, physical_device, queue.family_index(), size, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
         //
 
@@ -323,7 +344,7 @@ void staging_image_read(
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-                cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.handle(), image, extent);
+                cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.buffer(), image, extent);
 
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
@@ -333,6 +354,6 @@ void staging_image_read(
 
         //
 
-        copy_device_to_host(staging_device_memory, 0, size, data_pointer(data));
+        copy_device_to_host(staging_buffer.memory(), 0, size, data_pointer(data));
 }
 }
