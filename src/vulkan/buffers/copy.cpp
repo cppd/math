@@ -48,54 +48,38 @@ public:
                           physical_device,
                           buffer_.handle(),
                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          0 /*allocate_flags*/))
+                          /*allocate_flags=*/0))
         {
         }
 
-        [[nodiscard]] VkBuffer buffer() const&& = delete;
-        [[nodiscard]] VkBuffer buffer() const&
+        [[nodiscard]] VkBuffer handle() const&& = delete;
+        [[nodiscard]] VkBuffer handle() const&
         {
                 return buffer_.handle();
         }
 
-        [[nodiscard]] const handle::DeviceMemory& memory() const&& = delete;
-        [[nodiscard]] const handle::DeviceMemory& memory() const&
+        void write(const VkDeviceSize offset, const VkDeviceSize size, const void* const data) const
         {
-                return memory_;
+                ASSERT(offset + size <= buffer_.size());
+
+                void* pointer = nullptr;
+                VULKAN_CHECK(vkMapMemory(memory_.device(), memory_, offset, size, 0, &pointer));
+                std::memcpy(pointer, data, size);
+                vkUnmapMemory(memory_.device(), memory_);
+                // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+        }
+
+        void read(const VkDeviceSize offset, const VkDeviceSize size, void* const data) const
+        {
+                ASSERT(offset + size <= buffer_.size());
+
+                void* pointer = nullptr;
+                VULKAN_CHECK(vkMapMemory(memory_.device(), memory_, offset, size, 0, &pointer));
+                std::memcpy(data, pointer, size);
+                vkUnmapMemory(memory_.device(), memory_);
+                // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
         }
 };
-
-void copy_host_to_device(
-        const handle::DeviceMemory& device_memory,
-        const VkDeviceSize offset,
-        const VkDeviceSize size,
-        const void* const data)
-{
-        void* map_memory_data;
-        VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
-
-        std::memcpy(map_memory_data, data, size);
-
-        vkUnmapMemory(device_memory.device(), device_memory);
-
-        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
-}
-
-void copy_device_to_host(
-        const handle::DeviceMemory& device_memory,
-        const VkDeviceSize offset,
-        const VkDeviceSize size,
-        void* const data)
-{
-        void* map_memory_data;
-        VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
-
-        std::memcpy(data, map_memory_data, size);
-
-        vkUnmapMemory(device_memory.device(), device_memory);
-
-        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
-}
 
 VkAccessFlags src_access(const VkImageLayout old_layout)
 {
@@ -262,7 +246,7 @@ void write_data_to_buffer(
 
         //
 
-        copy_host_to_device(staging_buffer.memory(), 0, size, data);
+        staging_buffer.write(0, size, data);
 
         //
 
@@ -273,7 +257,7 @@ void write_data_to_buffer(
 
         const auto commands = [&](const VkCommandBuffer command_buffer)
         {
-                vkCmdCopyBuffer(command_buffer, staging_buffer.buffer(), buffer, 1, &copy);
+                vkCmdCopyBuffer(command_buffer, staging_buffer.handle(), buffer, 1, &copy);
         };
 
         run_commands(device, command_pool.handle(), queue.handle(), commands);
@@ -300,7 +284,7 @@ void staging_image_write(
 
         //
 
-        copy_host_to_device(staging_buffer.memory(), 0, size, data_pointer(data));
+        staging_buffer.write(0, size, data_pointer(data));
 
         //
 
@@ -309,7 +293,7 @@ void staging_image_write(
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-                cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.buffer(), extent);
+                cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer.handle(), extent);
 
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
@@ -344,7 +328,7 @@ void staging_image_read(
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-                cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.buffer(), image, extent);
+                cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer.handle(), image, extent);
 
                 cmd_transition_image_layout(
                         aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
@@ -354,6 +338,6 @@ void staging_image_read(
 
         //
 
-        copy_device_to_host(staging_buffer.memory(), 0, size, data_pointer(data));
+        staging_buffer.read(0, size, data_pointer(data));
 }
 }
