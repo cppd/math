@@ -106,19 +106,26 @@ public:
         Face& operator=(Face&&) = delete;
 };
 
+std::filesystem::path character_file_path(const std::string& file_name)
+{
+        return settings::test_directory() / path_from_utf8(file_name);
+}
+
+void create_empty_file(const std::string& file_name)
+{
+        const std::filesystem::path path = character_file_path(file_name);
+        const std::ofstream file(path);
+        if (!file)
+        {
+                error("Error creating the file " + generic_utf8_filename(path));
+        }
+}
+
 void save_to_file(const char32_t code_point, const std::optional<Char>& data)
 {
         if (!data)
         {
-                std::ostringstream oss;
-                oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
-                const std::filesystem::path path = settings::test_directory() / path_from_utf8(oss.str());
-                // create empty file
-                const std::ofstream f(path);
-                if (!f)
-                {
-                        error("Error creating the file " + generic_utf8_filename(path));
-                }
+                create_empty_file("code_point=" + unicode::utf32_to_number_string(code_point) + ".txt");
                 return;
         }
 
@@ -135,20 +142,14 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
 
         if (data->width * data->height == 0)
         {
-                // create empty file
                 oss << ".txt";
-                const std::ofstream f(oss.str());
-                if (!f)
-                {
-                        error("Error creating the file " + oss.str());
-                }
+                create_empty_file(oss.str());
                 return;
         }
 
         oss << ".png";
-
         image::save(
-                settings::test_directory() / path_from_utf8(oss.str()),
+                character_file_path(oss.str()),
                 image::ImageView<2>(
                         {data->width, data->height}, image::ColorFormat::R8_SRGB,
                         std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));
