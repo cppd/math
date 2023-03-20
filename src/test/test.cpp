@@ -32,23 +32,19 @@ constexpr std::string_view SMALL = "Small";
 constexpr std::string_view LARGE = "Large";
 constexpr std::string_view PERFORMANCE = "Performance";
 
-template <typename T>
-void run(
-        const T& test,
-        const std::string_view test_name,
-        const std::string_view type_name,
-        progress::Ratios* const progress_ratios)
+std::string progress_text(const std::string_view test_name, const std::string_view type_name)
 {
-        const std::string name = [&]()
-        {
-                std::string s;
-                s += "Self-Test, ";
-                s += type_name;
-                s += ", ";
-                s += test_name;
-                return s;
-        }();
+        std::string res;
+        res += "Self-Test, ";
+        res += type_name;
+        res += ", ";
+        res += test_name;
+        return res;
+}
 
+template <typename T>
+void run(const T& test, const std::string& name, progress::Ratios* const progress_ratios)
+{
         progress::Ratio progress(progress_ratios, name);
 
         const auto visitors = Visitors{
@@ -113,7 +109,7 @@ void Tests::run_small(const std::string& name, progress::Ratios* const progress_
                 oss << SMALL << " test not found " << name;
                 error(oss.str());
         }
-        run(iter->second, iter->first, SMALL, progress_ratios);
+        run(iter->second, progress_text(iter->first, SMALL), progress_ratios);
 }
 
 void Tests::run_large(const std::string& name, progress::Ratios* const progress_ratios) const
@@ -125,7 +121,7 @@ void Tests::run_large(const std::string& name, progress::Ratios* const progress_
                 oss << LARGE << " test not found " << name;
                 error(oss.str());
         }
-        run(iter->second, iter->first, LARGE, progress_ratios);
+        run(iter->second, progress_text(iter->first, LARGE), progress_ratios);
 }
 
 void Tests::run_performance(const std::string& name, progress::Ratios* const progress_ratios) const
@@ -137,7 +133,7 @@ void Tests::run_performance(const std::string& name, progress::Ratios* const pro
                 oss << PERFORMANCE << " test not found " << name;
                 error(oss.str());
         }
-        run(iter->second, iter->first, PERFORMANCE, progress_ratios);
+        run(iter->second, progress_text(iter->first, PERFORMANCE), progress_ratios);
 }
 
 void Tests::run_small(progress::Ratios* const progress_ratios) const
