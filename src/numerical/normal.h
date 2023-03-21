@@ -26,6 +26,7 @@ Springer-Verlag London, 2012.
 #pragma once
 
 #include "complement.h"
+#include "covariance.h"
 #include "eigen.h"
 #include "matrix.h"
 #include "vector.h"
@@ -46,29 +47,7 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
                 error("At least " + to_string(N) + " points are required for point normal");
         }
 
-        Vector<N, T> p0(0);
-        for (const Vector<N, T>& p : points)
-        {
-                p0 += p;
-        }
-        p0 /= points.size();
-
-        Matrix<N, N, T> covariance_matrix;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                covariance_matrix.row(i) = Vector<N, T>(0);
-        }
-        for (Vector<N, T> p : points)
-        {
-                p -= p0;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        for (std::size_t j = i; j < N; ++j)
-                        {
-                                covariance_matrix(i, j) += p[i] * p[j];
-                        }
-                }
-        }
+        const Matrix<N, N, T> covariance_matrix = covariance_matrix_simple(points);
 
         T max = Limits<T>::lowest();
         for (std::size_t i = 0; i < N - 1; ++i)
