@@ -59,29 +59,27 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
         }
 
         const T tolerance = max * (100 * Limits<T>::epsilon());
-        Vector<N, T> eigenvalues;
-        std::array<Vector<N, T>, N> eigenvectors;
-        eigen_symmetric_upper_triangular(covariance_matrix, tolerance, &eigenvalues, &eigenvectors);
+        const Eigen eigen = eigen_symmetric_upper_triangular(covariance_matrix, tolerance);
 
         std::size_t min_i = 0;
-        T min = eigenvalues[0];
+        T min = eigen.values[0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                if (min > eigenvalues[i])
+                if (min > eigen.values[i])
                 {
                         min_i = i;
-                        min = eigenvalues[i];
+                        min = eigen.values[i];
                 }
         }
         std::array<Vector<N, T>, N - 1> vectors;
         std::size_t n = 0;
         for (std::size_t i = 0; i < min_i; ++i)
         {
-                vectors[n++] = eigenvectors[i];
+                vectors[n++] = eigen.vectors[i];
         }
         for (std::size_t i = min_i + 1; i < N; ++i)
         {
-                vectors[n++] = eigenvectors[i];
+                vectors[n++] = eigen.vectors[i];
         }
 
         return orthogonal_complement(vectors).normalized();

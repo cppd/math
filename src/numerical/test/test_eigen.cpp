@@ -32,21 +32,27 @@ namespace ns::numerical
 {
 namespace
 {
-bool equal(double a, double b)
+template <std::size_t N, typename T>
+bool equal(const Vector<N, T>& a, const Vector<N, T>& b, const T precision)
 {
-        return std::abs(a - b) < 1e-8;
-}
-
-bool equal(const Vector<3, double>& a, const Vector<3, double>& b)
-{
-        for (unsigned i = 0; i < 3; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
-                if (!equal(a[i], b[i]))
+                if (!(std::abs(a[i] - b[i]) < precision))
                 {
                         return false;
                 }
         }
         return true;
+}
+
+template <typename T>
+bool equal(const T a, const T b, const T precision)
+{
+        if (a == b)
+        {
+                return true;
+        }
+        return std::abs(a - b) / std::max(std::abs(a), std::abs(b)) < precision;
 }
 
 template <std::size_t N, typename T>
@@ -93,38 +99,29 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigne
 void test_eigen_defined()
 {
         constexpr double TOLERANCE = 1e-10;
+        constexpr double PRECISION = 1e-8;
 
         Matrix<3, 3, double> a;
         a.row(0) = Vector<3, double>(1.2, 3.4, 5.6);
         a.row(1) = Vector<3, double>(3.4, 7.8, 9.10);
         a.row(2) = Vector<3, double>(5.6, 9.10, 11.12);
 
-        Vector<3, double> eigenvalues;
-        std::array<Vector<3, double>, 3> eigenvectors;
+        const Eigen eigen = eigen_symmetric_upper_triangular(a, TOLERANCE);
 
-        try
-        {
-                eigen_symmetric_upper_triangular(a, TOLERANCE, &eigenvalues, &eigenvectors);
-        }
-        catch (const EigenException& e)
-        {
-                error(e.what());
-        }
-
-        if (!equal(eigenvalues, Vector<3, double>(-1.453829508, 0.722976163, 20.850853345)))
+        if (!equal(eigen.values, Vector<3, double>(-1.453829508, 0.722976163, 20.850853345), PRECISION))
         {
                 error("Eigenvalues error");
         }
 
-        if (!equal(eigenvectors[0], Vector<3, double>(0.831214283, 0.203404459, -0.517406456)))
+        if (!equal(eigen.vectors[0], Vector<3, double>(0.831214283, 0.203404459, -0.517406456), PRECISION))
         {
                 error("Eigenvalues error");
         }
-        if (!equal(eigenvectors[1], Vector<3, double>(-0.458978533, 0.776240332, -0.432191683)))
+        if (!equal(eigen.vectors[1], Vector<3, double>(-0.458978533, 0.776240332, -0.432191683), PRECISION))
         {
                 error("Eigenvalues error");
         }
-        if (!equal(eigenvectors[2], Vector<3, double>(0.313722043, 0.596722357, 0.738580332)))
+        if (!equal(eigen.vectors[2], Vector<3, double>(0.313722043, 0.596722357, 0.738580332), PRECISION))
         {
                 error("Eigenvalues error");
         }
@@ -134,35 +131,30 @@ template <std::size_t N, typename T>
 void test_eigen_random(const unsigned count)
 {
         constexpr T TOLERANCE = Limits<T>::epsilon() * 100;
+        constexpr T PRECISION = 0.01;
 
         for (const MatrixWithDeterminant<N, T>& m : random_symmetric_matrices<N, T>(count, -1, 1))
         {
-                Vector<N, T> eigenvalues;
-                std::array<Vector<N, T>, N> eigenvectors;
-                try
-                {
-                        eigen_symmetric_upper_triangular(m.matrix, TOLERANCE, &eigenvalues, &eigenvectors);
-                }
-                catch (const EigenException& e)
-                {
-                        error(e.what());
-                }
+                const Eigen eigen = eigen_symmetric_upper_triangular(m.matrix, TOLERANCE);
 
                 const T trace = m.matrix.trace();
                 const T det = m.determinant;
+
                 T sum = 0;
                 T product = 1;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        sum += eigenvalues[i];
-                        product *= eigenvalues[i];
+                        sum += eigen.values[i];
+                        product *= eigen.values[i];
                 }
-                if (std::abs((trace - sum) / std::max(std::abs(trace), std::abs(sum))) > T{0.01})
+
+                if (!equal(trace, sum, PRECISION))
                 {
                         error(std::string("Eigenvalues error for ") + type_name<T>() + ": trace " + to_string(trace)
                               + " and sum " + to_string(sum) + " are not equal");
                 }
-                if (std::abs((det - product) / std::max(std::abs(det), std::abs(product))) > T{0.01})
+
+                if (!equal(det, product, PRECISION))
                 {
                         error(std::string("Eigenvalues error for ") + type_name<T>() + ": determinant " + to_string(det)
                               + " and product " + to_string(product) + " are not equal");
@@ -178,7 +170,7 @@ void test_eigen_random(const unsigned count)
         test_eigen_random<5, T>(count);
 }
 
-void test_eigen(progress::Ratio* const progress)
+void test(progress::Ratio* const progress)
 {
         LOG("Test eigenvalues and eigenvectors");
         progress->set(0);
@@ -194,6 +186,18 @@ void test_eigen(progress::Ratio* const progress)
         progress->set(3, 3);
 
         LOG("Test eigenvalues and eigenvectors passed");
+}
+
+void test_eigen(progress::Ratio* const progress)
+{
+        try
+        {
+                test(progress);
+        }
+        catch (const EigenException& e)
+        {
+                error(e.what());
+        }
 }
 
 TEST_SMALL("Eigen", test_eigen)

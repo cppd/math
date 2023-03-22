@@ -133,11 +133,14 @@ public:
 };
 
 template <std::size_t N, typename T>
-void eigen_symmetric_upper_triangular(
-        Matrix<N, N, T> a,
-        const T& tolerance,
-        Vector<N, T>* const eigenvalues,
-        std::array<Vector<N, T>, N>* const eigenvectors)
+struct Eigen final
+{
+        Vector<N, T> values;
+        std::array<Vector<N, T>, N> vectors;
+};
+
+template <std::size_t N, typename T>
+Eigen<N, T> eigen_symmetric_upper_triangular(Matrix<N, N, T> a, const T& tolerance)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;
@@ -161,9 +164,7 @@ void eigen_symmetric_upper_triangular(
 
                 if (mu <= tolerance)
                 {
-                        *eigenvalues = a.diagonal();
-                        *eigenvectors = vectors;
-                        return;
+                        return {.values = a.diagonal(), .vectors = vectors};
                 }
         }
 
