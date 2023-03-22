@@ -39,27 +39,41 @@ Springer-Verlag London, 2012.
 
 namespace ns::numerical
 {
+namespace normal_implementation
+{
+template <std::size_t N, typename T>
+Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& points)
+{
+        const Matrix<N, N, T> covariance_matrix = covariance_matrix_simple(points);
+
+        const T tolerance = [&]()
+        {
+                T max = Limits<T>::lowest();
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        for (std::size_t j = i + 1; j < N; ++j)
+                        {
+                                max = std::max(max, std::abs(covariance_matrix(i, j)));
+                        }
+                }
+                return max * (100 * Limits<T>::epsilon());
+        }();
+
+        return eigen_symmetric_upper_triangular(covariance_matrix, tolerance);
+}
+}
+
 template <std::size_t N, typename T>
 Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
 {
+        namespace impl = normal_implementation;
+
         if (points.size() < N)
         {
                 error("At least " + to_string(N) + " points are required for point normal");
         }
 
-        const Matrix<N, N, T> covariance_matrix = covariance_matrix_simple(points);
-
-        T max = Limits<T>::lowest();
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                for (std::size_t j = i + 1; j < N; ++j)
-                {
-                        max = std::max(max, std::abs(covariance_matrix(i, j)));
-                }
-        }
-
-        const T tolerance = max * (100 * Limits<T>::epsilon());
-        const Eigen eigen = eigen_symmetric_upper_triangular(covariance_matrix, tolerance);
+        const Eigen eigen = impl::covariance_matrix_eigen_for_points(points);
 
         std::size_t min_i = 0;
         T min = eigen.values[0];
