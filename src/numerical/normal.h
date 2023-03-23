@@ -31,6 +31,7 @@ Springer-Verlag London, 2012.
 #include "matrix.h"
 #include "vector.h"
 
+#include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -61,6 +62,24 @@ Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& 
 
         return eigen_symmetric_upper_triangular(covariance_matrix, tolerance);
 }
+
+template <std::size_t N, typename T>
+std::size_t min_value_index(const Vector<N, T>& values)
+{
+        static_assert(N > 0);
+
+        std::size_t index = 0;
+        T min = values[0];
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                if (min > values[i])
+                {
+                        index = i;
+                        min = values[i];
+                }
+        }
+        return index;
+}
 }
 
 template <std::size_t N, typename T>
@@ -75,26 +94,9 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
 
         const Eigen eigen = impl::covariance_matrix_eigen_for_points(points);
 
-        std::size_t min_i = 0;
-        T min = eigen.values[0];
-        for (std::size_t i = 1; i < N; ++i)
-        {
-                if (min > eigen.values[i])
-                {
-                        min_i = i;
-                        min = eigen.values[i];
-                }
-        }
-        std::array<Vector<N, T>, N - 1> vectors;
-        std::size_t n = 0;
-        for (std::size_t i = 0; i < min_i; ++i)
-        {
-                vectors[n++] = eigen.vectors[i];
-        }
-        for (std::size_t i = min_i + 1; i < N; ++i)
-        {
-                vectors[n++] = eigen.vectors[i];
-        }
+        const auto min_value_index = impl::min_value_index(eigen.values);
+
+        const auto vectors = del_elem(eigen.vectors, min_value_index);
 
         return orthogonal_complement(vectors).normalized();
 }
