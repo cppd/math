@@ -154,8 +154,8 @@ public:
                   nodes_(nodes),
                   object_intersect_(object_intersect),
                   ray_(ray),
-                  dir_reciprocal_(reciprocal(ray.dir())),
-                  dir_negative_(negative_bool(ray.dir())),
+                  dir_reciprocal_(ray.dir().reciprocal()),
+                  dir_negative_(ray.dir().negative_bool()),
                   distance_(max_distance)
         {
         }

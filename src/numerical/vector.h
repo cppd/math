@@ -115,17 +115,6 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> operator-(const Vector<N, T>& a)
-{
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = -a[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
 [[nodiscard]] constexpr Vector<N, T> max(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -170,41 +159,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> reciprocal(const Vector<N, T>& a)
+[[nodiscard]] decltype(auto) is_finite(const Vector<N, T>& v)
 {
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                // 1 / -0 == -infinity
-                res[i] = (a[i] == 0) ? std::numeric_limits<T>::infinity() : (1 / a[i]);
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, bool> negative_bool(const Vector<N, T>& v)
-{
-        Vector<N, bool> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = (v[i] < 0);
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-        requires std::is_floating_point_v<T>
-[[nodiscard]] bool is_finite(const Vector<N, T>& data)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (std::isfinite(data[i]))
-                {
-                        continue;
-                }
-                return false;
-        }
-        return true;
+        return v.is_finite();
 }
 
 template <typename Dst, std::size_t N, typename Src>
@@ -272,7 +229,7 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::string to_string(const Vector<N, T>& v)
+[[nodiscard]] decltype(auto) to_string(const Vector<N, T>& v)
 {
         return v.to_string();
 }

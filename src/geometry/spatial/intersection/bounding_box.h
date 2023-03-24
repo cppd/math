@@ -176,7 +176,7 @@ std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<Ray<N, T>>
         res.reserve(rays.size());
         for (const Ray<N, T>& ray : rays)
         {
-                res.push_back(reciprocal(ray.dir()));
+                res.push_back(ray.dir().reciprocal());
         }
         return res;
 }
@@ -188,7 +188,7 @@ std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>
         res.reserve(rays.size());
         for (const Ray<N, T>& ray : rays)
         {
-                res.push_back(negative_bool(ray.dir()));
+                res.push_back(ray.dir().negative_bool());
         }
         return res;
 }

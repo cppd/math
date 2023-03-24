@@ -92,6 +92,16 @@ public:
                 return compute_hash(data_);
         }
 
+        [[nodiscard]] constexpr Vector<N, T> operator-() const
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = -data_[i];
+                }
+                return res;
+        }
+
         constexpr Vector<N, T>& operator+=(const Vector<N, T>& a) &
         {
                 for (std::size_t i = 0; i < N; ++i)
@@ -268,6 +278,41 @@ public:
                         res[i] = std::max(v, data_[i]);
                 }
                 return res;
+        }
+
+        [[nodiscard]] constexpr Vector<N, T> reciprocal() const
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        // 1 / -0 == -infinity
+                        res[i] = (data_[i] == 0) ? std::numeric_limits<T>::infinity() : (1 / data_[i]);
+                }
+                return res;
+        }
+
+        [[nodiscard]] constexpr Vector<N, bool> negative_bool() const
+        {
+                Vector<N, bool> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = (data_[i] < 0);
+                }
+                return res;
+        }
+
+        [[nodiscard]] bool is_finite() const
+                requires (std::is_floating_point_v<T>)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        if (std::isfinite(data_[i]))
+                        {
+                                continue;
+                        }
+                        return false;
+                }
+                return true;
         }
 
         [[nodiscard]] std::string to_string() const

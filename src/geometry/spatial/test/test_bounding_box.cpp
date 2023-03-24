@@ -310,8 +310,9 @@ void test_inside(
         test_intersection_1_volume(box, r, box.intersect_volume(r), length);
         test_intersection_1_volume(box, r, box.intersect_volume(r, move_distance), length);
 
-        test_intersection_1(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
-        test_intersection_1(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
+        test_intersection_1(box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool()));
+        test_intersection_1(
+                box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool(), move_distance));
 }
 
 template <std::size_t N, typename T>
@@ -334,9 +335,10 @@ void test_outside(
         test_intersection_2(box, r, box.intersect_volume(r, move_distance), move_min, move_max, precision);
         test_no_intersection(box, r, box.intersect_volume(r, length));
 
-        test_intersection_2(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
-        test_intersection_2(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
-        test_no_intersection(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), length));
+        test_intersection_2(box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool()));
+        test_intersection_2(
+                box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool(), move_distance));
+        test_no_intersection(box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool(), length));
 }
 
 template <std::size_t N, typename T>
@@ -354,8 +356,8 @@ void test_outside_no_intersection(
         test_no_intersection(box, r, box.intersect_volume(r));
         test_no_intersection(box, r, box.intersect_volume(r, length));
 
-        test_no_intersection(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
-        test_no_intersection(box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), length));
+        test_no_intersection(box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool()));
+        test_no_intersection(box, r, box.intersect(r.org(), r.dir().reciprocal(), r.dir().negative_bool(), length));
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -393,7 +395,7 @@ void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEn
                 test_no_intersection(box, ray, box.intersect_volume(ray));
 
                 test_no_intersection(
-                        box, ray, box.intersect(ray.org(), reciprocal(ray.dir()), negative_bool(ray.dir())));
+                        box, ray, box.intersect(ray.org(), ray.dir().reciprocal(), ray.dir().negative_bool()));
         }
 }
 
