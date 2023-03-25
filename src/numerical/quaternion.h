@@ -48,12 +48,12 @@ public:
         {
         }
 
-        [[nodiscard]] T operator[](const unsigned i) const
+        [[nodiscard]] T operator[](const std::size_t i) const
         {
                 return data_[i];
         }
 
-        [[nodiscard]] T& operator[](const unsigned i)
+        [[nodiscard]] T& operator[](const std::size_t i)
         {
                 return data_[i];
         }

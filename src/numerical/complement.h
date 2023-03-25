@@ -182,20 +182,20 @@ namespace complement_implementation
 template <std::size_t N, typename T>
 std::size_t closest_axis(const Vector<N, T>& v)
 {
-        static_assert(N >= 1);
+        static_assert(N > 0);
 
-        std::size_t max_index = 0;
-        T max_value = std::abs(v[0]);
+        std::size_t index = 0;
+        T max = std::abs(v[0]);
         for (std::size_t i = 1; i < N; ++i)
         {
-                const T value = std::abs(v[i]);
-                if (value > max_value)
+                const T abs = std::abs(v[i]);
+                if (abs > max)
                 {
-                        max_index = i;
-                        max_value = value;
+                        index = i;
+                        max = abs;
                 }
         }
-        return max_index;
+        return index;
 }
 
 template <std::size_t N, typename T>

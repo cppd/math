@@ -230,7 +230,7 @@ constexpr T determinant(RowMatrix<N, N, T>&& m)
         const bool sign = solve_u(m);
 
         T d = m(0, 0);
-        for (unsigned i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 d *= m(i, i);
         }
@@ -262,7 +262,7 @@ constexpr std::array<Vector<M, T>, N> solve_gauss(RowMatrix<N, N, T>&& a, RowMat
         solve_x(a, b);
 
         std::array<Vector<M, T>, N> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = std::move(b.row(i));
         }

@@ -64,18 +64,18 @@ Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& 
 }
 
 template <std::size_t N, typename T>
-std::size_t min_value_index(const Vector<N, T>& values)
+std::size_t min_value_index(const Vector<N, T>& v)
 {
         static_assert(N > 0);
 
         std::size_t index = 0;
-        T min = values[0];
+        T min = v[0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                if (min > values[i])
+                if (v[i] < min)
                 {
                         index = i;
-                        min = values[i];
+                        min = v[i];
                 }
         }
         return index;

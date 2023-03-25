@@ -119,7 +119,7 @@ public:
         {
                 static_assert(std::is_integral_v<Type>);
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (p[i] < offset0_[i] || p[i] >= offset1_[i])
                         {
@@ -141,7 +141,7 @@ public:
 
         [[nodiscard]] bool is_positive() const
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (offset0_[i] < 0)
                         {

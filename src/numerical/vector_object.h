@@ -71,12 +71,12 @@ public:
         {
         }
 
-        [[nodiscard]] constexpr const T& operator[](std::size_t i) const
+        [[nodiscard]] constexpr const T& operator[](const std::size_t i) const
         {
                 return data_[i];
         }
 
-        [[nodiscard]] constexpr T& operator[](std::size_t i)
+        [[nodiscard]] constexpr T& operator[](const std::size_t i)
         {
                 return data_[i];
         }

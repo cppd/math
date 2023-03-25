@@ -82,7 +82,7 @@ void set_matrix(MatrixWithDeterminant<N, T>* const m, std::uniform_real_distribu
 }
 
 template <std::size_t N, typename T>
-std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigned count, const T min, const T max)
+std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const std::size_t count, const T min, const T max)
 {
         PCG engine;
         std::uniform_real_distribution<T> urd(min, max);
@@ -128,7 +128,7 @@ void test_eigen_defined()
 }
 
 template <std::size_t N, typename T>
-void test_eigen_random(const unsigned count)
+void test_eigen_random(const std::size_t count)
 {
         constexpr T TOLERANCE = Limits<T>::epsilon() * 100;
         constexpr T PRECISION = 0.01;
@@ -142,7 +142,7 @@ void test_eigen_random(const unsigned count)
 
                 T sum = 0;
                 T product = 1;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         sum += eigen.values[i];
                         product *= eigen.values[i];
@@ -163,7 +163,7 @@ void test_eigen_random(const unsigned count)
 }
 
 template <typename T>
-void test_eigen_random(const unsigned count)
+void test_eigen_random(const std::size_t count)
 {
         test_eigen_random<3, T>(count);
         test_eigen_random<4, T>(count);

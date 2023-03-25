@@ -117,22 +117,22 @@ public:
         {
         }
 
-        [[nodiscard]] constexpr const Vector<COLUMNS, T>& row(std::size_t r) const
+        [[nodiscard]] constexpr const Vector<COLUMNS, T>& row(const std::size_t r) const
         {
                 return rows_[r];
         }
 
-        [[nodiscard]] constexpr Vector<COLUMNS, T>& row(std::size_t r)
+        [[nodiscard]] constexpr Vector<COLUMNS, T>& row(const std::size_t r)
         {
                 return rows_[r];
         }
 
-        [[nodiscard]] constexpr const T& operator()(std::size_t r, std::size_t c) const
+        [[nodiscard]] constexpr const T& operator()(const std::size_t r, const std::size_t c) const
         {
                 return rows_[r][c];
         }
 
-        [[nodiscard]] constexpr T& operator()(std::size_t r, std::size_t c)
+        [[nodiscard]] constexpr T& operator()(const std::size_t r, const std::size_t c)
         {
                 return rows_[r][c];
         }
@@ -194,24 +194,24 @@ public:
         {
                 static constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
-                T s = 0;
+                T res = 0;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        s += rows_[i][i];
+                        res += rows_[i][i];
                 }
-                return s;
+                return res;
         }
 
         [[nodiscard]] Vector<std::min(ROWS, COLUMNS), T> diagonal() const
         {
                 static constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
-                Vector<N, T> d;
+                Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        d[i] = rows_[i][i];
+                        res[i] = rows_[i][i];
                 }
-                return d;
+                return res;
         }
 };
 

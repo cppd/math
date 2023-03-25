@@ -48,15 +48,15 @@ template <std::size_t N, typename T>
 void test_normal_defined()
 {
         std::vector<Vector<N, T>> points;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 Vector<N, T>& p = points.emplace_back();
-                for (unsigned j = 0; j < i; ++j)
+                for (std::size_t j = 0; j < i; ++j)
                 {
                         p[j] = 0;
                 }
                 p[i] = 1;
-                for (unsigned j = i + 1; j < N; ++j)
+                for (std::size_t j = i + 1; j < N; ++j)
                 {
                         p[j] = 0;
                 }
@@ -69,11 +69,11 @@ void test_normal_defined()
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_vectors(const unsigned count, RandomEngine& engine)
+std::vector<Vector<N, T>> random_vectors(const std::size_t count, RandomEngine& engine)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(count);
-        for (unsigned i = 0; i < count; ++i)
+        for (std::size_t i = 0; i < count; ++i)
         {
                 res.push_back(sampling::uniform_on_sphere<N, T>(engine));
         }
@@ -81,9 +81,9 @@ std::vector<Vector<N, T>> random_vectors(const unsigned count, RandomEngine& eng
 }
 
 template <std::size_t N, typename T>
-void test_normal_random(const unsigned test_count)
+void test_normal_random(const std::size_t test_count)
 {
-        constexpr unsigned POINT_COUNT = 100;
+        constexpr std::size_t POINT_COUNT = 100;
 
         PCG engine;
 
@@ -125,7 +125,7 @@ void test_normal_defined()
 }
 
 template <typename T>
-void test_normal_random(const unsigned test_count)
+void test_normal_random(const std::size_t test_count)
 {
         test_normal_random<2, T>(test_count);
         test_normal_random<3, T>(test_count);

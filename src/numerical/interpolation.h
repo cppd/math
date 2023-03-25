@@ -91,7 +91,7 @@ public:
                 std::array<int, N> x1;
                 std::array<InterpolationType, N> x;
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         const T v = p[i] * size_[i] - T{0.5};
                         const T floor = std::floor(v);

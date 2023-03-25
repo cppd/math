@@ -38,7 +38,7 @@ void print_simplex_data(
                 static_assert(std::is_floating_point_v<T>);
 
                 LOG("z = " + to_string(v) + " + " + to_string(c));
-                for (unsigned i = 0; i < M; ++i)
+                for (std::size_t i = 0; i < M; ++i)
                 {
                         LOG(to_string(b[i]) + " + " + to_string(a[i]));
                 }
