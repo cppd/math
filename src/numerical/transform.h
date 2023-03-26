@@ -30,14 +30,12 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
         const Vector<3, T> s = cross(f, up).normalized();
         const Vector<3, T> u = cross(s, f).normalized();
 
-        Matrix<4, 4, T> m;
-
-        m.row(0) = Vector<4, T>(s[0], s[1], s[2], -dot(s, eye));
-        m.row(1) = Vector<4, T>(u[0], u[1], u[2], -dot(u, eye));
-        m.row(2) = Vector<4, T>(-f[0], -f[1], -f[2], dot(f, eye));
-        m.row(3) = Vector<4, T>(0, 0, 0, 1);
-
-        return m;
+        Matrix<4, 4, T> res;
+        res.row(0) = {s[0], s[1], s[2], -dot(s, eye)};
+        res.row(1) = {u[0], u[1], u[2], -dot(u, eye)};
+        res.row(2) = {-f[0], -f[1], -f[2], dot(f, eye)};
+        res.row(3) = {0, 0, 0, 1};
+        return res;
 }
 
 // Right-handed coordinate systems
@@ -52,28 +50,23 @@ constexpr Matrix<4, 4, T> ortho_vulkan(
         const std::type_identity_t<T>& near,
         const std::type_identity_t<T>& far)
 {
-        Matrix<4, 4, T> m(1);
-
-        m(0, 0) = 2 / (right - left);
-        m(1, 1) = 2 / (bottom - top);
-        m(2, 2) = 1 / (far - near);
-
-        m(0, 3) = -(right + left) / (right - left);
-        m(1, 3) = -(bottom + top) / (bottom - top);
-        m(2, 3) = -near / (far - near);
-
-        return m;
+        Matrix<4, 4, T> res;
+        res.row(0) = {2 / (right - left), 0, 0, -(right + left) / (right - left)};
+        res.row(1) = {0, 2 / (bottom - top), 0, -(bottom + top) / (bottom - top)};
+        res.row(2) = {0, 0, 1 / (far - near), -near / (far - near)};
+        res.row(3) = {0, 0, 0, 1};
+        return res;
 }
 
 template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
-        Matrix<N + 1, N + 1, T> m(1);
+        Matrix<N + 1, N + 1, T> res(1);
         for (std::size_t i = 0; i < N; ++i)
         {
-                m(i, i) = v[i];
+                res(i, i) = v[i];
         }
-        return m;
+        return res;
 }
 
 template <typename T, typename... V>
@@ -85,12 +78,12 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(const V&... v)
 template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
-        Matrix<N + 1, N + 1, T> m(1);
+        Matrix<N + 1, N + 1, T> res(1);
         for (std::size_t i = 0; i < N; ++i)
         {
-                m(i, N) = v[i];
+                res(i, N) = v[i];
         }
-        return m;
+        return res;
 }
 
 template <typename T, typename... V>
@@ -105,8 +98,8 @@ class MatrixVectorMultiplier final
         Matrix<N, N, T> matrix_;
 
 public:
-        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m)
-                : matrix_(m)
+        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& matrix)
+                : matrix_(matrix)
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
@@ -115,6 +108,7 @@ public:
                                 error("Wrong matrix for matrix-vector multiplier");
                         }
                 }
+
                 if (matrix_(N - 1, N - 1) != 1)
                 {
                         error("Wrong matrix for matrix-vector multiplier");
