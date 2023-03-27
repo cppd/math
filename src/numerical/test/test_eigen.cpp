@@ -33,7 +33,7 @@ namespace ns::numerical
 namespace
 {
 template <std::size_t N, typename T>
-bool equal(const Vector<N, T>& a, const Vector<N, T>& b, const T precision)
+[[nodiscard]] bool equal(const Vector<N, T>& a, const Vector<N, T>& b, const T precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -46,13 +46,16 @@ bool equal(const Vector<N, T>& a, const Vector<N, T>& b, const T precision)
 }
 
 template <typename T>
-bool equal(const T a, const T b, const T precision)
+[[nodiscard]] bool equal(const T a, const T b, const T precision)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         if (a == b)
         {
                 return true;
         }
-        return std::abs(a - b) / std::max(std::abs(a), std::abs(b)) < precision;
+        const T rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
+        return (rel < precision);
 }
 
 template <std::size_t N, typename T>

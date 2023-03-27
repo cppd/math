@@ -30,10 +30,11 @@ namespace
 template <typename T>
 void test_equal(const T a, const T b)
 {
-        if (!(a == b))
+        if (a == b)
         {
-                error(to_string(a) + " is not equal to " + to_string(b));
+                return;
         }
+        error(to_string(a) + " is not equal to " + to_string(b));
 }
 
 template <typename T>
