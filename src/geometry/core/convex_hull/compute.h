@@ -47,8 +47,6 @@ The projection to the n-space of the lower convex hull of the points
 #include "facet_storage.h"
 #include "simplex_points.h"
 
-#include "../ridge.h"
-
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/names.h>

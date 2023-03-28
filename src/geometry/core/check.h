@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -40,7 +41,7 @@ namespace check_implementation
 {
 template <std::size_t N, typename T>
 void check_facet_dimension(
-        const std::string& name,
+        const std::string_view name,
         const std::vector<Vector<N, T>>& vertices,
         const std::vector<std::array<int, N>>& facets)
 {
@@ -54,20 +55,23 @@ void check_facet_dimension(
                 }
                 if (facet_vertex_set.size() != N)
                 {
-                        error(name + " facet unique vertex count " + to_string(facet_vertex_set.size())
+                        error(std::string(name) + " facet unique vertex count " + to_string(facet_vertex_set.size())
                               + " is not equal to " + to_string(N));
                 }
 
                 const Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
                 if (!is_finite(n))
                 {
-                        error(name + " facet normal " + to_string(n) + " is not finite");
+                        error(std::string(name) + " facet normal " + to_string(n) + " is not finite");
                 }
         }
 }
 
 template <std::size_t N>
-void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets, const bool has_boundary)
+void check_manifoldness(
+        const std::string_view name,
+        const std::vector<std::array<int, N>>& facets,
+        const bool has_boundary)
 {
         struct Hash final
         {
@@ -93,7 +97,8 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
                 {
                         if (count != 2)
                         {
-                                error(name + " ridge facet count " + to_string(count) + " is not equal to 2");
+                                error(std::string(name) + " ridge facet count " + to_string(count)
+                                      + " is not equal to 2");
                         }
                 }
         }
@@ -103,7 +108,8 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
                 {
                         if (count > 2)
                         {
-                                error(name + " ridge facet count " + to_string(count) + " is greater than 2");
+                                error(std::string(name) + " ridge facet count " + to_string(count)
+                                      + " is greater than 2");
                         }
                 }
         }
@@ -111,7 +117,7 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
 
 template <std::size_t N>
 void check_euler_characteristic(
-        const std::string& name,
+        const std::string_view name,
         const std::vector<std::array<int, N>>& facets,
         const int expected_euler_characteristic)
 {
@@ -139,11 +145,11 @@ void check_euler_characteristic(
 
 template <std::size_t N, typename T>
 void check_mesh(
-        const std::string& name,
+        const std::string_view name,
         const std::vector<Vector<N, T>>& vertices,
         const std::vector<std::array<int, N>>& facets,
         const bool has_boundary,
-        const std::optional<int>& expected_euler_characteristic)
+        const std::optional<int> expected_euler_characteristic)
 {
         namespace impl = check_implementation;
 

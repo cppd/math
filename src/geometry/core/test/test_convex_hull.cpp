@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/geometry/core/check.h>
@@ -35,13 +36,12 @@ namespace ns::geometry::core
 namespace
 {
 template <std::size_t N>
-std::vector<Vector<N, float>> random_data(const bool zero, const int count, const bool on_sphere)
+std::vector<Vector<N, float>> random_points(const bool zero, const int count, const bool on_sphere)
 {
         PCG engine(count);
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
-        std::vector<Vector<N, float>> points;
-        points.resize(count);
+        std::vector<Vector<N, float>> points(count);
 
         for (Vector<N, float>& point : points)
         {
@@ -103,35 +103,45 @@ void check_visible_from_point(
 }
 
 template <std::size_t N>
-void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::vector<ConvexHullSimplex<N>>& facets)
+void check_convex_hull_data(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<ConvexHullSimplex<N>>& facets)
 {
+        if (facets.empty())
         {
-                if (facets.empty())
-                {
-                        error("Convex hull empty facets");
-                }
-
-                constexpr std::size_t MIN_POINT_COUNT = N + 1;
-                if (points.size() < MIN_POINT_COUNT)
-                {
-                        error("Convex hull point count " + to_string(points.size())
-                              + " is less than minimum point count " + to_string(MIN_POINT_COUNT));
-                }
+                error("Convex hull empty facets");
         }
 
+        constexpr std::size_t MIN_POINT_COUNT = N + 1;
+        if (points.size() < MIN_POINT_COUNT)
         {
-                std::vector<std::array<int, N>> array_facets;
-                array_facets.reserve(facets.size());
-                for (const ConvexHullSimplex<N>& facet : facets)
-                {
-                        array_facets.push_back(facet.vertices());
-                }
+                error("Convex hull point count " + to_string(points.size()) + " is less than minimum point count "
+                      + to_string(MIN_POINT_COUNT));
+        }
+}
 
-                constexpr bool HAS_BOUNDARY = false;
-                const int euler_characteristic = euler_characteristic_for_convex_polytope<N>();
-                check_mesh("Convex hull in " + space_name(N), points, array_facets, HAS_BOUNDARY, euler_characteristic);
+template <std::size_t N>
+void check_convex_hull_mesh(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<ConvexHullSimplex<N>>& facets)
+{
+        std::vector<std::array<int, N>> array_facets;
+        array_facets.reserve(facets.size());
+        for (const ConvexHullSimplex<N>& facet : facets)
+        {
+                array_facets.push_back(facet.vertices());
         }
 
+        constexpr bool HAS_BOUNDARY = false;
+        const int euler_characteristic = euler_characteristic_for_convex_polytope<N>();
+        check_mesh("Convex hull in " + space_name(N), points, array_facets, HAS_BOUNDARY, euler_characteristic);
+}
+
+template <std::size_t N>
+void check_convex_hull_facets(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<ConvexHullSimplex<N>>& facets)
+{
         for (const ConvexHullSimplex<N>& facet : facets)
         {
                 if (!is_finite(facet.ortho()))
@@ -148,6 +158,14 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::v
                         check_visible_from_point(points, facet, i);
                 }
         }
+}
+
+template <std::size_t N>
+void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::vector<ConvexHullSimplex<N>>& facets)
+{
+        check_convex_hull_data(points, facets);
+        check_convex_hull_mesh(points, facets);
+        check_convex_hull_facets(points, facets);
 }
 
 template <std::size_t N>
@@ -211,14 +229,14 @@ void test_convex_hull(progress::Ratio* const progress)
         LOG(name);
         {
                 constexpr bool ZERO = false;
-                const std::vector<Vector<N, float>> points = random_data<N>(ZERO, size, ON_SPHERE);
+                const std::vector<Vector<N, float>> points = random_points<N>(ZERO, size, ON_SPHERE);
                 const std::vector<ConvexHullSimplex<N>> facets =
                         create_convex_hull(points, WRITE_LOG, WRITE_INFO, progress);
                 check_convex_hull(points, facets);
         }
         {
                 constexpr bool ZERO = true;
-                const std::vector<Vector<N, float>> points = random_data<N>(ZERO, size, ON_SPHERE);
+                const std::vector<Vector<N, float>> points = random_points<N>(ZERO, size, ON_SPHERE);
                 const std::vector<ConvexHullSimplex<N>> facets =
                         create_convex_hull(points, WRITE_LOG, WRITE_INFO, progress);
                 check_convex_hull(points, facets);
@@ -238,11 +256,11 @@ void test_performance(progress::Ratio* const progress)
 
         {
                 constexpr bool ZERO = false;
-                create_convex_hull(random_data<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
+                create_convex_hull(random_points<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
         }
         {
                 constexpr bool ZERO = true;
-                create_convex_hull(random_data<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
+                create_convex_hull(random_points<N>(ZERO, SIZE, ON_SPHERE), WRITE_LOG, WRITE_INFO, progress);
         }
 }
 
