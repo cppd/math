@@ -49,11 +49,16 @@ struct ManifoldFacet final
 };
 
 template <std::size_t N>
-void find_vertex_and_facet_data(
+struct ManifoldData final
+{
+        std::vector<ManifoldVertex<N>> vertices;
+        std::vector<ManifoldFacet<N>> facets;
+};
+
+template <std::size_t N>
+[[nodiscard]] ManifoldData<N> find_manifold_data(
         bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
-        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
-        std::vector<ManifoldVertex<N>>* vertex_data,
-        std::vector<ManifoldFacet<N>>* facet_data);
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets);
 }

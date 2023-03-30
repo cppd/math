@@ -274,8 +274,9 @@ public:
 
                 create_voronoi_delaunay(source_points, &points_, &delaunay_objects_, &delaunay_facets_, progress);
 
-                find_vertex_and_facet_data(
-                        !cocone_only_, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
+                ManifoldData<N> data = find_manifold_data(!cocone_only_, points_, delaunay_objects_, delaunay_facets_);
+                vertex_data_ = std::move(data.vertices);
+                facet_data_ = std::move(data.facets);
 
                 ASSERT(source_points.size() == points_.size());
                 ASSERT(source_points.size() == vertex_data_.size());

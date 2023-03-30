@@ -425,21 +425,18 @@ std::vector<VertexConnections> vertex_connections(
 }
 
 template <std::size_t N>
-void find_vertex_and_facet_data(
-        bool find_cocone_neighbors,
+ManifoldData<N> find_manifold_data(
+        const bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
         const std::vector<core::DelaunayObject<N>>& objects,
-        const std::vector<core::DelaunayFacet<N>>& facets,
-        std::vector<ManifoldVertex<N>>* const vertex_data,
-        std::vector<ManifoldFacet<N>>* const facet_data)
+        const std::vector<core::DelaunayFacet<N>>& facets)
 {
         const std::vector<VertexConnections> connections = vertex_connections(points.size(), objects, facets);
 
-        vertex_data->clear();
-        vertex_data->reserve(points.size());
-
-        facet_data->clear();
-        facet_data->resize(facets.size());
+        std::vector<ManifoldVertex<N>> vertex_data;
+        std::vector<ManifoldFacet<N>> facet_data;
+        vertex_data.reserve(points.size());
+        facet_data.resize(facets.size());
 
         for (std::size_t v = 0; v < points.size(); ++v)
         {
@@ -447,7 +444,7 @@ void find_vertex_and_facet_data(
                 {
                         // No all points are Delaunay vertices.
                         // Integer convex hull algorithm can skip some points.
-                        vertex_data->emplace_back(Vector<N, double>(0), 0, 0);
+                        vertex_data.emplace_back(Vector<N, double>(0), 0, 0);
                         continue;
                 }
 
@@ -458,34 +455,35 @@ void find_vertex_and_facet_data(
 
                 if (!find_cocone_neighbors)
                 {
-                        cocone_facets(points[v], objects, facets, positive_norm, connections[v], facet_data);
+                        cocone_facets(points[v], objects, facets, positive_norm, connections[v], &facet_data);
 
-                        vertex_data->emplace_back(positive_norm, 0, 0);
+                        vertex_data.emplace_back(positive_norm, 0, 0);
                 }
                 else
                 {
                         const double height = voronoi_height(points[v], objects, positive_norm, connections[v].objects);
 
                         const double voronoi_radius = cocone_facets_and_voronoi_radius(
-                                points[v], objects, facets, positive_norm, connections[v], facet_data);
+                                points[v], objects, facets, positive_norm, connections[v], &facet_data);
 
-                        vertex_data->emplace_back(positive_norm, height, voronoi_radius);
+                        vertex_data.emplace_back(positive_norm, height, voronoi_radius);
                 }
         }
 
         if (find_cocone_neighbors)
         {
-                cocone_neighbors(facets, *facet_data, connections, vertex_data);
+                cocone_neighbors(facets, facet_data, connections, &vertex_data);
         }
 
-        ASSERT(vertex_data->size() == points.size());
+        ASSERT(vertex_data.size() == points.size());
+
+        return {.vertices = std::move(vertex_data), .facets = std::move(facet_data)};
 }
 
 #define TEMPLATE(N)                                                                                           \
-        template void find_vertex_and_facet_data(                                                             \
+        template ManifoldData<(N)> find_manifold_data(                                                        \
                 bool, const std::vector<Vector<(N), double>>&, const std::vector<core::DelaunayObject<(N)>>&, \
-                const std::vector<core::DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
-                std::vector<ManifoldFacet<(N)>>*);
+                const std::vector<core::DelaunayFacet<(N)>>&);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }
