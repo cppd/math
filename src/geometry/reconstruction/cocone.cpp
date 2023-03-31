@@ -96,11 +96,16 @@ std::vector<std::array<int, N>> create_facets(
 }
 
 template <std::size_t N>
-void create_voronoi_delaunay(
+struct DelaunayData final
+{
+        std::vector<Vector<N, double>> points;
+        std::vector<core::DelaunayObject<N>> objects;
+        std::vector<core::DelaunayFacet<N>> facets;
+};
+
+template <std::size_t N>
+DelaunayData<N> create_voronoi_delaunay(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<Vector<N, double>>* const points,
-        std::vector<core::DelaunayObject<N>>* const delaunay_objects,
-        std::vector<core::DelaunayFacet<N>>* const delaunay_facets,
         progress::Ratio* const progress)
 {
         constexpr bool WRITE_LOG = true;
@@ -108,13 +113,17 @@ void create_voronoi_delaunay(
         LOG("computing delaunay...");
         core::DelaunayData<N> delaunay = core::compute_delaunay(source_points, progress, WRITE_LOG);
 
-        *points = std::move(delaunay.points);
+        DelaunayData<N> res;
+
+        res.points = std::move(delaunay.points);
 
         LOG("creating delaunay objects...");
-        *delaunay_objects = core::create_delaunay_objects(*points, delaunay.simplices);
+        res.objects = core::create_delaunay_objects(res.points, delaunay.simplices);
 
         LOG("creating delaunay facets...");
-        *delaunay_facets = core::create_delaunay_facets(delaunay.simplices);
+        res.facets = core::create_delaunay_facets(delaunay.simplices);
+
+        return res;
 }
 
 void check_rho_and_aplha(const double rho, const double alpha)
@@ -272,11 +281,19 @@ public:
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
 
-                create_voronoi_delaunay(source_points, &points_, &delaunay_objects_, &delaunay_facets_, progress);
+                {
+                        DelaunayData<N> data = create_voronoi_delaunay(source_points, progress);
+                        points_ = std::move(data.points);
+                        delaunay_objects_ = std::move(data.objects);
+                        delaunay_facets_ = std::move(data.facets);
+                }
 
-                ManifoldData<N> data = find_manifold_data(!cocone_only_, points_, delaunay_objects_, delaunay_facets_);
-                vertex_data_ = std::move(data.vertices);
-                facet_data_ = std::move(data.facets);
+                {
+                        ManifoldData<N> data =
+                                find_manifold_data(!cocone_only_, points_, delaunay_objects_, delaunay_facets_);
+                        vertex_data_ = std::move(data.vertices);
+                        facet_data_ = std::move(data.facets);
+                }
 
                 ASSERT(source_points.size() == points_.size());
                 ASSERT(source_points.size() == vertex_data_.size());
