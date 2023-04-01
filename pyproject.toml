@@ -1,0 +1,10 @@
+[tool.isort]
+atomic = true
+combine_star = true
+line_length = 120
+order_by_type = true
+py_version = "auto"
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
