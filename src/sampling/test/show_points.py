@@ -47,14 +47,12 @@ def sampler_title(title, sampler_info):
 
 def sampler_lines(size):
     figures = []
-    for v in range(0, size + 1):
-        k = v / size
-        f = px.line(x=[k, k], y=[0, 1])
+    for i in range(0, size + 1):
+        k = i / size
+        figures.append(px.line(x=[k, k], y=[0, 1]))
+        figures.append(px.line(x=[0, 1], y=[k, k]))
+    for f in figures:
         f.update_traces(line_color=SAMPLER_LINE_COLOR, line_width=SAMPLER_LINE_WIDTH)
-        figures.append(f)
-        f = px.line(x=[0, 1], y=[k, k])
-        f.update_traces(line_color=SAMPLER_LINE_COLOR, line_width=SAMPLER_LINE_WIDTH)
-        figures.append(f)
     return figures
 
 
@@ -157,7 +155,7 @@ def parse_sampler_name(text):
     if word_begin < 0:
         return None
     text = text[word_begin + len(SAMPLER_NAME_STRING) :].strip()
-    if not len(text):
+    if not text:
         return None
     return text
 
@@ -174,7 +172,7 @@ def parse_sampler_grid(text):
         value = int(words[0])
     except ValueError:
         return None
-    if not value > 0:
+    if not (value > 0):
         return None
     return value
 
