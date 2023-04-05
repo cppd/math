@@ -215,6 +215,44 @@ public:
         }
 };
 
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator+(
+        const Matrix<ROWS, COLUMNS, T>& m1,
+        const Matrix<ROWS, COLUMNS, T>& m2)
+{
+        Matrix<ROWS, COLUMNS, T> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
+        {
+                const Vector<COLUMNS, T>& m1_row = m1.row(r);
+                const Vector<COLUMNS, T>& m2_row = m2.row(r);
+                Vector<COLUMNS, T>& res_row = res.row(r);
+                for (std::size_t c = 0; c < COLUMNS; ++c)
+                {
+                        res_row[c] = m1_row[c] + m2_row[c];
+                }
+        }
+        return res;
+}
+
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator-(
+        const Matrix<ROWS, COLUMNS, T>& m1,
+        const Matrix<ROWS, COLUMNS, T>& m2)
+{
+        Matrix<ROWS, COLUMNS, T> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
+        {
+                const Vector<COLUMNS, T>& m1_row = m1.row(r);
+                const Vector<COLUMNS, T>& m2_row = m2.row(r);
+                Vector<COLUMNS, T>& res_row = res.row(r);
+                for (std::size_t c = 0; c < COLUMNS; ++c)
+                {
+                        res_row[c] = m1_row[c] - m2_row[c];
+                }
+        }
+        return res;
+}
+
 template <std::size_t ROWS, std::size_t INNER, std::size_t COLUMNS, typename T>
 [[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator*(
         const Matrix<ROWS, INNER, T>& m1,
