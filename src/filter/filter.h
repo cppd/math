@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "matrix.h"
+#include <src/numerical/matrix.h>
 
-namespace ns::numerical
+namespace ns::filter
 {
 template <std::size_t N, std::size_t M, typename T>
 class Filter final
