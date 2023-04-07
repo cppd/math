@@ -22,5 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter
 {
 template <std::size_t N, typename T>
+[[nodiscard]] Matrix<N, N, T> continuous_white_noise(T dt, T spectral_density);
+
+template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> discrete_white_noise(T dt, T variance);
 }
