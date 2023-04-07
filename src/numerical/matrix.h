@@ -310,6 +310,28 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         return res;
 }
 
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator*(const Matrix<ROWS, COLUMNS, T>& m, const T& v)
+{
+        Matrix<ROWS, COLUMNS, T> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
+        {
+                const Vector<COLUMNS, T>& m_row = m.row(r);
+                Vector<COLUMNS, T>& res_row = res.row(r);
+                for (std::size_t c = 0; c < COLUMNS; ++c)
+                {
+                        res_row[c] = m_row[c] * v;
+                }
+        }
+        return res;
+}
+
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator*(const T& v, const Matrix<ROWS, COLUMNS, T>& m)
+{
+        return m * v;
+}
+
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
