@@ -34,8 +34,6 @@ Kalman and Bayesian Filters in Python.
 
 #include "models.h"
 
-#include <src/com/exponent.h>
-
 namespace ns::filter
 {
 // 6.2.2 Continuous White Noise Acceleration Model
@@ -45,15 +43,15 @@ template <std::size_t N, typename T>
         requires (N == 2)
 Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_density)
 {
-        const T dt_2 = power<2>(dt);
-        const T dt_3 = power<3>(dt);
-        const T sd = spectral_density;
+        const T dt_1 = dt * spectral_density;
+        const T dt_2 = dt_1 * dt;
+        const T dt_3 = dt_2 * dt;
 
         // clang-format off
         return Matrix<N, N, T>
         {{{
-                {dt_3 / 3 * sd, dt_2 / 2 * sd},
-                {dt_2 / 2 * sd,       dt * sd}
+                {dt_3 / 3, dt_2 / 2},
+                {dt_2 / 2,     dt_1}
         }}};
         // clang-format on
 }
@@ -65,18 +63,18 @@ template <std::size_t N, typename T>
         requires (N == 3)
 Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_density)
 {
-        const T dt_2 = power<2>(dt);
-        const T dt_3 = power<3>(dt);
-        const T dt_4 = power<4>(dt);
-        const T dt_5 = power<5>(dt);
-        const T sd = spectral_density;
+        const T dt_1 = dt * spectral_density;
+        const T dt_2 = dt_1 * dt;
+        const T dt_3 = dt_2 * dt;
+        const T dt_4 = dt_3 * dt;
+        const T dt_5 = dt_4 * dt;
 
         // clang-format off
         return Matrix<N, N, T>
         {{{
-                {dt_5 / 20 * sd, dt_4 / 8 * sd, dt_3 / 6 * sd},
-                {dt_4 /  8 * sd, dt_3 / 3 * sd, dt_2 / 2 * sd},
-                {dt_3 /  6 * sd, dt_2 / 2 * sd,       dt * sd}
+                {dt_5 / 20, dt_4 / 8, dt_3 / 6},
+                {dt_4 /  8, dt_3 / 3, dt_2 / 2},
+                {dt_3 /  6, dt_2 / 2,     dt_1}
         }}};
         // clang-format on
 }
@@ -89,16 +87,15 @@ template <std::size_t N, typename T>
         requires (N == 2)
 Matrix<N, N, T> discrete_white_noise(const T dt, const T variance)
 {
-        const T dt_2 = power<2>(dt);
-        const T dt_3 = power<3>(dt);
-        const T dt_4 = power<4>(dt);
-        const T v = variance;
+        const T dt_2 = dt * dt * variance;
+        const T dt_3 = dt_2 * dt;
+        const T dt_4 = dt_3 * dt;
 
         // clang-format off
         return Matrix<N, N, T>
         {{{
-                {dt_4 / 4 * v, dt_3 / 2 * v},
-                {dt_3 / 2 * v,     dt_2 * v}
+                {dt_4 / 4, dt_3 / 2},
+                {dt_3 / 2,     dt_2}
         }}};
         // clang-format on
 }
@@ -112,17 +109,18 @@ template <std::size_t N, typename T>
         requires (N == 3)
 Matrix<N, N, T> discrete_white_noise(const T dt, const T variance)
 {
-        const T dt_2 = power<2>(dt);
-        const T dt_3 = power<3>(dt);
-        const T dt_4 = power<4>(dt);
-        const T v = variance;
+        const T dt_0 = variance;
+        const T dt_1 = dt_0 * dt;
+        const T dt_2 = dt_1 * dt;
+        const T dt_3 = dt_2 * dt;
+        const T dt_4 = dt_3 * dt;
 
         // clang-format off
         return Matrix<N, N, T>
         {{{
-                {dt_4 / 4 * v, dt_3 / 2 * v, dt_2 / 2 * v},
-                {dt_3 / 2 * v,     dt_2 * v,       dt * v},
-                {dt_2 / 2 * v,       dt * v,        1 * v}
+                {dt_4 / 4, dt_3 / 2, dt_2 / 2},
+                {dt_3 / 2,     dt_2,     dt_1},
+                {dt_2 / 2,     dt_1,     dt_0}
         }}};
         // clang-format on
 }
