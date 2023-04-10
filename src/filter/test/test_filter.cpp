@@ -70,6 +70,7 @@ struct ResultData final
 template <typename T, typename Engine>
 std::vector<ProcessData<T>> generate_random_data(
         const std::size_t count,
+        const T dt,
         const T velocity_mean,
         const T velocity_variance,
         const T measurement_variance,
@@ -83,7 +84,7 @@ std::vector<ProcessData<T>> generate_random_data(
         res.reserve(count);
         for (std::size_t i = 0; i < count; ++i)
         {
-                x += nd_v(engine);
+                x += dt * nd_v(engine);
                 res.push_back({.x = x, .z = x + nd_m(engine)});
         }
         return res;
@@ -116,45 +117,47 @@ void write_to_file(
         }
 }
 
-template <typename T>
 void test()
 {
+        using T = double;
+
         constexpr std::size_t N = 2;
         constexpr std::size_t M = 1;
 
-        const std::size_t count = 50;
-        const T velocity_mean = 1;
-        const T velocity_variance = power<2>(0.1);
-        const T measurement_variance = power<2>(3);
+        constexpr T DT = 1;
+        constexpr T VELOCITY_MEAN = 1;
+        constexpr T VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T MEASUREMENT_VARIANCE = power<2>(3);
 
-        const auto engine_init = 11111;
+        constexpr auto ENGINE_INIT = 11111;
 
-        const std::vector<ProcessData<T>> process_data = generate_random_data<double>(
-                count, velocity_mean, velocity_variance, measurement_variance, PCG(engine_init));
-
-        const T dt = 1;
-        const Vector<N, T> x(10, 5);
-        const Matrix<N, N, T> p{
+        constexpr Vector<N, T> X(10, 5);
+        constexpr Matrix<N, N, T> P{
                 {500,  0},
                 {  0, 50}
         };
-        const Matrix<N, N, T> f{
-                {1, dt},
+        constexpr Matrix<N, N, T> F{
+                {1, DT},
                 {0,  1}
         };
-        const Matrix<M, N, T> h{
+        constexpr Matrix<M, N, T> H{
                 {1, 0}
         };
-        const Matrix<M, M, T> r{{measurement_variance}};
-        const Matrix<N, N, T> q = discrete_white_noise<N, T>(dt, velocity_variance);
+        constexpr Matrix<M, M, T> R{{MEASUREMENT_VARIANCE}};
+        constexpr Matrix<N, N, T> Q{discrete_white_noise<N, T>(DT, VELOCITY_VARIANCE)};
+
+        constexpr std::size_t COUNT = 50;
+
+        const std::vector<ProcessData<T>> process_data = generate_random_data<double>(
+                COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG(ENGINE_INIT));
 
         Filter<N, M, T> filter;
-        filter.set_x(x);
-        filter.set_p(p);
-        filter.set_f(f);
-        filter.set_q(q);
-        filter.set_h(h);
-        filter.set_r(r);
+        filter.set_x(X);
+        filter.set_p(P);
+        filter.set_f(F);
+        filter.set_q(Q);
+        filter.set_h(H);
+        filter.set_r(R);
 
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());
@@ -176,6 +179,6 @@ void test()
         }
 }
 
-TEST_SMALL("Filter", test<double>)
+TEST_SMALL("Filter", test)
 }
 }
