@@ -24,8 +24,6 @@ namespace ns::filter
 template <std::size_t N, std::size_t M, typename T>
 class Filter final
 {
-        static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
-
         // state mean
         Vector<N, T> x_;
 
@@ -106,7 +104,7 @@ public:
                 const Matrix<N, M, T> k = p_ * h_t_ * (h_ * p_ * h_t_ + r_).inverse();
                 x_ = x_ + k * (z - h_ * x_);
 
-                const Matrix<N, N, T> i_kh = I - k * h_;
+                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h_;
                 p_ = i_kh * p_ * i_kh.transpose() + k * r_ * k.transpose();
         }
 };
