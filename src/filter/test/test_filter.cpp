@@ -134,14 +134,18 @@ void test()
 
         const T dt = 1;
         const Vector<N, T> x(10, 5);
-        const Matrix<N, N, T> p({
-                {{500, 0}, {0, 50}}
-        });
-        const Matrix<N, N, T> f({
-                {{1, dt}, {0, 1}}
-        });
-        const Matrix<M, N, T> h({{{1, 0}}});
-        const Matrix<M, M, T> r(measurement_variance);
+        const Matrix<N, N, T> p{
+                {500,  0},
+                {  0, 50}
+        };
+        const Matrix<N, N, T> f{
+                {1, dt},
+                {0,  1}
+        };
+        const Matrix<M, N, T> h{
+                {1, 0}
+        };
+        const Matrix<M, M, T> r{{measurement_variance}};
         const Matrix<N, N, T> q = discrete_white_noise<N, T>(dt, velocity_variance);
 
         Filter<N, M, T> filter;

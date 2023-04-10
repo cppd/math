@@ -24,7 +24,7 @@ namespace ns::filter
 template <std::size_t N, std::size_t M, typename T>
 class Filter final
 {
-        static constexpr Matrix<N, N, T> I{1};
+        static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
 
         // state mean
         Vector<N, T> x_;

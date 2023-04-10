@@ -84,13 +84,13 @@ class Impl final : public VolumeObject
 
         const std::vector<std::uint32_t> family_indices_;
 
-        Matrix4d vp_matrix_ = Matrix4d(1);
+        Matrix4d vp_matrix_ = IDENTITY_MATRIX<4, double>;
         std::optional<Vector4d> world_clip_plane_equation_;
 
         Matrix3d gradient_to_world_matrix_;
         Matrix4d world_to_texture_matrix_;
         Matrix4d texture_to_world_matrix_;
-        Matrix4d world_to_shadow_matrix_ = Matrix4d(1);
+        Matrix4d world_to_shadow_matrix_ = IDENTITY_MATRIX<4, double>;
 
         Vector3d gradient_h_;
 
@@ -243,7 +243,8 @@ class Impl final : public VolumeObject
                 texture_to_world_matrix_ = texture_to_world_matrix;
                 gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
 
-                gradient_to_world_matrix_ = texture_to_world_matrix_.top_left<3, 3>() * Matrix3d(gradient_h_);
+                gradient_to_world_matrix_ =
+                        texture_to_world_matrix_.top_left<3, 3>() * make_diagonal_matrix(gradient_h_);
                 world_to_texture_matrix_ = texture_to_world_matrix_.inverse();
 
                 buffer_set_coordinates();

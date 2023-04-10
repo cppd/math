@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "solve.h"
 #include "vector.h"
 
+#include <src/com/error.h>
 #include <src/com/type/concept.h>
 
 #include <string>
@@ -29,48 +30,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
+namespace matrix_implementation
+{
+template <std::size_t N, typename T, std::size_t COLUMN>
+constexpr Vector<N, T> make_vector(const T& v)
+{
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                static_assert(((I >= 0 && I < N) && ...));
+                return Vector<N, T>{(I == COLUMN ? v : 0)...};
+        }
+        (std::make_integer_sequence<std::size_t, N>());
+}
+}
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 class Matrix final
 {
         static_assert(FloatingPoint<T>);
         static_assert(ROWS >= 1 && COLUMNS >= 1);
-
-        template <std::size_t COLUMN>
-        static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(const T& v)
-        {
-                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
-                {
-                        static_assert(sizeof...(I) == COLUMNS);
-                        static_assert(((I >= 0 && I < COLUMNS) && ...));
-                        return Vector<COLUMNS, T>{(I == COLUMN ? v : 0)...};
-                }
-                (std::make_integer_sequence<std::size_t, COLUMNS>());
-        }
-
-        static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_diagonal_matrix(const T& v)
-        {
-                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
-                {
-                        static_assert(sizeof...(I) == ROWS);
-                        static_assert(((I >= 0 && I < ROWS) && ...));
-                        return std::array<Vector<COLUMNS, T>, ROWS>{make_vector_one_value_impl<I>(v)...};
-                }
-                (std::make_integer_sequence<std::size_t, ROWS>());
-        }
-
-        static constexpr std::array<Vector<ROWS, T>, ROWS> make_diagonal_matrix(const Vector<ROWS, T>& v)
-                requires (COLUMNS == ROWS)
-        {
-                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
-                {
-                        static_assert(sizeof...(I) == ROWS);
-                        static_assert(((I >= 0 && I < ROWS) && ...));
-                        return std::array<Vector<ROWS, T>, ROWS>{make_vector_one_value_impl<I>(v[I])...};
-                }
-                (std::make_integer_sequence<std::size_t, ROWS>());
-        }
-
-        //
 
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
@@ -91,25 +70,30 @@ public:
         {
         }
 
-        template <typename... Args>
-                requires ((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
-        explicit constexpr Matrix(Args&&... args)
-                : rows_{std::forward<Args>(args)...}
-        {
-        }
+        // template <typename... Args>
+        //         requires ((sizeof...(Args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
+        // explicit constexpr Matrix(Args&&... args)
+        //         : rows_{std::forward<Args>(args)...}
+        // {
+        // }
 
-        template <typename Arg>
-                requires std::is_convertible_v<Arg, T>
-        explicit constexpr Matrix(const Arg& v)
-                requires (COLUMNS == ROWS)
-                : rows_(make_diagonal_matrix(v))
+        constexpr Matrix(std::initializer_list<std::initializer_list<T>>&& data)
         {
-        }
-
-        explicit constexpr Matrix(const Vector<ROWS, T>& v)
-                requires (COLUMNS == ROWS)
-                : rows_(make_diagonal_matrix(v))
-        {
+                ASSERT(data.size() == ROWS);
+                std::size_t r = 0;
+                for (auto&& row : data)
+                {
+                        ASSERT(row.size() == COLUMNS);
+                        std::size_t c = 0;
+                        for (auto&& column : row)
+                        {
+                                rows_[r][c] = column;
+                                ++c;
+                        }
+                        ASSERT(c == COLUMNS);
+                        ++r;
+                }
+                ASSERT(r == ROWS);
         }
 
         explicit constexpr Matrix(const std::array<Vector<COLUMNS, T>, ROWS>& data)
@@ -214,6 +198,19 @@ public:
                 return res;
         }
 };
+
+template <std::size_t N, typename T>
+constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
+{
+        namespace impl = matrix_implementation;
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        {
+                static_assert(sizeof...(I) == N);
+                static_assert(((I >= 0 && I < N) && ...));
+                return Matrix<N, N, T>({impl::make_vector<N, T, I>(v[I])...});
+        }
+        (std::make_integer_sequence<std::size_t, N>());
+}
 
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 [[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator+(
@@ -373,6 +370,9 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         }
         return s;
 }
+
+template <std::size_t N, typename T>
+inline constexpr Matrix<N, N, T> IDENTITY_MATRIX = make_diagonal_matrix(Vector<N, T>(1));
 
 using Matrix3d = Matrix<3, 3, double>;
 using Matrix3f = Matrix<3, 3, float>;

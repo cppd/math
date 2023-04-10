@@ -48,9 +48,9 @@ class RendererView final
         DrawingBuffer* const drawing_buffer_;
         RendererViewEvents* const events_;
 
-        Matrix4d vp_matrix_ = Matrix4d(1);
-        Matrix4d shadow_vp_matrix_ = Matrix4d(1);
-        Matrix4d world_to_shadow_matrix_ = Matrix4d(1);
+        Matrix4d vp_matrix_ = IDENTITY_MATRIX<4, double>;
+        Matrix4d shadow_vp_matrix_ = IDENTITY_MATRIX<4, double>;
+        Matrix4d world_to_shadow_matrix_ = IDENTITY_MATRIX<4, double>;
 
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;

@@ -61,7 +61,7 @@ constexpr Matrix<4, 4, T> ortho_vulkan(
 template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
-        Matrix<N + 1, N + 1, T> res(1);
+        Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res(i, i) = v[i];
@@ -78,7 +78,7 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(const V&... v)
 template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
-        Matrix<N + 1, N + 1, T> res(1);
+        Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res(i, N) = v[i];
