@@ -34,9 +34,9 @@ Kalman and Bayesian Filters in Python.
 
 #pragma once
 
-#include "models.h"
-
 #include <src/numerical/matrix.h>
+
+#include <type_traits>
 
 namespace ns::filter
 {
@@ -45,8 +45,12 @@ namespace ns::filter
 // of the order of sqrt(Q(2, 2)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_density)
+constexpr Matrix<N, N, T> continuous_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> spectral_density)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         const T dt_1 = dt * spectral_density;
         const T dt_2 = dt_1 * dt;
         const T dt_3 = dt_2 * dt;
@@ -62,8 +66,12 @@ constexpr Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_de
 // of the order of sqrt(Q(3, 3)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_density)
+constexpr Matrix<N, N, T> continuous_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> spectral_density)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         const T dt_1 = dt * spectral_density;
         const T dt_2 = dt_1 * dt;
         const T dt_3 = dt_2 * dt;
@@ -83,8 +91,10 @@ constexpr Matrix<N, N, T> continuous_white_noise(const T dt, const T spectral_de
 // A practical range is a/2 <= sigma <= a.
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr Matrix<N, N, T> discrete_white_noise(const T dt, const T variance)
+constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt, const std::type_identity_t<T> variance)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         const T dt_2 = dt * dt * variance;
         const T dt_3 = dt_2 * dt;
         const T dt_4 = dt_3 * dt;
@@ -102,8 +112,10 @@ constexpr Matrix<N, N, T> discrete_white_noise(const T dt, const T variance)
 // A practical range is d/2 <= sigma <= d.
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr Matrix<N, N, T> discrete_white_noise(const T dt, const T variance)
+constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt, const std::type_identity_t<T> variance)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         const T dt_0 = variance;
         const T dt_1 = dt_0 * dt;
         const T dt_2 = dt_1 * dt;
