@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/file/path.h>
+#include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
@@ -30,7 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cctype>
 #include <cmath>
 #include <fstream>
+#include <map>
 #include <random>
+#include <unordered_map>
 #include <vector>
 
 namespace ns::filter
@@ -135,8 +138,61 @@ void write_to_file(
         }
 }
 
+std::string distribution_to_string(const std::unordered_map<int, unsigned>& distribution)
+{
+        std::string res;
+        for (const auto& [k, v] : std::map{distribution.cbegin(), distribution.cend()})
+        {
+                if (!res.empty())
+                {
+                        res += '\n';
+                }
+                res += to_string(k) + ":" + to_string(v);
+        }
+        return res;
+}
+
+template <std::size_t N>
+void check_distribution(
+        std::unordered_map<int, unsigned> distribution,
+        const std::array<unsigned, N>& expected_distribution)
+{
+        static_assert(N > 0);
+
+        if (distribution.empty())
+        {
+                error("Filter distribution is empty");
+        }
+
+        const auto [min, max] = std::minmax_element(
+                distribution.cbegin(), distribution.cend(),
+                [](const auto& a, const auto& b)
+                {
+                        return a.first < b.first;
+                });
+        if (!(static_cast<std::size_t>(std::abs(min->first)) < expected_distribution.size()
+              && static_cast<std::size_t>(std::abs(max->first)) < expected_distribution.size()))
+        {
+                error("Filter distribution 1 error\n" + distribution_to_string(distribution));
+        }
+
+        if (!(distribution[0] > expected_distribution[0]))
+        {
+                error("Filter distribution 2 error\n" + distribution_to_string(distribution));
+        }
+        for (std::size_t i = 1; i < expected_distribution.size(); ++i)
+        {
+                const int index = i;
+                if (!(distribution[index] <= expected_distribution[index]
+                      && distribution[-index] <= expected_distribution[index]))
+                {
+                        error("Filter distribution 3 error\n" + distribution_to_string(distribution));
+                }
+        }
+}
+
 template <typename T>
-void test_impl(const T precision)
+void test_impl()
 {
         constexpr std::size_t N = 2;
         constexpr std::size_t M = 1;
@@ -161,7 +217,7 @@ void test_impl(const T precision)
         constexpr Matrix<M, M, T> R{{MEASUREMENT_VARIANCE}};
         constexpr Matrix<N, N, T> Q{discrete_white_noise<N, T>(DT, VELOCITY_VARIANCE)};
 
-        constexpr std::size_t COUNT = 50;
+        constexpr std::size_t COUNT = 1000;
 
         const std::vector<ProcessData<T>> process_data =
                 generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
@@ -174,28 +230,38 @@ void test_impl(const T precision)
         filter.set_h(H);
         filter.set_r(R);
 
+        std::unordered_map<int, unsigned> distribution;
+
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());
         for (const ProcessData<T>& process : process_data)
         {
                 filter.predict();
                 filter.update(Vector<M, T>(process.z));
+
                 const T f_x = filter.x()[0];
                 const T f_stddev = std::sqrt(filter.p()(0, 0));
+
                 result_data.push_back({.filter = f_x, .standard_deviation = f_stddev});
+                ++distribution[static_cast<int>((f_x - process.x) / f_stddev)];
         }
 
         write_to_file("filter_1d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
 
-        compare(result_data.back().standard_deviation, T{1.43066055164861537772L}, precision);
-        compare(process_data.back().x, result_data.back().filter, 4 * result_data.back().standard_deviation);
+        compare(result_data.back().standard_deviation, T{1.4306576889002234962L}, T{0});
+        compare(process_data.back().x, result_data.back().filter, 5 * result_data.back().standard_deviation);
+
+        constexpr std::array EXPECTED_DISTRIBUTION = std::to_array<unsigned>({610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
+        check_distribution(distribution, EXPECTED_DISTRIBUTION);
 }
 
 void test()
 {
-        test_impl<float>(2e-7);
-        test_impl<double>(0);
-        test_impl<long double>(0);
+        LOG("Test Filter 1D");
+        test_impl<float>();
+        test_impl<double>();
+        test_impl<long double>();
+        LOG("Test Filter 1D passed");
 }
 
 TEST_SMALL("Filter 1D", test)
