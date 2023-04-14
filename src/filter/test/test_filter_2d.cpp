@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../filter.h"
+#include "../models.h"
+
 #include <src/com/exponent.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
@@ -58,6 +61,12 @@ struct ProcessData final
         Vector<2, T> z;
 };
 
+template <typename T>
+struct ResultData final
+{
+        Vector<2, T> x;
+};
+
 template <typename T, typename Engine>
 std::vector<ProcessData<T>> generate_random_data(
         const std::size_t count,
@@ -82,41 +91,129 @@ std::vector<ProcessData<T>> generate_random_data(
 }
 
 template <typename T>
-std::string make_string(const ProcessData<T>& process)
+std::string make_string(const ProcessData<T>& process, const ResultData<T>& result)
 {
         std::string res;
         res += '(' + to_string(process.x[0]);
         res += ", " + to_string(process.x[1]);
         res += ", " + to_string(process.z[0]);
         res += ", " + to_string(process.z[1]);
+        res += ", " + to_string(result.x[0]);
+        res += ", " + to_string(result.x[1]);
         res += ')';
         return res;
 }
 
 template <typename T>
-void write_to_file(const std::string& file_name, const std::vector<ProcessData<T>>& process)
+void write_to_file(
+        const std::string& file_name,
+        const std::vector<ProcessData<T>>& process,
+        const std::vector<ResultData<T>>& result)
 {
+        ASSERT(process.size() == result.size());
+
         std::ofstream file(file_path(file_name));
         for (std::size_t i = 0; i < process.size(); ++i)
         {
-                file << make_string(process[i]) << '\n';
+                file << make_string(process[i], result[i]) << '\n';
         }
+}
+
+template <std::size_t N, typename T, std::size_t COUNT>
+constexpr Matrix<N * COUNT, N * COUNT, T> block_diagonal(const std::array<Matrix<N, N, T>, COUNT>& matrices)
+{
+        constexpr std::size_t RN = N * COUNT;
+
+        Matrix<RN, RN, T> res;
+
+        for (std::size_t r = 0; r < RN; ++r)
+        {
+                for (std::size_t c = 0; c < RN; ++c)
+                {
+                        res(r, c) = 0;
+                }
+        }
+
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                const std::size_t base = i * N;
+                const Matrix<N, N, T>& matrix = matrices[i];
+                for (std::size_t r = 0; r < N; ++r)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res(r + base, c + base) = matrix(r, c);
+                        }
+                }
+        }
+
+        return res;
 }
 
 template <typename T>
 void test_impl()
 {
+        constexpr std::size_t N = 4;
+        constexpr std::size_t M = 2;
+
         constexpr T DT = 1;
         constexpr T VELOCITY_MEAN = 1;
         constexpr T VELOCITY_VARIANCE = power<2>(0.1);
         constexpr T MEASUREMENT_VARIANCE = power<2>(3);
+
+        constexpr Vector<N, T> X(10, 5, 10, 5);
+        constexpr Matrix<N, N, T> P{
+                {500,  0,   0,  0},
+                {  0, 50,   0,  0},
+                {  0,  0, 500,  0},
+                {  0,  0,   0, 50}
+        };
+        constexpr Matrix<N, N, T> F{
+                {1, DT, 0,  0},
+                {0,  1, 0,  0},
+                {0,  0, 1, DT},
+                {0,  0, 0,  1}
+        };
+        constexpr Matrix<M, N, T> H{
+                {1, 0, 0, 0},
+                {0, 0, 1, 0}
+        };
+        constexpr Matrix<M, M, T> R{
+                {MEASUREMENT_VARIANCE,                    0},
+                {                   0, MEASUREMENT_VARIANCE}
+        };
+        constexpr Matrix<N, N, T> Q = []()
+        {
+                const auto m = discrete_white_noise<N / 2, T>(DT, VELOCITY_VARIANCE);
+                return block_diagonal(std::array{m, m});
+        }();
 
         constexpr std::size_t COUNT = 1000;
 
         const std::vector<ProcessData<T>> process_data =
                 generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
 
-        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", process_data);
+        Filter<N, M, T> filter;
+        filter.set_x(X);
+        filter.set_p(P);
+        filter.set_f(F);
+        filter.set_q(Q);
+        filter.set_h(H);
+        filter.set_r(R);
+
+        std::vector<ResultData<T>> result_data;
+        result_data.reserve(process_data.size());
+        for (const ProcessData<T>& process : process_data)
+        {
+                filter.predict();
+                filter.update(Vector<M, T>(process.z));
+
+                const Vector<M, T> f_x(filter.x()[0], filter.x()[2]);
+
+                result_data.push_back({.x = f_x});
+        }
+
+        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
 }
 
 void test()
