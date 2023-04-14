@@ -33,8 +33,12 @@ MEASUREMENT_COLOR = "#000000"
 MEASUREMENT_LINE_WIDTH = 0.25
 MEASUREMENT_MARKER_SIZE = 4
 
+FILTER_COLOR = "#008000"
+FILTER_LINE_WIDTH = 1
+FILTER_MARKER_SIZE = 4
 
-Data = collections.namedtuple("Data", ["x0", "x1", "z0", "z1"])
+
+Data = collections.namedtuple("Data", ["x0", "x1", "z0", "z1", "fx0", "fx1"])
 
 
 def error(message):
@@ -64,6 +68,17 @@ def create_figure(data, title):
             mode="lines+markers",
             marker_size=MEASUREMENT_MARKER_SIZE,
             line=dict(color=MEASUREMENT_COLOR, width=MEASUREMENT_LINE_WIDTH),
+        )
+    )
+
+    figure.add_trace(
+        go.Scatter(
+            x=[p.fx0 for p in data],
+            y=[p.fx1 for p in data],
+            name="Filter",
+            mode="lines+markers",
+            marker_size=FILTER_MARKER_SIZE,
+            line=dict(color=FILTER_COLOR, width=FILTER_LINE_WIDTH),
         )
     )
 
