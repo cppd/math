@@ -84,7 +84,7 @@ struct ProcessData final
 template <typename T>
 struct ResultData final
 {
-        T filter;
+        T x;
         T standard_deviation;
 };
 
@@ -117,7 +117,7 @@ std::string make_string(const ProcessData<T>& process, const ResultData<T>& resu
         std::string res;
         res += '(' + to_string(process.x);
         res += ", " + to_string(process.z);
-        res += ", " + to_string(result.filter);
+        res += ", " + to_string(result.x);
         res += ", " + to_string(result.standard_deviation);
         res += ')';
         return res;
@@ -242,14 +242,14 @@ void test_impl()
                 const T f_x = filter.x()[0];
                 const T f_stddev = std::sqrt(filter.p()(0, 0));
 
-                result_data.push_back({.filter = f_x, .standard_deviation = f_stddev});
+                result_data.push_back({.x = f_x, .standard_deviation = f_stddev});
                 ++distribution[static_cast<int>((f_x - process.x) / f_stddev)];
         }
 
         write_to_file("filter_1d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
 
         compare(result_data.back().standard_deviation, T{1.4306576889002234962L}, T{0});
-        compare(process_data.back().x, result_data.back().filter, 5 * result_data.back().standard_deviation);
+        compare(process_data.back().x, result_data.back().x, 5 * result_data.back().standard_deviation);
 
         constexpr std::array EXPECTED_DISTRIBUTION = std::to_array<unsigned>({610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
         check_distribution(distribution, EXPECTED_DISTRIBUTION);
