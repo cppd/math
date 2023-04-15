@@ -28,7 +28,7 @@ namespace ns
 namespace matrix_object_implementation
 {
 template <std::size_t N, typename T, std::size_t COLUMN>
-constexpr Vector<N, T> make_vector(const T& v)
+[[nodiscard]] constexpr Vector<N, T> make_vector(const T& v)
 {
         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
         {
@@ -41,7 +41,7 @@ constexpr Vector<N, T> make_vector(const T& v)
 }
 
 template <std::size_t N, typename T>
-constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
+[[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
 {
         namespace impl = matrix_object_implementation;
         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
@@ -51,6 +51,35 @@ constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
                 return Matrix<N, N, T>({impl::make_vector<N, T, I>(v[I])...});
         }
         (std::make_integer_sequence<std::size_t, N>());
+}
+
+template <std::size_t N, typename T, std::size_t COUNT>
+[[nodiscard]] constexpr Matrix<N * COUNT, N * COUNT, T> block_diagonal(
+        const std::array<Matrix<N, N, T>, COUNT>& matrices)
+{
+        constexpr std::size_t N_COUNT = N * COUNT;
+
+        Matrix<N_COUNT, N_COUNT, T> res;
+        for (std::size_t r = 0; r < N_COUNT; ++r)
+        {
+                for (std::size_t c = 0; c < N_COUNT; ++c)
+                {
+                        res(r, c) = 0;
+                }
+        }
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                const std::size_t base = i * N;
+                const Matrix<N, N, T>& matrix = matrices[i];
+                for (std::size_t r = 0; r < N; ++r)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res(base + r, base + c) = matrix(r, c);
+                        }
+                }
+        }
+        return res;
 }
 
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
