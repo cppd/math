@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
 #include <src/settings/directory.h>
@@ -54,21 +55,21 @@ std::filesystem::path file_path(const std::string_view name)
         return settings::test_directory() / path_from_utf8(name);
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 struct ProcessData final
 {
-        Vector<2, T> x;
-        Vector<2, T> z;
+        std::vector<Vector<N, T>> track;
+        std::vector<Vector<N, T>> measurements;
 };
 
-template <typename T>
+template <std::size_t N, typename T>
 struct ResultData final
 {
-        Vector<2, T> x;
+        std::vector<Vector<N, T>> filter;
 };
 
-template <typename T, typename Engine>
-std::vector<ProcessData<T>> generate_random_data(
+template <std::size_t N, typename T, typename Engine>
+ProcessData<N, T> generate_random_data(
         const std::size_t count,
         const T dt,
         const T velocity_mean,
@@ -79,43 +80,60 @@ std::vector<ProcessData<T>> generate_random_data(
         std::normal_distribution<T> nd_v(velocity_mean, std::sqrt(velocity_variance));
         std::normal_distribution<T> nd_m(0, std::sqrt(measurement_variance));
 
-        Vector<2, T> x{0, 0};
-        std::vector<ProcessData<T>> res;
-        res.reserve(count);
+        Vector<N, T> x(0);
+        ProcessData<N, T> res;
+        res.track.reserve(count);
+        res.measurements.reserve(count);
         for (std::size_t i = 0; i < count; ++i)
         {
-                x += Vector<2, T>(dt * nd_v(engine), dt * nd_v(engine));
-                res.push_back({.x = x, .z = x + Vector<2, T>(nd_m(engine), nd_m(engine))});
+                for (std::size_t n = 0; n < N; ++n)
+                {
+                        x[n] += dt * nd_v(engine);
+                }
+                res.track.push_back(x);
+                res.measurements.push_back(x);
+                for (std::size_t n = 0; n < N; ++n)
+                {
+                        res.measurements.back()[n] += nd_m(engine);
+                }
         }
         return res;
 }
 
-template <typename T>
-std::string make_string(const ProcessData<T>& process, const ResultData<T>& result)
+template <std::size_t N, typename T>
+void write_to_file(const std::string& file_name, const ProcessData<N, T>& process, const ResultData<N, T>& result)
 {
-        std::string res;
-        res += '(' + to_string(process.x[0]);
-        res += ", " + to_string(process.x[1]);
-        res += ", " + to_string(process.z[0]);
-        res += ", " + to_string(process.z[1]);
-        res += ", " + to_string(result.x[0]);
-        res += ", " + to_string(result.x[1]);
-        res += ')';
-        return res;
-}
-
-template <typename T>
-void write_to_file(
-        const std::string& file_name,
-        const std::vector<ProcessData<T>>& process,
-        const std::vector<ResultData<T>>& result)
-{
-        ASSERT(process.size() == result.size());
-
         std::ofstream file(file_path(file_name));
-        for (std::size_t i = 0; i < process.size(); ++i)
+        file.precision(Limits<T>::max_digits10());
+
+        const auto out = [&](const Vector<N, T>& v)
         {
-                file << make_string(process[i], result[i]) << '\n';
+                static_assert(N > 0);
+                file << '(';
+                file << v[0];
+                for (std::size_t i = 1; i < N; ++i)
+                {
+                        file << ", " << v[i];
+                }
+                file << ")\n";
+        };
+
+        file << "\"track\"\n";
+        for (const Vector<N, T>& v : process.track)
+        {
+                out(v);
+        }
+
+        file << "\"measurements\"\n";
+        for (const Vector<N, T>& v : process.measurements)
+        {
+                out(v);
+        }
+
+        file << "\"filter\"\n";
+        for (const Vector<N, T>& v : result.filter)
+        {
+                out(v);
         }
 }
 
@@ -159,8 +177,8 @@ void test_impl()
 
         constexpr std::size_t COUNT = 1000;
 
-        const std::vector<ProcessData<T>> process_data =
-                generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
+        const ProcessData process =
+                generate_random_data<2, T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
 
         Filter<N, M, T> filter;
         filter.set_x(X);
@@ -170,19 +188,17 @@ void test_impl()
         filter.set_h(H);
         filter.set_r(R);
 
-        std::vector<ResultData<T>> result_data;
-        result_data.reserve(process_data.size());
-        for (const ProcessData<T>& process : process_data)
+        ResultData<2, T> result;
+        result.filter.reserve(process.measurements.size());
+        for (const Vector<M, T>& z : process.measurements)
         {
                 filter.predict();
-                filter.update(Vector<M, T>(process.z));
+                filter.update(z);
 
-                const Vector<M, T> f_x(filter.x()[0], filter.x()[2]);
-
-                result_data.push_back({.x = f_x});
+                result.filter.push_back({filter.x()[0], filter.x()[2]});
         }
 
-        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
+        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", process, result);
 }
 
 void test()
