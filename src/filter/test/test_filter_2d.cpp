@@ -119,37 +119,6 @@ void write_to_file(
         }
 }
 
-template <std::size_t N, typename T, std::size_t COUNT>
-constexpr Matrix<N * COUNT, N * COUNT, T> block_diagonal(const std::array<Matrix<N, N, T>, COUNT>& matrices)
-{
-        constexpr std::size_t RN = N * COUNT;
-
-        Matrix<RN, RN, T> res;
-
-        for (std::size_t r = 0; r < RN; ++r)
-        {
-                for (std::size_t c = 0; c < RN; ++c)
-                {
-                        res(r, c) = 0;
-                }
-        }
-
-        for (std::size_t i = 0; i < COUNT; ++i)
-        {
-                const std::size_t base = i * N;
-                const Matrix<N, N, T>& matrix = matrices[i];
-                for (std::size_t r = 0; r < N; ++r)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                res(r + base, c + base) = matrix(r, c);
-                        }
-                }
-        }
-
-        return res;
-}
-
 template <typename T>
 void test_impl()
 {
