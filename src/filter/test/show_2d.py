@@ -15,7 +15,6 @@
 
 import argparse
 import ast
-import collections
 import os
 import sys
 import tempfile
@@ -38,22 +37,19 @@ FILTER_LINE_WIDTH = 1
 FILTER_MARKER_SIZE = 4
 
 
-Data = collections.namedtuple("Data", ["x0", "x1", "z0", "z1", "fx0", "fx1"])
-
-
 def error(message):
     raise Exception(message)
 
 
 def create_figure(data, title):
-    assert len(data) > 0
+    assert data
 
     figure = go.Figure()
 
     figure.add_trace(
         go.Scatter(
-            x=[p.x0 for p in data],
-            y=[p.x1 for p in data],
+            x=[p[0] for p in data["track"]],
+            y=[p[1] for p in data["track"]],
             name="Track",
             mode="lines",
             line=dict(color=TRACK_COLOR, width=TRACK_LINE_WIDTH, dash="dot"),
@@ -62,8 +58,8 @@ def create_figure(data, title):
 
     figure.add_trace(
         go.Scatter(
-            x=[p.z0 for p in data],
-            y=[p.z1 for p in data],
+            x=[p[0] for p in data["measurements"]],
+            y=[p[1] for p in data["measurements"]],
             name="Measurements",
             mode="lines+markers",
             marker_size=MEASUREMENT_MARKER_SIZE,
@@ -73,8 +69,8 @@ def create_figure(data, title):
 
     figure.add_trace(
         go.Scatter(
-            x=[p.fx0 for p in data],
-            y=[p.fx1 for p in data],
+            x=[p[0] for p in data["filter"]],
+            y=[p[1] for p in data["filter"]],
             name="Filter",
             mode="lines+markers",
             marker_size=FILTER_MARKER_SIZE,
@@ -89,7 +85,7 @@ def create_figure(data, title):
 
 
 def show_data(data, file_name):
-    if len(data) == 0:
+    if not data:
         error("No data to show")
 
     figure = create_figure(data, title=os.path.basename(file_name))
@@ -99,32 +95,28 @@ def show_data(data, file_name):
 
 
 def parse_data(text):
-    begin = text.find("(")
-    if begin < 0:
-        error("Malformed input:\n{0}".format(text))
-    end = text.find(")", begin)
-    if end < 0:
-        error("Malformed input:\n{0}".format(text))
-    text = text[begin : (end + 1)]
-
     try:
         data = ast.literal_eval(text)
     except ValueError:
         error("Malformed input:\n{0}".format(text))
 
+    if isinstance(data, str):
+        return data
+
     if not isinstance(data, tuple):
         error("Not tuple input:\n{0}".format(text))
 
     for d in data:
-        if not isinstance(d, (int, float)):
+        if not isinstance(d, float):
             error("Input type error:\n{0}".format(text))
 
-    return Data(*data)
+    return data
 
 
 def read_file(file_name):
-    data_list = []
+    data_dict = {}
     dimension = None
+    values = None
 
     with open(file_name, encoding="utf-8") as file:
         for line in file:
@@ -133,6 +125,10 @@ def read_file(file_name):
                 continue
 
             data = parse_data(line)
+            if isinstance(data, str):
+                data_dict[data] = []
+                values = data_dict[data]
+                continue
 
             if dimension is not None:
                 if len(data) != dimension:
@@ -140,15 +136,18 @@ def read_file(file_name):
             else:
                 dimension = len(data)
 
-            data_list.append(data)
+            if values is None:
+                error("No data name")
 
-    if not data_list:
+            values.append(data)
+
+    if not data_dict:
         error("No data")
 
     if dimension is None:
         error("No dimension")
 
-    return data_list
+    return data_dict
 
 
 def use_dialog(args):
