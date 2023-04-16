@@ -32,7 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cctype>
 #include <cmath>
 #include <fstream>
+#include <map>
+#include <optional>
 #include <random>
+#include <unordered_map>
 #include <vector>
 
 namespace ns::filter
@@ -59,7 +62,7 @@ template <std::size_t N, typename T>
 struct ProcessData final
 {
         std::vector<Vector<N, T>> track;
-        std::vector<Vector<N, T>> measurements;
+        std::unordered_map<std::size_t, std::optional<Vector<N, T>>> measurements;
 };
 
 template <std::size_t N, typename T>
@@ -68,15 +71,18 @@ struct ResultData final
         std::vector<Vector<N, T>> filter;
 };
 
-template <std::size_t N, typename T, typename Engine>
+template <std::size_t N, typename T>
 ProcessData<N, T> generate_random_data(
         const std::size_t count,
         const T dt,
         const T velocity_mean,
         const T velocity_variance,
         const T measurement_variance,
-        Engine&& engine)
+        const std::array<std::size_t, 2>& measurement_outage,
+        const std::size_t measurement_interval)
 {
+        PCG engine;
+
         std::normal_distribution<T> nd_v(velocity_mean, std::sqrt(velocity_variance));
         std::normal_distribution<T> nd_m(0, std::sqrt(measurement_variance));
 
@@ -91,49 +97,99 @@ ProcessData<N, T> generate_random_data(
                         x[n] += dt * nd_v(engine);
                 }
                 res.track.push_back(x);
-                res.measurements.push_back(x);
+
+                if (i % measurement_interval)
+                {
+                        continue;
+                }
+                if (i >= measurement_outage[0] && i <= measurement_outage[1])
+                {
+                        res.measurements[i] = std::nullopt;
+                        continue;
+                }
+                auto& v = *res.measurements.try_emplace(i, x).first->second;
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        res.measurements.back()[n] += nd_m(engine);
+                        v[n] += nd_m(engine);
                 }
         }
         return res;
 }
 
 template <std::size_t N, typename T>
+void write(std::ostream& os, const Vector<N, T>& v)
+{
+        static_assert(N > 0);
+        os << '(';
+        os << v[0];
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                os << ", " << v[i];
+        }
+        os << ")\n";
+}
+
+template <std::size_t N, typename T>
+void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
+{
+        static_assert(N > 0);
+        if (v)
+        {
+                write(os, *v);
+                return;
+        }
+        os << "(None";
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                os << ", None";
+        }
+        os << ")\n";
+}
+
+template <std::size_t N, typename T>
 void write_to_file(const std::string& file_name, const ProcessData<N, T>& process, const ResultData<N, T>& result)
 {
         std::ofstream file(file_path(file_name));
-        file.precision(Limits<T>::max_digits10());
+        file << std::setprecision(Limits<T>::max_digits10());
+        file << std::scientific;
 
-        const auto out = [&](const Vector<N, T>& v)
+        file << '{';
+        file << R"("name":"Track")";
+        file << R"(, "mode":"lines")";
+        file << R"(, "line_color":"#0000ff")";
+        file << R"(, "line_width":1)";
+        file << R"(, "line_dash":"dot")";
+        file << R"(, "marker_size":None)";
+        file << "}\n";
+        for (const auto& v : process.track)
         {
-                static_assert(N > 0);
-                file << '(';
-                file << v[0];
-                for (std::size_t i = 1; i < N; ++i)
-                {
-                        file << ", " << v[i];
-                }
-                file << ")\n";
-        };
-
-        file << "\"track\"\n";
-        for (const Vector<N, T>& v : process.track)
-        {
-                out(v);
+                write(file, v);
         }
 
-        file << "\"measurements\"\n";
-        for (const Vector<N, T>& v : process.measurements)
+        file << '{';
+        file << R"("name":"Measurements")";
+        file << R"(, "mode":"lines+markers")";
+        file << R"(, "line_color":"#000000")";
+        file << R"(, "line_width":0.25)";
+        file << R"(, "line_dash":None)";
+        file << R"(, "marker_size":4)";
+        file << "}\n";
+        for (const auto& [_, v] : std::map{process.measurements.cbegin(), process.measurements.cend()})
         {
-                out(v);
+                write(file, v);
         }
 
-        file << "\"filter\"\n";
-        for (const Vector<N, T>& v : result.filter)
+        file << '{';
+        file << R"("name":"Filter")";
+        file << R"(, "mode":"lines+markers")";
+        file << R"(, "line_color":"#008000")";
+        file << R"(, "line_width":1)";
+        file << R"(, "line_dash":None)";
+        file << R"(, "marker_size":4)";
+        file << "}\n";
+        for (const auto& v : result.filter)
         {
-                out(v);
+                write(file, v);
         }
 }
 
@@ -146,6 +202,7 @@ void test_impl()
         constexpr T DT = 1;
         constexpr T VELOCITY_MEAN = 1;
         constexpr T VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T PROCESS_VARIANCE = power<2>(0.1);
         constexpr T MEASUREMENT_VARIANCE = power<2>(3);
 
         constexpr Vector<N, T> X(10, 5, 10, 5);
@@ -171,14 +228,16 @@ void test_impl()
         };
         constexpr Matrix<N, N, T> Q = []()
         {
-                const auto m = discrete_white_noise<N / 2, T>(DT, VELOCITY_VARIANCE);
+                const auto m = discrete_white_noise<N / 2, T>(DT, PROCESS_VARIANCE);
                 return block_diagonal(std::array{m, m});
         }();
 
         constexpr std::size_t COUNT = 1000;
-
-        const ProcessData process =
-                generate_random_data<2, T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
+        constexpr std::array<std::size_t, 2> MEASUREMENT_OUTAGE = {350, 400};
+        constexpr std::size_t MEASUREMENT_INTERVAL = 1;
+        const ProcessData process = generate_random_data<2, T>(
+                COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, MEASUREMENT_OUTAGE,
+                MEASUREMENT_INTERVAL);
 
         Filter<N, M, T> filter;
         filter.set_x(X);
@@ -189,11 +248,16 @@ void test_impl()
         filter.set_r(R);
 
         ResultData<2, T> result;
-        result.filter.reserve(process.measurements.size());
-        for (const Vector<M, T>& z : process.measurements)
+        result.filter.reserve(COUNT);
+        for (std::size_t i = 0; i < COUNT; ++i)
         {
                 filter.predict();
-                filter.update(z);
+
+                const auto iter = process.measurements.find(i);
+                if (iter != process.measurements.cend() && iter->second)
+                {
+                        filter.update(*iter->second);
+                }
 
                 result.filter.push_back({filter.x()[0], filter.x()[2]});
         }
