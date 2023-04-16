@@ -25,17 +25,6 @@ from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
 
-TRACK_COLOR = "#0000ff"
-TRACK_LINE_WIDTH = 1
-
-MEASUREMENT_COLOR = "#000000"
-MEASUREMENT_LINE_WIDTH = 0.25
-MEASUREMENT_MARKER_SIZE = 4
-
-FILTER_COLOR = "#008000"
-FILTER_LINE_WIDTH = 1
-FILTER_MARKER_SIZE = 4
-
 
 def error(message):
     raise Exception(message)
@@ -46,37 +35,17 @@ def create_figure(data, title):
 
     figure = go.Figure()
 
-    figure.add_trace(
-        go.Scatter(
-            x=[p[0] for p in data["track"]],
-            y=[p[1] for p in data["track"]],
-            name="Track",
-            mode="lines",
-            line=dict(color=TRACK_COLOR, width=TRACK_LINE_WIDTH, dash="dot"),
+    for d, values in data:
+        figure.add_trace(
+            go.Scatter(
+                x=[p[0] for p in values],
+                y=[p[1] for p in values],
+                name=d["name"],
+                mode=d["mode"],
+                marker_size=d["marker_size"],
+                line=dict(color=d["line_color"], width=d["line_width"], dash=d["line_dash"]),
+            )
         )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=[p[0] for p in data["measurements"]],
-            y=[p[1] for p in data["measurements"]],
-            name="Measurements",
-            mode="lines+markers",
-            marker_size=MEASUREMENT_MARKER_SIZE,
-            line=dict(color=MEASUREMENT_COLOR, width=MEASUREMENT_LINE_WIDTH),
-        )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=[p[0] for p in data["filter"]],
-            y=[p[1] for p in data["filter"]],
-            name="Filter",
-            mode="lines+markers",
-            marker_size=FILTER_MARKER_SIZE,
-            line=dict(color=FILTER_COLOR, width=FILTER_LINE_WIDTH),
-        )
-    )
 
     figure.update_xaxes(showgrid=True, visible=True)
     figure.update_yaxes(showgrid=True, visible=True)
@@ -100,21 +69,21 @@ def parse_data(text):
     except ValueError:
         error("Malformed input:\n{0}".format(text))
 
-    if isinstance(data, str):
+    if isinstance(data, dict):
         return data
 
     if not isinstance(data, tuple):
         error("Not tuple input:\n{0}".format(text))
 
     for d in data:
-        if not isinstance(d, float):
+        if not (d is None or isinstance(d, float)):
             error("Input type error:\n{0}".format(text))
 
     return data
 
 
 def read_file(file_name):
-    data_dict = {}
+    res = []
     dimension = None
     values = None
 
@@ -125,9 +94,9 @@ def read_file(file_name):
                 continue
 
             data = parse_data(line)
-            if isinstance(data, str):
-                data_dict[data] = []
-                values = data_dict[data]
+            if isinstance(data, dict):
+                res.append((data, []))
+                values = res[-1][1]
                 continue
 
             if dimension is not None:
@@ -141,13 +110,13 @@ def read_file(file_name):
 
             values.append(data)
 
-    if not data_dict:
+    if not res:
         error("No data")
 
     if dimension is None:
         error("No dimension")
 
-    return data_dict
+    return res
 
 
 def use_dialog(args):
