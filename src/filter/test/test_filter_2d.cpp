@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "simulator.h"
+
 #include "../filter.h"
 #include "../models.h"
 
@@ -22,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
@@ -34,11 +35,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <map>
 #include <optional>
-#include <random>
-#include <unordered_map>
 #include <vector>
 
-namespace ns::filter
+namespace ns::filter::test
 {
 namespace
 {
@@ -56,64 +55,6 @@ std::string replace_space(const std::string_view s)
 std::filesystem::path file_path(const std::string_view name)
 {
         return settings::test_directory() / path_from_utf8(name);
-}
-
-template <std::size_t N, typename T>
-struct ProcessData final
-{
-        std::vector<Vector<N, T>> track;
-        std::unordered_map<std::size_t, std::optional<Vector<N, T>>> measurements;
-};
-
-template <std::size_t N, typename T>
-struct ResultData final
-{
-        std::vector<Vector<N, T>> filter;
-};
-
-template <std::size_t N, typename T>
-ProcessData<N, T> generate_random_data(
-        const std::size_t count,
-        const T dt,
-        const T velocity_mean,
-        const T velocity_variance,
-        const T measurement_variance,
-        const std::array<std::size_t, 2>& measurement_outage,
-        const std::size_t measurement_interval)
-{
-        PCG engine;
-
-        std::normal_distribution<T> nd_v(velocity_mean, std::sqrt(velocity_variance));
-        std::normal_distribution<T> nd_m(0, std::sqrt(measurement_variance));
-
-        Vector<N, T> x(0);
-        ProcessData<N, T> res;
-        res.track.reserve(count);
-        res.measurements.reserve(count);
-        for (std::size_t i = 0; i < count; ++i)
-        {
-                for (std::size_t n = 0; n < N; ++n)
-                {
-                        x[n] += dt * nd_v(engine);
-                }
-                res.track.push_back(x);
-
-                if (i % measurement_interval)
-                {
-                        continue;
-                }
-                if (i >= measurement_outage[0] && i <= measurement_outage[1])
-                {
-                        res.measurements[i] = std::nullopt;
-                        continue;
-                }
-                auto& v = *res.measurements.try_emplace(i, x).first->second;
-                for (std::size_t n = 0; n < N; ++n)
-                {
-                        v[n] += nd_m(engine);
-                }
-        }
-        return res;
 }
 
 template <std::size_t N, typename T>
@@ -147,7 +88,7 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 }
 
 template <std::size_t N, typename T>
-void write_to_file(const std::string& file_name, const ProcessData<N, T>& process, const ResultData<N, T>& result)
+void write_to_file(const std::string& file_name, const Track<N, T>& track, const std::vector<Vector<N, T>>& filter)
 {
         std::ofstream file(file_path(file_name));
         file << std::setprecision(Limits<T>::max_digits10());
@@ -161,7 +102,7 @@ void write_to_file(const std::string& file_name, const ProcessData<N, T>& proces
         file << R"(, "line_dash":"dot")";
         file << R"(, "marker_size":None)";
         file << "}\n";
-        for (const auto& v : process.track)
+        for (const auto& v : track.positions)
         {
                 write(file, v);
         }
@@ -174,7 +115,7 @@ void write_to_file(const std::string& file_name, const ProcessData<N, T>& proces
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const auto& [_, v] : std::map{process.measurements.cbegin(), process.measurements.cend()})
+        for (const auto& [_, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
         {
                 write(file, v);
         }
@@ -187,7 +128,7 @@ void write_to_file(const std::string& file_name, const ProcessData<N, T>& proces
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const auto& v : result.filter)
+        for (const auto& v : filter)
         {
                 write(file, v);
         }
@@ -200,10 +141,12 @@ void test_impl()
         constexpr std::size_t M = 2;
 
         constexpr T DT = 1;
-        constexpr T VELOCITY_MEAN = 1;
-        constexpr T VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T TRACK_VELOCITY_MEAN = 1;
+        constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
         constexpr T PROCESS_VARIANCE = power<2>(0.1);
-        constexpr T MEASUREMENT_VARIANCE = power<2>(3);
+
+        constexpr T VELOCITY_MEASUREMENT_VARIANCE = power<2>(0.2);
+        constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(3);
 
         constexpr Vector<N, T> X(10, 5, 10, 5);
         constexpr Matrix<N, N, T> P{
@@ -218,51 +161,67 @@ void test_impl()
                 {0,  0, 1, DT},
                 {0,  0, 0,  1}
         };
-        constexpr Matrix<M, N, T> H{
-                {1, 0, 0, 0},
-                {0, 0, 1, 0}
-        };
-        constexpr Matrix<M, M, T> R{
-                {MEASUREMENT_VARIANCE,                    0},
-                {                   0, MEASUREMENT_VARIANCE}
-        };
         constexpr Matrix<N, N, T> Q = []()
         {
                 const auto m = discrete_white_noise<N / 2, T>(DT, PROCESS_VARIANCE);
                 return block_diagonal(std::array{m, m});
         }();
 
+        constexpr Matrix<M, N, T> H_POSITION{
+                {1, 0, 0, 0},
+                {0, 0, 1, 0}
+        };
+        constexpr Matrix<M, M, T> R_POSITION{
+                {POSITION_MEASUREMENT_VARIANCE,                             0},
+                {                            0, POSITION_MEASUREMENT_VARIANCE}
+        };
+
+        constexpr Matrix<M, N, T> H_VELOCITY{
+                {0, 1, 0, 0},
+                {0, 0, 0, 1}
+        };
+        constexpr Matrix<M, M, T> R_VELOCITY{
+                {VELOCITY_MEASUREMENT_VARIANCE,                             0},
+                {                            0, VELOCITY_MEASUREMENT_VARIANCE}
+        };
+
         constexpr std::size_t COUNT = 1000;
-        constexpr std::array<std::size_t, 2> MEASUREMENT_OUTAGE = {350, 400};
-        constexpr std::size_t MEASUREMENT_INTERVAL = 1;
-        const ProcessData process = generate_random_data<2, T>(
-                COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, MEASUREMENT_OUTAGE,
-                MEASUREMENT_INTERVAL);
+        constexpr std::array<std::size_t, 2> POSITION_OUTAGE = {350, 400};
+        constexpr std::size_t POSITION_INTERVAL = 5;
+        const Track track = generate_track<2, T>(
+                COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
+                POSITION_MEASUREMENT_VARIANCE, POSITION_OUTAGE, POSITION_INTERVAL);
 
         Filter<N, M, T> filter;
         filter.set_x(X);
         filter.set_p(P);
         filter.set_f(F);
         filter.set_q(Q);
-        filter.set_h(H);
-        filter.set_r(R);
 
-        ResultData<2, T> result;
-        result.filter.reserve(COUNT);
+        std::vector<Vector<2, T>> result;
+        result.reserve(COUNT);
         for (std::size_t i = 0; i < COUNT; ++i)
         {
                 filter.predict();
 
-                const auto iter = process.measurements.find(i);
-                if (iter != process.measurements.cend() && iter->second)
+                if (const auto iter = track.position_measurements.find(i);
+                    iter != track.position_measurements.cend() && iter->second)
                 {
+                        filter.set_h(H_POSITION);
+                        filter.set_r(R_POSITION);
                         filter.update(*iter->second);
                 }
+                else
+                {
+                        filter.set_h(H_VELOCITY);
+                        filter.set_r(R_VELOCITY);
+                        filter.update(track.velocity_measurements[i]);
+                }
 
-                result.filter.push_back({filter.x()[0], filter.x()[2]});
+                result.push_back({filter.x()[0], filter.x()[2]});
         }
 
-        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", process, result);
+        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", track, result);
 }
 
 void test()
