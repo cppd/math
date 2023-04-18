@@ -112,7 +112,7 @@ public:
                 return rows_[0].data();
         }
 
-        [[nodiscard]] Matrix<COLUMNS, ROWS, T> transpose() const
+        [[nodiscard]] constexpr Matrix<COLUMNS, ROWS, T> transpose() const
         {
                 Matrix<COLUMNS, ROWS, T> res;
                 for (std::size_t r = 0; r < ROWS; ++r)
@@ -144,7 +144,7 @@ public:
         }
 
         template <std::size_t R, std::size_t C>
-        [[nodiscard]] Matrix<R, C, T> top_left() const
+        [[nodiscard]] constexpr Matrix<R, C, T> top_left() const
         {
                 static_assert(R > 0 && C > 0 && R <= ROWS && C <= COLUMNS && (R < ROWS || C < COLUMNS));
 
@@ -159,9 +159,9 @@ public:
                 return res;
         }
 
-        [[nodiscard]] T trace() const
+        [[nodiscard]] constexpr T trace() const
         {
-                static constexpr std::size_t N = std::min(ROWS, COLUMNS);
+                constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
                 T res = 0;
                 for (std::size_t i = 0; i < N; ++i)
@@ -171,9 +171,9 @@ public:
                 return res;
         }
 
-        [[nodiscard]] Vector<std::min(ROWS, COLUMNS), T> diagonal() const
+        [[nodiscard]] constexpr Vector<std::min(ROWS, COLUMNS), T> diagonal() const
         {
-                static constexpr std::size_t N = std::min(ROWS, COLUMNS);
+                constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
