@@ -15,125 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "show_file.h"
 #include "simulator.h"
 
 #include "../filter.h"
 #include "../models.h"
 
 #include <src/com/exponent.h>
-#include <src/com/file/path.h>
 #include <src/com/log.h>
-#include <src/com/print.h>
-#include <src/com/type/limit.h>
-#include <src/com/type/name.h>
-#include <src/numerical/vector.h>
-#include <src/settings/directory.h>
 #include <src/test/test.h>
 
-#include <cctype>
-#include <cmath>
-#include <fstream>
-#include <map>
-#include <optional>
+#include <array>
 #include <vector>
 
 namespace ns::filter::test
 {
 namespace
 {
-std::string replace_space(const std::string_view s)
-{
-        std::string res;
-        res.reserve(s.size());
-        for (const char c : s)
-        {
-                res += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
-        }
-        return res;
-}
-
-std::filesystem::path file_path(const std::string_view name)
-{
-        return settings::test_directory() / path_from_utf8(name);
-}
-
-template <std::size_t N, typename T>
-void write(std::ostream& os, const Vector<N, T>& v)
-{
-        static_assert(N > 0);
-        os << '(';
-        os << v[0];
-        for (std::size_t i = 1; i < N; ++i)
-        {
-                os << ", " << v[i];
-        }
-        os << ")\n";
-}
-
-template <std::size_t N, typename T>
-void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
-{
-        static_assert(N > 0);
-        if (v)
-        {
-                write(os, *v);
-                return;
-        }
-        os << "(None";
-        for (std::size_t i = 1; i < N; ++i)
-        {
-                os << ", None";
-        }
-        os << ")\n";
-}
-
-template <std::size_t N, typename T>
-void write_to_file(const std::string& file_name, const Track<N, T>& track, const std::vector<Vector<N, T>>& filter)
-{
-        std::ofstream file(file_path(file_name));
-        file << std::setprecision(Limits<T>::max_digits10());
-        file << std::scientific;
-
-        file << '{';
-        file << R"("name":"Track")";
-        file << R"(, "mode":"lines")";
-        file << R"(, "line_color":"#0000ff")";
-        file << R"(, "line_width":1)";
-        file << R"(, "line_dash":"dot")";
-        file << R"(, "marker_size":None)";
-        file << "}\n";
-        for (const auto& v : track.positions)
-        {
-                write(file, v);
-        }
-
-        file << '{';
-        file << R"("name":"Measurements")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#000000")";
-        file << R"(, "line_width":0.25)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":4)";
-        file << "}\n";
-        for (const auto& [_, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
-        {
-                write(file, v);
-        }
-
-        file << '{';
-        file << R"("name":"Filter")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#008000")";
-        file << R"(, "line_width":1)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":4)";
-        file << "}\n";
-        for (const auto& v : filter)
-        {
-                write(file, v);
-        }
-}
-
 template <typename T>
 void test_impl()
 {
@@ -188,6 +86,7 @@ void test_impl()
         constexpr std::size_t COUNT = 1000;
         constexpr std::array<std::size_t, 2> POSITION_OUTAGE = {350, 400};
         constexpr std::size_t POSITION_INTERVAL = 5;
+
         const Track track = generate_track<2, T>(
                 COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
                 POSITION_MEASUREMENT_VARIANCE, POSITION_OUTAGE, POSITION_INTERVAL);
@@ -221,7 +120,7 @@ void test_impl()
                 result.push_back({filter.x()[0], filter.x()[2]});
         }
 
-        write_to_file("filter_2d_" + replace_space(type_name<T>()) + ".txt", track, result);
+        write_to_file(track.positions, track.position_measurements, result);
 }
 
 void test()
