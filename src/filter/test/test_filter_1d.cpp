@@ -211,24 +211,24 @@ void test_impl()
                 {1, DT},
                 {0,  1}
         };
+        constexpr Matrix<N, N, T> Q{discrete_white_noise<N, T>(DT, VELOCITY_VARIANCE)};
+
         constexpr Matrix<M, N, T> H{
                 {1, 0}
         };
+        constexpr Matrix<N, M, T> H_T = H.transpose();
         constexpr Matrix<M, M, T> R{{MEASUREMENT_VARIANCE}};
-        constexpr Matrix<N, N, T> Q{discrete_white_noise<N, T>(DT, VELOCITY_VARIANCE)};
 
         constexpr std::size_t COUNT = 1000;
 
         const std::vector<ProcessData<T>> process_data =
                 generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
 
-        Filter<N, M, T> filter;
+        Filter<N, T> filter;
         filter.set_x(X);
         filter.set_p(P);
         filter.set_f(F);
         filter.set_q(Q);
-        filter.set_h(H);
-        filter.set_r(R);
 
         std::unordered_map<int, unsigned> distribution;
 
@@ -237,7 +237,7 @@ void test_impl()
         for (const ProcessData<T>& process : process_data)
         {
                 filter.predict();
-                filter.update(Vector<M, T>(process.z));
+                filter.update(H, H_T, R, Vector<M, T>(process.z));
 
                 const T f_x = filter.x()[0];
                 const T f_stddev = std::sqrt(filter.p()(0, 0));

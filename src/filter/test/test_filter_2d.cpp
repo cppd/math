@@ -65,20 +65,22 @@ void test_impl()
                 return block_diagonal(std::array{m, m});
         }();
 
-        constexpr Matrix<M, N, T> H_POSITION{
+        constexpr Matrix<M, N, T> POSITION_H{
                 {1, 0, 0, 0},
                 {0, 0, 1, 0}
         };
-        constexpr Matrix<M, M, T> R_POSITION{
+        constexpr Matrix<N, M, T> POSITION_H_T = POSITION_H.transpose();
+        constexpr Matrix<M, M, T> POSITION_R{
                 {POSITION_MEASUREMENT_VARIANCE,                             0},
                 {                            0, POSITION_MEASUREMENT_VARIANCE}
         };
 
-        constexpr Matrix<M, N, T> H_VELOCITY{
+        constexpr Matrix<M, N, T> VELOCITY_H{
                 {0, 1, 0, 0},
                 {0, 0, 0, 1}
         };
-        constexpr Matrix<M, M, T> R_VELOCITY{
+        constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transpose();
+        constexpr Matrix<M, M, T> VELOCITY_R{
                 {VELOCITY_MEASUREMENT_VARIANCE,                             0},
                 {                            0, VELOCITY_MEASUREMENT_VARIANCE}
         };
@@ -91,7 +93,7 @@ void test_impl()
                 COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
                 POSITION_MEASUREMENT_VARIANCE, POSITION_OUTAGE, POSITION_INTERVAL);
 
-        Filter<N, M, T> filter;
+        Filter<N, T> filter;
         filter.set_x(X);
         filter.set_p(P);
         filter.set_f(F);
@@ -106,15 +108,11 @@ void test_impl()
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)
                 {
-                        filter.set_h(H_POSITION);
-                        filter.set_r(R_POSITION);
-                        filter.update(*iter->second);
+                        filter.update(POSITION_H, POSITION_H_T, POSITION_R, *iter->second);
                 }
                 else
                 {
-                        filter.set_h(H_VELOCITY);
-                        filter.set_r(R_VELOCITY);
-                        filter.update(track.velocity_measurements[i]);
+                        filter.update(VELOCITY_H, VELOCITY_H_T, VELOCITY_R, track.velocity_measurements[i]);
                 }
 
                 result.push_back({filter.x()[0], filter.x()[2]});

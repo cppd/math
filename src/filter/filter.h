@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter
 {
-template <std::size_t N, std::size_t M, typename T>
+template <std::size_t N, typename T>
 class Filter final
 {
         // state mean
@@ -36,13 +36,6 @@ class Filter final
 
         // process covariance
         Matrix<N, N, T> q_;
-
-        // measurement function
-        Matrix<M, N, T> h_;
-        Matrix<N, M, T> h_t_; // transposed
-
-        // measurement covariance
-        Matrix<M, M, T> r_;
 
 public:
         // state mean
@@ -70,19 +63,6 @@ public:
                 q_ = q;
         }
 
-        // measurement function
-        void set_h(const Matrix<M, N, T>& h)
-        {
-                h_ = h;
-                h_t_ = h_.transpose();
-        }
-
-        // measurement covariance
-        void set_r(const Matrix<M, M, T>& r)
-        {
-                r_ = r;
-        }
-
         [[nodiscard]] const Vector<N, T>& x() const
         {
                 return x_;
@@ -99,13 +79,18 @@ public:
                 p_ = f_ * p_ * f_t_ + q_;
         }
 
-        void update(const Vector<M, T>& z) // measurement
+        template <std::size_t M>
+        void update(
+                const Matrix<M, N, T>& h /*measurement function*/,
+                const Matrix<N, M, T>& h_t /*measurement function transposed*/,
+                const Matrix<M, M, T>& r /* measurement covariance*/,
+                const Vector<M, T>& z /*measurement*/)
         {
-                const Matrix<N, M, T> k = p_ * h_t_ * (h_ * p_ * h_t_ + r_).inverse();
-                x_ = x_ + k * (z - h_ * x_);
+                const Matrix<N, M, T> k = p_ * h_t * (h * p_ * h_t + r).inverse();
+                x_ = x_ + k * (z - h * x_);
 
-                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h_;
-                p_ = i_kh * p_ * i_kh.transpose() + k * r_ * k.transpose();
+                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
+                p_ = i_kh * p_ * i_kh.transpose() + k * r * k.transpose();
         }
 };
 }
