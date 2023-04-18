@@ -65,16 +65,6 @@ void test_impl()
                 return block_diagonal(std::array{m, m});
         }();
 
-        constexpr Matrix<M, N, T> POSITION_H{
-                {1, 0, 0, 0},
-                {0, 0, 1, 0}
-        };
-        constexpr Matrix<N, M, T> POSITION_H_T = POSITION_H.transpose();
-        constexpr Matrix<M, M, T> POSITION_R{
-                {POSITION_MEASUREMENT_VARIANCE,                             0},
-                {                            0, POSITION_MEASUREMENT_VARIANCE}
-        };
-
         constexpr Matrix<M, N, T> VELOCITY_H{
                 {0, 1, 0, 0},
                 {0, 0, 0, 1}
@@ -84,6 +74,17 @@ void test_impl()
                 {VELOCITY_MEASUREMENT_VARIANCE,                             0},
                 {                            0, VELOCITY_MEASUREMENT_VARIANCE}
         };
+
+        constexpr Matrix<N, N, T> POSITION_VELOCITY_H{
+                {1, 0, 0, 0},
+                {0, 1, 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+        };
+        constexpr Matrix<N, N, T> POSITION_VELOCITY_H_T = POSITION_VELOCITY_H.transpose();
+        constexpr Matrix<N, N, T> POSITION_VELOCITY_R = make_diagonal_matrix(Vector<N, T>(
+                POSITION_MEASUREMENT_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE,
+                VELOCITY_MEASUREMENT_VARIANCE));
 
         constexpr std::size_t COUNT = 1000;
         constexpr std::array<std::size_t, 2> POSITION_OUTAGE = {350, 400};
@@ -108,7 +109,11 @@ void test_impl()
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)
                 {
-                        filter.update(POSITION_H, POSITION_H_T, POSITION_R, *iter->second);
+                        const auto& velocity = track.velocity_measurements[i];
+                        const auto& position = *iter->second;
+                        filter.update(
+                                POSITION_VELOCITY_H, POSITION_VELOCITY_H_T, POSITION_VELOCITY_R,
+                                {position[0], velocity[0], position[1], velocity[1]});
                 }
                 else
                 {
