@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-#include <array>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -42,6 +41,5 @@ Track<N, T> generate_track(
         T track_velocity_variance,
         T velocity_variance,
         T position_variance,
-        const std::array<std::size_t, 2>& position_outage,
         std::size_t position_interval);
 }

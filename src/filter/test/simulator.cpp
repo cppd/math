@@ -98,7 +98,6 @@ Track<N, T> generate_track(
         const T track_velocity_variance,
         const T velocity_variance,
         const T position_variance,
-        const std::array<std::size_t, 2>& position_outage,
         const std::size_t position_interval)
 {
         Simulator<N, T> simulator(
@@ -117,23 +116,16 @@ Track<N, T> generate_track(
 
                 res.velocity_measurements.push_back(simulator.velocity_measurement());
 
-                if ((i % position_interval) != 0)
+                if ((i % position_interval) == 0)
                 {
-                        continue;
+                        res.position_measurements[i] = simulator.position_measurement();
                 }
-                if (i >= position_outage[0] && i <= position_outage[1])
-                {
-                        res.position_measurements[i] = std::nullopt;
-                        continue;
-                }
-                res.position_measurements[i] = simulator.position_measurement();
         }
 
         return res;
 }
 
-#define TEMPLATE(T) \
-        template Track<2, T> generate_track(std::size_t, T, T, T, T, T, const std::array<std::size_t, 2>&, std::size_t);
+#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, T, T, T, T, T, std::size_t);
 
 TEMPLATE(float)
 TEMPLATE(double)

@@ -39,9 +39,10 @@ void test_impl()
         constexpr std::size_t M = 2;
 
         constexpr T DT = 1;
+
         constexpr T TRACK_VELOCITY_MEAN = 1;
         constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
-        constexpr T PROCESS_VARIANCE = power<2>(0.1);
+        constexpr T PROCESS_VARIANCE = TRACK_VELOCITY_VARIANCE;
 
         constexpr T VELOCITY_MEASUREMENT_VARIANCE = power<2>(0.2);
         constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(3);
@@ -86,13 +87,24 @@ void test_impl()
                 POSITION_MEASUREMENT_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE,
                 VELOCITY_MEASUREMENT_VARIANCE));
 
-        constexpr std::size_t COUNT = 1000;
-        constexpr std::array<std::size_t, 2> POSITION_OUTAGE = {350, 400};
-        constexpr std::size_t POSITION_INTERVAL = 5;
+        const Track track = [&]()
+        {
+                constexpr std::size_t COUNT = 1000;
+                constexpr std::size_t POSITION_INTERVAL = 5;
 
-        const Track track = generate_track<2, T>(
-                COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
-                POSITION_MEASUREMENT_VARIANCE, POSITION_OUTAGE, POSITION_INTERVAL);
+                Track res = generate_track<2, T>(
+                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
+                        POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
+                for (auto& [i, p] : res.position_measurements)
+                {
+                        ASSERT(i >= 0 && i < COUNT);
+                        if (i >= 350 && i <= 400)
+                        {
+                                p.reset();
+                        }
+                }
+                return res;
+        }();
 
         Filter<N, T> filter;
         filter.set_x(X);
@@ -101,8 +113,8 @@ void test_impl()
         filter.set_q(Q);
 
         std::vector<Vector<2, T>> result;
-        result.reserve(COUNT);
-        for (std::size_t i = 0; i < COUNT; ++i)
+        result.reserve(track.positions.size());
+        for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
                 filter.predict();
 
