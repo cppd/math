@@ -121,7 +121,7 @@ void add_mesh(
         }
 
         {
-                const Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inverse().transpose();
+                const Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inversed().transposed();
                 for (const auto& v : mesh.normals)
                 {
                         data->mesh.normals.push_back(matrix * to_vector<T>(v));

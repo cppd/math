@@ -150,7 +150,7 @@ class Impl final : public VolumeObject
                                 : geometry::spatial::Hyperplane<3, double>(Vector3d(0), 0);
 
                 buffer_.set_coordinates(
-                        texture_to_device.inverse(), texture_to_world_matrix_, texture_to_device.row(2), clip_plane,
+                        texture_to_device.inversed(), texture_to_world_matrix_, texture_to_device.row(2), clip_plane,
                         gradient_h_, gradient_to_world_matrix_, world_to_texture_matrix_);
 
                 if (!ray_tracing_)
@@ -245,7 +245,7 @@ class Impl final : public VolumeObject
 
                 gradient_to_world_matrix_ =
                         texture_to_world_matrix_.top_left<3, 3>() * make_diagonal_matrix(gradient_h_);
-                world_to_texture_matrix_ = texture_to_world_matrix_.inverse();
+                world_to_texture_matrix_ = texture_to_world_matrix_.inversed();
 
                 buffer_set_coordinates();
         }

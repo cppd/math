@@ -216,7 +216,7 @@ void test_impl()
         constexpr Matrix<M, N, T> H{
                 {1, 0}
         };
-        constexpr Matrix<N, M, T> H_T = H.transpose();
+        constexpr Matrix<N, M, T> H_T = H.transposed();
         constexpr Matrix<M, M, T> R{{MEASUREMENT_VARIANCE}};
 
         constexpr std::size_t COUNT = 1000;

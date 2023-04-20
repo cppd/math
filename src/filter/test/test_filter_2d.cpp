@@ -70,7 +70,7 @@ void test_impl()
                 {0, 1, 0, 0},
                 {0, 0, 0, 1}
         };
-        constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transpose();
+        constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transposed();
         constexpr Matrix<M, M, T> VELOCITY_R{
                 {VELOCITY_MEASUREMENT_VARIANCE,                             0},
                 {                            0, VELOCITY_MEASUREMENT_VARIANCE}
@@ -82,7 +82,7 @@ void test_impl()
                 {0, 0, 1, 0},
                 {0, 0, 0, 1}
         };
-        constexpr Matrix<N, N, T> POSITION_VELOCITY_H_T = POSITION_VELOCITY_H.transpose();
+        constexpr Matrix<N, N, T> POSITION_VELOCITY_H_T = POSITION_VELOCITY_H.transposed();
         constexpr Matrix<N, N, T> POSITION_VELOCITY_R = make_diagonal_matrix(Vector<N, T>(
                 POSITION_MEASUREMENT_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE,
                 VELOCITY_MEASUREMENT_VARIANCE));

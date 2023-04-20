@@ -54,7 +54,7 @@ public:
         void set_f(const Matrix<N, N, T>& f)
         {
                 f_ = f;
-                f_t_ = f_.transpose();
+                f_t_ = f_.transposed();
         }
 
         // process covariance
@@ -86,11 +86,11 @@ public:
                 const Matrix<M, M, T>& r /* measurement covariance*/,
                 const Vector<M, T>& z /*measurement*/)
         {
-                const Matrix<N, M, T> k = p_ * h_t * (h * p_ * h_t + r).inverse();
+                const Matrix<N, M, T> k = p_ * h_t * (h * p_ * h_t + r).inversed();
                 x_ = x_ + k * (z - h * x_);
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
-                p_ = i_kh * p_ * i_kh.transpose() + k * r * k.transpose();
+                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 };
 }

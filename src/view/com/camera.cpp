@@ -187,7 +187,7 @@ info::Camera Camera::camera() const
                 return res;
         }();
 
-        const Vector4d view_center = main_view_matrix().inverse() * volume_center;
+        const Vector4d view_center = main_view_matrix().inversed() * volume_center;
 
         return {
                 .up = camera_up_,

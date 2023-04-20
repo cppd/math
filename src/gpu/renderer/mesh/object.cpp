@@ -112,7 +112,7 @@ class Impl final : public MeshObject
 
         void buffer_set_coordinates(const Matrix4d& model_matrix)
         {
-                mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
+                mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inversed().transposed());
         }
 
         void set_transform_matrix(const Matrix4d& model_matrix)

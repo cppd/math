@@ -112,7 +112,7 @@ public:
                 return rows_[0].data();
         }
 
-        [[nodiscard]] constexpr Matrix<COLUMNS, ROWS, T> transpose() const
+        [[nodiscard]] constexpr Matrix<COLUMNS, ROWS, T> transposed() const
         {
                 Matrix<COLUMNS, ROWS, T> res;
                 for (std::size_t r = 0; r < ROWS; ++r)
@@ -131,7 +131,7 @@ public:
                 return numerical::determinant(rows_);
         }
 
-        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const
+        [[nodiscard]] Matrix<ROWS, ROWS, T> inversed() const
                 requires (ROWS == COLUMNS)
         {
                 return Matrix<ROWS, ROWS, T>(numerical::inverse(rows_));
