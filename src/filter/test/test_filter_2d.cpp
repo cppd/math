@@ -44,6 +44,8 @@ void test_impl()
         constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
         constexpr T PROCESS_VARIANCE = TRACK_VELOCITY_VARIANCE;
 
+        constexpr T RELATIVE_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.2);
+        constexpr T RELATIVE_AMOUNT_MEASUREMENT_VARIANCE = power<2>(0.2);
         constexpr T VELOCITY_MEASUREMENT_VARIANCE = power<2>(0.2);
         constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(3);
 
@@ -93,8 +95,9 @@ void test_impl()
                 constexpr std::size_t POSITION_INTERVAL = 5;
 
                 Track res = generate_track<2, T>(
-                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_MEASUREMENT_VARIANCE,
-                        POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
+                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE,
+                        RELATIVE_DIRECTION_MEASUREMENT_VARIANCE, RELATIVE_AMOUNT_MEASUREMENT_VARIANCE,
+                        VELOCITY_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
