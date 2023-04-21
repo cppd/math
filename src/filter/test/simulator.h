@@ -26,19 +26,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct RelativeMeasurement final
+struct VelocityMeasurement final
 {
         Vector<N, T> direction;
         T amount;
 };
 
 template <std::size_t N, typename T>
+struct PositionMeasurement final
+{
+        Vector<N, T> position;
+};
+
+template <std::size_t N, typename T>
 struct Track final
 {
         std::vector<Vector<N, T>> positions;
-        std::vector<RelativeMeasurement<N, T>> relative_measurements;
-        std::vector<Vector<N, T>> velocity_measurements;
-        std::unordered_map<std::size_t, std::optional<Vector<N, T>>> position_measurements;
+        std::vector<VelocityMeasurement<N, T>> velocity_measurements;
+        std::unordered_map<std::size_t, std::optional<PositionMeasurement<N, T>>> position_measurements;
 };
 
 template <std::size_t N, typename T>
@@ -47,9 +52,8 @@ Track<N, T> generate_track(
         T dt,
         T track_velocity_mean,
         T track_velocity_variance,
-        T relative_direction_variance,
-        T relative_amount_variance,
-        T velocity_variance,
+        T velocity_direction_variance,
+        T velocity_amount_variance,
         T position_variance,
         std::size_t position_interval);
 }

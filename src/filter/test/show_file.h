@@ -28,6 +28,6 @@ namespace ns::filter::test
 template <std::size_t N, typename T>
 void write_to_file(
         const std::vector<Vector<N, T>>& positions,
-        const std::unordered_map<std::size_t, std::optional<Vector<N, T>>>& position_measurements,
+        const std::vector<std::optional<Vector<N, T>>>& position_measurements,
         const std::vector<Vector<N, T>>& filter);
 }

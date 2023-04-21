@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cctype>
 #include <fstream>
-#include <map>
 #include <string>
 
 namespace ns::filter::test
@@ -81,7 +80,7 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 template <std::size_t N, typename T>
 void write_to_file(
         const std::vector<Vector<N, T>>& positions,
-        const std::unordered_map<std::size_t, std::optional<Vector<N, T>>>& position_measurements,
+        const std::vector<std::optional<Vector<N, T>>>& position_measurements,
         const std::vector<Vector<N, T>>& filter)
 {
         std::ofstream file(file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -109,7 +108,7 @@ void write_to_file(
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const auto& [_, v] : std::map{position_measurements.cbegin(), position_measurements.cend()})
+        for (const auto& v : position_measurements)
         {
                 write(file, v);
         }
@@ -128,9 +127,9 @@ void write_to_file(
         }
 }
 
-#define TEMPLATE(T)                                                                                                    \
-        template void write_to_file(                                                                                   \
-                const std::vector<Vector<2, T>>&, const std::unordered_map<std::size_t, std::optional<Vector<2, T>>>&, \
+#define TEMPLATE(T)                                                                                \
+        template void write_to_file(                                                               \
+                const std::vector<Vector<2, T>>&, const std::vector<std::optional<Vector<2, T>>>&, \
                 const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)
