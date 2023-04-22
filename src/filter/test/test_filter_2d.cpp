@@ -32,7 +32,6 @@ namespace ns::filter::test
 {
 namespace
 {
-
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>& track)
 {
@@ -68,17 +67,19 @@ void test_impl()
         constexpr std::size_t N = 4;
         constexpr std::size_t M = 2;
 
-        constexpr T DT = 1;
+        constexpr T DT = 0.1;
 
-        constexpr T TRACK_VELOCITY_MEAN = 1;
-        constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T TRACK_VELOCITY_MEAN = 10;
+        constexpr T TRACK_VELOCITY_VARIANCE = power<2>(1);
         constexpr T PROCESS_VARIANCE = TRACK_VELOCITY_VARIANCE;
 
-        constexpr T RELATIVE_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.1);
-        constexpr T RELATIVE_AMOUNT_MEASUREMENT_VARIANCE = power<2>(0.1);
-        constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(3);
+        constexpr T VELOCITY_AMOUNT_MEASUREMENT_VARIANCE = power<2>(1);
+        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.1);
 
-        constexpr Vector<N, T> X(10, 5, 10, 5);
+        constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(30);
+        constexpr std::size_t POSITION_INTERVAL = 10;
+
+        constexpr Vector<N, T> X(10, 0, 10, 5);
         constexpr Matrix<N, N, T> P{
                 {500,  0,   0,  0},
                 {  0, 50,   0,  0},
@@ -112,8 +113,8 @@ void test_impl()
         };
         constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transposed();
         constexpr Matrix<M, M, T> VELOCITY_MEASUREMENT_R{
-                {RELATIVE_AMOUNT_MEASUREMENT_VARIANCE,                                       0},
-                {                                   0, RELATIVE_DIRECTION_MEASUREMENT_VARIANCE}
+                {VELOCITY_AMOUNT_MEASUREMENT_VARIANCE,                                       0},
+                {                                   0, VELOCITY_DIRECTION_MEASUREMENT_VARIANCE}
         };
 
         constexpr Matrix<M, N, T> POSITION_H{
@@ -128,17 +129,15 @@ void test_impl()
 
         const Track track = [&]()
         {
-                constexpr std::size_t COUNT = 1000;
-                constexpr std::size_t POSITION_INTERVAL = 5;
+                constexpr std::size_t COUNT = 3000;
 
                 Track res = generate_track<2, T>(
-                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE,
-                        RELATIVE_DIRECTION_MEASUREMENT_VARIANCE, RELATIVE_AMOUNT_MEASUREMENT_VARIANCE,
-                        POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
+                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_AMOUNT_MEASUREMENT_VARIANCE,
+                        VELOCITY_DIRECTION_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
-                        if ((i >= 300 && i <= 400) || (i >= 650 && i <= 750))
+                        if (i >= 1000 && i <= 1500)
                         {
                                 p.reset();
                         }

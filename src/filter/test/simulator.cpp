@@ -41,8 +41,8 @@ class Simulator final
 
         PCG engine_;
         std::normal_distribution<T> track_velocity_nd_;
-        std::normal_distribution<T> velocity_direction_measurements_nd_;
         std::normal_distribution<T> velocity_amount_measurements_nd_;
+        std::normal_distribution<T> velocity_direction_measurements_nd_;
         std::normal_distribution<T> position_measurements_nd_;
 
         std::size_t index_{0};
@@ -54,14 +54,14 @@ public:
                 const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> track_velocity_mean,
                 const std::type_identity_t<T> track_velocity_variance,
-                const std::type_identity_t<T> velocity_direction_measurements_variance,
                 const std::type_identity_t<T> velocity_amount_measurements_variance,
+                const std::type_identity_t<T> velocity_direction_measurements_variance,
                 const std::type_identity_t<T> position_measurements_variance)
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
-                  velocity_direction_measurements_nd_(0, std::sqrt(velocity_direction_measurements_variance)),
                   velocity_amount_measurements_nd_(0, std::sqrt(velocity_amount_measurements_variance)),
+                  velocity_direction_measurements_nd_(0, std::sqrt(velocity_direction_measurements_variance)),
                   position_measurements_nd_(0, std::sqrt(position_measurements_variance))
         {
         }
@@ -70,12 +70,13 @@ public:
         {
                 Vector<N, T> v(0);
                 v[0] = track_velocity_mean_;
-                velocity_ = rotate(v, std::cos(index_++ / 150.0));
+                velocity_ = rotate(v, std::cos(index_ / 250.0));
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         velocity_[i] += track_velocity_nd_(engine_);
                 }
                 position_ += dt_ * velocity_;
+                ++index_;
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
@@ -85,8 +86,8 @@ public:
 
         [[nodiscard]] VelocityMeasurement<N, T> velocity_measurement()
         {
-                const T direction = velocity_direction_measurements_nd_(engine_);
                 const T amount = velocity_amount_measurements_nd_(engine_);
+                const T direction = velocity_direction_measurements_nd_(engine_);
                 return {.direction = rotate(velocity_, direction).normalized(), .amount = velocity_.norm() + amount};
         }
 
@@ -108,13 +109,13 @@ Track<N, T> generate_track(
         const T dt,
         const T track_velocity_mean,
         const T track_velocity_variance,
-        const T velocity_direction_variance,
         const T velocity_amount_variance,
+        const T velocity_direction_variance,
         const T position_variance,
         const std::size_t position_interval)
 {
         Simulator<N, T> simulator(
-                dt, track_velocity_mean, track_velocity_variance, velocity_direction_variance, velocity_amount_variance,
+                dt, track_velocity_mean, track_velocity_variance, velocity_amount_variance, velocity_direction_variance,
                 position_variance);
 
         Track<N, T> res;
