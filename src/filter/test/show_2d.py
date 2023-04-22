@@ -48,7 +48,9 @@ def create_figure(data, title):
         )
 
     figure.update_xaxes(showgrid=True, visible=True)
-    figure.update_yaxes(showgrid=True, visible=True)
+    figure.update_yaxes(showgrid=True, visible=True, scaleanchor="x", scaleratio=1)
+
+    title = None
     figure.update_layout(title=title)
     return figure
 
