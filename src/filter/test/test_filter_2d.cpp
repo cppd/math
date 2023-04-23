@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../filter.h"
 #include "../nees.h"
 
+#include <src/com/constant.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -66,14 +67,51 @@ void check_nees(
             + (N > 1 ? "s" : "") + " of freedom; " + (nees <= N ? " passed" : "failed"));
 }
 
-template <std::size_t N, typename T>
-Matrix<N, N, T> velocity_r(const Matrix<N, N, T>& measurement_r, const T cos, const T sin, const T amount)
+template <typename T>
+Matrix<2, 2, T> velocity_r(const Matrix<2, 2, T>& measurement_r, const Vector<2, T>& direction, const T amount)
 {
-        const Matrix<N, N, T> error_propagation{
+        // x = amount*cos(angle)
+        // y = amount*sin(angle)
+        // Jacobian matrix
+        //  cos(angle) -amount*sin(angle)
+        //  sin(angle)  amount*cos(angle)
+        const T cos = direction[0];
+        const T sin = direction[1];
+        const Matrix<2, 2, T> error_propagation{
                 {cos, -amount * sin},
                 {sin,  amount * cos}
         };
         return error_propagation * measurement_r * error_propagation.transposed();
+}
+
+template <typename T>
+Matrix<2, 2, T> measurement_r(const Matrix<2, 2, T>& velocity_r, const Vector<2, T>& velocity)
+{
+        // amount = sqrt(x*x+y*y)
+        // angle = atan(y/x)
+        // Jacobian matrix
+        //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
+        //     -y/(x*x+y*y)     x/(x*x+y*y)
+        const T norm_squared = velocity.norm_squared();
+        const T norm = std::sqrt(norm_squared);
+        const T x = velocity[0];
+        const T y = velocity[1];
+        const Matrix<2, 2, T> error_propagation{
+                {         x / norm,         y / norm},
+                {-y / norm_squared, x / norm_squared}
+        };
+        return error_propagation * velocity_r * error_propagation.transposed();
+}
+
+template <typename T>
+T normalize_angle_difference(T difference)
+{
+        difference = std::fmod(difference, 2 * PI<T>);
+        if (std::abs(difference) <= PI<T>)
+        {
+                return difference;
+        }
+        return (difference > 0) ? (difference - 2 * PI<T>) : (difference + 2 * PI<T>);
 }
 
 template <typename T>
@@ -96,10 +134,10 @@ void test_impl()
 
         constexpr Vector<N, T> X(10, 0, 10, 5);
         constexpr Matrix<N, N, T> P{
-                {500,  0,   0,  0},
-                {  0, 50,   0,  0},
-                {  0,  0, 500,  0},
-                {  0,  0,   0, 50}
+                {500,   0,   0,   0},
+                {  0, 100,   0,   0},
+                {  0,   0, 500,   0},
+                {  0,   0,   0, 100}
         };
         constexpr Matrix<N, N, T> F{
                 {1, DT, 0,  0},
@@ -152,7 +190,7 @@ void test_impl()
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
-                        if (i >= 1000 && i <= 1500)
+                        if (i >= 1100 && i <= 1600)
                         {
                                 p.reset();
                         }
@@ -178,14 +216,31 @@ void test_impl()
                     iter != track.position_measurements.cend() && iter->second)
                 {
                         filter.update(POSITION_H, POSITION_H_T, POSITION_R, iter->second->position);
+
+                        {
+                                const Matrix<M, M, T> velocity_p{
+                                        {filter.p()(1, 1), filter.p()(1, 3)},
+                                        {filter.p()(3, 1), filter.p()(3, 3)}
+                                };
+                                const Vector<M, T> velocity(filter.x()[1], filter.x()[3]);
+                                const Matrix<M, M, T> r = measurement_r(velocity_p, velocity);
+                                const T velocity_angle = std::atan2(velocity[1], velocity[0]);
+                                const T measurement_angle = std::atan2(
+                                        track.velocity_measurements[i].direction[1],
+                                        track.velocity_measurements[i].direction[0]);
+                                const T angle_difference =
+                                        normalize_angle_difference(velocity_angle - measurement_angle);
+                                LOG("i = " + to_string(i) + "; angle difference = " + to_string(angle_difference)
+                                    + "; direction difference sigma = "
+                                    + to_string(std::sqrt(r(1, 1) + VELOCITY_MEASUREMENT_R(1, 1))));
+                        }
                 }
                 else
                 {
-                        const T cos = track.velocity_measurements[i].direction[0];
-                        const T sin = track.velocity_measurements[i].direction[1];
-                        const T amount = track.velocity_measurements[i].amount;
-                        const Vector<M, T> velocity(amount * cos, amount * sin);
-                        const Matrix<M, M, T> r = velocity_r(VELOCITY_MEASUREMENT_R, cos, sin, amount);
+                        const auto& direction = track.velocity_measurements[i].direction;
+                        const auto& amount = track.velocity_measurements[i].amount;
+                        const Vector<M, T> velocity = direction * amount;
+                        const Matrix<M, M, T> r = velocity_r(VELOCITY_MEASUREMENT_R, direction, amount);
                         filter.update(VELOCITY_H, VELOCITY_H_T, r, velocity);
                 }
 
@@ -198,6 +253,7 @@ void test_impl()
         }
 
         write_to_file(track.positions, position_measurements(track), result);
+
         check_nees(track.positions, result, result_p);
 }
 

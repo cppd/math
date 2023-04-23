@@ -70,7 +70,7 @@ public:
         {
                 Vector<N, T> v(0);
                 v[0] = track_velocity_mean_;
-                velocity_ = rotate(v, std::cos(index_ / 250.0));
+                velocity_ = rotate(v, std::cos(index_ < 100 ? 0 : ((index_ - 100) / 250.0)));
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         velocity_[i] += track_velocity_nd_(engine_);
