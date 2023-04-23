@@ -19,9 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simulator.h"
 
 #include "../filter.h"
+#include "../nees.h"
 
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -49,6 +52,18 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>
                 }
         }
         return res;
+}
+
+template <std::size_t N, typename T>
+void check_nees(
+        const std::vector<Vector<N, T>>& values,
+        const std::vector<Vector<N, T>>& estimates,
+        const std::vector<Matrix<N, N, T>>& covariances)
+{
+        const T nees = nees_average(values, estimates, covariances);
+
+        LOG(std::string("NEES average <") + type_name<T>() + "> = " + to_string(nees) + "; " + to_string(N) + " degree"
+            + (N > 1 ? "s" : "") + " of freedom; " + (nees <= N ? " passed" : "failed"));
 }
 
 template <std::size_t N, typename T>
@@ -153,6 +168,8 @@ void test_impl()
 
         std::vector<Vector<2, T>> result;
         result.reserve(track.positions.size());
+        std::vector<Matrix<2, 2, T>> result_p;
+        result_p.reserve(track.positions.size());
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
                 filter.predict();
@@ -173,9 +190,15 @@ void test_impl()
                 }
 
                 result.push_back({filter.x()[0], filter.x()[2]});
+
+                result_p.push_back({
+                        {filter.p()(0, 0), filter.p()(0, 2)},
+                        {filter.p()(2, 0), filter.p()(2, 2)}
+                });
         }
 
         write_to_file(track.positions, position_measurements(track), result);
+        check_nees(track.positions, result, result_p);
 }
 
 void test()
