@@ -139,12 +139,14 @@ void test_impl()
                 {  0,   0, 500,   0},
                 {  0,   0,   0, 100}
         };
+
         constexpr Matrix<N, N, T> F{
                 {1, DT, 0,  0},
                 {0,  1, 0,  0},
                 {0,  0, 1, DT},
                 {0,  0, 0,  1}
         };
+        constexpr Matrix<N, N, T> F_T = F.transposed();
         constexpr Matrix<N, N, T> Q = []()
         {
                 constexpr Matrix<N, 2, T> NOISE_TRANSITION{
@@ -198,11 +200,7 @@ void test_impl()
                 return res;
         }();
 
-        Filter<N, T> filter;
-        filter.set_x(X);
-        filter.set_p(P);
-        filter.set_f(F);
-        filter.set_q(Q);
+        Filter<N, T> filter(X, P);
 
         std::vector<Vector<2, T>> result;
         result.reserve(track.positions.size());
@@ -210,7 +208,7 @@ void test_impl()
         result_p.reserve(track.positions.size());
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
-                filter.predict();
+                filter.predict(F, F_T, Q);
 
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)

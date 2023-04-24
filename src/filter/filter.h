@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 namespace ns::filter
 {
@@ -30,37 +31,11 @@ class Filter final
         // state covariance
         Matrix<N, N, T> p_;
 
-        // state transition function
-        Matrix<N, N, T> f_;
-        Matrix<N, N, T> f_t_; // transposed
-
-        // process covariance
-        Matrix<N, N, T> q_;
-
 public:
-        // state mean
-        void set_x(const Vector<N, T>& x)
+        Filter(const Vector<N, T>& x /*state mean*/, const Matrix<N, N, T>& p /*state covariance*/)
+                : x_(x),
+                  p_(p)
         {
-                x_ = x;
-        }
-
-        // state covariance
-        void set_p(const Matrix<N, N, T>& p)
-        {
-                p_ = p;
-        }
-
-        // state transition function
-        void set_f(const Matrix<N, N, T>& f)
-        {
-                f_ = f;
-                f_t_ = f_.transposed();
-        }
-
-        // process covariance
-        void set_q(const Matrix<N, N, T>& q)
-        {
-                q_ = q;
         }
 
         [[nodiscard]] const Vector<N, T>& x() const
@@ -73,10 +48,13 @@ public:
                 return p_;
         }
 
-        void predict()
+        void predict(
+                const Matrix<N, N, T>& f /*state transition function*/,
+                const Matrix<N, N, T>& f_t /*state transition function transposed*/,
+                const Matrix<N, N, T>& q /*process covariance*/)
         {
-                x_ = f_ * x_;
-                p_ = f_ * p_ * f_t_ + q_;
+                x_ = f * x_;
+                p_ = f * p_ * f_t + q;
         }
 
         template <std::size_t M>
