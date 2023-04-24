@@ -38,17 +38,17 @@ class Matrix final
 
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
-        // constexpr Vector<ROWS, T> column_impl(const std::size_t column) const
-        // {
-        //         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
-        //         {
-        //                 static_assert(sizeof...(I) == ROWS);
-        //                 static_assert(((I >= 0 && I < ROWS) && ...));
-        //
-        //                 return Vector<ROWS, T>{rows_[I][column]...};
-        //         }
-        //         (std::make_integer_sequence<std::size_t, ROWS>());
-        // }
+        constexpr Vector<ROWS, T> column(const std::size_t column) const
+        {
+                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+                {
+                        static_assert(sizeof...(I) == ROWS);
+                        static_assert(((I >= 0 && I < ROWS) && ...));
+
+                        return Vector<ROWS, T>{rows_[I][column]...};
+                }
+                (std::make_integer_sequence<std::size_t, ROWS>());
+        }
 
 public:
         constexpr Matrix()
@@ -81,6 +81,22 @@ public:
                 ASSERT(r == ROWS);
         }
 
+        explicit constexpr Matrix(const Vector<ROWS == 1 ? COLUMNS : ROWS, T>& data)
+                requires (ROWS == 1 || COLUMNS == 1)
+        {
+                if constexpr (ROWS == 1)
+                {
+                        rows_[0] = data;
+                }
+                else
+                {
+                        for (std::size_t i = 0; i < ROWS; ++i)
+                        {
+                                rows_[i][0] = data[i];
+                        }
+                }
+        }
+
         explicit constexpr Matrix(const std::array<Vector<COLUMNS, T>, ROWS>& data)
                 : rows_(data)
         {
@@ -106,10 +122,43 @@ public:
                 return rows_[r][c];
         }
 
-        [[nodiscard]] const T* data() const
+        [[nodiscard]] constexpr const T& operator()(const std::size_t index) const
+                requires (ROWS == 1 || COLUMNS == 1)
         {
-                static_assert(sizeof(Matrix) == ROWS * COLUMNS * sizeof(T));
-                return rows_[0].data();
+                if constexpr (ROWS == 1)
+                {
+                        return rows_[0][index];
+                }
+                else
+                {
+                        return rows_[index][0];
+                }
+        }
+
+        [[nodiscard]] constexpr T& operator()(const std::size_t index)
+                requires (ROWS == 1 || COLUMNS == 1)
+        {
+                if constexpr (ROWS == 1)
+                {
+                        return rows_[0][index];
+                }
+                else
+                {
+                        return rows_[index][0];
+                }
+        }
+
+        [[nodiscard]] constexpr Vector<ROWS == 1 ? COLUMNS : ROWS, T> to_vector() const
+                requires (ROWS == 1 || COLUMNS == 1)
+        {
+                if constexpr (ROWS == 1)
+                {
+                        return rows_[0];
+                }
+                else
+                {
+                        return column(0);
+                }
         }
 
         [[nodiscard]] constexpr Matrix<COLUMNS, ROWS, T> transposed() const
