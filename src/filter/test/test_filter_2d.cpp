@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "low_pass.h"
 #include "show_file.h"
 #include "simulator.h"
 
@@ -22,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../nees.h"
 
 #include <src/com/constant.h>
+#include <src/com/conversion.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -29,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <array>
+#include <cmath>
 #include <map>
 #include <vector>
 
@@ -36,6 +39,14 @@ namespace ns::filter::test
 {
 namespace
 {
+
+template <typename T, typename Angle>
+Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
+{
+        static_assert(std::is_floating_point_v<Angle>);
+        return {std::cos(angle) * v[0] - std::sin(angle) * v[1], std::sin(angle) * v[0] + std::cos(angle) * v[1]};
+}
+
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>& track)
 {
@@ -115,6 +126,33 @@ T normalize_angle_difference(T difference)
 }
 
 template <typename T>
+constexpr Matrix<4, 4, T> create_f(const T dt)
+{
+        return {
+                {1, dt, 0,  0},
+                {0,  1, 0,  0},
+                {0,  0, 1, dt},
+                {0,  0, 0,  1}
+        };
+}
+
+template <typename T>
+constexpr Matrix<4, 4, T> create_q(const T dt, const T process_variance)
+{
+        const Matrix<4, 2, T> noise_transition{
+                {square(dt) / 2,              0},
+                {            dt,              0},
+                {             0, square(dt) / 2},
+                {             0,             dt}
+        };
+        const Matrix<2, 2, T> process_covariance{
+                {process_variance,                0},
+                {               0, process_variance}
+        };
+        return noise_transition * process_covariance * noise_transition.transposed();
+}
+
+template <typename T>
 void test_impl()
 {
         constexpr std::size_t N = 4;
@@ -127,12 +165,14 @@ void test_impl()
         constexpr T PROCESS_VARIANCE = TRACK_VELOCITY_VARIANCE;
 
         constexpr T VELOCITY_AMOUNT_MEASUREMENT_VARIANCE = power<2>(1);
-        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.1);
+        constexpr T VELOCITY_DIRECTION_PROCESS_VARIANCE = power<2>(0.1);
+        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.5);
 
         constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(30);
         constexpr std::size_t POSITION_INTERVAL = 10;
+        constexpr T POSITION_DT = 1;
 
-        constexpr Vector<N, T> X(10, 0, 10, 5);
+        constexpr Vector<N, T> X(10, 0, 10, -5);
         constexpr Matrix<N, N, T> P{
                 {500,   0,   0,   0},
                 {  0, 100,   0,   0},
@@ -140,27 +180,13 @@ void test_impl()
                 {  0,   0,   0, 100}
         };
 
-        constexpr Matrix<N, N, T> F{
-                {1, DT, 0,  0},
-                {0,  1, 0,  0},
-                {0,  0, 1, DT},
-                {0,  0, 0,  1}
-        };
+        constexpr Matrix<N, N, T> F = create_f(DT);
         constexpr Matrix<N, N, T> F_T = F.transposed();
-        constexpr Matrix<N, N, T> Q = []()
-        {
-                constexpr Matrix<N, 2, T> NOISE_TRANSITION{
-                        {DT * DT / 2,           0},
-                        {         DT,           0},
-                        {          0, DT * DT / 2},
-                        {          0,          DT}
-                };
-                constexpr Matrix<2, 2, T> PROCESS_COVARIANCE{
-                        {PROCESS_VARIANCE,                0},
-                        {               0, PROCESS_VARIANCE}
-                };
-                return NOISE_TRANSITION * PROCESS_COVARIANCE * NOISE_TRANSITION.transposed();
-        }();
+        constexpr Matrix<N, N, T> Q = create_q(DT, PROCESS_VARIANCE);
+
+        constexpr Matrix<N, N, T> POSITION_F = create_f(POSITION_DT);
+        constexpr Matrix<N, N, T> POSITION_F_T = POSITION_F.transposed();
+        constexpr Matrix<N, N, T> POSITION_Q = create_q(POSITION_DT, PROCESS_VARIANCE);
 
         constexpr Matrix<M, N, T> VELOCITY_H{
                 {0, 1, 0, 0},
@@ -184,15 +210,15 @@ void test_impl()
 
         const Track track = [&]()
         {
-                constexpr std::size_t COUNT = 3000;
+                constexpr std::size_t COUNT = 8000;
 
                 Track res = generate_track<2, T>(
                         COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_AMOUNT_MEASUREMENT_VARIANCE,
-                        VELOCITY_DIRECTION_MEASUREMENT_VARIANCE, POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
+                        VELOCITY_DIRECTION_PROCESS_VARIANCE, POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
-                        if (i >= 1100 && i <= 1600)
+                        if ((i >= 800 && i <= 1400) || (i >= 2600 && i <= 3500) || (i >= 5000 && i <= 6000))
                         {
                                 p.reset();
                         }
@@ -201,41 +227,81 @@ void test_impl()
         }();
 
         Filter<N, T> filter(X, P);
+        Filter<N, T> position_filter(X, P);
+        Filter<1, T> difference_filter(Vector<1, T>(0), {{square(2)}});
 
+        std::vector<Vector<2, T>> position_result;
+        position_result.reserve(track.positions.size());
         std::vector<Vector<2, T>> result;
         result.reserve(track.positions.size());
         std::vector<Matrix<2, 2, T>> result_p;
         result_p.reserve(track.positions.size());
+
+        LowPassFilter<T> lpf;
+        std::optional<T> position_velocity_angle;
+        std::optional<T> position_velocity_angle_p;
+
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
+                if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
+                {
+                        position_filter.predict(POSITION_F, POSITION_F_T, POSITION_Q);
+
+                        if (iter->second)
+                        {
+                                position_filter.update(POSITION_H, POSITION_H_T, POSITION_R, iter->second->position);
+
+                                if (i >= 200)
+                                {
+                                        const Vector<M, T> velocity(position_filter.x()[1], position_filter.x()[3]);
+                                        const T velocity_angle = std::atan2(velocity[1], velocity[0]);
+                                        position_velocity_angle = velocity_angle;
+                                        const Matrix<M, M, T> velocity_p{
+                                                {position_filter.p()(1, 1), position_filter.p()(1, 3)},
+                                                {position_filter.p()(3, 1), position_filter.p()(3, 3)}
+                                        };
+                                        const Matrix<M, M, T> r = measurement_r(velocity_p, velocity);
+                                        position_velocity_angle_p = r(1, 1);
+                                }
+                        }
+                        else
+                        {
+                                position_velocity_angle.reset();
+                                position_velocity_angle_p.reset();
+                        }
+
+                        position_result.push_back({position_filter.x()[0], position_filter.x()[2]});
+                }
+
+                if (const auto& p = position_velocity_angle)
+                {
+                        const T measurement_angle = std::atan2(
+                                track.velocity_measurements[i].direction[1],
+                                track.velocity_measurements[i].direction[0]);
+                        const T difference = normalize_angle_difference(*p - measurement_angle);
+                        difference_filter.predict({{1}}, {{1}}, {{square(0.001)}});
+                        difference_filter.update(
+                                {{1}}, {{1}}, {{*position_velocity_angle_p + VELOCITY_MEASUREMENT_R(1, 1)}},
+                                Vector<1, T>(difference));
+                        const T filtered_difference = difference_filter.x()[0];
+                        lpf.push(filtered_difference);
+                }
+
+                if (const auto& difference = lpf.value())
+                {
+                        LOG("i = " + to_string(i) + "; angle difference = " + to_string(*difference));
+                }
+
                 filter.predict(F, F_T, Q);
 
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)
                 {
                         filter.update(POSITION_H, POSITION_H_T, POSITION_R, iter->second->position);
-
-                        {
-                                const Matrix<M, M, T> velocity_p{
-                                        {filter.p()(1, 1), filter.p()(1, 3)},
-                                        {filter.p()(3, 1), filter.p()(3, 3)}
-                                };
-                                const Vector<M, T> velocity(filter.x()[1], filter.x()[3]);
-                                const Matrix<M, M, T> r = measurement_r(velocity_p, velocity);
-                                const T velocity_angle = std::atan2(velocity[1], velocity[0]);
-                                const T measurement_angle = std::atan2(
-                                        track.velocity_measurements[i].direction[1],
-                                        track.velocity_measurements[i].direction[0]);
-                                const T angle_difference =
-                                        normalize_angle_difference(velocity_angle - measurement_angle);
-                                LOG("i = " + to_string(i) + "; angle difference = " + to_string(angle_difference)
-                                    + "; direction difference sigma = "
-                                    + to_string(std::sqrt(r(1, 1) + VELOCITY_MEASUREMENT_R(1, 1))));
-                        }
                 }
-                else
+                else if (const auto& difference = lpf.value())
                 {
-                        const auto& direction = track.velocity_measurements[i].direction;
+                        const auto& direction = rotate(track.velocity_measurements[i].direction, *difference);
                         const auto& amount = track.velocity_measurements[i].amount;
                         const Vector<M, T> velocity = direction * amount;
                         const Matrix<M, M, T> r = velocity_r(VELOCITY_MEASUREMENT_R, direction, amount);
@@ -250,7 +316,16 @@ void test_impl()
                 });
         }
 
-        write_to_file(track.positions, position_measurements(track), result);
+        std::vector<Vector<2, T>> measurement_angles;
+        measurement_angles.reserve(track.positions.size());
+        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        {
+                const T angle = std::atan2(
+                        track.velocity_measurements[i].direction[1], track.velocity_measurements[i].direction[0]);
+                measurement_angles.emplace_back(track.positions[i][0], -2000 + radians_to_degrees(angle));
+        }
+
+        write_to_file(track.positions, measurement_angles, position_measurements(track), position_result, result);
 
         check_nees(track.positions, result, result_p);
 }

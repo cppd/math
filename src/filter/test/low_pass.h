@@ -17,19 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vector.h>
-
+#include <deque>
 #include <optional>
-#include <unordered_map>
-#include <vector>
 
 namespace ns::filter::test
 {
-template <std::size_t N, typename T>
-void write_to_file(
-        const std::vector<Vector<N, T>>& positions,
-        const std::vector<Vector<N, T>>& angle_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& position_measurements,
-        const std::vector<Vector<N, T>>& position_filter,
-        const std::vector<Vector<N, T>>& filter);
+template <typename T>
+class LowPassFilter final
+{
+        std::deque<T> values_;
+
+public:
+        void clear();
+
+        void push(T value);
+
+        [[nodiscard]] std::optional<T> value() const;
+};
 }

@@ -70,7 +70,7 @@ public:
         {
                 Vector<N, T> v(0);
                 v[0] = track_velocity_mean_;
-                velocity_ = rotate(v, std::cos(index_ < 100 ? 0 : ((index_ - 100) / 250.0)));
+                velocity_ = rotate(v, std::cos(index_ / T{600}));
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         velocity_[i] += track_velocity_nd_(engine_);
@@ -88,7 +88,8 @@ public:
         {
                 const T amount = velocity_amount_measurements_nd_(engine_);
                 const T direction = velocity_direction_measurements_nd_(engine_);
-                return {.direction = rotate(velocity_, direction).normalized(), .amount = velocity_.norm() + amount};
+                return {.direction = rotate(velocity_, -T{0.5} - index_ / T{600 * 20} + direction).normalized(),
+                        .amount = velocity_.norm() + amount};
         }
 
         [[nodiscard]] PositionMeasurement<N, T> position_measurement()

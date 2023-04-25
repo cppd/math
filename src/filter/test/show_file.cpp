@@ -80,7 +80,9 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 template <std::size_t N, typename T>
 void write_to_file(
         const std::vector<Vector<N, T>>& positions,
+        const std::vector<Vector<N, T>>& angle_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_measurements,
+        const std::vector<Vector<N, T>>& position_filter,
         const std::vector<Vector<N, T>>& filter)
 {
         std::ofstream file(file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -101,12 +103,25 @@ void write_to_file(
         }
 
         file << '{';
-        file << R"("name":"Measurements")";
+        file << R"("name":"Angle Measurements")";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":"#000000")";
         file << R"(, "line_width":0.25)";
         file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":4)";
+        file << R"(, "marker_size":2)";
+        file << "}\n";
+        for (const auto& v : angle_measurements)
+        {
+                write(file, v);
+        }
+
+        file << '{';
+        file << R"("name":"Position Measurements")";
+        file << R"(, "mode":"lines+markers")";
+        file << R"(, "line_color":"#000000")";
+        file << R"(, "line_width":0.25)";
+        file << R"(, "line_dash":None)";
+        file << R"(, "marker_size":2)";
         file << "}\n";
         for (const auto& v : position_measurements)
         {
@@ -114,12 +129,25 @@ void write_to_file(
         }
 
         file << '{';
+        file << R"("name":"Position Filter")";
+        file << R"(, "mode":"lines+markers")";
+        file << R"(, "line_color":"#a00000")";
+        file << R"(, "line_width":0.25)";
+        file << R"(, "line_dash":None)";
+        file << R"(, "marker_size":2)";
+        file << "}\n";
+        for (const auto& v : position_filter)
+        {
+                write(file, v);
+        }
+
+        file << '{';
         file << R"("name":"Filter")";
         file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#008000")";
+        file << R"(, "line_color":"#00a000")";
         file << R"(, "line_width":1)";
         file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":4)";
+        file << R"(, "marker_size":2)";
         file << "}\n";
         for (const auto& v : filter)
         {
@@ -129,7 +157,8 @@ void write_to_file(
 
 #define TEMPLATE(T)                                                                                \
         template void write_to_file(                                                               \
-                const std::vector<Vector<2, T>>&, const std::vector<std::optional<Vector<2, T>>>&, \
+                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                \
+                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<Vector<2, T>>&, \
                 const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)
