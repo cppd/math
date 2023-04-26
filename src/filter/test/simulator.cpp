@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include <src/com/conversion.h>
 #include <src/com/random/pcg.h>
 
 #include <cmath>
@@ -41,9 +42,9 @@ class Simulator final
 
         PCG engine_;
         std::normal_distribution<T> track_velocity_nd_;
-        std::normal_distribution<T> velocity_amount_measurements_nd_;
-        std::normal_distribution<T> velocity_direction_measurements_nd_;
-        std::normal_distribution<T> position_measurements_nd_;
+        std::normal_distribution<T> measurements_velocity_amount_nd_;
+        std::normal_distribution<T> measurements_velocity_direction_nd_;
+        std::normal_distribution<T> measurements_position_nd_;
 
         std::size_t index_{0};
         Vector<N, T> position_{0};
@@ -54,15 +55,15 @@ public:
                 const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> track_velocity_mean,
                 const std::type_identity_t<T> track_velocity_variance,
-                const std::type_identity_t<T> velocity_amount_measurements_variance,
-                const std::type_identity_t<T> velocity_direction_measurements_variance,
-                const std::type_identity_t<T> position_measurements_variance)
+                const std::type_identity_t<T> measurements_velocity_amount_variance,
+                const std::type_identity_t<T> measurements_velocity_direction_variance,
+                const std::type_identity_t<T> measurements_position_variance)
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
-                  velocity_amount_measurements_nd_(0, std::sqrt(velocity_amount_measurements_variance)),
-                  velocity_direction_measurements_nd_(0, std::sqrt(velocity_direction_measurements_variance)),
-                  position_measurements_nd_(0, std::sqrt(position_measurements_variance))
+                  measurements_velocity_amount_nd_(0, std::sqrt(measurements_velocity_amount_variance)),
+                  measurements_velocity_direction_nd_(0, std::sqrt(measurements_velocity_direction_variance)),
+                  measurements_position_nd_(0, std::sqrt(measurements_position_variance))
         {
         }
 
@@ -86,9 +87,10 @@ public:
 
         [[nodiscard]] VelocityMeasurement<N, T> velocity_measurement()
         {
-                const T amount = velocity_amount_measurements_nd_(engine_);
-                const T direction = velocity_direction_measurements_nd_(engine_);
-                return {.direction = rotate(velocity_, -T{0.5} - index_ / T{600 * 20} + direction).normalized(),
+                const T amount = measurements_velocity_amount_nd_(engine_);
+                const T direction = measurements_velocity_direction_nd_(engine_);
+                return {.direction = rotate(velocity_, -T{1} - index_ / T{600} * degrees_to_radians(T{5}) + direction)
+                                             .normalized(),
                         .amount = velocity_.norm() + amount};
         }
 
@@ -97,7 +99,7 @@ public:
                 Vector<N, T> position{position_};
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        position[i] += position_measurements_nd_(engine_);
+                        position[i] += measurements_position_nd_(engine_);
                 }
                 return {.position = position};
         }
@@ -110,14 +112,14 @@ Track<N, T> generate_track(
         const T dt,
         const T track_velocity_mean,
         const T track_velocity_variance,
-        const T velocity_amount_variance,
-        const T velocity_direction_variance,
-        const T position_variance,
+        const T measurements_velocity_amount_variance,
+        const T measurements_velocity_direction_variance,
+        const T measurements_position_variance,
         const std::size_t position_interval)
 {
         Simulator<N, T> simulator(
-                dt, track_velocity_mean, track_velocity_variance, velocity_amount_variance, velocity_direction_variance,
-                position_variance);
+                dt, track_velocity_mean, track_velocity_variance, measurements_velocity_amount_variance,
+                measurements_velocity_direction_variance, measurements_position_variance);
 
         Track<N, T> res;
         res.positions.reserve(count);

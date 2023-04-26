@@ -126,7 +126,7 @@ T normalize_angle_difference(T difference)
 }
 
 template <typename T>
-constexpr Matrix<4, 4, T> create_f(const T dt)
+constexpr Matrix<4, 4, T> create_position_f(const T dt)
 {
         return {
                 {1, dt, 0,  0},
@@ -137,7 +137,7 @@ constexpr Matrix<4, 4, T> create_f(const T dt)
 }
 
 template <typename T>
-constexpr Matrix<4, 4, T> create_q(const T dt, const T process_variance)
+constexpr Matrix<4, 4, T> create_position_q(const T dt, const T process_variance)
 {
         const Matrix<4, 2, T> noise_transition{
                 {square(dt) / 2,              0},
@@ -153,24 +153,44 @@ constexpr Matrix<4, 4, T> create_q(const T dt, const T process_variance)
 }
 
 template <typename T>
+constexpr Matrix<2, 2, T> create_difference_f(const T dt)
+{
+        return {
+                {1, dt},
+                {0,  1}
+        };
+}
+
+template <typename T>
+constexpr Matrix<2, 2, T> create_difference_q(const T dt, const T process_variance)
+{
+        const Matrix<2, 1, T> noise_transition{
+                {square(dt) / 2},
+                {dt},
+        };
+        const Matrix<1, 1, T> process_covariance{{process_variance}};
+        return noise_transition * process_covariance * noise_transition.transposed();
+}
+
+template <typename T>
 void test_impl()
 {
         constexpr std::size_t N = 4;
         constexpr std::size_t M = 2;
 
         constexpr T DT = 0.1;
-
-        constexpr T TRACK_VELOCITY_MEAN = 10;
-        constexpr T TRACK_VELOCITY_VARIANCE = power<2>(1);
-        constexpr T PROCESS_VARIANCE = TRACK_VELOCITY_VARIANCE;
-
-        constexpr T VELOCITY_AMOUNT_MEASUREMENT_VARIANCE = power<2>(1);
-        constexpr T VELOCITY_DIRECTION_PROCESS_VARIANCE = power<2>(0.1);
-        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(0.5);
-
-        constexpr T POSITION_MEASUREMENT_VARIANCE = power<2>(30);
         constexpr std::size_t POSITION_INTERVAL = 10;
         constexpr T POSITION_DT = 1;
+
+        constexpr T TRACK_VELOCITY_MEAN = 10;
+        constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T MEASUREMENT_VELOCITY_AMOUNT_VARIANCE = power<2>(1.0);
+        constexpr T MEASUREMENT_VELOCITY_DIRECTION_VARIANCE = power<2>(degrees_to_radians(2.0));
+        constexpr T MEASUREMENT_POSITION_VARIANCE = power<2>(30.0);
+
+        constexpr T PROCESS_VARIANCE = power<2>(1.0);
+        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(degrees_to_radians(30.0));
+        constexpr T DIRECTION_DIFFERENCE_PROCESS_VARIANCE = power<2>(degrees_to_radians(0.01));
 
         constexpr Vector<N, T> X(10, 0, 10, -5);
         constexpr Matrix<N, N, T> P{
@@ -180,13 +200,13 @@ void test_impl()
                 {  0,   0,   0, 100}
         };
 
-        constexpr Matrix<N, N, T> F = create_f(DT);
+        constexpr Matrix<N, N, T> F = create_position_f(DT);
         constexpr Matrix<N, N, T> F_T = F.transposed();
-        constexpr Matrix<N, N, T> Q = create_q(DT, PROCESS_VARIANCE);
+        constexpr Matrix<N, N, T> Q = create_position_q(DT, PROCESS_VARIANCE);
 
-        constexpr Matrix<N, N, T> POSITION_F = create_f(POSITION_DT);
+        constexpr Matrix<N, N, T> POSITION_F = create_position_f(POSITION_DT);
         constexpr Matrix<N, N, T> POSITION_F_T = POSITION_F.transposed();
-        constexpr Matrix<N, N, T> POSITION_Q = create_q(POSITION_DT, PROCESS_VARIANCE);
+        constexpr Matrix<N, N, T> POSITION_Q = create_position_q(POSITION_DT, PROCESS_VARIANCE);
 
         constexpr Matrix<M, N, T> VELOCITY_H{
                 {0, 1, 0, 0},
@@ -194,7 +214,7 @@ void test_impl()
         };
         constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transposed();
         constexpr Matrix<M, M, T> VELOCITY_MEASUREMENT_R{
-                {VELOCITY_AMOUNT_MEASUREMENT_VARIANCE,                                       0},
+                {MEASUREMENT_VELOCITY_AMOUNT_VARIANCE,                                       0},
                 {                                   0, VELOCITY_DIRECTION_MEASUREMENT_VARIANCE}
         };
 
@@ -204,8 +224,8 @@ void test_impl()
         };
         constexpr Matrix<N, M, T> POSITION_H_T = POSITION_H.transposed();
         constexpr Matrix<M, M, T> POSITION_R = {
-                {POSITION_MEASUREMENT_VARIANCE,                             0},
-                {                            0, POSITION_MEASUREMENT_VARIANCE}
+                {MEASUREMENT_POSITION_VARIANCE,                             0},
+                {                            0, MEASUREMENT_POSITION_VARIANCE}
         };
 
         const Track track = [&]()
@@ -213,8 +233,8 @@ void test_impl()
                 constexpr std::size_t COUNT = 8000;
 
                 Track res = generate_track<2, T>(
-                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, VELOCITY_AMOUNT_MEASUREMENT_VARIANCE,
-                        VELOCITY_DIRECTION_PROCESS_VARIANCE, POSITION_MEASUREMENT_VARIANCE, POSITION_INTERVAL);
+                        COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, MEASUREMENT_VELOCITY_AMOUNT_VARIANCE,
+                        MEASUREMENT_VELOCITY_DIRECTION_VARIANCE, MEASUREMENT_POSITION_VARIANCE, POSITION_INTERVAL);
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
@@ -226,9 +246,22 @@ void test_impl()
                 return res;
         }();
 
+        constexpr Vector<2, T> DIFFERENCE_X(1, 1);
+        constexpr Matrix<2, 2, T> DIFFERENCE_P{
+                {square(3),         0},
+                {        0, square(1)}
+        };
+        constexpr Matrix<2, 2, T> DIFFERENCE_F = create_difference_f(DT);
+        constexpr Matrix<2, 2, T> DIFFERENCE_F_T = DIFFERENCE_F.transposed();
+        constexpr Matrix<2, 2, T> DIFFERENCE_Q = create_difference_q(DT, DIRECTION_DIFFERENCE_PROCESS_VARIANCE);
+        constexpr Matrix<1, 2, T> DIFFERENCE_H{
+                {1, 0}
+        };
+        constexpr Matrix<2, 1, T> DIFFERENCE_H_T = DIFFERENCE_H.transposed();
+
         Filter<N, T> filter(X, P);
         Filter<N, T> position_filter(X, P);
-        Filter<1, T> difference_filter(Vector<1, T>(0), {{square(2)}});
+        Filter<2, T> difference_filter(DIFFERENCE_X, DIFFERENCE_P);
 
         std::vector<Vector<2, T>> position_result;
         position_result.reserve(track.positions.size());
@@ -279,17 +312,13 @@ void test_impl()
                                 track.velocity_measurements[i].direction[1],
                                 track.velocity_measurements[i].direction[0]);
                         const T difference = normalize_angle_difference(*p - measurement_angle);
-                        difference_filter.predict({{1}}, {{1}}, {{square(0.001)}});
+                        difference_filter.predict(DIFFERENCE_F, DIFFERENCE_F_T, DIFFERENCE_Q);
                         difference_filter.update(
-                                {{1}}, {{1}}, {{*position_velocity_angle_p + VELOCITY_MEASUREMENT_R(1, 1)}},
+                                DIFFERENCE_H, DIFFERENCE_H_T,
+                                {{*position_velocity_angle_p + MEASUREMENT_VELOCITY_DIRECTION_VARIANCE}},
                                 Vector<1, T>(difference));
                         const T filtered_difference = difference_filter.x()[0];
                         lpf.push(filtered_difference);
-                }
-
-                if (const auto& difference = lpf.value())
-                {
-                        LOG("i = " + to_string(i) + "; angle difference = " + to_string(*difference));
                 }
 
                 filter.predict(F, F_T, Q);

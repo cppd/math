@@ -52,8 +52,8 @@ Track<N, T> generate_track(
         T dt,
         T track_velocity_mean,
         T track_velocity_variance,
-        T velocity_amount_variance,
-        T velocity_direction_variance,
-        T position_variance,
+        T measurements_velocity_amount_variance,
+        T measurements_velocity_direction_variance,
+        T measurements_position_variance,
         std::size_t position_interval);
 }
