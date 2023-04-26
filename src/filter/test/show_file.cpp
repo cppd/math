@@ -82,7 +82,7 @@ void write_to_file(
         const std::vector<Vector<N, T>>& positions,
         const std::vector<Vector<N, T>>& angle_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_measurements,
-        const std::vector<Vector<N, T>>& position_filter,
+        const std::vector<std::optional<Vector<N, T>>>& position_filter,
         const std::vector<Vector<N, T>>& filter)
 {
         std::ofstream file(file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -155,10 +155,10 @@ void write_to_file(
         }
 }
 
-#define TEMPLATE(T)                                                                                \
-        template void write_to_file(                                                               \
-                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                \
-                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<Vector<2, T>>&, \
+#define TEMPLATE(T)                                                                                               \
+        template void write_to_file(                                                                              \
+                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                               \
+                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&, \
                 const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)

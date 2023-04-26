@@ -30,6 +30,6 @@ void write_to_file(
         const std::vector<Vector<N, T>>& positions,
         const std::vector<Vector<N, T>>& angle_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_measurements,
-        const std::vector<Vector<N, T>>& position_filter,
+        const std::vector<std::optional<Vector<N, T>>>& position_filter,
         const std::vector<Vector<N, T>>& filter);
 }
