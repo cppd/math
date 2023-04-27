@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "low_pass.h"
 #include "show_file.h"
 #include "simulator.h"
 
@@ -192,12 +191,13 @@ void test_impl()
         constexpr T TRACK_VELOCITY_VARIANCE = power<2>(0.1);
         constexpr T MEASUREMENT_VELOCITY_AMOUNT_VARIANCE = power<2>(1.0);
         constexpr T MEASUREMENT_VELOCITY_DIRECTION_VARIANCE = power<2>(degrees_to_radians(2.0));
+        constexpr T MEASUREMENT_ACCELERATION_VARIANCE = power<2>(1.0);
         constexpr T MEASUREMENT_POSITION_VARIANCE = power<2>(20.0);
 
         constexpr T PROCESS_VARIANCE = power<2>(0.1);
         constexpr T POSITION_PROCESS_VARIANCE = 10 * PROCESS_VARIANCE;
-        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(degrees_to_radians(60.0));
-        constexpr T DIRECTION_DIFFERENCE_PROCESS_VARIANCE = power<2>(degrees_to_radians(0.001));
+        constexpr T VELOCITY_DIRECTION_MEASUREMENT_VARIANCE = power<2>(degrees_to_radians(50.0));
+        constexpr T DIRECTION_DIFFERENCE_PROCESS_VARIANCE = power<2>(degrees_to_radians(0.0001));
 
         constexpr Vector<N, T> X(10, 0, 0, 10, -5, 0.5);
         constexpr Matrix<N, N, T> P{
@@ -243,7 +243,8 @@ void test_impl()
 
                 Track res = generate_track<2, T>(
                         COUNT, DT, TRACK_VELOCITY_MEAN, TRACK_VELOCITY_VARIANCE, MEASUREMENT_VELOCITY_AMOUNT_VARIANCE,
-                        MEASUREMENT_VELOCITY_DIRECTION_VARIANCE, MEASUREMENT_POSITION_VARIANCE, POSITION_INTERVAL);
+                        MEASUREMENT_VELOCITY_DIRECTION_VARIANCE, MEASUREMENT_ACCELERATION_VARIANCE,
+                        MEASUREMENT_POSITION_VARIANCE, POSITION_INTERVAL);
                 for (auto& [i, p] : res.position_measurements)
                 {
                         ASSERT(i >= 0 && i < COUNT);
@@ -279,7 +280,7 @@ void test_impl()
         std::vector<Matrix<2, 2, T>> result_p;
         result_p.reserve(track.positions.size());
 
-        LowPassFilter<T> lpf;
+        std::optional<T> filtered_difference;
         std::optional<T> position_velocity_angle;
         std::optional<T> position_velocity_angle_p;
 
@@ -318,16 +319,14 @@ void test_impl()
                 if (const auto& p = position_velocity_angle)
                 {
                         const T measurement_angle = std::atan2(
-                                track.velocity_measurements[i].direction[1],
-                                track.velocity_measurements[i].direction[0]);
+                                track.process_measurements[i].direction[1], track.process_measurements[i].direction[0]);
                         const T difference = normalize_angle_difference(*p - measurement_angle);
                         difference_filter.predict(DIFFERENCE_F, DIFFERENCE_F_T, DIFFERENCE_Q);
                         difference_filter.update(
                                 DIFFERENCE_H, DIFFERENCE_H_T,
                                 {{*position_velocity_angle_p + MEASUREMENT_VELOCITY_DIRECTION_VARIANCE}},
                                 Vector<1, T>(difference));
-                        const T filtered_difference = difference_filter.x()[0];
-                        lpf.push(filtered_difference);
+                        filtered_difference = difference_filter.x()[0];
                 }
 
                 process_filter.predict(F, F_T, Q);
@@ -337,10 +336,10 @@ void test_impl()
                 {
                         process_filter.update(POSITION_H, POSITION_H_T, POSITION_R, iter->second->position);
                 }
-                else if (const auto& difference = lpf.value())
+                else if (const auto& difference = filtered_difference)
                 {
-                        const auto& direction = rotate(track.velocity_measurements[i].direction, *difference);
-                        const auto& amount = track.velocity_measurements[i].amount;
+                        const auto& direction = rotate(track.process_measurements[i].direction, *difference);
+                        const auto& amount = track.process_measurements[i].amount;
                         const Vector<M, T> velocity = direction * amount;
                         const Matrix<M, M, T> r = velocity_r(VELOCITY_MEASUREMENT_R, direction, amount);
                         process_filter.update(VELOCITY_H, VELOCITY_H_T, r, velocity);
@@ -359,7 +358,7 @@ void test_impl()
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
                 const T angle = std::atan2(
-                        track.velocity_measurements[i].direction[1], track.velocity_measurements[i].direction[0]);
+                        track.process_measurements[i].direction[1], track.process_measurements[i].direction[0]);
                 measurement_angles.emplace_back(track.positions[i][0], -500 + radians_to_degrees(angle));
         }
 

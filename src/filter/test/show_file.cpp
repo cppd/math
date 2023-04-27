@@ -145,7 +145,7 @@ void write_to_file(
         file << R"("name":"Filter")";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":"#00a000")";
-        file << R"(, "line_width":1)";
+        file << R"(, "line_width":0.5)";
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":2)";
         file << "}\n";

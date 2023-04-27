@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simulator.h"
 
 #include <src/com/conversion.h>
+#include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
 
 #include <cmath>
@@ -44,11 +45,31 @@ class Simulator final
         std::normal_distribution<T> track_velocity_nd_;
         std::normal_distribution<T> measurements_velocity_amount_nd_;
         std::normal_distribution<T> measurements_velocity_direction_nd_;
+        std::normal_distribution<T> measurements_acceleration_nd_;
         std::normal_distribution<T> measurements_position_nd_;
 
         std::size_t index_{0};
         Vector<N, T> position_{0};
-        Vector<N, T> velocity_{0};
+        Vector<N, T> velocity_;
+        Vector<N, T> next_velocity_;
+        Vector<N, T> acceleration_;
+
+        [[nodiscard]] Vector<N, T> velocity(const T index) const
+        {
+                Vector<N, T> v(0);
+                v[0] = track_velocity_mean_;
+                return rotate(v, std::cos(index / 100));
+        }
+
+        [[nodiscard]] Vector<N, T> noise(std::normal_distribution<T>& distribution)
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = distribution(engine_);
+                }
+                return res;
+        }
 
 public:
         Simulator(
@@ -57,27 +78,30 @@ public:
                 const std::type_identity_t<T> track_velocity_variance,
                 const std::type_identity_t<T> measurements_velocity_amount_variance,
                 const std::type_identity_t<T> measurements_velocity_direction_variance,
+                const std::type_identity_t<T> measurements_acceleration_variance,
                 const std::type_identity_t<T> measurements_position_variance)
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
                   measurements_velocity_amount_nd_(0, std::sqrt(measurements_velocity_amount_variance)),
                   measurements_velocity_direction_nd_(0, std::sqrt(measurements_velocity_direction_variance)),
-                  measurements_position_nd_(0, std::sqrt(measurements_position_variance))
+                  measurements_acceleration_nd_(0, std::sqrt(measurements_acceleration_variance)),
+                  measurements_position_nd_(0, std::sqrt(measurements_position_variance)),
+                  velocity_(velocity(index_) + noise(track_velocity_nd_)),
+                  next_velocity_(velocity(index_ + 1) + noise(track_velocity_nd_)),
+                  acceleration_(next_velocity_ - velocity_)
         {
         }
 
         void move()
         {
-                Vector<N, T> v(0);
-                v[0] = track_velocity_mean_;
-                velocity_ = rotate(v, std::cos(index_ / T{100}));
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        velocity_[i] += track_velocity_nd_(engine_);
-                }
-                position_ += dt_ * velocity_;
                 ++index_;
+
+                position_ = position_ + dt_ * velocity_ + (square(dt_) / 2) * acceleration_;
+
+                velocity_ = next_velocity_;
+                next_velocity_ = velocity(index_ + 1) + noise(track_velocity_nd_);
+                acceleration_ = next_velocity_ - velocity_;
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
@@ -85,13 +109,14 @@ public:
                 return position_;
         }
 
-        [[nodiscard]] VelocityMeasurement<N, T> velocity_measurement()
+        [[nodiscard]] ProcessMeasurement<N, T> process_measurement()
         {
-                const T amount = measurements_velocity_amount_nd_(engine_);
-                const T direction = measurements_velocity_direction_nd_(engine_);
-                return {.direction = rotate(velocity_, -T{0.5} - index_ / T{600} * degrees_to_radians(T{5}) + direction)
-                                             .normalized(),
-                        .amount = velocity_.norm() + amount};
+                const T angle = -T{0.5} - index_ / T{600} * degrees_to_radians(T{5});
+                const Vector<N, T> direction = rotate(velocity_, angle + measurements_velocity_direction_nd_(engine_));
+                return ProcessMeasurement<N, T>{
+                        .direction = direction.normalized(),
+                        .amount = velocity_.norm() + measurements_velocity_amount_nd_(engine_),
+                        .acceleration = acceleration_ + noise(measurements_acceleration_nd_)};
         }
 
         [[nodiscard]] PositionMeasurement<N, T> position_measurement()
@@ -114,12 +139,14 @@ Track<N, T> generate_track(
         const T track_velocity_variance,
         const T measurements_velocity_amount_variance,
         const T measurements_velocity_direction_variance,
+        const T measurements_acceleration_variance,
         const T measurements_position_variance,
         const std::size_t position_interval)
 {
         Simulator<N, T> simulator(
                 dt, track_velocity_mean, track_velocity_variance, measurements_velocity_amount_variance,
-                measurements_velocity_direction_variance, measurements_position_variance);
+                measurements_velocity_direction_variance, measurements_acceleration_variance,
+                measurements_position_variance);
 
         Track<N, T> res;
         res.positions.reserve(count);
@@ -131,7 +158,7 @@ Track<N, T> generate_track(
 
                 res.positions.push_back(simulator.position());
 
-                res.velocity_measurements.push_back(simulator.velocity_measurement());
+                res.process_measurements.push_back(simulator.process_measurement());
 
                 if ((i % position_interval) == 0)
                 {
@@ -142,7 +169,7 @@ Track<N, T> generate_track(
         return res;
 }
 
-#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, T, T, T, T, T, T, std::size_t);
+#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, T, T, T, T, T, T, T, std::size_t);
 
 TEMPLATE(float)
 TEMPLATE(double)
