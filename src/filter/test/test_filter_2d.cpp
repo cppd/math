@@ -95,7 +95,7 @@ Matrix<2, 2, T> velocity_r(const Matrix<2, 2, T>& measurement_r, const Vector<2,
 }
 
 template <typename T>
-Matrix<2, 2, T> measurement_r(const Matrix<2, 2, T>& velocity_r, const Vector<2, T>& velocity)
+T velocity_angle_p(const Matrix<2, 2, T>& velocity_r, const Vector<2, T>& velocity)
 {
         // amount = sqrt(x*x+y*y)
         // angle = atan(y/x)
@@ -110,7 +110,8 @@ Matrix<2, 2, T> measurement_r(const Matrix<2, 2, T>& velocity_r, const Vector<2,
                 {         x / norm,         y / norm},
                 {-y / norm_squared, x / norm_squared}
         };
-        return error_propagation * velocity_r * error_propagation.transposed();
+        const Matrix<2, 2, T> r = error_propagation * velocity_r * error_propagation.transposed();
+        return r(1, 1);
 }
 
 template <typename T>
@@ -303,8 +304,7 @@ void test_impl()
                                                 {position_filter.p()(1, 1), position_filter.p()(1, 4)},
                                                 {position_filter.p()(4, 1), position_filter.p()(4, 4)}
                                         };
-                                        const Matrix<M, M, T> r = measurement_r(velocity_p, velocity);
-                                        position_velocity_angle_p = r(1, 1);
+                                        position_velocity_angle_p = velocity_angle_p(velocity_p, velocity);
                                 }
                                 position_result.push_back(Vector<2, T>(position_filter.x()[0], position_filter.x()[3]));
                         }
