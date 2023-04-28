@@ -116,7 +116,7 @@ public:
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
                         .amount = velocity_.norm() + measurements_velocity_amount_nd_(engine_),
-                        .acceleration = acceleration_ + noise(measurements_acceleration_nd_)};
+                        .acceleration = rotate(acceleration_ + noise(measurements_acceleration_nd_), angle)};
         }
 
         [[nodiscard]] PositionMeasurement<N, T> position_measurement()
