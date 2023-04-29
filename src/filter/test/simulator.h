@@ -37,6 +37,7 @@ template <std::size_t N, typename T>
 struct PositionMeasurement final
 {
         Vector<N, T> position;
+        T speed;
 };
 
 template <std::size_t N, typename T>
@@ -47,15 +48,22 @@ struct Track final
         std::unordered_map<std::size_t, std::optional<PositionMeasurement<N, T>>> position_measurements;
 };
 
+template <typename T>
+struct TrackMeasurementVariance final
+{
+        T velocity_amount;
+        T velocity_direction;
+        T acceleration;
+        T position;
+        T position_speed;
+};
+
 template <std::size_t N, typename T>
 Track<N, T> generate_track(
         std::size_t count,
         T dt,
         T track_velocity_mean,
         T track_velocity_variance,
-        T measurements_velocity_amount_variance,
-        T measurements_velocity_direction_variance,
-        T measurements_acceleration_variance,
-        T measurements_position_variance,
+        const TrackMeasurementVariance<T>& track_measurement_variance,
         std::size_t position_interval);
 }

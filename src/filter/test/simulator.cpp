@@ -42,11 +42,14 @@ class Simulator final
         const T track_velocity_mean_;
 
         PCG engine_;
+
         std::normal_distribution<T> track_velocity_nd_;
+
         std::normal_distribution<T> measurements_velocity_amount_nd_;
         std::normal_distribution<T> measurements_velocity_direction_nd_;
         std::normal_distribution<T> measurements_acceleration_nd_;
         std::normal_distribution<T> measurements_position_nd_;
+        std::normal_distribution<T> measurements_position_speed_nd_;
 
         std::size_t index_{0};
         Vector<N, T> position_{0};
@@ -61,7 +64,7 @@ class Simulator final
                 return rotate(v, std::cos(index / 100));
         }
 
-        [[nodiscard]] Vector<N, T> noise(std::normal_distribution<T>& distribution)
+        [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)
         {
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
@@ -76,19 +79,17 @@ public:
                 const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> track_velocity_mean,
                 const std::type_identity_t<T> track_velocity_variance,
-                const std::type_identity_t<T> measurements_velocity_amount_variance,
-                const std::type_identity_t<T> measurements_velocity_direction_variance,
-                const std::type_identity_t<T> measurements_acceleration_variance,
-                const std::type_identity_t<T> measurements_position_variance)
+                const TrackMeasurementVariance<T>& track_measurement_variance)
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
-                  measurements_velocity_amount_nd_(0, std::sqrt(measurements_velocity_amount_variance)),
-                  measurements_velocity_direction_nd_(0, std::sqrt(measurements_velocity_direction_variance)),
-                  measurements_acceleration_nd_(0, std::sqrt(measurements_acceleration_variance)),
-                  measurements_position_nd_(0, std::sqrt(measurements_position_variance)),
-                  velocity_(velocity(index_) + noise(track_velocity_nd_)),
-                  next_velocity_(velocity(index_ + 1) + noise(track_velocity_nd_)),
+                  measurements_velocity_amount_nd_(0, std::sqrt(track_measurement_variance.velocity_amount)),
+                  measurements_velocity_direction_nd_(0, std::sqrt(track_measurement_variance.velocity_direction)),
+                  measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
+                  measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
+                  measurements_position_speed_nd_(0, std::sqrt(track_measurement_variance.position_speed)),
+                  velocity_(velocity(index_) + vector(track_velocity_nd_)),
+                  next_velocity_(velocity(index_ + 1) + vector(track_velocity_nd_)),
                   acceleration_(next_velocity_ - velocity_)
         {
         }
@@ -100,7 +101,7 @@ public:
                 position_ = position_ + dt_ * velocity_ + (square(dt_) / 2) * acceleration_;
 
                 velocity_ = next_velocity_;
-                next_velocity_ = velocity(index_ + 1) + noise(track_velocity_nd_);
+                next_velocity_ = velocity(index_ + 1) + vector(track_velocity_nd_);
                 acceleration_ = next_velocity_ - velocity_;
         }
 
@@ -116,17 +117,13 @@ public:
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
                         .amount = velocity_.norm() + measurements_velocity_amount_nd_(engine_),
-                        .acceleration = rotate(acceleration_ + noise(measurements_acceleration_nd_), angle)};
+                        .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle)};
         }
 
         [[nodiscard]] PositionMeasurement<N, T> position_measurement()
         {
-                Vector<N, T> position{position_};
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        position[i] += measurements_position_nd_(engine_);
-                }
-                return {.position = position};
+                return {.position = position_ + vector(measurements_position_nd_),
+                        .speed = velocity_.norm() + measurements_position_speed_nd_(engine_)};
         }
 };
 }
@@ -137,16 +134,10 @@ Track<N, T> generate_track(
         const T dt,
         const T track_velocity_mean,
         const T track_velocity_variance,
-        const T measurements_velocity_amount_variance,
-        const T measurements_velocity_direction_variance,
-        const T measurements_acceleration_variance,
-        const T measurements_position_variance,
+        const TrackMeasurementVariance<T>& track_measurement_variance,
         const std::size_t position_interval)
 {
-        Simulator<N, T> simulator(
-                dt, track_velocity_mean, track_velocity_variance, measurements_velocity_amount_variance,
-                measurements_velocity_direction_variance, measurements_acceleration_variance,
-                measurements_position_variance);
+        Simulator<N, T> simulator(dt, track_velocity_mean, track_velocity_variance, track_measurement_variance);
 
         Track<N, T> res;
         res.positions.reserve(count);
@@ -169,7 +160,8 @@ Track<N, T> generate_track(
         return res;
 }
 
-#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, T, T, T, T, T, T, T, std::size_t);
+#define TEMPLATE(T) \
+        template Track<2, T> generate_track(std::size_t, T, T, T, const TrackMeasurementVariance<T>&, std::size_t);
 
 TEMPLATE(float)
 TEMPLATE(double)
