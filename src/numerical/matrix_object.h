@@ -38,7 +38,7 @@ class Matrix final
 
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
-        constexpr Vector<ROWS, T> column(const std::size_t column) const
+        [[nodiscard]] constexpr Vector<ROWS, T> column(const std::size_t column) const
         {
                 return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
                 {
