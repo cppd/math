@@ -79,7 +79,7 @@ public:
         {
                 const T a = average();
                 return std::string("NEES average <") + type_name<T>() + "> = " + to_string(a) + "; " + to_string(N)
-                       + " degree" + (N > 1 ? "s" : "") + " of freedom; check " + (a <= max() ? " passed" : "failed");
+                       + " degree" + (N > 1 ? "s" : "") + " of freedom; check " + (a <= max() ? "passed" : "failed");
         }
 };
 }
