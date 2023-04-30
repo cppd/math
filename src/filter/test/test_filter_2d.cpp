@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_file.h"
 #include "simulator.h"
+#include "utility.h"
 
 #include "../filter.h"
 #include "../nees.h"
@@ -86,13 +87,6 @@ Track<N, T> generate_track()
         }
 
         return res;
-}
-
-template <typename T, typename Angle>
-Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
-{
-        static_assert(std::is_floating_point_v<Angle>);
-        return {std::cos(angle) * v[0] - std::sin(angle) * v[1], std::sin(angle) * v[0] + std::cos(angle) * v[1]};
 }
 
 template <std::size_t N, typename T>

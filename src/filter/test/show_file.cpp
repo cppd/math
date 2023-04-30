@@ -17,35 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_file.h"
 
-#include <src/com/file/path.h>
+#include "utility.h"
+
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/settings/directory.h>
 
-#include <cctype>
 #include <fstream>
+#include <iomanip>
 #include <string>
 
 namespace ns::filter::test
 {
 namespace
 {
-std::string replace_space(const std::string_view s)
-{
-        std::string res;
-        res.reserve(s.size());
-        for (const char c : s)
-        {
-                res += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
-        }
-        return res;
-}
-
-std::filesystem::path file_path(const std::string_view name)
-{
-        return settings::test_directory() / path_from_utf8(name);
-}
-
 template <std::size_t N, typename T>
 void write(std::ostream& os, const Vector<N, T>& v)
 {
@@ -85,7 +69,7 @@ void write_to_file(
         const std::vector<std::optional<Vector<N, T>>>& position_filter,
         const std::vector<Vector<N, T>>& filter)
 {
-        std::ofstream file(file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
+        std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
