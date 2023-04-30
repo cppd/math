@@ -70,5 +70,22 @@ public:
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
+
+        template <std::size_t M, typename H, typename HJ>
+        void update(
+                const H& h /*measurement function*/,
+                const HJ& hj /*measurement function Jacobian*/,
+                const Matrix<M, M, T>& r /* measurement covariance*/,
+                const Vector<M, T>& z /*measurement*/)
+        {
+                const Matrix<M, N, T> hjx = hj(x_);
+                const Matrix<N, M, T> hjx_t = hjx.transposed();
+
+                const Matrix<N, M, T> k = p_ * hjx_t * (hjx * p_ * hjx_t + r).inversed();
+                x_ = x_ + k * (z - h(x_));
+
+                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
+                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
+        }
 };
 }
