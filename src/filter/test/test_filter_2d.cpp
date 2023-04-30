@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/print.h>
-#include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -106,18 +104,6 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>
                 }
         }
         return res;
-}
-
-template <std::size_t N, typename T>
-void check_nees(
-        const std::vector<Vector<N, T>>& values,
-        const std::vector<Vector<N, T>>& estimates,
-        const std::vector<Matrix<N, N, T>>& covariances)
-{
-        const T nees = nees_average(values, estimates, covariances);
-
-        LOG(std::string("NEES average <") + type_name<T>() + "> = " + to_string(nees) + "; " + to_string(N) + " degree"
-            + (N > 1 ? "s" : "") + " of freedom; " + (nees <= N ? " passed" : "failed"));
 }
 
 template <typename T>
@@ -290,8 +276,8 @@ void test_impl()
         position_result.reserve(track.positions.size());
         std::vector<Vector<2, T>> result;
         result.reserve(track.positions.size());
-        std::vector<Matrix<2, 2, T>> result_p;
-        result_p.reserve(track.positions.size());
+
+        NeesAverage<2, T> nees_average;
 
         std::optional<T> filtered_difference;
         std::optional<T> position_velocity_angle;
@@ -359,9 +345,11 @@ void test_impl()
 
                 result.push_back({process_filter.x()[0], process_filter.x()[3]});
 
-                result_p.push_back({
-                        {process_filter.p()(0, 0), process_filter.p()(0, 3)},
-                        {process_filter.p()(3, 0), process_filter.p()(3, 3)}
+                nees_average.add(
+                        track.positions[i], Vector<2, T>(process_filter.x()[0], process_filter.x()[3]),
+                        {
+                                {process_filter.p()(0, 0), process_filter.p()(0, 3)},
+                                {process_filter.p()(3, 0), process_filter.p()(3, 3)}
                 });
         }
 
@@ -376,7 +364,7 @@ void test_impl()
 
         write_to_file(track.positions, measurement_angles, position_measurements(track), position_result, result);
 
-        check_nees(track.positions, result, result_p);
+        LOG(nees_average.check_string());
 }
 
 void test()

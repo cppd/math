@@ -263,12 +263,7 @@ void test_impl()
 
         std::unordered_map<int, unsigned> distribution;
 
-        std::vector<Vector<1, T>> values;
-        values.reserve(process_data.size());
-        std::vector<Vector<1, T>> estimates;
-        estimates.reserve(process_data.size());
-        std::vector<Matrix<1, 1, T>> covariances;
-        covariances.reserve(process_data.size());
+        NeesAverage<1, T> nees_average;
 
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());
@@ -290,9 +285,7 @@ void test_impl()
                 result_data.push_back({.x = x, .standard_deviation = stddev});
                 ++distribution[static_cast<int>((x - process.x) / stddev)];
 
-                values.emplace_back(process.x);
-                estimates.emplace_back(x);
-                covariances.push_back(Matrix<1, 1, T>{{variance}});
+                nees_average.add(Vector<1, T>(process.x), Vector<1, T>(x), {{variance}});
         }
 
         write_to_file("filter_1d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
@@ -300,11 +293,10 @@ void test_impl()
         compare(result_data.back().standard_deviation, T{1.4306576889002234962L}, T{0});
         compare(process_data.back().x, result_data.back().x, 5 * result_data.back().standard_deviation);
 
-        const T nees = nees_average(values, estimates, covariances);
+        const T nees = nees_average.average();
         if (!(nees < T{1.2}))
         {
-                error(std::string("NEES average <") + type_name<T>() + "> = " + to_string(nees)
-                      + "; 1 degree of freedom; failed");
+                error(nees_average.check_string());
         }
 
         constexpr std::array EXPECTED_DISTRIBUTION = std::to_array<unsigned>({610, 230, 60, 15, 7, 2, 0, 0, 0, 0});

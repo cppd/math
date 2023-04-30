@@ -33,33 +33,53 @@ Kalman and Bayesian Filters in Python.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/com/type/name.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-#include <vector>
+#include <string>
 
 namespace ns::filter
 {
 // Average of normalized (state) estimation error squared (NEES)
 template <std::size_t N, typename T>
-T nees_average(
-        const std::vector<Vector<N, T>>& values,
-        const std::vector<Vector<N, T>>& estimates,
-        const std::vector<Matrix<N, N, T>>& covariances)
+class NeesAverage final
 {
-        if (values.size() != estimates.size() || values.size() != covariances.size())
+        static_assert(N >= 1);
+        static_assert(std::is_floating_point_v<T>);
+
+        long double sum_ = 0;
+        std::size_t count_ = 0;
+
+public:
+        void add(const Vector<N, T>& value, const Vector<N, T>& estimate, const Matrix<N, N, T>& covariance)
         {
-                error("NEES data size error");
+                const Vector<N, T> x = value - estimate;
+                const T nees = dot(x * covariance.inversed(), x);
+                sum_ += nees;
+                ++count_;
         }
 
-        T sum = 0;
-        for (std::size_t i = 0; i < values.size(); ++i)
+        [[nodiscard]] T average() const
         {
-                const Vector<N, T> x = values[i] - estimates[i];
-                const T nees = dot(x * covariances[i].inversed(), x);
-                sum += nees;
+                if (!(count_ > 0))
+                {
+                        error("No data to compute NEES average");
+                }
+                return sum_ / count_;
         }
 
-        return sum / values.size();
-}
+        [[nodiscard]] static constexpr T max()
+        {
+                return N;
+        }
+
+        [[nodiscard]] std::string check_string() const
+        {
+                const T a = average();
+                return std::string("NEES average <") + type_name<T>() + "> = " + to_string(a) + "; " + to_string(N)
+                       + " degree" + (N > 1 ? "s" : "") + " of freedom; check " + (a <= max() ? " passed" : "failed");
+        }
+};
 }
