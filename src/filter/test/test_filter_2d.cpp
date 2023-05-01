@@ -516,9 +516,13 @@ void test_impl()
 void test()
 {
         LOG("Test Filter 2D");
+        LOG("---");
         test_impl<float>();
+        LOG("---");
         test_impl<double>();
+        LOG("---");
         test_impl<long double>();
+        LOG("---");
         LOG("Test Filter 2D passed");
 }
 
