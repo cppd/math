@@ -285,7 +285,7 @@ void test_impl()
                 result_data.push_back({.x = x, .standard_deviation = stddev});
                 ++distribution[static_cast<int>((x - process.x) / stddev)];
 
-                nees_average.add(Vector<1, T>(process.x), Vector<1, T>(x), {{variance}});
+                nees_average.add(process.x, x, variance);
         }
 
         write_to_file("filter_1d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);

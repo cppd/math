@@ -51,6 +51,7 @@ class Simulator final
         Vector<N, T> velocity_;
         Vector<N, T> next_velocity_;
         Vector<N, T> acceleration_;
+        T angle_;
 
         [[nodiscard]] Vector<N, T> velocity(const T index) const
         {
@@ -98,6 +99,8 @@ public:
                 velocity_ = next_velocity_;
                 next_velocity_ = velocity(index_ + 1) + vector(track_velocity_nd_);
                 acceleration_ = next_velocity_ - velocity_;
+
+                angle_ = -T{0.5} - index_ / T{600} * degrees_to_radians(T{5});
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
@@ -105,14 +108,18 @@ public:
                 return position_;
         }
 
+        [[nodiscard]] T angle() const
+        {
+                return angle_;
+        }
+
         [[nodiscard]] ProcessMeasurement<N, T> process_measurement()
         {
-                const T angle = -T{0.5} - index_ / T{600} * degrees_to_radians(T{5});
-                const Vector<N, T> direction = rotate(velocity_, angle + measurements_velocity_direction_nd_(engine_));
+                const Vector<N, T> direction = rotate(velocity_, angle_ + measurements_velocity_direction_nd_(engine_));
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
                         .amount = velocity_.norm() + measurements_velocity_amount_nd_(engine_),
-                        .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle)};
+                        .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
         }
 
         [[nodiscard]] PositionMeasurement<N, T> position_measurement()
@@ -136,6 +143,7 @@ Track<N, T> generate_track(
 
         Track<N, T> res;
         res.positions.reserve(count);
+        res.angles.reserve(count);
         res.position_measurements.reserve(count);
 
         for (std::size_t i = 0; i < count; ++i)
@@ -143,6 +151,7 @@ Track<N, T> generate_track(
                 simulator.move();
 
                 res.positions.push_back(simulator.position());
+                res.angles.push_back(simulator.angle());
 
                 res.process_measurements.push_back(simulator.process_measurement());
 

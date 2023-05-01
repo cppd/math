@@ -61,6 +61,12 @@ public:
                 ++count_;
         }
 
+        void add(const T value, const T estimate, const T variance)
+                requires (N == 1)
+        {
+                add(Vector<1, T>(value), Vector<1, T>(estimate), Matrix<1, 1, T>{{variance}});
+        }
+
         [[nodiscard]] T average() const
         {
                 if (!(count_ > 0))

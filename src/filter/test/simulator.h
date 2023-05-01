@@ -44,6 +44,7 @@ template <std::size_t N, typename T>
 struct Track final
 {
         std::vector<Vector<N, T>> positions;
+        std::vector<T> angles;
         std::vector<ProcessMeasurement<N, T>> process_measurements;
         std::unordered_map<std::size_t, std::optional<PositionMeasurement<N, T>>> position_measurements;
 };
