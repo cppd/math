@@ -53,7 +53,7 @@ struct Config final
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
         static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(0.1);
 
-        static constexpr T PROCESS_VARIANCE = square(0.1);
+        static constexpr T PROCESS_VARIANCE = square(0.2);
         static constexpr T PROCESS_POSITION_VARIANCE = POSITION_INTERVAL * PROCESS_VARIANCE;
         static constexpr T DIRECTION_VELOCITY_MEASUREMENT_VARIANCE = square(degrees_to_radians(50.0));
         static constexpr T DIRECTION_PROCESS_DIFFERENCE_VARIANCE = square(degrees_to_radians(0.0001));
@@ -282,6 +282,15 @@ class ProcessFilter final
                 {0, 0, 0, 1, 0, 0}
         };
         static constexpr Matrix<N, M, T> POSITION_H_T = POSITION_H.transposed();
+
+        static constexpr Matrix<4, N, T> POSITION_VELOCITY_H{
+                {1, 0, 0, 0, 0, 0},
+                {0, 0, 0, 1, 0, 0},
+                {0, 1, 0, 0, 0, 0},
+                {0, 0, 0, 0, 1, 0}
+        };
+        static constexpr Matrix<N, 4, T> POSITION_VELOCITY_H_T = POSITION_VELOCITY_H.transposed();
+
         static constexpr Matrix<M, M, T> POSITION_R = make_diagonal_matrix<M, T>(
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_POSITION_VARIANCE});
 
@@ -309,6 +318,16 @@ public:
         void update_position(const Vector<M, T>& position)
         {
                 filter_.update(POSITION_H, POSITION_H_T, POSITION_R, position);
+        }
+
+        void update_position_velocity(const Vector<M, T>& position, const Vector<M, T>& direction, const T amount)
+        {
+                const Vector<M, T> velocity = direction * amount;
+                const Matrix<4, 4, T> r =
+                        block_diagonal(std::array{POSITION_R, velocity_r(VELOCITY_MEASUREMENT_R, direction, amount)});
+                filter_.update(
+                        POSITION_VELOCITY_H, POSITION_VELOCITY_H_T, r,
+                        Vector<4, T>(position[0], position[1], velocity[0], velocity[1]));
         }
 
         void update_velocity(const Vector<M, T>& direction, const T amount)
@@ -431,7 +450,7 @@ void test_impl()
                                 position_nees_average.add(
                                         track.positions[i], position_filter.position(), position_filter.position_p());
 
-                                if (i >= 200)
+                                if (i >= 100)
                                 {
                                         const Angle<T> position_angle = position_filter.velocity_angle();
                                         const T measurement_angle = std::atan2(
@@ -462,12 +481,22 @@ void test_impl()
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)
                 {
-                        process_filter.update_position(iter->second->position);
+                        if (filtered_difference)
+                        {
+                                const auto direction =
+                                        rotate(track.process_measurements[i].direction, -*filtered_difference);
+                                const auto amount = track.process_measurements[i].amount;
+                                process_filter.update_position_velocity(iter->second->position, direction, amount);
+                        }
+                        else
+                        {
+                                process_filter.update_position(iter->second->position);
+                        }
                 }
-                else if (const auto& difference = filtered_difference)
+                else if (filtered_difference)
                 {
-                        const auto& direction = rotate(track.process_measurements[i].direction, -*difference);
-                        const auto& amount = track.process_measurements[i].amount;
+                        const auto direction = rotate(track.process_measurements[i].direction, -*filtered_difference);
+                        const auto amount = track.process_measurements[i].amount;
                         process_filter.update_velocity(direction, amount);
                 }
 
