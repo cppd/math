@@ -73,69 +73,84 @@ void write_to_file(
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
-        file << '{';
-        file << R"("name":"Track")";
-        file << R"(, "mode":"lines")";
-        file << R"(, "line_color":"#0000ff")";
-        file << R"(, "line_width":1)";
-        file << R"(, "line_dash":"dot")";
-        file << R"(, "marker_size":None)";
-        file << "}\n";
-        for (const auto& v : positions)
+        if (!positions.empty())
         {
-                write(file, v);
+                file << '{';
+                file << R"("name":"Track")";
+                file << R"(, "mode":"lines")";
+                file << R"(, "line_color":"#0000ff")";
+                file << R"(, "line_width":1)";
+                file << R"(, "line_dash":"dot")";
+                file << R"(, "marker_size":None)";
+                file << "}\n";
+                for (const auto& v : positions)
+                {
+                        write(file, v);
+                }
         }
 
-        file << '{';
-        file << R"("name":"Angle Measurements")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#000000")";
-        file << R"(, "line_width":0.25)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
-        file << "}\n";
-        for (const auto& v : angle_measurements)
+        if (!angle_measurements.empty())
         {
-                write(file, v);
+                file << '{';
+                file << R"("name":"Angle Measurements")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#000000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : angle_measurements)
+                {
+                        write(file, v);
+                }
         }
 
-        file << '{';
-        file << R"("name":"Position Measurements")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#000000")";
-        file << R"(, "line_width":0.25)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
-        file << "}\n";
-        for (const auto& v : position_measurements)
+        if (!position_measurements.empty())
         {
-                write(file, v);
+                file << '{';
+                file << R"("name":"Position Measurements")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#000000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : position_measurements)
+                {
+                        write(file, v);
+                }
         }
 
-        file << '{';
-        file << R"("name":"Position Filter")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#a00000")";
-        file << R"(, "line_width":0.25)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
-        file << "}\n";
-        for (const auto& v : position_filter)
+        if (!position_filter.empty())
         {
-                write(file, v);
+                file << '{';
+                file << R"("name":"Position Filter")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#a00000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : position_filter)
+                {
+                        write(file, v);
+                }
         }
 
-        file << '{';
-        file << R"("name":"Filter")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#00a000")";
-        file << R"(, "line_width":0.5)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
-        file << "}\n";
-        for (const auto& v : filter)
+        if (!filter.empty())
         {
-                write(file, v);
+                file << '{';
+                file << R"("name":"Filter")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#00a000")";
+                file << R"(, "line_width":0.5)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : filter)
+                {
+                        write(file, v);
+                }
         }
 }
 
