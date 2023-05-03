@@ -29,7 +29,10 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::vector<Vector<N, T>>& positions,
         const std::vector<Vector<N, T>>& angle_measurements,
+        const std::vector<Vector<N, T>>& acceleration_x_measurements,
+        const std::vector<Vector<N, T>>& acceleration_y_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_measurements,
+        const std::vector<std::optional<Vector<N, T>>>& speed_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_filter,
         const std::vector<Vector<N, T>>& filter);
 }

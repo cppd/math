@@ -65,7 +65,10 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::vector<Vector<N, T>>& positions,
         const std::vector<Vector<N, T>>& angle_measurements,
+        const std::vector<Vector<N, T>>& acceleration_x_measurements,
+        const std::vector<Vector<N, T>>& acceleration_y_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_measurements,
+        const std::vector<std::optional<Vector<N, T>>>& speed_measurements,
         const std::vector<std::optional<Vector<N, T>>>& position_filter,
         const std::vector<Vector<N, T>>& filter)
 {
@@ -105,6 +108,38 @@ void write_to_file(
                 }
         }
 
+        if (!acceleration_x_measurements.empty())
+        {
+                file << '{';
+                file << R"("name":"Acceleration X Measurements")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#000000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : acceleration_x_measurements)
+                {
+                        write(file, v);
+                }
+        }
+
+        if (!acceleration_y_measurements.empty())
+        {
+                file << '{';
+                file << R"("name":"Acceleration Y Measurements")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#000000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : acceleration_y_measurements)
+                {
+                        write(file, v);
+                }
+        }
+
         if (!position_measurements.empty())
         {
                 file << '{';
@@ -116,6 +151,22 @@ void write_to_file(
                 file << R"(, "marker_size":2)";
                 file << "}\n";
                 for (const auto& v : position_measurements)
+                {
+                        write(file, v);
+                }
+        }
+
+        if (!speed_measurements.empty())
+        {
+                file << '{';
+                file << R"("name":"Speed Measurements")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#000000")";
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : speed_measurements)
                 {
                         write(file, v);
                 }
@@ -154,10 +205,11 @@ void write_to_file(
         }
 }
 
-#define TEMPLATE(T)                                                                                               \
-        template void write_to_file(                                                                              \
-                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                               \
-                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&, \
+#define TEMPLATE(T)                                                                                                   \
+        template void write_to_file(                                                                                  \
+                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, \
+                const std::vector<Vector<2, T>>&, const std::vector<std::optional<Vector<2, T>>>&,                    \
+                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&,     \
                 const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)

@@ -104,6 +104,25 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>
 }
 
 template <std::size_t N, typename T>
+std::vector<std::optional<Vector<N, T>>> speed_measurements(const Track<N, T>& track, const T offset)
+{
+        std::vector<std::optional<Vector<N, T>>> res;
+        res.reserve(track.position_measurements.size());
+        for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
+        {
+                if (v)
+                {
+                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + v->speed));
+                }
+                else
+                {
+                        res.emplace_back();
+                }
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
 std::vector<Vector<N, T>> angle_measurements(const Track<N, T>& track, const T offset)
 {
         std::vector<Vector<2, T>> res;
@@ -114,6 +133,19 @@ std::vector<Vector<N, T>> angle_measurements(const Track<N, T>& track, const T o
                 const T vy = track.process_measurements[i].direction[1];
                 const T angle = -std::atan2(vy, vx);
                 res.emplace_back(track.positions[i][0], offset + radians_to_degrees(angle));
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> acceleration_measurements(const Track<N, T>& track, const std::size_t index, const T offset)
+{
+        ASSERT(index < N);
+        std::vector<Vector<2, T>> res;
+        res.reserve(track.positions.size());
+        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        {
+                res.emplace_back(track.positions[i][0], offset + track.process_measurements[i].acceleration[index]);
         }
         return res;
 }
@@ -531,8 +563,10 @@ void test_impl()
         }
 
         write_to_file(
-                track.positions, angle_measurements(track, /*offset=*/T{-500}), position_measurements(track),
-                position_result, process_result);
+                track.positions, angle_measurements(track, /*offset=*/T{-600}),
+                acceleration_measurements(track, /*index=*/0, /*offset=*/T{-700}),
+                acceleration_measurements(track, /*index=*/1, /*offset=*/T{-800}), position_measurements(track),
+                speed_measurements(track, /*offset=*/T{-400}), position_result, process_result);
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_nees_average.check_string());
