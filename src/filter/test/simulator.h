@@ -29,7 +29,6 @@ template <std::size_t N, typename T>
 struct ProcessMeasurement final
 {
         Vector<N, T> direction;
-        T amount;
         Vector<N, T> acceleration;
 };
 
@@ -52,8 +51,7 @@ struct Track final
 template <typename T>
 struct TrackMeasurementVariance final
 {
-        T velocity_amount;
-        T velocity_direction;
+        T direction;
         T acceleration;
         T position;
         T position_speed;

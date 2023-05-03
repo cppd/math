@@ -40,7 +40,6 @@ class Simulator final
 
         std::normal_distribution<T> track_velocity_nd_;
 
-        std::normal_distribution<T> measurements_velocity_amount_nd_;
         std::normal_distribution<T> measurements_velocity_direction_nd_;
         std::normal_distribution<T> measurements_acceleration_nd_;
         std::normal_distribution<T> measurements_position_nd_;
@@ -79,8 +78,7 @@ public:
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
-                  measurements_velocity_amount_nd_(0, std::sqrt(track_measurement_variance.velocity_amount)),
-                  measurements_velocity_direction_nd_(0, std::sqrt(track_measurement_variance.velocity_direction)),
+                  measurements_velocity_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
                   measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
                   measurements_position_speed_nd_(0, std::sqrt(track_measurement_variance.position_speed)),
@@ -118,7 +116,6 @@ public:
                 const Vector<N, T> direction = rotate(velocity_, angle_ + measurements_velocity_direction_nd_(engine_));
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
-                        .amount = velocity_.norm() + measurements_velocity_amount_nd_(engine_),
                         .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
         }
 

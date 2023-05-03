@@ -47,15 +47,13 @@ struct Config final
         static constexpr T TRACK_VELOCITY_MEAN = 10;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
-        static constexpr T MEASUREMENT_VELOCITY_AMOUNT_VARIANCE = square(1.0);
-        static constexpr T MEASUREMENT_VELOCITY_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
+        static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
         static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(0.1);
 
         static constexpr T PROCESS_VARIANCE = square(0.2);
         static constexpr T PROCESS_POSITION_VARIANCE = POSITION_INTERVAL * PROCESS_VARIANCE;
-        static constexpr T DIRECTION_VELOCITY_MEASUREMENT_VARIANCE = square(degrees_to_radians(50.0));
         static constexpr T DIRECTION_PROCESS_DIFFERENCE_VARIANCE = square(degrees_to_radians(0.0001));
 };
 
@@ -65,8 +63,7 @@ Track<N, T> generate_track()
         constexpr std::size_t COUNT = 6000;
 
         const TrackMeasurementVariance<T> measurement_variance{
-                .velocity_amount = Config<T>::MEASUREMENT_VELOCITY_AMOUNT_VARIANCE,
-                .velocity_direction = Config<T>::MEASUREMENT_VELOCITY_DIRECTION_VARIANCE,
+                .direction = Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
                 .acceleration = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
                 .position = Config<T>::MEASUREMENT_POSITION_VARIANCE,
                 .position_speed = Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE};
@@ -78,7 +75,7 @@ Track<N, T> generate_track()
         for (auto& [i, p] : res.position_measurements)
         {
                 ASSERT(i >= 0 && i < COUNT);
-                if ((i >= 1000 && i <= 1600) || (i >= 2600 && i <= 3300) || (i >= 5000 && i <= 5600))
+                if ((i >= 1000 && i <= 1300) || (i >= 2600 && i <= 2900) || (i >= 5000 && i <= 5300))
                 {
                         p.reset();
                 }
@@ -299,8 +296,19 @@ class ProcessFilter final
                 {0, 0, 0, 0, 1, 0}
         };
         static constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transposed();
-        static constexpr Matrix<M, M, T> VELOCITY_MEASUREMENT_R = make_diagonal_matrix<M, T>(
-                {Config<T>::MEASUREMENT_VELOCITY_AMOUNT_VARIANCE, Config<T>::DIRECTION_VELOCITY_MEASUREMENT_VARIANCE});
+
+        static Matrix<M, M, T> velocity_measurement_r(const T speed_variance, const T direction_variance)
+        {
+                return make_diagonal_matrix<M, T>({speed_variance, direction_variance});
+        }
+
+        static constexpr Matrix<M, N, T> ACCELERATION_H{
+                {0, 0, 1, 0, 0, 0},
+                {0, 0, 0, 0, 0, 1}
+        };
+        static constexpr Matrix<N, M, T> ACCELERATION_H_T = ACCELERATION_H.transposed();
+        static constexpr Matrix<M, M, T> ACCELERATION_R = make_diagonal_matrix<M, T>(
+                {Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, Config<T>::MEASUREMENT_ACCELERATION_VARIANCE});
 
         Filter<N, T> filter_;
 
@@ -320,21 +328,37 @@ public:
                 filter_.update(POSITION_H, POSITION_H_T, POSITION_R, position);
         }
 
-        void update_position_velocity(const Vector<M, T>& position, const Vector<M, T>& direction, const T amount)
+        void update_position_velocity(
+                const Vector<M, T>& position,
+                const Vector<M, T>& direction,
+                const T speed,
+                const T speed_variance,
+                const T direction_variance)
         {
-                const Vector<M, T> velocity = direction * amount;
-                const Matrix<4, 4, T> r =
-                        block_diagonal(std::array{POSITION_R, velocity_r(VELOCITY_MEASUREMENT_R, direction, amount)});
+                const Vector<M, T> velocity = direction * speed;
+                const Matrix<4, 4, T> r = block_diagonal(std::array{
+                        POSITION_R,
+                        velocity_r(velocity_measurement_r(speed_variance, direction_variance), direction, speed)});
                 filter_.update(
                         POSITION_VELOCITY_H, POSITION_VELOCITY_H_T, r,
                         Vector<4, T>(position[0], position[1], velocity[0], velocity[1]));
         }
 
-        void update_velocity(const Vector<M, T>& direction, const T amount)
+        void update_velocity(
+                const Vector<M, T>& direction,
+                const T speed,
+                const T speed_variance,
+                const T direction_variance)
         {
-                const Vector<M, T> velocity = direction * amount;
-                const Matrix<M, M, T> r = velocity_r(VELOCITY_MEASUREMENT_R, direction, amount);
+                const Vector<M, T> velocity = direction * speed;
+                const Matrix<M, M, T> r =
+                        velocity_r(velocity_measurement_r(speed_variance, direction_variance), direction, speed);
                 filter_.update(VELOCITY_H, VELOCITY_H_T, r, velocity);
+        }
+
+        void update_acceleration(const Vector<M, T>& acceleration)
+        {
+                filter_.update(ACCELERATION_H, ACCELERATION_H_T, ACCELERATION_R, acceleration);
         }
 
         [[nodiscard]] Vector<M, T> position() const
@@ -434,7 +458,7 @@ void test_impl()
         NeesAverage<2, T> process_nees_average;
         NeesAverage<1, T> difference_nees_average;
 
-        std::optional<T> filtered_difference;
+        bool use_filtered_difference = false;
 
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
@@ -458,12 +482,12 @@ void test_impl()
                                                 track.process_measurements[i].direction[0]);
                                         const T difference =
                                                 normalize_angle_difference(measurement_angle - position_angle.angle);
-                                        const T variance = Config<T>::MEASUREMENT_VELOCITY_DIRECTION_VARIANCE
-                                                           + position_angle.variance;
+                                        const T variance =
+                                                Config<T>::MEASUREMENT_DIRECTION_VARIANCE + position_angle.variance;
 
                                         difference_filter.predict_and_update(difference, variance);
 
-                                        filtered_difference = difference_filter.difference();
+                                        use_filtered_difference = true;
 
                                         difference_nees_average.add(
                                                 normalize_angle_difference(track.angles[i]),
@@ -481,23 +505,25 @@ void test_impl()
                 if (const auto iter = track.position_measurements.find(i);
                     iter != track.position_measurements.cend() && iter->second)
                 {
-                        if (filtered_difference)
+                        if (use_filtered_difference)
                         {
-                                const auto direction =
-                                        rotate(track.process_measurements[i].direction, -*filtered_difference);
-                                const auto amount = track.process_measurements[i].amount;
-                                process_filter.update_position_velocity(iter->second->position, direction, amount);
+                                const auto direction = rotate(
+                                        track.process_measurements[i].direction, -difference_filter.difference());
+                                process_filter.update_position_velocity(
+                                        iter->second->position, direction, iter->second->speed,
+                                        Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE,
+                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE + difference_filter.difference_p());
                         }
                         else
                         {
                                 process_filter.update_position(iter->second->position);
                         }
                 }
-                else if (filtered_difference)
+                else if (use_filtered_difference)
                 {
-                        const auto direction = rotate(track.process_measurements[i].direction, -*filtered_difference);
-                        const auto amount = track.process_measurements[i].amount;
-                        process_filter.update_velocity(direction, amount);
+                        const auto acceleration =
+                                rotate(track.process_measurements[i].acceleration, -difference_filter.difference());
+                        process_filter.update_acceleration(acceleration);
                 }
 
                 process_result.push_back(process_filter.position());
