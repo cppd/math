@@ -53,32 +53,36 @@ template <std::size_t N, typename T>
         (std::make_integer_sequence<std::size_t, N>());
 }
 
-template <std::size_t N, typename T, std::size_t COUNT>
-[[nodiscard]] constexpr Matrix<N * COUNT, N * COUNT, T> block_diagonal(
-        const std::array<Matrix<N, N, T>, COUNT>& matrices)
+template <std::size_t R, std::size_t C, typename T, std::size_t COUNT>
+[[nodiscard]] constexpr Matrix<R * COUNT, C * COUNT, T> block_diagonal(
+        const std::array<Matrix<R, C, T>, COUNT>& matrices)
 {
-        constexpr std::size_t N_COUNT = N * COUNT;
+        constexpr std::size_t RESULT_R = R * COUNT;
+        constexpr std::size_t RESULT_C = C * COUNT;
 
-        Matrix<N_COUNT, N_COUNT, T> res;
-        for (std::size_t r = 0; r < N_COUNT; ++r)
+        Matrix<RESULT_R, RESULT_C, T> res;
+        for (std::size_t r = 0; r < RESULT_R; ++r)
         {
-                for (std::size_t c = 0; c < N_COUNT; ++c)
+                for (std::size_t c = 0; c < RESULT_C; ++c)
                 {
                         res(r, c) = 0;
                 }
         }
+
         for (std::size_t i = 0; i < COUNT; ++i)
         {
-                const std::size_t base = i * N;
-                const Matrix<N, N, T>& matrix = matrices[i];
-                for (std::size_t r = 0; r < N; ++r)
+                const std::size_t base_r = i * R;
+                const std::size_t base_c = i * C;
+                const Matrix<R, C, T>& matrix = matrices[i];
+                for (std::size_t r = 0; r < R; ++r)
                 {
-                        for (std::size_t c = 0; c < N; ++c)
+                        for (std::size_t c = 0; c < C; ++c)
                         {
-                                res(base + r, base + c) = matrix(r, c);
+                                res(base_r + r, base_c + c) = matrix(r, c);
                         }
                 }
         }
+
         return res;
 }
 
