@@ -53,8 +53,8 @@ struct Config final
         static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(0.1);
 
         static constexpr T PROCESS_VARIANCE = square(0.2);
-        static constexpr T PROCESS_POSITION_VARIANCE = POSITION_INTERVAL * PROCESS_VARIANCE;
-        static constexpr T DIRECTION_PROCESS_DIFFERENCE_VARIANCE = square(degrees_to_radians(0.0001));
+        static constexpr T POSITION_VARIANCE = POSITION_INTERVAL * square(0.2);
+        static constexpr T DIFFERENCE_VARIANCE = square(degrees_to_radians(0.0001));
 };
 
 template <std::size_t N, typename T>
@@ -194,36 +194,50 @@ T normalize_angle_difference(T difference)
         return (difference > 0) ? (difference - 2 * PI<T>) : (difference + 2 * PI<T>);
 }
 
-template <typename T>
-constexpr Matrix<6, 6, T> create_position_f(const T dt)
+template <std::size_t N, std::size_t M, typename T>
+        requires (N == 3 && M == 2)
+constexpr Matrix<6, 6, T> create_f(const T dt)
 {
         const T dt_2 = square(dt) / 2;
+        const Matrix<3, 3, T> m{
+                {1, dt, dt_2},
+                {0,  1,   dt},
+                {0,  0,    1}
+        };
+        return block_diagonal(std::array{m, m});
+}
+
+template <std::size_t N, std::size_t M, typename T>
+        requires (N == 2 && M == 1)
+constexpr Matrix<2, 2, T> create_f(const T dt)
+{
         return {
-                {1, dt, dt_2, 0,  0,    0},
-                {0,  1,   dt, 0,  0,    0},
-                {0,  0,    1, 0,  0,    0},
-                {0,  0,    0, 1, dt, dt_2},
-                {0,  0,    0, 0,  1,   dt},
-                {0,  0,    0, 0,  0,    1},
+                {1, dt},
+                {0,  1}
         };
 }
 
-template <typename T>
-constexpr Matrix<6, 6, T> create_position_q(const T dt, const T process_variance)
+template <std::size_t N, std::size_t M, typename T>
+        requires (N == 3 && M == 2)
+constexpr Matrix<6, 6, T> create_q(const T dt, const T process_variance)
 {
         const T dt_2 = square(dt) / 2;
-        const Matrix<6, 2, T> noise_transition{
-                {dt_2,    0},
-                {  dt,    0},
-                {   1,    0},
-                {   0, dt_2},
-                {   0,   dt},
-                {   0,    1},
-        };
+        const Matrix<3, 1, T> m{{dt_2}, {dt}, {1}};
+        const Matrix noise_transition = block_diagonal(std::array{m, m});
         const Matrix<2, 2, T> process_covariance{
                 {process_variance,                0},
                 {               0, process_variance}
         };
+        return noise_transition * process_covariance * noise_transition.transposed();
+}
+
+template <std::size_t N, std::size_t M, typename T>
+        requires (N == 2 && M == 1)
+static constexpr Matrix<2, 2, T> create_q(const T dt, const T process_variance)
+{
+        const T dt_2 = square(dt) / 2;
+        const Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
+        const Matrix<1, 1, T> process_covariance{{process_variance}};
         return noise_transition * process_covariance * noise_transition.transposed();
 }
 
@@ -240,10 +254,9 @@ class PositionFilter final
         static constexpr std::size_t N = 6;
         static constexpr std::size_t M = 2;
 
-        static constexpr Matrix<N, N, T> F = create_position_f<T>(Config<T>::POSITION_DT);
+        static constexpr Matrix<N, N, T> F = create_f<3, 2, T>(Config<T>::POSITION_DT);
         static constexpr Matrix<N, N, T> F_T = F.transposed();
-        static constexpr Matrix<N, N, T> Q =
-                create_position_q<T>(Config<T>::POSITION_DT, Config<T>::PROCESS_POSITION_VARIANCE);
+        static constexpr Matrix<N, N, T> Q = create_q<3, 2, T>(Config<T>::POSITION_DT, Config<T>::POSITION_VARIANCE);
 
         static constexpr Matrix<M, N, T> POSITION_H{
                 {1, 0, 0, 0, 0, 0},
@@ -302,9 +315,9 @@ class ProcessFilter final
         static constexpr std::size_t N = 6;
         static constexpr std::size_t M = 2;
 
-        static constexpr Matrix<N, N, T> F = create_position_f<T>(Config<T>::DT);
+        static constexpr Matrix<N, N, T> F = create_f<3, 2, T>(Config<T>::DT);
         static constexpr Matrix<N, N, T> F_T = F.transposed();
-        static constexpr Matrix<N, N, T> Q = create_position_q<T>(Config<T>::DT, Config<T>::PROCESS_VARIANCE);
+        static constexpr Matrix<N, N, T> Q = create_q<3, 2, T>(Config<T>::DT, Config<T>::PROCESS_VARIANCE);
 
         static constexpr Matrix<M, N, T> POSITION_H{
                 {1, 0, 0, 0, 0, 0},
@@ -312,33 +325,31 @@ class ProcessFilter final
         };
         static constexpr Matrix<N, M, T> POSITION_H_T = POSITION_H.transposed();
 
-        static constexpr Matrix<4, N, T> POSITION_VELOCITY_H{
+        static constexpr Matrix<6, N, T> POSITION_VELOCITY_ACCELERATION_H{
                 {1, 0, 0, 0, 0, 0},
                 {0, 0, 0, 1, 0, 0},
                 {0, 1, 0, 0, 0, 0},
-                {0, 0, 0, 0, 1, 0}
+                {0, 0, 0, 0, 1, 0},
+                {0, 0, 1, 0, 0, 0},
+                {0, 0, 0, 0, 0, 1}
         };
-        static constexpr Matrix<N, 4, T> POSITION_VELOCITY_H_T = POSITION_VELOCITY_H.transposed();
-
-        static constexpr Matrix<M, M, T> POSITION_R = make_diagonal_matrix<M, T>(
-                {Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_POSITION_VARIANCE});
-
-        static constexpr Matrix<M, N, T> VELOCITY_H{
-                {0, 1, 0, 0, 0, 0},
-                {0, 0, 0, 0, 1, 0}
-        };
-        static constexpr Matrix<N, M, T> VELOCITY_H_T = VELOCITY_H.transposed();
-
-        static Matrix<M, M, T> velocity_measurement_r(const T speed_variance, const T direction_variance)
-        {
-                return make_diagonal_matrix<M, T>({speed_variance, direction_variance});
-        }
+        static constexpr Matrix<N, 6, T> POSITION_VELOCITY_ACCELERATION_H_T =
+                POSITION_VELOCITY_ACCELERATION_H.transposed();
 
         static constexpr Matrix<M, N, T> ACCELERATION_H{
                 {0, 0, 1, 0, 0, 0},
                 {0, 0, 0, 0, 0, 1}
         };
         static constexpr Matrix<N, M, T> ACCELERATION_H_T = ACCELERATION_H.transposed();
+
+        static constexpr Matrix<M, M, T> POSITION_R = make_diagonal_matrix<M, T>(
+                {Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_POSITION_VARIANCE});
+
+        static Matrix<M, M, T> velocity_measurement_r(const T speed_variance, const T direction_variance)
+        {
+                return make_diagonal_matrix<M, T>({speed_variance, direction_variance});
+        }
+
         static constexpr Matrix<M, M, T> ACCELERATION_R = make_diagonal_matrix<M, T>(
                 {Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, Config<T>::MEASUREMENT_ACCELERATION_VARIANCE});
 
@@ -360,32 +371,23 @@ public:
                 filter_.update(POSITION_H, POSITION_H_T, POSITION_R, position);
         }
 
-        void update_position_velocity(
+        void update_position_velocity_acceleration(
                 const Vector<M, T>& position,
                 const Vector<M, T>& direction,
                 const T speed,
                 const T speed_variance,
-                const T direction_variance)
+                const T direction_variance,
+                const Vector<M, T>& acceleration)
         {
                 const Vector<M, T> velocity = direction * speed;
-                const Matrix<4, 4, T> r = block_diagonal(std::array{
+                const Matrix r = block_diagonal(std::array{
                         POSITION_R,
-                        velocity_r(velocity_measurement_r(speed_variance, direction_variance), direction, speed)});
+                        velocity_r(velocity_measurement_r(speed_variance, direction_variance), direction, speed),
+                        ACCELERATION_R});
                 filter_.update(
-                        POSITION_VELOCITY_H, POSITION_VELOCITY_H_T, r,
-                        Vector<4, T>(position[0], position[1], velocity[0], velocity[1]));
-        }
-
-        void update_velocity(
-                const Vector<M, T>& direction,
-                const T speed,
-                const T speed_variance,
-                const T direction_variance)
-        {
-                const Vector<M, T> velocity = direction * speed;
-                const Matrix<M, M, T> r =
-                        velocity_r(velocity_measurement_r(speed_variance, direction_variance), direction, speed);
-                filter_.update(VELOCITY_H, VELOCITY_H_T, r, velocity);
+                        POSITION_VELOCITY_ACCELERATION_H, POSITION_VELOCITY_ACCELERATION_H_T, r,
+                        Vector<6, T>(
+                                position[0], position[1], velocity[0], velocity[1], acceleration[0], acceleration[1]));
         }
 
         void update_acceleration(const Vector<M, T>& acceleration)
@@ -413,33 +415,15 @@ class DifferenceFilter final
         static constexpr std::size_t N = 2;
         static constexpr std::size_t M = 1;
 
-        static constexpr Matrix<N, N, T> create_f()
-        {
-                return {
-                        {1, Config<T>::DT},
-                        {0,             1}
-                };
-        }
-
-        static constexpr Matrix<N, N, T> create_q()
-        {
-                const Matrix<2, 1, T> noise_transition{
-                        {square(Config<T>::DT) / 2},
-                        {Config<T>::DT},
-                };
-                const Matrix<1, 1, T> process_covariance{{Config<T>::DIRECTION_PROCESS_DIFFERENCE_VARIANCE}};
-                return noise_transition * process_covariance * noise_transition.transposed();
-        }
-
         static constexpr Vector<N, T> INIT_X{1, 1};
         static constexpr Matrix<N, N, T> INIT_P{
                 {square(3),         0},
                 {        0, square(3)}
         };
 
-        static constexpr Matrix<N, N, T> F = create_f();
+        static constexpr Matrix<N, N, T> F = create_f<2, 1, T>(Config<T>::DT);
         static constexpr Matrix<N, N, T> F_T = F.transposed();
-        static constexpr Matrix<N, N, T> Q = create_q();
+        static constexpr Matrix<N, N, T> Q = create_q<2, 1, T>(Config<T>::DT, Config<T>::DIFFERENCE_VARIANCE);
 
         static constexpr Matrix<M, N, T> H{
                 {1, 0}
@@ -473,9 +457,13 @@ void test_impl()
 
         const Track track = generate_track<2, T>();
 
-        const Vector<N, T> init_x(track.positions[0][0] + 50, 1.0, -1.0, track.positions[0][1] - 50, -5, 0.5);
-        const Matrix<N, N, T> init_p =
-                make_diagonal_matrix<N, T>({square(100), square(30), square(10), square(100), square(30), square(10)});
+        ASSERT(track.position_measurements.contains(0) && track.position_measurements.find(0)->second);
+        const Vector<N, T> init_x(
+                track.position_measurements.find(0)->second->position[0], 1.0, -1.0,
+                track.position_measurements.find(0)->second->position[1], -5, 0.5);
+        const Matrix<N, N, T> init_p = make_diagonal_matrix<N, T>(
+                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
+                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)});
 
         PositionFilter<T> position_filter(init_x, init_p);
         ProcessFilter<T> process_filter(init_x, init_p);
@@ -541,10 +529,14 @@ void test_impl()
                         {
                                 const auto direction = rotate(
                                         track.process_measurements[i].direction, -difference_filter.difference());
-                                process_filter.update_position_velocity(
+                                const auto acceleration = rotate(
+                                        track.process_measurements[i].acceleration, -difference_filter.difference());
+
+                                process_filter.update_position_velocity_acceleration(
                                         iter->second->position, direction, iter->second->speed,
                                         Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE,
-                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE + difference_filter.difference_p());
+                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE + difference_filter.difference_p(),
+                                        acceleration);
                         }
                         else
                         {
