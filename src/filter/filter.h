@@ -57,6 +57,18 @@ public:
                 p_ = f * p_ * f_t + q;
         }
 
+        template <typename F, typename FJ>
+        void predict(
+                const F& f /*state transition function*/,
+                const FJ& fj /*state transition function Jacobian*/,
+                const Matrix<N, N, T>& q /*process covariance*/)
+        {
+                x_ = f(x_);
+
+                const Matrix<N, N, T> fjx = fj(x_);
+                p_ = fjx * p_ * fjx.transposed() + q;
+        }
+
         template <std::size_t M>
         void update(
                 const Matrix<M, N, T>& h /*measurement function*/,
