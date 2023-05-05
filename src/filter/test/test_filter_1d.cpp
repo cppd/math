@@ -178,7 +178,12 @@ void check_distribution(
 template <typename T>
 class TestFilter
 {
-        const Matrix<2, 2, T> f_;
+        const T dt_;
+
+        const Matrix<2, 2, T> f_{
+                {1, dt_},
+                {0,   1}
+        };
         const Matrix<2, 2, T> f_t_ = f_.transposed();
         const Matrix<2, 2, T> q_;
 
@@ -196,8 +201,8 @@ public:
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
                 const Vector<2, T>& x,
-                const Matrix<2, 2, T> p)
-                : f_{{1, dt}, {0, 1}},
+                const Matrix<2, 2, T>& p)
+                : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
                   filter_(x, p)
@@ -212,6 +217,23 @@ public:
 
         void process_ext(const T measurement)
         {
+                // x[0] = x[0] + dt * x[1]
+                // x[1] = x[1]
+                // Jacobian matrix
+                //  1 dt
+                //  0  1
+                const auto f = [&](const Vector<2, T>& x)
+                {
+                        return Vector<2, T>(x[0] + dt_ * x[1], x[1]);
+                };
+                const auto f_jacobian = [&](const Vector<2, T>& /*x*/)
+                {
+                        return Matrix<2, 2, T>{
+                                {1, dt_},
+                                {0,   1}
+                        };
+                };
+
                 // measurement = x[0]
                 // Jacobian matrix
                 //  1 0
@@ -225,7 +247,8 @@ public:
                                 {1, 0}
                         };
                 };
-                filter_.predict(f_, f_t_, q_);
+
+                filter_.predict(f, f_jacobian, q_);
                 filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement));
         }
 
