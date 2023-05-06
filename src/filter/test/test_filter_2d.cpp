@@ -249,6 +249,184 @@ struct Angle final
 };
 
 template <typename T>
+class ExtFilter final
+{
+        static constexpr std::size_t N = 7;
+
+        static constexpr Matrix<N, N, T> F = []()
+        {
+                const T dt = Config<T>::POSITION_DT;
+                const T dt_2 = square(dt) / 2;
+                return Matrix<N, N, T>{
+                        {1, dt, dt_2, 0,  0,    0, 0},
+                        {0,  1,   dt, 0,  0,    0, 0},
+                        {0,  0,    1, 0,  0,    0, 0},
+                        {0,  0,    0, 1, dt, dt_2, 0},
+                        {0,  0,    0, 0,  1,   dt, 0},
+                        {0,  0,    0, 0,  0,    1, 0},
+                        {0,  0,    0, 0,  0,    0, 1}
+                };
+        }();
+
+        static constexpr Matrix<N, N, T> F_T = F.transposed();
+
+        static constexpr Matrix<N, N, T> Q = []()
+        {
+                const T dt = Config<T>::POSITION_DT;
+                const T dt_2 = square(dt) / 2;
+                const Matrix<N, 3, T> noise_transition{
+                        {dt_2,    0, 0},
+                        {  dt,    0, 0},
+                        {   1,    0, 0},
+                        {   0, dt_2, 0},
+                        {   0,   dt, 0},
+                        {   0,    1, 0},
+                        {   0,    0, 1}
+                };
+
+                const T p = Config<T>::POSITION_VARIANCE;
+                const T d = Config<T>::DIFFERENCE_VARIANCE;
+                const Matrix<3, 3, T> process_covariance{
+                        {p, 0, 0},
+                        {0, p, 0},
+                        {0, 0, d}
+                };
+
+                return noise_transition * process_covariance * noise_transition.transposed();
+        }();
+
+        static constexpr Matrix<2, N, T> POSITION_H{
+                {1, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 1, 0, 0, 0}
+        };
+        static constexpr Matrix<N, 2, T> POSITION_H_T = POSITION_H.transposed();
+        static constexpr Matrix<2, 2, T> POSITION_R = make_diagonal_matrix<2, T>(
+                {Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_POSITION_VARIANCE});
+
+        static Matrix<4, 4, T> r(const Vector<2, T>& direction, const T speed)
+        {
+                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                const T sv = Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE;
+                const T dv = Config<T>::MEASUREMENT_DIRECTION_VARIANCE;
+                const Matrix<4, 4, T> r{
+                        {pv,  0,  0,  0},
+                        { 0, pv,  0,  0},
+                        { 0,  0, sv,  0},
+                        { 0,  0,  0, dv},
+                };
+
+                // x = px
+                // y = py
+                // vx = speed*cos(angle)
+                // vy = speed*sin(angle)
+                // Jacobian
+                const T cos = direction[0];
+                const T sin = direction[1];
+                const Matrix<4, 4, T> error_propagation{
+                        {1, 0,   0,            0},
+                        {0, 1,   0,            0},
+                        {0, 0, cos, -speed * sin},
+                        {0, 0, sin,  speed * cos}
+                };
+
+                return error_propagation * r * error_propagation.transposed();
+        }
+
+        static Vector<4, T> h(const Vector<N, T>& x)
+        {
+                // x = px
+                // y = py
+                // dx = vx*cos(angle) - vy*sin(angle)
+                // dy = vx*sin(angle) + vy*cos(angle)
+                const T vx = x[1];
+                const T vy = x[4];
+                const T angle = x[6];
+                const T cos = std::cos(angle);
+                const T sin = std::sin(angle);
+                return {x[0], x[3], vx * cos - vy * sin, vx * sin + vy * cos};
+        }
+
+        static Matrix<4, N, T> hj(const Vector<N, T>& x)
+        {
+                // x = px
+                // y = py
+                // dx = vx*cos(angle) - vy*sin(angle)
+                // dy = vx*sin(angle) + vy*cos(angle)
+                // Jacobian
+                const T vx = x[1];
+                const T vy = x[4];
+                const T angle = x[6];
+                const T cos = std::cos(angle);
+                const T sin = std::sin(angle);
+                return {
+                        {1,   0, 0, 0,    0, 0,                    0},
+                        {0,   0, 0, 1,    0, 0,                    0},
+                        {0, cos, 0, 0, -sin, 0, -vy * cos - vx * sin},
+                        {0, sin, 0, 0,  cos, 0,  vx * cos - vy * sin}
+                };
+        }
+
+        Filter<N, T> filter_;
+
+public:
+        ExtFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)
+                : filter_(init_x, init_p)
+        {
+        }
+
+        void predict()
+        {
+                filter_.predict(F, F_T, Q);
+        }
+
+        void update(const Vector<2, T>& position)
+        {
+                filter_.update(POSITION_H, POSITION_H_T, POSITION_R, position);
+        }
+
+        void update(const Vector<2, T>& position, const Vector<2, T>& direction, const T speed)
+        {
+                filter_.update(
+                        h, hj, r(direction, speed),
+                        Vector<4, T>(position[0], position[1], direction[0] * speed, direction[1] * speed));
+        }
+
+        [[nodiscard]] Vector<2, T> position() const
+        {
+                return {filter_.x()[0], filter_.x()[3]};
+        }
+
+        [[nodiscard]] Matrix<2, 2, T> position_p() const
+        {
+                return {
+                        {filter_.p()(0, 0), filter_.p()(0, 3)},
+                        {filter_.p()(3, 0), filter_.p()(3, 3)}
+                };
+        }
+
+        [[nodiscard]] Angle<T> velocity_angle() const
+        {
+                const Vector<2, T> velocity{filter_.x()[1], filter_.x()[4]};
+                const Matrix<2, 2, T> velocity_p{
+                        {filter_.p()(1, 1), filter_.p()(1, 4)},
+                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                };
+                return {.angle = std::atan2(velocity[1], velocity[0]),
+                        .variance = velocity_angle_p(velocity_p, velocity)};
+        }
+
+        [[nodiscard]] T angle() const
+        {
+                return filter_.x()[6];
+        }
+
+        [[nodiscard]] T angle_p() const
+        {
+                return filter_.p()(6, 6);
+        }
+};
+
+template <typename T>
 class PositionFilter final
 {
         static constexpr std::size_t N = 6;
