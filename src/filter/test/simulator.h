@@ -36,7 +36,7 @@ template <std::size_t N, typename T>
 struct PositionMeasurement final
 {
         Vector<N, T> position;
-        T speed;
+        std::optional<T> speed;
 };
 
 template <std::size_t N, typename T>

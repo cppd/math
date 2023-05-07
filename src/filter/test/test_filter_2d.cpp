@@ -110,9 +110,9 @@ std::vector<std::optional<Vector<N, T>>> speed_measurements(const Track<N, T>& t
         res.reserve(track.position_measurements.size());
         for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
         {
-                if (v)
+                if (v && v->speed)
                 {
-                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + v->speed));
+                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + (*v->speed)));
                 }
                 else
                 {
@@ -532,8 +532,9 @@ void test_impl()
                                 const auto acceleration = rotate(
                                         track.process_measurements[i].acceleration, -difference_filter.difference());
 
+                                ASSERT(iter->second->speed);
                                 process_filter.update_position_velocity_acceleration(
-                                        iter->second->position, direction, iter->second->speed,
+                                        iter->second->position, direction, *iter->second->speed,
                                         Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE,
                                         Config<T>::MEASUREMENT_DIRECTION_VARIANCE + difference_filter.difference_p(),
                                         acceleration);

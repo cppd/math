@@ -80,6 +80,10 @@ Track<N, T> generate_track()
                 {
                         p.reset();
                 }
+                if (p && (std::llround(i / T{100}) % 3 != 0))
+                {
+                        p->speed.reset();
+                }
         }
 
         return res;
@@ -111,9 +115,9 @@ std::vector<std::optional<Vector<N, T>>> speed_measurements(const Track<N, T>& t
         res.reserve(track.position_measurements.size());
         for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
         {
-                if (v)
+                if (v && v->speed)
                 {
-                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + v->speed));
+                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + (*v->speed)));
                 }
                 else
                 {
@@ -392,14 +396,16 @@ class ProcessFilter final
                 // dy = vx*sin(angle) + vy*cos(angle)
                 // ax = ax*cos(angle) - ay*sin(angle)
                 // ay = ax*sin(angle) + ay*cos(angle)
+                const T px = x[0];
                 const T vx = x[1];
-                const T vy = x[4];
                 const T ax = x[2];
+                const T py = x[3];
+                const T vy = x[4];
                 const T ay = x[5];
                 const T angle = x[6];
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
-                return {x[0], x[3], vx * cos - vy * sin, vx * sin + vy * cos, ax * cos - ay * sin, ax * sin + ay * cos};
+                return {px, py, vx * cos - vy * sin, vx * sin + vy * cos, ax * cos - ay * sin, ax * sin + ay * cos};
         }
 
         static Matrix<6, N, T> position_velocity_acceleration_hj(const Vector<N, T>& x)
@@ -465,6 +471,103 @@ class ProcessFilter final
                 };
         }
 
+        static Matrix<6, 6, T> position_direction_acceleration_r(const Vector<2, T>& direction)
+        {
+                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                const T dv = Config<T>::MEASUREMENT_DIRECTION_VARIANCE;
+                const T av = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE;
+                const Matrix<5, 5, T> r{
+                        {pv,  0,  0,  0,  0},
+                        { 0, pv,  0,  0,  0},
+                        { 0,  0, dv,  0,  0},
+                        { 0,  0,  0, av,  0},
+                        { 0,  0,  0,  0, av}
+                };
+
+                // dx = cos(angle)
+                // dy = sin(angle)
+                // ax = ax
+                // ay = ay
+                // Jacobian
+                const T cos = direction[0];
+                const T sin = direction[1];
+                const Matrix<6, 5, T> error_propagation{
+                        {1, 0,    0, 0, 0},
+                        {0, 1,    0, 0, 0},
+                        {0, 0, -sin, 0, 0},
+                        {0, 0,  cos, 0, 0},
+                        {0, 0,    0, 1, 0},
+                        {0, 0,    0, 0, 1}
+                };
+
+                return error_propagation * r * error_propagation.transposed();
+        }
+
+        static Vector<6, T> position_direction_acceleration_h(const Vector<N, T>& x)
+        {
+                // px = px
+                // py = py
+                // dx = (vx*cos(angle) - vy*sin(angle)) / sqrt(vx*vx + vy*vy);
+                // dy = (vx*sin(angle) + vy*cos(angle)) / sqrt(vx*vx + vy*vy);
+                // ax = (ax*cos(angle) - ay*sin(angle))
+                // ay = (ax*sin(angle) + ay*cos(angle))
+                const T px = x[0];
+                const T vx = x[1];
+                const T ax = x[2];
+                const T py = x[3];
+                const T vy = x[4];
+                const T ay = x[5];
+                const T angle = x[6];
+                const T speed = std::sqrt(square(vx) + square(vy));
+                const T cos = std::cos(angle);
+                const T sin = std::sin(angle);
+                return {px,
+                        py,
+                        (vx * cos - vy * sin) / speed,
+                        (vx * sin + vy * cos) / speed,
+                        ax * cos - ay * sin,
+                        ax * sin + ay * cos};
+        }
+
+        static Matrix<6, N, T> position_direction_acceleration_hj(const Vector<N, T>& x)
+        {
+                // px = px
+                // py = py
+                // dx = (vx*cos(angle) - vy*sin(angle)) / sqrt(vx*vx + vy*vy);
+                // dy = (vx*sin(angle) + vy*cos(angle)) / sqrt(vx*vx + vy*vy);
+                // ax = (ax*cos(angle) - ay*sin(angle))
+                // ay = (ax*sin(angle) + ay*cos(angle))
+                // Jacobian
+                // mPx=Px;
+                // mPy=Py;
+                // mDx=(Vx*Cos[Angle]-Vy*Sin[Angle])/Sqrt[Vx*Vx+Vy*Vy];
+                // mDy=(Vx*Sin[Angle]+Vy*Cos[Angle])/Sqrt[Vx*Vx+Vy*Vy];
+                // mAx=(Ax*Cos[Angle]-Ay*Sin[Angle]);
+                // mAy=(Ax*Sin[Angle]+Ay*Cos[Angle]);
+                // Simplify[D[{mPx,mPy,mDx,mDy,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Angle,AngleV}}]]
+                const T vx = x[1];
+                const T vy = x[4];
+                const T ax = x[2];
+                const T ay = x[5];
+                const T angle = x[6];
+                const T l = std::sqrt(square(vx) + square(vy));
+                const T l_3 = power<3>(l);
+                const T cos = std::cos(angle);
+                const T sin = std::sin(angle);
+                const T d_1 = vy * cos + vx * sin;
+                const T d_2 = vx * cos - vy * sin;
+                const T a_1 = -ax * sin - ay * cos;
+                const T a_2 = ax * cos - ay * sin;
+                return {
+                        {1,               0,   0, 0,               0,    0,        0, 0},
+                        {0,               0,   0, 1,               0,    0,        0, 0},
+                        {0,  vy * d_1 / l_3,   0, 0, -vx * d_1 / l_3,    0, -d_1 / l, 0},
+                        {0, -vy * d_2 / l_3,   0, 0,  vx * d_2 / l_3,    0,  d_2 / l, 0},
+                        {0,               0, cos, 0,               0, -sin,      a_1, 0},
+                        {0,               0, sin, 0,               0,  cos,      a_2, 0}
+                };
+        }
+
         Filter<N, T> filter_;
 
 public:
@@ -494,6 +597,19 @@ public:
                         position_velocity_acceleration_r(direction, speed),
                         Vector<6, T>(
                                 position[0], position[1], direction[0] * speed, direction[1] * speed, acceleration[0],
+                                acceleration[1]));
+        }
+
+        void update_position_direction_acceleration(
+                const Vector<2, T>& position,
+                const Vector<2, T>& direction,
+                const Vector<2, T>& acceleration)
+        {
+                filter_.update(
+                        position_direction_acceleration_h, position_direction_acceleration_hj,
+                        position_direction_acceleration_r(direction),
+                        Vector<6, T>(
+                                position[0], position[1], direction[0], direction[1], acceleration[0],
                                 acceleration[1]));
         }
 
@@ -627,9 +743,18 @@ void test_impl()
                                         track.positions[i], estimation_filter.position(),
                                         estimation_filter.position_p());
 
-                                process_filter.update_position_velocity_acceleration(
-                                        measurement->position, track.process_measurements[i].direction,
-                                        measurement->speed, track.process_measurements[i].acceleration);
+                                if (measurement->speed)
+                                {
+                                        process_filter.update_position_velocity_acceleration(
+                                                measurement->position, track.process_measurements[i].direction,
+                                                *measurement->speed, track.process_measurements[i].acceleration);
+                                }
+                                else
+                                {
+                                        process_filter.update_position_direction_acceleration(
+                                                measurement->position, track.process_measurements[i].direction,
+                                                track.process_measurements[i].acceleration);
+                                }
 
                                 LOG(to_string(i) + ": track = "
                                     + to_string(radians_to_degrees(normalize_angle_difference(track.angles[i])))
