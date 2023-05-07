@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "show_file.h"
+#include "show_file_converters.h"
 #include "simulator.h"
 #include "utility.h"
 
@@ -30,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
-#include <map>
 #include <vector>
 
 namespace ns::filter::test
@@ -81,72 +81,6 @@ Track<N, T> generate_track()
                 }
         }
 
-        return res;
-}
-
-template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> position_measurements(const Track<N, T>& track)
-{
-        std::vector<std::optional<Vector<N, T>>> res;
-        res.reserve(track.position_measurements.size());
-        for (const auto& [_, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
-        {
-                if (v)
-                {
-                        res.push_back(v->position);
-                }
-                else
-                {
-                        res.emplace_back();
-                }
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> speed_measurements(const Track<N, T>& track, const T offset)
-{
-        std::vector<std::optional<Vector<N, T>>> res;
-        res.reserve(track.position_measurements.size());
-        for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
-        {
-                if (v && v->speed)
-                {
-                        res.emplace_back(Vector<2, T>(track.positions[i][0], offset + (*v->speed)));
-                }
-                else
-                {
-                        res.emplace_back();
-                }
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-std::vector<Vector<N, T>> angle_measurements(const Track<N, T>& track, const T offset)
-{
-        std::vector<Vector<2, T>> res;
-        res.reserve(track.positions.size());
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
-        {
-                const T vx = track.process_measurements[i].direction[0];
-                const T vy = track.process_measurements[i].direction[1];
-                const T angle = -std::atan2(vy, vx);
-                res.emplace_back(track.positions[i][0], offset + radians_to_degrees(angle));
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-std::vector<Vector<N, T>> acceleration_measurements(const Track<N, T>& track, const std::size_t index, const T offset)
-{
-        ASSERT(index < N);
-        std::vector<Vector<2, T>> res;
-        res.reserve(track.positions.size());
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
-        {
-                res.emplace_back(track.positions[i][0], offset + track.process_measurements[i].acceleration[index]);
-        }
         return res;
 }
 
@@ -233,7 +167,7 @@ constexpr Matrix<6, 6, T> create_q(const T dt, const T process_variance)
 
 template <std::size_t N, std::size_t M, typename T>
         requires (N == 2 && M == 1)
-static constexpr Matrix<2, 2, T> create_q(const T dt, const T process_variance)
+constexpr Matrix<2, 2, T> create_q(const T dt, const T process_variance)
 {
         const T dt_2 = square(dt) / 2;
         const Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
@@ -555,11 +489,12 @@ void test_impl()
                 process_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
         }
 
+        constexpr T OFFSET = 500;
         write_to_file(
-                track.positions, angle_measurements(track, /*offset=*/T{-600}),
-                acceleration_measurements(track, /*index=*/0, /*offset=*/T{-700}),
-                acceleration_measurements(track, /*index=*/1, /*offset=*/T{-800}), position_measurements(track),
-                speed_measurements(track, /*offset=*/T{-400}), position_result, process_result);
+                add_offset(track.positions, OFFSET), angle_measurements(track),
+                acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
+                add_offset(position_measurements(track), OFFSET), speed_measurements(track),
+                add_offset(position_result, OFFSET), add_offset(process_result, OFFSET));
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_nees_average.check_string());
