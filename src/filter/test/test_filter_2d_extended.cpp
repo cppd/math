@@ -46,10 +46,10 @@ struct Config final
         static constexpr T TRACK_VELOCITY_MEAN = 10;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
-        static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(1.0));
-        static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(0.5);
+        static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
+        static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
-        static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(0.5);
+        static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(1.0);
 
         static constexpr T ESTIMATION_FILTER_VARIANCE = square(0.2);
 
@@ -75,7 +75,8 @@ Track<N, T> generate_track()
         for (auto& [i, p] : res.position_measurements)
         {
                 ASSERT(i >= 0 && i < COUNT);
-                if ((i >= 1000 && i <= 1300) || (i >= 2600 && i <= 2900) || (i >= 5000 && i <= 5300))
+                const auto n = std::llround(i / T{300});
+                if ((n > 3) && ((n % 5) == 0))
                 {
                         p.reset();
                 }
@@ -347,7 +348,7 @@ class ProcessFilter final
                 };
         }();
 
-        static Matrix<6, 6, T> r(const Vector<2, T>& direction, const T speed)
+        static Matrix<6, 6, T> position_velocity_acceleration_r(const Vector<2, T>& direction, const T speed)
         {
                 const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
                 const T sv = Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE;
@@ -359,7 +360,7 @@ class ProcessFilter final
                         { 0,  0, sv,  0,  0,  0},
                         { 0,  0,  0, dv,  0,  0},
                         { 0,  0,  0,  0, av,  0},
-                        { 0,  0,  0,  0,  0, av},
+                        { 0,  0,  0,  0,  0, av}
                 };
 
                 // px = px
@@ -383,7 +384,7 @@ class ProcessFilter final
                 return error_propagation * r * error_propagation.transposed();
         }
 
-        static Vector<6, T> h(const Vector<N, T>& x)
+        static Vector<6, T> position_velocity_acceleration_h(const Vector<N, T>& x)
         {
                 // x = px
                 // y = py
@@ -401,7 +402,7 @@ class ProcessFilter final
                 return {x[0], x[3], vx * cos - vy * sin, vx * sin + vy * cos, ax * cos - ay * sin, ax * sin + ay * cos};
         }
 
-        static Matrix<6, N, T> hj(const Vector<N, T>& x)
+        static Matrix<6, N, T> position_velocity_acceleration_hj(const Vector<N, T>& x)
         {
                 // x = px
                 // y = py
@@ -427,7 +428,7 @@ class ProcessFilter final
                 };
         }
 
-        static Matrix<2, 2, T> r_a()
+        static Matrix<2, 2, T> acceleration_r()
         {
                 const T av = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE;
                 return {
@@ -436,7 +437,7 @@ class ProcessFilter final
                 };
         }
 
-        static Vector<2, T> h_a(const Vector<N, T>& x)
+        static Vector<2, T> acceleration_h(const Vector<N, T>& x)
         {
                 // ax = ax*cos(angle) - ay*sin(angle)
                 // ay = ax*sin(angle) + ay*cos(angle)
@@ -448,7 +449,7 @@ class ProcessFilter final
                 return {ax * cos - ay * sin, ax * sin + ay * cos};
         }
 
-        static Matrix<2, N, T> hj_a(const Vector<N, T>& x)
+        static Matrix<2, N, T> acceleration_hj(const Vector<N, T>& x)
         {
                 // ax = ax*cos(angle) - ay*sin(angle)
                 // ay = ax*sin(angle) + ay*cos(angle)
@@ -489,7 +490,8 @@ public:
                 const Vector<2, T>& acceleration)
         {
                 filter_.update(
-                        h, hj, r(direction, speed),
+                        position_velocity_acceleration_h, position_velocity_acceleration_hj,
+                        position_velocity_acceleration_r(direction, speed),
                         Vector<6, T>(
                                 position[0], position[1], direction[0] * speed, direction[1] * speed, acceleration[0],
                                 acceleration[1]));
@@ -497,7 +499,7 @@ public:
 
         void update_acceleration(const Vector<2, T>& acceleration)
         {
-                filter_.update(h_a, hj_a, r_a(), acceleration);
+                filter_.update(acceleration_h, acceleration_hj, acceleration_r(), acceleration);
         }
 
         [[nodiscard]] Vector<2, T> position() const
@@ -651,9 +653,7 @@ void test_impl()
                 process_result.push_back(process_filter.position());
 
                 position_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
-                angle_nees_average.add(
-                        normalize_angle_difference(track.angles[i]), normalize_angle_difference(process_filter.angle()),
-                        process_filter.angle_p());
+                angle_nees_average.add(track.angles[i], process_filter.angle(), process_filter.angle_p());
         }
 
         write_to_file(
