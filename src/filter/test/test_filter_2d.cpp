@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_file.h"
-#include "show_file_converters.h"
 #include "simulator.h"
 #include "utility.h"
+
+#include "view/write.h"
 
 #include "../filter.h"
 #include "../nees.h"
@@ -497,13 +497,7 @@ void test_impl()
                 process_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
         }
 
-        constexpr T OFFSET = 500;
-        write_to_file(
-                add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
-                acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
-                add_offset(position_measurements(track), OFFSET), speed_measurements(track),
-                add_offset(result_position, OFFSET), filter_speed(track, result_speed),
-                add_offset(result_process, OFFSET));
+        view::write_to_file(track, result_position, result_speed, result_process);
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_nees_average.check_string());

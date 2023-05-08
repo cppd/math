@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "simulator.h"
+#include "../simulator.h"
+#include "../utility.h"
 
-#include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::test
+namespace ns::filter::test::view
 {
 template <typename T>
 std::vector<std::optional<Vector<2, T>>> add_offset(
@@ -116,16 +116,6 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
 template <typename T>
 std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 {
-        const auto unbound_angle = [](const std::optional<T> previous, const T next)
-        {
-                static constexpr T TWO_PI = 2 * PI<T>;
-                if (previous)
-                {
-                        return next - TWO_PI * std::round((next - *previous) / TWO_PI);
-                }
-                return next;
-        };
-
         std::vector<Vector<2, T>> res;
         res.reserve(track.positions.size());
         std::optional<T> previous_angle;

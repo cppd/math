@@ -15,9 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_file.h"
+#include "write.h"
 
-#include "utility.h"
+#include "converters.h"
+
+#include "../utility.h"
 
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <string>
 
-namespace ns::filter::test
+namespace ns::filter::test::view
 {
 namespace
 {
@@ -59,10 +61,9 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
         }
         os << ")\n";
 }
-}
 
 template <std::size_t N, typename T>
-void write_to_file(
+void write_data(
         const std::vector<Vector<N, T>>& track_position,
         const std::vector<Vector<N, T>>& track_speed,
         const std::vector<Vector<N, T>>& measurement_angle,
@@ -238,14 +239,28 @@ void write_to_file(
                 }
         }
 }
+}
 
-#define TEMPLATE(T)                                                                                                   \
-        template void write_to_file(                                                                                  \
-                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, \
-                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                                   \
-                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&,     \
-                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&,     \
-                const std::vector<Vector<2, T>>&);
+template <std::size_t N, typename T>
+void write_to_file(
+        const Track<N, T>& track,
+        const std::vector<std::optional<Vector<N, T>>>& position,
+        const std::vector<std::optional<T>>& speed,
+        const std::vector<Vector<N, T>>& process)
+{
+        static constexpr T OFFSET = 500;
+
+        write_data(
+                add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
+                acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
+                add_offset(position_measurements(track), OFFSET), speed_measurements(track),
+                add_offset(position, OFFSET), filter_speed(track, speed), add_offset(process, OFFSET));
+}
+
+#define TEMPLATE(T)                                                                  \
+        template void write_to_file(                                                 \
+                const Track<2, T>&, const std::vector<std::optional<Vector<2, T>>>&, \
+                const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

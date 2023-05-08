@@ -17,24 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../simulator.h"
+
 #include <src/numerical/vector.h>
 
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
-namespace ns::filter::test
+namespace ns::filter::test::view
 {
 template <std::size_t N, typename T>
 void write_to_file(
-        const std::vector<Vector<N, T>>& track_position,
-        const std::vector<Vector<N, T>>& track_speed,
-        const std::vector<Vector<N, T>>& measurement_angle,
-        const std::vector<Vector<N, T>>& measurement_acceleration_x,
-        const std::vector<Vector<N, T>>& measurement_acceleration_y,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_position,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
-        const std::vector<std::optional<Vector<N, T>>>& filter_position,
-        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
-        const std::vector<Vector<N, T>>& filter_process);
+        const Track<N, T>& track,
+        const std::vector<std::optional<Vector<N, T>>>& position,
+        const std::vector<std::optional<T>>& speed,
+        const std::vector<Vector<N, T>>& process);
 }

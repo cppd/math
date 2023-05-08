@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/constant.h>
 #include <src/com/file/path.h>
 #include <src/numerical/vector.h>
 #include <src/settings/directory.h>
@@ -24,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cctype>
 #include <cmath>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 namespace ns::filter::test
@@ -51,4 +53,15 @@ inline std::filesystem::path test_file_path(const std::string_view name)
 {
         return settings::test_directory() / path_from_utf8(name);
 }
+
+template <typename T>
+T unbound_angle(const std::optional<T> previous, const T next)
+{
+        static constexpr T TWO_PI = 2 * PI<T>;
+        if (previous)
+        {
+                return next - TWO_PI * std::round((next - *previous) / TWO_PI);
+        }
+        return next;
+};
 }
