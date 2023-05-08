@@ -50,10 +50,10 @@ struct Config final
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
         static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(1.0);
 
-        static constexpr T ESTIMATION_FILTER_VARIANCE = square(0.2);
+        static constexpr T POSITION_FILTER_VARIANCE = square(0.2);
 
         static constexpr T POSITION_VARIANCE = square(0.2);
-        static constexpr T DIFFERENCE_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(0.001));
 };
 
 template <std::size_t N, typename T>
@@ -107,7 +107,7 @@ struct Angle final
 };
 
 template <typename T>
-class EstimationFilter final
+class PositionFilter final
 {
         static constexpr std::size_t N = 6;
         static constexpr std::size_t M = 2;
@@ -141,7 +141,7 @@ class EstimationFilter final
                         {   0,    1},
                 };
 
-                const T p = Config<T>::ESTIMATION_FILTER_VARIANCE;
+                const T p = Config<T>::POSITION_FILTER_VARIANCE;
                 const Matrix<2, 2, T> process_covariance{
                         {p, 0},
                         {0, p}
@@ -182,7 +182,7 @@ class EstimationFilter final
         Filter<N, T> filter_;
 
 public:
-        EstimationFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)
+        PositionFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)
                 : filter_(init_x, init_p)
         {
         }
@@ -261,7 +261,7 @@ class ProcessFilter final
                 };
 
                 const T p = Config<T>::POSITION_VARIANCE;
-                const T d = Config<T>::DIFFERENCE_VARIANCE;
+                const T d = Config<T>::ANGLE_VARIANCE;
                 const Matrix<3, 3, T> process_covariance{
                         {p, 0, 0},
                         {0, p, 0},
@@ -564,6 +564,11 @@ public:
                 };
         }
 
+        [[nodiscard]] T speed() const
+        {
+                return Vector<2, T>(filter_.x()[1], filter_.x()[4]).norm();
+        }
+
         [[nodiscard]] T angle() const
         {
                 return filter_.x()[6];
@@ -595,12 +600,12 @@ void test_impl()
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)});
 
-        EstimationFilter<T> estimation_filter(position_init_x, position_init_p);
+        PositionFilter<T> position_filter(position_init_x, position_init_p);
 
-        std::vector<std::optional<Vector<2, T>>> estimation_result;
-        estimation_result.reserve(track.positions.size());
+        std::vector<std::optional<Vector<2, T>>> result_position;
+        result_position.reserve(track.positions.size());
 
-        NeesAverage<2, T> estimation_nees_average;
+        NeesAverage<2, T> position_nees_average;
 
         std::size_t i = 0;
 
@@ -608,16 +613,15 @@ void test_impl()
         {
                 if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
                 {
-                        estimation_filter.predict();
+                        position_filter.predict();
 
                         if (const auto& measurement = iter->second)
                         {
-                                estimation_filter.update(measurement->position);
+                                position_filter.update(measurement->position);
 
-                                estimation_result.push_back(estimation_filter.position());
-                                estimation_nees_average.add(
-                                        track.positions[i], estimation_filter.position(),
-                                        estimation_filter.position_p());
+                                result_position.push_back(position_filter.position());
+                                position_nees_average.add(
+                                        track.positions[i], position_filter.position(), position_filter.position_p());
 
                                 if (i >= 300)
                                 {
@@ -626,12 +630,12 @@ void test_impl()
                         }
                         else
                         {
-                                estimation_result.push_back(std::nullopt);
+                                result_position.push_back(std::nullopt);
                         }
                 }
         }
 
-        const Angle<T> angle = estimation_filter.velocity_angle();
+        const Angle<T> angle = position_filter.velocity_angle();
 
         const T measurement_angle =
                 std::atan2(track.process_measurements[i].direction[1], track.process_measurements[i].direction[0]);
@@ -653,11 +657,15 @@ void test_impl()
 
         ProcessFilter<T> process_filter(init_x, init_p);
 
-        std::vector<Vector<2, T>> process_result;
-        process_result.reserve(track.positions.size());
+        std::vector<Vector<2, T>> result_process;
+        result_process.reserve(track.positions.size());
 
-        NeesAverage<2, T> position_nees_average;
-        NeesAverage<1, T> angle_nees_average;
+        std::vector<std::optional<T>> result_speed;
+        result_speed.reserve(track.positions.size());
+        result_speed.resize(i);
+
+        NeesAverage<2, T> process_position_nees_average;
+        NeesAverage<1, T> process_angle_nees_average;
 
         for (; i < track.positions.size(); ++i)
         {
@@ -665,16 +673,15 @@ void test_impl()
 
                 if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
                 {
-                        estimation_filter.predict();
+                        position_filter.predict();
 
                         if (const auto& measurement = iter->second)
                         {
-                                estimation_filter.update(measurement->position);
+                                position_filter.update(measurement->position);
 
-                                estimation_result.push_back(estimation_filter.position());
-                                estimation_nees_average.add(
-                                        track.positions[i], estimation_filter.position(),
-                                        estimation_filter.position_p());
+                                result_position.push_back(position_filter.position());
+                                position_nees_average.add(
+                                        track.positions[i], position_filter.position(), position_filter.position_p());
 
                                 if (measurement->speed)
                                 {
@@ -700,7 +707,7 @@ void test_impl()
                         else
                         {
                                 process_filter.update_acceleration(track.process_measurements[i].acceleration);
-                                estimation_result.push_back(std::nullopt);
+                                result_position.push_back(std::nullopt);
                         }
                 }
                 else
@@ -708,22 +715,25 @@ void test_impl()
                         process_filter.update_acceleration(track.process_measurements[i].acceleration);
                 }
 
-                process_result.push_back(process_filter.position());
+                result_process.push_back(process_filter.position());
+                result_speed.push_back(process_filter.speed());
 
-                position_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
-                angle_nees_average.add(track.angles[i], process_filter.angle(), process_filter.angle_p());
+                process_position_nees_average.add(
+                        track.positions[i], process_filter.position(), process_filter.position_p());
+                process_angle_nees_average.add(track.angles[i], process_filter.angle(), process_filter.angle_p());
         }
 
         constexpr T OFFSET = 500;
         write_to_file(
-                add_offset(track.positions, OFFSET), angle_measurements(track),
+                add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track), OFFSET), speed_measurements(track),
-                add_offset(estimation_result, OFFSET), add_offset(process_result, OFFSET));
+                add_offset(result_position, OFFSET), filter_speed(track, result_speed),
+                add_offset(result_process, OFFSET));
 
-        LOG("Estimation Filter: " + estimation_nees_average.check_string());
         LOG("Position Filter: " + position_nees_average.check_string());
-        LOG("Angle Filter: " + angle_nees_average.check_string());
+        LOG("Process Filter: " + process_position_nees_average.check_string());
+        LOG("Angle Filter: " + process_angle_nees_average.check_string());
 }
 
 void test()

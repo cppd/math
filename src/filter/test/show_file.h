@@ -27,12 +27,14 @@ namespace ns::filter::test
 {
 template <std::size_t N, typename T>
 void write_to_file(
-        const std::vector<Vector<N, T>>& positions,
-        const std::vector<Vector<N, T>>& angle_measurements,
-        const std::vector<Vector<N, T>>& acceleration_x_measurements,
-        const std::vector<Vector<N, T>>& acceleration_y_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& position_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& speed_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& position_filter,
-        const std::vector<Vector<N, T>>& filter);
+        const std::vector<Vector<N, T>>& track_position,
+        const std::vector<Vector<N, T>>& track_speed,
+        const std::vector<Vector<N, T>>& measurement_angle,
+        const std::vector<Vector<N, T>>& measurement_acceleration_x,
+        const std::vector<Vector<N, T>>& measurement_acceleration_y,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_position,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
+        const std::vector<std::optional<Vector<N, T>>>& filter_position,
+        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
+        const std::vector<Vector<N, T>>& filter_process);
 }

@@ -106,6 +106,11 @@ public:
                 return position_;
         }
 
+        [[nodiscard]] T speed() const
+        {
+                return velocity_.norm();
+        }
+
         [[nodiscard]] T angle() const
         {
                 return angle_;
@@ -140,6 +145,7 @@ Track<N, T> generate_track(
 
         Track<N, T> res;
         res.positions.reserve(count);
+        res.speed.reserve(count);
         res.angles.reserve(count);
         res.position_measurements.reserve(count);
 
@@ -148,6 +154,7 @@ Track<N, T> generate_track(
                 simulator.move();
 
                 res.positions.push_back(simulator.position());
+                res.speed.push_back(simulator.speed());
                 res.angles.push_back(simulator.angle());
 
                 res.process_measurements.push_back(simulator.process_measurement());

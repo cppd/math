@@ -341,6 +341,11 @@ public:
                         {filter_.p()(3, 0), filter_.p()(3, 3)}
                 };
         }
+
+        [[nodiscard]] T speed() const
+        {
+                return Vector<2, T>(filter_.x()[1], filter_.x()[4]).norm();
+        }
 };
 
 template <typename T>
@@ -403,10 +408,12 @@ void test_impl()
         ProcessFilter<T> process_filter(init_x, init_p);
         DifferenceFilter<T> difference_filter;
 
-        std::vector<std::optional<Vector<2, T>>> position_result;
-        position_result.reserve(track.positions.size());
-        std::vector<Vector<2, T>> process_result;
-        process_result.reserve(track.positions.size());
+        std::vector<std::optional<Vector<2, T>>> result_position;
+        result_position.reserve(track.positions.size());
+        std::vector<Vector<2, T>> result_process;
+        result_process.reserve(track.positions.size());
+        std::vector<std::optional<T>> result_speed;
+        result_speed.reserve(track.positions.size());
 
         NeesAverage<2, T> position_nees_average;
         NeesAverage<2, T> process_nees_average;
@@ -424,7 +431,7 @@ void test_impl()
                         {
                                 position_filter.update(measurement->position);
 
-                                position_result.push_back(position_filter.position());
+                                result_position.push_back(position_filter.position());
                                 position_nees_average.add(
                                         track.positions[i], position_filter.position(), position_filter.position_p());
 
@@ -450,7 +457,7 @@ void test_impl()
                         }
                         else
                         {
-                                position_result.push_back(std::nullopt);
+                                result_position.push_back(std::nullopt);
                         }
                 }
 
@@ -485,16 +492,18 @@ void test_impl()
                         process_filter.update_acceleration(acceleration);
                 }
 
-                process_result.push_back(process_filter.position());
+                result_process.push_back(process_filter.position());
+                result_speed.push_back(process_filter.speed());
                 process_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
         }
 
         constexpr T OFFSET = 500;
         write_to_file(
-                add_offset(track.positions, OFFSET), angle_measurements(track),
+                add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track), OFFSET), speed_measurements(track),
-                add_offset(position_result, OFFSET), add_offset(process_result, OFFSET));
+                add_offset(result_position, OFFSET), filter_speed(track, result_speed),
+                add_offset(result_process, OFFSET));
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_nees_average.check_string());

@@ -63,6 +63,18 @@ std::vector<Vector<2, T>> add_offset(const std::vector<Vector<2, T>>& data, cons
 }
 
 template <typename T>
+std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
+{
+        std::vector<Vector<2, T>> res;
+        res.reserve(track.positions.size());
+        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        {
+                res.emplace_back(track.positions[i][0], track.speed[i]);
+        }
+        return res;
+}
+
+template <typename T>
 std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>& track)
 {
         std::vector<std::optional<Vector<2, T>>> res;
@@ -124,6 +136,28 @@ std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, co
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
                 res.emplace_back(track.positions[i][0], track.process_measurements[i].acceleration[index]);
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<std::optional<Vector<2, T>>> filter_speed(
+        const Track<2, T>& track,
+        const std::vector<std::optional<T>>& speed)
+{
+        ASSERT(track.positions.size() == speed.size());
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(track.positions.size());
+        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        {
+                if (speed[i])
+                {
+                        res.push_back(Vector<2, T>(track.positions[i][0], *speed[i]));
+                }
+                else
+                {
+                        res.emplace_back();
+                }
         }
         return res;
 }

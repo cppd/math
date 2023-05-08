@@ -63,142 +63,176 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 
 template <std::size_t N, typename T>
 void write_to_file(
-        const std::vector<Vector<N, T>>& positions,
-        const std::vector<Vector<N, T>>& angle_measurements,
-        const std::vector<Vector<N, T>>& acceleration_x_measurements,
-        const std::vector<Vector<N, T>>& acceleration_y_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& position_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& speed_measurements,
-        const std::vector<std::optional<Vector<N, T>>>& position_filter,
-        const std::vector<Vector<N, T>>& filter)
+        const std::vector<Vector<N, T>>& track_position,
+        const std::vector<Vector<N, T>>& track_speed,
+        const std::vector<Vector<N, T>>& measurement_angle,
+        const std::vector<Vector<N, T>>& measurement_acceleration_x,
+        const std::vector<Vector<N, T>>& measurement_acceleration_y,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_position,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
+        const std::vector<std::optional<Vector<N, T>>>& filter_position,
+        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
+        const std::vector<Vector<N, T>>& filter_process)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
-        if (!positions.empty())
+        if (!track_position.empty())
         {
                 file << '{';
-                file << R"("name":"Track")";
+                file << R"("name":"Track Position")";
                 file << R"(, "mode":"lines")";
                 file << R"(, "line_color":"#0000ff")";
                 file << R"(, "line_width":1)";
                 file << R"(, "line_dash":"dot")";
                 file << R"(, "marker_size":None)";
                 file << "}\n";
-                for (const auto& v : positions)
+                for (const auto& v : track_position)
                 {
                         write(file, v);
                 }
         }
 
-        if (!angle_measurements.empty())
+        if (!track_speed.empty())
         {
                 file << '{';
-                file << R"("name":"Angle Measurements")";
+                file << R"("name":"Track Speed")";
+                file << R"(, "mode":"lines")";
+                file << R"(, "line_color":"#0000ff")";
+                file << R"(, "line_width":1)";
+                file << R"(, "line_dash":"dot")";
+                file << R"(, "marker_size":None)";
+                file << "}\n";
+                for (const auto& v : track_speed)
+                {
+                        write(file, v);
+                }
+        }
+
+        if (!measurement_angle.empty())
+        {
+                file << '{';
+                file << R"("name":"Measurement Angle")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#000000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : angle_measurements)
+                for (const auto& v : measurement_angle)
                 {
                         write(file, v);
                 }
         }
 
-        if (!acceleration_x_measurements.empty())
+        if (!measurement_acceleration_x.empty())
         {
                 file << '{';
-                file << R"("name":"Acceleration X Measurements")";
+                file << R"("name":"Measurement Acceleration X")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#000000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : acceleration_x_measurements)
+                for (const auto& v : measurement_acceleration_x)
                 {
                         write(file, v);
                 }
         }
 
-        if (!acceleration_y_measurements.empty())
+        if (!measurement_acceleration_y.empty())
         {
                 file << '{';
-                file << R"("name":"Acceleration Y Measurements")";
+                file << R"("name":"Measurement Acceleration Y")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#000000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : acceleration_y_measurements)
+                for (const auto& v : measurement_acceleration_y)
                 {
                         write(file, v);
                 }
         }
 
-        if (!position_measurements.empty())
+        if (!measurement_position.empty())
         {
                 file << '{';
-                file << R"("name":"Position Measurements")";
+                file << R"("name":"Measurement Position")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#000000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : position_measurements)
+                for (const auto& v : measurement_position)
                 {
                         write(file, v);
                 }
         }
 
-        if (!speed_measurements.empty())
+        if (!measurement_speed.empty())
         {
                 file << '{';
-                file << R"("name":"Speed Measurements")";
+                file << R"("name":"Measurement Speed")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#000000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : speed_measurements)
+                for (const auto& v : measurement_speed)
                 {
                         write(file, v);
                 }
         }
 
-        if (!position_filter.empty())
+        if (!filter_position.empty())
         {
                 file << '{';
-                file << R"("name":"Position Filter")";
+                file << R"("name":"Filter Position")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#a00000")";
                 file << R"(, "line_width":0.25)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : position_filter)
+                for (const auto& v : filter_position)
                 {
                         write(file, v);
                 }
         }
 
-        if (!filter.empty())
+        if (!filter_speed.empty())
         {
                 file << '{';
-                file << R"("name":"Filter")";
+                file << R"("name":"Filter Speed")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#00a000")";
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : filter)
+                for (const auto& v : filter_speed)
+                {
+                        write(file, v);
+                }
+        }
+
+        if (!filter_process.empty())
+        {
+                file << '{';
+                file << R"("name":"Filter Process")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#00a000")";
+                file << R"(, "line_width":0.5)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : filter_process)
                 {
                         write(file, v);
                 }
@@ -208,7 +242,8 @@ void write_to_file(
 #define TEMPLATE(T)                                                                                                   \
         template void write_to_file(                                                                                  \
                 const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, \
-                const std::vector<Vector<2, T>>&, const std::vector<std::optional<Vector<2, T>>>&,                    \
+                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&,                                   \
+                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&,     \
                 const std::vector<std::optional<Vector<2, T>>>&, const std::vector<std::optional<Vector<2, T>>>&,     \
                 const std::vector<Vector<2, T>>&);
 
