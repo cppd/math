@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
@@ -115,14 +116,27 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
 template <typename T>
 std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 {
+        const auto unbound_angle = [](const std::optional<T> previous, const T next)
+        {
+                static constexpr T TWO_PI = 2 * PI<T>;
+                if (previous)
+                {
+                        return next - TWO_PI * std::round((next - *previous) / TWO_PI);
+                }
+                return next;
+        };
+
         std::vector<Vector<2, T>> res;
         res.reserve(track.positions.size());
+        std::optional<T> previous_angle;
         for (std::size_t i = 0; i < track.positions.size(); ++i)
         {
                 const T vx = track.process_measurements[i].direction[0];
                 const T vy = track.process_measurements[i].direction[1];
-                const T angle = -std::atan2(vy, vx);
-                res.emplace_back(track.positions[i][0], radians_to_degrees(angle));
+                const T angle = std::atan2(vy, vx);
+                const T unbounded_angle = unbound_angle(previous_angle, angle);
+                previous_angle = unbounded_angle;
+                res.emplace_back(track.positions[i][0], radians_to_degrees(unbounded_angle));
         }
         return res;
 }
