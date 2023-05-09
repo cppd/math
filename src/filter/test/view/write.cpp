@@ -64,6 +64,7 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 
 template <std::size_t N, typename T>
 void write_data(
+        const std::string_view annotation,
         const std::vector<Vector<N, T>>& track_position,
         const std::vector<Vector<N, T>>& track_speed,
         const std::vector<Vector<N, T>>& measurement_angle,
@@ -78,6 +79,11 @@ void write_data(
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
+
+        if (!annotation.empty())
+        {
+                file << '"' << annotation << "\"\n";
+        }
 
         if (!track_position.empty())
         {
@@ -243,6 +249,7 @@ void write_data(
 
 template <std::size_t N, typename T>
 void write_to_file(
+        const std::string_view annotation,
         const Track<N, T>& track,
         const std::vector<std::optional<Vector<N, T>>>& position,
         const std::vector<std::optional<T>>& speed,
@@ -251,15 +258,15 @@ void write_to_file(
         static constexpr T OFFSET = 500;
 
         write_data(
-                add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
+                annotation, add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track), OFFSET), speed_measurements(track),
                 add_offset(position, OFFSET), filter_speed(track, speed), add_offset(process, OFFSET));
 }
 
-#define TEMPLATE(T)                                                                  \
-        template void write_to_file(                                                 \
-                const Track<2, T>&, const std::vector<std::optional<Vector<2, T>>>&, \
+#define TEMPLATE(T)                                                                                    \
+        template void write_to_file(                                                                   \
+                std::string_view, const Track<2, T>&, const std::vector<std::optional<Vector<2, T>>>&, \
                 const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)

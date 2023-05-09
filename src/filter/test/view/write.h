@@ -22,12 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <optional>
+#include <string_view>
 #include <vector>
 
 namespace ns::filter::test::view
 {
 template <std::size_t N, typename T>
 void write_to_file(
+        const std::string_view annotation,
         const Track<N, T>& track,
         const std::vector<std::optional<Vector<N, T>>>& position,
         const std::vector<std::optional<T>>& speed,

@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
+#include <sstream>
 #include <vector>
 
 namespace ns::filter::test
@@ -56,6 +57,36 @@ struct Config final
         static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
 };
+
+template <typename T>
+std::string make_annotation()
+{
+        const auto* const sigma = reinterpret_cast<const char*>(u8"σ");
+        const auto* const degree = reinterpret_cast<const char*>(u8"°");
+
+        std::ostringstream oss;
+        oss << "<b>update</b>";
+        oss << "<br>";
+        oss << "position: " << 1 / Config<T>::POSITION_DT << " Hz";
+        oss << "<br>";
+        oss << "speed: " << 1 / Config<T>::POSITION_DT << " Hz";
+        oss << "<br>";
+        oss << "direction: " << 1 / Config<T>::DT << " Hz";
+        oss << "<br>";
+        oss << "acceleration: " << 1 / Config<T>::DT << " Hz";
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>" << sigma << "</b>";
+        oss << "<br>";
+        oss << "position: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_VARIANCE) << " m";
+        oss << "<br>";
+        oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE) << " m/s";
+        oss << "<br>";
+        oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE)) << degree;
+        oss << "<br>";
+        oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_ACCELERATION_VARIANCE) << " m/s<sup>2</sup>";
+        return oss.str();
+}
 
 template <std::size_t N, typename T>
 Track<N, T> generate_track()
@@ -766,7 +797,7 @@ void test_impl()
                         track.angles_r[i], process_filter.angle_r(), process_filter.angle_r_p());
         }
 
-        view::write_to_file(track, result_position, result_speed, result_process);
+        view::write_to_file(make_annotation<T>(), track, result_position, result_speed, result_process);
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_position_nees_average.check_string());

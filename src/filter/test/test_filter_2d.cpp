@@ -497,7 +497,7 @@ void test_impl()
                 process_nees_average.add(track.positions[i], process_filter.position(), process_filter.position_p());
         }
 
-        view::write_to_file(track, result_position, result_speed, result_process);
+        view::write_to_file({}, track, result_position, result_speed, result_process);
 
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_nees_average.check_string());
