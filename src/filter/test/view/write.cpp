@@ -63,28 +63,8 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 }
 
 template <std::size_t N, typename T>
-void write_data(
-        const std::string_view annotation,
-        const std::vector<Vector<N, T>>& track_position,
-        const std::vector<Vector<N, T>>& track_speed,
-        const std::vector<Vector<N, T>>& measurement_angle,
-        const std::vector<Vector<N, T>>& measurement_acceleration_x,
-        const std::vector<Vector<N, T>>& measurement_acceleration_y,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_position,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
-        const std::vector<std::optional<Vector<N, T>>>& filter_position,
-        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
-        const std::vector<Vector<N, T>>& filter_process)
+void write_track_position(std::ostream& file, const std::vector<Vector<N, T>>& track_position)
 {
-        std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
-        file << std::setprecision(Limits<T>::max_digits10());
-        file << std::scientific;
-
-        if (!annotation.empty())
-        {
-                file << '"' << annotation << "\"\n";
-        }
-
         if (!track_position.empty())
         {
                 file << '{';
@@ -100,7 +80,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_track_speed(std::ostream& file, const std::vector<Vector<N, T>>& track_speed)
+{
         if (!track_speed.empty())
         {
                 file << '{';
@@ -116,7 +100,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_measurement_angle(std::ostream& file, const std::vector<Vector<N, T>>& measurement_angle)
+{
         if (!measurement_angle.empty())
         {
                 file << '{';
@@ -132,7 +120,14 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_measurement_acceleration(
+        std::ostream& file,
+        const std::vector<Vector<N, T>>& measurement_acceleration_x,
+        const std::vector<Vector<N, T>>& measurement_acceleration_y)
+{
         if (!measurement_acceleration_x.empty())
         {
                 file << '{';
@@ -164,7 +159,13 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_measurement_position(
+        std::ostream& file,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_position)
+{
         if (!measurement_position.empty())
         {
                 file << '{';
@@ -180,7 +181,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_measurement_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& measurement_speed)
+{
         if (!measurement_speed.empty())
         {
                 file << '{';
@@ -196,7 +201,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_filter_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& filter_position)
+{
         if (!filter_position.empty())
         {
                 file << '{';
@@ -212,7 +221,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_filter_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& filter_speed)
+{
         if (!filter_speed.empty())
         {
                 file << '{';
@@ -228,7 +241,11 @@ void write_data(
                         write(file, v);
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void write_filter_process(std::ostream& file, const std::vector<Vector<N, T>>& filter_process)
+{
         if (!filter_process.empty())
         {
                 file << '{';
@@ -244,6 +261,48 @@ void write_data(
                         write(file, v);
                 }
         }
+}
+
+template <std::size_t N, typename T>
+void write_data(
+        const std::string_view annotation,
+        const std::vector<Vector<N, T>>& track_position,
+        const std::vector<Vector<N, T>>& track_speed,
+        const std::vector<Vector<N, T>>& measurement_angle,
+        const std::vector<Vector<N, T>>& measurement_acceleration_x,
+        const std::vector<Vector<N, T>>& measurement_acceleration_y,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_position,
+        const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
+        const std::vector<std::optional<Vector<N, T>>>& filter_position,
+        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
+        const std::vector<Vector<N, T>>& filter_process)
+{
+        std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
+        file << std::setprecision(Limits<T>::max_digits10());
+        file << std::scientific;
+
+        if (!annotation.empty())
+        {
+                file << '"' << annotation << "\"\n";
+        }
+
+        write_track_position(file, track_position);
+
+        write_track_speed(file, track_speed);
+
+        write_measurement_angle(file, measurement_angle);
+
+        write_measurement_acceleration(file, measurement_acceleration_x, measurement_acceleration_y);
+
+        write_measurement_position(file, measurement_position);
+
+        write_measurement_speed(file, measurement_speed);
+
+        write_filter_position(file, filter_position);
+
+        write_filter_speed(file, filter_speed);
+
+        write_filter_process(file, filter_process);
 }
 }
 
