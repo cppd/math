@@ -63,5 +63,16 @@ T unbound_angle(const std::optional<T> previous, const T next)
                 return next - TWO_PI * std::round((next - *previous) / TWO_PI);
         }
         return next;
-};
+}
+
+template <typename T>
+T normalize_angle_difference(T difference)
+{
+        difference = std::fmod(difference, 2 * PI<T>);
+        if (std::abs(difference) <= PI<T>)
+        {
+                return difference;
+        }
+        return (difference > 0) ? (difference - 2 * PI<T>) : (difference + 2 * PI<T>);
+}
 }

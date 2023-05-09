@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "simulator.h"
+#include "utility.h"
 
 #include "view/write.h"
 
@@ -128,17 +129,6 @@ Track<N, T> generate_track()
         }
 
         return res;
-}
-
-template <typename T>
-T normalize_angle_difference(T difference)
-{
-        difference = std::fmod(difference, 2 * PI<T>);
-        if (std::abs(difference) <= PI<T>)
-        {
-                return difference;
-        }
-        return (difference > 0) ? (difference - 2 * PI<T>) : (difference + 2 * PI<T>);
 }
 
 template <typename T>
@@ -817,7 +807,7 @@ void test_impl()
 
 void test()
 {
-        LOG("Test Filter 2D Extended");
+        LOG("Test Filter 2D");
         LOG("---");
         test_impl<float>();
         LOG("---");
@@ -825,9 +815,9 @@ void test()
         LOG("---");
         test_impl<long double>();
         LOG("---");
-        LOG("Test Filter 2D Extended passed");
+        LOG("Test Filter 2D passed");
 }
 
-TEST_SMALL("Filter 2D Extended", test)
+TEST_SMALL("Filter 2D", test)
 }
 }
