@@ -18,6 +18,7 @@ import ast
 import os
 import sys
 import tempfile
+from collections import namedtuple
 
 import plotly.graph_objects as go
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
@@ -25,17 +26,19 @@ from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
 
+Info = namedtuple("Info", "annotation data")
+
 
 def error(message):
     raise Exception(message)
 
 
-def create_figure(data, title):
-    assert data
+def create_figure(info, title):
+    assert info and isinstance(info, Info)
 
     figure = go.Figure()
 
-    for d, values in data:
+    for d, values in info.data:
         figure.add_trace(
             go.Scatter(
                 x=[p[0] for p in values],
@@ -43,23 +46,36 @@ def create_figure(data, title):
                 name=d["name"],
                 mode=d["mode"],
                 marker_size=d["marker_size"],
-                line=dict(color=d["line_color"], width=d["line_width"], dash=d["line_dash"]),
+                line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
             )
         )
 
     figure.update_xaxes(showgrid=True, visible=True)
     figure.update_yaxes(showgrid=True, visible=True, scaleanchor="x", scaleratio=1)
 
+    if info.annotation:
+        figure.add_annotation(
+            text=info.annotation,
+            align="left",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+            x=1.02,
+            y=0.01,
+            xanchor="left",
+            yanchor="bottom",
+        )
+
     title = None
     figure.update_layout(title=title)
     return figure
 
 
-def show_data(data, file_name):
-    if not data:
-        error("No data to show")
+def show_data(info, file_name):
+    if not info:
+        error("No info to show")
 
-    figure = create_figure(data, title=os.path.basename(file_name))
+    figure = create_figure(info, title=os.path.basename(file_name))
 
     file = tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX)
     figure.write_html(file.name, auto_open=True)
@@ -72,6 +88,9 @@ def parse_data(text):
         error("Malformed input:\n{0}".format(text))
 
     if isinstance(data, dict):
+        return data
+
+    if isinstance(data, str):
         return data
 
     if not isinstance(data, tuple):
@@ -88,6 +107,7 @@ def read_file(file_name):
     res = []
     dimension = None
     values = None
+    annotation = None
 
     with open(file_name, encoding="utf-8") as file:
         for line in file:
@@ -96,6 +116,13 @@ def read_file(file_name):
                 continue
 
             data = parse_data(line)
+
+            if isinstance(data, str):
+                if annotation is not None:
+                    error("Too many annotations")
+                annotation = data
+                continue
+
             if isinstance(data, dict):
                 res.append((data, []))
                 values = res[-1][1]
@@ -118,7 +145,7 @@ def read_file(file_name):
     if dimension is None:
         error("No dimension")
 
-    return res
+    return Info(annotation, res)
 
 
 def use_dialog(args):
