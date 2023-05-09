@@ -42,18 +42,19 @@ struct Config final
         static constexpr std::size_t POSITION_INTERVAL = 10;
         static constexpr T POSITION_DT = POSITION_INTERVAL * DT;
 
-        static constexpr T TRACK_VELOCITY_MEAN = 10;
+        static constexpr T TRACK_VELOCITY_MEAN = 20;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
         static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
-        static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(1.0);
+        static constexpr T MEASUREMENT_POSITION_SPEED_VARIANCE = square(0.2);
 
         static constexpr T POSITION_FILTER_VARIANCE = square(0.2);
 
         static constexpr T POSITION_VARIANCE = square(0.2);
         static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
 };
 
 template <std::size_t N, typename T>
@@ -225,21 +226,22 @@ public:
 template <typename T>
 class ProcessFilter final
 {
-        static constexpr std::size_t N = 8;
+        static constexpr std::size_t N = 9;
 
         static constexpr Matrix<N, N, T> F = []()
         {
                 const T dt = Config<T>::DT;
                 const T dt_2 = square(dt) / 2;
                 return Matrix<N, N, T>{
-                        {1, dt, dt_2, 0,  0,    0, 0,  0},
-                        {0,  1,   dt, 0,  0,    0, 0,  0},
-                        {0,  0,    1, 0,  0,    0, 0,  0},
-                        {0,  0,    0, 1, dt, dt_2, 0,  0},
-                        {0,  0,    0, 0,  1,   dt, 0,  0},
-                        {0,  0,    0, 0,  0,    1, 0,  0},
-                        {0,  0,    0, 0,  0,    0, 1, dt},
-                        {0,  0,    0, 0,  0,    0, 0,  1}
+                        {1, dt, dt_2, 0,  0,    0, 0,  0, 0},
+                        {0,  1,   dt, 0,  0,    0, 0,  0, 0},
+                        {0,  0,    1, 0,  0,    0, 0,  0, 0},
+                        {0,  0,    0, 1, dt, dt_2, 0,  0, 0},
+                        {0,  0,    0, 0,  1,   dt, 0,  0, 0},
+                        {0,  0,    0, 0,  0,    1, 0,  0, 0},
+                        {0,  0,    0, 0,  0,    0, 1, dt, 0},
+                        {0,  0,    0, 0,  0,    0, 0,  1, 0},
+                        {0,  0,    0, 0,  0,    0, 0,  0, 1}
                 };
         }();
 
@@ -249,31 +251,34 @@ class ProcessFilter final
         {
                 const T dt = Config<T>::DT;
                 const T dt_2 = square(dt) / 2;
-                const Matrix<N, 3, T> noise_transition{
-                        {dt_2,    0,    0},
-                        {  dt,    0,    0},
-                        {   1,    0,    0},
-                        {   0, dt_2,    0},
-                        {   0,   dt,    0},
-                        {   0,    1,    0},
-                        {   0,    0, dt_2},
-                        {   0,    0,   dt}
+                const Matrix<N, 4, T> noise_transition{
+                        {dt_2,    0,    0, 0},
+                        {  dt,    0,    0, 0},
+                        {   1,    0,    0, 0},
+                        {   0, dt_2,    0, 0},
+                        {   0,   dt,    0, 0},
+                        {   0,    1,    0, 0},
+                        {   0,    0, dt_2, 0},
+                        {   0,    0,   dt, 0},
+                        {   0,    0,    0, 1}
                 };
 
                 const T p = Config<T>::POSITION_VARIANCE;
-                const T d = Config<T>::ANGLE_VARIANCE;
-                const Matrix<3, 3, T> process_covariance{
-                        {p, 0, 0},
-                        {0, p, 0},
-                        {0, 0, d}
+                const T a = Config<T>::ANGLE_VARIANCE;
+                const T a_r = Config<T>::ANGLE_R_VARIANCE;
+                const Matrix<4, 4, T> process_covariance{
+                        {p, 0, 0,   0},
+                        {0, p, 0,   0},
+                        {0, 0, a,   0},
+                        {0, 0, 0, a_r}
                 };
 
                 return noise_transition * process_covariance * noise_transition.transposed();
         }();
 
         static constexpr Matrix<2, N, T> POSITION_H{
-                {1, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 1, 0, 0, 0, 0}
+                {1, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 1, 0, 0, 0, 0, 0}
         };
         static constexpr Matrix<N, 2, T> POSITION_H_T = POSITION_H.transposed();
         static constexpr Matrix<2, 2, T> POSITION_R = []
@@ -325,8 +330,8 @@ class ProcessFilter final
         {
                 // x = px
                 // y = py
-                // dx = vx*cos(angle) - vy*sin(angle)
-                // dy = vx*sin(angle) + vy*cos(angle)
+                // dx = vx*cos(angle + angle_r) - vy*sin(angle + angle_r)
+                // dy = vx*sin(angle + angle_r) + vy*cos(angle + angle_r)
                 // ax = ax*cos(angle) - ay*sin(angle)
                 // ay = ax*sin(angle) + ay*cos(angle)
                 const T px = x[0];
@@ -336,17 +341,25 @@ class ProcessFilter final
                 const T vy = x[4];
                 const T ay = x[5];
                 const T angle = x[6];
+                const T angle_r = x[8];
+                const T cos_v = std::cos(angle + angle_r);
+                const T sin_v = std::sin(angle + angle_r);
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
-                return {px, py, vx * cos - vy * sin, vx * sin + vy * cos, ax * cos - ay * sin, ax * sin + ay * cos};
+                return {px,
+                        py,
+                        vx * cos_v - vy * sin_v,
+                        vx * sin_v + vy * cos_v,
+                        ax * cos - ay * sin,
+                        ax * sin + ay * cos};
         }
 
         static Matrix<6, N, T> position_velocity_acceleration_hj(const Vector<N, T>& x)
         {
                 // x = px
                 // y = py
-                // dx = vx*cos(angle) - vy*sin(angle)
-                // dy = vx*sin(angle) + vy*cos(angle)
+                // dx = vx*cos(angle + angle_r) - vy*sin(angle + angle_r)
+                // dy = vx*sin(angle + angle_r) + vy*cos(angle + angle_r)
                 // ax = ax*cos(angle) - ay*sin(angle)
                 // ay = ax*sin(angle) + ay*cos(angle)
                 // Jacobian
@@ -355,15 +368,22 @@ class ProcessFilter final
                 const T ax = x[2];
                 const T ay = x[5];
                 const T angle = x[6];
+                const T angle_r = x[8];
+                const T cos_v = std::cos(angle + angle_r);
+                const T sin_v = std::sin(angle + angle_r);
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
+                const T d_1 = -vx * sin_v - vy * cos_v;
+                const T d_2 = vx * cos_v - vy * sin_v;
+                const T a_1 = -ax * sin - ay * cos;
+                const T a_2 = ax * cos - ay * sin;
                 return {
-                        {1,   0,   0, 0,    0,    0,                    0, 0},
-                        {0,   0,   0, 1,    0,    0,                    0, 0},
-                        {0, cos,   0, 0, -sin,    0, -vx * sin - vy * cos, 0},
-                        {0, sin,   0, 0,  cos,    0,  vx * cos - vy * sin, 0},
-                        {0,   0, cos, 0,    0, -sin, -ax * sin - ay * cos, 0},
-                        {0,   0, sin, 0,    0,  cos,  ax * cos - ay * sin, 0}
+                        {1,     0,   0, 0,      0,    0,   0, 0,   0},
+                        {0,     0,   0, 1,      0,    0,   0, 0,   0},
+                        {0, cos_v,   0, 0, -sin_v,    0, d_1, 0, d_1},
+                        {0, sin_v,   0, 0,  cos_v,    0, d_2, 0, d_2},
+                        {0,     0, cos, 0,      0, -sin, a_1, 0,   0},
+                        {0,     0, sin, 0,      0,  cos, a_2, 0,   0}
                 };
         }
 
@@ -399,8 +419,8 @@ class ProcessFilter final
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
                 return {
-                        {0, 0, cos, 0, 0, -sin, -ax * sin - ay * cos, 0},
-                        {0, 0, sin, 0, 0,  cos,  ax * cos - ay * sin, 0}
+                        {0, 0, cos, 0, 0, -sin, -ax * sin - ay * cos, 0, 0},
+                        {0, 0, sin, 0, 0,  cos,  ax * cos - ay * sin, 0, 0}
                 };
         }
 
@@ -440,8 +460,8 @@ class ProcessFilter final
         {
                 // px = px
                 // py = py
-                // dx = (vx*cos(angle) - vy*sin(angle)) / sqrt(vx*vx + vy*vy);
-                // dy = (vx*sin(angle) + vy*cos(angle)) / sqrt(vx*vx + vy*vy);
+                // dx = (vx*cos(angle + angle_r) - vy*sin(angle + angle_r)) / sqrt(vx*vx + vy*vy);
+                // dy = (vx*sin(angle + angle_r) + vy*cos(angle + angle_r)) / sqrt(vx*vx + vy*vy);
                 // ax = (ax*cos(angle) - ay*sin(angle))
                 // ay = (ax*sin(angle) + ay*cos(angle))
                 const T px = x[0];
@@ -451,13 +471,16 @@ class ProcessFilter final
                 const T vy = x[4];
                 const T ay = x[5];
                 const T angle = x[6];
+                const T angle_r = x[8];
                 const T speed = std::sqrt(square(vx) + square(vy));
+                const T cos_v = std::cos(angle + angle_r);
+                const T sin_v = std::sin(angle + angle_r);
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
                 return {px,
                         py,
-                        (vx * cos - vy * sin) / speed,
-                        (vx * sin + vy * cos) / speed,
+                        (vx * cos_v - vy * sin_v) / speed,
+                        (vx * sin_v + vy * cos_v) / speed,
                         ax * cos - ay * sin,
                         ax * sin + ay * cos};
         }
@@ -466,38 +489,41 @@ class ProcessFilter final
         {
                 // px = px
                 // py = py
-                // dx = (vx*cos(angle) - vy*sin(angle)) / sqrt(vx*vx + vy*vy);
-                // dy = (vx*sin(angle) + vy*cos(angle)) / sqrt(vx*vx + vy*vy);
+                // dx = (vx*cos(angle + angle_r) - vy*sin(angle + angle_r)) / sqrt(vx*vx + vy*vy);
+                // dy = (vx*sin(angle + angle_r) + vy*cos(angle + angle_r)) / sqrt(vx*vx + vy*vy);
                 // ax = (ax*cos(angle) - ay*sin(angle))
                 // ay = (ax*sin(angle) + ay*cos(angle))
                 // Jacobian
                 // mPx=Px;
                 // mPy=Py;
-                // mDx=(Vx*Cos[Angle]-Vy*Sin[Angle])/Sqrt[Vx*Vx+Vy*Vy];
-                // mDy=(Vx*Sin[Angle]+Vy*Cos[Angle])/Sqrt[Vx*Vx+Vy*Vy];
+                // mDx=(Vx*Cos[Angle+AngleR]-Vy*Sin[Angle+AngleR])/Sqrt[Vx*Vx+Vy*Vy];
+                // mDy=(Vx*Sin[Angle+AngleR]+Vy*Cos[Angle+AngleR])/Sqrt[Vx*Vx+Vy*Vy];
                 // mAx=(Ax*Cos[Angle]-Ay*Sin[Angle]);
                 // mAy=(Ax*Sin[Angle]+Ay*Cos[Angle]);
-                // Simplify[D[{mPx,mPy,mDx,mDy,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Angle,AngleV}}]]
+                // Simplify[D[{mPx,mPy,mDx,mDy,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Angle,AngleV,AngleR}}]]
                 const T vx = x[1];
                 const T vy = x[4];
                 const T ax = x[2];
                 const T ay = x[5];
                 const T angle = x[6];
+                const T angle_r = x[8];
                 const T l = std::sqrt(square(vx) + square(vy));
                 const T l_3 = power<3>(l);
+                const T cos_v = std::cos(angle + angle_r);
+                const T sin_v = std::sin(angle + angle_r);
                 const T cos = std::cos(angle);
                 const T sin = std::sin(angle);
-                const T d_1 = vy * cos + vx * sin;
-                const T d_2 = vx * cos - vy * sin;
+                const T d_1 = vy * cos_v + vx * sin_v;
+                const T d_2 = vx * cos_v - vy * sin_v;
                 const T a_1 = -ax * sin - ay * cos;
                 const T a_2 = ax * cos - ay * sin;
                 return {
-                        {1,               0,   0, 0,               0,    0,        0, 0},
-                        {0,               0,   0, 1,               0,    0,        0, 0},
-                        {0,  vy * d_1 / l_3,   0, 0, -vx * d_1 / l_3,    0, -d_1 / l, 0},
-                        {0, -vy * d_2 / l_3,   0, 0,  vx * d_2 / l_3,    0,  d_2 / l, 0},
-                        {0,               0, cos, 0,               0, -sin,      a_1, 0},
-                        {0,               0, sin, 0,               0,  cos,      a_2, 0}
+                        {1,               0,   0, 0,               0,    0,        0, 0,        0},
+                        {0,               0,   0, 1,               0,    0,        0, 0,        0},
+                        {0,  vy * d_1 / l_3,   0, 0, -vx * d_1 / l_3,    0, -d_1 / l, 0, -d_1 / l},
+                        {0, -vy * d_2 / l_3,   0, 0,  vx * d_2 / l_3,    0,  d_2 / l, 0,  d_2 / l},
+                        {0,               0, cos, 0,               0, -sin,      a_1, 0,        0},
+                        {0,               0, sin, 0,               0,  cos,      a_2, 0,        0}
                 };
         }
 
@@ -583,6 +609,16 @@ public:
         {
                 return filter_.p()(6, 6);
         }
+
+        [[nodiscard]] T angle_r() const
+        {
+                return filter_.x()[8];
+        }
+
+        [[nodiscard]] T angle_r_p() const
+        {
+                return filter_.p()(8, 8);
+        }
 };
 
 template <typename T>
@@ -640,20 +676,21 @@ void test_impl()
         const T measurement_angle =
                 std::atan2(track.process_measurements[i].direction[1], track.process_measurements[i].direction[0]);
         const T angle_difference = normalize_angle_difference(measurement_angle - angle.angle);
-        const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE;
+        const T angle_r_variance = square(degrees_to_radians(5.0));
+        const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE + angle_r_variance;
 
         LOG("estimated angle = " + to_string(radians_to_degrees(angle.angle))
             + "; measurement angle = " + to_string(radians_to_degrees(measurement_angle)) + "\n"
             + "angle difference = " + to_string(radians_to_degrees(angle_difference))
             + "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_variance))));
 
-        const Vector<8, T> init_x(
+        const Vector<9, T> init_x(
                 track.position_measurements.find(i)->second->position[0], 1.0, -1.0,
-                track.position_measurements.find(i)->second->position[1], -5, 0.5, angle_difference, 0);
-        const Matrix<8, 8, T> init_p = make_diagonal_matrix<8, T>(
+                track.position_measurements.find(i)->second->position[1], -5, 0.5, angle_difference, 0, 0);
+        const Matrix<9, 9, T> init_p = make_diagonal_matrix<9, T>(
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), angle_variance,
-                 square(degrees_to_radians(0.1))});
+                 square(degrees_to_radians(0.1)), angle_r_variance});
 
         ProcessFilter<T> process_filter(init_x, init_p);
 
@@ -666,6 +703,7 @@ void test_impl()
 
         NeesAverage<2, T> process_position_nees_average;
         NeesAverage<1, T> process_angle_nees_average;
+        NeesAverage<1, T> process_angle_r_nees_average;
 
         for (; i < track.positions.size(); ++i)
         {
@@ -702,7 +740,10 @@ void test_impl()
                                     + to_string(radians_to_degrees(normalize_angle_difference(process_filter.angle())))
                                     + "; speed = "
                                     + to_string(radians_to_degrees(
-                                            normalize_angle_difference(process_filter.angle_speed()))));
+                                            normalize_angle_difference(process_filter.angle_speed())))
+                                    + "; r = "
+                                    + to_string(
+                                            radians_to_degrees(normalize_angle_difference(process_filter.angle_r()))));
                         }
                         else
                         {
@@ -721,6 +762,8 @@ void test_impl()
                 process_position_nees_average.add(
                         track.positions[i], process_filter.position(), process_filter.position_p());
                 process_angle_nees_average.add(track.angles[i], process_filter.angle(), process_filter.angle_p());
+                process_angle_r_nees_average.add(
+                        track.angles_r[i], process_filter.angle_r(), process_filter.angle_r_p());
         }
 
         view::write_to_file(track, result_position, result_speed, result_process);
@@ -728,6 +771,7 @@ void test_impl()
         LOG("Position Filter: " + position_nees_average.check_string());
         LOG("Process Filter: " + process_position_nees_average.check_string());
         LOG("Angle Filter: " + process_angle_nees_average.check_string());
+        LOG("Angle R Filter: " + process_angle_r_nees_average.check_string());
 }
 
 void test()

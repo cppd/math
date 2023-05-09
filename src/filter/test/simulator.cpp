@@ -116,9 +116,15 @@ public:
                 return angle_;
         }
 
+        [[nodiscard]] T angle_r() const
+        {
+                return degrees_to_radians(5.0);
+        }
+
         [[nodiscard]] ProcessMeasurement<N, T> process_measurement()
         {
-                const Vector<N, T> direction = rotate(velocity_, angle_ + measurements_velocity_direction_nd_(engine_));
+                const Vector<N, T> direction =
+                        rotate(velocity_, angle_r() + angle_ + measurements_velocity_direction_nd_(engine_));
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
                         .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
@@ -156,6 +162,7 @@ Track<N, T> generate_track(
                 res.positions.push_back(simulator.position());
                 res.speed.push_back(simulator.speed());
                 res.angles.push_back(simulator.angle());
+                res.angles_r.push_back(simulator.angle_r());
 
                 res.process_measurements.push_back(simulator.process_measurement());
 
