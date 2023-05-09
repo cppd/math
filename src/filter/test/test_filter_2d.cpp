@@ -47,6 +47,9 @@ struct Config final
         static constexpr T TRACK_VELOCITY_MEAN = 10;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
+        static constexpr T DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
+        static constexpr T DIRECTION_ANGLE = degrees_to_radians(10.0);
+
         static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
@@ -70,7 +73,8 @@ Track<N, T> generate_track()
 
         Track res = generate_track<N, T>(
                 COUNT, Config<T>::DT, Config<T>::TRACK_VELOCITY_MEAN, Config<T>::TRACK_VELOCITY_VARIANCE,
-                measurement_variance, Config<T>::POSITION_INTERVAL);
+                Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE, measurement_variance,
+                Config<T>::POSITION_INTERVAL);
 
         for (auto& [i, p] : res.position_measurements)
         {

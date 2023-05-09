@@ -35,6 +35,8 @@ class Simulator final
 {
         const T dt_;
         const T track_velocity_mean_;
+        const T direction_bias_drift_;
+        const T direction_angle_;
 
         PCG engine_;
 
@@ -74,9 +76,13 @@ public:
                 const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> track_velocity_mean,
                 const std::type_identity_t<T> track_velocity_variance,
+                const T direction_bias_drift,
+                const T direction_angle,
                 const TrackMeasurementVariance<T>& track_measurement_variance)
                 : dt_(dt),
                   track_velocity_mean_(track_velocity_mean),
+                  direction_bias_drift_(direction_bias_drift / (T{60} * T{60}) * dt_),
+                  direction_angle_(direction_angle),
                   track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
                   measurements_velocity_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
@@ -98,7 +104,7 @@ public:
                 next_velocity_ = velocity(index_ + 1) + vector(track_velocity_nd_);
                 acceleration_ = (next_velocity_ - velocity_) / dt_;
 
-                angle_ = -T{0.5} - index_ / T{600} * degrees_to_radians(T{6});
+                angle_ = -T{0.5} - index_ * direction_bias_drift_;
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
@@ -118,13 +124,13 @@ public:
 
         [[nodiscard]] T angle_r() const
         {
-                return degrees_to_radians(5.0);
+                return direction_angle_;
         }
 
         [[nodiscard]] ProcessMeasurement<N, T> process_measurement()
         {
                 const Vector<N, T> direction =
-                        rotate(velocity_, angle_r() + angle_ + measurements_velocity_direction_nd_(engine_));
+                        rotate(velocity_, direction_angle_ + angle_ + measurements_velocity_direction_nd_(engine_));
                 return ProcessMeasurement<N, T>{
                         .direction = direction.normalized(),
                         .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
@@ -144,10 +150,14 @@ Track<N, T> generate_track(
         const T dt,
         const T track_velocity_mean,
         const T track_velocity_variance,
+        const T direction_bias_drift,
+        const T direction_angle,
         const TrackMeasurementVariance<T>& track_measurement_variance,
         const std::size_t position_interval)
 {
-        Simulator<N, T> simulator(dt, track_velocity_mean, track_velocity_variance, track_measurement_variance);
+        Simulator<N, T> simulator(
+                dt, track_velocity_mean, track_velocity_variance, direction_bias_drift, direction_angle,
+                track_measurement_variance);
 
         Track<N, T> res;
         res.positions.reserve(count);
@@ -175,8 +185,9 @@ Track<N, T> generate_track(
         return res;
 }
 
-#define TEMPLATE(T) \
-        template Track<2, T> generate_track(std::size_t, T, T, T, const TrackMeasurementVariance<T>&, std::size_t);
+#define TEMPLATE(T)                          \
+        template Track<2, T> generate_track( \
+                std::size_t, T, T, T, T, T, const TrackMeasurementVariance<T>&, std::size_t);
 
 TEMPLATE(float)
 TEMPLATE(double)

@@ -65,6 +65,8 @@ Track<N, T> generate_track(
         T dt,
         T track_velocity_mean,
         T track_velocity_variance,
+        T direction_bias_drift,
+        T direction_angle,
         const TrackMeasurementVariance<T>& track_measurement_variance,
         std::size_t position_interval);
 }

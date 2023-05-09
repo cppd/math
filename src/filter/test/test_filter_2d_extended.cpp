@@ -46,6 +46,9 @@ struct Config final
         static constexpr T TRACK_VELOCITY_MEAN = 20;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
+        static constexpr T DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
+        static constexpr T DIRECTION_ANGLE = degrees_to_radians(10.0);
+
         static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
@@ -61,9 +64,8 @@ struct Config final
 template <typename T>
 std::string make_annotation()
 {
-        const auto* const sigma = reinterpret_cast<const char*>(u8"σ");
-        const auto* const degree = reinterpret_cast<const char*>(u8"°");
-
+        constexpr std::string_view DEGREE = "&#x00b0;";
+        constexpr std::string_view SIGMA = "&#x03c3;";
         std::ostringstream oss;
         oss << "<b>update</b>";
         oss << "<br>";
@@ -76,13 +78,20 @@ std::string make_annotation()
         oss << "acceleration: " << 1 / Config<T>::DT << " Hz";
         oss << "<br>";
         oss << "<br>";
-        oss << "<b>" << sigma << "</b>";
+        oss << "<b>bias</b>";
+        oss << "<br>";
+        oss << "direction drift: " << radians_to_degrees(Config<T>::DIRECTION_BIAS_DRIFT) << " " << DEGREE << "/h";
+        oss << "<br>";
+        oss << "direction angle: " << radians_to_degrees(Config<T>::DIRECTION_ANGLE) << DEGREE;
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>" << SIGMA << "</b>";
         oss << "<br>";
         oss << "position: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_VARIANCE) << " m";
         oss << "<br>";
         oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_SPEED_VARIANCE) << " m/s";
         oss << "<br>";
-        oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE)) << degree;
+        oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE)) << DEGREE;
         oss << "<br>";
         oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_ACCELERATION_VARIANCE) << " m/s<sup>2</sup>";
         return oss.str();
@@ -101,7 +110,8 @@ Track<N, T> generate_track()
 
         Track res = generate_track<N, T>(
                 COUNT, Config<T>::DT, Config<T>::TRACK_VELOCITY_MEAN, Config<T>::TRACK_VELOCITY_VARIANCE,
-                measurement_variance, Config<T>::POSITION_INTERVAL);
+                Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE, measurement_variance,
+                Config<T>::POSITION_INTERVAL);
 
         for (auto& [i, p] : res.position_measurements)
         {
