@@ -160,19 +160,19 @@ Track<N, T> generate_track(
                 track_measurement_variance);
 
         Track<N, T> res;
-        res.positions.reserve(count);
-        res.speed.reserve(count);
-        res.angles.reserve(count);
+        res.points.reserve(count);
+        res.process_measurements.reserve(count);
         res.position_measurements.reserve(count);
 
         for (std::size_t i = 0; i < count; ++i)
         {
                 simulator.move();
 
-                res.positions.push_back(simulator.position());
-                res.speed.push_back(simulator.speed());
-                res.angles.push_back(simulator.angle());
-                res.angles_r.push_back(simulator.angle_r());
+                res.points.push_back(
+                        {.position = simulator.position(),
+                         .speed = simulator.speed(),
+                         .angle = simulator.angle(),
+                         .angle_r = simulator.angle_r()});
 
                 res.process_measurements.push_back(simulator.process_measurement());
 

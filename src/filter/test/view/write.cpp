@@ -317,7 +317,7 @@ void write_to_file(
         static constexpr T OFFSET = 500;
 
         write_data(
-                annotation, add_offset(track.positions, OFFSET), track_speed(track), angle_measurements(track),
+                annotation, add_offset(track_position(track), OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track), OFFSET), speed_measurements(track),
                 add_offset(position, OFFSET), filter_speed(track, speed), add_offset(process, OFFSET));

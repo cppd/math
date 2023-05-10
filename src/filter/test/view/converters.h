@@ -64,13 +64,25 @@ std::vector<Vector<2, T>> add_offset(const std::vector<Vector<2, T>>& data, cons
 }
 
 template <typename T>
+std::vector<Vector<2, T>> track_position(const Track<2, T>& track)
+{
+        std::vector<Vector<2, T>> res;
+        res.reserve(track.points.size());
+        for (std::size_t i = 0; i < track.points.size(); ++i)
+        {
+                res.emplace_back(track.points[i].position);
+        }
+        return res;
+}
+
+template <typename T>
 std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
 {
         std::vector<Vector<2, T>> res;
-        res.reserve(track.positions.size());
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        res.reserve(track.points.size());
+        for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                res.emplace_back(track.positions[i][0], track.speed[i]);
+                res.emplace_back(track.points[i].position[0], track.points[i].speed);
         }
         return res;
 }
@@ -103,7 +115,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
         {
                 if (v && v->speed)
                 {
-                        res.push_back(Vector<2, T>(track.positions[i][0], *v->speed));
+                        res.push_back(Vector<2, T>(track.points[i].position[0], *v->speed));
                 }
                 else
                 {
@@ -117,16 +129,16 @@ template <typename T>
 std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 {
         std::vector<Vector<2, T>> res;
-        res.reserve(track.positions.size());
+        res.reserve(track.points.size());
         std::optional<T> previous_angle;
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        for (std::size_t i = 0; i < track.points.size(); ++i)
         {
                 const T vx = track.process_measurements[i].direction[0];
                 const T vy = track.process_measurements[i].direction[1];
                 const T angle = std::atan2(vy, vx);
                 const T unbounded_angle = unbound_angle(previous_angle, angle);
                 previous_angle = unbounded_angle;
-                res.emplace_back(track.positions[i][0], radians_to_degrees(unbounded_angle));
+                res.emplace_back(track.points[i].position[0], radians_to_degrees(unbounded_angle));
         }
         return res;
 }
@@ -136,10 +148,10 @@ std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, co
 {
         ASSERT(index < 2);
         std::vector<Vector<2, T>> res;
-        res.reserve(track.positions.size());
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        res.reserve(track.points.size());
+        for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                res.emplace_back(track.positions[i][0], track.process_measurements[i].acceleration[index]);
+                res.emplace_back(track.points[i].position[0], track.process_measurements[i].acceleration[index]);
         }
         return res;
 }
@@ -149,14 +161,14 @@ std::vector<std::optional<Vector<2, T>>> filter_speed(
         const Track<2, T>& track,
         const std::vector<std::optional<T>>& speed)
 {
-        ASSERT(track.positions.size() == speed.size());
+        ASSERT(track.points.size() == speed.size());
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.positions.size());
-        for (std::size_t i = 0; i < track.positions.size(); ++i)
+        res.reserve(track.points.size());
+        for (std::size_t i = 0; i < track.points.size(); ++i)
         {
                 if (speed[i])
                 {
-                        res.push_back(Vector<2, T>(track.positions[i][0], *speed[i]));
+                        res.push_back(Vector<2, T>(track.points[i].position[0], *speed[i]));
                 }
                 else
                 {

@@ -670,13 +670,13 @@ void test_impl()
         PositionFilter<T> position_filter(position_init_x, position_init_p);
 
         std::vector<std::optional<Vector<2, T>>> result_position;
-        result_position.reserve(track.positions.size());
+        result_position.reserve(track.points.size());
 
         NeesAverage<2, T> position_nees_average;
 
         std::size_t i = 0;
 
-        for (; i < track.positions.size(); ++i)
+        for (; i < track.points.size(); ++i)
         {
                 if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
                 {
@@ -688,7 +688,8 @@ void test_impl()
 
                                 result_position.push_back(position_filter.position());
                                 position_nees_average.add(
-                                        track.positions[i], position_filter.position(), position_filter.position_p());
+                                        track.points[i].position, position_filter.position(),
+                                        position_filter.position_p());
 
                                 if (i >= 300)
                                 {
@@ -726,17 +727,17 @@ void test_impl()
         ProcessFilter<T> process_filter(init_x, init_p);
 
         std::vector<Vector<2, T>> result_process;
-        result_process.reserve(track.positions.size());
+        result_process.reserve(track.points.size());
 
         std::vector<std::optional<T>> result_speed;
-        result_speed.reserve(track.positions.size());
+        result_speed.reserve(track.points.size());
         result_speed.resize(i);
 
         NeesAverage<2, T> process_position_nees_average;
         NeesAverage<1, T> process_angle_nees_average;
         NeesAverage<1, T> process_angle_r_nees_average;
 
-        for (; i < track.positions.size(); ++i)
+        for (; i < track.points.size(); ++i)
         {
                 process_filter.predict();
 
@@ -750,7 +751,8 @@ void test_impl()
 
                                 result_position.push_back(position_filter.position());
                                 position_nees_average.add(
-                                        track.positions[i], position_filter.position(), position_filter.position_p());
+                                        track.points[i].position, position_filter.position(),
+                                        position_filter.position_p());
 
                                 if (measurement->speed)
                                 {
@@ -766,7 +768,7 @@ void test_impl()
                                 }
 
                                 LOG(to_string(i) + ": track = "
-                                    + to_string(radians_to_degrees(normalize_angle_difference(track.angles[i])))
+                                    + to_string(radians_to_degrees(normalize_angle_difference(track.points[i].angle)))
                                     + "; process = "
                                     + to_string(radians_to_degrees(normalize_angle_difference(process_filter.angle())))
                                     + "; speed = "
@@ -791,10 +793,10 @@ void test_impl()
                 result_speed.push_back(process_filter.speed());
 
                 process_position_nees_average.add(
-                        track.positions[i], process_filter.position(), process_filter.position_p());
-                process_angle_nees_average.add(track.angles[i], process_filter.angle(), process_filter.angle_p());
+                        track.points[i].position, process_filter.position(), process_filter.position_p());
+                process_angle_nees_average.add(track.points[i].angle, process_filter.angle(), process_filter.angle_p());
                 process_angle_r_nees_average.add(
-                        track.angles_r[i], process_filter.angle_r(), process_filter.angle_r_p());
+                        track.points[i].angle_r, process_filter.angle_r(), process_filter.angle_r_p());
         }
 
         view::write_to_file(make_annotation<T>(), track, result_position, result_speed, result_process);

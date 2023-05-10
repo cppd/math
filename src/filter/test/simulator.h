@@ -26,6 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
+struct SimulatorPoint final
+{
+        Vector<N, T> position;
+        T speed;
+        T angle;
+        T angle_r;
+};
+
+template <std::size_t N, typename T>
 struct ProcessMeasurement final
 {
         Vector<N, T> direction;
@@ -42,10 +51,7 @@ struct PositionMeasurement final
 template <std::size_t N, typename T>
 struct Track final
 {
-        std::vector<Vector<N, T>> positions;
-        std::vector<T> speed;
-        std::vector<T> angles;
-        std::vector<T> angles_r;
+        std::vector<SimulatorPoint<N, T>> points;
         std::vector<ProcessMeasurement<N, T>> process_measurements;
         std::unordered_map<std::size_t, std::optional<PositionMeasurement<N, T>>> position_measurements;
 };
