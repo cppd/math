@@ -162,7 +162,7 @@ Track<N, T> generate_track(
         Track<N, T> res;
         res.points.reserve(count);
         res.process_measurements.reserve(count);
-        res.position_measurements.reserve(count);
+        res.position_measurements.reserve(count / position_interval);
 
         for (std::size_t i = 0; i < count; ++i)
         {
@@ -178,7 +178,7 @@ Track<N, T> generate_track(
 
                 if ((i % position_interval) == 0)
                 {
-                        res.position_measurements[i] = simulator.position_measurement();
+                        res.position_measurements.try_emplace(i, simulator.position_measurement());
                 }
         }
 

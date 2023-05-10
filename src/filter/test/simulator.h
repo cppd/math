@@ -53,7 +53,7 @@ struct Track final
 {
         std::vector<SimulatorPoint<N, T>> points;
         std::vector<ProcessMeasurement<N, T>> process_measurements;
-        std::unordered_map<std::size_t, std::optional<PositionMeasurement<N, T>>> position_measurements;
+        std::unordered_map<std::size_t, PositionMeasurement<N, T>> position_measurements;
 };
 
 template <typename T>

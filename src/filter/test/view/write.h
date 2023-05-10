@@ -31,6 +31,7 @@ template <std::size_t N, typename T>
 void write_to_file(
         std::string_view annotation,
         const Track<N, T>& track,
+        std::size_t track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& position,
         const std::vector<std::optional<T>>& speed,
         const std::vector<Vector<N, T>>& process);

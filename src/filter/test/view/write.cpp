@@ -310,6 +310,7 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
+        const std::size_t track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& position,
         const std::vector<std::optional<T>>& speed,
         const std::vector<Vector<N, T>>& process)
@@ -319,13 +320,14 @@ void write_to_file(
         write_data(
                 annotation, add_offset(track_position(track), OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
-                add_offset(position_measurements(track), OFFSET), speed_measurements(track),
-                add_offset(position, OFFSET), filter_speed(track, speed), add_offset(process, OFFSET));
+                add_offset(position_measurements(track, track_position_interval), OFFSET),
+                position_speed_measurements(track, track_position_interval), add_offset(position, OFFSET),
+                filter_speed(track, speed), add_offset(process, OFFSET));
 }
 
-#define TEMPLATE(T)                                                                                    \
-        template void write_to_file(                                                                   \
-                std::string_view, const Track<2, T>&, const std::vector<std::optional<Vector<2, T>>>&, \
+#define TEMPLATE(T)                                                                                                 \
+        template void write_to_file(                                                                                \
+                std::string_view, const Track<2, T>&, std::size_t, const std::vector<std::optional<Vector<2, T>>>&, \
                 const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)

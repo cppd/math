@@ -88,38 +88,43 @@ std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>& track)
+std::vector<std::optional<Vector<2, T>>> position_measurements(
+        const Track<2, T>& track,
+        const std::size_t position_interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
-        for (const auto& [_, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
+        std::optional<std::size_t> last_i;
+        for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
         {
-                if (v)
-                {
-                        res.push_back(v->position);
-                }
-                else
+                if (last_i && i > *last_i + position_interval)
                 {
                         res.emplace_back();
                 }
+                res.push_back(v.position);
+                last_i = i;
         }
         return res;
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& track)
+std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
+        const Track<2, T>& track,
+        const std::size_t position_interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
+        std::optional<std::size_t> last_i;
         for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
         {
-                if (v && v->speed)
+                if (v.speed)
                 {
-                        res.push_back(Vector<2, T>(track.points[i].position[0], *v->speed));
-                }
-                else
-                {
-                        res.emplace_back();
+                        if (last_i && i > *last_i + position_interval)
+                        {
+                                res.emplace_back();
+                        }
+                        res.push_back(Vector<2, T>(track.points[i].position[0], *v.speed));
+                        last_i = i;
                 }
         }
         return res;
