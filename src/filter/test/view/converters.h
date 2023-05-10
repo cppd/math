@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
 
-#include <map>
 #include <optional>
 #include <vector>
 
@@ -94,15 +93,16 @@ std::vector<std::optional<Vector<2, T>>> position_measurements(
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
-        std::optional<std::size_t> last_i;
-        for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
+        std::optional<std::size_t> last_index;
+        for (const PositionMeasurement<2, T>& m : track.position_measurements)
         {
-                if (last_i && i > *last_i + position_interval)
+                ASSERT(!last_index || *last_index < m.index);
+                if (last_index && m.index > *last_index + position_interval)
                 {
                         res.emplace_back();
                 }
-                res.push_back(v.position);
-                last_i = i;
+                res.push_back(m.position);
+                last_index = m.index;
         }
         return res;
 }
@@ -114,18 +114,20 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
-        std::optional<std::size_t> last_i;
-        for (const auto& [i, v] : std::map{track.position_measurements.cbegin(), track.position_measurements.cend()})
+        std::optional<std::size_t> last_index;
+        for (const PositionMeasurement<2, T>& m : track.position_measurements)
         {
-                if (v.speed)
+                ASSERT(!last_index || *last_index < m.index);
+                if (!m.speed)
                 {
-                        if (last_i && i > *last_i + position_interval)
-                        {
-                                res.emplace_back();
-                        }
-                        res.push_back(Vector<2, T>(track.points[i].position[0], *v.speed));
-                        last_i = i;
+                        continue;
                 }
+                if (last_index && m.index > *last_index + position_interval)
+                {
+                        res.emplace_back();
+                }
+                res.push_back(Vector<2, T>(track.points[m.index].position[0], *m.speed));
+                last_index = m.index;
         }
         return res;
 }

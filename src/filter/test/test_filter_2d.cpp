@@ -114,23 +114,30 @@ Track<N, T> generate_track()
                 Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE, measurement_variance,
                 Config<T>::POSITION_INTERVAL);
 
-        auto iter = res.position_measurements.begin();
-        while (iter != res.position_measurements.end())
+        std::vector<PositionMeasurement<N, T>> measurements;
+        measurements.reserve(res.position_measurements.size());
+        std::optional<std::size_t> last_index;
+
+        for (PositionMeasurement<N, T> m : res.position_measurements)
         {
-                const auto i = iter->first;
-                ASSERT(i >= 0 && i < COUNT);
-                const auto n = std::llround(i / T{300});
+                ASSERT(m.index >= 0 && m.index < COUNT);
+                ASSERT(!last_index || *last_index < m.index);
+                last_index = m.index;
+
+                const auto n = std::llround(m.index / T{300});
                 if ((n > 3) && ((n % 5) == 0))
                 {
-                        iter = res.position_measurements.erase(iter);
                         continue;
                 }
-                if (std::llround(i / T{100}) % 5 == 0)
+                if (std::llround(m.index / T{100}) % 5 == 0)
                 {
-                        iter->second.speed.reset();
+                        m.speed.reset();
                 }
-                ++iter;
+
+                measurements.push_back(m);
         }
+
+        res.position_measurements = measurements;
 
         return res;
 }
@@ -660,11 +667,11 @@ void test_impl()
 {
         const Track track = generate_track<2, T>();
 
-        ASSERT(track.position_measurements.contains(0));
+        ASSERT(!track.position_measurements.empty() && track.position_measurements[0].index == 0);
 
         const Vector<6, T> position_init_x(
-                track.position_measurements.find(0)->second.position[0], 1.0, -1.0,
-                track.position_measurements.find(0)->second.position[1], -5, 0.5);
+                track.position_measurements[0].position[0], 1.0, -1.0, track.position_measurements[0].position[1], -5,
+                0.5);
 
         const Matrix<6, 6, T> position_init_p = make_diagonal_matrix<6, T>(
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
@@ -677,47 +684,48 @@ void test_impl()
 
         NeesAverage<2, T> position_nees_average;
 
-        std::size_t i = 0;
         std::optional<std::size_t> last_position_i;
+        auto position_iter = track.position_measurements.cbegin();
 
-        for (; i < track.points.size(); ++i)
+        for (; position_iter != track.position_measurements.cend(); ++position_iter)
         {
-                if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
+                const PositionMeasurement<2, T>& m = *position_iter;
+
+                ASSERT(!last_position_i || last_position_i < m.index);
+
+                if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
                 {
-                        if (last_position_i && i > *last_position_i + Config<T>::POSITION_INTERVAL)
-                        {
-                                result_position.emplace_back();
-                        }
+                        result_position.emplace_back();
+                }
 
-                        if (!last_position_i)
-                        {
-                                last_position_i = i;
-                        }
+                if (!last_position_i)
+                {
+                        last_position_i = m.index;
+                }
 
-                        const auto& measurement = iter->second;
+                position_filter.predict((m.index - *last_position_i) * Config<T>::DT);
+                position_filter.update(m.position);
+                last_position_i = m.index;
 
-                        position_filter.predict((i - *last_position_i) * Config<T>::DT);
-                        position_filter.update(measurement.position);
-                        last_position_i = i;
+                result_position.push_back(position_filter.position());
 
-                        result_position.push_back(position_filter.position());
+                position_nees_average.add(
+                        track.points[m.index].position, position_filter.position(), position_filter.position_p());
 
-                        position_nees_average.add(
-                                track.points[i].position, position_filter.position(), position_filter.position_p());
-
-                        if (i >= 300)
-                        {
-                                break;
-                        }
+                if (m.index >= 300)
+                {
+                        break;
                 }
         }
 
-        ASSERT(last_position_i);
+        ASSERT(last_position_i && position_iter != track.position_measurements.cend());
+        ASSERT(position_iter->index == *last_position_i);
 
         const Angle<T> angle = position_filter.velocity_angle();
 
-        const T measurement_angle =
-                std::atan2(track.process_measurements[i].direction[1], track.process_measurements[i].direction[0]);
+        const T measurement_angle = std::atan2(
+                track.process_measurements[*last_position_i].direction[1],
+                track.process_measurements[*last_position_i].direction[0]);
         const T angle_difference = normalize_angle_difference(measurement_angle - angle.angle);
         const T angle_r_variance = square(degrees_to_radians(5.0));
         const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE + angle_r_variance;
@@ -728,8 +736,7 @@ void test_impl()
             + "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_variance))));
 
         const Vector<9, T> init_x(
-                track.position_measurements.find(i)->second.position[0], 1.0, -1.0,
-                track.position_measurements.find(i)->second.position[1], -5, 0.5, angle_difference, 0, 0);
+                position_iter->position[0], 1.0, -1.0, position_iter->position[1], -5, 0.5, angle_difference, 0, 0);
         const Matrix<9, 9, T> init_p = make_diagonal_matrix<9, T>(
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), angle_variance,
@@ -742,38 +749,35 @@ void test_impl()
 
         std::vector<std::optional<T>> result_speed;
         result_speed.reserve(track.points.size());
-        result_speed.resize(i);
+        result_speed.resize(*last_position_i);
 
         NeesAverage<2, T> process_position_nees_average;
         NeesAverage<1, T> process_angle_nees_average;
         NeesAverage<1, T> process_angle_r_nees_average;
 
-        for (; i < track.points.size(); ++i)
+        ++position_iter;
+        ASSERT(position_iter->index > *last_position_i);
+
+        for (std::size_t i = *last_position_i; i < track.points.size(); ++i)
         {
                 process_filter.predict();
 
-                if (const auto iter = track.position_measurements.find(i); iter != track.position_measurements.cend())
+                if (position_iter != track.position_measurements.cend() && position_iter->index == i)
                 {
-                        const auto& measurement = iter->second;
+                        const auto& measurement = *position_iter;
 
-                        ASSERT(last_position_i);
-                        if (i > *last_position_i)
+                        if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
                         {
-                                if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
-                                {
-                                        result_position.emplace_back();
-                                }
-
-                                position_filter.predict((i - *last_position_i) * Config<T>::DT);
-                                position_filter.update(measurement.position);
-                                last_position_i = i;
-
-                                result_position.push_back(position_filter.position());
-
-                                position_nees_average.add(
-                                        track.points[i].position, position_filter.position(),
-                                        position_filter.position_p());
+                                result_position.emplace_back();
                         }
+
+                        position_filter.predict((i - *last_position_i) * Config<T>::DT);
+                        position_filter.update(measurement.position);
+
+                        result_position.push_back(position_filter.position());
+
+                        position_nees_average.add(
+                                track.points[i].position, position_filter.position(), position_filter.position_p());
 
                         if (measurement.speed)
                         {
@@ -796,6 +800,12 @@ void test_impl()
                             + to_string(radians_to_degrees(normalize_angle_difference(process_filter.angle_speed())))
                             + "; r = "
                             + to_string(radians_to_degrees(normalize_angle_difference(process_filter.angle_r()))));
+
+                        ASSERT(i == position_iter->index);
+                        last_position_i = position_iter->index;
+                        ++position_iter;
+                        ASSERT(position_iter == track.position_measurements.cend()
+                               || position_iter->index > *last_position_i);
                 }
                 else
                 {

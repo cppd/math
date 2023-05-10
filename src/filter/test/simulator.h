@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace ns::filter::test
@@ -44,6 +43,7 @@ struct ProcessMeasurement final
 template <std::size_t N, typename T>
 struct PositionMeasurement final
 {
+        std::size_t index;
         Vector<N, T> position;
         std::optional<T> speed;
 };
@@ -53,7 +53,7 @@ struct Track final
 {
         std::vector<SimulatorPoint<N, T>> points;
         std::vector<ProcessMeasurement<N, T>> process_measurements;
-        std::unordered_map<std::size_t, PositionMeasurement<N, T>> position_measurements;
+        std::vector<PositionMeasurement<N, T>> position_measurements;
 };
 
 template <typename T>

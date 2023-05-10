@@ -136,10 +136,14 @@ public:
                         .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
         }
 
-        [[nodiscard]] PositionMeasurement<N, T> position_measurement()
+        [[nodiscard]] Vector<N, T> position_measurement()
         {
-                return {.position = position_ + vector(measurements_position_nd_),
-                        .speed = velocity_.norm() + measurements_position_speed_nd_(engine_)};
+                return position_ + vector(measurements_position_nd_);
+        }
+
+        [[nodiscard]] T speed_measurement()
+        {
+                return velocity_.norm() + measurements_position_speed_nd_(engine_);
         }
 };
 }
@@ -178,7 +182,10 @@ Track<N, T> generate_track(
 
                 if ((i % position_interval) == 0)
                 {
-                        res.position_measurements.try_emplace(i, simulator.position_measurement());
+                        res.position_measurements.push_back(
+                                {.index = i,
+                                 .position = simulator.position_measurement(),
+                                 .speed = simulator.speed_measurement()});
                 }
         }
 
