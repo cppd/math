@@ -62,6 +62,17 @@ public:
         // {
         // }
 
+        explicit constexpr Matrix(const std::type_identity_t<T> value)
+        {
+                for (std::size_t r = 0; r < ROWS; ++r)
+                {
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
+                        {
+                                rows_[r][c] = value;
+                        }
+                }
+        }
+
         constexpr Matrix(std::initializer_list<std::initializer_list<T>>&& data)
         {
                 ASSERT(data.size() == ROWS);
