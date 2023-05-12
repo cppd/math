@@ -38,18 +38,6 @@ class Matrix final
 
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
-        [[nodiscard]] constexpr Vector<ROWS, T> column(const std::size_t column) const
-        {
-                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
-                {
-                        static_assert(sizeof...(I) == ROWS);
-                        static_assert(((I >= 0 && I < ROWS) && ...));
-
-                        return Vector<ROWS, T>{rows_[I][column]...};
-                }
-                (std::make_integer_sequence<std::size_t, ROWS>());
-        }
-
 public:
         constexpr Matrix()
         {
@@ -121,6 +109,18 @@ public:
         [[nodiscard]] constexpr Vector<COLUMNS, T>& row(const std::size_t r)
         {
                 return rows_[r];
+        }
+
+        [[nodiscard]] constexpr Vector<ROWS, T> column(const std::size_t column) const
+        {
+                return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+                {
+                        static_assert(sizeof...(I) == ROWS);
+                        static_assert(((I >= 0 && I < ROWS) && ...));
+
+                        return Vector<ROWS, T>{rows_[I][column]...};
+                }
+                (std::make_integer_sequence<std::size_t, ROWS>());
         }
 
         [[nodiscard]] constexpr const T& operator()(const std::size_t r, const std::size_t c) const
