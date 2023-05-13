@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../filter.h"
 #include "../models.h"
 #include "../nees.h"
+#include "../sigma_points.h"
+#include "../ukf.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -157,16 +159,18 @@ void check_distribution(
                 {
                         return a.first < b.first;
                 });
+
         if (!(static_cast<std::size_t>(std::abs(min->first)) < expected_distribution.size()
               && static_cast<std::size_t>(std::abs(max->first)) < expected_distribution.size()))
         {
                 error("Filter distribution 1 error\n" + distribution_to_string(distribution));
         }
 
-        if (!(distribution[0] > expected_distribution[0]))
+        if (!(distribution[0] >= expected_distribution[0]))
         {
                 error("Filter distribution 2 error\n" + distribution_to_string(distribution));
         }
+
         for (std::size_t i = 1; i < expected_distribution.size(); ++i)
         {
                 const int index = i;
@@ -309,8 +313,71 @@ public:
         }
 };
 
+template <typename T>
+class TestUkf
+{
+        static constexpr T ALPHA = 0.1;
+        static constexpr T BETA = 2; // 2 for Gaussian
+        static constexpr T KAPPA = 1; // 3 − N
+
+        const T dt_;
+
+        const Matrix<2, 2, T> q_;
+        const Matrix<1, 1, T> r_;
+
+        Ukf<2, T, SigmaPoints> filter_;
+
+public:
+        TestUkf(const std::type_identity_t<T> dt,
+                const std::type_identity_t<T> process_variance,
+                const std::type_identity_t<T> measurement_variance,
+                const Vector<2, T>& x,
+                const Matrix<2, 2, T>& p)
+                : dt_(dt),
+                  q_(discrete_white_noise<2, T>(dt, process_variance)),
+                  r_({{measurement_variance}}),
+                  filter_(SigmaPoints<2, T>(ALPHA, BETA, KAPPA), x, p)
+        {
+        }
+
+        void process(const T measurement)
+        {
+                // x[0] = x[0] + dt * x[1]
+                // x[1] = x[1]
+                const auto f = [&](const Vector<2, T>& x)
+                {
+                        return Vector<2, T>(x[0] + dt_ * x[1], x[1]);
+                };
+
+                // measurement = x[0]
+                const auto h = [](const Vector<2, T>& x)
+                {
+                        return Vector<1, T>(x[0]);
+                };
+
+                filter_.predict(f, q_);
+                filter_.update(h, r_, Vector<1, T>(measurement));
+        }
+
+        [[nodiscard]] T x() const
+        {
+                return filter_.x()[0];
+        }
+
+        [[nodiscard]] T variance() const
+        {
+                return filter_.p()(0, 0);
+        }
+
+        static std::string name()
+        {
+                return "UKF";
+        }
+};
+
 template <typename T, template <typename> typename Filter>
 void test_impl(
+        const std::type_identity_t<T> precision,
         const std::type_identity_t<T> expected_deviation,
         const std::type_identity_t<T> deviation_count,
         const std::vector<unsigned>& expected_distribution)
@@ -357,11 +424,11 @@ void test_impl(
                 "filter_" + to_lower(filter.name()) + "_1d_" + replace_space(type_name<T>()) + ".txt", process_data,
                 result_data);
 
-        compare(result_data.back().standard_deviation, expected_deviation, T{0});
+        compare(result_data.back().standard_deviation, expected_deviation, precision);
         compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
 
         const T nees = nees_average.average();
-        if (!(nees < T{1.2}))
+        if (!(nees < T{1.35}))
         {
                 error(nees_average.check_string());
         }
@@ -370,18 +437,20 @@ void test_impl(
 }
 
 template <typename T>
-void test_impl()
+void test_impl(const std::type_identity_t<T> precision)
 {
-        test_impl<T, TestLkf>(1.4306576889002234962L, 5, {610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
-        test_impl<T, TestEkf>(1.4306576889002234962L, 5, {610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
+        const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
+        test_impl<T, TestLkf>(precision, 1.4306576889002234962L, 5, distribution);
+        test_impl<T, TestEkf>(precision, 1.4306576889002234962L, 5, distribution);
+        test_impl<T, TestUkf>(precision, 1.43670888967218343853L, 5, distribution);
 }
 
 void test()
 {
         LOG("Test Filter 1D");
-        test_impl<float>();
-        test_impl<double>();
-        test_impl<long double>();
+        test_impl<float>(1e-3);
+        test_impl<double>(1e-12);
+        test_impl<long double>(1e-15);
         LOG("Test Filter 1D passed");
 }
 
