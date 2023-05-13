@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/string/str.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -136,16 +137,18 @@ std::string distribution_to_string(const std::unordered_map<int, unsigned>& dist
         return res;
 }
 
-template <std::size_t N>
 void check_distribution(
         std::unordered_map<int, unsigned> distribution,
-        const std::array<unsigned, N>& expected_distribution)
+        const std::vector<unsigned>& expected_distribution)
 {
-        static_assert(N > 0);
-
         if (distribution.empty())
         {
                 error("Filter distribution is empty");
+        }
+
+        if (expected_distribution.empty())
+        {
+                error("Filter expected distribution is empty");
         }
 
         const auto [min, max] = std::minmax_element(
@@ -176,7 +179,7 @@ void check_distribution(
 }
 
 template <typename T>
-class TestFilter
+class TestLkf
 {
         const T dt_;
 
@@ -196,8 +199,7 @@ class TestFilter
         Filter<2, T> filter_;
 
 public:
-        TestFilter(
-                const std::type_identity_t<T> dt,
+        TestLkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
                 const Vector<2, T>& x,
@@ -215,7 +217,46 @@ public:
                 filter_.update(h_, h_t_, r_, Vector<1, T>(measurement));
         }
 
-        void process_ext(const T measurement)
+        [[nodiscard]] T x() const
+        {
+                return filter_.x()[0];
+        }
+
+        [[nodiscard]] T variance() const
+        {
+                return filter_.p()(0, 0);
+        }
+
+        static std::string name()
+        {
+                return "LKF";
+        }
+};
+
+template <typename T>
+class TestEkf
+{
+        const T dt_;
+
+        const Matrix<2, 2, T> q_;
+        const Matrix<1, 1, T> r_;
+
+        Filter<2, T> filter_;
+
+public:
+        TestEkf(const std::type_identity_t<T> dt,
+                const std::type_identity_t<T> process_variance,
+                const std::type_identity_t<T> measurement_variance,
+                const Vector<2, T>& x,
+                const Matrix<2, 2, T>& p)
+                : dt_(dt),
+                  q_(discrete_white_noise<2, T>(dt, process_variance)),
+                  r_({{measurement_variance}}),
+                  filter_(x, p)
+        {
+        }
+
+        void process(const T measurement)
         {
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
@@ -261,10 +302,18 @@ public:
         {
                 return filter_.p()(0, 0);
         }
+
+        static std::string name()
+        {
+                return "EKF";
+        }
 };
 
-template <typename T, bool EXT>
-void test_impl()
+template <typename T, template <typename> typename Filter>
+void test_impl(
+        const std::type_identity_t<T> expected_deviation,
+        const std::type_identity_t<T> deviation_count,
+        const std::vector<unsigned>& expected_distribution)
 {
         constexpr T DT = 1;
         constexpr T VELOCITY_MEAN = 1;
@@ -282,7 +331,7 @@ void test_impl()
                 {  0, 50}
         };
 
-        TestFilter<T> filter(DT, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, X, P);
+        Filter<T> filter(DT, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, X, P);
 
         std::unordered_map<int, unsigned> distribution;
 
@@ -292,14 +341,7 @@ void test_impl()
         result_data.reserve(process_data.size());
         for (const ProcessData<T>& process : process_data)
         {
-                if constexpr (EXT)
-                {
-                        filter.process_ext(process.z);
-                }
-                else
-                {
-                        filter.process(process.z);
-                }
+                filter.process(process.z);
 
                 const T x = filter.x();
                 const T variance = filter.variance();
@@ -311,10 +353,12 @@ void test_impl()
                 nees_average.add(process.x, x, variance);
         }
 
-        write_to_file("filter_1d_" + replace_space(type_name<T>()) + ".txt", process_data, result_data);
+        write_to_file(
+                "filter_" + to_lower(filter.name()) + "_1d_" + replace_space(type_name<T>()) + ".txt", process_data,
+                result_data);
 
-        compare(result_data.back().standard_deviation, T{1.4306576889002234962L}, T{0});
-        compare(process_data.back().x, result_data.back().x, 5 * result_data.back().standard_deviation);
+        compare(result_data.back().standard_deviation, expected_deviation, T{0});
+        compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
 
         const T nees = nees_average.average();
         if (!(nees < T{1.2}))
@@ -322,15 +366,14 @@ void test_impl()
                 error(nees_average.check_string());
         }
 
-        constexpr std::array EXPECTED_DISTRIBUTION = std::to_array<unsigned>({610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
-        check_distribution(distribution, EXPECTED_DISTRIBUTION);
+        check_distribution(distribution, expected_distribution);
 }
 
 template <typename T>
 void test_impl()
 {
-        test_impl<T, false>();
-        test_impl<T, true>();
+        test_impl<T, TestLkf>(1.4306576889002234962L, 5, {610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
+        test_impl<T, TestEkf>(1.4306576889002234962L, 5, {610, 230, 60, 15, 7, 2, 0, 0, 0, 0});
 }
 
 void test()
