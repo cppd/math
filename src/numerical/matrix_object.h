@@ -242,6 +242,20 @@ public:
                 }
                 return res;
         }
+
+        [[nodiscard]] bool is_finite() const
+                requires (std::is_floating_point_v<T>)
+        {
+                for (std::size_t i = 0; i < ROWS; ++i)
+                {
+                        if (rows_[i].is_finite())
+                        {
+                                continue;
+                        }
+                        return false;
+                }
+                return true;
+        }
 };
 
 using Matrix3d = Matrix<3, 3, double>;
