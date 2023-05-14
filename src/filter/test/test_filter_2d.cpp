@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "position_filter.h"
 #include "simulator.h"
 #include "utility.h"
 
@@ -141,128 +142,6 @@ Track<N, T> generate_track()
 
         return res;
 }
-
-template <typename T>
-struct Angle final
-{
-        T angle;
-        T variance;
-};
-
-template <typename T>
-class PositionFilter final
-{
-        static constexpr std::size_t N = 6;
-        static constexpr std::size_t M = 2;
-
-        static constexpr Matrix<M, N, T> H{
-                {1, 0, 0, 0, 0, 0},
-                {0, 0, 0, 1, 0, 0}
-        };
-        static constexpr Matrix<N, M, T> H_T = H.transposed();
-        static constexpr Matrix<2, 2, T> R = []
-        {
-                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
-                return Matrix<2, 2, T>{
-                        {pv,  0},
-                        { 0, pv}
-                };
-        }();
-
-        static Matrix<N, N, T> f(const T dt)
-        {
-                const T dt_2 = square(dt) / 2;
-                return Matrix<N, N, T>{
-                        {1, dt, dt_2, 0,  0,    0},
-                        {0,  1,   dt, 0,  0,    0},
-                        {0,  0,    1, 0,  0,    0},
-                        {0,  0,    0, 1, dt, dt_2},
-                        {0,  0,    0, 0,  1,   dt},
-                        {0,  0,    0, 0,  0,    1}
-                };
-        }
-
-        static Matrix<N, N, T> q(const T dt)
-        {
-                const T dt_2 = square(dt) / 2;
-                const Matrix<N, 2, T> noise_transition{
-                        {dt_2,    0},
-                        {  dt,    0},
-                        {   1,    0},
-                        {   0, dt_2},
-                        {   0,   dt},
-                        {   0,    1},
-                };
-
-                const T p = Config<T>::POSITION_FILTER_VARIANCE;
-                const Matrix<2, 2, T> process_covariance{
-                        {p, 0},
-                        {0, p}
-                };
-
-                return noise_transition * process_covariance * noise_transition.transposed();
-        }
-
-        static T velocity_angle_p(const Matrix<2, 2, T>& velocity_r, const Vector<2, T>& velocity)
-        {
-                // angle = atan(y/x)
-                // Jacobian
-                //  -y/(x*x+y*y) x/(x*x+y*y)
-                const T norm_squared = velocity.norm_squared();
-                const T x = velocity[0];
-                const T y = velocity[1];
-                const Matrix<1, 2, T> error_propagation{
-                        {-y / norm_squared, x / norm_squared}
-                };
-                const Matrix<1, 1, T> r = error_propagation * velocity_r * error_propagation.transposed();
-                return r(0, 0);
-        }
-
-        Ekf<N, T> filter_;
-
-public:
-        PositionFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)
-                : filter_(init_x, init_p)
-        {
-        }
-
-        void predict(const T dt)
-        {
-                ASSERT(dt >= 0);
-                const auto& f_matrix = f(dt);
-                const auto& q_matrix = q(dt);
-                filter_.predict(f_matrix, f_matrix.transposed(), q_matrix);
-        }
-
-        void update(const Vector<M, T>& position)
-        {
-                filter_.update(H, H_T, R, position);
-        }
-
-        [[nodiscard]] Vector<M, T> position() const
-        {
-                return {filter_.x()[0], filter_.x()[3]};
-        }
-
-        [[nodiscard]] Matrix<M, M, T> position_p() const
-        {
-                return {
-                        {filter_.p()(0, 0), filter_.p()(0, 3)},
-                        {filter_.p()(3, 0), filter_.p()(3, 3)}
-                };
-        }
-
-        [[nodiscard]] Angle<T> velocity_angle() const
-        {
-                const Vector<M, T> velocity{filter_.x()[1], filter_.x()[4]};
-                const Matrix<M, M, T> velocity_p{
-                        {filter_.p()(1, 1), filter_.p()(1, 4)},
-                        {filter_.p()(4, 1), filter_.p()(4, 4)}
-                };
-                return {.angle = std::atan2(velocity[1], velocity[0]),
-                        .variance = velocity_angle_p(velocity_p, velocity)};
-        }
-};
 
 template <typename T>
 class ProcessFilter final
@@ -677,7 +556,7 @@ void test_impl()
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)});
 
-        PositionFilter<T> position_filter(position_init_x, position_init_p);
+        PositionFilter<T> position_filter(Config<T>::POSITION_FILTER_VARIANCE, position_init_x, position_init_p);
 
         std::vector<std::optional<Vector<2, T>>> result_position;
         result_position.reserve(track.points.size());
@@ -704,7 +583,7 @@ void test_impl()
                 }
 
                 position_filter.predict((m.index - *last_position_i) * Config<T>::DT);
-                position_filter.update(m.position);
+                position_filter.update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
                 last_position_i = m.index;
 
                 result_position.push_back(position_filter.position());
@@ -721,7 +600,7 @@ void test_impl()
         ASSERT(last_position_i && position_iter != track.position_measurements.cend());
         ASSERT(position_iter->index == *last_position_i);
 
-        const Angle<T> angle = position_filter.velocity_angle();
+        const typename PositionFilter<T>::Angle angle = position_filter.velocity_angle();
 
         const T measurement_angle = std::atan2(
                 track.process_measurements[*last_position_i].direction[1],
@@ -772,7 +651,7 @@ void test_impl()
                         }
 
                         position_filter.predict((i - *last_position_i) * Config<T>::DT);
-                        position_filter.update(measurement.position);
+                        position_filter.update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
                         result_position.push_back(position_filter.position());
 
