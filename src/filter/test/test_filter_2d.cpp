@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_filter.h"
 #include "process_filter_ekf.h"
+#include "process_filter_ukf.h"
 #include "simulator.h"
 #include "utility.h"
 
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 namespace ns::filter::test
@@ -262,10 +264,49 @@ public:
 };
 
 template <typename T>
-void test_impl()
+auto move(
+        const Track<2, T>& track,
+        const std::size_t count,
+        PositionFilter<T>* const position_filter,
+        PositionFilterData<T, PositionFilter>* const position_filter_data)
 {
-        const Track track = generate_track<2, T>();
+        std::optional<std::size_t> last_position_i;
+        auto position_iter = track.position_measurements.cbegin();
 
+        for (; position_iter != track.position_measurements.cend(); ++position_iter)
+        {
+                const PositionMeasurement<2, T>& m = *position_iter;
+
+                ASSERT(!last_position_i || last_position_i < m.index);
+
+                if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
+                {
+                        position_filter_data->update_empty();
+                }
+
+                if (!last_position_i)
+                {
+                        last_position_i = m.index;
+                }
+
+                position_filter->predict((m.index - *last_position_i) * Config<T>::DT);
+                position_filter->update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                last_position_i = m.index;
+
+                position_filter_data->update(track.points[m.index]);
+
+                if (m.index >= count)
+                {
+                        break;
+                }
+        }
+
+        return std::tuple(last_position_i, position_iter);
+}
+
+template <typename T>
+void test_impl(const Track<2, T>& track)
+{
         ASSERT(!track.position_measurements.empty() && track.position_measurements[0].index == 0);
 
         const Vector<6, T> position_init_x(
@@ -280,36 +321,7 @@ void test_impl()
 
         PositionFilterData position_filter_data("Filter", &position_filter, track.points.size());
 
-        std::optional<std::size_t> last_position_i;
-        auto position_iter = track.position_measurements.cbegin();
-
-        for (; position_iter != track.position_measurements.cend(); ++position_iter)
-        {
-                const PositionMeasurement<2, T>& m = *position_iter;
-
-                ASSERT(!last_position_i || last_position_i < m.index);
-
-                if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
-                {
-                        position_filter_data.update_empty();
-                }
-
-                if (!last_position_i)
-                {
-                        last_position_i = m.index;
-                }
-
-                position_filter.predict((m.index - *last_position_i) * Config<T>::DT);
-                position_filter.update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
-                last_position_i = m.index;
-
-                position_filter_data.update(track.points[m.index]);
-
-                if (m.index >= 300)
-                {
-                        break;
-                }
-        }
+        auto [last_position_i, position_iter] = move(track, /*count=*/300, &position_filter, &position_filter_data);
 
         ASSERT(last_position_i && position_iter != track.position_measurements.cend());
         ASSERT(position_iter->index == *last_position_i);
@@ -335,18 +347,34 @@ void test_impl()
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), angle_variance,
                  square(degrees_to_radians(0.1)), angle_r_variance});
 
-        ProcessFilterEkf<T> process_ekf(
-                Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
-                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p);
+        static constexpr std::size_t EKF = 0;
+        static constexpr std::size_t UKF = 1;
 
-        ProcessFilterData process_ekf_data("EKF", &process_ekf, track.points.size(), *last_position_i);
+        std::tuple process{
+                std::make_unique<ProcessFilterEkf<T>>(
+                        Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE,
+                        Config<T>::PROCESS_FILTER_ANGLE_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x,
+                        init_p),
+                std::make_unique<ProcessFilterUkf<T>>(
+                        Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE,
+                        Config<T>::PROCESS_FILTER_ANGLE_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x,
+                        init_p)};
+
+        std::tuple process_data{
+                ProcessFilterData("EKF", std::get<EKF>(process).get(), track.points.size(), *last_position_i),
+                ProcessFilterData("UKF", std::get<UKF>(process).get(), track.points.size(), *last_position_i)};
 
         ++position_iter;
         ASSERT(position_iter->index > *last_position_i);
 
         for (std::size_t i = *last_position_i; i < track.points.size(); ++i)
         {
-                process_ekf.predict();
+                std::apply(
+                        [](auto&... p)
+                        {
+                                (p->predict(), ...);
+                        },
+                        process);
 
                 if (position_iter != track.position_measurements.cend() && position_iter->index == i)
                 {
@@ -362,27 +390,40 @@ void test_impl()
 
                         position_filter_data.update(track.points[i]);
 
-                        if (measurement.speed)
-                        {
-                                process_ekf.update_position_velocity_acceleration(
-                                        measurement.position, *measurement.speed,
-                                        track.process_measurements[i].direction,
-                                        track.process_measurements[i].acceleration,
-                                        Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_SPEED_VARIANCE,
-                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
-                        }
-                        else
-                        {
-                                process_ekf.update_position_direction_acceleration(
-                                        measurement.position, track.process_measurements[i].direction,
-                                        track.process_measurements[i].acceleration,
-                                        Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
-                        }
+                        std::apply(
+                                [&](auto&... p)
+                                {
+                                        if (measurement.speed)
+                                        {
+                                                (p->update_position_velocity_acceleration(
+                                                         measurement.position, *measurement.speed,
+                                                         track.process_measurements[i].direction,
+                                                         track.process_measurements[i].acceleration,
+                                                         Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                                         Config<T>::MEASUREMENT_SPEED_VARIANCE,
+                                                         Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
+                                                         Config<T>::MEASUREMENT_ACCELERATION_VARIANCE),
+                                                 ...);
+                                        }
+                                        else
+                                        {
+                                                (p->update_position_direction_acceleration(
+                                                         measurement.position, track.process_measurements[i].direction,
+                                                         track.process_measurements[i].acceleration,
+                                                         Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                                         Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
+                                                         Config<T>::MEASUREMENT_ACCELERATION_VARIANCE),
+                                                 ...);
+                                        }
+                                },
+                                process);
 
-                        LOG(process_ekf_data.angle_string(i, track.points[i]));
+                        std::apply(
+                                [&](auto&... p)
+                                {
+                                        (LOG(p.angle_string(i, track.points[i])), ...);
+                                },
+                                process_data);
 
                         ASSERT(i == position_iter->index);
                         last_position_i = position_iter->index;
@@ -392,20 +433,45 @@ void test_impl()
                 }
                 else
                 {
-                        process_ekf.update_acceleration(
-                                track.process_measurements[i].acceleration,
-                                Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
+                        std::apply(
+                                [&](auto&... p)
+                                {
+                                        (p->update_acceleration(
+                                                 track.process_measurements[i].acceleration,
+                                                 Config<T>::MEASUREMENT_ACCELERATION_VARIANCE),
+                                         ...);
+                                },
+                                process);
                 }
 
-                process_ekf_data.update(track.points[i]);
+                std::apply(
+                        [&](auto&... p)
+                        {
+                                (p.update(track.points[i]), ...);
+                        },
+                        process_data);
         }
 
         view::write_to_file(
                 make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.result_position(),
-                process_ekf_data.result_speed(), process_ekf_data.result_position());
+                std::get<EKF>(process_data).result_speed(), std::get<EKF>(process_data).result_position(),
+                std::get<UKF>(process_data).result_speed(), std::get<UKF>(process_data).result_position());
 
         LOG(position_filter_data.nees_string());
-        LOG(process_ekf_data.nees_string());
+
+        std::apply(
+                [&](auto&... p)
+                {
+                        (LOG(p.nees_string()), ...);
+                },
+                process_data);
+}
+
+template <typename T>
+void test_impl()
+{
+        const Track track = generate_track<2, T>();
+        test_impl(track);
 }
 
 void test()

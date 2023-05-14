@@ -34,5 +34,7 @@ void write_to_file(
         std::size_t track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& filter_position,
         const std::vector<std::optional<T>>& ekf_speed,
-        const std::vector<Vector<N, T>>& ekf_position);
+        const std::vector<Vector<N, T>>& ekf_position,
+        const std::vector<std::optional<T>>& ukf_speed,
+        const std::vector<Vector<N, T>>& ukf_position);
 }

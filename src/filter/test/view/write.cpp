@@ -231,7 +231,7 @@ void write_ekf_speed(std::ostream& file, const std::vector<std::optional<Vector<
                 file << '{';
                 file << R"("name":"EKF Speed")";
                 file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"#00a000")";
+                file << R"(, "line_color":"#00c000")";
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
@@ -251,7 +251,47 @@ void write_ekf_position(std::ostream& file, const std::vector<Vector<N, T>>& pos
                 file << '{';
                 file << R"("name":"EKF Position")";
                 file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"#00a000")";
+                file << R"(, "line_color":"#00c000")";
+                file << R"(, "line_width":0.5)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : position)
+                {
+                        write(file, v);
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void write_ukf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
+{
+        if (!speed.empty())
+        {
+                file << '{';
+                file << R"("name":"UKF Speed")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#009000")";
+                file << R"(, "line_width":0.5)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : speed)
+                {
+                        write(file, v);
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void write_ukf_position(std::ostream& file, const std::vector<Vector<N, T>>& position)
+{
+        if (!position.empty())
+        {
+                file << '{';
+                file << R"("name":"UKF Position")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#009000")";
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
@@ -275,7 +315,9 @@ void write_data(
         const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
         const std::vector<std::optional<Vector<N, T>>>& filter_position,
         const std::vector<std::optional<Vector<N, T>>>& ekf_speed,
-        const std::vector<Vector<N, T>>& ekf_position)
+        const std::vector<Vector<N, T>>& ekf_position,
+        const std::vector<std::optional<Vector<N, T>>>& ukf_speed,
+        const std::vector<Vector<N, T>>& ukf_position)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
@@ -303,6 +345,10 @@ void write_data(
         write_ekf_speed(file, ekf_speed);
 
         write_ekf_position(file, ekf_position);
+
+        write_ukf_speed(file, ukf_speed);
+
+        write_ukf_position(file, ukf_position);
 }
 }
 
@@ -313,7 +359,9 @@ void write_to_file(
         const std::size_t track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& filter_position,
         const std::vector<std::optional<T>>& ekf_speed,
-        const std::vector<Vector<N, T>>& ekf_position)
+        const std::vector<Vector<N, T>>& ekf_position,
+        const std::vector<std::optional<T>>& ukf_speed,
+        const std::vector<Vector<N, T>>& ukf_position)
 {
         static constexpr T OFFSET = 500;
 
@@ -322,12 +370,14 @@ void write_to_file(
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track, track_position_interval), OFFSET),
                 position_speed_measurements(track, track_position_interval), add_offset(filter_position, OFFSET),
-                filter_speed(track, ekf_speed), add_offset(ekf_position, OFFSET));
+                filter_speed(track, ekf_speed), add_offset(ekf_position, OFFSET), filter_speed(track, ukf_speed),
+                add_offset(ukf_position, OFFSET));
 }
 
 #define TEMPLATE(T)                                                                                                 \
         template void write_to_file(                                                                                \
                 std::string_view, const Track<2, T>&, std::size_t, const std::vector<std::optional<Vector<2, T>>>&, \
+                const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&,                             \
                 const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)
