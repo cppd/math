@@ -204,9 +204,9 @@ void write_measurement_speed(std::ostream& file, const std::vector<std::optional
 }
 
 template <std::size_t N, typename T>
-void write_filter_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& filter_position)
+void write_filter_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& position)
 {
-        if (!filter_position.empty())
+        if (!position.empty())
         {
                 file << '{';
                 file << R"("name":"Filter Position")";
@@ -216,7 +216,7 @@ void write_filter_position(std::ostream& file, const std::vector<std::optional<V
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : filter_position)
+                for (const auto& v : position)
                 {
                         write(file, v);
                 }
@@ -224,19 +224,19 @@ void write_filter_position(std::ostream& file, const std::vector<std::optional<V
 }
 
 template <std::size_t N, typename T>
-void write_filter_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& filter_speed)
+void write_ekf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
 {
-        if (!filter_speed.empty())
+        if (!speed.empty())
         {
                 file << '{';
-                file << R"("name":"Filter Speed")";
+                file << R"("name":"EKF Speed")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#00a000")";
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : filter_speed)
+                for (const auto& v : speed)
                 {
                         write(file, v);
                 }
@@ -244,19 +244,19 @@ void write_filter_speed(std::ostream& file, const std::vector<std::optional<Vect
 }
 
 template <std::size_t N, typename T>
-void write_filter_process(std::ostream& file, const std::vector<Vector<N, T>>& filter_process)
+void write_ekf_position(std::ostream& file, const std::vector<Vector<N, T>>& position)
 {
-        if (!filter_process.empty())
+        if (!position.empty())
         {
                 file << '{';
-                file << R"("name":"Filter Process")";
+                file << R"("name":"EKF Position")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#00a000")";
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
                 file << "}\n";
-                for (const auto& v : filter_process)
+                for (const auto& v : position)
                 {
                         write(file, v);
                 }
@@ -274,8 +274,8 @@ void write_data(
         const std::vector<std::optional<Vector<N, T>>>& measurement_position,
         const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
         const std::vector<std::optional<Vector<N, T>>>& filter_position,
-        const std::vector<std::optional<Vector<N, T>>>& filter_speed,
-        const std::vector<Vector<N, T>>& filter_process)
+        const std::vector<std::optional<Vector<N, T>>>& ekf_speed,
+        const std::vector<Vector<N, T>>& ekf_position)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
@@ -300,9 +300,9 @@ void write_data(
 
         write_filter_position(file, filter_position);
 
-        write_filter_speed(file, filter_speed);
+        write_ekf_speed(file, ekf_speed);
 
-        write_filter_process(file, filter_process);
+        write_ekf_position(file, ekf_position);
 }
 }
 
@@ -311,9 +311,9 @@ void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
         const std::size_t track_position_interval,
-        const std::vector<std::optional<Vector<N, T>>>& position,
-        const std::vector<std::optional<T>>& speed,
-        const std::vector<Vector<N, T>>& process)
+        const std::vector<std::optional<Vector<N, T>>>& filter_position,
+        const std::vector<std::optional<T>>& ekf_speed,
+        const std::vector<Vector<N, T>>& ekf_position)
 {
         static constexpr T OFFSET = 500;
 
@@ -321,8 +321,8 @@ void write_to_file(
                 annotation, add_offset(track_position(track), OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track, track_position_interval), OFFSET),
-                position_speed_measurements(track, track_position_interval), add_offset(position, OFFSET),
-                filter_speed(track, speed), add_offset(process, OFFSET));
+                position_speed_measurements(track, track_position_interval), add_offset(filter_position, OFFSET),
+                filter_speed(track, ekf_speed), add_offset(ekf_position, OFFSET));
 }
 
 #define TEMPLATE(T)                                                                                                 \
