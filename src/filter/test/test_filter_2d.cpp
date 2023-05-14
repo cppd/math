@@ -142,6 +142,125 @@ Track<N, T> generate_track()
         return res;
 }
 
+template <typename T, template <typename> typename Filter>
+class PositionFilterData final
+{
+        std::string name_;
+        const Filter<T>* const filter_;
+
+        std::vector<std::optional<Vector<2, T>>> result_position_;
+
+        NeesAverage<2, T> nees_average_position_;
+
+public:
+        PositionFilterData(std::string name, const Filter<T>* const filter, const std::size_t reserve)
+                : name_(std::move(name)),
+                  filter_(filter)
+        {
+                ASSERT(filter_);
+
+                result_position_.reserve(reserve);
+        }
+
+        void update_empty()
+        {
+                result_position_.emplace_back();
+        }
+
+        void update(const auto& point)
+        {
+                result_position_.push_back(filter_->position());
+
+                nees_average_position_.add(point.position, filter_->position(), filter_->position_p());
+        }
+
+        [[nodiscard]] std::string nees_string() const
+        {
+                std::string s;
+                s += "Position " + name_ + " Position: " + nees_average_position_.check_string();
+                return s;
+        }
+
+        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& result_position() const
+        {
+                return result_position_;
+        }
+};
+
+template <typename T, template <typename> typename Filter>
+class ProcessFilterData final
+{
+        std::string name_;
+        const Filter<T>* const filter_;
+
+        std::vector<Vector<2, T>> result_position_;
+        std::vector<std::optional<T>> result_speed_;
+
+        NeesAverage<2, T> nees_average_position_;
+        NeesAverage<1, T> nees_average_angle_;
+        NeesAverage<1, T> nees_average_angle_r_;
+
+public:
+        ProcessFilterData(
+                std::string name,
+                const Filter<T>* const filter,
+                const std::size_t reserve,
+                const std::size_t resize)
+                : name_(std::move(name)),
+                  filter_(filter)
+        {
+                ASSERT(filter_);
+
+                result_position_.reserve(reserve);
+                result_speed_.reserve(reserve);
+                result_speed_.resize(resize);
+        }
+
+        void update(const auto& point)
+        {
+                result_position_.push_back(filter_->position());
+                result_speed_.push_back(filter_->speed());
+
+                nees_average_position_.add(point.position, filter_->position(), filter_->position_p());
+                nees_average_angle_.add(point.angle, filter_->angle(), filter_->angle_p());
+                nees_average_angle_r_.add(point.angle_r, filter_->angle_r(), filter_->angle_r_p());
+        }
+
+        [[nodiscard]] std::string angle_string(const auto& i, const auto& point) const
+        {
+                std::string s;
+                s += to_string(i);
+                s += "; ";
+                s += name_;
+                s += "; track = " + to_string(radians_to_degrees(normalize_angle_difference(point.angle)));
+                s += "; process = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle())));
+                s += "; speed = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle_speed())));
+                s += "; r = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle_r())));
+                return s;
+        }
+
+        [[nodiscard]] std::string nees_string() const
+        {
+                std::string s;
+                s += "Process " + name_ + " Position: " + nees_average_position_.check_string();
+                s += '\n';
+                s += "Process " + name_ + " Angle: " + nees_average_angle_.check_string();
+                s += '\n';
+                s += "Process " + name_ + " Angle R: " + nees_average_angle_r_.check_string();
+                return s;
+        }
+
+        const std::vector<Vector<2, T>>& result_position() const
+        {
+                return result_position_;
+        }
+
+        const std::vector<std::optional<T>>& result_speed() const
+        {
+                return result_speed_;
+        }
+};
+
 template <typename T>
 void test_impl()
 {
@@ -159,10 +278,7 @@ void test_impl()
 
         PositionFilter<T> position_filter(Config<T>::POSITION_FILTER_VARIANCE, position_init_x, position_init_p);
 
-        std::vector<std::optional<Vector<2, T>>> position_filter_result_position;
-        position_filter_result_position.reserve(track.points.size());
-
-        NeesAverage<2, T> position_filter_nees_average_position;
+        PositionFilterData position_filter_data("Filter", &position_filter, track.points.size());
 
         std::optional<std::size_t> last_position_i;
         auto position_iter = track.position_measurements.cbegin();
@@ -175,7 +291,7 @@ void test_impl()
 
                 if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
                 {
-                        position_filter_result_position.emplace_back();
+                        position_filter_data.update_empty();
                 }
 
                 if (!last_position_i)
@@ -187,10 +303,7 @@ void test_impl()
                 position_filter.update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
                 last_position_i = m.index;
 
-                position_filter_result_position.push_back(position_filter.position());
-
-                position_filter_nees_average_position.add(
-                        track.points[m.index].position, position_filter.position(), position_filter.position_p());
+                position_filter_data.update(track.points[m.index]);
 
                 if (m.index >= 300)
                 {
@@ -226,16 +339,7 @@ void test_impl()
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
                 Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p);
 
-        std::vector<Vector<2, T>> process_ekf_result_position;
-        process_ekf_result_position.reserve(track.points.size());
-
-        std::vector<std::optional<T>> process_ekf_result_speed;
-        process_ekf_result_speed.reserve(track.points.size());
-        process_ekf_result_speed.resize(*last_position_i);
-
-        NeesAverage<2, T> process_ekf_nees_average_position;
-        NeesAverage<1, T> process_ekf_nees_average_angle;
-        NeesAverage<1, T> process_ekf_nees_average_angle_r;
+        ProcessFilterData process_ekf_data("EKF", &process_ekf, track.points.size(), *last_position_i);
 
         ++position_iter;
         ASSERT(position_iter->index > *last_position_i);
@@ -250,16 +354,13 @@ void test_impl()
 
                         if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
                         {
-                                position_filter_result_position.emplace_back();
+                                position_filter_data.update_empty();
                         }
 
                         position_filter.predict((i - *last_position_i) * Config<T>::DT);
                         position_filter.update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
-                        position_filter_result_position.push_back(position_filter.position());
-
-                        position_filter_nees_average_position.add(
-                                track.points[i].position, position_filter.position(), position_filter.position_p());
+                        position_filter_data.update(track.points[i]);
 
                         if (measurement.speed)
                         {
@@ -281,14 +382,7 @@ void test_impl()
                                         Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
                         }
 
-                        LOG(to_string(i) + ": track = "
-                            + to_string(radians_to_degrees(normalize_angle_difference(track.points[i].angle)))
-                            + "; process = "
-                            + to_string(radians_to_degrees(normalize_angle_difference(process_ekf.angle())))
-                            + "; speed = "
-                            + to_string(radians_to_degrees(normalize_angle_difference(process_ekf.angle_speed())))
-                            + "; r = "
-                            + to_string(radians_to_degrees(normalize_angle_difference(process_ekf.angle_r()))));
+                        LOG(process_ekf_data.angle_string(i, track.points[i]));
 
                         ASSERT(i == position_iter->index);
                         last_position_i = position_iter->index;
@@ -303,24 +397,15 @@ void test_impl()
                                 Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
                 }
 
-                process_ekf_result_position.push_back(process_ekf.position());
-                process_ekf_result_speed.push_back(process_ekf.speed());
-
-                process_ekf_nees_average_position.add(
-                        track.points[i].position, process_ekf.position(), process_ekf.position_p());
-                process_ekf_nees_average_angle.add(track.points[i].angle, process_ekf.angle(), process_ekf.angle_p());
-                process_ekf_nees_average_angle_r.add(
-                        track.points[i].angle_r, process_ekf.angle_r(), process_ekf.angle_r_p());
+                process_ekf_data.update(track.points[i]);
         }
 
         view::write_to_file(
-                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_result_position,
-                process_ekf_result_speed, process_ekf_result_position);
+                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.result_position(),
+                process_ekf_data.result_speed(), process_ekf_data.result_position());
 
-        LOG("Position Filter Position: " + position_filter_nees_average_position.check_string());
-        LOG("Process EKF Position: " + process_ekf_nees_average_position.check_string());
-        LOG("Process EKF Angle: " + process_ekf_nees_average_angle.check_string());
-        LOG("Process EKF Angle R: " + process_ekf_nees_average_angle_r.check_string());
+        LOG(position_filter_data.nees_string());
+        LOG(process_ekf_data.nees_string());
 }
 
 void test()
