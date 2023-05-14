@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
-#include "../filter.h"
+#include "../ekf.h"
 #include "../nees.h"
 
 #include <src/com/constant.h>
@@ -218,7 +218,7 @@ class PositionFilter final
                 return r(0, 0);
         }
 
-        Filter<N, T> filter_;
+        Ekf<N, T> filter_;
 
 public:
         PositionFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)
@@ -568,7 +568,7 @@ class ProcessFilter final
                 };
         }
 
-        Filter<N, T> filter_;
+        Ekf<N, T> filter_;
 
 public:
         ProcessFilter(const Vector<N, T> init_x, const Matrix<N, N, T>& init_p)

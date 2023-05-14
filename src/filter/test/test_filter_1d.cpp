@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
-#include "../filter.h"
+#include "../ekf.h"
 #include "../models.h"
 #include "../nees.h"
 #include "../sigma_points.h"
@@ -200,7 +200,7 @@ class TestLkf
         const Matrix<2, 1, T> h_t_ = h_.transposed();
         const Matrix<1, 1, T> r_;
 
-        Filter<2, T> filter_;
+        Ekf<2, T> filter_;
 
 public:
         TestLkf(const std::type_identity_t<T> dt,
@@ -245,7 +245,7 @@ class TestEkf
         const Matrix<2, 2, T> q_;
         const Matrix<1, 1, T> r_;
 
-        Filter<2, T> filter_;
+        Ekf<2, T> filter_;
 
 public:
         TestEkf(const std::type_identity_t<T> dt,

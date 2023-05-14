@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter
 {
 template <std::size_t N, typename T>
-class Filter final
+class Ekf final
 {
         // state mean
         Vector<N, T> x_;
@@ -32,7 +32,7 @@ class Filter final
         Matrix<N, N, T> p_;
 
 public:
-        Filter(const Vector<N, T>& x /*state mean*/, const Matrix<N, N, T>& p /*state covariance*/)
+        Ekf(const Vector<N, T>& x /*state mean*/, const Matrix<N, N, T>& p /*state covariance*/)
                 : x_(x),
                   p_(p)
         {
