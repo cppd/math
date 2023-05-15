@@ -22,6 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter
 {
+namespace ekf_implementation
+{
+struct Residual final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a - b;
+        }
+};
+
+struct Add final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a + b;
+        }
+};
+}
+
 template <std::size_t N, typename T>
 class Ekf final
 {
@@ -83,19 +104,20 @@ public:
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
-        template <std::size_t M, typename H, typename HJ, typename Residual>
+        template <std::size_t M, typename H, typename HJ, typename ResidualZ, typename AddX>
         void update(
                 const H& h /*measurement function*/,
                 const HJ& hj /*measurement function Jacobian*/,
                 const Matrix<M, M, T>& r /* measurement covariance*/,
                 const Vector<M, T>& z /*measurement*/,
-                const Residual residual /*the residual between the two measurement vectors*/)
+                const ResidualZ residual_z /*the residual between the two measurement vectors*/,
+                const AddX& add_x /*the sum of the two state vectors*/)
         {
                 const Matrix<M, N, T> hjx = hj(x_);
                 const Matrix<N, M, T> hjx_t = hjx.transposed();
 
                 const Matrix<N, M, T> k = p_ * hjx_t * (hjx * p_ * hjx_t + r).inversed();
-                x_ = x_ + k * residual(z, h(x_));
+                x_ = add_x(x_, k * residual_z(z, h(x_)));
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
@@ -104,11 +126,9 @@ public:
         template <std::size_t M, typename H, typename HJ>
         void update(const H& h, const HJ& hj, const Matrix<M, M, T>& r, const Vector<M, T>& z)
         {
-                update(h, hj, r, z,
-                       [](const Vector<M, T>& a, const Vector<M, T>& b)
-                       {
-                               return a - b;
-                       });
+                namespace impl = ekf_implementation;
+
+                update(h, hj, r, z, impl::Residual(), impl::Add());
         }
 };
 }

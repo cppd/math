@@ -23,6 +23,18 @@ namespace ns::filter::test
 {
 namespace
 {
+struct AddX final
+{
+        template <typename T>
+        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+        {
+                Vector<9, T> res = a + b;
+                res[6] = normalize_angle(res[6]);
+                res[8] = normalize_angle(res[8]);
+                return res;
+        }
+};
+
 template <typename T>
 Matrix<9, 9, T> f(const T dt)
 {
@@ -368,7 +380,8 @@ void ProcessFilterEkf<T>::update_position_velocity_acceleration(
                         Vector<6, T> res = a - b;
                         res[3] = normalize_angle(res[3]);
                         return res;
-                });
+                },
+                AddX());
 }
 
 template <typename T>
@@ -391,7 +404,8 @@ void ProcessFilterEkf<T>::update_position_direction_acceleration(
                         Vector<5, T> res = a - b;
                         res[2] = normalize_angle(res[2]);
                         return res;
-                });
+                },
+                AddX());
 }
 
 template <typename T>
