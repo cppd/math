@@ -69,7 +69,8 @@ template <std::size_t N, typename T>
 Track<N, T> generate_track(
         std::size_t count,
         T dt,
-        T track_velocity_mean,
+        T track_velocity_min,
+        T track_velocity_max,
         T track_velocity_variance,
         T direction_bias_drift,
         T direction_angle,

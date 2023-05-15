@@ -46,7 +46,8 @@ struct Config final
         static constexpr T DT = 0.1;
         static constexpr std::size_t POSITION_INTERVAL = 10;
 
-        static constexpr T TRACK_VELOCITY_MEAN = 20;
+        static constexpr T TRACK_VELOCITY_MIN = 3;
+        static constexpr T TRACK_VELOCITY_MAX = 30;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
         static constexpr T DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
@@ -112,9 +113,9 @@ Track<N, T> generate_track()
                 .position_speed = Config<T>::MEASUREMENT_SPEED_VARIANCE};
 
         Track res = generate_track<N, T>(
-                COUNT, Config<T>::DT, Config<T>::TRACK_VELOCITY_MEAN, Config<T>::TRACK_VELOCITY_VARIANCE,
-                Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE, measurement_variance,
-                Config<T>::POSITION_INTERVAL);
+                COUNT, Config<T>::DT, Config<T>::TRACK_VELOCITY_MIN, Config<T>::TRACK_VELOCITY_MAX,
+                Config<T>::TRACK_VELOCITY_VARIANCE, Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE,
+                measurement_variance, Config<T>::POSITION_INTERVAL);
 
         std::vector<PositionMeasurement<N, T>> measurements;
         measurements.reserve(res.position_measurements.size());
