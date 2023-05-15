@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process_filter_ekf.h"
 
+#include "utility.h"
+
 namespace ns::filter::test
 {
 namespace
@@ -102,9 +104,7 @@ Matrix<2, 9, T> position_hj(const Vector<9, T>& /*x*/)
 //
 
 template <typename T>
-Matrix<6, 6, T> position_velocity_acceleration_r(
-        const Vector<2, T>& direction,
-        const T speed,
+Matrix<6, 6, T> position_speed_angle_acceleration_r(
         const T position_variance,
         const T speed_variance,
         const T direction_variance,
@@ -114,7 +114,7 @@ Matrix<6, 6, T> position_velocity_acceleration_r(
         const T sv = speed_variance;
         const T dv = direction_variance;
         const T av = acceleration_variance;
-        const Matrix<6, 6, T> r{
+        return {
                 {pv,  0,  0,  0,  0,  0},
                 { 0, pv,  0,  0,  0,  0},
                 { 0,  0, sv,  0,  0,  0},
@@ -122,35 +122,15 @@ Matrix<6, 6, T> position_velocity_acceleration_r(
                 { 0,  0,  0,  0, av,  0},
                 { 0,  0,  0,  0,  0, av}
         };
-
-        // px = px
-        // py = py
-        // vx = speed*cos(angle)
-        // vy = speed*sin(angle)
-        // ax = ax
-        // ay = ay
-        // Jacobian
-        const T cos = direction[0];
-        const T sin = direction[1];
-        const Matrix<6, 6, T> error_propagation{
-                {1, 0,   0,            0, 0, 0},
-                {0, 1,   0,            0, 0, 0},
-                {0, 0, cos, -speed * sin, 0, 0},
-                {0, 0, sin,  speed * cos, 0, 0},
-                {0, 0,   0,            0, 1, 0},
-                {0, 0,   0,            0, 0, 1}
-        };
-
-        return error_propagation * r * error_propagation.transposed();
 }
 
 template <typename T>
-Vector<6, T> position_velocity_acceleration_h(const Vector<9, T>& x)
+Vector<6, T> position_speed_angle_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
-        // dx = vx*cos(angle + angle_r) - vy*sin(angle + angle_r)
-        // dy = vx*sin(angle + angle_r) + vy*cos(angle + angle_r)
+        // speed = sqrt(vx*vx + vy*vy)
+        // angle = atan(vy, vx) + angle + angle_r
         // ax = ax*cos(angle) - ay*sin(angle)
         // ay = ax*sin(angle) + ay*cos(angle)
         const T px = x[0];
@@ -161,52 +141,60 @@ Vector<6, T> position_velocity_acceleration_h(const Vector<9, T>& x)
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T cos_v = std::cos(angle + angle_r);
-        const T sin_v = std::sin(angle + angle_r);
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
-        return {px, py, vx * cos_v - vy * sin_v, vx * sin_v + vy * cos_v, ax * cos - ay * sin, ax * sin + ay * cos};
+        return {
+                px, // px
+                py, // py
+                std::sqrt(vx * vx + vy * vy), // speed
+                std::atan2(vy, vx) + angle + angle_r, // angle
+                ax * cos - ay * sin, // ax
+                ax * sin + ay * cos // ay
+        };
 }
 
 template <typename T>
-Matrix<6, 9, T> position_velocity_acceleration_hj(const Vector<9, T>& x)
+Matrix<6, 9, T> position_speed_angle_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
-        // dx = vx*cos(angle + angle_r) - vy*sin(angle + angle_r)
-        // dy = vx*sin(angle + angle_r) + vy*cos(angle + angle_r)
+        // speed = sqrt(vx*vx + vy*vy)
+        // angle = atan(vy, vx) + angle + angle_r
         // ax = ax*cos(angle) - ay*sin(angle)
         // ay = ax*sin(angle) + ay*cos(angle)
         // Jacobian
+        // mPx=Px;
+        // mPy=Py;
+        // mSpeed=Sqrt[Vx*Vx+Vy*Vy];
+        // mAngle=ArcTan[Vx,Vy]+Bc+Br;
+        // mAx=(Ax*Cos[Bc]-Ay*Sin[Bc]);
+        // mAy=(Ax*Sin[Bc]+Ay*Cos[Bc]);
+        // Simplify[D[{mPx,mPy,mSpeed,mAngle,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
-        const T vy = x[4];
         const T ax = x[2];
+        const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T angle_r = x[8];
-        const T cos_v = std::cos(angle + angle_r);
-        const T sin_v = std::sin(angle + angle_r);
+        const T speed_2 = vx * vx + vy * vy;
+        const T speed = std::sqrt(speed_2);
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
-        const T d_1 = -vx * sin_v - vy * cos_v;
-        const T d_2 = vx * cos_v - vy * sin_v;
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
         return {
-                {1,     0,   0, 0,      0,    0,   0, 0,   0},
-                {0,     0,   0, 1,      0,    0,   0, 0,   0},
-                {0, cos_v,   0, 0, -sin_v,    0, d_1, 0, d_1},
-                {0, sin_v,   0, 0,  cos_v,    0, d_2, 0, d_2},
-                {0,     0, cos, 0,      0, -sin, a_1, 0,   0},
-                {0,     0, sin, 0,      0,  cos, a_2, 0,   0}
+                {1,             0,   0, 0,            0,    0,   0, 0, 0},
+                {0,             0,   0, 1,            0,    0,   0, 0, 0},
+                {0,    vx / speed,   0, 0,   vy / speed,    0,   0, 0, 0},
+                {0, -vy / speed_2,   0, 0, vx / speed_2,    0,   1, 0, 1},
+                {0,             0, cos, 0,            0, -sin, a_1, 0, 0},
+                {0,             0, sin, 0,            0,  cos, a_2, 0, 0}
         };
 }
 
 //
 
 template <typename T>
-Matrix<6, 6, T> position_direction_acceleration_r(
-        const Vector<2, T>& direction,
+Matrix<5, 5, T> position_angle_acceleration_r(
         const T position_variance,
         const T direction_variance,
         const T acceleration_variance)
@@ -214,42 +202,23 @@ Matrix<6, 6, T> position_direction_acceleration_r(
         const T pv = position_variance;
         const T dv = direction_variance;
         const T av = acceleration_variance;
-        const Matrix<5, 5, T> r{
+        return {
                 {pv,  0,  0,  0,  0},
                 { 0, pv,  0,  0,  0},
                 { 0,  0, dv,  0,  0},
                 { 0,  0,  0, av,  0},
                 { 0,  0,  0,  0, av}
         };
-
-        // dx = cos(angle)
-        // dy = sin(angle)
-        // ax = ax
-        // ay = ay
-        // Jacobian
-        const T cos = direction[0];
-        const T sin = direction[1];
-        const Matrix<6, 5, T> error_propagation{
-                {1, 0,    0, 0, 0},
-                {0, 1,    0, 0, 0},
-                {0, 0, -sin, 0, 0},
-                {0, 0,  cos, 0, 0},
-                {0, 0,    0, 1, 0},
-                {0, 0,    0, 0, 1}
-        };
-
-        return error_propagation * r * error_propagation.transposed();
 }
 
 template <typename T>
-Vector<6, T> position_direction_acceleration_h(const Vector<9, T>& x)
+Vector<5, T> position_angle_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
-        // dx = (vx*cos(angle + angle_r) - vy*sin(angle + angle_r)) / sqrt(vx*vx + vy*vy);
-        // dy = (vx*sin(angle + angle_r) + vy*cos(angle + angle_r)) / sqrt(vx*vx + vy*vy);
-        // ax = (ax*cos(angle) - ay*sin(angle))
-        // ay = (ax*sin(angle) + ay*cos(angle))
+        // angle = atan(vy, vx) + angle + angle_r
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
         const T px = x[0];
         const T vx = x[1];
         const T ax = x[2];
@@ -258,59 +227,48 @@ Vector<6, T> position_direction_acceleration_h(const Vector<9, T>& x)
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T speed = std::sqrt(square(vx) + square(vy));
-        const T cos_v = std::cos(angle + angle_r);
-        const T sin_v = std::sin(angle + angle_r);
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
-        return {px,
-                py,
-                (vx * cos_v - vy * sin_v) / speed,
-                (vx * sin_v + vy * cos_v) / speed,
-                ax * cos - ay * sin,
-                ax * sin + ay * cos};
+        return {
+                px, // px
+                py, // py
+                std::atan2(vy, vx) + angle + angle_r, // angle
+                ax * cos - ay * sin, // ax
+                ax * sin + ay * cos // ay
+        };
 }
 
 template <typename T>
-Matrix<6, 9, T> position_direction_acceleration_hj(const Vector<9, T>& x)
+Matrix<5, 9, T> position_angle_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
-        // dx = (vx*cos(angle + angle_r) - vy*sin(angle + angle_r)) / sqrt(vx*vx + vy*vy);
-        // dy = (vx*sin(angle + angle_r) + vy*cos(angle + angle_r)) / sqrt(vx*vx + vy*vy);
-        // ax = (ax*cos(angle) - ay*sin(angle))
-        // ay = (ax*sin(angle) + ay*cos(angle))
+        // angle = atan(vy, vx) + angle + angle_r
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
         // Jacobian
         // mPx=Px;
         // mPy=Py;
-        // mDx=(Vx*Cos[Angle+AngleR]-Vy*Sin[Angle+AngleR])/Sqrt[Vx*Vx+Vy*Vy];
-        // mDy=(Vx*Sin[Angle+AngleR]+Vy*Cos[Angle+AngleR])/Sqrt[Vx*Vx+Vy*Vy];
-        // mAx=(Ax*Cos[Angle]-Ay*Sin[Angle]);
-        // mAy=(Ax*Sin[Angle]+Ay*Cos[Angle]);
-        // Simplify[D[{mPx,mPy,mDx,mDy,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Angle,AngleV,AngleR}}]]
+        // mAngle=ArcTan[Vx,Vy]+Bc+Br;
+        // mAx=(Ax*Cos[Bc]-Ay*Sin[Bc]);
+        // mAy=(Ax*Sin[Bc]+Ay*Cos[Bc]);
+        // Simplify[D[{mPx,mPy,mAngle,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
-        const T vy = x[4];
         const T ax = x[2];
+        const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T angle_r = x[8];
-        const T l = std::sqrt(square(vx) + square(vy));
-        const T l_3 = power<3>(l);
-        const T cos_v = std::cos(angle + angle_r);
-        const T sin_v = std::sin(angle + angle_r);
+        const T s_2 = vx * vx + vy * vy;
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
-        const T d_1 = vy * cos_v + vx * sin_v;
-        const T d_2 = vx * cos_v - vy * sin_v;
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
         return {
-                {1,               0,   0, 0,               0,    0,        0, 0,        0},
-                {0,               0,   0, 1,               0,    0,        0, 0,        0},
-                {0,  vy * d_1 / l_3,   0, 0, -vx * d_1 / l_3,    0, -d_1 / l, 0, -d_1 / l},
-                {0, -vy * d_2 / l_3,   0, 0,  vx * d_2 / l_3,    0,  d_2 / l, 0,  d_2 / l},
-                {0,               0, cos, 0,               0, -sin,      a_1, 0,        0},
-                {0,               0, sin, 0,               0,  cos,      a_2, 0,        0}
+                {1,         0,   0, 0,        0,    0,   0, 0, 0},
+                {0,         0,   0, 1,        0,    0,   0, 0, 0},
+                {0, -vy / s_2,   0, 0, vx / s_2,    0,   1, 0, 1},
+                {0,         0, cos, 0,        0, -sin, a_1, 0, 0},
+                {0,         0, sin, 0,        0,  cos, a_2, 0, 0}
         };
 }
 
@@ -345,6 +303,9 @@ Matrix<2, 9, T> acceleration_hj(const Vector<9, T>& x)
         // ax = ax*cos(angle) - ay*sin(angle)
         // ay = ax*sin(angle) + ay*cos(angle)
         // Jacobian
+        // mAx=(Ax*Cos[Bc]-Ay*Sin[Bc]);
+        // mAy=(Ax*Sin[Bc]+Ay*Cos[Bc]);
+        // Simplify[D[{mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T ax = x[2];
         const T ay = x[5];
         const T angle = x[6];
@@ -396,12 +357,18 @@ void ProcessFilterEkf<T>::update_position_velocity_acceleration(
         const T acceleration_variance)
 {
         filter_.update(
-                position_velocity_acceleration_h<T>, position_velocity_acceleration_hj<T>,
-                position_velocity_acceleration_r(
-                        direction, speed, position_variance, speed_variance, direction_variance, acceleration_variance),
+                position_speed_angle_acceleration_h<T>, position_speed_angle_acceleration_hj<T>,
+                position_speed_angle_acceleration_r(
+                        position_variance, speed_variance, direction_variance, acceleration_variance),
                 Vector<6, T>(
-                        position[0], position[1], direction[0] * speed, direction[1] * speed, acceleration[0],
-                        acceleration[1]));
+                        position[0], position[1], speed, std::atan2(direction[1], direction[0]), acceleration[0],
+                        acceleration[1]),
+                [](const Vector<6, T>& a, const Vector<6, T>& b) -> Vector<6, T>
+                {
+                        Vector<6, T> res = a - b;
+                        res[3] = normalize_angle_difference(res[3]);
+                        return res;
+                });
 }
 
 template <typename T>
@@ -414,10 +381,17 @@ void ProcessFilterEkf<T>::update_position_direction_acceleration(
         const T acceleration_variance)
 {
         filter_.update(
-                position_direction_acceleration_h<T>, position_direction_acceleration_hj<T>,
-                position_direction_acceleration_r(
-                        direction, position_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(position[0], position[1], direction[0], direction[1], acceleration[0], acceleration[1]));
+                position_angle_acceleration_h<T>, position_angle_acceleration_hj<T>,
+                position_angle_acceleration_r(position_variance, direction_variance, acceleration_variance),
+                Vector<5, T>(
+                        position[0], position[1], std::atan2(direction[1], direction[0]), acceleration[0],
+                        acceleration[1]),
+                [](const Vector<5, T>& a, const Vector<5, T>& b) -> Vector<5, T>
+                {
+                        Vector<5, T> res = a - b;
+                        res[2] = normalize_angle_difference(res[2]);
+                        return res;
+                });
 }
 
 template <typename T>
