@@ -366,7 +366,7 @@ void ProcessFilterEkf<T>::update_position_velocity_acceleration(
                 [](const Vector<6, T>& a, const Vector<6, T>& b) -> Vector<6, T>
                 {
                         Vector<6, T> res = a - b;
-                        res[3] = normalize_angle_difference(res[3]);
+                        res[3] = normalize_angle(res[3]);
                         return res;
                 });
 }
@@ -389,7 +389,7 @@ void ProcessFilterEkf<T>::update_position_direction_acceleration(
                 [](const Vector<5, T>& a, const Vector<5, T>& b) -> Vector<5, T>
                 {
                         Vector<5, T> res = a - b;
-                        res[2] = normalize_angle_difference(res[2]);
+                        res[2] = normalize_angle(res[2]);
                         return res;
                 });
 }

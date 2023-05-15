@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/file/path.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/settings/directory.h>
 
@@ -31,14 +32,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T, typename Angle>
-Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
+[[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
 {
         static_assert(std::is_floating_point_v<Angle>);
 
-        return {std::cos(angle) * v[0] - std::sin(angle) * v[1], std::sin(angle) * v[0] + std::cos(angle) * v[1]};
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        const Matrix<2, 2, T> m{
+                {cos, -sin},
+                {sin,  cos}
+        };
+        return m * v;
 }
 
-inline std::string replace_space(const std::string_view s)
+[[nodiscard]] inline std::string replace_space(const std::string_view s)
 {
         std::string res;
         res.reserve(s.size());
@@ -49,30 +56,24 @@ inline std::string replace_space(const std::string_view s)
         return res;
 }
 
-inline std::filesystem::path test_file_path(const std::string_view name)
+[[nodiscard]] inline std::filesystem::path test_file_path(const std::string_view name)
 {
         return settings::test_directory() / path_from_utf8(name);
 }
 
 template <typename T>
-T unbound_angle(const std::optional<T> previous, const T next)
+[[nodiscard]] T normalize_angle(const T difference)
 {
-        static constexpr T TWO_PI = 2 * PI<T>;
-        if (previous)
-        {
-                return next - TWO_PI * std::round((next - *previous) / TWO_PI);
-        }
-        return next;
+        return std::remainder(difference, 2 * PI<T>);
 }
 
 template <typename T>
-T normalize_angle_difference(T difference)
+[[nodiscard]] T unbound_angle(const std::optional<T> previous, const T next)
 {
-        difference = std::fmod(difference, 2 * PI<T>);
-        if (std::abs(difference) <= PI<T>)
+        if (previous)
         {
-                return difference;
+                return *previous + normalize_angle(next - *previous);
         }
-        return (difference > 0) ? (difference - 2 * PI<T>) : (difference + 2 * PI<T>);
+        return next;
 }
 }

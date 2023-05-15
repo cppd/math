@@ -234,10 +234,10 @@ public:
                 s += to_string(i);
                 s += "; ";
                 s += name_;
-                s += "; track = " + to_string(radians_to_degrees(normalize_angle_difference(point.angle)));
-                s += "; process = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle())));
-                s += "; speed = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle_speed())));
-                s += "; r = " + to_string(radians_to_degrees(normalize_angle_difference(filter_->angle_r())));
+                s += "; track = " + to_string(radians_to_degrees(normalize_angle(point.angle)));
+                s += "; process = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
+                s += "; speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
+                s += "; r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r())));
                 return s;
         }
 
@@ -331,7 +331,7 @@ void test_impl(const Track<2, T>& track)
         const T measurement_angle = std::atan2(
                 track.process_measurements[*last_position_i].direction[1],
                 track.process_measurements[*last_position_i].direction[0]);
-        const T angle_difference = normalize_angle_difference(measurement_angle - angle.angle);
+        const T angle_difference = normalize_angle(measurement_angle - angle.angle);
         const T angle_r_variance = square(degrees_to_radians(5.0));
         const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE + angle_r_variance;
 
