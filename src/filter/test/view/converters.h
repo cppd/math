@@ -29,6 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::view
 {
+namespace converters_implementation
+{
+template <typename T>
+T speed_kph(const T speed_mps)
+{
+        return T{3.6} * speed_mps;
+}
+}
+
 template <typename T>
 std::vector<std::optional<Vector<2, T>>> add_offset(
         const std::vector<std::optional<Vector<2, T>>>& data,
@@ -77,11 +86,13 @@ std::vector<Vector<2, T>> track_position(const Track<2, T>& track)
 template <typename T>
 std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
 {
+        namespace impl = converters_implementation;
+
         std::vector<Vector<2, T>> res;
         res.reserve(track.points.size());
         for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                res.emplace_back(track.points[i].position[0], track.points[i].speed);
+                res.emplace_back(track.points[i].position[0], impl::speed_kph(track.points[i].speed));
         }
         return res;
 }
@@ -112,6 +123,8 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
         const Track<2, T>& track,
         const std::size_t position_interval)
 {
+        namespace impl = converters_implementation;
+
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
         std::optional<std::size_t> last_index;
@@ -126,7 +139,7 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
                 {
                         res.emplace_back();
                 }
-                res.push_back(Vector<2, T>(track.points[m.index].position[0], *m.speed));
+                res.push_back(Vector<2, T>(track.points[m.index].position[0], impl::speed_kph(*m.speed)));
                 last_index = m.index;
         }
         return res;
@@ -168,6 +181,8 @@ std::vector<std::optional<Vector<2, T>>> filter_speed(
         const Track<2, T>& track,
         const std::vector<std::optional<T>>& speed)
 {
+        namespace impl = converters_implementation;
+
         ASSERT(track.points.size() == speed.size());
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.points.size());
@@ -175,7 +190,7 @@ std::vector<std::optional<Vector<2, T>>> filter_speed(
         {
                 if (speed[i])
                 {
-                        res.push_back(Vector<2, T>(track.points[i].position[0], *speed[i]));
+                        res.push_back(Vector<2, T>(track.points[i].position[0], impl::speed_kph(*speed[i])));
                 }
                 else
                 {

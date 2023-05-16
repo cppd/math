@@ -363,7 +363,7 @@ void write_to_file(
         const std::vector<std::optional<T>>& ukf_speed,
         const std::vector<Vector<N, T>>& ukf_position)
 {
-        static constexpr T OFFSET = 500;
+        static constexpr T OFFSET = 1000;
 
         write_data(
                 annotation, add_offset(track_position(track), OFFSET), track_speed(track), angle_measurements(track),
