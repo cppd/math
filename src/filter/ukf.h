@@ -44,7 +44,7 @@ std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
         const Mean& mean,
         const Residual& residual)
 {
-        Vector<N, T> x = mean(points, wm);
+        const Vector<N, T> x = mean(points, wm);
 
         Matrix<N, N, T> p = noise_covariance;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
