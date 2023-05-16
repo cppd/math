@@ -104,7 +104,7 @@ std::string make_annotation()
 template <std::size_t N, typename T>
 Track<N, T> generate_track()
 {
-        constexpr std::size_t COUNT = 6000;
+        constexpr std::size_t COUNT = 10000;
 
         const TrackMeasurementVariance<T> measurement_variance{
                 .direction = Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
@@ -253,12 +253,12 @@ public:
                 return s;
         }
 
-        const std::vector<Vector<2, T>>& result_position() const
+        [[nodiscard]] const std::vector<Vector<2, T>>& result_position() const
         {
                 return result_position_;
         }
 
-        const std::vector<std::optional<T>>& result_speed() const
+        [[nodiscard]] const std::vector<std::optional<T>>& result_speed() const
         {
                 return result_speed_;
         }
