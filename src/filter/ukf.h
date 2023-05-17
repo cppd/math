@@ -126,7 +126,7 @@ template <std::size_t N, typename T, template <std::size_t, typename> typename S
 class Ukf final
 {
         static constexpr std::size_t POINT_COUNT =
-                std::tuple_size_v<decltype(std::declval<SigmaPoints<N, T>>().points({}, {}))>;
+                std::tuple_size_v<std::remove_cvref_t<decltype(std::declval<SigmaPoints<N, T>>().wm())>>;
 
         static_assert(POINT_COUNT >= 2 * N + 1);
 
@@ -218,7 +218,7 @@ public:
 
                 const Matrix<N, M, T> k = p_xz * p_z.inversed();
 
-                x_ = add_x(x_, k * (residual_z(z, x_z)));
+                x_ = add_x(x_, k * residual_z(z, x_z));
                 p_ = p_ - k * p_z * k.transposed();
         }
 
