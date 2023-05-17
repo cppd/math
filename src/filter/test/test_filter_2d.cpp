@@ -16,14 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "position_filter.h"
+#include "position_filter_data.h"
+#include "process_filter_data.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
 #include "simulator.h"
 #include "utility.h"
 
 #include "view/write.h"
-
-#include "../nees.h"
 
 #include <src/com/constant.h>
 #include <src/com/conversion.h>
@@ -145,125 +145,6 @@ Track<N, T> generate_track()
         return res;
 }
 
-template <typename T, template <typename> typename Filter>
-class PositionFilterData final
-{
-        std::string name_;
-        const Filter<T>* const filter_;
-
-        std::vector<std::optional<Vector<2, T>>> result_position_;
-
-        NeesAverage<2, T> nees_average_position_;
-
-public:
-        PositionFilterData(std::string name, const Filter<T>* const filter, const std::size_t reserve)
-                : name_(std::move(name)),
-                  filter_(filter)
-        {
-                ASSERT(filter_);
-
-                result_position_.reserve(reserve);
-        }
-
-        void update_empty()
-        {
-                result_position_.emplace_back();
-        }
-
-        void update(const auto& point)
-        {
-                result_position_.push_back(filter_->position());
-
-                nees_average_position_.add(point.position, filter_->position(), filter_->position_p());
-        }
-
-        [[nodiscard]] std::string nees_string() const
-        {
-                std::string s;
-                s += "Position " + name_ + " Position: " + nees_average_position_.check_string();
-                return s;
-        }
-
-        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& result_position() const
-        {
-                return result_position_;
-        }
-};
-
-template <typename T, template <typename> typename Filter>
-class ProcessFilterData final
-{
-        std::string name_;
-        const Filter<T>* const filter_;
-
-        std::vector<Vector<2, T>> result_position_;
-        std::vector<std::optional<T>> result_speed_;
-
-        NeesAverage<2, T> nees_average_position_;
-        NeesAverage<1, T> nees_average_angle_;
-        NeesAverage<1, T> nees_average_angle_r_;
-
-public:
-        ProcessFilterData(
-                std::string name,
-                const Filter<T>* const filter,
-                const std::size_t reserve,
-                const std::size_t resize)
-                : name_(std::move(name)),
-                  filter_(filter)
-        {
-                ASSERT(filter_);
-
-                result_position_.reserve(reserve);
-                result_speed_.reserve(reserve);
-                result_speed_.resize(resize);
-        }
-
-        void update(const auto& point)
-        {
-                result_position_.push_back(filter_->position());
-                result_speed_.push_back(filter_->speed());
-
-                nees_average_position_.add(point.position, filter_->position(), filter_->position_p());
-                nees_average_angle_.add(point.angle, filter_->angle(), filter_->angle_p());
-                nees_average_angle_r_.add(point.angle_r, filter_->angle_r(), filter_->angle_r_p());
-        }
-
-        [[nodiscard]] std::string angle_string(const auto& i, const auto& point) const
-        {
-                std::string s;
-                s += to_string(i);
-                s += "; ";
-                s += name_;
-                s += "; track = " + to_string(radians_to_degrees(normalize_angle(point.angle)));
-                s += "; process = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-                s += "; speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
-                s += "; r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r())));
-                return s;
-        }
-
-        [[nodiscard]] std::string nees_string() const
-        {
-                std::string s;
-                s += "Process " + name_ + " Position: " + nees_average_position_.check_string();
-                s += '\n';
-                s += "Process " + name_ + " Angle: " + nees_average_angle_.check_string();
-                s += '\n';
-                s += "Process " + name_ + " Angle R: " + nees_average_angle_r_.check_string();
-                return s;
-        }
-
-        [[nodiscard]] const std::vector<Vector<2, T>>& result_position() const
-        {
-                return result_position_;
-        }
-
-        [[nodiscard]] const std::vector<std::optional<T>>& result_speed() const
-        {
-                return result_speed_;
-        }
-};
-
 template <typename T>
 auto move(
         const Track<2, T>& track,
@@ -282,7 +163,7 @@ auto move(
 
                 if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
                 {
-                        position_filter_data->update_empty();
+                        position_filter_data->save_empty();
                 }
 
                 if (!last_position_i)
@@ -294,7 +175,7 @@ auto move(
                 position_filter->update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
                 last_position_i = m.index;
 
-                position_filter_data->update(track.points[m.index]);
+                position_filter_data->save(track.points[m.index]);
 
                 if (m.index >= count)
                 {
@@ -383,13 +264,13 @@ void test_impl(const Track<2, T>& track)
 
                         if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
                         {
-                                position_filter_data.update_empty();
+                                position_filter_data.save_empty();
                         }
 
                         position_filter.predict((i - *last_position_i) * Config<T>::DT);
                         position_filter.update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
-                        position_filter_data.update(track.points[i]);
+                        position_filter_data.save(track.points[i]);
 
                         std::apply(
                                 [&](auto&... p)
@@ -422,7 +303,7 @@ void test_impl(const Track<2, T>& track)
                         std::apply(
                                 [&](auto&... p)
                                 {
-                                        (LOG(p.angle_string(i, track.points[i])), ...);
+                                        (LOG(to_string(i) + "; " + p.angle_string(track.points[i])), ...);
                                 },
                                 process_data);
 
@@ -448,15 +329,15 @@ void test_impl(const Track<2, T>& track)
                 std::apply(
                         [&](auto&... p)
                         {
-                                (p.update(track.points[i]), ...);
+                                (p.save(track.points[i]), ...);
                         },
                         process_data);
         }
 
         view::write_to_file(
-                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.result_position(),
-                std::get<EKF>(process_data).result_speed(), std::get<EKF>(process_data).result_position(),
-                std::get<UKF>(process_data).result_speed(), std::get<UKF>(process_data).result_position());
+                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.positions(),
+                std::get<EKF>(process_data).speed(), std::get<EKF>(process_data).position(),
+                std::get<UKF>(process_data).speed(), std::get<UKF>(process_data).position());
 
         LOG(position_filter_data.nees_string());
 
