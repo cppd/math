@@ -45,10 +45,10 @@ public:
 
         void update_position(const Vector<2, T>& position, T position_variance);
 
-        void update_position_velocity_acceleration(
+        void update_position_speed_direction_acceleration(
                 const Vector<2, T>& position,
                 T speed,
-                const Vector<2, T>& direction,
+                T direction,
                 const Vector<2, T>& acceleration,
                 T position_variance,
                 T speed_variance,
@@ -57,7 +57,7 @@ public:
 
         void update_position_direction_acceleration(
                 const Vector<2, T>& position,
-                const Vector<2, T>& direction,
+                T direction,
                 const Vector<2, T>& acceleration,
                 T position_variance,
                 T direction_variance,

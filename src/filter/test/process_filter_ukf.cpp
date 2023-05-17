@@ -169,7 +169,7 @@ Vector<2, T> position_h(const Vector<9, T>& x)
 //
 
 template <typename T>
-Matrix<6, 6, T> position_speed_angle_acceleration_r(
+Matrix<6, 6, T> position_speed_direction_acceleration_r(
         const T position_variance,
         const T speed_variance,
         const T direction_variance,
@@ -190,7 +190,7 @@ Matrix<6, 6, T> position_speed_angle_acceleration_r(
 }
 
 template <typename T>
-Vector<6, T> position_speed_angle_acceleration_h(const Vector<9, T>& x)
+Vector<6, T> position_speed_direction_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -218,7 +218,7 @@ Vector<6, T> position_speed_angle_acceleration_h(const Vector<9, T>& x)
         };
 }
 
-struct PositionSpeedAngleAccelerationResidual final
+struct PositionSpeedDirectionAccelerationResidual final
 {
         template <typename T>
         Vector<6, T> operator()(const Vector<6, T>& a, const Vector<6, T>& b) const
@@ -229,7 +229,7 @@ struct PositionSpeedAngleAccelerationResidual final
         }
 };
 
-struct PositionSpeedAngleAccelerationMean final
+struct PositionSpeedDirectionAccelerationMean final
 {
         template <typename T, std::size_t COUNT>
         Vector<6, T> operator()(const std::array<Vector<6, T>, COUNT>& p, const Vector<COUNT, T>& w) const
@@ -257,7 +257,7 @@ struct PositionSpeedAngleAccelerationMean final
 //
 
 template <typename T>
-Matrix<5, 5, T> position_angle_acceleration_r(
+Matrix<5, 5, T> position_direction_acceleration_r(
         const T position_variance,
         const T direction_variance,
         const T acceleration_variance)
@@ -275,7 +275,7 @@ Matrix<5, 5, T> position_angle_acceleration_r(
 }
 
 template <typename T>
-Vector<5, T> position_angle_acceleration_h(const Vector<9, T>& x)
+Vector<5, T> position_direction_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -301,7 +301,7 @@ Vector<5, T> position_angle_acceleration_h(const Vector<9, T>& x)
         };
 }
 
-struct PositionAngleAccelerationResidual final
+struct PositionDirectionAccelerationResidual final
 {
         template <typename T>
         Vector<5, T> operator()(const Vector<5, T>& a, const Vector<5, T>& b) const
@@ -312,7 +312,7 @@ struct PositionAngleAccelerationResidual final
         }
 };
 
-struct PositionAngleAccelerationMean final
+struct PositionDirectionAccelerationMean final
 {
         template <typename T, std::size_t COUNT>
         Vector<5, T> operator()(const std::array<Vector<5, T>, COUNT>& p, const Vector<COUNT, T>& w) const
@@ -397,10 +397,10 @@ void ProcessFilterUkf<T>::update_position(const Vector<2, T>& position, const T 
 }
 
 template <typename T>
-void ProcessFilterUkf<T>::update_position_velocity_acceleration(
+void ProcessFilterUkf<T>::update_position_speed_direction_acceleration(
         const Vector<2, T>& position,
         const T speed,
-        const Vector<2, T>& direction,
+        const T direction,
         const Vector<2, T>& acceleration,
         const T position_variance,
         const T speed_variance,
@@ -408,31 +408,28 @@ void ProcessFilterUkf<T>::update_position_velocity_acceleration(
         const T acceleration_variance)
 {
         filter_.update(
-                position_speed_angle_acceleration_h<T>,
-                position_speed_angle_acceleration_r(
+                position_speed_direction_acceleration_h<T>,
+                position_speed_direction_acceleration_r(
                         position_variance, speed_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(
-                        position[0], position[1], speed, std::atan2(direction[1], direction[0]), acceleration[0],
-                        acceleration[1]),
-                PositionSpeedAngleAccelerationMean(), ResidualX(), PositionSpeedAngleAccelerationResidual(), AddX());
+                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
+                PositionSpeedDirectionAccelerationMean(), ResidualX(), PositionSpeedDirectionAccelerationResidual(),
+                AddX());
 }
 
 template <typename T>
 void ProcessFilterUkf<T>::update_position_direction_acceleration(
         const Vector<2, T>& position,
-        const Vector<2, T>& direction,
+        const T direction,
         const Vector<2, T>& acceleration,
         const T position_variance,
         const T direction_variance,
         const T acceleration_variance)
 {
         filter_.update(
-                position_angle_acceleration_h<T>,
-                position_angle_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                Vector<5, T>(
-                        position[0], position[1], std::atan2(direction[1], direction[0]), acceleration[0],
-                        acceleration[1]),
-                PositionAngleAccelerationMean(), ResidualX(), PositionAngleAccelerationResidual(), AddX());
+                position_direction_acceleration_h<T>,
+                position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
+                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]),
+                PositionDirectionAccelerationMean(), ResidualX(), PositionDirectionAccelerationResidual(), AddX());
 }
 
 template <typename T>

@@ -136,7 +136,7 @@ public:
                 const Vector<N, T> direction =
                         rotate(velocity_, direction_angle_ + angle_ + measurements_velocity_direction_nd_(engine_));
                 return ProcessMeasurement<N, T>{
-                        .direction = direction.normalized(),
+                        .direction = std::atan2(direction[1], direction[0]),
                         .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
         }
 

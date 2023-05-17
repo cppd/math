@@ -25,13 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
-#include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/test/test.h>
 
 #include <cmath>
+#include <optional>
 #include <sstream>
 #include <tuple>
 #include <vector>
@@ -210,9 +210,7 @@ void test_impl(const Track<2, T>& track)
 
         const typename PositionFilter<T>::Angle angle = position_filter.velocity_angle();
 
-        const T measurement_angle = std::atan2(
-                track.process_measurements[*last_position_i].direction[1],
-                track.process_measurements[*last_position_i].direction[0]);
+        const T measurement_angle = track.process_measurements[*last_position_i].direction;
         const T angle_difference = normalize_angle(measurement_angle - angle.angle);
         const T angle_r_variance = square(degrees_to_radians(5.0));
         const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE + angle_r_variance;
@@ -260,7 +258,7 @@ void test_impl(const Track<2, T>& track)
 
                 if (position_iter != track.position_measurements.cend() && position_iter->index == i)
                 {
-                        const auto& measurement = *position_iter;
+                        const auto& position_measurement = *position_iter;
 
                         if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
                         {
@@ -268,17 +266,17 @@ void test_impl(const Track<2, T>& track)
                         }
 
                         position_filter.predict((i - *last_position_i) * Config<T>::DT);
-                        position_filter.update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                        position_filter.update(position_measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
                         position_filter_data.save(track.points[i]);
 
                         std::apply(
                                 [&](auto&... p)
                                 {
-                                        if (measurement.speed)
+                                        if (position_measurement.speed)
                                         {
-                                                (p->update_position_velocity_acceleration(
-                                                         measurement.position, *measurement.speed,
+                                                (p->update_position_speed_direction_acceleration(
+                                                         position_measurement.position, *position_measurement.speed,
                                                          track.process_measurements[i].direction,
                                                          track.process_measurements[i].acceleration,
                                                          Config<T>::MEASUREMENT_POSITION_VARIANCE,
@@ -290,7 +288,8 @@ void test_impl(const Track<2, T>& track)
                                         else
                                         {
                                                 (p->update_position_direction_acceleration(
-                                                         measurement.position, track.process_measurements[i].direction,
+                                                         position_measurement.position,
+                                                         track.process_measurements[i].direction,
                                                          track.process_measurements[i].acceleration,
                                                          Config<T>::MEASUREMENT_POSITION_VARIANCE,
                                                          Config<T>::MEASUREMENT_DIRECTION_VARIANCE,

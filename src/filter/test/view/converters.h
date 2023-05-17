@@ -153,9 +153,7 @@ std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
         std::optional<T> previous_angle;
         for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                const T vx = track.process_measurements[i].direction[0];
-                const T vy = track.process_measurements[i].direction[1];
-                const T angle = std::atan2(vy, vx);
+                const T angle = track.process_measurements[i].direction;
                 const T unbounded_angle = unbound_angle(previous_angle, angle);
                 previous_angle = unbounded_angle;
                 res.emplace_back(track.points[i].position[0], radians_to_degrees(unbounded_angle));

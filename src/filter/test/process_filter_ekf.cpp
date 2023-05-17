@@ -116,7 +116,7 @@ Matrix<2, 9, T> position_hj(const Vector<9, T>& /*x*/)
 //
 
 template <typename T>
-Matrix<6, 6, T> position_speed_angle_acceleration_r(
+Matrix<6, 6, T> position_speed_direction_acceleration_r(
         const T position_variance,
         const T speed_variance,
         const T direction_variance,
@@ -137,7 +137,7 @@ Matrix<6, 6, T> position_speed_angle_acceleration_r(
 }
 
 template <typename T>
-Vector<6, T> position_speed_angle_acceleration_h(const Vector<9, T>& x)
+Vector<6, T> position_speed_direction_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -166,7 +166,7 @@ Vector<6, T> position_speed_angle_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<6, 9, T> position_speed_angle_acceleration_hj(const Vector<9, T>& x)
+Matrix<6, 9, T> position_speed_direction_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -206,7 +206,7 @@ Matrix<6, 9, T> position_speed_angle_acceleration_hj(const Vector<9, T>& x)
 //
 
 template <typename T>
-Matrix<5, 5, T> position_angle_acceleration_r(
+Matrix<5, 5, T> position_direction_acceleration_r(
         const T position_variance,
         const T direction_variance,
         const T acceleration_variance)
@@ -224,7 +224,7 @@ Matrix<5, 5, T> position_angle_acceleration_r(
 }
 
 template <typename T>
-Vector<5, T> position_angle_acceleration_h(const Vector<9, T>& x)
+Vector<5, T> position_direction_acceleration_h(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -251,7 +251,7 @@ Vector<5, T> position_angle_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<5, 9, T> position_angle_acceleration_hj(const Vector<9, T>& x)
+Matrix<5, 9, T> position_direction_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -358,10 +358,10 @@ void ProcessFilterEkf<T>::update_position(const Vector<2, T>& position, const T 
 }
 
 template <typename T>
-void ProcessFilterEkf<T>::update_position_velocity_acceleration(
+void ProcessFilterEkf<T>::update_position_speed_direction_acceleration(
         const Vector<2, T>& position,
         const T speed,
-        const Vector<2, T>& direction,
+        const T direction,
         const Vector<2, T>& acceleration,
         const T position_variance,
         const T speed_variance,
@@ -369,12 +369,10 @@ void ProcessFilterEkf<T>::update_position_velocity_acceleration(
         const T acceleration_variance)
 {
         filter_.update(
-                position_speed_angle_acceleration_h<T>, position_speed_angle_acceleration_hj<T>,
-                position_speed_angle_acceleration_r(
+                position_speed_direction_acceleration_h<T>, position_speed_direction_acceleration_hj<T>,
+                position_speed_direction_acceleration_r(
                         position_variance, speed_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(
-                        position[0], position[1], speed, std::atan2(direction[1], direction[0]), acceleration[0],
-                        acceleration[1]),
+                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
                 [](const Vector<6, T>& a, const Vector<6, T>& b) -> Vector<6, T>
                 {
                         Vector<6, T> res = a - b;
@@ -387,18 +385,16 @@ void ProcessFilterEkf<T>::update_position_velocity_acceleration(
 template <typename T>
 void ProcessFilterEkf<T>::update_position_direction_acceleration(
         const Vector<2, T>& position,
-        const Vector<2, T>& direction,
+        const T direction,
         const Vector<2, T>& acceleration,
         const T position_variance,
         const T direction_variance,
         const T acceleration_variance)
 {
         filter_.update(
-                position_angle_acceleration_h<T>, position_angle_acceleration_hj<T>,
-                position_angle_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                Vector<5, T>(
-                        position[0], position[1], std::atan2(direction[1], direction[0]), acceleration[0],
-                        acceleration[1]),
+                position_direction_acceleration_h<T>, position_direction_acceleration_hj<T>,
+                position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
+                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]),
                 [](const Vector<5, T>& a, const Vector<5, T>& b) -> Vector<5, T>
                 {
                         Vector<5, T> res = a - b;

@@ -36,7 +36,7 @@ struct SimulatorPoint final
 template <std::size_t N, typename T>
 struct ProcessMeasurement final
 {
-        Vector<N, T> direction;
+        T direction;
         Vector<N, T> acceleration;
 };
 
