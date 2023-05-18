@@ -66,9 +66,9 @@ public:
                 position_.push_back(filter_->position());
                 speed_.push_back(filter_->speed());
 
-                nees_position_.add(point.position, filter_->position(), filter_->position_p());
-                nees_angle_.add(point.angle, filter_->angle(), filter_->angle_p());
-                nees_angle_r_.add(point.angle_r, filter_->angle_r(), filter_->angle_r_p());
+                nees_position_.add(point.position - filter_->position(), filter_->position_p());
+                nees_angle_.add(normalize_angle(point.angle - filter_->angle()), filter_->angle_p());
+                nees_angle_r_.add(normalize_angle(point.angle_r - filter_->angle_r()), filter_->angle_r_p());
         }
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const

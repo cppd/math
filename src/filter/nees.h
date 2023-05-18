@@ -53,18 +53,20 @@ class NeesAverage final
         std::size_t count_ = 0;
 
 public:
-        void add(const Vector<N, T>& value, const Vector<N, T>& estimate, const Matrix<N, N, T>& covariance)
+        void add(
+                // difference between true value and the filter’s state estimate
+                const Vector<N, T>& difference,
+                const Matrix<N, N, T>& covariance)
         {
-                const Vector<N, T> x = value - estimate;
-                const T nees = dot(x * covariance.inversed(), x);
+                const T nees = dot(difference * covariance.inversed(), difference);
                 sum_ += nees;
                 ++count_;
         }
 
-        void add(const T value, const T estimate, const T variance)
+        void add(const T difference, const T variance)
                 requires (N == 1)
         {
-                add(Vector<1, T>(value), Vector<1, T>(estimate), Matrix<1, 1, T>{{variance}});
+                add(Vector<1, T>(difference), Matrix<1, 1, T>{{variance}});
         }
 
         [[nodiscard]] T average() const

@@ -108,7 +108,7 @@ public:
                 next_velocity_ = velocity(index_ + 1) + vector(track_velocity_nd_);
                 acceleration_ = (next_velocity_ - velocity_) / dt_;
 
-                angle_ = -T{0.5} - index_ * direction_bias_drift_;
+                angle_ = -T{3} - index_ * direction_bias_drift_;
         }
 
         [[nodiscard]] const Vector<N, T>& position() const

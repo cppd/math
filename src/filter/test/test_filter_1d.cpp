@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include "../ekf.h"
+#include "../functions.h"
 #include "../models.h"
 #include "../nees.h"
 #include "../sigma_points.h"
@@ -294,7 +295,7 @@ public:
                 };
 
                 filter_.predict(f, f_jacobian, q_);
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement));
+                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Subtract());
         }
 
         [[nodiscard]] T x() const
@@ -325,7 +326,7 @@ class TestUkf
         const Matrix<2, 2, T> q_;
         const Matrix<1, 1, T> r_;
 
-        Ukf<2, T, SigmaPoints> filter_;
+        Ukf<2, T, SigmaPoints<2, T, Add, Subtract>> filter_;
 
 public:
         TestUkf(const std::type_identity_t<T> dt,
@@ -336,7 +337,7 @@ public:
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
-                  filter_(SigmaPoints<2, T>(ALPHA, BETA, KAPPA), x, p)
+                  filter_({ALPHA, BETA, KAPPA, Add(), Subtract()}, x, p)
         {
         }
 
@@ -355,8 +356,8 @@ public:
                         return Vector<1, T>(x[0]);
                 };
 
-                filter_.predict(f, q_);
-                filter_.update(h, r_, Vector<1, T>(measurement));
+                filter_.predict(f, q_, Mean(), Subtract());
+                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Subtract(), Mean(), Subtract());
         }
 
         [[nodiscard]] T x() const
@@ -417,7 +418,7 @@ void test_impl(
                 result_data.push_back({.x = x, .standard_deviation = stddev});
                 ++distribution[static_cast<int>((x - process.x) / stddev)];
 
-                nees_average.add(process.x, x, variance);
+                nees_average.add(process.x - x, variance);
         }
 
         write_to_file(

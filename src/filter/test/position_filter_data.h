@@ -56,7 +56,7 @@ public:
         void save(const SimulatorPoint<2, T>& point)
         {
                 positions_.push_back(filter_->position());
-                nees_position_.add(point.position, filter_->position(), filter_->position_p());
+                nees_position_.add(point.position - filter_->position(), filter_->position_p());
         }
 
         [[nodiscard]] std::string nees_string() const

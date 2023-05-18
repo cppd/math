@@ -34,7 +34,7 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter
 {
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Add, typename Subtract>
 class SigmaPoints final
 {
         static_assert(std::is_floating_point_v<T>);
@@ -60,14 +60,28 @@ class SigmaPoints final
 
         T lambda_;
         Weights weights_;
+        Add add_;
+        Subtract subtract_;
 
 public:
         SigmaPoints(
                 const std::type_identity_t<T> alpha,
                 const std::type_identity_t<T> beta,
-                const std::type_identity_t<T> kappa)
+                const std::type_identity_t<T> kappa,
+                // Addition
+                // Vector<N, T> operator()(
+                //   const Vector<N, T>& a,
+                //   const Vector<N, T>& b) const
+                Add add,
+                // Subtraction
+                // Vector<N, T> operator()(
+                //   const Vector<N, T>& a,
+                //   const Vector<N, T>& b) const
+                Subtract subtract)
                 : lambda_(square(alpha) * (N + kappa) - N),
-                  weights_(create_weights(lambda_, alpha, beta))
+                  weights_(create_weights(lambda_, alpha, beta)),
+                  add_(std::move(add)),
+                  subtract_(std::move(subtract))
         {
         }
 
@@ -90,8 +104,8 @@ public:
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const Vector<N, T> c = l.column(i);
-                        res[i + 1] = x + c;
-                        res[i + N + 1] = x - c;
+                        res[i + 1] = add_(x, c);
+                        res[i + N + 1] = subtract_(x, c);
                 }
                 return res;
         }

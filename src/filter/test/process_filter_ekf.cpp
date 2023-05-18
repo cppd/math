@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
+#include "../functions.h"
+
 namespace ns::filter::test
 {
 namespace
@@ -354,7 +356,7 @@ void ProcessFilterEkf<T>::predict()
 template <typename T>
 void ProcessFilterEkf<T>::update_position(const Vector<2, T>& position, const T position_variance)
 {
-        filter_.update(position_h<T>, position_hj<T>, position_r(position_variance), position);
+        filter_.update(position_h<T>, position_hj<T>, position_r(position_variance), position, AddX(), Subtract());
 }
 
 template <typename T>
@@ -372,14 +374,13 @@ void ProcessFilterEkf<T>::update_position_speed_direction_acceleration(
                 position_speed_direction_acceleration_h<T>, position_speed_direction_acceleration_hj<T>,
                 position_speed_direction_acceleration_r(
                         position_variance, speed_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
+                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]), AddX(),
                 [](const Vector<6, T>& a, const Vector<6, T>& b) -> Vector<6, T>
                 {
                         Vector<6, T> res = a - b;
                         res[3] = normalize_angle(res[3]);
                         return res;
-                },
-                AddX());
+                });
 }
 
 template <typename T>
@@ -394,20 +395,21 @@ void ProcessFilterEkf<T>::update_position_direction_acceleration(
         filter_.update(
                 position_direction_acceleration_h<T>, position_direction_acceleration_hj<T>,
                 position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]),
+                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
                 [](const Vector<5, T>& a, const Vector<5, T>& b) -> Vector<5, T>
                 {
                         Vector<5, T> res = a - b;
                         res[2] = normalize_angle(res[2]);
                         return res;
-                },
-                AddX());
+                });
 }
 
 template <typename T>
 void ProcessFilterEkf<T>::update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance)
 {
-        filter_.update(acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration_variance), acceleration);
+        filter_.update(
+                acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration_variance), acceleration, AddX(),
+                Subtract());
 }
 
 template <typename T>

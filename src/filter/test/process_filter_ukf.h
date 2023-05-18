@@ -28,7 +28,17 @@ namespace ns::filter::test
 template <typename T>
 class ProcessFilterUkf final
 {
-        Ukf<9, T, SigmaPoints> filter_;
+        struct SigmaPointsAdd final
+        {
+                [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const;
+        };
+
+        struct SigmaPointsSubtract final
+        {
+                [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const;
+        };
+
+        Ukf<9, T, SigmaPoints<9, T, SigmaPointsAdd, SigmaPointsSubtract>> filter_;
         const T dt_;
         Matrix<9, 9, T> q_;
 

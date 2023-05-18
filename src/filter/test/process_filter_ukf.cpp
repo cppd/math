@@ -19,19 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
+#include "../functions.h"
+
 namespace ns::filter::test
 {
 namespace
 {
+template <typename T>
+constexpr T SIGMA_POINTS_ALPHA = 0.1;
+template <typename T>
+constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
 template <std::size_t N, typename T>
-SigmaPoints<N, T> create_sigma_points()
-{
-        constexpr T ALPHA = 0.1;
-        constexpr T BETA = 2; // 2 for Gaussian
-        constexpr T KAPPA = 3 - T{N};
-
-        return {ALPHA, BETA, KAPPA};
-}
+constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 struct AddX final
 {
@@ -366,6 +365,18 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
+Vector<9, T> ProcessFilterUkf<T>::SigmaPointsAdd::operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+{
+        return a + b;
+}
+
+template <typename T>
+Vector<9, T> ProcessFilterUkf<T>::SigmaPointsSubtract::operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+{
+        return a - b;
+}
+
+template <typename T>
 ProcessFilterUkf<T>::ProcessFilterUkf(
         const T dt,
         const T position_variance,
@@ -373,7 +384,11 @@ ProcessFilterUkf<T>::ProcessFilterUkf(
         const T angle_r_variance,
         const Vector<9, T>& x,
         const Matrix<9, 9, T>& p)
-        : filter_(create_sigma_points<9, T>(), x, p),
+        : filter_(
+                {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, SigmaPointsAdd(),
+                 SigmaPointsSubtract()},
+                x,
+                p),
           dt_(dt),
           q_(q(dt, position_variance, angle_variance, angle_r_variance))
 {
@@ -393,7 +408,7 @@ void ProcessFilterUkf<T>::predict()
 template <typename T>
 void ProcessFilterUkf<T>::update_position(const Vector<2, T>& position, const T position_variance)
 {
-        filter_.update(position_h<T>, position_r(position_variance), position);
+        filter_.update(position_h<T>, position_r(position_variance), position, AddX(), ResidualX(), Mean(), Subtract());
 }
 
 template <typename T>
@@ -411,9 +426,8 @@ void ProcessFilterUkf<T>::update_position_speed_direction_acceleration(
                 position_speed_direction_acceleration_h<T>,
                 position_speed_direction_acceleration_r(
                         position_variance, speed_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
-                PositionSpeedDirectionAccelerationMean(), ResidualX(), PositionSpeedDirectionAccelerationResidual(),
-                AddX());
+                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]), AddX(),
+                ResidualX(), PositionSpeedDirectionAccelerationMean(), PositionSpeedDirectionAccelerationResidual());
 }
 
 template <typename T>
@@ -428,14 +442,16 @@ void ProcessFilterUkf<T>::update_position_direction_acceleration(
         filter_.update(
                 position_direction_acceleration_h<T>,
                 position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]),
-                PositionDirectionAccelerationMean(), ResidualX(), PositionDirectionAccelerationResidual(), AddX());
+                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
+                ResidualX(), PositionDirectionAccelerationMean(), PositionDirectionAccelerationResidual());
 }
 
 template <typename T>
 void ProcessFilterUkf<T>::update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance)
 {
-        filter_.update(acceleration_h<T>, acceleration_r(acceleration_variance), acceleration);
+        filter_.update(
+                acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, AddX(), ResidualX(), Mean(),
+                Subtract());
 }
 
 template <typename T>

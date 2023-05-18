@@ -110,8 +110,8 @@ public:
                 const HJ& hj /*measurement function Jacobian*/,
                 const Matrix<M, M, T>& r /* measurement covariance*/,
                 const Vector<M, T>& z /*measurement*/,
-                const ResidualZ residual_z /*the residual between the two measurement vectors*/,
-                const AddX& add_x /*the sum of the two state vectors*/)
+                const AddX add_x /*the sum of the two state vectors*/,
+                const ResidualZ residual_z /*the residual between the two measurement vectors*/)
         {
                 const Matrix<M, N, T> hjx = hj(x_);
                 const Matrix<N, M, T> hjx_t = hjx.transposed();
@@ -121,14 +121,6 @@ public:
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
-        }
-
-        template <std::size_t M, typename H, typename HJ>
-        void update(const H& h, const HJ& hj, const Matrix<M, M, T>& r, const Vector<M, T>& z)
-        {
-                namespace impl = ekf_implementation;
-
-                update(h, hj, r, z, impl::Residual(), impl::Add());
         }
 };
 }

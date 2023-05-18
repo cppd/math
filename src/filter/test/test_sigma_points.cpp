@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../functions.h"
 #include "../sigma_points.h"
 
 #include <src/com/log.h>
@@ -69,7 +70,7 @@ void test_impl(const T precision)
                 }
         };
 
-        const SigmaPoints<2, T> points(0.1L, 2, 1);
+        const SigmaPoints<2, T, Add, Subtract> points(0.1L, 2, 1, Add(), Subtract());
 
         cmp(points.wm(),
             Vector<5, T>(
