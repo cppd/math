@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include "../functions.h"
+#include "../sigma_points.h"
+#include "../ukf.h"
 
 namespace ns::filter::test
 {
@@ -362,150 +364,170 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
                 ax * sin + ay * cos // ay
         };
 }
-}
 
-template <typename T>
-Vector<9, T> ProcessFilterUkf<T>::SigmaPointsAdd::operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+struct SigmaPointsAdd final
 {
-        return a + b;
-}
+        template <typename T>
+        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+        {
+                return a + b;
+        }
+};
 
-template <typename T>
-Vector<9, T> ProcessFilterUkf<T>::SigmaPointsSubtract::operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+struct SigmaPointsSubtract final
 {
-        return a - b;
+        template <typename T>
+        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
+        {
+                return a - b;
+        }
+};
+
+template <typename T>
+class ProcessFilterUkf final : public ProcessFilter<T>
+{
+        Ukf<9, T, SigmaPoints<9, T, SigmaPointsAdd, SigmaPointsSubtract>> filter_;
+        const T dt_;
+        Matrix<9, 9, T> q_;
+
+        void predict() override
+        {
+                filter_.predict(
+                        [&](const Vector<9, T>& x)
+                        {
+                                return f(dt_, x);
+                        },
+                        q_, MeanX(), ResidualX());
+        }
+
+        void update_position(const Vector<2, T>& position, const T position_variance) override
+        {
+                filter_.update(
+                        position_h<T>, position_r(position_variance), position, AddX(), ResidualX(), Mean(),
+                        Subtract());
+        }
+
+        void update_position_speed_direction_acceleration(
+                const Vector<2, T>& position,
+                const T speed,
+                const T direction,
+                const Vector<2, T>& acceleration,
+                const T position_variance,
+                const T speed_variance,
+                const T direction_variance,
+                const T acceleration_variance) override
+        {
+                filter_.update(
+                        position_speed_direction_acceleration_h<T>,
+                        position_speed_direction_acceleration_r(
+                                position_variance, speed_variance, direction_variance, acceleration_variance),
+                        Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
+                        AddX(), ResidualX(), PositionSpeedDirectionAccelerationMean(),
+                        PositionSpeedDirectionAccelerationResidual());
+        }
+
+        void update_position_direction_acceleration(
+                const Vector<2, T>& position,
+                const T direction,
+                const Vector<2, T>& acceleration,
+                const T position_variance,
+                const T direction_variance,
+                const T acceleration_variance) override
+        {
+                filter_.update(
+                        position_direction_acceleration_h<T>,
+                        position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
+                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
+                        ResidualX(), PositionDirectionAccelerationMean(), PositionDirectionAccelerationResidual());
+        }
+
+        void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
+        {
+                filter_.update(
+                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, AddX(), ResidualX(),
+                        Mean(), Subtract());
+        }
+
+        [[nodiscard]] Vector<2, T> position() const override
+        {
+                return {filter_.x()[0], filter_.x()[3]};
+        }
+
+        [[nodiscard]] Matrix<2, 2, T> position_p() const override
+        {
+                return {
+                        {filter_.p()(0, 0), filter_.p()(0, 3)},
+                        {filter_.p()(3, 0), filter_.p()(3, 3)}
+                };
+        }
+
+        [[nodiscard]] T speed() const override
+        {
+                return Vector<2, T>(filter_.x()[1], filter_.x()[4]).norm();
+        }
+
+        [[nodiscard]] T angle() const override
+        {
+                return filter_.x()[6];
+        }
+
+        [[nodiscard]] T angle_speed() const override
+        {
+                return filter_.x()[7];
+        }
+
+        [[nodiscard]] T angle_p() const override
+        {
+                return filter_.p()(6, 6);
+        }
+
+        [[nodiscard]] T angle_r() const override
+        {
+                return filter_.x()[8];
+        }
+
+        [[nodiscard]] T angle_r_p() const override
+        {
+                return filter_.p()(8, 8);
+        }
+
+public:
+        ProcessFilterUkf(
+                const T dt,
+                const T position_variance,
+                const T angle_variance,
+                const T angle_r_variance,
+                const Vector<9, T>& x,
+                const Matrix<9, 9, T>& p)
+                : filter_(
+                        {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, SigmaPointsAdd(),
+                         SigmaPointsSubtract()},
+                        x,
+                        p),
+                  dt_(dt),
+                  q_(q(dt, position_variance, angle_variance, angle_r_variance))
+        {
+        }
+};
 }
 
 template <typename T>
-ProcessFilterUkf<T>::ProcessFilterUkf(
+std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
         const T dt,
         const T position_variance,
         const T angle_variance,
         const T angle_r_variance,
         const Vector<9, T>& x,
         const Matrix<9, 9, T>& p)
-        : filter_(
-                {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, SigmaPointsAdd(),
-                 SigmaPointsSubtract()},
-                x,
-                p),
-          dt_(dt),
-          q_(q(dt, position_variance, angle_variance, angle_r_variance))
 {
+        return std::make_unique<ProcessFilterUkf<T>>(dt, position_variance, angle_variance, angle_r_variance, x, p);
 }
 
-template <typename T>
-void ProcessFilterUkf<T>::predict()
-{
-        filter_.predict(
-                [&](const Vector<9, T>& x)
-                {
-                        return f(dt_, x);
-                },
-                q_, MeanX(), ResidualX());
-}
+#define TEMPLATE(T)                                                           \
+        template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf( \
+                T, T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
 
-template <typename T>
-void ProcessFilterUkf<T>::update_position(const Vector<2, T>& position, const T position_variance)
-{
-        filter_.update(position_h<T>, position_r(position_variance), position, AddX(), ResidualX(), Mean(), Subtract());
-}
-
-template <typename T>
-void ProcessFilterUkf<T>::update_position_speed_direction_acceleration(
-        const Vector<2, T>& position,
-        const T speed,
-        const T direction,
-        const Vector<2, T>& acceleration,
-        const T position_variance,
-        const T speed_variance,
-        const T direction_variance,
-        const T acceleration_variance)
-{
-        filter_.update(
-                position_speed_direction_acceleration_h<T>,
-                position_speed_direction_acceleration_r(
-                        position_variance, speed_variance, direction_variance, acceleration_variance),
-                Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]), AddX(),
-                ResidualX(), PositionSpeedDirectionAccelerationMean(), PositionSpeedDirectionAccelerationResidual());
-}
-
-template <typename T>
-void ProcessFilterUkf<T>::update_position_direction_acceleration(
-        const Vector<2, T>& position,
-        const T direction,
-        const Vector<2, T>& acceleration,
-        const T position_variance,
-        const T direction_variance,
-        const T acceleration_variance)
-{
-        filter_.update(
-                position_direction_acceleration_h<T>,
-                position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
-                ResidualX(), PositionDirectionAccelerationMean(), PositionDirectionAccelerationResidual());
-}
-
-template <typename T>
-void ProcessFilterUkf<T>::update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance)
-{
-        filter_.update(
-                acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, AddX(), ResidualX(), Mean(),
-                Subtract());
-}
-
-template <typename T>
-Vector<2, T> ProcessFilterUkf<T>::position() const
-{
-        return {filter_.x()[0], filter_.x()[3]};
-}
-
-template <typename T>
-Matrix<2, 2, T> ProcessFilterUkf<T>::position_p() const
-{
-        return {
-                {filter_.p()(0, 0), filter_.p()(0, 3)},
-                {filter_.p()(3, 0), filter_.p()(3, 3)}
-        };
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::speed() const
-{
-        return Vector<2, T>(filter_.x()[1], filter_.x()[4]).norm();
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::angle() const
-{
-        return filter_.x()[6];
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::angle_speed() const
-{
-        return filter_.x()[7];
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::angle_p() const
-{
-        return filter_.p()(6, 6);
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::angle_r() const
-{
-        return filter_.x()[8];
-}
-
-template <typename T>
-T ProcessFilterUkf<T>::angle_r_p() const
-{
-        return filter_.p()(8, 8);
-}
-
-template class ProcessFilterUkf<float>;
-template class ProcessFilterUkf<double>;
-template class ProcessFilterUkf<long double>;
+TEMPLATE(float);
+TEMPLATE(double);
+TEMPLATE(long double);
 }

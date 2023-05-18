@@ -17,73 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../sigma_points.h"
-#include "../ukf.h"
+#include "process_filter.h"
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <memory>
+
 namespace ns::filter::test
 {
 template <typename T>
-class ProcessFilterUkf final
-{
-        struct SigmaPointsAdd final
-        {
-                [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const;
-        };
-
-        struct SigmaPointsSubtract final
-        {
-                [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const;
-        };
-
-        Ukf<9, T, SigmaPoints<9, T, SigmaPointsAdd, SigmaPointsSubtract>> filter_;
-        const T dt_;
-        Matrix<9, 9, T> q_;
-
-public:
-        ProcessFilterUkf(
-                T dt,
-                T position_variance,
-                T angle_variance,
-                T angle_r_variance,
-                const Vector<9, T>& x,
-                const Matrix<9, 9, T>& p);
-
-        void predict();
-
-        void update_position(const Vector<2, T>& position, T position_variance);
-
-        void update_position_speed_direction_acceleration(
-                const Vector<2, T>& position,
-                T speed,
-                T direction,
-                const Vector<2, T>& acceleration,
-                T position_variance,
-                T speed_variance,
-                T direction_variance,
-                T acceleration_variance);
-
-        void update_position_direction_acceleration(
-                const Vector<2, T>& position,
-                T direction,
-                const Vector<2, T>& acceleration,
-                T position_variance,
-                T direction_variance,
-                T acceleration_variance);
-
-        void update_acceleration(const Vector<2, T>& acceleration, T acceleration_variance);
-
-        [[nodiscard]] Vector<2, T> position() const;
-        [[nodiscard]] Matrix<2, 2, T> position_p() const;
-
-        [[nodiscard]] T speed() const;
-        [[nodiscard]] T angle() const;
-        [[nodiscard]] T angle_speed() const;
-        [[nodiscard]] T angle_p() const;
-        [[nodiscard]] T angle_r() const;
-        [[nodiscard]] T angle_r_p() const;
-};
-
+std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+        T dt,
+        T position_variance,
+        T angle_variance,
+        T angle_r_variance,
+        const Vector<9, T>& x,
+        const Matrix<9, 9, T>& p);
 }
