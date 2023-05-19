@@ -274,10 +274,19 @@ template <typename T>
                 return {};
         }
 
+        constexpr bool IS_CLASS = std::is_class_v<std::remove_cvref<decltype(*i)>>;
+
         std::string res = to_string(*i);
         while (++i != std::end(data))
         {
-                res += ", ";
+                if constexpr (IS_CLASS)
+                {
+                        res += '\n';
+                }
+                else
+                {
+                        res += ", ";
+                }
                 res += to_string(*i);
         }
         return res;
