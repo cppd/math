@@ -58,9 +58,10 @@ class Simulator final
 
         [[nodiscard]] Vector<N, T> velocity(const T index) const
         {
+                constexpr T S = 1000;
                 Vector<N, T> v(0);
                 v[0] = track_velocity_m_ + track_velocity_a_ * std::sin(index / 167);
-                return rotate(v, std::cos(index / 100));
+                return rotate(v, std::cos((std::max<T>(0, index - S)) / 100));
         }
 
         [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)

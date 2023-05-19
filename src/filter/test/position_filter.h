@@ -46,5 +46,7 @@ public:
         };
 
         [[nodiscard]] Angle velocity_angle() const;
+
+        [[nodiscard]] Vector<2, T> velocity() const;
 };
 }

@@ -51,16 +51,17 @@ struct Config final
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
 
         static constexpr T DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
-        static constexpr T DIRECTION_ANGLE = degrees_to_radians(10.0);
+        static constexpr T DIRECTION_ANGLE = degrees_to_radians(30.0);
 
         static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
         static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
         static constexpr T MEASUREMENT_SPEED_VARIANCE = square(0.2);
 
-        static constexpr T POSITION_FILTER_VARIANCE = square(0.2);
+        static constexpr T POSITION_FILTER_VARIANCE = square(0.5);
+        static constexpr T POSITION_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(20.0));
 
-        static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.2);
+        static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
 };
@@ -148,7 +149,6 @@ Track<N, T> generate_track()
 template <typename T>
 auto move(
         const Track<2, T>& track,
-        const std::size_t count,
         PositionFilter<T>* const position_filter,
         PositionFilterData<T, PositionFilter>* const position_filter_data)
 {
@@ -177,7 +177,7 @@ auto move(
 
                 position_filter_data->save(track.points[m.index]);
 
-                if (m.index >= count)
+                if (position_filter->velocity_angle().variance < Config<T>::POSITION_FILTER_ANGLE_VARIANCE)
                 {
                         break;
                 }
@@ -203,7 +203,7 @@ void test_impl(const Track<2, T>& track)
 
         PositionFilterData position_filter_data("Filter", &position_filter, track.points.size());
 
-        auto [last_position_i, position_iter] = move(track, /*count=*/300, &position_filter, &position_filter_data);
+        auto [last_position_i, position_iter] = move(track, &position_filter, &position_filter_data);
 
         ASSERT(last_position_i && position_iter != track.position_measurements.cend());
         ASSERT(position_iter->index == *last_position_i);
@@ -220,12 +220,23 @@ void test_impl(const Track<2, T>& track)
             + "angle difference = " + to_string(radians_to_degrees(angle_difference))
             + "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_variance))));
 
-        const Vector<9, T> init_x(
-                position_iter->position[0], 1.0, -1.0, position_iter->position[1], -5, 0.5, angle_difference, 0, 0);
-        const Matrix<9, 9, T> init_p = make_diagonal_matrix<9, T>(
+        const Vector<2, T> init_p = position_filter.position();
+        const Vector<2, T> init_v = position_filter.velocity();
+        const Vector<2, T> init_a(0);
+
+        const Vector<9, T> ekf_init_x(
+                init_p[0], init_v[0], init_a[0], init_p[1], init_v[1], init_a[1], angle_difference, 0, 0);
+        const Matrix<9, 9, T> ekf_init_p = make_diagonal_matrix<9, T>(
                 {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), angle_variance,
                  square(degrees_to_radians(0.1)), angle_r_variance});
+
+        const Vector<9, T> ukf_init_x(
+                init_p[0], init_v[0], init_a[0], init_p[1], init_v[1], init_a[1], angle_difference, 0, 0);
+        const Matrix<9, 9, T> ukf_init_p = make_diagonal_matrix<9, T>(
+                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
+                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), square(degrees_to_radians(30.0)),
+                 square(degrees_to_radians(0.1)), square(degrees_to_radians(30.0))});
 
         static constexpr std::size_t EKF = 0;
         static constexpr std::size_t UKF = 1;
@@ -233,10 +244,10 @@ void test_impl(const Track<2, T>& track)
         std::vector<std::unique_ptr<ProcessFilter<T>>> filters;
         filters.push_back(create_process_filter_ekf<T>(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
-                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
+                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, ekf_init_x, ekf_init_p));
         filters.push_back(create_process_filter_ukf(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
-                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
+                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, ukf_init_x, ukf_init_p));
 
         std::vector<ProcessFilterData<T>> filter_data;
         filter_data.emplace_back("EKF", filters[EKF].get(), track.points.size(), *last_position_i);

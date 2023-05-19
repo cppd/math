@@ -148,6 +148,12 @@ typename PositionFilter<T>::Angle PositionFilter<T>::velocity_angle() const
         return {.angle = std::atan2(velocity[1], velocity[0]), .variance = velocity_angle_p(velocity_p, velocity)};
 }
 
+template <typename T>
+Vector<2, T> PositionFilter<T>::velocity() const
+{
+        return {filter_.x()[1], filter_.x()[4]};
+}
+
 template class PositionFilter<float>;
 template class PositionFilter<double>;
 template class PositionFilter<long double>;
