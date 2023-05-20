@@ -177,7 +177,7 @@ auto move(
 
                 position_filter_data->save(track.points[m.index]);
 
-                if (position_filter->velocity_angle().variance < Config<T>::POSITION_FILTER_ANGLE_VARIANCE)
+                if (position_filter->angle_p() < Config<T>::POSITION_FILTER_ANGLE_VARIANCE)
                 {
                         break;
                 }
@@ -208,35 +208,35 @@ void test_impl(const Track<2, T>& track)
         ASSERT(last_position_i && position_iter != track.position_measurements.cend());
         ASSERT(position_iter->index == *last_position_i);
 
-        const typename PositionFilter<T>::Angle angle = position_filter.velocity_angle();
+        const T position_filter_angle = position_filter.angle();
+        const T position_filter_angle_p = position_filter.angle_p();
 
         const T measurement_angle = track.process_measurements[*last_position_i].direction;
-        const T angle_difference = normalize_angle(measurement_angle - angle.angle);
-        const T angle_r_variance = square(degrees_to_radians(5.0));
-        const T angle_variance = angle.variance + Config<T>::MEASUREMENT_DIRECTION_VARIANCE + angle_r_variance;
+        const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
 
-        LOG("estimated angle = " + to_string(radians_to_degrees(angle.angle))
-            + "; measurement angle = " + to_string(radians_to_degrees(measurement_angle)) + "\n"
-            + "angle difference = " + to_string(radians_to_degrees(angle_difference))
-            + "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_variance))));
+        LOG("estimation: angle = " + to_string(radians_to_degrees(position_filter_angle)) + "; "
+            + "angle stddev = " + to_string(radians_to_degrees(std::sqrt(position_filter_angle_p))) + "\n"
+            + "measurement: angle = " + to_string(radians_to_degrees(measurement_angle)) + "\n"
+            + "angle difference = " + to_string(radians_to_degrees(angle_difference)));
 
-        const Vector<2, T> init_p = position_filter.position();
-        const Vector<2, T> init_v = position_filter.velocity();
-        const Vector<2, T> init_a(0);
+        const Vector<9, T> init_x = [&]()
+        {
+                const Vector<2, T> p = position_filter.position();
+                const Vector<2, T> v = position_filter.velocity();
+                const Vector<2, T> a(0);
+                return Vector<9, T>(p[0], v[0], a[0], p[1], v[1], a[1], angle_difference, 0, 0);
+        }();
 
-        const Vector<9, T> ekf_init_x(
-                init_p[0], init_v[0], init_a[0], init_p[1], init_v[1], init_a[1], angle_difference, 0, 0);
-        const Matrix<9, 9, T> ekf_init_p = make_diagonal_matrix<9, T>(
-                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
-                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), angle_variance,
-                 square(degrees_to_radians(0.1)), angle_r_variance});
-
-        const Vector<9, T> ukf_init_x(
-                init_p[0], init_v[0], init_a[0], init_p[1], init_v[1], init_a[1], angle_difference, 0, 0);
-        const Matrix<9, 9, T> ukf_init_p = make_diagonal_matrix<9, T>(
-                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
-                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10), square(degrees_to_radians(30.0)),
-                 square(degrees_to_radians(0.1)), square(degrees_to_radians(30.0))});
+        const Matrix<9, 9, T> init_p = [&]()
+        {
+                const T p = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                const T v = square(30.0);
+                const T a = square(10.0);
+                const T angle = square(degrees_to_radians(40.0));
+                const T angle_speed = square(degrees_to_radians(0.1));
+                const T angle_r = square(degrees_to_radians(40.0));
+                return make_diagonal_matrix<9, T>({p, v, a, p, v, a, angle, angle_speed, angle_r});
+        }();
 
         static constexpr std::size_t EKF = 0;
         static constexpr std::size_t UKF = 1;
@@ -244,10 +244,10 @@ void test_impl(const Track<2, T>& track)
         std::vector<std::unique_ptr<ProcessFilter<T>>> filters;
         filters.push_back(create_process_filter_ekf<T>(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
-                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, ekf_init_x, ekf_init_p));
+                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
         filters.push_back(create_process_filter_ukf(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
-                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, ukf_init_x, ukf_init_p));
+                Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
 
         std::vector<ProcessFilterData<T>> filter_data;
         filter_data.emplace_back("EKF", filters[EKF].get(), track.points.size(), *last_position_i);

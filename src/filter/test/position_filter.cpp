@@ -80,19 +80,19 @@ Matrix<2, 2, T> r(const T measurement_variance)
 }
 
 template <typename T>
-T velocity_angle_p(const Matrix<2, 2, T>& velocity_r, const Vector<2, T>& velocity)
+T velocity_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
         // Jacobian
         //  -y/(x*x+y*y) x/(x*x+y*y)
-        const T norm_squared = velocity.norm_squared();
+        const T ns = velocity.norm_squared();
         const T x = velocity[0];
         const T y = velocity[1];
         const Matrix<1, 2, T> error_propagation{
-                {-y / norm_squared, x / norm_squared}
+                {-y / ns, x / ns}
         };
-        const Matrix<1, 1, T> r = error_propagation * velocity_r * error_propagation.transposed();
-        return r(0, 0);
+        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        return p(0, 0);
 }
 }
 
@@ -138,20 +138,25 @@ Matrix<2, 2, T> PositionFilter<T>::position_p() const
 }
 
 template <typename T>
-typename PositionFilter<T>::Angle PositionFilter<T>::velocity_angle() const
+Vector<2, T> PositionFilter<T>::velocity() const
 {
-        const Vector<2, T> velocity{filter_.x()[1], filter_.x()[4]};
+        return {filter_.x()[1], filter_.x()[4]};
+}
+
+template <typename T>
+T PositionFilter<T>::angle() const
+{
+        return std::atan2(filter_.x()[4], filter_.x()[1]);
+}
+
+template <typename T>
+T PositionFilter<T>::angle_p() const
+{
         const Matrix<2, 2, T> velocity_p{
                 {filter_.p()(1, 1), filter_.p()(1, 4)},
                 {filter_.p()(4, 1), filter_.p()(4, 4)}
         };
-        return {.angle = std::atan2(velocity[1], velocity[0]), .variance = velocity_angle_p(velocity_p, velocity)};
-}
-
-template <typename T>
-Vector<2, T> PositionFilter<T>::velocity() const
-{
-        return {filter_.x()[1], filter_.x()[4]};
+        return velocity_angle_p(velocity(), velocity_p);
 }
 
 template class PositionFilter<float>;

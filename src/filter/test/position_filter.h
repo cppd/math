@@ -39,14 +39,9 @@ public:
         [[nodiscard]] Vector<2, T> position() const;
         [[nodiscard]] Matrix<2, 2, T> position_p() const;
 
-        struct Angle final
-        {
-                T angle;
-                T variance;
-        };
-
-        [[nodiscard]] Angle velocity_angle() const;
-
         [[nodiscard]] Vector<2, T> velocity() const;
+
+        [[nodiscard]] T angle() const;
+        [[nodiscard]] T angle_p() const;
 };
 }
