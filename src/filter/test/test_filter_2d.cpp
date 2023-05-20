@@ -33,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <optional>
 #include <sstream>
-#include <tuple>
 #include <vector>
 
 namespace ns::filter::test
@@ -183,7 +182,57 @@ auto move(
                 }
         }
 
-        return std::tuple(last_position_i, position_iter);
+        return position_iter;
+}
+
+template <typename T>
+void position_filter_update(
+        const PositionMeasurement<2, T>& measurement,
+        const std::size_t index_delta,
+        PositionFilter<T>* const position_filter)
+{
+        position_filter->predict(index_delta * Config<T>::DT);
+        position_filter->update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+}
+
+template <typename T>
+void process_filter_update(
+        const PositionMeasurement<2, T>& measurement,
+        const ProcessMeasurement<2, T>& process_measurement,
+        const std::vector<std::unique_ptr<ProcessFilter<T>>>& filters)
+{
+        if (measurement.speed)
+        {
+                for (auto& f : filters)
+                {
+                        f->update_position_speed_direction_acceleration(
+                                measurement.position, *measurement.speed, process_measurement.direction,
+                                process_measurement.acceleration, Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                Config<T>::MEASUREMENT_SPEED_VARIANCE, Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
+                                Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
+                }
+        }
+        else
+        {
+                for (auto& f : filters)
+                {
+                        f->update_position_direction_acceleration(
+                                measurement.position, process_measurement.direction, process_measurement.acceleration,
+                                Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
+                                Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
+                }
+        }
+}
+
+template <typename T>
+void process_filter_update(
+        const ProcessMeasurement<2, T>& process_measurement,
+        const std::vector<std::unique_ptr<ProcessFilter<T>>>& filters)
+{
+        for (auto& f : filters)
+        {
+                f->update_acceleration(process_measurement.acceleration, Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
+        }
 }
 
 template <typename T>
@@ -200,18 +249,18 @@ void test_impl(const Track<2, T>& track)
                  Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)});
 
         PositionFilter<T> position_filter(Config<T>::POSITION_FILTER_VARIANCE, position_init_x, position_init_p);
-
         PositionFilterData<T> position_filter_data("Filter", &position_filter);
 
-        auto [last_position_i, position_iter] = move(track, &position_filter, &position_filter_data);
-
-        ASSERT(last_position_i && position_iter != track.position_measurements.cend());
-        ASSERT(position_iter->index == *last_position_i);
+        auto position_iter = move(track, &position_filter, &position_filter_data);
+        if (position_iter == track.position_measurements.cend())
+        {
+                error("Failed to estimate angle");
+        }
 
         const T position_filter_angle = position_filter.angle();
         const T position_filter_angle_p = position_filter.angle_p();
 
-        const T measurement_angle = track.process_measurements[*last_position_i].direction;
+        const T measurement_angle = track.process_measurements[position_iter->index].direction;
         const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
 
         LOG("estimation: angle = " + to_string(radians_to_degrees(position_filter_angle)) + "; "
@@ -253,10 +302,9 @@ void test_impl(const Track<2, T>& track)
         filter_data.emplace_back("EKF", filters[EKF].get());
         filter_data.emplace_back("UKF", filters[UKF].get());
 
+        std::size_t last_position_i = position_iter->index;
         ++position_iter;
-        ASSERT(position_iter->index > *last_position_i);
-
-        for (std::size_t i = *last_position_i; i < track.points.size(); ++i)
+        for (std::size_t i = last_position_i + 1; i < track.points.size(); ++i)
         {
                 for (auto& f : filters)
                 {
@@ -265,64 +313,29 @@ void test_impl(const Track<2, T>& track)
 
                 if (position_iter != track.position_measurements.cend() && position_iter->index == i)
                 {
-                        const auto& position_measurement = *position_iter;
-
-                        if (i > *last_position_i + Config<T>::POSITION_INTERVAL)
+                        const std::size_t delta = i - last_position_i;
+                        if (delta > Config<T>::POSITION_INTERVAL)
                         {
                                 position_filter_data.save_empty();
                         }
-
-                        position_filter.predict((i - *last_position_i) * Config<T>::DT);
-                        position_filter.update(position_measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
-
-                        position_filter_data.save(i, track.points[i]);
-
-                        if (position_measurement.speed)
+                        if (delta > 0)
                         {
-                                for (auto& f : filters)
-                                {
-                                        f->update_position_speed_direction_acceleration(
-                                                position_measurement.position, *position_measurement.speed,
-                                                track.process_measurements[i].direction,
-                                                track.process_measurements[i].acceleration,
-                                                Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                                                Config<T>::MEASUREMENT_SPEED_VARIANCE,
-                                                Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                                Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
-                                }
-                        }
-                        else
-                        {
-                                for (auto& f : filters)
-                                {
-                                        f->update_position_direction_acceleration(
-                                                position_measurement.position, track.process_measurements[i].direction,
-                                                track.process_measurements[i].acceleration,
-                                                Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                                                Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                                Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
-                                }
+                                position_filter_update(*position_iter, delta, &position_filter);
+                                position_filter_data.save(i, track.points[i]);
                         }
 
+                        process_filter_update(*position_iter, track.process_measurements[i], filters);
                         for (const auto& fd : filter_data)
                         {
                                 LOG(to_string(i) + "; " + fd.angle_string(track.points[i]));
                         }
 
-                        ASSERT(i == position_iter->index);
                         last_position_i = position_iter->index;
                         ++position_iter;
-                        ASSERT(position_iter == track.position_measurements.cend()
-                               || position_iter->index > *last_position_i);
                 }
                 else
                 {
-                        for (auto& f : filters)
-                        {
-                                f->update_acceleration(
-                                        track.process_measurements[i].acceleration,
-                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE);
-                        }
+                        process_filter_update(track.process_measurements[i], filters);
                 }
 
                 for (auto& fd : filter_data)
