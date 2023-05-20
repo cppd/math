@@ -213,7 +213,7 @@ public:
                 const Matrix<N, M, T> k = p_xz * p_z.inversed();
 
                 x_ = add_x(x_, k * residual_z(z, x_z));
-                p_ = p_ - k * p_z * k.transposed();
+                p_ = p_ - p_xz * k.transposed();
         }
 };
 }
