@@ -45,20 +45,32 @@ class SigmaPoints final
                 Vector<2 * N + 1, T> covariance;
         };
 
-        static Weights create_weights(const T lambda, const T alpha, const T beta)
+        static long double lambda(const long double alpha, const long double kappa)
         {
+                return square(alpha) * (N + kappa) - N;
+        }
+
+        static long double n_plus_lambda(const long double alpha, const long double kappa)
+        {
+                return square(alpha) * (N + kappa);
+        }
+
+        static Weights create_weights(const long double alpha, const long double beta, const long double kappa)
+        {
+                const long double l = lambda(alpha, kappa);
+                const long double n_plus_l = n_plus_lambda(alpha, kappa);
                 Weights res;
-                res.mean[0] = lambda / (N + lambda);
-                res.covariance[0] = res.mean[0] + 1 - square(alpha) + beta;
+                res.mean[0] = l / n_plus_l;
+                res.covariance[0] = l / n_plus_l + 1 - square(alpha) + beta;
                 for (std::size_t i = 1; i <= 2 * N; ++i)
                 {
-                        res.mean[i] = 1 / (2 * (N + lambda));
+                        res.mean[i] = 1 / (2 * n_plus_l);
                         res.covariance[i] = res.mean[i];
                 }
                 return res;
         }
 
-        T lambda_;
+        T n_plus_lambda_;
         Weights weights_;
         Add add_;
         Subtract subtract_;
@@ -78,8 +90,8 @@ public:
                 //   const Vector<N, T>& a,
                 //   const Vector<N, T>& b) const
                 Subtract subtract)
-                : lambda_(square(alpha) * (N + kappa) - N),
-                  weights_(create_weights(lambda_, alpha, beta)),
+                : n_plus_lambda_(n_plus_lambda(alpha, kappa)),
+                  weights_(create_weights(alpha, beta, kappa)),
                   add_(std::move(add)),
                   subtract_(std::move(subtract))
         {
@@ -97,7 +109,7 @@ public:
 
         [[nodiscard]] std::array<Vector<N, T>, 2 * N + 1> points(const Vector<N, T>& x, const Matrix<N, N, T>& p) const
         {
-                const Matrix<N, N, T> l = numerical::cholesky_decomposition_lower_triangular((N + lambda_) * p);
+                const Matrix<N, N, T> l = numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
 
                 std::array<Vector<N, T>, 2 * N + 1> res;
                 res[0] = x;
