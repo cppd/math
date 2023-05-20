@@ -28,7 +28,6 @@ McGraw-Hill Education, 2015.
 #include "matrix.h"
 
 #include <src/com/print.h>
-#include <src/com/type/limit.h>
 
 #include <algorithm>
 #include <cmath>
@@ -79,12 +78,12 @@ template <std::size_t N, typename T>
 
                 const T v = a(k, k) - sum;
 
-                if (!(v > -10 * Limits<T>::epsilon()))
+                if (!(v >= 0))
                 {
                         throw CholeskyException("sqrt(" + to_string(v) + ")");
                 }
 
-                l(k, k) = std::sqrt(std::max(T{0}, v));
+                l(k, k) = std::sqrt(v);
         }
 
         return l;
