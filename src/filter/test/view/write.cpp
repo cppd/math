@@ -204,12 +204,32 @@ void write_measurement_speed(std::ostream& file, const std::vector<std::optional
 }
 
 template <std::size_t N, typename T>
-void write_filter_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& position)
+void write_lkf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
+{
+        if (!speed.empty())
+        {
+                file << '{';
+                file << R"("name":"LKF Speed")";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":"#a00000")";
+                file << R"(, "line_width":0.5)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":2)";
+                file << "}\n";
+                for (const auto& v : speed)
+                {
+                        write(file, v);
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void write_lkf_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& position)
 {
         if (!position.empty())
         {
                 file << '{';
-                file << R"("name":"Filter Position")";
+                file << R"("name":"LKF Position")";
                 file << R"(, "mode":"lines+markers")";
                 file << R"(, "line_color":"#a00000")";
                 file << R"(, "line_width":0.25)";
@@ -224,7 +244,7 @@ void write_filter_position(std::ostream& file, const std::vector<std::optional<V
 }
 
 template <std::size_t N, typename T>
-void write_ekf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
+void write_ekf_speed(std::ostream& file, const std::vector<Vector<N, T>>& speed)
 {
         if (!speed.empty())
         {
@@ -264,7 +284,7 @@ void write_ekf_position(std::ostream& file, const std::vector<Vector<N, T>>& pos
 }
 
 template <std::size_t N, typename T>
-void write_ukf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
+void write_ukf_speed(std::ostream& file, const std::vector<Vector<N, T>>& speed)
 {
         if (!speed.empty())
         {
@@ -313,10 +333,11 @@ void write_data(
         const std::vector<Vector<N, T>>& measurement_acceleration_y,
         const std::vector<std::optional<Vector<N, T>>>& measurement_position,
         const std::vector<std::optional<Vector<N, T>>>& measurement_speed,
-        const std::vector<std::optional<Vector<N, T>>>& filter_position,
-        const std::vector<std::optional<Vector<N, T>>>& ekf_speed,
+        const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
+        const std::vector<std::optional<Vector<N, T>>>& lkf_position,
+        const std::vector<Vector<N, T>>& ekf_speed,
         const std::vector<Vector<N, T>>& ekf_position,
-        const std::vector<std::optional<Vector<N, T>>>& ukf_speed,
+        const std::vector<Vector<N, T>>& ukf_speed,
         const std::vector<Vector<N, T>>& ukf_position)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -340,7 +361,9 @@ void write_data(
 
         write_measurement_speed(file, measurement_speed);
 
-        write_filter_position(file, filter_position);
+        write_lkf_speed(file, lkf_speed);
+
+        write_lkf_position(file, lkf_position);
 
         write_ekf_speed(file, ekf_speed);
 
@@ -357,10 +380,11 @@ void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
         const std::size_t track_position_interval,
-        const std::vector<std::optional<Vector<N, T>>>& filter_position,
-        const std::vector<std::optional<T>>& ekf_speed,
+        const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
+        const std::vector<std::optional<Vector<N, T>>>& lkf_position,
+        const std::vector<Vector<N, T>>& ekf_speed,
         const std::vector<Vector<N, T>>& ekf_position,
-        const std::vector<std::optional<T>>& ukf_speed,
+        const std::vector<Vector<N, T>>& ukf_speed,
         const std::vector<Vector<N, T>>& ukf_position)
 {
         static constexpr T OFFSET = 1000;
@@ -369,16 +393,16 @@ void write_to_file(
                 annotation, add_offset(track_position(track), OFFSET), track_speed(track), angle_measurements(track),
                 acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1),
                 add_offset(position_measurements(track, track_position_interval), OFFSET),
-                position_speed_measurements(track, track_position_interval), add_offset(filter_position, OFFSET),
-                filter_speed(track, ekf_speed), add_offset(ekf_position, OFFSET), filter_speed(track, ukf_speed),
-                add_offset(ukf_position, OFFSET));
+                position_speed_measurements(track, track_position_interval), convert_speed(lkf_speed),
+                add_offset(lkf_position, OFFSET), convert_speed(ekf_speed), add_offset(ekf_position, OFFSET),
+                convert_speed(ukf_speed), add_offset(ukf_position, OFFSET));
 }
 
 #define TEMPLATE(T)                                                                                                 \
         template void write_to_file(                                                                                \
                 std::string_view, const Track<2, T>&, std::size_t, const std::vector<std::optional<Vector<2, T>>>&, \
-                const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&,                             \
-                const std::vector<std::optional<T>>&, const std::vector<Vector<2, T>>&);
+                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<Vector<2, T>>&,                  \
+                const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&, const std::vector<Vector<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

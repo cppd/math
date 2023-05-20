@@ -92,7 +92,7 @@ std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
         res.reserve(track.points.size());
         for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                res.emplace_back(track.points[i].position[0], impl::speed_kph(track.points[i].speed));
+                res.emplace_back(i, impl::speed_kph(track.points[i].speed));
         }
         return res;
 }
@@ -139,7 +139,7 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
                 {
                         res.emplace_back();
                 }
-                res.push_back(Vector<2, T>(track.points[m.index].position[0], impl::speed_kph(*m.speed)));
+                res.push_back(Vector<2, T>(m.index, impl::speed_kph(*m.speed)));
                 last_index = m.index;
         }
         return res;
@@ -148,6 +148,8 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
 template <typename T>
 std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 {
+        ASSERT(track.points.size() == track.process_measurements.size());
+
         std::vector<Vector<2, T>> res;
         res.reserve(track.points.size());
         std::optional<T> previous_angle;
@@ -156,7 +158,7 @@ std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
                 const T angle = track.process_measurements[i].direction;
                 const T unbounded_angle = unbound_angle(previous_angle, angle);
                 previous_angle = unbounded_angle;
-                res.emplace_back(track.points[i].position[0], radians_to_degrees(unbounded_angle));
+                res.emplace_back(i, radians_to_degrees(unbounded_angle));
         }
         return res;
 }
@@ -164,31 +166,44 @@ std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 template <typename T>
 std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, const std::size_t index)
 {
+        ASSERT(track.points.size() == track.process_measurements.size());
         ASSERT(index < 2);
+
         std::vector<Vector<2, T>> res;
         res.reserve(track.points.size());
         for (std::size_t i = 0; i < track.points.size(); ++i)
         {
-                res.emplace_back(track.points[i].position[0], track.process_measurements[i].acceleration[index]);
+                res.emplace_back(i, track.process_measurements[i].acceleration[index]);
         }
         return res;
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> filter_speed(
-        const Track<2, T>& track,
-        const std::vector<std::optional<T>>& speed)
+std::vector<Vector<2, T>> convert_speed(const std::vector<Vector<2, T>>& speed)
 {
         namespace impl = converters_implementation;
 
-        ASSERT(track.points.size() == speed.size());
-        std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.points.size());
-        for (std::size_t i = 0; i < track.points.size(); ++i)
+        std::vector<Vector<2, T>> res;
+        res.reserve(speed.size());
+        for (const Vector<2, T>& s : speed)
         {
-                if (speed[i])
+                res.emplace_back(s[0], impl::speed_kph(s[1]));
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<Vector<2, T>>>& speed)
+{
+        namespace impl = converters_implementation;
+
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(speed.size());
+        for (const std::optional<Vector<2, T>>& s : speed)
+        {
+                if (s)
                 {
-                        res.push_back(Vector<2, T>(track.points[i].position[0], impl::speed_kph(*speed[i])));
+                        res.push_back(Vector<2, T>((*s)[0], impl::speed_kph((*s)[1])));
                 }
                 else
                 {

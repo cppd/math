@@ -138,6 +138,12 @@ Matrix<2, 2, T> PositionFilter<T>::position_p() const
 }
 
 template <typename T>
+T PositionFilter<T>::speed() const
+{
+        return velocity().norm();
+}
+
+template <typename T>
 Vector<2, T> PositionFilter<T>::velocity() const
 {
         return {filter_.x()[1], filter_.x()[4]};

@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "position_filter.h"
 #include "simulator.h"
 
 #include "../nees.h"
 
-#include <src/com/error.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -30,43 +30,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <typename T, template <typename> typename Filter>
+template <typename T>
 class PositionFilterData final
 {
         std::string name_;
-        const Filter<T>* filter_;
+        const PositionFilter<T>* filter_;
         std::vector<std::optional<Vector<2, T>>> positions_;
+        std::vector<std::optional<Vector<2, T>>> speed_;
         NeesAverage<2, T> nees_position_;
 
 public:
-        PositionFilterData(std::string name, const Filter<T>* const filter, const std::size_t reserve)
-                : name_(std::move(name)),
-                  filter_(filter)
-        {
-                ASSERT(filter_);
+        PositionFilterData(std::string name, const PositionFilter<T>* filter);
 
-                positions_.reserve(reserve);
-        }
+        void save_empty();
+        void save(std::size_t index, const SimulatorPoint<2, T>& point);
 
-        void save_empty()
-        {
-                positions_.emplace_back();
-        }
-
-        void save(const SimulatorPoint<2, T>& point)
-        {
-                positions_.push_back(filter_->position());
-                nees_position_.add(point.position - filter_->position(), filter_->position_p());
-        }
-
-        [[nodiscard]] std::string nees_string() const
-        {
-                return "Position " + name_ + " Position: " + nees_position_.check_string();
-        }
-
-        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& positions() const
-        {
-                return positions_;
-        }
+        [[nodiscard]] std::string nees_string() const;
+        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& positions() const;
+        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& speed() const;
 };
 }

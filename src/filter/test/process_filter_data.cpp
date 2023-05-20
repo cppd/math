@@ -26,26 +26,18 @@ namespace ns::filter::test
 {
 
 template <typename T>
-ProcessFilterData<T>::ProcessFilterData(
-        std::string name,
-        const ProcessFilter<T>* const filter,
-        const std::size_t reserve,
-        const std::size_t resize)
+ProcessFilterData<T>::ProcessFilterData(std::string name, const ProcessFilter<T>* const filter)
         : name_(std::move(name)),
           filter_(filter)
 {
         ASSERT(filter_);
-
-        position_.reserve(reserve);
-        speed_.reserve(reserve);
-        speed_.resize(resize);
 }
 
 template <typename T>
-void ProcessFilterData<T>::save(const SimulatorPoint<2, T>& point)
+void ProcessFilterData<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
 {
         position_.push_back(filter_->position());
-        speed_.push_back(filter_->speed());
+        speed_.push_back({index, filter_->speed()});
 
         nees_position_.add(point.position - filter_->position(), filter_->position_p());
         nees_angle_.add(normalize_angle(point.angle - filter_->angle()), filter_->angle_p());
@@ -81,7 +73,7 @@ template <typename T>
         return position_;
 }
 template <typename T>
-[[nodiscard]] const std::vector<std::optional<T>>& ProcessFilterData<T>::speed() const
+[[nodiscard]] const std::vector<Vector<2, T>>& ProcessFilterData<T>::speed() const
 {
         return speed_;
 }

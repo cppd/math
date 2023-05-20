@@ -39,6 +39,7 @@ public:
         [[nodiscard]] Vector<2, T> position() const;
         [[nodiscard]] Matrix<2, 2, T> position_p() const;
 
+        [[nodiscard]] T speed() const;
         [[nodiscard]] Vector<2, T> velocity() const;
 
         [[nodiscard]] T angle() const;

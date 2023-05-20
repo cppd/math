@@ -59,7 +59,7 @@ struct Config final
         static constexpr T MEASUREMENT_SPEED_VARIANCE = square(0.2);
 
         static constexpr T POSITION_FILTER_VARIANCE = square(0.5);
-        static constexpr T POSITION_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
@@ -150,7 +150,7 @@ template <typename T>
 auto move(
         const Track<2, T>& track,
         PositionFilter<T>* const position_filter,
-        PositionFilterData<T, PositionFilter>* const position_filter_data)
+        PositionFilterData<T>* const position_filter_data)
 {
         std::optional<std::size_t> last_position_i;
         auto position_iter = track.position_measurements.cbegin();
@@ -175,9 +175,9 @@ auto move(
                 position_filter->update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
                 last_position_i = m.index;
 
-                position_filter_data->save(track.points[m.index]);
+                position_filter_data->save(m.index, track.points[m.index]);
 
-                if (position_filter->angle_p() < Config<T>::POSITION_FILTER_ANGLE_VARIANCE)
+                if (position_filter->angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
                 {
                         break;
                 }
@@ -201,7 +201,7 @@ void test_impl(const Track<2, T>& track)
 
         PositionFilter<T> position_filter(Config<T>::POSITION_FILTER_VARIANCE, position_init_x, position_init_p);
 
-        PositionFilterData position_filter_data("Filter", &position_filter, track.points.size());
+        PositionFilterData<T> position_filter_data("Filter", &position_filter);
 
         auto [last_position_i, position_iter] = move(track, &position_filter, &position_filter_data);
 
@@ -250,8 +250,8 @@ void test_impl(const Track<2, T>& track)
                 Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
 
         std::vector<ProcessFilterData<T>> filter_data;
-        filter_data.emplace_back("EKF", filters[EKF].get(), track.points.size(), *last_position_i);
-        filter_data.emplace_back("UKF", filters[UKF].get(), track.points.size(), *last_position_i);
+        filter_data.emplace_back("EKF", filters[EKF].get());
+        filter_data.emplace_back("UKF", filters[UKF].get());
 
         ++position_iter;
         ASSERT(position_iter->index > *last_position_i);
@@ -275,7 +275,7 @@ void test_impl(const Track<2, T>& track)
                         position_filter.predict((i - *last_position_i) * Config<T>::DT);
                         position_filter.update(position_measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
-                        position_filter_data.save(track.points[i]);
+                        position_filter_data.save(i, track.points[i]);
 
                         if (position_measurement.speed)
                         {
@@ -327,14 +327,14 @@ void test_impl(const Track<2, T>& track)
 
                 for (auto& fd : filter_data)
                 {
-                        fd.save(track.points[i]);
+                        fd.save(i, track.points[i]);
                 }
         }
 
         view::write_to_file(
-                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.positions(),
-                filter_data[EKF].speed(), filter_data[EKF].position(), filter_data[UKF].speed(),
-                filter_data[UKF].position());
+                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.speed(),
+                position_filter_data.positions(), filter_data[EKF].speed(), filter_data[EKF].position(),
+                filter_data[UKF].speed(), filter_data[UKF].position());
 
         LOG(position_filter_data.nees_string());
 

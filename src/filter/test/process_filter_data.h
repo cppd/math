@@ -37,20 +37,20 @@ class ProcessFilterData final
         const ProcessFilter<T>* filter_;
 
         std::vector<Vector<2, T>> position_;
-        std::vector<std::optional<T>> speed_;
+        std::vector<Vector<2, T>> speed_;
 
         NeesAverage<2, T> nees_position_;
         NeesAverage<1, T> nees_angle_;
         NeesAverage<1, T> nees_angle_r_;
 
 public:
-        ProcessFilterData(std::string name, const ProcessFilter<T>* filter, std::size_t reserve, std::size_t resize);
+        ProcessFilterData(std::string name, const ProcessFilter<T>* filter);
 
-        void save(const SimulatorPoint<2, T>& point);
+        void save(std::size_t index, const SimulatorPoint<2, T>& point);
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& position() const;
-        [[nodiscard]] const std::vector<std::optional<T>>& speed() const;
+        [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
 };
 }

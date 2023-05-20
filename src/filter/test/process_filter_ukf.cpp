@@ -527,7 +527,7 @@ std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
         template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf( \
                 T, T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
 
-TEMPLATE(float);
-TEMPLATE(double);
-TEMPLATE(long double);
+TEMPLATE(float)
+TEMPLATE(double)
+TEMPLATE(long double)
 }
