@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
+#include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -60,8 +61,8 @@ class Simulator final
         {
                 constexpr T S = 1000;
                 Vector<N, T> v(0);
-                v[0] = track_velocity_m_ + track_velocity_a_ * std::sin(index / 167);
-                return rotate(v, std::cos((std::max<T>(0, index - S)) / 100));
+                v[0] = track_velocity_m_ + track_velocity_a_ * std::sin(index * (PI<T> / 300));
+                return rotate(v, std::cos((std::max<T>(0, index - S)) * (PI<T> / 450)));
         }
 
         [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)
