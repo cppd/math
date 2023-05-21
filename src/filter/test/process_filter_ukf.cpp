@@ -63,29 +63,9 @@ struct MeanX final
         template <typename T, std::size_t COUNT>
         [[nodiscard]] Vector<9, T> operator()(const std::array<Vector<9, T>, COUNT>& p, const Vector<COUNT, T>& w) const
         {
-                Vector<9, T> x(0);
-                T cos6 = 0;
-                T sin6 = 0;
-                T cos8 = 0;
-                T sin8 = 0;
-                for (std::size_t i = 0; i < COUNT; ++i)
-                {
-                        const Vector<9, T>& pi = p[i];
-                        const T wi = w[i];
-                        x[0] += wi * pi[0];
-                        x[1] += wi * pi[1];
-                        x[2] += wi * pi[2];
-                        x[3] += wi * pi[3];
-                        x[4] += wi * pi[4];
-                        x[5] += wi * pi[5];
-                        cos6 += wi * std::cos(pi[6]);
-                        sin6 += wi * std::sin(pi[6]);
-                        x[7] += wi * pi[7];
-                        cos8 += wi * std::cos(pi[8]);
-                        sin8 += wi * std::sin(pi[8]);
-                }
-                x[6] = std::atan2(sin6, cos6);
-                x[8] = std::atan2(sin8, cos8);
+                Vector<9, T> x = Mean()(p, w);
+                x[6] = normalize_angle(x[6]);
+                x[8] = normalize_angle(x[8]);
                 return x;
         }
 };
@@ -219,41 +199,13 @@ Vector<6, T> position_speed_direction_acceleration_h(const Vector<9, T>& x)
         };
 }
 
-struct PositionSpeedDirectionAccelerationResidual final
+template <typename T>
+Vector<6, T> position_speed_direction_acceleration_residual(const Vector<6, T>& a, const Vector<6, T>& b)
 {
-        template <typename T>
-        Vector<6, T> operator()(const Vector<6, T>& a, const Vector<6, T>& b) const
-        {
-                Vector<6, T> res = a - b;
-                res[3] = normalize_angle(res[3]);
-                return res;
-        }
-};
-
-struct PositionSpeedDirectionAccelerationMean final
-{
-        template <typename T, std::size_t COUNT>
-        Vector<6, T> operator()(const std::array<Vector<6, T>, COUNT>& p, const Vector<COUNT, T>& w) const
-        {
-                Vector<6, T> x(0);
-                T cos3 = 0;
-                T sin3 = 0;
-                for (std::size_t i = 0; i < COUNT; ++i)
-                {
-                        const Vector<6, T>& pi = p[i];
-                        const T wi = w[i];
-                        x[0] += wi * pi[0];
-                        x[1] += wi * pi[1];
-                        x[2] += wi * pi[2];
-                        cos3 += wi * std::cos(pi[3]);
-                        sin3 += wi * std::sin(pi[3]);
-                        x[4] += wi * pi[4];
-                        x[5] += wi * pi[5];
-                }
-                x[3] = std::atan2(sin3, cos3);
-                return x;
-        }
-};
+        Vector<6, T> res = a - b;
+        res[3] = normalize_angle(res[3]);
+        return res;
+}
 
 //
 
@@ -302,40 +254,13 @@ Vector<5, T> position_direction_acceleration_h(const Vector<9, T>& x)
         };
 }
 
-struct PositionDirectionAccelerationResidual final
+template <typename T>
+Vector<5, T> position_direction_acceleration_residual(const Vector<5, T>& a, const Vector<5, T>& b)
 {
-        template <typename T>
-        Vector<5, T> operator()(const Vector<5, T>& a, const Vector<5, T>& b) const
-        {
-                Vector<5, T> res = a - b;
-                res[2] = normalize_angle(res[2]);
-                return res;
-        }
-};
-
-struct PositionDirectionAccelerationMean final
-{
-        template <typename T, std::size_t COUNT>
-        Vector<5, T> operator()(const std::array<Vector<5, T>, COUNT>& p, const Vector<COUNT, T>& w) const
-        {
-                Vector<5, T> x(0);
-                T cos2 = 0;
-                T sin2 = 0;
-                for (std::size_t i = 0; i < COUNT; ++i)
-                {
-                        const Vector<5, T>& pi = p[i];
-                        const T wi = w[i];
-                        x[0] += wi * pi[0];
-                        x[1] += wi * pi[1];
-                        cos2 += wi * std::cos(pi[2]);
-                        sin2 += wi * std::sin(pi[2]);
-                        x[3] += wi * pi[3];
-                        x[4] += wi * pi[4];
-                }
-                x[2] = std::atan2(sin2, cos2);
-                return x;
-        }
-};
+        Vector<5, T> res = a - b;
+        res[2] = normalize_angle(res[2]);
+        return res;
+}
 
 //
 
@@ -365,28 +290,10 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
         };
 }
 
-struct SigmaPointsAdd final
-{
-        template <typename T>
-        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
-        {
-                return a + b;
-        }
-};
-
-struct SigmaPointsSubtract final
-{
-        template <typename T>
-        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
-        {
-                return a - b;
-        }
-};
-
 template <typename T>
 class ProcessFilterUkf final : public ProcessFilter<T>
 {
-        Ukf<9, T, SigmaPoints<9, T, SigmaPointsAdd, SigmaPointsSubtract>> filter_;
+        Ukf<9, T, SigmaPoints<9, T, Add, Subtract>> filter_;
         const T dt_;
         Matrix<9, 9, T> q_;
 
@@ -422,8 +329,7 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                         position_speed_direction_acceleration_r(
                                 position_variance, speed_variance, direction_variance, acceleration_variance),
                         Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
-                        AddX(), ResidualX(), PositionSpeedDirectionAccelerationMean(),
-                        PositionSpeedDirectionAccelerationResidual());
+                        AddX(), ResidualX(), Mean(), position_speed_direction_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
@@ -438,7 +344,7 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                         position_direction_acceleration_h<T>,
                         position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
                         Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
-                        ResidualX(), PositionDirectionAccelerationMean(), PositionDirectionAccelerationResidual());
+                        ResidualX(), Mean(), position_direction_acceleration_residual<T>);
         }
 
         void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
@@ -500,8 +406,7 @@ public:
                 const Vector<9, T>& x,
                 const Matrix<9, 9, T>& p)
                 : filter_(
-                        {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, SigmaPointsAdd(),
-                         SigmaPointsSubtract()},
+                        {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, Add(), Subtract()},
                         x,
                         p),
                   dt_(dt),
