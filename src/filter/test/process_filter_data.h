@@ -34,6 +34,7 @@ template <typename T>
 class ProcessFilterData final
 {
         std::string name_;
+        unsigned char color_;
         const ProcessFilter<T>* filter_;
 
         std::vector<Vector<2, T>> position_;
@@ -44,9 +45,12 @@ class ProcessFilterData final
         NeesAverage<1, T> nees_angle_r_;
 
 public:
-        ProcessFilterData(std::string name, const ProcessFilter<T>* filter);
+        ProcessFilterData(std::string name, unsigned char color, const ProcessFilter<T>* filter);
 
         void save(std::size_t index, const SimulatorPoint<2, T>& point);
+
+        [[nodiscard]] const std::string& name() const;
+        [[nodiscard]] unsigned char color() const;
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;

@@ -101,6 +101,26 @@ std::string make_annotation()
         return oss.str();
 }
 
+template <typename T>
+void write_to_file(
+        const Track<2, T>& track,
+        const PositionFilterData<T>& position_filter_data,
+        const std::vector<ProcessFilterData<T>>& filter_data)
+{
+        std::vector<view::Filter<2, T>> view_filters;
+        view_filters.reserve(filter_data.size());
+
+        for (const ProcessFilterData<T>& fd : filter_data)
+        {
+                view_filters.push_back(
+                        {.name = fd.name(), .color = fd.color(), .speed = fd.speed(), .position = fd.position()});
+        }
+
+        view::write_to_file(
+                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.speed(),
+                position_filter_data.positions(), view_filters);
+}
+
 template <std::size_t N, typename T>
 Track<N, T> generate_track()
 {
@@ -287,20 +307,18 @@ void test_impl(const Track<2, T>& track)
                 return make_diagonal_matrix<9, T>({p, v, a, p, v, a, angle, angle_speed, angle_r});
         }();
 
-        static constexpr std::size_t EKF = 0;
-        static constexpr std::size_t UKF = 1;
-
         std::vector<std::unique_ptr<ProcessFilter<T>>> filters;
+        std::vector<ProcessFilterData<T>> filter_data;
+
         filters.push_back(create_process_filter_ekf<T>(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
                 Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
+        filter_data.emplace_back("EKF", 190, filters.back().get());
+
         filters.push_back(create_process_filter_ukf(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
                 Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
-
-        std::vector<ProcessFilterData<T>> filter_data;
-        filter_data.emplace_back("EKF", filters[EKF].get());
-        filter_data.emplace_back("UKF", filters[UKF].get());
+        filter_data.emplace_back("UKF", 140, filters.back().get());
 
         std::size_t last_position_i = position_iter->index;
         ++position_iter;
@@ -344,13 +362,9 @@ void test_impl(const Track<2, T>& track)
                 }
         }
 
-        view::write_to_file(
-                make_annotation<T>(), track, Config<T>::POSITION_INTERVAL, position_filter_data.speed(),
-                position_filter_data.positions(), filter_data[EKF].speed(), filter_data[EKF].position(),
-                filter_data[UKF].speed(), filter_data[UKF].position());
+        write_to_file(track, position_filter_data, filter_data);
 
         LOG(position_filter_data.nees_string());
-
         for (const auto& fd : filter_data)
         {
                 LOG(fd.nees_string());

@@ -26,8 +26,12 @@ namespace ns::filter::test
 {
 
 template <typename T>
-ProcessFilterData<T>::ProcessFilterData(std::string name, const ProcessFilter<T>* const filter)
+ProcessFilterData<T>::ProcessFilterData(
+        std::string name,
+        const unsigned char color,
+        const ProcessFilter<T>* const filter)
         : name_(std::move(name)),
+          color_(color),
           filter_(filter)
 {
         ASSERT(filter_);
@@ -45,7 +49,19 @@ void ProcessFilterData<T>::save(const std::size_t index, const SimulatorPoint<2,
 }
 
 template <typename T>
-[[nodiscard]] std::string ProcessFilterData<T>::angle_string(const SimulatorPoint<2, T>& point) const
+const std::string& ProcessFilterData<T>::name() const
+{
+        return name_;
+}
+
+template <typename T>
+unsigned char ProcessFilterData<T>::color() const
+{
+        return color_;
+}
+
+template <typename T>
+std::string ProcessFilterData<T>::angle_string(const SimulatorPoint<2, T>& point) const
 {
         std::string s;
         s += name_;
@@ -57,7 +73,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::string ProcessFilterData<T>::nees_string() const
+std::string ProcessFilterData<T>::nees_string() const
 {
         std::string s;
         s += "Process " + name_ + " Position: " + nees_position_.check_string();
@@ -68,12 +84,12 @@ template <typename T>
         return s;
 }
 template <typename T>
-[[nodiscard]] const std::vector<Vector<2, T>>& ProcessFilterData<T>::position() const
+const std::vector<Vector<2, T>>& ProcessFilterData<T>::position() const
 {
         return position_;
 }
 template <typename T>
-[[nodiscard]] const std::vector<Vector<2, T>>& ProcessFilterData<T>::speed() const
+const std::vector<Vector<2, T>>& ProcessFilterData<T>::speed() const
 {
         return speed_;
 }

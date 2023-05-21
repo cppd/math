@@ -22,11 +22,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <optional>
-#include <string_view>
+#include <string>
 #include <vector>
 
 namespace ns::filter::test::view
 {
+template <std::size_t N, typename T>
+struct Filter final
+{
+        std::string name;
+        unsigned char color;
+        std::vector<Vector<N, T>> speed;
+        std::vector<Vector<N, T>> position;
+};
+
 template <std::size_t N, typename T>
 void write_to_file(
         std::string_view annotation,
@@ -34,8 +43,5 @@ void write_to_file(
         std::size_t track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
         const std::vector<std::optional<Vector<N, T>>>& lkf_position,
-        const std::vector<Vector<N, T>>& ekf_speed,
-        const std::vector<Vector<N, T>>& ekf_position,
-        const std::vector<Vector<N, T>>& ukf_speed,
-        const std::vector<Vector<N, T>>& ukf_position);
+        const std::vector<Filter<N, T>>& filters);
 }
