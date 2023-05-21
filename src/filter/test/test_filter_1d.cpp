@@ -326,7 +326,7 @@ class TestUkf
         const Matrix<2, 2, T> q_;
         const Matrix<1, 1, T> r_;
 
-        Ukf<2, T, SigmaPoints<2, T, Add, Subtract>> filter_;
+        Ukf<2, T, SigmaPoints<2, T, Add, Subtract>, Add, Mean, Subtract> filter_;
 
 public:
         TestUkf(const std::type_identity_t<T> dt,
@@ -337,7 +337,7 @@ public:
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
-                  filter_({ALPHA, BETA, KAPPA, Add(), Subtract()}, x, p)
+                  filter_({ALPHA, BETA, KAPPA, Add(), Subtract()}, Add(), Mean(), Subtract(), x, p)
         {
         }
 
@@ -356,8 +356,8 @@ public:
                         return Vector<1, T>(x[0]);
                 };
 
-                filter_.predict(f, q_, Mean(), Subtract());
-                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Subtract(), Mean(), Subtract());
+                filter_.predict(f, q_);
+                filter_.update(h, r_, Vector<1, T>(measurement), Mean(), Subtract());
         }
 
         [[nodiscard]] T x() const

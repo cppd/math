@@ -58,18 +58,6 @@ struct ResidualX final
         }
 };
 
-struct MeanX final
-{
-        template <typename T, std::size_t COUNT>
-        [[nodiscard]] Vector<9, T> operator()(const std::array<Vector<9, T>, COUNT>& p, const Vector<COUNT, T>& w) const
-        {
-                Vector<9, T> x = Mean()(p, w);
-                x[6] = normalize_angle(x[6]);
-                x[8] = normalize_angle(x[8]);
-                return x;
-        }
-};
-
 template <typename T>
 Vector<9, T> f(const T dt, const Vector<9, T>& x)
 {
@@ -293,7 +281,7 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
 template <typename T>
 class ProcessFilterUkf final : public ProcessFilter<T>
 {
-        Ukf<9, T, SigmaPoints<9, T, Add, Subtract>> filter_;
+        Ukf<9, T, SigmaPoints<9, T, Add, Subtract>, AddX, Mean, ResidualX> filter_;
         const T dt_;
         Matrix<9, 9, T> q_;
 
@@ -304,14 +292,12 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                         {
                                 return f(dt_, x);
                         },
-                        q_, MeanX(), ResidualX());
+                        q_);
         }
 
         void update_position(const Vector<2, T>& position, const T position_variance) override
         {
-                filter_.update(
-                        position_h<T>, position_r(position_variance), position, AddX(), ResidualX(), Mean(),
-                        Subtract());
+                filter_.update(position_h<T>, position_r(position_variance), position, Mean(), Subtract());
         }
 
         void update_position_speed_direction_acceleration(
@@ -329,7 +315,7 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                         position_speed_direction_acceleration_r(
                                 position_variance, speed_variance, direction_variance, acceleration_variance),
                         Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
-                        AddX(), ResidualX(), Mean(), position_speed_direction_acceleration_residual<T>);
+                        Mean(), position_speed_direction_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
@@ -343,15 +329,14 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                 filter_.update(
                         position_direction_acceleration_h<T>,
                         position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
-                        ResidualX(), Mean(), position_direction_acceleration_residual<T>);
+                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), Mean(),
+                        position_direction_acceleration_residual<T>);
         }
 
         void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
         {
                 filter_.update(
-                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, AddX(), ResidualX(),
-                        Mean(), Subtract());
+                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, Mean(), Subtract());
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -407,6 +392,9 @@ public:
                 const Matrix<9, 9, T>& p)
                 : filter_(
                         {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, Add(), Subtract()},
+                        AddX(),
+                        Mean(),
+                        ResidualX(),
                         x,
                         p),
                   dt_(dt),
