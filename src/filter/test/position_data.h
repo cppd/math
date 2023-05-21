@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "process_filter.h"
+#include "position_filter.h"
 #include "simulator.h"
 
 #include "../nees.h"
@@ -31,30 +31,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-class ProcessFilterData final
+class PositionData final
 {
         std::string name_;
-        unsigned char color_;
-        const ProcessFilter<T>* filter_;
-
-        std::vector<Vector<2, T>> position_;
-        std::vector<Vector<2, T>> speed_;
-
+        const PositionFilter<T>* filter_;
+        std::vector<std::optional<Vector<2, T>>> positions_;
+        std::vector<std::optional<Vector<2, T>>> speed_;
         NeesAverage<2, T> nees_position_;
-        NeesAverage<1, T> nees_angle_;
-        NeesAverage<1, T> nees_angle_r_;
 
 public:
-        ProcessFilterData(std::string name, unsigned char color, const ProcessFilter<T>* filter);
+        PositionData(std::string name, const PositionFilter<T>* filter);
 
+        void save_empty();
         void save(std::size_t index, const SimulatorPoint<2, T>& point);
 
-        [[nodiscard]] const std::string& name() const;
-        [[nodiscard]] unsigned char color() const;
-
-        [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& position() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
+        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& positions() const;
+        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& speed() const;
 };
 }

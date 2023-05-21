@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "position_data.h"
 #include "position_filter.h"
-#include "position_filter_data.h"
-#include "process_filter_data.h"
+#include "process_data.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
 #include "simulator.h"
@@ -58,7 +58,7 @@ struct Config final
         static constexpr T MEASUREMENT_SPEED_VARIANCE = square(0.2);
 
         static constexpr T POSITION_FILTER_VARIANCE = square(0.5);
-        static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(10.0));
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
@@ -104,13 +104,13 @@ std::string make_annotation()
 template <typename T>
 void write_to_file(
         const Track<2, T>& track,
-        const PositionFilterData<T>& position_filter_data,
-        const std::vector<ProcessFilterData<T>>& filter_data)
+        const PositionData<T>& position_filter_data,
+        const std::vector<ProcessData<T>>& filter_data)
 {
         std::vector<view::Filter<2, T>> view_filters;
         view_filters.reserve(filter_data.size());
 
-        for (const ProcessFilterData<T>& fd : filter_data)
+        for (const ProcessData<T>& fd : filter_data)
         {
                 view_filters.push_back(
                         {.name = fd.name(), .color = fd.color(), .speed = fd.speed(), .position = fd.position()});
@@ -166,54 +166,85 @@ Track<N, T> generate_track()
 }
 
 template <typename T>
-auto move(
-        const Track<2, T>& track,
-        PositionFilter<T>* const position_filter,
-        PositionFilterData<T>* const position_filter_data)
+class Position final
 {
-        std::optional<std::size_t> last_position_i;
-        auto position_iter = track.position_measurements.cbegin();
+        PositionFilter<T> filter_;
+        PositionData<T> data_;
 
-        for (; position_iter != track.position_measurements.cend(); ++position_iter)
+        std::optional<std::size_t> last_position_i_;
+
+        Position(const Vector<6, T>& init_x, const Matrix<6, 6, T>& init_p)
+                : filter_(Config<T>::POSITION_FILTER_VARIANCE, init_x, init_p),
+                  data_("Filter", &filter_)
         {
-                const PositionMeasurement<2, T>& m = *position_iter;
-
-                ASSERT(!last_position_i || last_position_i < m.index);
-
-                if (last_position_i && m.index > *last_position_i + Config<T>::POSITION_INTERVAL)
-                {
-                        position_filter_data->save_empty();
-                }
-
-                if (!last_position_i)
-                {
-                        last_position_i = m.index;
-                }
-
-                position_filter->predict((m.index - *last_position_i) * Config<T>::DT);
-                position_filter->update(m.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
-                last_position_i = m.index;
-
-                position_filter_data->save(m.index, track.points[m.index]);
-
-                if (position_filter->angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
-                {
-                        break;
-                }
         }
 
-        return position_iter;
-}
+public:
+        Position(const Position&) = delete;
+        Position& operator=(const Position&) = delete;
 
-template <typename T>
-void position_filter_update(
-        const PositionMeasurement<2, T>& measurement,
-        const std::size_t index_delta,
-        PositionFilter<T>* const position_filter)
-{
-        position_filter->predict(index_delta * Config<T>::DT);
-        position_filter->update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
-}
+        explicit Position(const Track<2, T>& track)
+                : Position(
+                        {track.position_measurements[0].position[0], 1.0, -1.0,
+                         track.position_measurements[0].position[1], -2.0, 0.5},
+                        make_diagonal_matrix<6, T>(
+                                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
+                                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)}))
+
+        {
+        }
+
+        [[nodiscard]] typename std::vector<PositionMeasurement<2, T>>::const_iterator find_direction(
+                const Track<2, T>& track)
+        {
+                auto position_iter = track.position_measurements.cbegin();
+
+                for (; position_iter != track.position_measurements.cend(); ++position_iter)
+                {
+                        const PositionMeasurement<2, T>& m = *position_iter;
+
+                        update(m, track.points[m.index]);
+
+                        if (filter_.angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
+                        {
+                                break;
+                        }
+                }
+
+                return position_iter;
+        }
+
+        void update(const PositionMeasurement<2, T>& measurement, const SimulatorPoint<2, T>& point)
+        {
+                ASSERT(!last_position_i_ || *last_position_i_ < measurement.index);
+
+                const std::size_t delta = last_position_i_ ? (measurement.index - *last_position_i_) : 1;
+
+                if (delta > Config<T>::POSITION_INTERVAL)
+                {
+                        data_.save_empty();
+                }
+
+                if (delta > 0)
+                {
+                        filter_.predict(delta * Config<T>::DT);
+                        filter_.update(measurement.position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                        data_.save(measurement.index, point);
+                }
+
+                last_position_i_ = measurement.index;
+        }
+
+        [[nodiscard]] const PositionFilter<T>& filter() const
+        {
+                return filter_;
+        }
+
+        [[nodiscard]] const PositionData<T>& data() const
+        {
+                return data_;
+        }
+};
 
 template <typename T>
 void process_filter_update(
@@ -260,25 +291,17 @@ void test_impl(const Track<2, T>& track)
 {
         ASSERT(!track.position_measurements.empty() && track.position_measurements[0].index == 0);
 
-        const Vector<6, T> position_init_x(
-                track.position_measurements[0].position[0], 1.0, -1.0, track.position_measurements[0].position[1], -5,
-                0.5);
+        Position<T> position(track);
 
-        const Matrix<6, 6, T> position_init_p = make_diagonal_matrix<6, T>(
-                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
-                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)});
+        auto position_iter = position.find_direction(track);
 
-        PositionFilter<T> position_filter(Config<T>::POSITION_FILTER_VARIANCE, position_init_x, position_init_p);
-        PositionFilterData<T> position_filter_data("Filter", &position_filter);
-
-        auto position_iter = move(track, &position_filter, &position_filter_data);
         if (position_iter == track.position_measurements.cend())
         {
-                error("Failed to estimate angle");
+                error("Failed to estimate direction");
         }
 
-        const T position_filter_angle = position_filter.angle();
-        const T position_filter_angle_p = position_filter.angle_p();
+        const T position_filter_angle = position.filter().angle();
+        const T position_filter_angle_p = position.filter().angle_p();
 
         const T measurement_angle = track.process_measurements[position_iter->index].direction;
         const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
@@ -290,8 +313,8 @@ void test_impl(const Track<2, T>& track)
 
         const Vector<9, T> init_x = [&]()
         {
-                const Vector<2, T> p = position_filter.position();
-                const Vector<2, T> v = position_filter.velocity();
+                const Vector<2, T> p = position.filter().position();
+                const Vector<2, T> v = position.filter().velocity();
                 const Vector<2, T> a(0);
                 return Vector<9, T>(p[0], v[0], a[0], p[1], v[1], a[1], angle_difference, 0, 0);
         }();
@@ -308,7 +331,7 @@ void test_impl(const Track<2, T>& track)
         }();
 
         std::vector<std::unique_ptr<ProcessFilter<T>>> filters;
-        std::vector<ProcessFilterData<T>> filter_data;
+        std::vector<ProcessData<T>> filter_data;
 
         filters.push_back(create_process_filter_ekf<T>(
                 Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
@@ -320,9 +343,7 @@ void test_impl(const Track<2, T>& track)
                 Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
         filter_data.emplace_back("UKF", 140, filters.back().get());
 
-        std::size_t last_position_i = position_iter->index;
-        ++position_iter;
-        for (std::size_t i = last_position_i + 1; i < track.points.size(); ++i)
+        for (std::size_t i = (position_iter++)->index + 1; i < track.points.size(); ++i)
         {
                 for (auto& f : filters)
                 {
@@ -331,16 +352,7 @@ void test_impl(const Track<2, T>& track)
 
                 if (position_iter != track.position_measurements.cend() && position_iter->index == i)
                 {
-                        const std::size_t delta = i - last_position_i;
-                        if (delta > Config<T>::POSITION_INTERVAL)
-                        {
-                                position_filter_data.save_empty();
-                        }
-                        if (delta > 0)
-                        {
-                                position_filter_update(*position_iter, delta, &position_filter);
-                                position_filter_data.save(i, track.points[i]);
-                        }
+                        position.update(*position_iter, track.points[i]);
 
                         process_filter_update(*position_iter, track.process_measurements[i], filters);
                         for (const auto& fd : filter_data)
@@ -348,7 +360,6 @@ void test_impl(const Track<2, T>& track)
                                 LOG(to_string(i) + "; " + fd.angle_string(track.points[i]));
                         }
 
-                        last_position_i = position_iter->index;
                         ++position_iter;
                 }
                 else
@@ -362,9 +373,9 @@ void test_impl(const Track<2, T>& track)
                 }
         }
 
-        write_to_file(track, position_filter_data, filter_data);
+        write_to_file(track, position.data(), filter_data);
 
-        LOG(position_filter_data.nees_string());
+        LOG(position.data().nees_string());
         for (const auto& fd : filter_data)
         {
                 LOG(fd.nees_string());

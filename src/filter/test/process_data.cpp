@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process_filter_data.h"
+#include "process_data.h"
 
 #include "utility.h"
 
@@ -26,10 +26,7 @@ namespace ns::filter::test
 {
 
 template <typename T>
-ProcessFilterData<T>::ProcessFilterData(
-        std::string name,
-        const unsigned char color,
-        const ProcessFilter<T>* const filter)
+ProcessData<T>::ProcessData(std::string name, const unsigned char color, const ProcessFilter<T>* const filter)
         : name_(std::move(name)),
           color_(color),
           filter_(filter)
@@ -38,7 +35,7 @@ ProcessFilterData<T>::ProcessFilterData(
 }
 
 template <typename T>
-void ProcessFilterData<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
+void ProcessData<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
 {
         position_.push_back(filter_->position());
         speed_.push_back({index, filter_->speed()});
@@ -49,19 +46,19 @@ void ProcessFilterData<T>::save(const std::size_t index, const SimulatorPoint<2,
 }
 
 template <typename T>
-const std::string& ProcessFilterData<T>::name() const
+const std::string& ProcessData<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-unsigned char ProcessFilterData<T>::color() const
+unsigned char ProcessData<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string ProcessFilterData<T>::angle_string(const SimulatorPoint<2, T>& point) const
+std::string ProcessData<T>::angle_string(const SimulatorPoint<2, T>& point) const
 {
         std::string s;
         s += name_;
@@ -73,7 +70,7 @@ std::string ProcessFilterData<T>::angle_string(const SimulatorPoint<2, T>& point
 }
 
 template <typename T>
-std::string ProcessFilterData<T>::nees_string() const
+std::string ProcessData<T>::nees_string() const
 {
         std::string s;
         s += "Process " + name_ + " Position: " + nees_position_.check_string();
@@ -84,17 +81,17 @@ std::string ProcessFilterData<T>::nees_string() const
         return s;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& ProcessFilterData<T>::position() const
+const std::vector<Vector<2, T>>& ProcessData<T>::position() const
 {
         return position_;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& ProcessFilterData<T>::speed() const
+const std::vector<Vector<2, T>>& ProcessData<T>::speed() const
 {
         return speed_;
 }
 
-template class ProcessFilterData<float>;
-template class ProcessFilterData<double>;
-template class ProcessFilterData<long double>;
+template class ProcessData<float>;
+template class ProcessData<double>;
+template class ProcessData<long double>;
 }
