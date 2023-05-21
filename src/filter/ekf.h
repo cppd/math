@@ -53,7 +53,7 @@ class Ekf final
         Matrix<N, N, T> p_;
 
 public:
-        Ekf(const Vector<N, T>& x /*state mean*/, const Matrix<N, N, T>& p /*state covariance*/)
+        Ekf(const Vector<N, T>& x, const Matrix<N, N, T>& p)
                 : x_(x),
                   p_(p)
         {
@@ -70,9 +70,12 @@ public:
         }
 
         void predict(
-                const Matrix<N, N, T>& f /*state transition function*/,
-                const Matrix<N, N, T>& f_t /*state transition function transposed*/,
-                const Matrix<N, N, T>& q /*process covariance*/)
+                // State transition function
+                const Matrix<N, N, T>& f,
+                // State transition function transposed
+                const Matrix<N, N, T>& f_t,
+                // Process covariance
+                const Matrix<N, N, T>& q)
         {
                 x_ = f * x_;
                 p_ = f * p_ * f_t + q;
@@ -80,9 +83,16 @@ public:
 
         template <typename F, typename FJ>
         void predict(
-                const F& f /*state transition function*/,
-                const FJ& fj /*state transition function Jacobian*/,
-                const Matrix<N, N, T>& q /*process covariance*/)
+                // State transition function
+                // Vector<N, T> operator()(
+                //   const Vector<N, T>& x) const
+                const F f,
+                // State transition function Jacobian
+                // Matrix<N, N, T> operator()(
+                //   const Vector<N, T>& x) const
+                const FJ fj,
+                // Process covariance
+                const Matrix<N, N, T>& q)
         {
                 x_ = f(x_);
 
@@ -92,10 +102,14 @@ public:
 
         template <std::size_t M>
         void update(
-                const Matrix<M, N, T>& h /*measurement function*/,
-                const Matrix<N, M, T>& h_t /*measurement function transposed*/,
-                const Matrix<M, M, T>& r /* measurement covariance*/,
-                const Vector<M, T>& z /*measurement*/)
+                // Measurement function
+                const Matrix<M, N, T>& h,
+                // Measurement function transposed
+                const Matrix<N, M, T>& h_t,
+                // measurement covariance
+                const Matrix<M, M, T>& r,
+                // Measurement
+                const Vector<M, T>& z)
         {
                 const Matrix<N, M, T> k = p_ * h_t * (h * p_ * h_t + r).inversed();
                 x_ = x_ + k * (z - h * x_);
@@ -106,12 +120,28 @@ public:
 
         template <std::size_t M, typename H, typename HJ, typename ResidualZ, typename AddX>
         void update(
-                const H& h /*measurement function*/,
-                const HJ& hj /*measurement function Jacobian*/,
-                const Matrix<M, M, T>& r /* measurement covariance*/,
-                const Vector<M, T>& z /*measurement*/,
-                const AddX add_x /*the sum of the two state vectors*/,
-                const ResidualZ residual_z /*the residual between the two measurement vectors*/)
+                // Measurement function
+                // Vector<M, T> operator()(
+                //   const Vector<N, T>& x) const
+                const H h,
+                // Measurement function Jacobian
+                // Matrix<M, N, T> operator()(
+                //   const Vector<N, T>& x) const
+                const HJ hj,
+                // Measurement covariance
+                const Matrix<M, M, T>& r,
+                // measurement
+                const Vector<M, T>& z,
+                // The sum of the two state vectors
+                // Vector<N, T> operator()(
+                //   const Vector<N, T>& a,
+                //   const Vector<N, T>& b) const
+                const AddX add_x,
+                // The residual between the two measurement vectors
+                // Vector<M, T> operator()(
+                //   const Vector<M, T>& a,
+                //   const Vector<M, T>& b) const
+                const ResidualZ residual_z)
         {
                 const Matrix<M, N, T> hjx = hj(x_);
                 const Matrix<N, M, T> hjx_t = hjx.transposed();

@@ -206,6 +206,14 @@ Matrix<6, 9, T> position_speed_direction_acceleration_hj(const Vector<9, T>& x)
         };
 }
 
+template <typename T>
+Vector<6, T> position_speed_direction_acceleration_residual(const Vector<6, T>& a, const Vector<6, T>& b)
+{
+        Vector<6, T> res = a - b;
+        res[3] = normalize_angle(res[3]);
+        return res;
+}
+
 //
 
 template <typename T>
@@ -287,6 +295,14 @@ Matrix<5, 9, T> position_direction_acceleration_hj(const Vector<9, T>& x)
         };
 }
 
+template <typename T>
+Vector<5, T> position_direction_acceleration_residual(const Vector<5, T>& a, const Vector<5, T>& b)
+{
+        Vector<5, T> res = a - b;
+        res[2] = normalize_angle(res[2]);
+        return res;
+}
+
 //
 
 template <typename T>
@@ -366,13 +382,7 @@ class ProcessFilterEkf final : public ProcessFilter<T>
                         position_speed_direction_acceleration_r(
                                 position_variance, speed_variance, direction_variance, acceleration_variance),
                         Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
-                        AddX(),
-                        [](const Vector<6, T>& a, const Vector<6, T>& b) -> Vector<6, T>
-                        {
-                                Vector<6, T> res = a - b;
-                                res[3] = normalize_angle(res[3]);
-                                return res;
-                        });
+                        AddX(), position_speed_direction_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
@@ -387,12 +397,7 @@ class ProcessFilterEkf final : public ProcessFilter<T>
                         position_direction_acceleration_h<T>, position_direction_acceleration_hj<T>,
                         position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
                         Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
-                        [](const Vector<5, T>& a, const Vector<5, T>& b) -> Vector<5, T>
-                        {
-                                Vector<5, T> res = a - b;
-                                res[2] = normalize_angle(res[2]);
-                                return res;
-                        });
+                        position_direction_acceleration_residual<T>);
         }
 
         void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
