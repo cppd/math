@@ -31,19 +31,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-class PositionData final
+class Position final
 {
-        std::string name_;
-        const PositionFilter<T>* filter_;
+        PositionFilter<T> filter_;
+        T dt_;
+        T position_interval_;
+
         std::vector<std::optional<Vector<2, T>>> positions_;
         std::vector<std::optional<Vector<2, T>>> speed_;
         NeesAverage<2, T> nees_position_;
 
-public:
-        PositionData(std::string name, const PositionFilter<T>* filter);
+        std::optional<std::size_t> last_position_i_;
 
-        void save_empty();
-        void save(std::size_t index, const SimulatorPoint<2, T>& point);
+public:
+        Position(PositionFilter<T>&& filter, T dt, T position_interval);
+
+        void update(
+                const PositionMeasurement<2, T>& measurement,
+                T position_measurement_variance,
+                const SimulatorPoint<2, T>& point);
+
+        [[nodiscard]] const PositionFilter<T>& filter() const;
 
         [[nodiscard]] std::string nees_string() const;
         [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& positions() const;
