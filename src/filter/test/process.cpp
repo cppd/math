@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process_data.h"
+#include "process.h"
 
 #include "utility.h"
 
@@ -24,18 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-
 template <typename T>
-ProcessData<T>::ProcessData(std::string name, const unsigned char color, const ProcessFilter<T>* const filter)
+Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
-          filter_(filter)
+          filter_(std::move(filter))
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void ProcessData<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
+void Process<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
 {
         position_.push_back(filter_->position());
         speed_.push_back({index, filter_->speed()});
@@ -46,19 +45,65 @@ void ProcessData<T>::save(const std::size_t index, const SimulatorPoint<2, T>& p
 }
 
 template <typename T>
-const std::string& ProcessData<T>::name() const
+void Process<T>::predict()
+{
+        filter_->predict();
+}
+
+template <typename T>
+void Process<T>::update(
+        const PositionMeasurement<2, T>& measurement,
+        const ProcessMeasurement<2, T>& process_measurement,
+        const T position_variance,
+        const T speed_variance,
+        const T direction_variance,
+        const T acceleration_variance,
+        const std::size_t index,
+        const SimulatorPoint<2, T>& point)
+{
+        if (measurement.speed)
+        {
+                filter_->update_position_speed_direction_acceleration(
+                        measurement.position, *measurement.speed, process_measurement.direction,
+                        process_measurement.acceleration, position_variance, speed_variance, direction_variance,
+                        acceleration_variance);
+        }
+        else
+        {
+                filter_->update_position_direction_acceleration(
+                        measurement.position, process_measurement.direction, process_measurement.acceleration,
+                        position_variance, direction_variance, acceleration_variance);
+        }
+
+        save(index, point);
+}
+
+template <typename T>
+void Process<T>::update_acceleration(
+        const ProcessMeasurement<2, T>& process_measurement,
+        const T acceleration_variance,
+        const std::size_t index,
+        const SimulatorPoint<2, T>& point)
+{
+        filter_->update_acceleration(process_measurement.acceleration, acceleration_variance);
+
+        save(index, point);
+}
+
+template <typename T>
+const std::string& Process<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-unsigned char ProcessData<T>::color() const
+unsigned char Process<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string ProcessData<T>::angle_string(const SimulatorPoint<2, T>& point) const
+std::string Process<T>::angle_string(const SimulatorPoint<2, T>& point) const
 {
         std::string s;
         s += name_;
@@ -70,7 +115,7 @@ std::string ProcessData<T>::angle_string(const SimulatorPoint<2, T>& point) cons
 }
 
 template <typename T>
-std::string ProcessData<T>::nees_string() const
+std::string Process<T>::nees_string() const
 {
         std::string s;
         s += "Process " + name_ + " Position: " + nees_position_.check_string();
@@ -81,17 +126,17 @@ std::string ProcessData<T>::nees_string() const
         return s;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& ProcessData<T>::position() const
+const std::vector<Vector<2, T>>& Process<T>::position() const
 {
         return position_;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& ProcessData<T>::speed() const
+const std::vector<Vector<2, T>>& Process<T>::speed() const
 {
         return speed_;
 }
 
-template class ProcessData<float>;
-template class ProcessData<double>;
-template class ProcessData<long double>;
+template class Process<float>;
+template class Process<double>;
+template class Process<long double>;
 }

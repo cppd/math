@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -31,11 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-class ProcessData final
+class Process final
 {
         std::string name_;
         unsigned char color_;
-        const ProcessFilter<T>* filter_;
+        std::unique_ptr<ProcessFilter<T>> filter_;
 
         std::vector<Vector<2, T>> position_;
         std::vector<Vector<2, T>> speed_;
@@ -44,10 +45,28 @@ class ProcessData final
         NeesAverage<1, T> nees_angle_;
         NeesAverage<1, T> nees_angle_r_;
 
-public:
-        ProcessData(std::string name, unsigned char color, const ProcessFilter<T>* filter);
-
         void save(std::size_t index, const SimulatorPoint<2, T>& point);
+
+public:
+        Process(std::string name, unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter);
+
+        void predict();
+
+        void update(
+                const PositionMeasurement<2, T>& measurement,
+                const ProcessMeasurement<2, T>& process_measurement,
+                T position_variance,
+                T speed_variance,
+                T direction_variance,
+                T acceleration_variance,
+                std::size_t index,
+                const SimulatorPoint<2, T>& point);
+
+        void update_acceleration(
+                const ProcessMeasurement<2, T>& process_measurement,
+                T acceleration_variance,
+                std::size_t index,
+                const SimulatorPoint<2, T>& point);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] unsigned char color() const;
