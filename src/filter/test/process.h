@@ -37,6 +37,7 @@ class Process final
         std::string name_;
         unsigned char color_;
         std::unique_ptr<ProcessFilter<T>> filter_;
+        T dt_;
 
         std::vector<Vector<2, T>> position_;
         std::vector<Vector<2, T>> speed_;
@@ -45,12 +46,14 @@ class Process final
         NeesAverage<1, T> nees_angle_;
         NeesAverage<1, T> nees_angle_r_;
 
+        std::optional<std::size_t> last_position_i_;
+
         void save(std::size_t index, const SimulatorPoint<2, T>& point);
 
 public:
-        Process(std::string name, unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter);
+        Process(std::string name, unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter, T dt);
 
-        void predict();
+        void predict(std::size_t index);
 
         void update(
                 const PositionMeasurement<2, T>& measurement,

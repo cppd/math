@@ -28,7 +28,7 @@ class ProcessFilter
 public:
         virtual ~ProcessFilter() = default;
 
-        virtual void predict() = 0;
+        virtual void predict(T dt) = 0;
 
         virtual void update_position(const Vector<2, T>& position, T position_variance) = 0;
 

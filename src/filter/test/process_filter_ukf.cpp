@@ -282,17 +282,18 @@ template <typename T>
 class ProcessFilterUkf final : public ProcessFilter<T>
 {
         Ukf<9, T, SigmaPoints<9, T, Add, Subtract>, AddX, Mean, ResidualX> filter_;
-        const T dt_;
-        Matrix<9, 9, T> q_;
+        const T position_variance_;
+        const T angle_variance_;
+        const T angle_r_variance_;
 
-        void predict() override
+        void predict(const T dt) override
         {
                 filter_.predict(
-                        [&](const Vector<9, T>& x)
+                        [dt](const Vector<9, T>& x)
                         {
-                                return f(dt_, x);
+                                return f(dt, x);
                         },
-                        q_);
+                        q(dt, position_variance_, angle_variance_, angle_r_variance_));
         }
 
         void update_position(const Vector<2, T>& position, const T position_variance) override
@@ -384,7 +385,6 @@ class ProcessFilterUkf final : public ProcessFilter<T>
 
 public:
         ProcessFilterUkf(
-                const T dt,
                 const T position_variance,
                 const T angle_variance,
                 const T angle_r_variance,
@@ -397,8 +397,9 @@ public:
                         ResidualX(),
                         x,
                         p),
-                  dt_(dt),
-                  q_(q(dt, position_variance, angle_variance, angle_r_variance))
+                  position_variance_(position_variance),
+                  angle_variance_(angle_variance),
+                  angle_r_variance_(angle_r_variance)
         {
         }
 };
@@ -406,19 +407,18 @@ public:
 
 template <typename T>
 std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
-        const T dt,
         const T position_variance,
         const T angle_variance,
         const T angle_r_variance,
         const Vector<9, T>& x,
         const Matrix<9, 9, T>& p)
 {
-        return std::make_unique<ProcessFilterUkf<T>>(dt, position_variance, angle_variance, angle_r_variance, x, p);
+        return std::make_unique<ProcessFilterUkf<T>>(position_variance, angle_variance, angle_r_variance, x, p);
 }
 
 #define TEMPLATE(T)                                                           \
         template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf( \
-                T, T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
+                T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

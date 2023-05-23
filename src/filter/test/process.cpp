@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter)
+Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter, T dt)
         : name_(std::move(name)),
           color_(color),
-          filter_(std::move(filter))
+          filter_(std::move(filter)),
+          dt_(dt)
 {
         ASSERT(filter_);
 }
@@ -45,9 +46,12 @@ void Process<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point
 }
 
 template <typename T>
-void Process<T>::predict()
+void Process<T>::predict(const std::size_t index)
 {
-        filter_->predict();
+        ASSERT(!last_position_i_ || *last_position_i_ < index);
+
+        const std::size_t delta = last_position_i_ ? (index - *last_position_i_) : 1;
+        filter_->predict(delta * dt_);
 }
 
 template <typename T>

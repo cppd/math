@@ -246,25 +246,28 @@ void test_impl(const Track<2, T>& track)
         processes.emplace_back(
                 "EKF", 190,
                 create_process_filter_ekf<T>(
-                        Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE,
-                        Config<T>::PROCESS_FILTER_ANGLE_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x,
-                        init_p));
+                        Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
+                        Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p),
+                Config<T>::DT);
 
         processes.emplace_back(
                 "UKF", 140,
                 create_process_filter_ukf(
-                        Config<T>::DT, Config<T>::PROCESS_FILTER_POSITION_VARIANCE,
-                        Config<T>::PROCESS_FILTER_ANGLE_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x,
-                        init_p));
+                        Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
+                        Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p),
+                Config<T>::DT);
 
         auto process_iter = move_process(track, position_iter->index);
         ++position_iter;
 
         for (; process_iter != track.process_measurements.cend(); ++process_iter)
         {
+                ASSERT(position_iter == track.position_measurements.cend()
+                       || position_iter->index >= process_iter->index);
+
                 for (auto& p : processes)
                 {
-                        p.predict();
+                        p.predict(process_iter->index);
                 }
 
                 if (position_iter != track.position_measurements.cend() && position_iter->index == process_iter->index)
