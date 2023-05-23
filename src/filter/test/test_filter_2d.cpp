@@ -179,6 +179,23 @@ typename std::vector<PositionMeasurement<2, T>>::const_iterator find_direction(
 }
 
 template <typename T>
+typename std::vector<ProcessMeasurement<2, T>>::const_iterator move_process(
+        const Track<2, T>& track,
+        const std::size_t index)
+{
+        auto process_iter = track.process_measurements.cbegin();
+        while (process_iter != track.process_measurements.cend() && process_iter->index <= index)
+        {
+                ++process_iter;
+        }
+        if (process_iter == track.process_measurements.cend())
+        {
+                error("Process position is not found");
+        }
+        return process_iter;
+}
+
+template <typename T>
 void test_impl(const Track<2, T>& track)
 {
         ASSERT(!track.position_measurements.empty() && track.position_measurements[0].index == 0);
@@ -240,26 +257,33 @@ void test_impl(const Track<2, T>& track)
                         Config<T>::PROCESS_FILTER_ANGLE_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x,
                         init_p));
 
-        for (std::size_t i = (position_iter++)->index + 1; i < track.points.size(); ++i)
+        auto process_iter = move_process(track, position_iter->index);
+        ++position_iter;
+
+        for (; process_iter != track.process_measurements.cend(); ++process_iter)
         {
                 for (auto& p : processes)
                 {
                         p.predict();
                 }
 
-                if (position_iter != track.position_measurements.cend() && position_iter->index == i)
+                if (position_iter != track.position_measurements.cend() && position_iter->index == process_iter->index)
                 {
-                        position.update(*position_iter, Config<T>::MEASUREMENT_POSITION_VARIANCE, track.points[i]);
+                        position.update(
+                                *position_iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                track.points[position_iter->index]);
 
                         for (auto& p : processes)
                         {
                                 p.update(
-                                        *position_iter, track.process_measurements[i],
-                                        Config<T>::MEASUREMENT_POSITION_VARIANCE, Config<T>::MEASUREMENT_SPEED_VARIANCE,
+                                        *position_iter, *process_iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                        Config<T>::MEASUREMENT_SPEED_VARIANCE,
                                         Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, i, track.points[i]);
+                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, process_iter->index,
+                                        track.points[process_iter->index]);
 
-                                LOG(to_string(i) + "; " + p.angle_string(track.points[i]));
+                                LOG(to_string(process_iter->index) + "; "
+                                    + p.angle_string(track.points[process_iter->index]));
                         }
 
                         ++position_iter;
@@ -269,8 +293,8 @@ void test_impl(const Track<2, T>& track)
                         for (auto& p : processes)
                         {
                                 p.update_acceleration(
-                                        track.process_measurements[i], Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, i,
-                                        track.points[i]);
+                                        *process_iter, Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
+                                        process_iter->index, track.points[process_iter->index]);
                         }
                 }
         }

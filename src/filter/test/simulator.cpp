@@ -133,13 +133,16 @@ public:
                 return direction_angle_;
         }
 
-        [[nodiscard]] ProcessMeasurement<N, T> process_measurement()
+        [[nodiscard]] T process_direction()
         {
                 const Vector<N, T> direction =
                         rotate(velocity_, direction_angle_ + angle_ + measurements_velocity_direction_nd_(engine_));
-                return ProcessMeasurement<N, T>{
-                        .direction = std::atan2(direction[1], direction[0]),
-                        .acceleration = rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_)};
+                return std::atan2(direction[1], direction[0]);
+        }
+
+        [[nodiscard]] Vector<N, T> process_acceleration()
+        {
+                return rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_);
         }
 
         [[nodiscard]] Vector<N, T> position_measurement()
@@ -188,7 +191,10 @@ Track<N, T> generate_track(
                          .angle = simulator.angle(),
                          .angle_r = simulator.angle_r()});
 
-                res.process_measurements.push_back(simulator.process_measurement());
+                res.process_measurements.push_back(
+                        {.index = i,
+                         .direction = simulator.process_direction(),
+                         .acceleration = simulator.process_acceleration()});
 
                 if ((i % position_interval) == 0)
                 {
