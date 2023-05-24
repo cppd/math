@@ -50,13 +50,20 @@ class Process final
 
         void save(std::size_t index, const SimulatorPoint<2, T>& point);
 
+        void predict(std::size_t index);
+
 public:
         Process(std::string name, unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter, T dt);
 
-        void predict(std::size_t index);
-
         void update(
                 const PositionMeasurement<2, T>& measurement,
+                T position_variance,
+                T speed_variance,
+                std::size_t index,
+                const SimulatorPoint<2, T>& point);
+
+        void update(
+                const PositionMeasurement<2, T>& position_measurement,
                 const ProcessMeasurement<2, T>& process_measurement,
                 T position_variance,
                 T speed_variance,
@@ -65,8 +72,8 @@ public:
                 std::size_t index,
                 const SimulatorPoint<2, T>& point);
 
-        void update_acceleration(
-                const ProcessMeasurement<2, T>& process_measurement,
+        void update(
+                const ProcessMeasurement<2, T>& measurement,
                 T acceleration_variance,
                 std::size_t index,
                 const SimulatorPoint<2, T>& point);

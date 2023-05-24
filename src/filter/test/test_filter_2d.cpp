@@ -260,45 +260,49 @@ void test_impl(const Track<2, T>& track)
         auto process_iter = move_process(track, position_iter->index);
         ++position_iter;
 
-        for (; process_iter != track.process_measurements.cend(); ++process_iter)
+        while (process_iter != track.process_measurements.cend() && position_iter != track.position_measurements.cend())
         {
-                ASSERT(position_iter == track.position_measurements.cend()
-                       || position_iter->index >= process_iter->index);
-
-                for (auto& p : processes)
+                if (process_iter->index < position_iter->index)
                 {
-                        p.predict(process_iter->index);
-                }
-
-                if (position_iter != track.position_measurements.cend() && position_iter->index == process_iter->index)
-                {
-                        position.update(
-                                *position_iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                                track.points[position_iter->index]);
-
+                        const auto av = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE;
+                        const std::size_t index = process_iter->index;
                         for (auto& p : processes)
                         {
-                                p.update(
-                                        *position_iter, *process_iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                                        Config<T>::MEASUREMENT_SPEED_VARIANCE,
-                                        Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                                        Config<T>::MEASUREMENT_ACCELERATION_VARIANCE, process_iter->index,
-                                        track.points[process_iter->index]);
-
-                                LOG(to_string(process_iter->index) + "; "
-                                    + p.angle_string(track.points[process_iter->index]));
+                                p.update(*process_iter, av, index, track.points[index]);
                         }
-
+                        ++process_iter;
+                }
+                else if (process_iter->index > position_iter->index)
+                {
+                        const auto pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                        const auto sv = Config<T>::MEASUREMENT_SPEED_VARIANCE;
+                        const std::size_t index = position_iter->index;
+                        position.update(*position_iter, pv, track.points[index]);
+                        for (auto& p : processes)
+                        {
+                                p.update(*position_iter, pv, sv, index, track.points[index]);
+                        }
+                        ++position_iter;
+                }
+                else if (process_iter->index == position_iter->index)
+                {
+                        const auto pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                        const auto sv = Config<T>::MEASUREMENT_SPEED_VARIANCE;
+                        const auto dv = Config<T>::MEASUREMENT_DIRECTION_VARIANCE;
+                        const auto av = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE;
+                        const std::size_t index = process_iter->index;
+                        position.update(*position_iter, pv, track.points[index]);
+                        for (auto& p : processes)
+                        {
+                                p.update(*position_iter, *process_iter, pv, sv, dv, av, index, track.points[index]);
+                                LOG(to_string(index) + "; " + p.angle_string(track.points[index]));
+                        }
+                        ++process_iter;
                         ++position_iter;
                 }
                 else
                 {
-                        for (auto& p : processes)
-                        {
-                                p.update_acceleration(
-                                        *process_iter, Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
-                                        process_iter->index, track.points[process_iter->index]);
-                        }
+                        ASSERT(false);
                 }
         }
 

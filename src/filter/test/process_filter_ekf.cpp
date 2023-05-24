@@ -116,6 +116,70 @@ Matrix<2, 9, T> position_hj(const Vector<9, T>& /*x*/)
         };
 }
 
+template <typename T>
+Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+{
+        return a - b;
+}
+
+//
+
+template <typename T>
+Matrix<3, 3, T> position_speed_r(const T position_variance, const T speed_variance)
+{
+        const T pv = position_variance;
+        const T sv = speed_variance;
+        return {
+                {pv,  0,  0},
+                { 0, pv,  0},
+                { 0,  0, sv}
+        };
+}
+
+template <typename T>
+Vector<3, T> position_speed_h(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        const T px = x[0];
+        const T vx = x[1];
+        const T py = x[3];
+        const T vy = x[4];
+        return {
+                px, // px
+                py, // py
+                std::sqrt(vx * vx + vy * vy), // speed
+        };
+}
+
+template <typename T>
+Matrix<3, 9, T> position_speed_hj(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        // Jacobian
+        // mPx=Px;
+        // mPy=Py;
+        // mSpeed=Sqrt[Vx*Vx+Vy*Vy];
+        // Simplify[D[{mPx,mPy,mSpeed},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
+        const T vx = x[1];
+        const T vy = x[4];
+        const T speed = std::sqrt(vx * vx + vy * vy);
+        return {
+                {1,          0, 0, 0,          0, 0, 0, 0, 0},
+                {0,          0, 0, 1,          0, 0, 0, 0, 0},
+                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0}
+        };
+}
+
+template <typename T>
+Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+{
+        return a - b;
+}
+
 //
 
 template <typename T>
@@ -349,6 +413,14 @@ Matrix<2, 9, T> acceleration_hj(const Vector<9, T>& x)
 }
 
 template <typename T>
+Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+{
+        return a - b;
+}
+
+//
+
+template <typename T>
 class ProcessFilterEkf final : public ProcessFilter<T>
 {
         Ekf<9, T> filter_;
@@ -367,7 +439,19 @@ class ProcessFilterEkf final : public ProcessFilter<T>
         void update_position(const Vector<2, T>& position, const T position_variance) override
         {
                 filter_.update(
-                        position_h<T>, position_hj<T>, position_r(position_variance), position, AddX(), Subtract());
+                        position_h<T>, position_hj<T>, position_r(position_variance), position, AddX(),
+                        position_residual<T>);
+        }
+
+        void update_position_speed(
+                const Vector<2, T>& position,
+                const T speed,
+                const T position_variance,
+                const T speed_variance) override
+        {
+                filter_.update(
+                        position_speed_h<T>, position_speed_hj<T>, position_speed_r(position_variance, speed_variance),
+                        Vector<3, T>(position[0], position[1], speed), AddX(), position_speed_residual<T>);
         }
 
         void update_position_speed_direction_acceleration(
@@ -407,7 +491,7 @@ class ProcessFilterEkf final : public ProcessFilter<T>
         {
                 filter_.update(
                         acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration_variance), acceleration,
-                        AddX(), Subtract());
+                        AddX(), acceleration_residual<T>);
         }
 
         [[nodiscard]] Vector<2, T> position() const override

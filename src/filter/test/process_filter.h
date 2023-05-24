@@ -32,6 +32,12 @@ public:
 
         virtual void update_position(const Vector<2, T>& position, T position_variance) = 0;
 
+        virtual void update_position_speed(
+                const Vector<2, T>& position,
+                T speed,
+                T position_variance,
+                T speed_variance) = 0;
+
         virtual void update_position_speed_direction_acceleration(
                 const Vector<2, T>& position,
                 T speed,

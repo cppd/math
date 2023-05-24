@@ -135,6 +135,49 @@ Vector<2, T> position_h(const Vector<9, T>& x)
         return {x[0], x[3]};
 }
 
+template <typename T>
+Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+{
+        return a - b;
+}
+
+//
+
+template <typename T>
+Matrix<3, 3, T> position_speed_r(const T position_variance, const T speed_variance)
+{
+        const T pv = position_variance;
+        const T sv = speed_variance;
+        return {
+                {pv,  0,  0},
+                { 0, pv,  0},
+                { 0,  0, sv}
+        };
+}
+
+template <typename T>
+Vector<3, T> position_speed_h(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        const T px = x[0];
+        const T vx = x[1];
+        const T py = x[3];
+        const T vy = x[4];
+        return {
+                px, // px
+                py, // py
+                std::sqrt(vx * vx + vy * vy) // speed
+        };
+}
+
+template <typename T>
+Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+{
+        return a - b;
+}
+
 //
 
 template <typename T>
@@ -279,6 +322,12 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
+Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+{
+        return a - b;
+}
+
+template <typename T>
 class ProcessFilterUkf final : public ProcessFilter<T>
 {
         Ukf<9, T, SigmaPoints<9, T, Add, Subtract>, AddX, Mean, ResidualX> filter_;
@@ -298,7 +347,18 @@ class ProcessFilterUkf final : public ProcessFilter<T>
 
         void update_position(const Vector<2, T>& position, const T position_variance) override
         {
-                filter_.update(position_h<T>, position_r(position_variance), position, Mean(), Subtract());
+                filter_.update(position_h<T>, position_r(position_variance), position, Mean(), position_residual<T>);
+        }
+
+        void update_position_speed(
+                const Vector<2, T>& position,
+                const T speed,
+                const T position_variance,
+                const T speed_variance) override
+        {
+                filter_.update(
+                        position_speed_h<T>, position_speed_r(position_variance, speed_variance),
+                        Vector<3, T>(position[0], position[1], speed), Mean(), position_speed_residual<T>);
         }
 
         void update_position_speed_direction_acceleration(
@@ -337,7 +397,8 @@ class ProcessFilterUkf final : public ProcessFilter<T>
         void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
         {
                 filter_.update(
-                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, Mean(), Subtract());
+                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, Mean(),
+                        acceleration_residual<T>);
         }
 
         [[nodiscard]] Vector<2, T> position() const override

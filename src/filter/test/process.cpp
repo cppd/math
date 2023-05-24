@@ -57,6 +57,29 @@ void Process<T>::predict(const std::size_t index)
 template <typename T>
 void Process<T>::update(
         const PositionMeasurement<2, T>& measurement,
+        const T position_variance,
+        const T speed_variance,
+        const std::size_t index,
+        const SimulatorPoint<2, T>& point)
+{
+        predict(measurement.index);
+
+        if (measurement.speed)
+        {
+                filter_->update_position_speed(
+                        measurement.position, *measurement.speed, position_variance, speed_variance);
+        }
+        else
+        {
+                filter_->update_position(measurement.position, position_variance);
+        }
+
+        save(index, point);
+}
+
+template <typename T>
+void Process<T>::update(
+        const PositionMeasurement<2, T>& position_measurement,
         const ProcessMeasurement<2, T>& process_measurement,
         const T position_variance,
         const T speed_variance,
@@ -65,17 +88,19 @@ void Process<T>::update(
         const std::size_t index,
         const SimulatorPoint<2, T>& point)
 {
-        if (measurement.speed)
+        predict(position_measurement.index);
+
+        if (position_measurement.speed)
         {
                 filter_->update_position_speed_direction_acceleration(
-                        measurement.position, *measurement.speed, process_measurement.direction,
+                        position_measurement.position, *position_measurement.speed, process_measurement.direction,
                         process_measurement.acceleration, position_variance, speed_variance, direction_variance,
                         acceleration_variance);
         }
         else
         {
                 filter_->update_position_direction_acceleration(
-                        measurement.position, process_measurement.direction, process_measurement.acceleration,
+                        position_measurement.position, process_measurement.direction, process_measurement.acceleration,
                         position_variance, direction_variance, acceleration_variance);
         }
 
@@ -83,13 +108,15 @@ void Process<T>::update(
 }
 
 template <typename T>
-void Process<T>::update_acceleration(
-        const ProcessMeasurement<2, T>& process_measurement,
+void Process<T>::update(
+        const ProcessMeasurement<2, T>& measurement,
         const T acceleration_variance,
         const std::size_t index,
         const SimulatorPoint<2, T>& point)
 {
-        filter_->update_acceleration(process_measurement.acceleration, acceleration_variance);
+        predict(measurement.index);
+
+        filter_->update_acceleration(measurement.acceleration, acceleration_variance);
 
         save(index, point);
 }
