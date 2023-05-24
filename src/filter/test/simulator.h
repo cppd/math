@@ -27,6 +27,7 @@ namespace ns::filter::test
 template <std::size_t N, typename T>
 struct SimulatorPoint final
 {
+        T time;
         Vector<N, T> position;
         T speed;
         T angle;
@@ -36,7 +37,8 @@ struct SimulatorPoint final
 template <std::size_t N, typename T>
 struct ProcessMeasurement final
 {
-        std::size_t index;
+        std::size_t simulator_point_index;
+        T time;
         T direction;
         Vector<N, T> acceleration;
 };
@@ -44,7 +46,8 @@ struct ProcessMeasurement final
 template <std::size_t N, typename T>
 struct PositionMeasurement final
 {
-        std::size_t index;
+        std::size_t simulator_point_index;
+        T time;
         Vector<N, T> position;
         std::optional<T> speed;
 };

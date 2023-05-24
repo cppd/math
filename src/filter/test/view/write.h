@@ -40,7 +40,7 @@ template <std::size_t N, typename T>
 void write_to_file(
         std::string_view annotation,
         const Track<N, T>& track,
-        std::size_t track_position_interval,
+        T track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
         const std::vector<std::optional<Vector<N, T>>>& lkf_position,
         const std::vector<Filter<N, T>>& filters);

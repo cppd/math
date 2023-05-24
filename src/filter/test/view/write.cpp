@@ -298,7 +298,7 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
-        const std::size_t track_position_interval,
+        const T track_position_interval,
         const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
         const std::vector<std::optional<Vector<N, T>>>& lkf_position,
         const std::vector<Filter<N, T>>& filters)
@@ -318,12 +318,11 @@ void write_to_file(
 
         write_measurement_angle(file, angle_measurements(track));
 
-        write_measurement_acceleration(
-                file, acceleration_measurements(track, /*index=*/0), acceleration_measurements(track, /*index=*/1));
+        write_measurement_acceleration(file, acceleration_measurements<0>(track), acceleration_measurements<1>(track));
 
         write_measurement_position(file, add_offset(position_measurements(track, track_position_interval), OFFSET));
 
-        write_measurement_speed(file, position_speed_measurements(track, track_position_interval));
+        write_measurement_speed(file, speed_measurements(track, track_position_interval));
 
         write_lkf_speed(file, convert_speed(lkf_speed));
         write_lkf_position(file, add_offset(lkf_position, OFFSET));
@@ -335,9 +334,9 @@ void write_to_file(
         }
 }
 
-#define TEMPLATE(T)                                                                                                 \
-        template void write_to_file(                                                                                \
-                std::string_view, const Track<2, T>&, std::size_t, const std::vector<std::optional<Vector<2, T>>>&, \
+#define TEMPLATE(T)                                                                                       \
+        template void write_to_file(                                                                      \
+                std::string_view, const Track<2, T>&, T, const std::vector<std::optional<Vector<2, T>>>&, \
                 const std::vector<std::optional<Vector<2, T>>>&, const std::vector<Filter<2, T>>&);
 
 TEMPLATE(float)

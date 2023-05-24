@@ -34,7 +34,13 @@ namespace converters_implementation
 template <typename T>
 T speed_kph(const T speed_mps)
 {
-        return T{3.6} * speed_mps;
+        return T{3.6L} * speed_mps;
+}
+
+template <typename T>
+T time_unit(const T time)
+{
+        return 10 * time;
 }
 }
 
@@ -76,9 +82,9 @@ std::vector<Vector<2, T>> track_position(const Track<2, T>& track)
 {
         std::vector<Vector<2, T>> res;
         res.reserve(track.points.size());
-        for (std::size_t i = 0; i < track.points.size(); ++i)
+        for (const SimulatorPoint<2, T>& p : track.points)
         {
-                res.emplace_back(track.points[i].position);
+                res.emplace_back(p.position);
         }
         return res;
 }
@@ -90,57 +96,53 @@ std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
 
         std::vector<Vector<2, T>> res;
         res.reserve(track.points.size());
-        for (std::size_t i = 0; i < track.points.size(); ++i)
+        for (const SimulatorPoint<2, T>& p : track.points)
         {
-                res.emplace_back(i, impl::speed_kph(track.points[i].speed));
+                res.emplace_back(impl::time_unit(p.time), impl::speed_kph(p.speed));
         }
         return res;
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> position_measurements(
-        const Track<2, T>& track,
-        const std::size_t position_interval)
+std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>& track, const T interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
-        std::optional<std::size_t> last_index;
+        std::optional<T> last_time;
         for (const PositionMeasurement<2, T>& m : track.position_measurements)
         {
-                ASSERT(!last_index || *last_index < m.index);
-                if (last_index && m.index > *last_index + position_interval)
+                ASSERT(!last_time || *last_time < m.time);
+                if (last_time && m.time > *last_time + interval)
                 {
                         res.emplace_back();
                 }
                 res.push_back(m.position);
-                last_index = m.index;
+                last_time = m.time;
         }
         return res;
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
-        const Track<2, T>& track,
-        const std::size_t position_interval)
+std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& track, const T interval)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(track.position_measurements.size());
-        std::optional<std::size_t> last_index;
+        std::optional<T> last_time;
         for (const PositionMeasurement<2, T>& m : track.position_measurements)
         {
-                ASSERT(!last_index || *last_index < m.index);
+                ASSERT(!last_time || *last_time < m.time);
                 if (!m.speed)
                 {
                         continue;
                 }
-                if (last_index && m.index > *last_index + position_interval)
+                if (last_time && m.time > *last_time + interval)
                 {
                         res.emplace_back();
                 }
-                res.push_back(Vector<2, T>(m.index, impl::speed_kph(*m.speed)));
-                last_index = m.index;
+                res.push_back(Vector<2, T>(impl::time_unit(m.time), impl::speed_kph(*m.speed)));
+                last_time = m.time;
         }
         return res;
 }
@@ -148,32 +150,32 @@ std::vector<std::optional<Vector<2, T>>> position_speed_measurements(
 template <typename T>
 std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
 {
-        ASSERT(track.points.size() == track.process_measurements.size());
+        namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
-        res.reserve(track.points.size());
+        res.reserve(track.process_measurements.size());
         std::optional<T> previous_angle;
-        for (std::size_t i = 0; i < track.points.size(); ++i)
+        for (const ProcessMeasurement<2, T>& m : track.process_measurements)
         {
-                const T angle = track.process_measurements[i].direction;
+                const T angle = m.direction;
                 const T unbounded_angle = unbound_angle(previous_angle, angle);
                 previous_angle = unbounded_angle;
-                res.emplace_back(i, radians_to_degrees(unbounded_angle));
+                res.emplace_back(impl::time_unit(m.time), radians_to_degrees(unbounded_angle));
         }
         return res;
 }
 
-template <typename T>
-std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, const std::size_t index)
+template <std::size_t INDEX, typename T>
+std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track)
 {
-        ASSERT(track.points.size() == track.process_measurements.size());
-        ASSERT(index < 2);
+        namespace impl = converters_implementation;
 
+        static_assert(INDEX < 2);
         std::vector<Vector<2, T>> res;
-        res.reserve(track.points.size());
-        for (std::size_t i = 0; i < track.points.size(); ++i)
+        res.reserve(track.process_measurements.size());
+        for (const ProcessMeasurement<2, T>& m : track.process_measurements)
         {
-                res.emplace_back(i, track.process_measurements[i].acceleration[index]);
+                res.emplace_back(impl::time_unit(m.time), m.acceleration[INDEX]);
         }
         return res;
 }
@@ -187,7 +189,7 @@ std::vector<Vector<2, T>> convert_speed(const std::vector<Vector<2, T>>& speed)
         res.reserve(speed.size());
         for (const Vector<2, T>& s : speed)
         {
-                res.emplace_back(s[0], impl::speed_kph(s[1]));
+                res.emplace_back(impl::time_unit(s[0]), impl::speed_kph(s[1]));
         }
         return res;
 }
@@ -203,7 +205,7 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
         {
                 if (s)
                 {
-                        res.push_back(Vector<2, T>((*s)[0], impl::speed_kph((*s)[1])));
+                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), impl::speed_kph((*s)[1])));
                 }
                 else
                 {

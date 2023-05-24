@@ -186,20 +186,23 @@ Track<N, T> generate_track(
                 simulator.move();
 
                 res.points.push_back(
-                        {.position = simulator.position(),
+                        {.time = i * dt,
+                         .position = simulator.position(),
                          .speed = simulator.speed(),
                          .angle = simulator.angle(),
                          .angle_r = simulator.angle_r()});
 
                 res.process_measurements.push_back(
-                        {.index = i,
+                        {.simulator_point_index = i,
+                         .time = i * dt,
                          .direction = simulator.process_direction(),
                          .acceleration = simulator.process_acceleration()});
 
                 if ((i % position_interval) == 0)
                 {
                         res.position_measurements.push_back(
-                                {.index = i,
+                                {.simulator_point_index = i,
+                                 .time = i * dt,
                                  .position = simulator.position_measurement(),
                                  .speed = simulator.speed_measurement()});
                 }

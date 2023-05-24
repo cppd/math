@@ -22,9 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<T>::Position(PositionFilter<T>&& filter, const T dt, const T position_interval)
+Position<T>::Position(PositionFilter<T>&& filter, const T position_interval)
         : filter_(std::move(filter)),
-          dt_(dt),
           position_interval_(position_interval)
 {
 }
@@ -35,9 +34,10 @@ void Position<T>::update(
         const T position_measurement_variance,
         const SimulatorPoint<2, T>& point)
 {
-        ASSERT(!last_position_i_ || *last_position_i_ < measurement.index);
+        ASSERT(!last_time_ || *last_time_ < measurement.time);
 
-        const std::size_t delta = last_position_i_ ? (measurement.index - *last_position_i_) : 1;
+        const T delta = last_time_ ? (measurement.time - *last_time_) : 0;
+        last_time_ = measurement.time;
 
         if (delta > position_interval_)
         {
@@ -45,18 +45,13 @@ void Position<T>::update(
                 speed_.emplace_back();
         }
 
-        if (delta > 0)
-        {
-                filter_.predict(delta * dt_);
-                filter_.update(measurement.position, position_measurement_variance);
+        filter_.predict(delta);
+        filter_.update(measurement.position, position_measurement_variance);
 
-                positions_.push_back(filter_.position());
-                speed_.push_back(Vector<2, T>(measurement.index, filter_.speed()));
+        positions_.push_back(filter_.position());
+        speed_.push_back(Vector<2, T>(measurement.time, filter_.speed()));
 
-                nees_position_.add(point.position - filter_.position(), filter_.position_p());
-        }
-
-        last_position_i_ = measurement.index;
+        nees_position_.add(point.position - filter_.position(), filter_.position_p());
 }
 
 template <typename T>

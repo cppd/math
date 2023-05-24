@@ -25,20 +25,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter, T dt)
+Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
-          filter_(std::move(filter)),
-          dt_(dt)
+          filter_(std::move(filter))
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void Process<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point)
+void Process<T>::save(const T time, const SimulatorPoint<2, T>& point)
 {
         position_.push_back(filter_->position());
-        speed_.push_back({index, filter_->speed()});
+        speed_.push_back({time, filter_->speed()});
 
         nees_position_.add(point.position - filter_->position(), filter_->position_p());
         nees_angle_.add(normalize_angle(point.angle - filter_->angle()), filter_->angle_p());
@@ -46,12 +45,13 @@ void Process<T>::save(const std::size_t index, const SimulatorPoint<2, T>& point
 }
 
 template <typename T>
-void Process<T>::predict(const std::size_t index)
+void Process<T>::predict(const T time)
 {
-        ASSERT(!last_position_i_ || *last_position_i_ < index);
+        ASSERT(!last_time_ || *last_time_ < time);
 
-        const std::size_t delta = last_position_i_ ? (index - *last_position_i_) : 1;
-        filter_->predict(delta * dt_);
+        const T delta = last_time_ ? (time - *last_time_) : 0;
+        last_time_ = time;
+        filter_->predict(delta);
 }
 
 template <typename T>
@@ -59,10 +59,9 @@ void Process<T>::update(
         const PositionMeasurement<2, T>& measurement,
         const T position_variance,
         const T speed_variance,
-        const std::size_t index,
         const SimulatorPoint<2, T>& point)
 {
-        predict(measurement.index);
+        predict(measurement.time);
 
         if (measurement.speed)
         {
@@ -74,7 +73,7 @@ void Process<T>::update(
                 filter_->update_position(measurement.position, position_variance);
         }
 
-        save(index, point);
+        save(measurement.time, point);
 }
 
 template <typename T>
@@ -85,10 +84,11 @@ void Process<T>::update(
         const T speed_variance,
         const T direction_variance,
         const T acceleration_variance,
-        const std::size_t index,
         const SimulatorPoint<2, T>& point)
 {
-        predict(position_measurement.index);
+        ASSERT(position_measurement.time == process_measurement.time);
+
+        predict(position_measurement.time);
 
         if (position_measurement.speed)
         {
@@ -104,21 +104,20 @@ void Process<T>::update(
                         position_variance, direction_variance, acceleration_variance);
         }
 
-        save(index, point);
+        save(position_measurement.time, point);
 }
 
 template <typename T>
 void Process<T>::update(
         const ProcessMeasurement<2, T>& measurement,
         const T acceleration_variance,
-        const std::size_t index,
         const SimulatorPoint<2, T>& point)
 {
-        predict(measurement.index);
+        predict(measurement.time);
 
         filter_->update_acceleration(measurement.acceleration, acceleration_variance);
 
-        save(index, point);
+        save(measurement.time, point);
 }
 
 template <typename T>
