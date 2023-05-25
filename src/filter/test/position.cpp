@@ -22,8 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<T>::Position(PositionFilter<T>&& filter)
-        : filter_(std::move(filter))
+Position<T>::Position(std::string name, color::RGB8 color, PositionFilter<T>&& filter)
+        : name_(std::move(name)),
+          color_(color),
+          filter_(std::move(filter))
 {
 }
 
@@ -61,13 +63,25 @@ const PositionFilter<T>& Position<T>::filter() const
 }
 
 template <typename T>
+const std::string& Position<T>::name() const
+{
+        return name_;
+}
+
+template <typename T>
+color::RGB8 Position<T>::color() const
+{
+        return color_;
+}
+
+template <typename T>
 std::string Position<T>::nees_string() const
 {
         return "Position Filter: " + nees_position_.check_string();
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Position<T>::positions() const
+const std::vector<Vector<3, T>>& Position<T>::position() const
 {
         return position_;
 }

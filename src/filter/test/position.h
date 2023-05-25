@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../nees.h"
 
+#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -33,6 +34,8 @@ namespace ns::filter::test
 template <typename T>
 class Position final
 {
+        std::string name_;
+        color::RGB8 color_;
         PositionFilter<T> filter_;
 
         std::vector<Vector<3, T>> position_;
@@ -44,7 +47,7 @@ class Position final
         void save(T time, const SimulatorPoint<2, T>& point);
 
 public:
-        explicit Position(PositionFilter<T>&& filter);
+        Position(std::string name, color::RGB8 color, PositionFilter<T>&& filter);
 
         void update(
                 const PositionMeasurement<2, T>& measurement,
@@ -53,8 +56,11 @@ public:
 
         [[nodiscard]] const PositionFilter<T>& filter() const;
 
+        [[nodiscard]] const std::string& name() const;
+        [[nodiscard]] color::RGB8 color() const;
+
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& position() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
 };
 }

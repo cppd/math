@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter)
+Process<T>::Process(std::string name, const color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           filter_(std::move(filter))
@@ -128,7 +128,7 @@ const std::string& Process<T>::name() const
 }
 
 template <typename T>
-unsigned char Process<T>::color() const
+color::RGB8 Process<T>::color() const
 {
         return color_;
 }

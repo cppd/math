@@ -45,6 +45,8 @@ struct Config final
         static constexpr T DT = T{1} / 10;
         static constexpr std::size_t POSITION_DT_COUNT = 10;
 
+        static constexpr T DATA_CONNECT_INTERVAL = T{1.5} * DT * POSITION_DT_COUNT;
+
         static constexpr T TRACK_VELOCITY_MIN = 3;
         static constexpr T TRACK_VELOCITY_MAX = 30;
         static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
@@ -105,17 +107,24 @@ template <typename T>
 void write_to_file(const Track<2, T>& track, const Position<T>& position, const std::vector<Process<T>>& processes)
 {
         std::vector<view::Filter<2, T>> filters;
-        filters.reserve(processes.size());
+        filters.reserve(1 + processes.size());
 
-        for (const Process<T>& fd : processes)
+        filters.push_back(
+                {.name = position.name(),
+                 .color = position.color(),
+                 .speed = position.speed(),
+                 .position = position.position()});
+
+        for (const Process<T>& process : processes)
         {
                 filters.push_back(
-                        {.name = fd.name(), .color = fd.color(), .speed = fd.speed(), .position = fd.position()});
+                        {.name = process.name(),
+                         .color = process.color(),
+                         .speed = process.speed(),
+                         .position = process.position()});
         }
 
-        view::write_to_file(
-                make_annotation<T>(), track, Config<T>::DT * Config<T>::POSITION_DT_COUNT, position.speed(),
-                position.positions(), filters);
+        view::write_to_file(make_annotation<T>(), track, Config<T>::DATA_CONNECT_INTERVAL, filters);
 }
 
 template <std::size_t N, typename T>
@@ -199,13 +208,15 @@ void test_impl(const Track<2, T>& track)
 {
         ASSERT(!track.position_measurements.empty());
 
-        Position<T> position(PositionFilter(
-                Config<T>::POSITION_FILTER_VARIANCE,
-                {track.position_measurements[0].position[0], 1.0, -1.0, track.position_measurements[0].position[1],
-                 -2.0, 0.5},
-                make_diagonal_matrix<6, T>(
-                        {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
-                         Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)})));
+        Position<T> position(
+                "LKF", color::RGB8(160, 0, 0),
+                PositionFilter(
+                        Config<T>::POSITION_FILTER_VARIANCE,
+                        {track.position_measurements[0].position[0], 1.0, -1.0,
+                         track.position_measurements[0].position[1], -2.0, 0.5},
+                        make_diagonal_matrix<6, T>(
+                                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
+                                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)})));
 
         auto position_iter = find_direction(track, &position);
         auto process_iter = move_process(track, position_iter->time);
@@ -242,13 +253,13 @@ void test_impl(const Track<2, T>& track)
         std::vector<Process<T>> processes;
 
         processes.emplace_back(
-                "EKF", 190,
+                "EKF", color::RGB8(0, 190, 0),
                 create_process_filter_ekf<T>(
                         Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
                         Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));
 
         processes.emplace_back(
-                "UKF", 140,
+                "UKF", color::RGB8(0, 140, 0),
                 create_process_filter_ukf(
                         Config<T>::PROCESS_FILTER_POSITION_VARIANCE, Config<T>::PROCESS_FILTER_ANGLE_VARIANCE,
                         Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE, init_x, init_p));

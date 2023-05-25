@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../nees.h"
 
+#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
@@ -35,7 +36,7 @@ template <typename T>
 class Process final
 {
         std::string name_;
-        unsigned char color_;
+        color::RGB8 color_;
         std::unique_ptr<ProcessFilter<T>> filter_;
 
         std::vector<Vector<3, T>> position_;
@@ -52,7 +53,7 @@ class Process final
         void predict(T time);
 
 public:
-        Process(std::string name, unsigned char color, std::unique_ptr<ProcessFilter<T>>&& filter);
+        Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
 
         void update(
                 const PositionMeasurement<2, T>& measurement,
@@ -75,7 +76,7 @@ public:
                 const SimulatorPoint<2, T>& point);
 
         [[nodiscard]] const std::string& name() const;
-        [[nodiscard]] unsigned char color() const;
+        [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../utility.h"
 
+#include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 
@@ -33,6 +34,12 @@ namespace ns::filter::test::view
 namespace
 {
 constexpr unsigned OFFSET = 1000;
+
+std::string color_to_string(const color::RGB8 color)
+{
+        return "\"rgb(" + to_string(color.red()) + "," + to_string(color.green()) + "," + to_string(color.blue())
+               + ")\"";
+}
 
 template <std::size_t N, typename T>
 void write(std::ostream& os, const Vector<N, T>& v)
@@ -206,50 +213,10 @@ void write_measurement_speed(std::ostream& file, const std::vector<std::optional
 }
 
 template <std::size_t N, typename T>
-void write_lkf_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& speed)
-{
-        if (!speed.empty())
-        {
-                file << '{';
-                file << R"("name":"LKF Speed")";
-                file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"#a00000")";
-                file << R"(, "line_width":0.5)";
-                file << R"(, "line_dash":None)";
-                file << R"(, "marker_size":2)";
-                file << "}\n";
-                for (const auto& v : speed)
-                {
-                        write(file, v);
-                }
-        }
-}
-
-template <std::size_t N, typename T>
-void write_lkf_position(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& position)
-{
-        if (!position.empty())
-        {
-                file << '{';
-                file << R"("name":"LKF Position")";
-                file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"#a00000")";
-                file << R"(, "line_width":0.25)";
-                file << R"(, "line_dash":None)";
-                file << R"(, "marker_size":2)";
-                file << "}\n";
-                for (const auto& v : position)
-                {
-                        write(file, v);
-                }
-        }
-}
-
-template <std::size_t N, typename T>
 void write_filter_speed(
         std::ostream& file,
         const std::string& name,
-        const unsigned color,
+        const color::RGB8 color,
         const std::vector<std::optional<Vector<N, T>>>& speed)
 {
         if (!speed.empty())
@@ -257,7 +224,7 @@ void write_filter_speed(
                 file << '{';
                 file << R"("name":")" << name << " Speed\"";
                 file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"rgba(0,)" << std::min(color, 255u) << R"a(,0,1)")a";
+                file << R"(, "line_color":)" << color_to_string(color);
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
@@ -273,7 +240,7 @@ template <std::size_t N, typename T>
 void write_filter_position(
         std::ostream& file,
         const std::string& name,
-        const unsigned color,
+        const color::RGB8 color,
         const std::vector<std::optional<Vector<N, T>>>& position)
 {
         if (!position.empty())
@@ -281,7 +248,7 @@ void write_filter_position(
                 file << '{';
                 file << R"("name":")" << name << " Position\"";
                 file << R"(, "mode":"lines+markers")";
-                file << R"(, "line_color":"rgba(0,)" << std::min(color, 255u) << R"a(,0,1)")a";
+                file << R"(, "line_color":)" << color_to_string(color);
                 file << R"(, "line_width":0.5)";
                 file << R"(, "line_dash":None)";
                 file << R"(, "marker_size":2)";
@@ -299,8 +266,6 @@ void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
         const T interval,
-        const std::vector<Vector<2, T>>& lkf_speed,
-        const std::vector<Vector<N + 1, T>>& lkf_position,
         const std::vector<Filter<N, T>>& filters)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -324,9 +289,6 @@ void write_to_file(
 
         write_measurement_speed(file, speed_measurements(track, interval));
 
-        write_lkf_speed(file, convert_speed(optional_speed(lkf_speed, interval)));
-        write_lkf_position(file, add_offset(optional_position(lkf_position, interval), OFFSET));
-
         for (const Filter<N, T>& filter : filters)
         {
                 write_filter_speed(
@@ -337,10 +299,8 @@ void write_to_file(
         }
 }
 
-#define TEMPLATE(T)                                                                        \
-        template void write_to_file(                                                       \
-                std::string_view, const Track<2, T>&, T, const std::vector<Vector<2, T>>&, \
-                const std::vector<Vector<3, T>>&, const std::vector<Filter<2, T>>&);
+#define TEMPLATE(T) \
+        template void write_to_file(std::string_view, const Track<2, T>&, T, const std::vector<Filter<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

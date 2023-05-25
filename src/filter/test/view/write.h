@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../simulator.h"
 
+#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -31,7 +32,7 @@ template <std::size_t N, typename T>
 struct Filter final
 {
         std::string name;
-        unsigned char color;
+        color::RGB8 color;
         std::vector<Vector<2, T>> speed;
         std::vector<Vector<N + 1, T>> position;
 };
@@ -41,7 +42,5 @@ void write_to_file(
         std::string_view annotation,
         const Track<N, T>& track,
         T interval,
-        const std::vector<Vector<2, T>>& lkf_speed,
-        const std::vector<Vector<N + 1, T>>& lkf_position,
         const std::vector<Filter<N, T>>& filters);
 }
