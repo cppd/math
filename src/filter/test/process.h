@@ -38,7 +38,7 @@ class Process final
         unsigned char color_;
         std::unique_ptr<ProcessFilter<T>> filter_;
 
-        std::vector<Vector<2, T>> position_;
+        std::vector<Vector<3, T>> position_;
         std::vector<Vector<2, T>> speed_;
 
         NeesAverage<2, T> nees_position_;
@@ -79,7 +79,7 @@ public:
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& position() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& position() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
 };
 }

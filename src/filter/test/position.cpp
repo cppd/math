@@ -22,10 +22,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<T>::Position(PositionFilter<T>&& filter, const T position_interval)
-        : filter_(std::move(filter)),
-          position_interval_(position_interval)
+Position<T>::Position(PositionFilter<T>&& filter)
+        : filter_(std::move(filter))
 {
+}
+
+template <typename T>
+void Position<T>::save(const T time, const SimulatorPoint<2, T>& point)
+{
+        const Vector<2, T> p = filter_.position();
+        position_.push_back({time, p[0], p[1]});
+        speed_.push_back({time, filter_.speed()});
+
+        nees_position_.add(point.position - filter_.position(), filter_.position_p());
 }
 
 template <typename T>
@@ -39,19 +48,10 @@ void Position<T>::update(
         const T delta = last_time_ ? (measurement.time - *last_time_) : 0;
         last_time_ = measurement.time;
 
-        if (delta > position_interval_)
-        {
-                positions_.emplace_back();
-                speed_.emplace_back();
-        }
-
         filter_.predict(delta);
         filter_.update(measurement.position, position_measurement_variance);
 
-        positions_.push_back(filter_.position());
-        speed_.push_back(Vector<2, T>(measurement.time, filter_.speed()));
-
-        nees_position_.add(point.position - filter_.position(), filter_.position_p());
+        save(measurement.time, point);
 }
 
 template <typename T>
@@ -67,13 +67,13 @@ std::string Position<T>::nees_string() const
 }
 
 template <typename T>
-const std::vector<std::optional<Vector<2, T>>>& Position<T>::positions() const
+const std::vector<Vector<3, T>>& Position<T>::positions() const
 {
-        return positions_;
+        return position_;
 }
 
 template <typename T>
-const std::vector<std::optional<Vector<2, T>>>& Position<T>::speed() const
+const std::vector<Vector<2, T>>& Position<T>::speed() const
 {
         return speed_;
 }

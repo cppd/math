@@ -250,7 +250,7 @@ void write_filter_speed(
         std::ostream& file,
         const std::string& name,
         const unsigned color,
-        const std::vector<Vector<N, T>>& speed)
+        const std::vector<std::optional<Vector<N, T>>>& speed)
 {
         if (!speed.empty())
         {
@@ -274,7 +274,7 @@ void write_filter_position(
         std::ostream& file,
         const std::string& name,
         const unsigned color,
-        const std::vector<Vector<N, T>>& position)
+        const std::vector<std::optional<Vector<N, T>>>& position)
 {
         if (!position.empty())
         {
@@ -298,9 +298,9 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
         const Track<N, T>& track,
-        const T track_position_interval,
-        const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
-        const std::vector<std::optional<Vector<N, T>>>& lkf_position,
+        const T interval,
+        const std::vector<Vector<2, T>>& lkf_speed,
+        const std::vector<Vector<N + 1, T>>& lkf_position,
         const std::vector<Filter<N, T>>& filters)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
@@ -320,24 +320,27 @@ void write_to_file(
 
         write_measurement_acceleration(file, acceleration_measurements<0>(track), acceleration_measurements<1>(track));
 
-        write_measurement_position(file, add_offset(position_measurements(track, track_position_interval), OFFSET));
+        write_measurement_position(file, add_offset(position_measurements(track, interval), OFFSET));
 
-        write_measurement_speed(file, speed_measurements(track, track_position_interval));
+        write_measurement_speed(file, speed_measurements(track, interval));
 
-        write_lkf_speed(file, convert_speed(lkf_speed));
-        write_lkf_position(file, add_offset(lkf_position, OFFSET));
+        write_lkf_speed(file, convert_speed(optional_speed(lkf_speed, interval)));
+        write_lkf_position(file, add_offset(optional_position(lkf_position, interval), OFFSET));
 
         for (const Filter<N, T>& filter : filters)
         {
-                write_filter_speed(file, filter.name, filter.color, convert_speed(filter.speed));
-                write_filter_position(file, filter.name, filter.color, add_offset(filter.position, OFFSET));
+                write_filter_speed(
+                        file, filter.name, filter.color, convert_speed(optional_speed(filter.speed, interval)));
+                write_filter_position(
+                        file, filter.name, filter.color,
+                        add_offset(optional_position(filter.position, interval), OFFSET));
         }
 }
 
-#define TEMPLATE(T)                                                                                       \
-        template void write_to_file(                                                                      \
-                std::string_view, const Track<2, T>&, T, const std::vector<std::optional<Vector<2, T>>>&, \
-                const std::vector<std::optional<Vector<2, T>>>&, const std::vector<Filter<2, T>>&);
+#define TEMPLATE(T)                                                                        \
+        template void write_to_file(                                                       \
+                std::string_view, const Track<2, T>&, T, const std::vector<Vector<2, T>>&, \
+                const std::vector<Vector<3, T>>&, const std::vector<Filter<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

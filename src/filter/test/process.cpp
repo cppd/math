@@ -36,7 +36,8 @@ Process<T>::Process(std::string name, const unsigned char color, std::unique_ptr
 template <typename T>
 void Process<T>::save(const T time, const SimulatorPoint<2, T>& point)
 {
-        position_.push_back(filter_->position());
+        const Vector<2, T> p = filter_->position();
+        position_.push_back({time, p[0], p[1]});
         speed_.push_back({time, filter_->speed()});
 
         nees_position_.add(point.position - filter_->position(), filter_->position_p());
@@ -156,7 +157,7 @@ std::string Process<T>::nees_string() const
         return s;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& Process<T>::position() const
+const std::vector<Vector<3, T>>& Process<T>::position() const
 {
         return position_;
 }

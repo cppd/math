@@ -181,15 +181,39 @@ std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track)
 }
 
 template <typename T>
-std::vector<Vector<2, T>> convert_speed(const std::vector<Vector<2, T>>& speed)
+std::vector<std::optional<Vector<2, T>>> optional_position(const std::vector<Vector<3, T>>& data, const T interval)
 {
-        namespace impl = converters_implementation;
-
-        std::vector<Vector<2, T>> res;
-        res.reserve(speed.size());
-        for (const Vector<2, T>& s : speed)
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(data.size());
+        std::optional<T> last_time;
+        for (const Vector<3, T>& d : data)
         {
-                res.emplace_back(impl::time_unit(s[0]), impl::speed_kph(s[1]));
+                ASSERT(!last_time || *last_time < d[0]);
+                if (last_time && d[0] > *last_time + interval)
+                {
+                        res.emplace_back();
+                }
+                res.push_back(Vector<2, T>(d[1], d[2]));
+                last_time = d[0];
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<std::optional<Vector<2, T>>> optional_speed(const std::vector<Vector<2, T>>& data, const T interval)
+{
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(data.size());
+        std::optional<T> last_time;
+        for (const Vector<2, T>& d : data)
+        {
+                ASSERT(!last_time || *last_time < d[0]);
+                if (last_time && d[0] > *last_time + interval)
+                {
+                        res.emplace_back();
+                }
+                res.push_back(d);
+                last_time = d[0];
         }
         return res;
 }

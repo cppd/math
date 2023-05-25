@@ -34,16 +34,17 @@ template <typename T>
 class Position final
 {
         PositionFilter<T> filter_;
-        T position_interval_;
 
-        std::vector<std::optional<Vector<2, T>>> positions_;
-        std::vector<std::optional<Vector<2, T>>> speed_;
+        std::vector<Vector<3, T>> position_;
+        std::vector<Vector<2, T>> speed_;
         NeesAverage<2, T> nees_position_;
 
         std::optional<T> last_time_;
 
+        void save(T time, const SimulatorPoint<2, T>& point);
+
 public:
-        Position(PositionFilter<T>&& filter, T position_interval);
+        explicit Position(PositionFilter<T>&& filter);
 
         void update(
                 const PositionMeasurement<2, T>& measurement,
@@ -53,7 +54,7 @@ public:
         [[nodiscard]] const PositionFilter<T>& filter() const;
 
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& positions() const;
-        [[nodiscard]] const std::vector<std::optional<Vector<2, T>>>& speed() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
 };
 }

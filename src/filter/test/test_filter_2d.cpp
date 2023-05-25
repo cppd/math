@@ -199,15 +199,13 @@ void test_impl(const Track<2, T>& track)
 {
         ASSERT(!track.position_measurements.empty());
 
-        Position<T> position(
-                PositionFilter(
-                        Config<T>::POSITION_FILTER_VARIANCE,
-                        {track.position_measurements[0].position[0], 1.0, -1.0,
-                         track.position_measurements[0].position[1], -2.0, 0.5},
-                        make_diagonal_matrix<6, T>(
-                                {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
-                                 Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)})),
-                Config<T>::DT * Config<T>::POSITION_DT_COUNT);
+        Position<T> position(PositionFilter(
+                Config<T>::POSITION_FILTER_VARIANCE,
+                {track.position_measurements[0].position[0], 1.0, -1.0, track.position_measurements[0].position[1],
+                 -2.0, 0.5},
+                make_diagonal_matrix<6, T>(
+                        {Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10),
+                         Config<T>::MEASUREMENT_POSITION_VARIANCE, square(30), square(10)})));
 
         auto position_iter = find_direction(track, &position);
         auto process_iter = move_process(track, position_iter->time);

@@ -32,16 +32,16 @@ struct Filter final
 {
         std::string name;
         unsigned char color;
-        std::vector<Vector<N, T>> speed;
-        std::vector<Vector<N, T>> position;
+        std::vector<Vector<2, T>> speed;
+        std::vector<Vector<N + 1, T>> position;
 };
 
 template <std::size_t N, typename T>
 void write_to_file(
         std::string_view annotation,
         const Track<N, T>& track,
-        T track_position_interval,
-        const std::vector<std::optional<Vector<N, T>>>& lkf_speed,
-        const std::vector<std::optional<Vector<N, T>>>& lkf_position,
+        T interval,
+        const std::vector<Vector<2, T>>& lkf_speed,
+        const std::vector<Vector<N + 1, T>>& lkf_position,
         const std::vector<Filter<N, T>>& filters);
 }
