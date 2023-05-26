@@ -36,19 +36,19 @@ template <std::size_t N, typename T>
 class Simulator final
 {
         const T dt_;
-        const T track_velocity_m_;
-        const T track_velocity_a_;
+        const T speed_m_;
+        const T speed_a_;
         const T direction_bias_drift_;
         const T direction_angle_;
 
         PCG engine_;
 
-        std::normal_distribution<T> track_velocity_nd_;
+        std::normal_distribution<T> speed_nd_;
 
-        std::normal_distribution<T> measurements_velocity_direction_nd_;
+        std::normal_distribution<T> measurements_direction_nd_;
         std::normal_distribution<T> measurements_acceleration_nd_;
         std::normal_distribution<T> measurements_position_nd_;
-        std::normal_distribution<T> measurements_position_speed_nd_;
+        std::normal_distribution<T> measurements_speed_nd_;
 
         std::size_t index_{0};
         Vector<N, T> position_{0};
@@ -61,7 +61,7 @@ class Simulator final
         {
                 constexpr T S = 1000;
                 Vector<N, T> v(0);
-                v[0] = track_velocity_m_ + track_velocity_a_ * std::sin(index * (PI<T> / 300));
+                v[0] = speed_m_ + speed_a_ * std::sin(index * (PI<T> / 300));
                 return rotate(v, std::cos((std::max<T>(0, index - S)) * (PI<T> / 450)));
         }
 
@@ -76,26 +76,19 @@ class Simulator final
         }
 
 public:
-        Simulator(
-                const std::type_identity_t<T> dt,
-                const std::type_identity_t<T> track_velocity_min,
-                const std::type_identity_t<T> track_velocity_max,
-                const std::type_identity_t<T> track_velocity_variance,
-                const T direction_bias_drift,
-                const T direction_angle,
-                const TrackMeasurementVariance<T>& track_measurement_variance)
-                : dt_(dt),
-                  track_velocity_m_((track_velocity_min + track_velocity_max) / 2),
-                  track_velocity_a_((track_velocity_max - track_velocity_min) / 2),
-                  direction_bias_drift_(direction_bias_drift / (T{60} * T{60}) * dt_),
-                  direction_angle_(direction_angle),
-                  track_velocity_nd_(0, std::sqrt(track_velocity_variance)),
-                  measurements_velocity_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
+        Simulator(const TrackInfo<T>& info, const TrackMeasurementVariance<T>& track_measurement_variance)
+                : dt_(info.dt),
+                  speed_m_((info.speed_min + info.speed_max) / 2),
+                  speed_a_((info.speed_max - info.speed_min) / 2),
+                  direction_bias_drift_(info.direction_bias_drift / (T{60} * T{60}) * dt_),
+                  direction_angle_(info.direction_angle),
+                  speed_nd_(0, std::sqrt(info.speed_variance)),
+                  measurements_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
                   measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
-                  measurements_position_speed_nd_(0, std::sqrt(track_measurement_variance.position_speed)),
-                  velocity_(velocity(index_) + vector(track_velocity_nd_)),
-                  next_velocity_(velocity(index_ + 1) + vector(track_velocity_nd_)),
+                  measurements_speed_nd_(0, std::sqrt(track_measurement_variance.speed)),
+                  velocity_(velocity(index_) + vector(speed_nd_)),
+                  next_velocity_(velocity(index_ + 1) + vector(speed_nd_)),
                   acceleration_(next_velocity_ - velocity_)
         {
         }
@@ -107,7 +100,7 @@ public:
                 position_ = position_ + dt_ * velocity_ + (square(dt_) / 2) * acceleration_;
 
                 velocity_ = next_velocity_;
-                next_velocity_ = velocity(index_ + 1) + vector(track_velocity_nd_);
+                next_velocity_ = velocity(index_ + 1) + vector(speed_nd_);
                 acceleration_ = (next_velocity_ - velocity_) / dt_;
 
                 angle_ = -T{3} - index_ * direction_bias_drift_;
@@ -136,7 +129,7 @@ public:
         [[nodiscard]] T process_direction()
         {
                 const Vector<N, T> direction =
-                        rotate(velocity_, direction_angle_ + angle_ + measurements_velocity_direction_nd_(engine_));
+                        rotate(velocity_, direction_angle_ + angle_ + measurements_direction_nd_(engine_));
                 return std::atan2(direction[1], direction[0]);
         }
 
@@ -152,7 +145,7 @@ public:
 
         [[nodiscard]] T speed_measurement()
         {
-                return velocity_.norm() + measurements_position_speed_nd_(engine_);
+                return velocity_.norm() + measurements_speed_nd_(engine_);
         }
 };
 }
@@ -160,33 +153,25 @@ public:
 template <std::size_t N, typename T>
 Track<N, T> generate_track(
         const std::size_t count,
-        const T dt,
-        const T track_velocity_min,
-        const T track_velocity_max,
-        const T track_velocity_variance,
-        const T direction_bias_drift,
-        const T direction_angle,
-        const TrackMeasurementVariance<T>& track_measurement_variance,
-        const std::size_t position_interval)
+        const TrackInfo<T>& info,
+        const TrackMeasurementVariance<T>& measurement_variance)
 {
-        ASSERT(track_velocity_min >= 0);
-        ASSERT(track_velocity_max >= track_velocity_min);
+        ASSERT(info.speed_min >= 0);
+        ASSERT(info.speed_max >= info.speed_min);
 
-        Simulator<N, T> simulator(
-                dt, track_velocity_min, track_velocity_max, track_velocity_variance, direction_bias_drift,
-                direction_angle, track_measurement_variance);
+        Simulator<N, T> simulator(info, measurement_variance);
 
         Track<N, T> res;
         res.points.reserve(count);
         res.process_measurements.reserve(count);
-        res.position_measurements.reserve(count / position_interval);
+        res.position_measurements.reserve(count);
 
         for (std::size_t i = 0; i < count; ++i)
         {
                 simulator.move();
 
                 res.points.push_back(
-                        {.time = i * dt,
+                        {.time = i * info.dt,
                          .position = simulator.position(),
                          .speed = simulator.speed(),
                          .angle = simulator.angle(),
@@ -194,26 +179,22 @@ Track<N, T> generate_track(
 
                 res.process_measurements.push_back(
                         {.simulator_point_index = i,
-                         .time = i * dt,
+                         .time = i * info.dt,
                          .direction = simulator.process_direction(),
                          .acceleration = simulator.process_acceleration()});
 
-                if ((i % position_interval) == 0)
-                {
-                        res.position_measurements.push_back(
-                                {.simulator_point_index = i,
-                                 .time = i * dt,
-                                 .position = simulator.position_measurement(),
-                                 .speed = simulator.speed_measurement()});
-                }
+                res.position_measurements.push_back(
+                        {.simulator_point_index = i,
+                         .time = i * info.dt,
+                         .position = simulator.position_measurement(),
+                         .speed = simulator.speed_measurement()});
         }
 
         return res;
 }
 
-#define TEMPLATE(T)                          \
-        template Track<2, T> generate_track( \
-                std::size_t, T, T, T, T, T, T, const TrackMeasurementVariance<T>&, std::size_t);
+#define TEMPLATE(T) \
+        template Track<2, T> generate_track(std::size_t, const TrackInfo<T>&, const TrackMeasurementVariance<T>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

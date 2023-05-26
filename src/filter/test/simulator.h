@@ -61,23 +61,28 @@ struct Track final
 };
 
 template <typename T>
+struct TrackInfo final
+{
+        T dt;
+        T speed_min;
+        T speed_max;
+        T speed_variance;
+        T direction_bias_drift;
+        T direction_angle;
+};
+
+template <typename T>
 struct TrackMeasurementVariance final
 {
         T direction;
         T acceleration;
         T position;
-        T position_speed;
+        T speed;
 };
 
 template <std::size_t N, typename T>
 Track<N, T> generate_track(
         std::size_t count,
-        T dt,
-        T track_velocity_min,
-        T track_velocity_max,
-        T track_velocity_variance,
-        T direction_bias_drift,
-        T direction_angle,
-        const TrackMeasurementVariance<T>& track_measurement_variance,
-        std::size_t position_interval);
+        const TrackInfo<T>& info,
+        const TrackMeasurementVariance<T>& measurement_variance);
 }

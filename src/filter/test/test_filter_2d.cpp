@@ -43,16 +43,15 @@ template <typename T>
 struct Config final
 {
         static constexpr T DT = T{1} / 10;
-        static constexpr std::size_t POSITION_DT_COUNT = 10;
+        static constexpr T POSITION_DT = 1;
 
-        static constexpr T DATA_CONNECT_INTERVAL = T{1.5} * DT * POSITION_DT_COUNT;
+        static constexpr T DATA_CONNECT_INTERVAL = 1.5 * POSITION_DT;
 
-        static constexpr T TRACK_VELOCITY_MIN = 3;
-        static constexpr T TRACK_VELOCITY_MAX = 30;
-        static constexpr T TRACK_VELOCITY_VARIANCE = square(0.1);
-
-        static constexpr T DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
-        static constexpr T DIRECTION_ANGLE = degrees_to_radians(30.0);
+        static constexpr T TRACK_SPEED_MIN = 3;
+        static constexpr T TRACK_SPEED_MAX = 30;
+        static constexpr T TRACK_SPEED_VARIANCE = square(0.1);
+        static constexpr T TRACK_DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
+        static constexpr T TRACK_DIRECTION_ANGLE = degrees_to_radians(30.0);
 
         static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
         static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
@@ -75,9 +74,9 @@ std::string make_annotation()
         std::ostringstream oss;
         oss << "<b>update</b>";
         oss << "<br>";
-        oss << "position: " << 1 / (Config<T>::POSITION_DT_COUNT * Config<T>::DT) << " Hz";
+        oss << "position: " << 1 / Config<T>::POSITION_DT << " Hz";
         oss << "<br>";
-        oss << "speed: " << 1 / (Config<T>::POSITION_DT_COUNT * Config<T>::DT) << " Hz";
+        oss << "speed: " << 1 / Config<T>::POSITION_DT << " Hz";
         oss << "<br>";
         oss << "direction: " << 1 / Config<T>::DT << " Hz";
         oss << "<br>";
@@ -86,9 +85,10 @@ std::string make_annotation()
         oss << "<br>";
         oss << "<b>bias</b>";
         oss << "<br>";
-        oss << "direction drift: " << radians_to_degrees(Config<T>::DIRECTION_BIAS_DRIFT) << " " << DEGREE << "/h";
+        oss << "direction drift: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_BIAS_DRIFT) << " " << DEGREE
+            << "/h";
         oss << "<br>";
-        oss << "direction angle: " << radians_to_degrees(Config<T>::DIRECTION_ANGLE) << DEGREE;
+        oss << "direction angle: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_ANGLE) << DEGREE;
         oss << "<br>";
         oss << "<br>";
         oss << "<b>" << SIGMA << "</b>";
@@ -128,42 +128,58 @@ void write_to_file(const Track<2, T>& track, const Position<T>& position, const 
 }
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track()
+Track<N, T> track()
 {
         constexpr std::size_t COUNT = 10000;
 
-        const TrackMeasurementVariance<T> measurement_variance{
-                .direction = Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                .acceleration = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
-                .position = Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                .position_speed = Config<T>::MEASUREMENT_SPEED_VARIANCE};
-
         Track res = generate_track<N, T>(
-                COUNT, Config<T>::DT, Config<T>::TRACK_VELOCITY_MIN, Config<T>::TRACK_VELOCITY_MAX,
-                Config<T>::TRACK_VELOCITY_VARIANCE, Config<T>::DIRECTION_BIAS_DRIFT, Config<T>::DIRECTION_ANGLE,
-                measurement_variance, Config<T>::POSITION_DT_COUNT);
+                COUNT,
+                {.dt = Config<T>::DT,
+                 .speed_min = Config<T>::TRACK_SPEED_MIN,
+                 .speed_max = Config<T>::TRACK_SPEED_MAX,
+                 .speed_variance = Config<T>::TRACK_SPEED_VARIANCE,
+                 .direction_bias_drift = Config<T>::TRACK_DIRECTION_BIAS_DRIFT,
+                 .direction_angle = Config<T>::TRACK_DIRECTION_ANGLE},
+                {.direction = Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
+                 .acceleration = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
+                 .position = Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                 .speed = Config<T>::MEASUREMENT_SPEED_VARIANCE});
 
         std::vector<PositionMeasurement<N, T>> measurements;
         measurements.reserve(res.position_measurements.size());
+
         std::optional<T> last_time;
+        std::optional<T> last_position_time;
 
         for (PositionMeasurement<N, T> m : res.position_measurements)
         {
-                ASSERT(m.simulator_point_index >= 0 && m.simulator_point_index < COUNT);
-                ASSERT(!last_time || *last_time < m.time);
+                ASSERT(m.simulator_point_index >= 0 && m.simulator_point_index < res.points.size());
+
+                if (last_time && !(*last_time < m.time))
+                {
+                        ASSERT(false);
+                        continue;
+                }
                 last_time = m.time;
+
+                if (last_position_time && !(*last_position_time + Config<T>::POSITION_DT <= m.time))
+                {
+                        continue;
+                }
 
                 const auto n = std::llround(m.time / 30);
                 if ((n > 3) && ((n % 5) == 0))
                 {
                         continue;
                 }
+
                 if (std::llround(m.time / 10) % 5 == 0)
                 {
                         m.speed.reset();
                 }
 
                 measurements.push_back(m);
+                last_position_time = m.time;
         }
 
         res.position_measurements = measurements;
@@ -326,8 +342,7 @@ void test_impl(const Track<2, T>& track)
 template <typename T>
 void test_impl()
 {
-        const Track track = generate_track<2, T>();
-        test_impl(track);
+        test_impl(track<2, T>());
 }
 
 void test()
