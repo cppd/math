@@ -327,6 +327,48 @@ Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
         return a - b;
 }
 
+//
+
+template <typename T>
+Matrix<3, 3, T> speed_acceleration_r(const T speed_variance, const T acceleration_variance)
+{
+        const T sv = speed_variance;
+        const T av = acceleration_variance;
+        return {
+                {sv,  0,  0},
+                { 0, av,  0},
+                { 0,  0, av}
+        };
+}
+
+template <typename T>
+Vector<3, T> speed_acceleration_h(const Vector<9, T>& x)
+{
+        // speed = sqrt(vx*vx + vy*vy)
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
+        const T vx = x[1];
+        const T ax = x[2];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        return {
+                std::sqrt(vx * vx + vy * vy), // speed
+                ax * cos - ay * sin, // ax
+                ax * sin + ay * cos // ay
+        };
+}
+
+template <typename T>
+Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+{
+        return a - b;
+}
+
+//
+
 template <typename T>
 class ProcessFilterUkf final : public ProcessFilter<T>
 {
@@ -399,6 +441,17 @@ class ProcessFilterUkf final : public ProcessFilter<T>
                 filter_.update(
                         acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, Mean(),
                         acceleration_residual<T>);
+        }
+
+        void update_speed_acceleration(
+                const T speed,
+                const Vector<2, T>& acceleration,
+                const T speed_variance,
+                const T acceleration_variance) override
+        {
+                filter_.update(
+                        speed_acceleration_h<T>, speed_acceleration_r(speed_variance, acceleration_variance),
+                        Vector<3, T>(speed, acceleration[0], acceleration[1]), Mean(), speed_acceleration_residual<T>);
         }
 
         [[nodiscard]] Vector<2, T> position() const override

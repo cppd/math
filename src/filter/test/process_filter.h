@@ -58,6 +58,12 @@ public:
 
         virtual void update_acceleration(const Vector<2, T>& acceleration, T acceleration_variance) = 0;
 
+        virtual void update_speed_acceleration(
+                T speed,
+                const Vector<2, T>& acceleration,
+                T speed_variance,
+                T acceleration_variance) = 0;
+
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
 
