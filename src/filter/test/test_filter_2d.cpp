@@ -44,6 +44,7 @@ struct Config final
 {
         static constexpr T DT = T{1} / 10;
         static constexpr T POSITION_DT = 1;
+        static constexpr T SPEED_DT = 1;
 
         static constexpr T DATA_CONNECT_INTERVAL = 1.5 * POSITION_DT;
 
@@ -76,7 +77,7 @@ std::string make_annotation()
         oss << "<br>";
         oss << "position: " << 1 / Config<T>::POSITION_DT << " Hz";
         oss << "<br>";
-        oss << "speed: " << 1 / Config<T>::POSITION_DT << " Hz";
+        oss << "speed: " << 1 / Config<T>::SPEED_DT << " Hz";
         oss << "<br>";
         oss << "direction: " << 1 / Config<T>::DT << " Hz";
         oss << "<br>";
@@ -128,6 +129,42 @@ void write_to_file(const Track<2, T>& track, const Position<T>& position, const 
 }
 
 template <std::size_t N, typename T>
+void process_track(std::vector<ProcessMeasurement<N, T>>* const measurements)
+{
+        std::optional<T> last_time;
+        std::optional<T> last_position_time;
+        std::optional<T> last_speed_time;
+
+        for (ProcessMeasurement<N, T>& m : *measurements)
+        {
+                if (last_time && !(*last_time < m.time))
+                {
+                        ASSERT(false);
+                        continue;
+                }
+                last_time = m.time;
+
+                if (last_position_time && !(*last_position_time + Config<T>::POSITION_DT <= m.time))
+                {
+                        m.position.reset();
+                }
+                else
+                {
+                        last_position_time = m.time;
+                }
+
+                if (last_speed_time && !(*last_speed_time + Config<T>::SPEED_DT <= m.time))
+                {
+                        m.speed.reset();
+                }
+                else
+                {
+                        last_speed_time = m.time;
+                }
+        }
+}
+
+template <std::size_t N, typename T>
 Track<N, T> track()
 {
         constexpr std::size_t COUNT = 10000;
@@ -145,41 +182,23 @@ Track<N, T> track()
                  .position = Config<T>::MEASUREMENT_POSITION_VARIANCE,
                  .speed = Config<T>::MEASUREMENT_SPEED_VARIANCE});
 
-        std::optional<T> last_time;
-        std::optional<T> last_position_time;
+        process_track(&track.measurements);
 
         for (ProcessMeasurement<N, T>& m : track.measurements)
         {
                 ASSERT(m.simulator_point_index >= 0 && m.simulator_point_index < track.points.size());
-
-                if (last_time && !(*last_time < m.time))
-                {
-                        ASSERT(false);
-                        continue;
-                }
-                last_time = m.time;
-
-                if (last_position_time && !(*last_position_time + Config<T>::POSITION_DT <= m.time))
-                {
-                        m.position.reset();
-                        m.speed.reset();
-                        continue;
-                }
 
                 const auto n = std::llround(m.time / 30);
                 if ((n > 3) && ((n % 5) == 0))
                 {
                         m.position.reset();
                         m.speed.reset();
-                        continue;
                 }
 
-                if (std::llround(m.time / 10) % 5 == 0)
+                if ((std::llround(m.time / 10) % 8) == 0)
                 {
                         m.speed.reset();
                 }
-
-                last_position_time = m.time;
         }
 
         return track;
