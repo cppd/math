@@ -41,17 +41,22 @@ void Position<T>::save(const T time, const SimulatorPoint<2, T>& point)
 
 template <typename T>
 void Position<T>::update(
-        const PositionMeasurement<2, T>& measurement,
+        const ProcessMeasurement<2, T>& measurement,
         const T position_measurement_variance,
         const SimulatorPoint<2, T>& point)
 {
         ASSERT(!last_time_ || *last_time_ < measurement.time);
 
+        if (!measurement.position)
+        {
+                error("No position in measurement");
+        }
+
         const T delta = last_time_ ? (measurement.time - *last_time_) : 0;
         last_time_ = measurement.time;
 
         filter_.predict(delta);
-        filter_.update(measurement.position, position_measurement_variance);
+        filter_.update(*measurement.position, position_measurement_variance);
 
         save(measurement.time, point);
 }

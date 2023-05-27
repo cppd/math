@@ -57,68 +57,45 @@ void Process<T>::predict(const T time)
 
 template <typename T>
 void Process<T>::update(
-        const PositionMeasurement<2, T>& measurement,
-        const T position_variance,
-        const T speed_variance,
-        const SimulatorPoint<2, T>& point)
-{
-        predict(measurement.time);
-
-        if (measurement.speed)
-        {
-                filter_->update_position_speed(
-                        measurement.position, *measurement.speed, position_variance, speed_variance);
-        }
-        else
-        {
-                filter_->update_position(measurement.position, position_variance);
-        }
-
-        save(measurement.time, point);
-}
-
-template <typename T>
-void Process<T>::update(
-        const PositionMeasurement<2, T>& position_measurement,
-        const ProcessMeasurement<2, T>& process_measurement,
+        const ProcessMeasurement<2, T>& m,
         const T position_variance,
         const T speed_variance,
         const T direction_variance,
         const T acceleration_variance,
         const SimulatorPoint<2, T>& point)
 {
-        ASSERT(position_measurement.time == process_measurement.time);
+        predict(m.time);
 
-        predict(position_measurement.time);
-
-        if (position_measurement.speed)
+        if (m.position && m.speed && m.direction && m.acceleration)
         {
                 filter_->update_position_speed_direction_acceleration(
-                        position_measurement.position, *position_measurement.speed, process_measurement.direction,
-                        process_measurement.acceleration, position_variance, speed_variance, direction_variance,
-                        acceleration_variance);
+                        *m.position, *m.speed, *m.direction, *m.acceleration, position_variance, speed_variance,
+                        direction_variance, acceleration_variance);
         }
-        else
+        else if (m.position && m.speed && !m.direction && !m.acceleration)
+        {
+                filter_->update_position_speed(*m.position, *m.speed, position_variance, speed_variance);
+        }
+        else if (m.position && !m.speed && m.direction && m.acceleration)
         {
                 filter_->update_position_direction_acceleration(
-                        position_measurement.position, process_measurement.direction, process_measurement.acceleration,
-                        position_variance, direction_variance, acceleration_variance);
+                        *m.position, *m.direction, *m.acceleration, position_variance, direction_variance,
+                        acceleration_variance);
+        }
+        else if (m.position && !m.speed && !m.direction && !m.acceleration)
+        {
+                filter_->update_position(*m.position, position_variance);
+        }
+        else if (!m.position && m.speed && !m.direction && m.acceleration)
+        {
+                filter_->update_speed_acceleration(*m.speed, *m.acceleration, speed_variance, acceleration_variance);
+        }
+        else if (m.acceleration)
+        {
+                filter_->update_acceleration(*m.acceleration, acceleration_variance);
         }
 
-        save(position_measurement.time, point);
-}
-
-template <typename T>
-void Process<T>::update(
-        const ProcessMeasurement<2, T>& measurement,
-        const T acceleration_variance,
-        const SimulatorPoint<2, T>& point)
-{
-        predict(measurement.time);
-
-        filter_->update_acceleration(measurement.acceleration, acceleration_variance);
-
-        save(measurement.time, point);
+        save(m.time, point);
 }
 
 template <typename T>

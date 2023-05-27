@@ -39,16 +39,9 @@ struct ProcessMeasurement final
 {
         std::size_t simulator_point_index;
         T time;
-        T direction;
-        Vector<N, T> acceleration;
-};
-
-template <std::size_t N, typename T>
-struct PositionMeasurement final
-{
-        std::size_t simulator_point_index;
-        T time;
-        Vector<N, T> position;
+        std::optional<T> direction;
+        std::optional<Vector<N, T>> acceleration;
+        std::optional<Vector<N, T>> position;
         std::optional<T> speed;
 };
 
@@ -56,8 +49,7 @@ template <std::size_t N, typename T>
 struct Track final
 {
         std::vector<SimulatorPoint<N, T>> points;
-        std::vector<ProcessMeasurement<N, T>> process_measurements;
-        std::vector<PositionMeasurement<N, T>> position_measurements;
+        std::vector<ProcessMeasurement<N, T>> measurements;
 };
 
 template <typename T>

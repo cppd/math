@@ -56,22 +56,10 @@ public:
         Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
 
         void update(
-                const PositionMeasurement<2, T>& measurement,
-                T position_variance,
-                T speed_variance,
-                const SimulatorPoint<2, T>& point);
-
-        void update(
-                const PositionMeasurement<2, T>& position_measurement,
-                const ProcessMeasurement<2, T>& process_measurement,
+                const ProcessMeasurement<2, T>& m,
                 T position_variance,
                 T speed_variance,
                 T direction_variance,
-                T acceleration_variance,
-                const SimulatorPoint<2, T>& point);
-
-        void update(
-                const ProcessMeasurement<2, T>& measurement,
                 T acceleration_variance,
                 const SimulatorPoint<2, T>& point);
 

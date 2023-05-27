@@ -50,7 +50,7 @@ public:
         Position(std::string name, color::RGB8 color, PositionFilter<T>&& filter);
 
         void update(
-                const PositionMeasurement<2, T>& measurement,
+                const ProcessMeasurement<2, T>& measurement,
                 T position_measurement_variance,
                 const SimulatorPoint<2, T>& point);
 

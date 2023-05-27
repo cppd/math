@@ -163,8 +163,7 @@ Track<N, T> generate_track(
 
         Track<N, T> res;
         res.points.reserve(count);
-        res.process_measurements.reserve(count);
-        res.position_measurements.reserve(count);
+        res.measurements.reserve(count);
 
         for (std::size_t i = 0; i < count; ++i)
         {
@@ -177,15 +176,11 @@ Track<N, T> generate_track(
                          .angle = simulator.angle(),
                          .angle_r = simulator.angle_r()});
 
-                res.process_measurements.push_back(
+                res.measurements.push_back(
                         {.simulator_point_index = i,
                          .time = i * info.dt,
                          .direction = simulator.process_direction(),
-                         .acceleration = simulator.process_acceleration()});
-
-                res.position_measurements.push_back(
-                        {.simulator_point_index = i,
-                         .time = i * info.dt,
+                         .acceleration = simulator.process_acceleration(),
                          .position = simulator.position_measurement(),
                          .speed = simulator.speed_measurement()});
         }

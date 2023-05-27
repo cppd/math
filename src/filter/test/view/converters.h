@@ -107,16 +107,20 @@ template <typename T>
 std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>& track, const T interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.position_measurements.size());
+        res.reserve(track.measurements.size());
         std::optional<T> last_time;
-        for (const PositionMeasurement<2, T>& m : track.position_measurements)
+        for (const ProcessMeasurement<2, T>& m : track.measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
+                if (!m.position)
+                {
+                        continue;
+                }
                 if (last_time && m.time > *last_time + interval)
                 {
                         res.emplace_back();
                 }
-                res.push_back(m.position);
+                res.push_back(*m.position);
                 last_time = m.time;
         }
         return res;
@@ -128,9 +132,9 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.position_measurements.size());
+        res.reserve(track.measurements.size());
         std::optional<T> last_time;
-        for (const PositionMeasurement<2, T>& m : track.position_measurements)
+        for (const ProcessMeasurement<2, T>& m : track.measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.speed)
@@ -148,34 +152,55 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
 }
 
 template <typename T>
-std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track)
+std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track, const T interval)
 {
         namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
-        res.reserve(track.process_measurements.size());
+        res.reserve(track.measurements.size());
         std::optional<T> previous_angle;
-        for (const ProcessMeasurement<2, T>& m : track.process_measurements)
+        std::optional<T> last_time;
+        for (const ProcessMeasurement<2, T>& m : track.measurements)
         {
-                const T angle = m.direction;
-                const T unbounded_angle = unbound_angle(previous_angle, angle);
+                ASSERT(!last_time || *last_time < m.time);
+                if (!m.direction)
+                {
+                        continue;
+                }
+                if (last_time && m.time > *last_time + interval)
+                {
+                        res.emplace_back();
+                }
+                const T unbounded_angle = unbound_angle(previous_angle, *m.direction);
                 previous_angle = unbounded_angle;
                 res.emplace_back(impl::time_unit(m.time), radians_to_degrees(unbounded_angle));
+                last_time = m.time;
         }
         return res;
 }
 
 template <std::size_t INDEX, typename T>
-std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track)
+std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, const T interval)
 {
         namespace impl = converters_implementation;
 
         static_assert(INDEX < 2);
         std::vector<Vector<2, T>> res;
-        res.reserve(track.process_measurements.size());
-        for (const ProcessMeasurement<2, T>& m : track.process_measurements)
+        res.reserve(track.measurements.size());
+        std::optional<T> last_time;
+        for (const ProcessMeasurement<2, T>& m : track.measurements)
         {
-                res.emplace_back(impl::time_unit(m.time), m.acceleration[INDEX]);
+                ASSERT(!last_time || *last_time < m.time);
+                if (!m.acceleration)
+                {
+                        continue;
+                }
+                if (last_time && m.time > *last_time + interval)
+                {
+                        res.emplace_back();
+                }
+                res.emplace_back(impl::time_unit(m.time), (*m.acceleration)[INDEX]);
+                last_time = m.time;
         }
         return res;
 }

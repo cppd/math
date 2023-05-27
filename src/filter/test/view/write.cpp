@@ -281,9 +281,10 @@ void write_to_file(
 
         write_track_speed(file, track_speed(track));
 
-        write_measurement_angle(file, angle_measurements(track));
+        write_measurement_angle(file, angle_measurements(track, interval));
 
-        write_measurement_acceleration(file, acceleration_measurements<0>(track), acceleration_measurements<1>(track));
+        write_measurement_acceleration(
+                file, acceleration_measurements<0>(track, interval), acceleration_measurements<1>(track, interval));
 
         write_measurement_position(file, add_offset(position_measurements(track, interval), OFFSET));
 
