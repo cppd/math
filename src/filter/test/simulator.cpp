@@ -35,6 +35,12 @@ namespace
 template <std::size_t N, typename T>
 class Simulator final
 {
+        struct Velocity final
+        {
+                T magnitude;
+                T angle;
+        };
+
         const T dt_;
         const T speed_m_;
         const T speed_a_;
@@ -52,17 +58,26 @@ class Simulator final
 
         T time_{0};
         Vector<N, T> position_{0};
-        Vector<N, T> velocity_;
-        Vector<N, T> next_velocity_;
+        Velocity velocity_;
+        Velocity next_velocity_;
         Vector<N, T> acceleration_;
         T angle_;
 
-        [[nodiscard]] Vector<N, T> velocity(const T time) const
+        [[nodiscard]] Velocity velocity(const T time) const
         {
                 constexpr T S = 100;
-                Vector<N, T> v(0);
-                v[0] = speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30));
-                return rotate(v, std::cos((std::max<T>(0, time - S)) * (PI<T> / 45)));
+                return {.magnitude = speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30)),
+                        .angle = std::cos((std::max<T>(0, time - S)) * (PI<T> / 45))};
+        }
+
+        [[nodiscard]] Velocity add_noise(const Velocity& velocity)
+        {
+                return {.magnitude = velocity.magnitude + speed_nd_(engine_), .angle = velocity.angle};
+        }
+
+        [[nodiscard]] Vector<2, T> to_vector(const Velocity& v) const
+        {
+                return {v.magnitude * std::cos(v.angle), v.magnitude * std::sin(v.angle)};
         }
 
         [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)
@@ -87,9 +102,9 @@ public:
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
                   measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
                   measurements_speed_nd_(0, std::sqrt(track_measurement_variance.speed)),
-                  velocity_(velocity(time_) + vector(speed_nd_)),
-                  next_velocity_(velocity(time_ + dt_) + vector(speed_nd_)),
-                  acceleration_(next_velocity_ - velocity_)
+                  velocity_(add_noise(velocity(time_))),
+                  next_velocity_(add_noise(velocity(time_ + dt_))),
+                  acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_)
         {
         }
 
@@ -97,11 +112,11 @@ public:
         {
                 time_ += dt_;
 
-                position_ = position_ + dt_ * velocity_ + (square(dt_) / 2) * acceleration_;
+                position_ = position_ + dt_ * to_vector(velocity_) + (square(dt_) / 2) * acceleration_;
 
                 velocity_ = next_velocity_;
-                next_velocity_ = velocity(time_ + dt_) + vector(speed_nd_);
-                acceleration_ = (next_velocity_ - velocity_) / dt_;
+                next_velocity_ = add_noise(velocity(time_ + dt_));
+                acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
 
                 angle_ = -T{3} - time_ * direction_bias_drift_;
         }
@@ -113,7 +128,7 @@ public:
 
         [[nodiscard]] T speed() const
         {
-                return velocity_.norm();
+                return velocity_.magnitude;
         }
 
         [[nodiscard]] T angle() const
@@ -126,26 +141,24 @@ public:
                 return direction_angle_;
         }
 
-        [[nodiscard]] T process_direction()
+        [[nodiscard]] T measurement_direction()
         {
-                const Vector<N, T> direction =
-                        rotate(velocity_, direction_angle_ + angle_ + measurements_direction_nd_(engine_));
-                return std::atan2(direction[1], direction[0]);
+                return velocity_.angle + direction_angle_ + angle_ + measurements_direction_nd_(engine_);
         }
 
-        [[nodiscard]] Vector<N, T> process_acceleration()
+        [[nodiscard]] Vector<N, T> measurement_acceleration()
         {
-                return rotate(acceleration_ + vector(measurements_acceleration_nd_), angle_);
+                return rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
         }
 
-        [[nodiscard]] Vector<N, T> position_measurement()
+        [[nodiscard]] Vector<N, T> measurement_position()
         {
                 return position_ + vector(measurements_position_nd_);
         }
 
-        [[nodiscard]] T speed_measurement()
+        [[nodiscard]] T measurement_speed()
         {
-                return velocity_.norm() + measurements_speed_nd_(engine_);
+                return velocity_.magnitude + measurements_speed_nd_(engine_);
         }
 };
 }
@@ -179,10 +192,10 @@ Track<N, T> generate_track(
                 res.measurements.push_back(
                         {.simulator_point_index = i,
                          .time = i * info.dt,
-                         .direction = simulator.process_direction(),
-                         .acceleration = simulator.process_acceleration(),
-                         .position = simulator.position_measurement(),
-                         .speed = simulator.speed_measurement()});
+                         .direction = simulator.measurement_direction(),
+                         .acceleration = simulator.measurement_acceleration(),
+                         .position = simulator.measurement_position(),
+                         .speed = simulator.measurement_speed()});
         }
 
         return res;
