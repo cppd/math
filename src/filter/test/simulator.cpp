@@ -50,19 +50,19 @@ class Simulator final
         std::normal_distribution<T> measurements_position_nd_;
         std::normal_distribution<T> measurements_speed_nd_;
 
-        std::size_t index_{0};
+        T time_{0};
         Vector<N, T> position_{0};
         Vector<N, T> velocity_;
         Vector<N, T> next_velocity_;
         Vector<N, T> acceleration_;
         T angle_;
 
-        [[nodiscard]] Vector<N, T> velocity(const T index) const
+        [[nodiscard]] Vector<N, T> velocity(const T time) const
         {
-                constexpr T S = 1000;
+                constexpr T S = 100;
                 Vector<N, T> v(0);
-                v[0] = speed_m_ + speed_a_ * std::sin(index * (PI<T> / 300));
-                return rotate(v, std::cos((std::max<T>(0, index - S)) * (PI<T> / 450)));
+                v[0] = speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30));
+                return rotate(v, std::cos((std::max<T>(0, time - S)) * (PI<T> / 45)));
         }
 
         [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)
@@ -80,30 +80,30 @@ public:
                 : dt_(info.dt),
                   speed_m_((info.speed_min + info.speed_max) / 2),
                   speed_a_((info.speed_max - info.speed_min) / 2),
-                  direction_bias_drift_(info.direction_bias_drift / (T{60} * T{60}) * dt_),
+                  direction_bias_drift_(info.direction_bias_drift / (T{60} * T{60})),
                   direction_angle_(info.direction_angle),
                   speed_nd_(0, std::sqrt(info.speed_variance)),
                   measurements_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
                   measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
                   measurements_speed_nd_(0, std::sqrt(track_measurement_variance.speed)),
-                  velocity_(velocity(index_) + vector(speed_nd_)),
-                  next_velocity_(velocity(index_ + 1) + vector(speed_nd_)),
+                  velocity_(velocity(time_) + vector(speed_nd_)),
+                  next_velocity_(velocity(time_ + dt_) + vector(speed_nd_)),
                   acceleration_(next_velocity_ - velocity_)
         {
         }
 
         void move()
         {
-                ++index_;
+                time_ += dt_;
 
                 position_ = position_ + dt_ * velocity_ + (square(dt_) / 2) * acceleration_;
 
                 velocity_ = next_velocity_;
-                next_velocity_ = velocity(index_ + 1) + vector(speed_nd_);
+                next_velocity_ = velocity(time_ + dt_) + vector(speed_nd_);
                 acceleration_ = (next_velocity_ - velocity_) / dt_;
 
-                angle_ = -T{3} - index_ * direction_bias_drift_;
+                angle_ = -T{3} - time_ * direction_bias_drift_;
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
