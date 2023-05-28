@@ -17,11 +17,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/conversion.h>
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 namespace ns::filter::test
 {
+template <typename T>
+struct ProcessFilterInit final
+{
+        static constexpr Vector<2, T> ACCELERATION{0};
+        static constexpr T ANGLE_SPEED = 0;
+        static constexpr T ANGLE_R = 0;
+
+        static constexpr T SPEED_VARIANCE = square(30.0);
+        static constexpr T ACCELERATION_VARIANCE = square(10.0);
+        static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(50.0));
+        static constexpr T ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
+        static constexpr T ANGLE_R_VARIANCE = square(degrees_to_radians(50.0));
+
+        Vector<2, T> position;
+        Vector<2, T> velocity;
+        T angle;
+        T position_variance;
+};
+
 template <typename T>
 class ProcessFilter
 {

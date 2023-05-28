@@ -19,11 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../ekf.h"
 
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 namespace ns::filter::test
 {
+template <typename T>
+struct PositionFilterInit final
+{
+        static constexpr Vector<2, T> VELOCITY{0};
+        static constexpr Vector<2, T> ACCELERAION{0};
+        static constexpr T SPEED_VARIANCE = square(30.0);
+        static constexpr T ACCELERATION_VARIANCE = square(10.0);
+
+        Vector<2, T> position;
+        T position_variance;
+};
+
 template <typename T>
 class PositionFilter final
 {
@@ -31,7 +44,7 @@ class PositionFilter final
         T process_variance_;
 
 public:
-        PositionFilter(T process_variance, const Vector<6, T>& x, const Matrix<6, 6, T>& p);
+        PositionFilter(const PositionFilterInit<T>& init, T process_variance);
 
         void predict(T dt);
         void update(const Vector<2, T>& position, T measurement_variance);

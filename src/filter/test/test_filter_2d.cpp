@@ -290,51 +290,24 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T> es
 }
 
 template <typename T>
-Position<T> create_position(const Vector<2, T>& position)
+Position<T> create_position(const Vector<2, T>& init_position, const T init_position_variance)
 {
-        const Vector<6, T> init_x = [&]()
-        {
-                const Vector<2, T> p = position;
-                const Vector<2, T> v(0);
-                const Vector<2, T> a(0);
-                return Vector<6, T>(p[0], v[0], a[0], p[1], v[1], a[1]);
-        }();
-
-        const Matrix<6, 6, T> init_p = []()
-        {
-                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
-                const T sv = square(30.0);
-                const T av = square(10.0);
-                return make_diagonal_matrix<6, T>({pv, sv, av, pv, sv, av});
-        }();
-
-        return {"LKF", color::RGB8(160, 0, 0), PositionFilter(Config<T>::POSITION_FILTER_VARIANCE, init_x, init_p)};
+        const PositionFilterInit<T> init{.position = init_position, .position_variance = init_position_variance};
+        return {"LKF", color::RGB8(160, 0, 0), PositionFilter<T>(init, Config<T>::POSITION_FILTER_VARIANCE)};
 }
 
 template <typename T>
 std::vector<Process<T>> create_processes(
-        const Vector<2, T>& position,
-        const Vector<2, T>& velocity,
-        const T angle_difference)
+        const Vector<2, T>& init_position,
+        const Vector<2, T>& init_velocity,
+        const T init_angle_difference,
+        const T init_position_variance)
 {
-        const Vector<9, T> init_x = [&]()
-        {
-                const Vector<2, T> p = position;
-                const Vector<2, T> v = velocity;
-                const Vector<2, T> a(0);
-                return Vector<9, T>(p[0], v[0], a[0], p[1], v[1], a[1], angle_difference, 0, 0);
-        }();
-
-        const Matrix<9, 9, T> init_p = []()
-        {
-                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
-                const T sv = square(30.0);
-                const T av = square(10.0);
-                const T angle_v = square(degrees_to_radians(40.0));
-                const T angle_speed_v = square(degrees_to_radians(0.1));
-                const T angle_r_v = square(degrees_to_radians(40.0));
-                return make_diagonal_matrix<9, T>({pv, sv, av, pv, sv, av, angle_v, angle_speed_v, angle_r_v});
-        }();
+        const ProcessFilterInit<T> init{
+                .position = init_position,
+                .velocity = init_velocity,
+                .angle = init_angle_difference,
+                .position_variance = init_position_variance};
 
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
         const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
@@ -343,8 +316,7 @@ std::vector<Process<T>> create_processes(
         std::vector<Process<T>> res;
 
         res.emplace_back(
-                "EKF", color::RGB8(0, 200, 0),
-                create_process_filter_ekf<T>(process_pv, process_av, process_arv, init_x, init_p));
+                "EKF", color::RGB8(0, 200, 0), create_process_filter_ekf<T>(init, process_pv, process_av, process_arv));
 
         static_assert(!Config<T>::UKF_ALPHAS.empty());
         const T min_alpha = *std::min_element(Config<T>::UKF_ALPHAS.cbegin(), Config<T>::UKF_ALPHAS.cend());
@@ -366,7 +338,7 @@ std::vector<Process<T>> create_processes(
                 ASSERT(alpha > 0 && alpha <= 1);
                 res.emplace_back(
                         name(alpha), color::RGB8(0, 160 - 40 * alpha, 0),
-                        create_process_filter_ukf(alpha, process_pv, process_av, process_arv, init_x, init_p));
+                        create_process_filter_ukf(init, alpha, process_pv, process_av, process_arv));
         }
 
         return res;
@@ -380,7 +352,7 @@ void test_impl(const Track<2, T>& track)
         auto iter = find_position(track);
         ASSERT(iter != track.measurements.cend() && iter->position);
 
-        Position<T> position = create_position(*iter->position);
+        Position<T> position = create_position(*iter->position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
         ++iter;
 
@@ -388,8 +360,9 @@ void test_impl(const Track<2, T>& track)
         std::tie(iter, angle_difference) = estimate_direction(track, iter, &position);
         ASSERT(iter != track.measurements.cend());
 
-        std::vector<Process<T>> processes =
-                create_processes(position.filter().position(), position.filter().velocity(), angle_difference);
+        std::vector<Process<T>> processes = create_processes(
+                position.filter().position(), position.filter().velocity(), angle_difference,
+                Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
         ++iter;
 

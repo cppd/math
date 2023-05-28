@@ -26,6 +26,27 @@ namespace ns::filter::test
 {
 namespace
 {
+template <typename T>
+Vector<9, T> x(const ProcessFilterInit<T>& init)
+{
+        ASSERT(is_finite(init.position));
+        ASSERT(is_finite(init.velocity));
+        ASSERT(is_finite(init.angle));
+        return Vector<9, T>(
+                init.position[0], init.velocity[0], init.ACCELERATION[0], init.position[1], init.velocity[1],
+                init.ACCELERATION[1], init.angle, init.ANGLE_SPEED, init.ANGLE_R);
+}
+
+template <typename T>
+Matrix<9, 9, T> p(const ProcessFilterInit<T>& init)
+{
+        ASSERT(is_finite(init.position_variance));
+        return make_diagonal_matrix<9, T>(
+                {init.position_variance, init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE, init.position_variance,
+                 init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE, init.ANGLE_VARIANCE, init.ANGLE_SPEED_VARIANCE,
+                 init.ANGLE_R_VARIANCE});
+}
+
 struct AddX final
 {
         template <typename T>
@@ -619,12 +640,11 @@ class ProcessFilterEkf final : public ProcessFilter<T>
 
 public:
         ProcessFilterEkf(
+                const ProcessFilterInit<T>& init,
                 const T position_variance,
                 const T angle_variance,
-                const T angle_r_variance,
-                const Vector<9, T>& x,
-                const Matrix<9, 9, T>& p)
-                : filter_(x, p),
+                const T angle_r_variance)
+                : filter_(x(init), p(init)),
                   position_variance_(position_variance),
                   angle_variance_(angle_variance),
                   angle_r_variance_(angle_r_variance)
@@ -635,18 +655,16 @@ public:
 
 template <typename T>
 std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(
+        const ProcessFilterInit<T>& init,
         const T position_variance,
         const T angle_variance,
-        const T angle_r_variance,
-        const Vector<9, T>& x,
-        const Matrix<9, 9, T>& p)
+        const T angle_r_variance)
 {
-        return std::make_unique<ProcessFilterEkf<T>>(position_variance, angle_variance, angle_r_variance, x, p);
+        return std::make_unique<ProcessFilterEkf<T>>(init, position_variance, angle_variance, angle_r_variance);
 }
 
-#define TEMPLATE(T)                                                           \
-        template std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf( \
-                T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
+#define TEMPLATE(T) \
+        template std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(const ProcessFilterInit<T>&, T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

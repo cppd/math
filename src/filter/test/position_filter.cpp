@@ -25,6 +25,24 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
+Vector<6, T> x(const PositionFilterInit<T>& init)
+{
+        ASSERT(is_finite(init.position));
+        return Vector<6, T>(
+                init.position[0], init.VELOCITY[0], init.ACCELERAION[0], init.position[1], init.VELOCITY[1],
+                init.ACCELERAION[1]);
+}
+
+template <typename T>
+Matrix<6, 6, T> p(const PositionFilterInit<T>& init)
+{
+        ASSERT(is_finite(init.position_variance));
+        return make_diagonal_matrix<6, T>(
+                {init.position_variance, init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE, init.position_variance,
+                 init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE});
+}
+
+template <typename T>
 constexpr Matrix<2, 6, T> H{
         {1, 0, 0, 0, 0, 0},
         {0, 0, 0, 1, 0, 0}
@@ -97,13 +115,11 @@ T velocity_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity
 }
 
 template <typename T>
-PositionFilter<T>::PositionFilter(const T process_variance, const Vector<6, T>& x, const Matrix<6, 6, T>& p)
-        : filter_(x, p),
+PositionFilter<T>::PositionFilter(const PositionFilterInit<T>& init, const T process_variance)
+        : filter_(x(init), p(init)),
           process_variance_(process_variance)
 {
         ASSERT(process_variance >= 0);
-        ASSERT(is_finite(x));
-        ASSERT(is_finite(p));
 }
 
 template <typename T>
