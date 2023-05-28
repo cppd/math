@@ -28,8 +28,6 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
-constexpr T SIGMA_POINTS_ALPHA = 0.1;
-template <typename T>
 constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
 template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
@@ -499,13 +497,14 @@ class ProcessFilterUkf final : public ProcessFilter<T>
 
 public:
         ProcessFilterUkf(
+                const T sigma_points_alpha,
                 const T position_variance,
                 const T angle_variance,
                 const T angle_r_variance,
                 const Vector<9, T>& x,
                 const Matrix<9, 9, T>& p)
                 : filter_(
-                        {SIGMA_POINTS_ALPHA<T>, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, Add(), Subtract()},
+                        {sigma_points_alpha, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, Add(), Subtract()},
                         AddX(),
                         Mean(),
                         ResidualX(),
@@ -521,18 +520,20 @@ public:
 
 template <typename T>
 std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+        const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
         const T angle_r_variance,
         const Vector<9, T>& x,
         const Matrix<9, 9, T>& p)
 {
-        return std::make_unique<ProcessFilterUkf<T>>(position_variance, angle_variance, angle_r_variance, x, p);
+        return std::make_unique<ProcessFilterUkf<T>>(
+                sigma_points_alpha, position_variance, angle_variance, angle_r_variance, x, p);
 }
 
 #define TEMPLATE(T)                                                           \
         template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf( \
-                T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
+                T, T, T, T, const Vector<9, T>&, const Matrix<9, 9, T>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

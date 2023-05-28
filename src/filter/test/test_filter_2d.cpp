@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/com/sort.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -42,7 +43,7 @@ namespace
 template <typename T>
 struct Config final
 {
-        static constexpr T DT = T{1} / 10;
+        static constexpr T DT = 0.1L;
         static constexpr T POSITION_DT = 1;
         static constexpr T SPEED_DT = 1;
 
@@ -65,6 +66,8 @@ struct Config final
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
+
+        static constexpr std::array<T, 2> UKF_ALPHAS{0.1, 1.0};
 };
 
 template <typename T>
@@ -259,6 +262,9 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T> es
                         continue;
                 }
 
+                LOG(to_string(iter->time)
+                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position->filter().angle_p()))));
+
                 if (position->filter().angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
                 {
                         break;
@@ -286,13 +292,21 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T> es
 template <typename T>
 Position<T> create_position(const Vector<2, T>& position)
 {
-        const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
-        const T sv = square(30);
-        const T av = square(10);
+        const Vector<6, T> init_x = [&]()
+        {
+                const Vector<2, T> p = position;
+                const Vector<2, T> v(0);
+                const Vector<2, T> a(0);
+                return Vector<6, T>(p[0], v[0], a[0], p[1], v[1], a[1]);
+        }();
 
-        const Vector<6, T> init_x(position[0], 1.0, -1.0, position[1], -2.0, 0.5);
-
-        const Matrix<6, 6, T> init_p = make_diagonal_matrix<6, T>({pv, sv, av, pv, sv, av});
+        const Matrix<6, 6, T> init_p = []()
+        {
+                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
+                const T sv = square(30.0);
+                const T av = square(10.0);
+                return make_diagonal_matrix<6, T>({pv, sv, av, pv, sv, av});
+        }();
 
         return {"LKF", color::RGB8(160, 0, 0), PositionFilter(Config<T>::POSITION_FILTER_VARIANCE, init_x, init_p)};
 }
@@ -311,7 +325,7 @@ std::vector<Process<T>> create_processes(
                 return Vector<9, T>(p[0], v[0], a[0], p[1], v[1], a[1], angle_difference, 0, 0);
         }();
 
-        const Matrix<9, 9, T> init_p = [&]()
+        const Matrix<9, 9, T> init_p = []()
         {
                 const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
                 const T sv = square(30.0);
@@ -329,12 +343,31 @@ std::vector<Process<T>> create_processes(
         std::vector<Process<T>> res;
 
         res.emplace_back(
-                "EKF", color::RGB8(0, 190, 0),
+                "EKF", color::RGB8(0, 200, 0),
                 create_process_filter_ekf<T>(process_pv, process_av, process_arv, init_x, init_p));
 
-        res.emplace_back(
-                "UKF", color::RGB8(0, 140, 0),
-                create_process_filter_ukf(process_pv, process_av, process_arv, init_x, init_p));
+        static_assert(!Config<T>::UKF_ALPHAS.empty());
+        const T min_alpha = *std::min_element(Config<T>::UKF_ALPHAS.cbegin(), Config<T>::UKF_ALPHAS.cend());
+        ASSERT(min_alpha >= 1e-6L);
+        const int precision = std::abs(std::floor(std::log10(min_alpha)));
+
+        const auto name = [&](const T alpha)
+        {
+                static constexpr std::string_view ALPHA = "\u03b1";
+                std::ostringstream oss;
+                oss << std::setprecision(precision) << std::fixed;
+                oss << "UKF (" << ALPHA << " " << alpha << ")";
+                return oss.str();
+        };
+
+        const auto alphas = sort(std::array(Config<T>::UKF_ALPHAS));
+        for (const T alpha : alphas)
+        {
+                ASSERT(alpha > 0 && alpha <= 1);
+                res.emplace_back(
+                        name(alpha), color::RGB8(0, 160 - 40 * alpha, 0),
+                        create_process_filter_ukf(alpha, process_pv, process_av, process_arv, init_x, init_p));
+        }
 
         return res;
 }

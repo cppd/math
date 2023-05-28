@@ -28,6 +28,7 @@ namespace ns::filter::test
 {
 template <typename T>
 std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+        T sigma_points_alpha,
         T position_variance,
         T angle_variance,
         T angle_r_variance,
