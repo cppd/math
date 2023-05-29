@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "position.h"
-#include "position_filter.h"
+#include "position_filter_lkf.h"
 #include "process.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
@@ -116,16 +116,16 @@ void write_to_file(const Track<2, T>& track, const Position<T>& position, const 
         filters.push_back(
                 {.name = position.name(),
                  .color = position.color(),
-                 .speed = position.speed(),
-                 .position = position.position()});
+                 .speed = position.speeds(),
+                 .position = position.positions()});
 
         for (const Process<T>& process : processes)
         {
                 filters.push_back(
                         {.name = process.name(),
                          .color = process.color(),
-                         .speed = process.speed(),
-                         .position = process.position()});
+                         .speed = process.speeds(),
+                         .position = process.positions()});
         }
 
         view::write_to_file(make_annotation<T>(), track, Config<T>::DATA_CONNECT_INTERVAL, filters);
@@ -263,9 +263,9 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T> es
                 }
 
                 LOG(to_string(iter->time)
-                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position->filter().angle_p()))));
+                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position->angle_p()))));
 
-                if (position->filter().angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
+                if (position->angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
                 {
                         break;
                 }
@@ -276,8 +276,8 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T> es
                 error("Failed to estimate direction");
         }
 
-        const T position_filter_angle = position->filter().angle();
-        const T position_filter_angle_p = position->filter().angle_p();
+        const T position_filter_angle = position->angle();
+        const T position_filter_angle_p = position->angle_p();
         const T measurement_angle = *(*direction_iter)->direction;
         const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
 
@@ -293,20 +293,20 @@ template <typename T>
 Position<T> create_position(const Vector<2, T>& init_position, const T init_position_variance)
 {
         const PositionFilterInit<T> init{.position = init_position, .position_variance = init_position_variance};
-        return {"LKF", color::RGB8(160, 0, 0), PositionFilter<T>(init, Config<T>::POSITION_FILTER_VARIANCE)};
+        return {"LKF", color::RGB8(160, 0, 0), create_position_filter_lkf(init, Config<T>::POSITION_FILTER_VARIANCE)};
 }
 
 template <typename T>
 std::vector<Process<T>> create_processes(
         const Vector<2, T>& init_position,
         const Vector<2, T>& init_velocity,
-        const T init_angle_difference,
+        const T init_angle,
         const T init_position_variance)
 {
         const ProcessFilterInit<T> init{
                 .position = init_position,
                 .velocity = init_velocity,
-                .angle = init_angle_difference,
+                .angle = init_angle,
                 .position_variance = init_position_variance};
 
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
@@ -361,8 +361,7 @@ void test_impl(const Track<2, T>& track)
         ASSERT(iter != track.measurements.cend());
 
         std::vector<Process<T>> processes = create_processes(
-                position.filter().position(), position.filter().velocity(), angle_difference,
-                Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                position.position(), position.velocity(), angle_difference, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
         ++iter;
 

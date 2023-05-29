@@ -15,7 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position_filter.h"
+#include "position_filter_lkf.h"
+
+#include "../ekf.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -112,76 +114,88 @@ T velocity_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity
         const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
         return p(0, 0);
 }
+
+//
+
+template <typename T>
+class Filter final : public PositionFilter<T>
+{
+        Ekf<6, T> filter_;
+        T process_variance_;
+
+        void predict(const T dt) override
+        {
+                ASSERT(dt >= 0);
+                const Matrix<6, 6, T> f_matrix = f(dt);
+                filter_.predict(f_matrix, f_matrix.transposed(), q(dt, process_variance_));
+        }
+
+        void update(const Vector<2, T>& position, const T position_variance) override
+        {
+                ASSERT(position_variance >= 0);
+                ASSERT(position.is_finite());
+                filter_.update(H<T>, H_T<T>, r(position_variance), position);
+        }
+
+        [[nodiscard]] Vector<2, T> position() const override
+        {
+                return {filter_.x()[0], filter_.x()[3]};
+        }
+
+        [[nodiscard]] Matrix<2, 2, T> position_p() const override
+        {
+                return {
+                        {filter_.p()(0, 0), filter_.p()(0, 3)},
+                        {filter_.p()(3, 0), filter_.p()(3, 3)}
+                };
+        }
+
+        [[nodiscard]] T speed() const override
+        {
+                return velocity().norm();
+        }
+
+        [[nodiscard]] Vector<2, T> velocity() const override
+        {
+                return {filter_.x()[1], filter_.x()[4]};
+        }
+
+        [[nodiscard]] T angle() const override
+        {
+                return std::atan2(filter_.x()[4], filter_.x()[1]);
+        }
+
+        [[nodiscard]] T angle_p() const override
+        {
+                const Matrix<2, 2, T> velocity_p{
+                        {filter_.p()(1, 1), filter_.p()(1, 4)},
+                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                };
+                return velocity_angle_p(velocity(), velocity_p);
+        }
+
+public:
+        Filter(const PositionFilterInit<T>& init, const T process_variance)
+                : filter_(x(init), p(init)),
+                  process_variance_(process_variance)
+        {
+                ASSERT(process_variance >= 0);
+        }
+};
 }
 
 template <typename T>
-PositionFilter<T>::PositionFilter(const PositionFilterInit<T>& init, const T process_variance)
-        : filter_(x(init), p(init)),
-          process_variance_(process_variance)
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
+        const PositionFilterInit<T>& init,
+        const T process_variance)
 {
-        ASSERT(process_variance >= 0);
+        return std::make_unique<Filter<T>>(init, process_variance);
 }
 
-template <typename T>
-void PositionFilter<T>::predict(const T dt)
-{
-        ASSERT(dt >= 0);
-        const Matrix<6, 6, T> f_matrix = f(dt);
-        filter_.predict(f_matrix, f_matrix.transposed(), q(dt, process_variance_));
-}
+#define TEMPLATE(T) \
+        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const PositionFilterInit<T>&, T);
 
-template <typename T>
-void PositionFilter<T>::update(const Vector<2, T>& position, const T measurement_variance)
-{
-        ASSERT(measurement_variance >= 0);
-        ASSERT(position.is_finite());
-        filter_.update(H<T>, H_T<T>, r(measurement_variance), position);
-}
-
-template <typename T>
-Vector<2, T> PositionFilter<T>::position() const
-{
-        return {filter_.x()[0], filter_.x()[3]};
-}
-
-template <typename T>
-Matrix<2, 2, T> PositionFilter<T>::position_p() const
-{
-        return {
-                {filter_.p()(0, 0), filter_.p()(0, 3)},
-                {filter_.p()(3, 0), filter_.p()(3, 3)}
-        };
-}
-
-template <typename T>
-T PositionFilter<T>::speed() const
-{
-        return velocity().norm();
-}
-
-template <typename T>
-Vector<2, T> PositionFilter<T>::velocity() const
-{
-        return {filter_.x()[1], filter_.x()[4]};
-}
-
-template <typename T>
-T PositionFilter<T>::angle() const
-{
-        return std::atan2(filter_.x()[4], filter_.x()[1]);
-}
-
-template <typename T>
-T PositionFilter<T>::angle_p() const
-{
-        const Matrix<2, 2, T> velocity_p{
-                {filter_.p()(1, 1), filter_.p()(1, 4)},
-                {filter_.p()(4, 1), filter_.p()(4, 4)}
-        };
-        return velocity_angle_p(velocity(), velocity_p);
-}
-
-template class PositionFilter<float>;
-template class PositionFilter<double>;
-template class PositionFilter<long double>;
+TEMPLATE(float)
+TEMPLATE(double)
+TEMPLATE(long double)
 }

@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include "../ekf.h"
-#include "../functions.h"
+
+#include <src/com/error.h>
+#include <src/com/exponent.h>
 
 namespace ns::filter::test
 {
@@ -510,7 +512,7 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 //
 
 template <typename T>
-class ProcessFilterEkf final : public ProcessFilter<T>
+class Filter final : public ProcessFilter<T>
 {
         Ekf<9, T> filter_;
         const T position_variance_;
@@ -639,11 +641,10 @@ class ProcessFilterEkf final : public ProcessFilter<T>
         }
 
 public:
-        ProcessFilterEkf(
-                const ProcessFilterInit<T>& init,
-                const T position_variance,
-                const T angle_variance,
-                const T angle_r_variance)
+        Filter(const ProcessFilterInit<T>& init,
+               const T position_variance,
+               const T angle_variance,
+               const T angle_r_variance)
                 : filter_(x(init), p(init)),
                   position_variance_(position_variance),
                   angle_variance_(angle_variance),
@@ -660,7 +661,7 @@ std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(
         const T angle_variance,
         const T angle_r_variance)
 {
-        return std::make_unique<ProcessFilterEkf<T>>(init, position_variance, angle_variance, angle_r_variance);
+        return std::make_unique<Filter<T>>(init, position_variance, angle_variance, angle_r_variance);
 }
 
 #define TEMPLATE(T) \

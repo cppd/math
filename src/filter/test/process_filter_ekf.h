@@ -19,9 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process_filter.h"
 
-#include <src/numerical/matrix.h>
-#include <src/numerical/vector.h>
-
 #include <memory>
 
 namespace ns::filter::test

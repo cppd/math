@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../ekf.h"
-
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -38,24 +36,21 @@ struct PositionFilterInit final
 };
 
 template <typename T>
-class PositionFilter final
+class PositionFilter
 {
-        Ekf<6, T> filter_;
-        T process_variance_;
-
 public:
-        PositionFilter(const PositionFilterInit<T>& init, T process_variance);
+        virtual ~PositionFilter() = default;
 
-        void predict(T dt);
-        void update(const Vector<2, T>& position, T measurement_variance);
+        virtual void predict(T dt) = 0;
+        virtual void update(const Vector<2, T>& position, T position_variance) = 0;
 
-        [[nodiscard]] Vector<2, T> position() const;
-        [[nodiscard]] Matrix<2, 2, T> position_p() const;
+        [[nodiscard]] virtual Vector<2, T> position() const = 0;
+        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
 
-        [[nodiscard]] T speed() const;
-        [[nodiscard]] Vector<2, T> velocity() const;
+        [[nodiscard]] virtual T speed() const = 0;
+        [[nodiscard]] virtual Vector<2, T> velocity() const = 0;
 
-        [[nodiscard]] T angle() const;
-        [[nodiscard]] T angle_p() const;
+        [[nodiscard]] virtual T angle() const = 0;
+        [[nodiscard]] virtual T angle_p() const = 0;
 };
 }

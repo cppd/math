@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -36,7 +37,7 @@ class Position final
 {
         std::string name_;
         color::RGB8 color_;
-        PositionFilter<T> filter_;
+        std::unique_ptr<PositionFilter<T>> filter_;
 
         std::vector<Vector<3, T>> position_;
         std::vector<Vector<2, T>> speed_;
@@ -47,20 +48,23 @@ class Position final
         void save(T time, const SimulatorPoint<2, T>& point);
 
 public:
-        Position(std::string name, color::RGB8 color, PositionFilter<T>&& filter);
+        Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter);
 
         void update(
                 const ProcessMeasurement<2, T>& measurement,
-                T position_measurement_variance,
+                T position_variance,
                 const SimulatorPoint<2, T>& point);
 
-        [[nodiscard]] const PositionFilter<T>& filter() const;
+        [[nodiscard]] T angle() const;
+        [[nodiscard]] T angle_p() const;
+        [[nodiscard]] Vector<2, T> position() const;
+        [[nodiscard]] Vector<2, T> velocity() const;
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& position() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
 };
 }

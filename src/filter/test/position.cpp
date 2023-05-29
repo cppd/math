@@ -22,27 +22,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<T>::Position(std::string name, color::RGB8 color, PositionFilter<T>&& filter)
+Position<T>::Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           filter_(std::move(filter))
 {
+        ASSERT(filter_);
 }
 
 template <typename T>
 void Position<T>::save(const T time, const SimulatorPoint<2, T>& point)
 {
-        const Vector<2, T> p = filter_.position();
+        const Vector<2, T> p = filter_->position();
         position_.push_back({time, p[0], p[1]});
-        speed_.push_back({time, filter_.speed()});
+        speed_.push_back({time, filter_->speed()});
 
-        nees_position_.add(point.position - filter_.position(), filter_.position_p());
+        nees_position_.add(point.position - filter_->position(), filter_->position_p());
 }
 
 template <typename T>
 void Position<T>::update(
         const ProcessMeasurement<2, T>& measurement,
-        const T position_measurement_variance,
+        const T position_variance,
         const SimulatorPoint<2, T>& point)
 {
         ASSERT(!last_time_ || *last_time_ < measurement.time);
@@ -55,16 +56,34 @@ void Position<T>::update(
         const T delta = last_time_ ? (measurement.time - *last_time_) : 0;
         last_time_ = measurement.time;
 
-        filter_.predict(delta);
-        filter_.update(*measurement.position, position_measurement_variance);
+        filter_->predict(delta);
+        filter_->update(*measurement.position, position_variance);
 
         save(measurement.time, point);
 }
 
 template <typename T>
-const PositionFilter<T>& Position<T>::filter() const
+T Position<T>::angle() const
 {
-        return filter_;
+        return filter_->angle();
+}
+
+template <typename T>
+T Position<T>::angle_p() const
+{
+        return filter_->angle_p();
+}
+
+template <typename T>
+Vector<2, T> Position<T>::position() const
+{
+        return filter_->position();
+}
+
+template <typename T>
+Vector<2, T> Position<T>::velocity() const
+{
+        return filter_->velocity();
 }
 
 template <typename T>
@@ -86,13 +105,13 @@ std::string Position<T>::nees_string() const
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Position<T>::position() const
+const std::vector<Vector<3, T>>& Position<T>::positions() const
 {
         return position_;
 }
 
 template <typename T>
-const std::vector<Vector<2, T>>& Position<T>::speed() const
+const std::vector<Vector<2, T>>& Position<T>::speeds() const
 {
         return speed_;
 }

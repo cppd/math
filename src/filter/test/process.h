@@ -68,7 +68,7 @@ public:
 
         [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
         [[nodiscard]] std::string nees_string() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& position() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speed() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
 };
 }

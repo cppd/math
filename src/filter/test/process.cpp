@@ -134,12 +134,12 @@ std::string Process<T>::nees_string() const
         return s;
 }
 template <typename T>
-const std::vector<Vector<3, T>>& Process<T>::position() const
+const std::vector<Vector<3, T>>& Process<T>::positions() const
 {
         return position_;
 }
 template <typename T>
-const std::vector<Vector<2, T>>& Process<T>::speed() const
+const std::vector<Vector<2, T>>& Process<T>::speeds() const
 {
         return speed_;
 }
