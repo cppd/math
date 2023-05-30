@@ -63,16 +63,12 @@ class Simulator final
         Vector<N, T> acceleration_;
         T angle_;
 
-        [[nodiscard]] Velocity velocity(const T time) const
+        [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
-                constexpr T S = 100;
-                return {.magnitude = speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30)),
-                        .angle = std::cos((std::max<T>(0, time - S)) * (PI<T> / 45))};
-        }
-
-        [[nodiscard]] Velocity add_noise(const Velocity& velocity)
-        {
-                return {.magnitude = velocity.magnitude + speed_nd_(engine_), .angle = velocity.angle};
+                static constexpr T S = 100;
+                const T magnitude = std::max<T>(0, speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30)));
+                const T angle = std::cos((std::max<T>(0, time - S)) * (PI<T> / 45));
+                return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle};
         }
 
         [[nodiscard]] Vector<2, T> to_vector(const Velocity& v) const
@@ -102,8 +98,8 @@ public:
                   measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
                   measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
                   measurements_speed_nd_(0, std::sqrt(track_measurement_variance.speed)),
-                  velocity_(add_noise(velocity(time_))),
-                  next_velocity_(add_noise(velocity(time_ + dt_))),
+                  velocity_(velocity_with_noise(time_)),
+                  next_velocity_(velocity_with_noise(time_ + dt_)),
                   acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_)
         {
         }
@@ -115,7 +111,7 @@ public:
                 position_ = position_ + dt_ * to_vector(velocity_) + (square(dt_) / 2) * acceleration_;
 
                 velocity_ = next_velocity_;
-                next_velocity_ = add_noise(velocity(time_ + dt_));
+                next_velocity_ = velocity_with_noise(time_ + dt_);
                 acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
 
                 angle_ = -T{3} - time_ * direction_bias_drift_;
@@ -169,7 +165,6 @@ Track<N, T> generate_track(
         const TrackInfo<T>& info,
         const TrackMeasurementVariance<T>& measurement_variance)
 {
-        ASSERT(info.speed_min >= 0);
         ASSERT(info.speed_max >= info.speed_min);
 
         Simulator<N, T> simulator(info, measurement_variance);
