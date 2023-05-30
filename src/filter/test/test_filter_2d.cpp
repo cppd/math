@@ -67,7 +67,7 @@ struct Config final
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
 
-        static constexpr std::array<T, 2> UKF_ALPHAS{0.1, 1.0};
+        static constexpr std::array UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
 };
 
 template <typename T>
