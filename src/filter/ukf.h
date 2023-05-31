@@ -26,6 +26,7 @@ Kalman and Bayesian Filters in Python.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -87,6 +88,19 @@ Matrix<N, M, T> state_measurement_cross_covariance(
         }
         return res;
 }
+
+template <std::size_t N, typename T>
+void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(p(i, i) > 0))
+                {
+                        error(std::string(name) + ", diagonal is not positive\nx\n" + to_string(x) + "\np\n"
+                              + to_string(p));
+                }
+        }
+}
 }
 
 template <std::size_t N, typename T, typename SigmaPoints, typename AddX, typename MeanX, typename ResidualX>
@@ -137,6 +151,9 @@ public:
                   x_(x),
                   p_(p)
         {
+                namespace impl = ukf_implementation;
+
+                impl::check_x_p("UKF constructor", x_, p_);
         }
 
         [[nodiscard]] const Vector<N, T>& x() const
@@ -169,6 +186,8 @@ public:
 
                 std::tie(x_, p_) = impl::unscented_transform(
                         sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, mean_x_, residual_x_);
+
+                impl::check_x_p("UKF predict", x_, p_);
         }
 
         template <std::size_t M, typename H, typename MeanZ, typename ResidualZ>
@@ -207,6 +226,8 @@ public:
                 const auto [x_z, p_z] = impl::unscented_transform(
                         sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, mean_z, residual_z);
 
+                impl::check_x_p("UKF update measurement", x_z, p_z);
+
                 const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
                         sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, residual_x_, residual_z);
 
@@ -214,6 +235,8 @@ public:
 
                 x_ = add_x_(x_, k * residual_z(z, x_z));
                 p_ = p_ - p_xz * k.transposed();
+
+                impl::check_x_p("UKF update", x_, p_);
         }
 };
 }
