@@ -80,7 +80,7 @@ template <std::size_t N, typename T>
 
                 if (!(v >= 0))
                 {
-                        throw CholeskyException("sqrt(" + to_string(v) + ")");
+                        throw CholeskyException("sqrt(" + to_string(v) + ")\n" + to_string(a) + "\n" + to_string(l));
                 }
 
                 l(k, k) = std::sqrt(v);
