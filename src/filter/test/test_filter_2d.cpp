@@ -70,40 +70,79 @@ struct Config final
         static constexpr std::array UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
 };
 
-template <typename T>
-std::string make_annotation()
+template <std::size_t N, typename T>
+std::string make_annotation(const std::vector<ProcessMeasurement<N, T>>& measurements)
 {
+        bool position = false;
+        bool speed = false;
+        bool direction = false;
+        bool acceleration = false;
+        for (const ProcessMeasurement<N, T>& m : measurements)
+        {
+                position = position || m.position.has_value();
+                speed = speed || m.speed.has_value();
+                direction = direction || m.direction.has_value();
+                acceleration = acceleration || m.acceleration.has_value();
+        }
+        if (!position)
+        {
+                error("No position measurements");
+        }
+
         constexpr std::string_view DEGREE = "&#x00b0;";
         constexpr std::string_view SIGMA = "&#x03c3;";
         std::ostringstream oss;
         oss << "<b>update</b>";
         oss << "<br>";
         oss << "position: " << 1 / Config<T>::POSITION_DT << " Hz";
-        oss << "<br>";
-        oss << "speed: " << 1 / Config<T>::SPEED_DT << " Hz";
-        oss << "<br>";
-        oss << "direction: " << 1 / Config<T>::DT << " Hz";
-        oss << "<br>";
-        oss << "acceleration: " << 1 / Config<T>::DT << " Hz";
-        oss << "<br>";
-        oss << "<br>";
-        oss << "<b>bias</b>";
-        oss << "<br>";
-        oss << "direction drift: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_BIAS_DRIFT) << " " << DEGREE
-            << "/h";
-        oss << "<br>";
-        oss << "direction angle: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_ANGLE) << DEGREE;
+        if (speed)
+        {
+                oss << "<br>";
+                oss << "speed: " << 1 / Config<T>::SPEED_DT << " Hz";
+        }
+        if (direction)
+        {
+                oss << "<br>";
+                oss << "direction: " << 1 / Config<T>::DT << " Hz";
+        }
+        if (acceleration)
+        {
+                oss << "<br>";
+                oss << "acceleration: " << 1 / Config<T>::DT << " Hz";
+        }
+        if (direction || acceleration)
+        {
+                oss << "<br>";
+                oss << "<br>";
+                oss << "<b>bias</b>";
+                oss << "<br>";
+                oss << "direction drift: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_BIAS_DRIFT) << " " << DEGREE
+                    << "/h";
+                oss << "<br>";
+                oss << "direction angle: " << radians_to_degrees(Config<T>::TRACK_DIRECTION_ANGLE) << DEGREE;
+        }
         oss << "<br>";
         oss << "<br>";
         oss << "<b>" << SIGMA << "</b>";
         oss << "<br>";
         oss << "position: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_VARIANCE) << " m";
-        oss << "<br>";
-        oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_SPEED_VARIANCE) << " m/s";
-        oss << "<br>";
-        oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE)) << DEGREE;
-        oss << "<br>";
-        oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_ACCELERATION_VARIANCE) << " m/s<sup>2</sup>";
+        if (speed)
+        {
+                oss << "<br>";
+                oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_SPEED_VARIANCE) << " m/s";
+        }
+        if (direction)
+        {
+                oss << "<br>";
+                oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE))
+                    << DEGREE;
+        }
+        if (acceleration)
+        {
+                oss << "<br>";
+                oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_ACCELERATION_VARIANCE)
+                    << " m/s<sup>2</sup>";
+        }
         return oss.str();
 }
 
@@ -128,7 +167,7 @@ void write_to_file(const Track<2, T>& track, const Position<T>& position, const 
                          .position = process.positions()});
         }
 
-        view::write_to_file(make_annotation<T>(), track, Config<T>::DATA_CONNECT_INTERVAL, filters);
+        view::write_to_file(make_annotation(track.measurements), track, Config<T>::DATA_CONNECT_INTERVAL, filters);
 }
 
 template <std::size_t N, typename T>
