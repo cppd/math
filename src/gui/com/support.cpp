@@ -263,8 +263,8 @@ std::array<double, 2> widget_size(const QWidget* const widget)
         const double height_mm = widget->heightMM();
 
         const double logical_ppi = widget->logicalDpiX();
-        const double width = pixels_to_millimeters(widget->width(), logical_ppi);
-        const double height = pixels_to_millimeters(widget->height(), logical_ppi);
+        const double width = pixels_to_millimeters<double>(widget->width(), logical_ppi);
+        const double height = pixels_to_millimeters<double>(widget->height(), logical_ppi);
         const double rel_w = std::abs(width_mm - width) / std::max(std::abs(width_mm), std::abs(width));
         const double rel_h = std::abs(height_mm - height) / std::max(std::abs(height_mm), std::abs(height));
         if (!(rel_w < 0.01 && rel_h < 0.01))

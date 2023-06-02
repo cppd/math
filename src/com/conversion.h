@@ -23,28 +23,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-inline int points_to_pixels(const double points, const double pixels_per_inch)
+template <typename T>
+[[nodiscard]] int points_to_pixels(const T points, const T pixels_per_inch)
 {
-        return std::lround(points / 72.0 * pixels_per_inch);
-}
+        static_assert(std::is_floating_point_v<T>);
 
-inline int millimeters_to_pixels(const double millimeters, const double pixels_per_inch)
-{
-        return std::lround(millimeters / 25.4 * pixels_per_inch);
-}
-
-constexpr double pixels_to_millimeters(const double pixels, const double pixels_per_inch)
-{
-        return pixels / pixels_per_inch * 25.4;
-}
-
-constexpr double size_to_ppi(const double size_in_mm, const unsigned size_in_pixels)
-{
-        return size_in_pixels / size_in_mm * 25.4;
+        return std::lround(points / 72 * pixels_per_inch);
 }
 
 template <typename T>
-constexpr T radians_to_degrees(const T angle)
+[[nodiscard]] int millimeters_to_pixels(const T millimeters, const T pixels_per_inch)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return std::lround(millimeters / T{25.4L} * pixels_per_inch);
+}
+
+template <typename T>
+[[nodiscard]] constexpr T pixels_to_millimeters(const T pixels, const T pixels_per_inch)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return pixels / pixels_per_inch * T{25.4L};
+}
+
+template <typename T>
+[[nodiscard]] constexpr T size_to_ppi(const T size_in_mm, const unsigned size_in_pixels)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return size_in_pixels / size_in_mm * T{25.4L};
+}
+
+template <typename T>
+[[nodiscard]] constexpr T radians_to_degrees(const T angle)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -52,10 +64,18 @@ constexpr T radians_to_degrees(const T angle)
 }
 
 template <typename T>
-constexpr T degrees_to_radians(const T angle)
+[[nodiscard]] constexpr T degrees_to_radians(const T angle)
 {
         static_assert(std::is_floating_point_v<T>);
 
         return angle * (PI<T> / 180);
+}
+
+template <typename T>
+[[nodiscard]] constexpr T mps_to_kph(const T mps)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return T{3.6L} * mps;
 }
 }

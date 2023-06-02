@@ -32,12 +32,6 @@ namespace ns::filter::test::view
 namespace converters_implementation
 {
 template <typename T>
-T speed_kph(const T speed_mps)
-{
-        return T{3.6L} * speed_mps;
-}
-
-template <typename T>
 T time_unit(const T time)
 {
         return 10 * time;
@@ -98,7 +92,7 @@ std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
         res.reserve(track.points.size());
         for (const SimulatorPoint<2, T>& p : track.points)
         {
-                res.emplace_back(impl::time_unit(p.time), impl::speed_kph(p.speed));
+                res.emplace_back(impl::time_unit(p.time), mps_to_kph(p.speed));
         }
         return res;
 }
@@ -145,7 +139,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
                 {
                         res.emplace_back();
                 }
-                res.push_back(Vector<2, T>(impl::time_unit(m.time), impl::speed_kph(*m.speed)));
+                res.push_back(Vector<2, T>(impl::time_unit(m.time), mps_to_kph(*m.speed)));
                 last_time = m.time;
         }
         return res;
@@ -254,7 +248,7 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
         {
                 if (s)
                 {
-                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), impl::speed_kph((*s)[1])));
+                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), mps_to_kph((*s)[1])));
                 }
                 else
                 {

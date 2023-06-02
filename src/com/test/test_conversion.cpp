@@ -28,49 +28,56 @@ namespace ns
 {
 namespace
 {
-static_assert(381 == size_to_ppi(10, 150));
-static_assert(25.4 / 15 == size_to_ppi(150, 10));
-static_assert(25.4 / 15 == pixels_to_millimeters(10, 150));
-static_assert(381 == pixels_to_millimeters(150, 10));
+template <typename T>
+void compare(const T a, const T b, const T precision)
+{
+        const T abs = std::abs(a - b);
+        if (!(abs <= precision))
+        {
+                error("Conversion abs error: " + to_string(a) + " is not equal to " + to_string(b));
+        }
+
+        const T rel = abs / std::max(std::abs(a), std::abs(b));
+        if (!(rel <= precision))
+        {
+                error("Conversion rel error: " + to_string(a) + " is not equal to " + to_string(b));
+        }
+}
 
 template <typename T>
-struct Test final
+void test(const T precision)
 {
+        static_assert(T{10} / 150 * T{25.4L} == pixels_to_millimeters<T>(10, 150));
+        static_assert(381 == pixels_to_millimeters<T>(150, 10));
+        static_assert(381 == size_to_ppi<T>(10, 150));
+        static_assert(T{10} / 150 * T{25.4L} == size_to_ppi<T>(150, 10));
         static_assert(radians_to_degrees(2 * PI<T>) == 360);
         static_assert(degrees_to_radians(T{360}) == 2 * PI<T>);
-};
+        static_assert(mps_to_kph(T{10}) == 36);
 
-template struct Test<float>;
-template struct Test<double>;
-template struct Test<long double>;
-
-void compare(const double a, const double b)
-{
-        const double abs = std::abs(a - b);
-        if (!(abs < 1e-10))
+        const auto cmp = [&](const T a, const T b)
         {
-                error("Conversion error: " + to_string(a) + " is not equal to " + to_string(b));
-        }
+                compare(a, b, precision);
+        };
 
-        const double rel = abs / std::max(std::abs(a), std::abs(b));
-        if (!(rel < 1e-10))
-        {
-                error("Conversion error: " + to_string(a) + " is not equal to " + to_string(b));
-        }
+        cmp(21, points_to_pixels<T>(10, 150));
+        cmp(21, points_to_pixels<T>(150, 10));
+        cmp(59, millimeters_to_pixels<T>(10, 150));
+        cmp(59, millimeters_to_pixels<T>(150, 10));
+        cmp(381, size_to_ppi<T>(10, 150));
+        cmp(25.4L / 15, size_to_ppi<T>(150, 10));
+        cmp(25.4L / 15, pixels_to_millimeters<T>(10, 150));
+        cmp(381, pixels_to_millimeters<T>(150, 10));
+        cmp(36, mps_to_kph<T>(10));
 }
 
-void test()
+void test_conversion()
 {
-        compare(21, points_to_pixels(10, 150));
-        compare(21, points_to_pixels(150, 10));
-        compare(59, millimeters_to_pixels(10, 150));
-        compare(59, millimeters_to_pixels(150, 10));
-        compare(381, size_to_ppi(10, 150));
-        compare(25.4 / 15, size_to_ppi(150, 10));
-        compare(25.4 / 15, pixels_to_millimeters(10, 150));
-        compare(381, pixels_to_millimeters(150, 10));
+        test<float>(1e-6);
+        test<double>(1e-15);
+        test<long double>(1e-18);
 }
 
-TEST_SMALL("Conversion", test)
+TEST_SMALL("Conversion", test_conversion)
 }
 }
