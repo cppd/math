@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Roger R Labbe Jr.
+Kalman and Bayesian Filters in Python.
+
+6.9 The Kalman Filter Equations
+7.4 Stable Compution of the Posterior Covariance
+11.1 Linearizing the Kalman Filter
+*/
+
 #pragma once
 
 #include <src/numerical/matrix.h>
@@ -105,13 +114,18 @@ public:
                 // Measurement function
                 const Matrix<M, N, T>& h,
                 // Measurement function transposed
-                const Matrix<N, M, T>& h_t,
+                const Matrix<N, M, T>& ht,
                 // measurement covariance
                 const Matrix<M, M, T>& r,
                 // Measurement
                 const Vector<M, T>& z)
         {
-                const Matrix<N, M, T> k = p_ * h_t * (h * p_ * h_t + r).inversed();
+                const Matrix<N, M, T> k = [&]()
+                {
+                        const Matrix<N, M, T> p_ht = p_ * ht;
+                        return p_ht * (h * p_ht + r).inversed();
+                }();
+
                 x_ = x_ + k * (z - h * x_);
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
@@ -144,9 +158,13 @@ public:
                 const ResidualZ residual_z)
         {
                 const Matrix<M, N, T> hjx = hj(x_);
-                const Matrix<N, M, T> hjx_t = hjx.transposed();
 
-                const Matrix<N, M, T> k = p_ * hjx_t * (hjx * p_ * hjx_t + r).inversed();
+                const Matrix<N, M, T> k = [&]()
+                {
+                        const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
+                        return p_hjxt * (hjx * p_hjxt + r).inversed();
+                }();
+
                 x_ = add_x(x_, k * residual_z(z, h(x_)));
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
