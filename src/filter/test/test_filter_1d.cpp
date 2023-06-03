@@ -183,9 +183,11 @@ void check_distribution(
         }
 }
 
-template <typename T>
+template <typename T, bool INF>
 class TestLkf
 {
+        static constexpr T INFINITY_PARAMETER = INF ? 0.01L : 0;
+
         const T dt_;
 
         const Matrix<2, 2, T> f_{
@@ -204,6 +206,8 @@ class TestLkf
         Ekf<2, T> filter_;
 
 public:
+        using Type = T;
+
         TestLkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
@@ -219,7 +223,7 @@ public:
         void process(const T measurement)
         {
                 filter_.predict(f_, f_t_, q_);
-                filter_.update(h_, h_t_, r_, Vector<1, T>(measurement));
+                filter_.update(h_, h_t_, r_, Vector<1, T>(measurement), INFINITY_PARAMETER);
         }
 
         [[nodiscard]] T x() const
@@ -234,13 +238,19 @@ public:
 
         static std::string name()
         {
-                return "LKF";
+                if (!INF)
+                {
+                        return "LKF";
+                }
+                return "LINEAR_H_INFINITY";
         }
 };
 
-template <typename T>
+template <typename T, bool INF>
 class TestEkf
 {
+        static constexpr T INFINITY_PARAMETER = INF ? 0.01L : 0;
+
         const T dt_;
 
         const Matrix<2, 2, T> q_;
@@ -249,6 +259,8 @@ class TestEkf
         Ekf<2, T> filter_;
 
 public:
+        using Type = T;
+
         TestEkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
@@ -295,7 +307,7 @@ public:
                 };
 
                 filter_.predict(f, f_jacobian, q_);
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Subtract());
+                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Subtract(), INFINITY_PARAMETER);
         }
 
         [[nodiscard]] T x() const
@@ -310,7 +322,11 @@ public:
 
         static std::string name()
         {
-                return "EKF";
+                if (!INF)
+                {
+                        return "EKF";
+                }
+                return "EXTENDED_H_INFINITY";
         }
 };
 
@@ -329,6 +345,8 @@ class TestUkf
         Ukf<2, T, SigmaPoints<2, T, Add, Subtract>, Add, Mean, Subtract> filter_;
 
 public:
+        using Type = T;
+
         TestUkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
@@ -376,13 +394,15 @@ public:
         }
 };
 
-template <typename T, template <typename> typename Filter>
+template <typename Filter>
 void test_impl(
-        const std::type_identity_t<T> precision,
-        const std::type_identity_t<T> expected_deviation,
-        const std::type_identity_t<T> deviation_count,
+        const typename Filter::Type precision,
+        const typename Filter::Type expected_deviation,
+        const typename Filter::Type deviation_count,
         const std::vector<unsigned>& expected_distribution)
 {
+        using T = typename Filter::Type;
+
         constexpr T DT = 1;
         constexpr T VELOCITY_MEAN = 1;
         constexpr T VELOCITY_VARIANCE = power<2>(0.1);
@@ -399,7 +419,7 @@ void test_impl(
                 {  0, 50}
         };
 
-        Filter<T> filter(DT, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, X, P);
+        Filter filter(DT, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, X, P);
 
         std::unordered_map<int, unsigned> distribution;
 
@@ -441,9 +461,11 @@ template <typename T>
 void test_impl(const std::type_identity_t<T> precision)
 {
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
-        test_impl<T, TestLkf>(precision, 1.4306576889002234962L, 5, distribution);
-        test_impl<T, TestEkf>(precision, 1.4306576889002234962L, 5, distribution);
-        test_impl<T, TestUkf>(precision, 1.43670888967218343853L, 5, distribution);
+        test_impl<TestLkf<T, false>>(precision, 1.4306576889002234962L, 5, distribution);
+        test_impl<TestLkf<T, true>>(precision, 1.43098764352003224212L, 5, distribution);
+        test_impl<TestEkf<T, false>>(precision, 1.4306576889002234962L, 5, distribution);
+        test_impl<TestEkf<T, true>>(precision, 1.43098764352003224212L, 5, distribution);
+        test_impl<TestUkf<T>>(precision, 1.43670888967218343853L, 5, distribution);
 }
 
 void test()

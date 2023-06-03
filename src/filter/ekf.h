@@ -24,6 +24,24 @@ Kalman and Bayesian Filters in Python.
 11.1 Linearizing the Kalman Filter
 */
 
+/*
+Dan Simon.
+Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
+John Wiley & Sons, 2006.
+
+5 The discrete-time Kalman filter
+11 The H infinity filter
+*/
+
+/*
+Edited by Vincenzo Pesce, Andrea Colagrossi, Stefano Silvestrini.
+Modern Spacecraft Guidance, Navigation, and Control.
+Elsevier, 2023.
+
+9 Navigation
+Sequential filters
+*/
+
 #pragma once
 
 #include <src/numerical/matrix.h>
@@ -118,17 +136,26 @@ public:
                 // measurement covariance
                 const Matrix<M, M, T>& r,
                 // Measurement
-                const Vector<M, T>& z)
+                const Vector<M, T>& z,
+                // H infinity parameter
+                const T theta = 0)
         {
+                static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
+
                 const Matrix<N, M, T> k = [&]()
                 {
-                        const Matrix<N, M, T> p_ht = p_ * ht;
-                        return p_ht * (h * p_ht + r).inversed();
+                        if (theta == 0)
+                        {
+                                const Matrix<N, M, T> p_ht = p_ * ht;
+                                return p_ht * (h * p_ht + r).inversed();
+                        }
+                        const Matrix<N, M, T> ht_ri = ht * r.inversed();
+                        return p_ * (I - theta * p_ + ht_ri * h * p_).inversed() * ht_ri;
                 }();
 
                 x_ = x_ + k * (z - h * x_);
 
-                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
+                const Matrix<N, N, T> i_kh = I - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
@@ -155,19 +182,28 @@ public:
                 // Vector<M, T> operator()(
                 //   const Vector<M, T>& a,
                 //   const Vector<M, T>& b) const
-                const ResidualZ residual_z)
+                const ResidualZ residual_z,
+                // H infinity parameter
+                const T theta = 0)
         {
+                static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
+
                 const Matrix<M, N, T> hjx = hj(x_);
 
                 const Matrix<N, M, T> k = [&]()
                 {
-                        const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
-                        return p_hjxt * (hjx * p_hjxt + r).inversed();
+                        if (theta == 0)
+                        {
+                                const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
+                                return p_hjxt * (hjx * p_hjxt + r).inversed();
+                        }
+                        const Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
+                        return p_ * (I - theta * p_ + ht_ri * hjx * p_).inversed() * ht_ri;
                 }();
 
                 x_ = add_x(x_, k * residual_z(z, h(x_)));
 
-                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
+                const Matrix<N, N, T> i_kh = I - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 };
