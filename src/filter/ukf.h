@@ -36,8 +36,22 @@ namespace ns::filter
 {
 namespace ukf_implementation
 {
+template <std::size_t N, typename T>
+[[nodiscard]] bool positive_definite(const Matrix<N, N, T>& p)
+{
+        // this is insufficient check based on diagonal only
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(p(i, i) > 0))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
-std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
+[[nodiscard]] std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
         const std::array<Vector<N, T>, POINT_COUNT>& points,
         const Vector<POINT_COUNT, T>& wm,
         const Vector<POINT_COUNT, T>& wc,
@@ -64,7 +78,7 @@ std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
 }
 
 template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typename ResidualX, typename ResidualZ>
-Matrix<N, M, T> state_measurement_cross_covariance(
+[[nodiscard]] Matrix<N, M, T> state_measurement_cross_covariance(
         const Vector<POINT_COUNT, T>& wc,
         const std::array<Vector<N, T>, POINT_COUNT>& sigmas_f,
         const Vector<N, T>& x,
@@ -92,13 +106,9 @@ Matrix<N, M, T> state_measurement_cross_covariance(
 template <std::size_t N, typename T>
 void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
 {
-        for (std::size_t i = 0; i < N; ++i)
+        if (!positive_definite(p))
         {
-                if (!(p(i, i) > 0))
-                {
-                        error(std::string(name) + ", diagonal is not positive\nx\n" + to_string(x) + "\np\n"
-                              + to_string(p));
-                }
+                error(std::string(name) + ", diagonal is not positive\nx\n" + to_string(x) + "\np\n" + to_string(p));
         }
 }
 }
