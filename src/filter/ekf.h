@@ -51,23 +51,51 @@ namespace ns::filter
 {
 namespace ekf_implementation
 {
-struct Residual final
+template <std::size_t N, typename T>
+[[nodiscard]] bool positive_definite(const Matrix<N, N, T>& p)
 {
-        template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        // this is insufficient check based on diagonal only
+        for (std::size_t i = 0; i < N; ++i)
         {
-                return a - b;
+                if (!(p(i, i) > 0))
+                {
+                        return false;
+                }
         }
-};
+        return true;
+}
 
-struct Add final
+// Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
+// 11 The H infinity filter
+// 11.89, 11.90
+// Modern Spacecraft Guidance, Navigation, and Control.
+// H infinity filter
+template <std::size_t N, std::size_t M, typename T>
+[[nodiscard]] Matrix<N, M, T> h_infinity_k(
+        const char* const name,
+        const T theta,
+        const Matrix<N, N, T>& p,
+        const Matrix<M, N, T>& h,
+        const Matrix<N, M, T>& ht_ri)
 {
-        template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
+
+        const Matrix<N, N, T> m = p.inversed() - theta * I + ht_ri * h;
+        if (!positive_definite(m))
         {
-                return a + b;
+                error(std::string(name) + ", H infinity condition is not hold\n" + to_string(m));
         }
-};
+        return p * (I - theta * p + ht_ri * h * p).inversed() * ht_ri;
+}
+
+template <std::size_t N, typename T>
+void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
+{
+        if (!positive_definite(p))
+        {
+                error(std::string(name) + ", P is not positive definite\nx\n" + to_string(x) + "\nP\n" + to_string(p));
+        }
+}
 }
 
 template <std::size_t N, typename T>
@@ -104,8 +132,12 @@ public:
                 // Process covariance
                 const Matrix<N, N, T>& q)
         {
+                namespace impl = ekf_implementation;
+
                 x_ = f * x_;
                 p_ = f * p_ * f_t + q;
+
+                impl::check_x_p("LKF predict", x_, p_);
         }
 
         template <typename F, typename FJ>
@@ -121,10 +153,14 @@ public:
                 // Process covariance
                 const Matrix<N, N, T>& q)
         {
+                namespace impl = ekf_implementation;
+
                 x_ = f(x_);
 
                 const Matrix<N, N, T> fjx = fj(x_);
                 p_ = fjx * p_ * fjx.transposed() + q;
+
+                impl::check_x_p("EKF predict", x_, p_);
         }
 
         template <std::size_t M>
@@ -140,7 +176,7 @@ public:
                 // H infinity parameter
                 const T theta = 0)
         {
-                static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
+                namespace impl = ekf_implementation;
 
                 const Matrix<N, M, T> k = [&]()
                 {
@@ -150,13 +186,15 @@ public:
                                 return p_ht * (h * p_ht + r).inversed();
                         }
                         const Matrix<N, M, T> ht_ri = ht * r.inversed();
-                        return p_ * (I - theta * p_ + ht_ri * h * p_).inversed() * ht_ri;
+                        return impl::h_infinity_k("LKF update", theta, p_, h, ht_ri);
                 }();
 
                 x_ = x_ + k * (z - h * x_);
 
-                const Matrix<N, N, T> i_kh = I - k * h;
+                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
+
+                impl::check_x_p("LKF update", x_, p_);
         }
 
         template <std::size_t M, typename H, typename HJ, typename ResidualZ, typename AddX>
@@ -186,7 +224,7 @@ public:
                 // H infinity parameter
                 const T theta = 0)
         {
-                static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
+                namespace impl = ekf_implementation;
 
                 const Matrix<M, N, T> hjx = hj(x_);
 
@@ -198,13 +236,15 @@ public:
                                 return p_hjxt * (hjx * p_hjxt + r).inversed();
                         }
                         const Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
-                        return p_ * (I - theta * p_ + ht_ri * hjx * p_).inversed() * ht_ri;
+                        return impl::h_infinity_k("EKF update", theta, p_, hjx, ht_ri);
                 }();
 
                 x_ = add_x(x_, k * residual_z(z, h(x_)));
 
-                const Matrix<N, N, T> i_kh = I - k * hjx;
+                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
+
+                impl::check_x_p("EKF update", x_, p_);
         }
 };
 }
