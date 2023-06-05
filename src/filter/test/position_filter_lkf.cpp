@@ -121,6 +121,7 @@ template <typename T>
 class Filter final : public PositionFilter<T>
 {
         Ekf<6, T> filter_;
+        T theta_;
         T process_variance_;
 
         void predict(const T dt) override
@@ -134,7 +135,7 @@ class Filter final : public PositionFilter<T>
         {
                 ASSERT(position_variance >= 0);
                 ASSERT(position.is_finite());
-                filter_.update(H<T>, H_T<T>, r(position_variance), position);
+                filter_.update(H<T>, H_T<T>, r(position_variance), position, theta_);
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -175,8 +176,9 @@ class Filter final : public PositionFilter<T>
         }
 
 public:
-        Filter(const PositionFilterInit<T>& init, const T process_variance)
+        Filter(const PositionFilterInit<T>& init, const T theta, const T process_variance)
                 : filter_(x(init), p(init)),
+                  theta_(theta),
                   process_variance_(process_variance)
         {
                 ASSERT(process_variance >= 0);
@@ -187,13 +189,14 @@ public:
 template <typename T>
 std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
         const PositionFilterInit<T>& init,
+        const T theta,
         const T process_variance)
 {
-        return std::make_unique<Filter<T>>(init, process_variance);
+        return std::make_unique<Filter<T>>(init, theta, process_variance);
 }
 
 #define TEMPLATE(T) \
-        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const PositionFilterInit<T>&, T);
+        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const PositionFilterInit<T>&, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

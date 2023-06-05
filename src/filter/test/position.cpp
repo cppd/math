@@ -101,7 +101,7 @@ color::RGB8 Position<T>::color() const
 template <typename T>
 std::string Position<T>::nees_string() const
 {
-        return "Position Filter: " + nees_position_.check_string();
+        return "Position " + name_ + " Position: " + nees_position_.check_string();
 }
 
 template <typename T>
