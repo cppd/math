@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/sort.h>
-#include <src/com/type/limit.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -62,14 +61,13 @@ struct Config final
         static constexpr T MEASUREMENT_SPEED_VARIANCE = square(0.2);
 
         static constexpr T POSITION_FILTER_VARIANCE = square(0.5);
-        static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr std::array POSITION_THETAS = std::to_array<T>({0});
+        static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(10.0));
+        static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
-
-        static constexpr std::array UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
+        static constexpr std::array PROCESS_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
 };
 
 template <std::size_t N, typename T>
@@ -290,6 +288,7 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
         }
 
         const Position<T>* angle_position = nullptr;
+        T angle_p = Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE;
 
         for (; iter != track.measurements.cend(); ++iter)
         {
@@ -303,31 +302,24 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
                         continue;
                 }
 
+                const bool direction =
+                        direction_iter && (iter->time - (*direction_iter)->time <= DIRECTION_TIME_DIFFERENCE)
+                        && (*direction_iter)->direction;
+
                 for (Position<T>& position : *positions)
                 {
                         position.update(
                                 *iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
                                 track.points[iter->simulator_point_index]);
-                }
 
-                if (!direction_iter || !(iter->time - (*direction_iter)->time <= DIRECTION_TIME_DIFFERENCE)
-                    || !(*direction_iter)->direction)
-                {
-                        continue;
-                }
-
-                for (const Position<T>& position : *positions)
-                {
                         LOG(to_string(iter->time) + "; " + position.name()
                             + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.angle_p()))));
-                }
 
-                for (const Position<T>& position : *positions)
-                {
-                        if (position.angle_p() < Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE)
+                        const T position_angle_p = position.angle_p();
+                        if (direction && (position_angle_p < angle_p))
                         {
                                 angle_position = &position;
-                                break;
+                                angle_p = position_angle_p;
                         }
                 }
 
@@ -339,7 +331,8 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
 
         if (iter == track.measurements.cend())
         {
-                error("Failed to estimate direction");
+                LOG("Failed to estimate direction");
+                return {iter, 0, Vector<2, T>(0), Vector<2, T>(0)};
         }
 
         ASSERT(angle_position);
@@ -391,7 +384,7 @@ std::vector<Position<T>> create_positions(const Vector<2, T>& init_position, con
 
         std::vector<Position<T>> res;
 
-        const int precision = compute_precision(Config<T>::POSITION_THETAS);
+        const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
 
         const auto name = [&](const T theta)
         {
@@ -402,7 +395,7 @@ std::vector<Position<T>> create_positions(const Vector<2, T>& init_position, con
                 return oss.str();
         };
 
-        const auto thetas = sort(std::array(Config<T>::POSITION_THETAS));
+        const auto thetas = sort(std::array(Config<T>::POSITION_FILTER_THETAS));
         for (std::size_t i = 0; i < thetas.size(); ++i)
         {
                 ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
@@ -437,7 +430,7 @@ std::vector<Process<T>> create_processes(
         res.emplace_back(
                 "EKF", color::RGB8(0, 200, 0), create_process_filter_ekf<T>(init, process_pv, process_av, process_arv));
 
-        const int precision = compute_precision(Config<T>::UKF_ALPHAS);
+        const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
         const auto name = [&](const T alpha)
         {
@@ -448,7 +441,7 @@ std::vector<Process<T>> create_processes(
                 return oss.str();
         };
 
-        const auto alphas = sort(std::array(Config<T>::UKF_ALPHAS));
+        const auto alphas = sort(std::array(Config<T>::PROCESS_FILTER_UKF_ALPHAS));
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
@@ -466,25 +459,24 @@ void test_impl(const Track<2, T>& track)
 {
         ASSERT(!track.measurements.empty());
 
-        auto iter = find_position(track);
-        ASSERT(iter != track.measurements.cend() && iter->position);
+        const auto first_position_iter = find_position(track);
+        ASSERT(first_position_iter != track.measurements.cend() && first_position_iter->position);
 
         std::vector<Position<T>> positions =
-                create_positions(*iter->position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                create_positions(*first_position_iter->position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
 
-        ++iter;
+        const auto [first_process_iter, init_angle, init_position, init_velocity] =
+                estimate_direction(track, std::next(first_position_iter), &positions);
 
-        T angle_difference;
-        Vector<2, T> init_position;
-        Vector<2, T> init_velocity;
-        std::tie(iter, angle_difference, init_position, init_velocity) = estimate_direction(track, iter, &positions);
-        ASSERT(iter != track.measurements.cend());
+        std::vector<Process<T>> processes;
+        if (first_process_iter != track.measurements.cend())
+        {
+                processes = create_processes(
+                        init_position, init_velocity, init_angle, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+        }
 
-        std::vector<Process<T>> processes = create_processes(
-                init_position, init_velocity, angle_difference, Config<T>::MEASUREMENT_POSITION_VARIANCE);
-
-        ++iter;
-
+        auto iter =
+                first_process_iter != track.measurements.cend() ? std::next(first_process_iter) : first_process_iter;
         for (; iter != track.measurements.cend(); ++iter)
         {
                 const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
