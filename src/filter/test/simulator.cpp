@@ -87,17 +87,17 @@ class Simulator final
         }
 
 public:
-        Simulator(const TrackInfo<T>& info, const TrackMeasurementVariance<T>& track_measurement_variance)
+        explicit Simulator(const TrackInfo<T>& info)
                 : dt_(info.dt),
                   speed_m_((info.speed_min + info.speed_max) / 2),
                   speed_a_((info.speed_max - info.speed_min) / 2),
                   direction_bias_drift_(info.direction_bias_drift / (T{60} * T{60})),
                   direction_angle_(info.direction_angle),
                   speed_nd_(0, std::sqrt(info.speed_variance)),
-                  measurements_direction_nd_(0, std::sqrt(track_measurement_variance.direction)),
-                  measurements_acceleration_nd_(0, std::sqrt(track_measurement_variance.acceleration)),
-                  measurements_position_nd_(0, std::sqrt(track_measurement_variance.position)),
-                  measurements_speed_nd_(0, std::sqrt(track_measurement_variance.speed)),
+                  measurements_direction_nd_(0, std::sqrt(info.measurement_variance_direction)),
+                  measurements_acceleration_nd_(0, std::sqrt(info.measurement_variance_acceleration)),
+                  measurements_position_nd_(0, std::sqrt(info.measurement_variance_position)),
+                  measurements_speed_nd_(0, std::sqrt(info.measurement_variance_speed)),
                   velocity_(velocity_with_noise(time_)),
                   next_velocity_(velocity_with_noise(time_ + dt_)),
                   acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_)
@@ -160,14 +160,11 @@ public:
 }
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(
-        const std::size_t count,
-        const TrackInfo<T>& info,
-        const TrackMeasurementVariance<T>& measurement_variance)
+Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
 {
         ASSERT(info.speed_max >= info.speed_min);
 
-        Simulator<N, T> simulator(info, measurement_variance);
+        Simulator<N, T> simulator(info);
 
         Track<N, T> res;
         res.points.reserve(count);
@@ -196,8 +193,7 @@ Track<N, T> generate_track(
         return res;
 }
 
-#define TEMPLATE(T) \
-        template Track<2, T> generate_track(std::size_t, const TrackInfo<T>&, const TrackMeasurementVariance<T>&);
+#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, const TrackInfo<T>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

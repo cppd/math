@@ -55,10 +55,10 @@ struct Config final
         static constexpr T TRACK_DIRECTION_BIAS_DRIFT = degrees_to_radians(360.0);
         static constexpr T TRACK_DIRECTION_ANGLE = degrees_to_radians(30.0);
 
-        static constexpr T MEASUREMENT_DIRECTION_VARIANCE = square(degrees_to_radians(2.0));
-        static constexpr T MEASUREMENT_ACCELERATION_VARIANCE = square(1.0);
-        static constexpr T MEASUREMENT_POSITION_VARIANCE = square(20.0);
-        static constexpr T MEASUREMENT_SPEED_VARIANCE = square(0.2);
+        static constexpr T MEASUREMENT_VARIANCE_ACCELERATION = square(1.0);
+        static constexpr T MEASUREMENT_VARIANCE_DIRECTION = square(degrees_to_radians(2.0));
+        static constexpr T MEASUREMENT_VARIANCE_POSITION = square(20.0);
+        static constexpr T MEASUREMENT_VARIANCE_SPEED = square(0.2);
 
         static constexpr T POSITION_FILTER_VARIANCE = square(0.5);
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(10.0));
@@ -125,22 +125,22 @@ std::string make_annotation(const std::vector<ProcessMeasurement<N, T>>& measure
         oss << "<br>";
         oss << "<b>" << SIGMA << "</b>";
         oss << "<br>";
-        oss << "position: " << std::sqrt(Config<T>::MEASUREMENT_POSITION_VARIANCE) << " m";
+        oss << "position: " << std::sqrt(Config<T>::MEASUREMENT_VARIANCE_POSITION) << " m";
         if (speed)
         {
                 oss << "<br>";
-                oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_SPEED_VARIANCE) << " m/s";
+                oss << "speed: " << std::sqrt(Config<T>::MEASUREMENT_VARIANCE_SPEED) << " m/s";
         }
         if (direction)
         {
                 oss << "<br>";
-                oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_DIRECTION_VARIANCE))
+                oss << "direction: " << radians_to_degrees(std::sqrt(Config<T>::MEASUREMENT_VARIANCE_DIRECTION))
                     << DEGREE;
         }
         if (acceleration)
         {
                 oss << "<br>";
-                oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_ACCELERATION_VARIANCE)
+                oss << "acceleration: " << std::sqrt(Config<T>::MEASUREMENT_VARIANCE_ACCELERATION)
                     << " m/s<sup>2</sup>";
         }
         return oss.str();
@@ -224,11 +224,11 @@ Track<N, T> track()
                  .speed_max = Config<T>::TRACK_SPEED_MAX,
                  .speed_variance = Config<T>::TRACK_SPEED_VARIANCE,
                  .direction_bias_drift = Config<T>::TRACK_DIRECTION_BIAS_DRIFT,
-                 .direction_angle = Config<T>::TRACK_DIRECTION_ANGLE},
-                {.direction = Config<T>::MEASUREMENT_DIRECTION_VARIANCE,
-                 .acceleration = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE,
-                 .position = Config<T>::MEASUREMENT_POSITION_VARIANCE,
-                 .speed = Config<T>::MEASUREMENT_SPEED_VARIANCE});
+                 .direction_angle = Config<T>::TRACK_DIRECTION_ANGLE,
+                 .measurement_variance_acceleration = Config<T>::MEASUREMENT_VARIANCE_ACCELERATION,
+                 .measurement_variance_direction = Config<T>::MEASUREMENT_VARIANCE_DIRECTION,
+                 .measurement_variance_position = Config<T>::MEASUREMENT_VARIANCE_POSITION,
+                 .measurement_variance_speed = Config<T>::MEASUREMENT_VARIANCE_SPEED});
 
         process_track(&track.measurements);
 
@@ -309,7 +309,7 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
                 for (Position<T>& position : *positions)
                 {
                         position.update(
-                                *iter, Config<T>::MEASUREMENT_POSITION_VARIANCE,
+                                *iter, Config<T>::MEASUREMENT_VARIANCE_POSITION,
                                 track.points[iter->simulator_point_index]);
 
                         LOG(to_string(iter->time) + "; " + position.name()
@@ -463,7 +463,7 @@ void test_impl(const Track<2, T>& track)
         ASSERT(first_position_iter != track.measurements.cend() && first_position_iter->position);
 
         std::vector<Position<T>> positions =
-                create_positions(*first_position_iter->position, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                create_positions(*first_position_iter->position, Config<T>::MEASUREMENT_VARIANCE_POSITION);
 
         const auto [first_process_iter, init_angle, init_position, init_velocity] =
                 estimate_direction(track, std::next(first_position_iter), &positions);
@@ -472,17 +472,17 @@ void test_impl(const Track<2, T>& track)
         if (first_process_iter != track.measurements.cend())
         {
                 processes = create_processes(
-                        init_position, init_velocity, init_angle, Config<T>::MEASUREMENT_POSITION_VARIANCE);
+                        init_position, init_velocity, init_angle, Config<T>::MEASUREMENT_VARIANCE_POSITION);
         }
 
         auto iter =
                 first_process_iter != track.measurements.cend() ? std::next(first_process_iter) : first_process_iter;
         for (; iter != track.measurements.cend(); ++iter)
         {
-                const T pv = Config<T>::MEASUREMENT_POSITION_VARIANCE;
-                const T sv = Config<T>::MEASUREMENT_SPEED_VARIANCE;
-                const T dv = Config<T>::MEASUREMENT_DIRECTION_VARIANCE;
-                const T av = Config<T>::MEASUREMENT_ACCELERATION_VARIANCE;
+                const T pv = Config<T>::MEASUREMENT_VARIANCE_POSITION;
+                const T sv = Config<T>::MEASUREMENT_VARIANCE_SPEED;
+                const T dv = Config<T>::MEASUREMENT_VARIANCE_DIRECTION;
+                const T av = Config<T>::MEASUREMENT_VARIANCE_ACCELERATION;
 
                 const auto& point = track.points[iter->simulator_point_index];
 

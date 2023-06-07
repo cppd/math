@@ -61,20 +61,12 @@ struct TrackInfo final
         T speed_variance;
         T direction_bias_drift;
         T direction_angle;
-};
-
-template <typename T>
-struct TrackMeasurementVariance final
-{
-        T direction;
-        T acceleration;
-        T position;
-        T speed;
+        T measurement_variance_acceleration;
+        T measurement_variance_direction;
+        T measurement_variance_position;
+        T measurement_variance_speed;
 };
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(
-        std::size_t count,
-        const TrackInfo<T>& info,
-        const TrackMeasurementVariance<T>& measurement_variance);
+Track<N, T> generate_track(std::size_t count, const TrackInfo<T>& info);
 }
