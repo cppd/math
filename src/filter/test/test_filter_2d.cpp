@@ -44,10 +44,13 @@ template <typename T>
 struct Config final
 {
         static constexpr T DT = 0.1L;
-        static constexpr T POSITION_DT = 1;
-        static constexpr T SPEED_DT = 1;
 
-        static constexpr T DATA_CONNECT_INTERVAL = 1.5 * POSITION_DT;
+        static constexpr unsigned DT_COUNT_ACCELERATION = 1;
+        static constexpr unsigned DT_COUNT_DIRECTION = 1;
+        static constexpr unsigned DT_COUNT_POSITION = 10;
+        static constexpr unsigned DT_COUNT_SPEED = 10;
+
+        static constexpr T DATA_CONNECT_INTERVAL = 2;
 
         static constexpr T TRACK_SPEED_MIN = 3;
         static constexpr T TRACK_SPEED_MAX = 30;
@@ -94,21 +97,21 @@ std::string make_annotation(const std::vector<ProcessMeasurement<N, T>>& measure
         std::ostringstream oss;
         oss << "<b>update</b>";
         oss << "<br>";
-        oss << "position: " << 1 / Config<T>::POSITION_DT << " Hz";
+        oss << "position: " << 1 / (Config<T>::DT * Config<T>::DT_COUNT_POSITION) << " Hz";
         if (speed)
         {
                 oss << "<br>";
-                oss << "speed: " << 1 / Config<T>::SPEED_DT << " Hz";
+                oss << "speed: " << 1 / (Config<T>::DT * Config<T>::DT_COUNT_SPEED) << " Hz";
         }
         if (direction)
         {
                 oss << "<br>";
-                oss << "direction: " << 1 / Config<T>::DT << " Hz";
+                oss << "direction: " << 1 / (Config<T>::DT * Config<T>::DT_COUNT_DIRECTION) << " Hz";
         }
         if (acceleration)
         {
                 oss << "<br>";
-                oss << "acceleration: " << 1 / Config<T>::DT << " Hz";
+                oss << "acceleration: " << 1 / (Config<T>::DT * Config<T>::DT_COUNT_ACCELERATION) << " Hz";
         }
         if (direction || acceleration)
         {
@@ -179,12 +182,29 @@ void write_to_file(
 template <std::size_t N, typename T>
 void process_track(std::vector<ProcessMeasurement<N, T>>* const measurements)
 {
-        std::optional<T> last_time;
-        std::optional<T> last_position_time;
-        std::optional<T> last_speed_time;
-
-        for (ProcessMeasurement<N, T>& m : *measurements)
+        const auto f = [](auto* const last_i, auto* const object, const std::size_t count, const std::size_t i)
         {
+                if (*last_i && (**last_i + count > i))
+                {
+                        object->reset();
+                }
+                else
+                {
+                        *last_i = i;
+                }
+        };
+
+        std::optional<T> last_time;
+
+        std::optional<std::size_t> last_position_i;
+        std::optional<std::size_t> last_speed_i;
+        std::optional<std::size_t> last_acceleration_i;
+        std::optional<std::size_t> last_direction_i;
+
+        for (std::size_t i = 0; i < measurements->size(); ++i)
+        {
+                ProcessMeasurement<N, T>& m = (*measurements)[i];
+
                 if (last_time && !(*last_time < m.time))
                 {
                         ASSERT(false);
@@ -192,23 +212,10 @@ void process_track(std::vector<ProcessMeasurement<N, T>>* const measurements)
                 }
                 last_time = m.time;
 
-                if (last_position_time && !(*last_position_time + Config<T>::POSITION_DT <= m.time))
-                {
-                        m.position.reset();
-                }
-                else
-                {
-                        last_position_time = m.time;
-                }
-
-                if (last_speed_time && !(*last_speed_time + Config<T>::SPEED_DT <= m.time))
-                {
-                        m.speed.reset();
-                }
-                else
-                {
-                        last_speed_time = m.time;
-                }
+                f(&last_position_i, &m.position, Config<T>::DT_COUNT_POSITION, i);
+                f(&last_speed_i, &m.speed, Config<T>::DT_COUNT_SPEED, i);
+                f(&last_acceleration_i, &m.acceleration, Config<T>::DT_COUNT_ACCELERATION, i);
+                f(&last_direction_i, &m.direction, Config<T>::DT_COUNT_DIRECTION, i);
         }
 }
 
