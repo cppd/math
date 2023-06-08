@@ -180,46 +180,6 @@ void write_to_file(
 }
 
 template <std::size_t N, typename T>
-void process_track(std::vector<ProcessMeasurement<N, T>>* const measurements)
-{
-        const auto f = [](auto* const last_i, auto* const object, const std::size_t count, const std::size_t i)
-        {
-                if (*last_i && (**last_i + count > i))
-                {
-                        object->reset();
-                }
-                else
-                {
-                        *last_i = i;
-                }
-        };
-
-        std::optional<T> last_time;
-
-        std::optional<std::size_t> last_position_i;
-        std::optional<std::size_t> last_speed_i;
-        std::optional<std::size_t> last_acceleration_i;
-        std::optional<std::size_t> last_direction_i;
-
-        for (std::size_t i = 0; i < measurements->size(); ++i)
-        {
-                ProcessMeasurement<N, T>& m = (*measurements)[i];
-
-                if (last_time && !(*last_time < m.time))
-                {
-                        ASSERT(false);
-                        continue;
-                }
-                last_time = m.time;
-
-                f(&last_position_i, &m.position, Config<T>::DT_COUNT_POSITION, i);
-                f(&last_speed_i, &m.speed, Config<T>::DT_COUNT_SPEED, i);
-                f(&last_acceleration_i, &m.acceleration, Config<T>::DT_COUNT_ACCELERATION, i);
-                f(&last_direction_i, &m.direction, Config<T>::DT_COUNT_DIRECTION, i);
-        }
-}
-
-template <std::size_t N, typename T>
 Track<N, T> track()
 {
         constexpr std::size_t COUNT = 8000;
@@ -227,6 +187,10 @@ Track<N, T> track()
         Track track = generate_track<N, T>(
                 COUNT,
                 {.dt = Config<T>::DT,
+                 .dt_count_acceleration = Config<T>::DT_COUNT_ACCELERATION,
+                 .dt_count_direction = Config<T>::DT_COUNT_DIRECTION,
+                 .dt_count_position = Config<T>::DT_COUNT_POSITION,
+                 .dt_count_speed = Config<T>::DT_COUNT_SPEED,
                  .speed_min = Config<T>::TRACK_SPEED_MIN,
                  .speed_max = Config<T>::TRACK_SPEED_MAX,
                  .speed_variance = Config<T>::TRACK_SPEED_VARIANCE,
@@ -236,8 +200,6 @@ Track<N, T> track()
                  .measurement_variance_direction = Config<T>::MEASUREMENT_VARIANCE_DIRECTION,
                  .measurement_variance_position = Config<T>::MEASUREMENT_VARIANCE_POSITION,
                  .measurement_variance_speed = Config<T>::MEASUREMENT_VARIANCE_SPEED});
-
-        process_track(&track.measurements);
 
         for (ProcessMeasurement<N, T>& m : track.measurements)
         {

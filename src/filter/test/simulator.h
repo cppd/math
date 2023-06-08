@@ -56,6 +56,10 @@ template <typename T>
 struct TrackInfo final
 {
         T dt;
+        unsigned dt_count_acceleration;
+        unsigned dt_count_direction;
+        unsigned dt_count_position;
+        unsigned dt_count_speed;
         T speed_min;
         T speed_max;
         T speed_variance;

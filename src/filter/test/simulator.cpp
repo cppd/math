@@ -181,13 +181,30 @@ Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
                          .angle = simulator.angle(),
                          .angle_r = simulator.angle_r()});
 
-                res.measurements.push_back(
-                        {.simulator_point_index = i,
-                         .time = i * info.dt,
-                         .direction = simulator.measurement_direction(),
-                         .acceleration = simulator.measurement_acceleration(),
-                         .position = simulator.measurement_position(),
-                         .speed = simulator.measurement_speed()});
+                ProcessMeasurement<N, T>& m = res.measurements.emplace_back();
+
+                m.simulator_point_index = i;
+                m.time = i * info.dt;
+
+                if (i % info.dt_count_direction == 0)
+                {
+                        m.direction = simulator.measurement_direction();
+                }
+
+                if (i % info.dt_count_acceleration == 0)
+                {
+                        m.acceleration = simulator.measurement_acceleration();
+                }
+
+                if (i % info.dt_count_position == 0)
+                {
+                        m.position = simulator.measurement_position();
+                }
+
+                if (i % info.dt_count_speed == 0)
+                {
+                        m.speed = simulator.measurement_speed();
+                }
         }
 
         return res;
