@@ -88,12 +88,12 @@ class Simulator final
 
 public:
         explicit Simulator(const TrackInfo<T>& info)
-                : dt_(info.dt),
-                  speed_m_((info.speed_min + info.speed_max) / 2),
-                  speed_a_((info.speed_max - info.speed_min) / 2),
-                  direction_bias_drift_(info.direction_bias_drift / (T{60} * T{60})),
-                  direction_angle_(info.direction_angle),
-                  speed_nd_(0, std::sqrt(info.speed_variance)),
+                : dt_(info.measurement_dt),
+                  speed_m_((info.track_speed_min + info.track_speed_max) / 2),
+                  speed_a_((info.track_speed_max - info.track_speed_min) / 2),
+                  direction_bias_drift_(info.track_direction_bias_drift / (T{60} * T{60})),
+                  direction_angle_(info.track_direction_angle),
+                  speed_nd_(0, std::sqrt(info.track_speed_variance)),
                   measurements_direction_nd_(0, std::sqrt(info.measurement_variance_direction)),
                   measurements_acceleration_nd_(0, std::sqrt(info.measurement_variance_acceleration)),
                   measurements_position_nd_(0, std::sqrt(info.measurement_variance_position)),
@@ -162,7 +162,9 @@ public:
 template <std::size_t N, typename T>
 Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
 {
-        ASSERT(info.speed_max >= info.speed_min);
+        ASSERT(info.track_speed_max >= info.track_speed_min);
+        ASSERT(info.measurement_dt_count_acceleration > 0 && info.measurement_dt_count_direction > 0
+               && info.measurement_dt_count_position > 0 && info.measurement_dt_count_speed > 0);
 
         Simulator<N, T> simulator(info);
 
@@ -175,7 +177,7 @@ Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
                 simulator.move();
 
                 res.points.push_back(
-                        {.time = i * info.dt,
+                        {.time = i * info.measurement_dt,
                          .position = simulator.position(),
                          .speed = simulator.speed(),
                          .angle = simulator.angle(),
@@ -184,24 +186,24 @@ Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
                 ProcessMeasurement<N, T>& m = res.measurements.emplace_back();
 
                 m.simulator_point_index = i;
-                m.time = i * info.dt;
+                m.time = i * info.measurement_dt;
 
-                if (i % info.dt_count_direction == 0)
-                {
-                        m.direction = simulator.measurement_direction();
-                }
-
-                if (i % info.dt_count_acceleration == 0)
+                if (i % info.measurement_dt_count_acceleration == 0)
                 {
                         m.acceleration = simulator.measurement_acceleration();
                 }
 
-                if (i % info.dt_count_position == 0)
+                if (i % info.measurement_dt_count_direction == 0)
+                {
+                        m.direction = simulator.measurement_direction();
+                }
+
+                if (i % info.measurement_dt_count_position == 0)
                 {
                         m.position = simulator.measurement_position();
                 }
 
-                if (i % info.dt_count_speed == 0)
+                if (i % info.measurement_dt_count_speed == 0)
                 {
                         m.speed = simulator.measurement_speed();
                 }
