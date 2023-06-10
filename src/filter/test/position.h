@@ -50,10 +50,7 @@ class Position final
 public:
         Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter);
 
-        void update(
-                const ProcessMeasurement<2, T>& measurement,
-                T position_variance,
-                const SimulatorPoint<2, T>& point);
+        void update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<2, T>& point);
 
         [[nodiscard]] T angle() const;
         [[nodiscard]] T angle_p() const;

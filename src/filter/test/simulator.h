@@ -39,10 +39,18 @@ struct ProcessMeasurement final
 {
         std::size_t simulator_point_index;
         T time;
-        std::optional<T> direction;
+
         std::optional<Vector<N, T>> acceleration;
+        T acceleration_variance;
+
+        std::optional<T> direction;
+        T direction_variance;
+
         std::optional<Vector<N, T>> position;
+        T position_variance;
+
         std::optional<T> speed;
+        T speed_variance;
 };
 
 template <std::size_t N, typename T>
@@ -50,27 +58,9 @@ struct Track final
 {
         std::vector<SimulatorPoint<N, T>> points;
         std::vector<ProcessMeasurement<N, T>> measurements;
-};
-
-template <typename T>
-struct TrackInfo final
-{
-        T track_speed_min;
-        T track_speed_max;
-        T track_speed_variance;
-        T track_direction_bias_drift;
-        T track_direction_angle;
-        T measurement_dt;
-        unsigned measurement_dt_count_acceleration;
-        unsigned measurement_dt_count_direction;
-        unsigned measurement_dt_count_position;
-        unsigned measurement_dt_count_speed;
-        T measurement_variance_acceleration;
-        T measurement_variance_direction;
-        T measurement_variance_position;
-        T measurement_variance_speed;
+        std::string annotations;
 };
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(const TrackInfo<T>& info);
+Track<N, T> generate_track();
 }

@@ -32,7 +32,107 @@ namespace ns::filter::test
 {
 namespace
 {
-constexpr std::size_t COUNT = 8000;
+template <typename T>
+struct Config final
+{
+        std::size_t count = 8000;
+
+        T track_speed_min = 3;
+        T track_speed_max = 30;
+        T track_speed_variance = square(0.1);
+        T track_direction_bias_drift = degrees_to_radians(360.0);
+        T track_direction_angle = degrees_to_radians(30.0);
+
+        T measurement_dt = 0.1L;
+        unsigned measurement_dt_count_acceleration = 1;
+        unsigned measurement_dt_count_direction = 1;
+        unsigned measurement_dt_count_position = 10;
+        unsigned measurement_dt_count_speed = 10;
+
+        T measurement_variance_acceleration = square(1.0);
+        T measurement_variance_direction = square(degrees_to_radians(2.0));
+        T measurement_variance_position = square(20.0);
+        T measurement_variance_speed = square(0.2);
+};
+
+template <std::size_t N, typename T>
+std::string make_annotation(const Config<T>& config, const std::vector<ProcessMeasurement<N, T>>& measurements)
+{
+        bool position = false;
+        bool speed = false;
+        bool direction = false;
+        bool acceleration = false;
+
+        for (const ProcessMeasurement<N, T>& m : measurements)
+        {
+                position = position || m.position.has_value();
+                speed = speed || m.speed.has_value();
+                direction = direction || m.direction.has_value();
+                acceleration = acceleration || m.acceleration.has_value();
+        }
+
+        if (!position)
+        {
+                error("No position measurements");
+        }
+
+        constexpr std::string_view DEGREE = "&#x00b0;";
+        constexpr std::string_view SIGMA = "&#x03c3;";
+        std::ostringstream oss;
+
+        oss << "<b>update</b>";
+        oss << "<br>";
+        oss << "position: " << 1 / (config.measurement_dt * config.measurement_dt_count_position) << " Hz";
+        if (speed)
+        {
+                oss << "<br>";
+                oss << "speed: " << 1 / (config.measurement_dt * config.measurement_dt_count_speed) << " Hz";
+        }
+        if (direction)
+        {
+                oss << "<br>";
+                oss << "direction: " << 1 / (config.measurement_dt * config.measurement_dt_count_direction) << " Hz";
+        }
+        if (acceleration)
+        {
+                oss << "<br>";
+                oss << "acceleration: " << 1 / (config.measurement_dt * config.measurement_dt_count_acceleration)
+                    << " Hz";
+        }
+        if (direction || acceleration)
+        {
+                oss << "<br>";
+                oss << "<br>";
+                oss << "<b>bias</b>";
+                oss << "<br>";
+                oss << "direction drift: " << radians_to_degrees(config.track_direction_bias_drift) << " " << DEGREE
+                    << "/h";
+                oss << "<br>";
+                oss << "direction angle: " << radians_to_degrees(config.track_direction_angle) << DEGREE;
+        }
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>" << SIGMA << "</b>";
+        oss << "<br>";
+        oss << "position: " << std::sqrt(config.measurement_variance_position) << " m";
+        if (speed)
+        {
+                oss << "<br>";
+                oss << "speed: " << std::sqrt(config.measurement_variance_speed) << " m/s";
+        }
+        if (direction)
+        {
+                oss << "<br>";
+                oss << "direction: " << radians_to_degrees(std::sqrt(config.measurement_variance_direction)) << DEGREE;
+        }
+        if (acceleration)
+        {
+                oss << "<br>";
+                oss << "acceleration: " << std::sqrt(config.measurement_variance_acceleration) << " m/s<sup>2</sup>";
+        }
+
+        return oss.str();
+}
 
 template <std::size_t N, typename T>
 class Simulator final
@@ -89,17 +189,17 @@ class Simulator final
         }
 
 public:
-        explicit Simulator(const TrackInfo<T>& info)
-                : dt_(info.measurement_dt),
-                  speed_m_((info.track_speed_min + info.track_speed_max) / 2),
-                  speed_a_((info.track_speed_max - info.track_speed_min) / 2),
-                  direction_bias_drift_(info.track_direction_bias_drift / (T{60} * T{60})),
-                  direction_angle_(info.track_direction_angle),
-                  speed_nd_(0, std::sqrt(info.track_speed_variance)),
-                  measurements_direction_nd_(0, std::sqrt(info.measurement_variance_direction)),
-                  measurements_acceleration_nd_(0, std::sqrt(info.measurement_variance_acceleration)),
-                  measurements_position_nd_(0, std::sqrt(info.measurement_variance_position)),
-                  measurements_speed_nd_(0, std::sqrt(info.measurement_variance_speed)),
+        explicit Simulator(const Config<T>& config)
+                : dt_(config.measurement_dt),
+                  speed_m_((config.track_speed_min + config.track_speed_max) / 2),
+                  speed_a_((config.track_speed_max - config.track_speed_min) / 2),
+                  direction_bias_drift_(config.track_direction_bias_drift / (T{60} * T{60})),
+                  direction_angle_(config.track_direction_angle),
+                  speed_nd_(0, std::sqrt(config.track_speed_variance)),
+                  measurements_direction_nd_(0, std::sqrt(config.measurement_variance_direction)),
+                  measurements_acceleration_nd_(0, std::sqrt(config.measurement_variance_acceleration)),
+                  measurements_position_nd_(0, std::sqrt(config.measurement_variance_position)),
+                  measurements_speed_nd_(0, std::sqrt(config.measurement_variance_speed)),
                   velocity_(velocity_with_noise(time_)),
                   next_velocity_(velocity_with_noise(time_ + dt_)),
                   acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_)
@@ -162,24 +262,26 @@ public:
 }
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(const TrackInfo<T>& info)
+Track<N, T> generate_track()
 {
-        ASSERT(info.track_speed_max >= info.track_speed_min);
-        ASSERT(info.measurement_dt_count_acceleration > 0 && info.measurement_dt_count_direction > 0
-               && info.measurement_dt_count_position > 0 && info.measurement_dt_count_speed > 0);
+        const Config<T> config;
 
-        Simulator<N, T> simulator(info);
+        ASSERT(config.track_speed_max >= config.track_speed_min);
+        ASSERT(config.measurement_dt_count_acceleration > 0 && config.measurement_dt_count_direction > 0
+               && config.measurement_dt_count_position > 0 && config.measurement_dt_count_speed > 0);
+
+        Simulator<N, T> simulator(config);
 
         Track<N, T> res;
-        res.points.reserve(COUNT);
-        res.measurements.reserve(COUNT);
+        res.points.reserve(config.count);
+        res.measurements.reserve(config.count);
 
-        for (std::size_t i = 0; i < COUNT; ++i)
+        for (std::size_t i = 0; i < config.count; ++i)
         {
                 simulator.move();
 
                 res.points.push_back(
-                        {.time = i * info.measurement_dt,
+                        {.time = i * config.measurement_dt,
                          .position = simulator.position(),
                          .speed = simulator.speed(),
                          .angle = simulator.angle(),
@@ -188,27 +290,31 @@ Track<N, T> generate_track(const TrackInfo<T>& info)
                 ProcessMeasurement<N, T>& m = res.measurements.emplace_back();
 
                 m.simulator_point_index = i;
-                m.time = i * info.measurement_dt;
+                m.time = i * config.measurement_dt;
 
-                if (i % info.measurement_dt_count_acceleration == 0)
+                if (i % config.measurement_dt_count_acceleration == 0)
                 {
                         m.acceleration = simulator.measurement_acceleration();
                 }
+                m.acceleration_variance = config.measurement_variance_acceleration;
 
-                if (i % info.measurement_dt_count_direction == 0)
+                if (i % config.measurement_dt_count_direction == 0)
                 {
                         m.direction = simulator.measurement_direction();
                 }
+                m.direction_variance = config.measurement_variance_direction;
 
-                if (i % info.measurement_dt_count_position == 0)
+                if (i % config.measurement_dt_count_position == 0)
                 {
                         m.position = simulator.measurement_position();
                 }
+                m.position_variance = config.measurement_variance_position;
 
-                if (i % info.measurement_dt_count_speed == 0)
+                if (i % config.measurement_dt_count_speed == 0)
                 {
                         m.speed = simulator.measurement_speed();
                 }
+                m.speed_variance = config.measurement_variance_speed;
 
                 const auto n = std::llround(m.time / 30);
                 if ((n > 3) && ((n % 5) == 0))
@@ -223,10 +329,12 @@ Track<N, T> generate_track(const TrackInfo<T>& info)
                 }
         }
 
+        res.annotations = make_annotation(config, res.measurements);
+
         return res;
 }
 
-#define TEMPLATE(T) template Track<2, T> generate_track(const TrackInfo<T>&);
+#define TEMPLATE(T) template Track<2, T> generate_track();
 
 TEMPLATE(float)
 TEMPLATE(double)
