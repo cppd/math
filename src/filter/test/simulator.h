@@ -72,5 +72,5 @@ struct TrackInfo final
 };
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(std::size_t count, const TrackInfo<T>& info);
+Track<N, T> generate_track(const TrackInfo<T>& info);
 }

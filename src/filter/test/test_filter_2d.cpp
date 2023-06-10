@@ -187,10 +187,7 @@ void write_to_file(
 template <std::size_t N, typename T>
 Track<N, T> track()
 {
-        constexpr std::size_t COUNT = 8000;
-
-        Track track = generate_track<N, T>(
-                COUNT,
+        return generate_track<N, T>(
                 {.track_speed_min = Config<T>::TRACK_SPEED_MIN,
                  .track_speed_max = Config<T>::TRACK_SPEED_MAX,
                  .track_speed_variance = Config<T>::TRACK_SPEED_VARIANCE,
@@ -205,25 +202,6 @@ Track<N, T> track()
                  .measurement_variance_direction = Config<T>::MEASUREMENT_VARIANCE_DIRECTION,
                  .measurement_variance_position = Config<T>::MEASUREMENT_VARIANCE_POSITION,
                  .measurement_variance_speed = Config<T>::MEASUREMENT_VARIANCE_SPEED});
-
-        for (ProcessMeasurement<N, T>& m : track.measurements)
-        {
-                ASSERT(m.simulator_point_index >= 0 && m.simulator_point_index < track.points.size());
-
-                const auto n = std::llround(m.time / 30);
-                if ((n > 3) && ((n % 5) == 0))
-                {
-                        m.position.reset();
-                        m.speed.reset();
-                }
-
-                if ((std::llround(m.time / 10) % 8) == 0)
-                {
-                        m.speed.reset();
-                }
-        }
-
-        return track;
 }
 
 template <typename T>

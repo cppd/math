@@ -32,6 +32,8 @@ namespace ns::filter::test
 {
 namespace
 {
+constexpr std::size_t COUNT = 8000;
+
 template <std::size_t N, typename T>
 class Simulator final
 {
@@ -160,7 +162,7 @@ public:
 }
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
+Track<N, T> generate_track(const TrackInfo<T>& info)
 {
         ASSERT(info.track_speed_max >= info.track_speed_min);
         ASSERT(info.measurement_dt_count_acceleration > 0 && info.measurement_dt_count_direction > 0
@@ -169,10 +171,10 @@ Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
         Simulator<N, T> simulator(info);
 
         Track<N, T> res;
-        res.points.reserve(count);
-        res.measurements.reserve(count);
+        res.points.reserve(COUNT);
+        res.measurements.reserve(COUNT);
 
-        for (std::size_t i = 0; i < count; ++i)
+        for (std::size_t i = 0; i < COUNT; ++i)
         {
                 simulator.move();
 
@@ -207,12 +209,24 @@ Track<N, T> generate_track(const std::size_t count, const TrackInfo<T>& info)
                 {
                         m.speed = simulator.measurement_speed();
                 }
+
+                const auto n = std::llround(m.time / 30);
+                if ((n > 3) && ((n % 5) == 0))
+                {
+                        m.position.reset();
+                        m.speed.reset();
+                }
+
+                if ((std::llround(m.time / 10) % 8) == 0)
+                {
+                        m.speed.reset();
+                }
         }
 
         return res;
 }
 
-#define TEMPLATE(T) template Track<2, T> generate_track(std::size_t, const TrackInfo<T>&);
+#define TEMPLATE(T) template Track<2, T> generate_track(const TrackInfo<T>&);
 
 TEMPLATE(float)
 TEMPLATE(double)
