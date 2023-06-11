@@ -26,8 +26,6 @@ Kalman and Bayesian Filters in Python.
 
 #pragma once
 
-#include "functions.h"
-
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -51,21 +49,6 @@ template <std::size_t N, typename T>
         }
         return true;
 }
-
-struct Mean final
-{
-        template <std::size_t N, typename T, std::size_t COUNT>
-        [[nodiscard]] Vector<N, T> operator()(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w) const
-        {
-                static_assert(COUNT > 0);
-                Vector<N, T> x = p[0] * w[0];
-                for (std::size_t i = 1; i < COUNT; ++i)
-                {
-                        x.multiply_add(p[i], w[i]);
-                }
-                return x;
-        }
-};
 
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
 [[nodiscard]] std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
@@ -121,7 +104,7 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
 }
 
 template <std::size_t N, typename T, typename F, std::size_t COUNT>
-auto apply(const F f, const std::array<Vector<N, T>, COUNT>& points)
+[[nodiscard]] auto apply(const F f, const std::array<Vector<N, T>, COUNT>& points)
 {
         std::array<std::remove_cvref_t<decltype(f(points[0]))>, COUNT> res;
         for (std::size_t i = 0; i < COUNT; ++i)
@@ -139,6 +122,39 @@ void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N,
                 error(std::string(name) + ", diagonal is not positive\nx\n" + to_string(x) + "\np\n" + to_string(p));
         }
 }
+
+struct Add final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a + b;
+        }
+};
+
+struct Subtract final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a - b;
+        }
+};
+
+struct Mean final
+{
+        template <std::size_t N, typename T, std::size_t COUNT>
+        [[nodiscard]] Vector<N, T> operator()(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w) const
+        {
+                static_assert(COUNT > 0);
+                Vector<N, T> x = p[0] * w[0];
+                for (std::size_t i = 1; i < COUNT; ++i)
+                {
+                        x.multiply_add(p[i], w[i]);
+                }
+                return x;
+        }
+};
 }
 
 template <std::size_t N, typename T, typename SigmaPoints>
@@ -190,15 +206,15 @@ public:
         {
                 namespace impl = ukf_implementation;
 
-                sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_, Add(), Subtract()));
+                sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_, impl::Add(), impl::Subtract()));
 
                 std::tie(x_, p_) = impl::unscented_transform(
-                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), Subtract());
+                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), impl::Subtract());
 
                 impl::check_x_p("UKF predict", x_, p_);
         }
 
-        template <std::size_t M, typename H, typename ResidualZ, typename AddX>
+        template <std::size_t M, typename H, typename AddX, typename ResidualZ>
         void update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
@@ -219,12 +235,12 @@ public:
                 const std::array<Vector<M, T>, POINT_COUNT> sigmas_h = impl::apply(h, sigmas_f_);
 
                 const auto [x_z, p_z] = impl::unscented_transform(
-                        sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, impl::Mean(), Subtract());
+                        sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, impl::Mean(), impl::Subtract());
 
                 impl::check_x_p("UKF update measurement", x_z, p_z);
 
                 const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
-                        sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, Subtract(), Subtract());
+                        sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, impl::Subtract(), impl::Subtract());
 
                 const Matrix<N, M, T> k = p_xz * p_z.inversed();
 

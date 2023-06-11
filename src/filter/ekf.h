@@ -195,7 +195,7 @@ public:
                 impl::check_x_p("LKF update", x_, p_);
         }
 
-        template <std::size_t M, typename H, typename HJ, typename ResidualZ, typename AddX>
+        template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
         void update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)

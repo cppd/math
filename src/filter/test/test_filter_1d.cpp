@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include "../ekf.h"
-#include "../functions.h"
 #include "../models.h"
 #include "../nees.h"
 #include "../sigma_points.h"
@@ -183,6 +182,24 @@ void check_distribution(
         }
 }
 
+struct Add final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a + b;
+        }
+};
+
+struct Residual final
+{
+        template <std::size_t N, typename T>
+        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a - b;
+        }
+};
+
 template <typename T, bool INF>
 class TestLkf
 {
@@ -307,7 +324,7 @@ public:
                 };
 
                 filter_.predict(f, f_jacobian, q_);
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Subtract(), INFINITY_PARAMETER);
+                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), INFINITY_PARAMETER);
         }
 
         [[nodiscard]] T x() const
@@ -375,7 +392,7 @@ public:
                 };
 
                 filter_.predict(f, q_);
-                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Subtract());
+                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Residual());
         }
 
         [[nodiscard]] T x() const

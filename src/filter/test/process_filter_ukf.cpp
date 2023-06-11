@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
-#include "../functions.h"
 #include "../sigma_points.h"
 #include "../ukf.h"
 

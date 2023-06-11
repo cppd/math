@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../functions.h"
 #include "../sigma_points.h"
 
 #include <src/com/log.h>
@@ -23,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 
 namespace ns::filter::test
 {
@@ -88,7 +88,7 @@ void test_impl(const T precision)
                         {   1, 0.1L},
                         {0.1L,    1}
                 };
-                const std::array<Vector<2, T>, 5> s = points.points(x, p, Add(), Subtract());
+                const std::array<Vector<2, T>, 5> s = points.points(x, p, std::plus(), std::minus());
                 cmp(s[0], Vector<2, T>(-1, 2));
                 cmp(s[1], Vector<2, T>(-0.826794919243112270664L, 2.01732050807568877304L));
                 cmp(s[2], Vector<2, T>(-1, 2.17233687939614085981L));
@@ -102,7 +102,7 @@ void test_impl(const T precision)
                         {    1, -0.2L},
                         {-0.2L,     1}
                 };
-                const std::array<Vector<2, T>, 5> s = points.points(x, p, Add(), Subtract());
+                const std::array<Vector<2, T>, 5> s = points.points(x, p, std::plus(), std::minus());
                 cmp(s[0], Vector<2, T>(1.1L, -2.2L));
                 cmp(s[1], Vector<2, T>(1.27320508075688772936L, -2.23464101615137754591L));
                 cmp(s[2], Vector<2, T>(1.1L, -2.03029437251522859413L));
