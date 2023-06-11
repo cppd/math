@@ -101,10 +101,10 @@ void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N,
 template <std::size_t N, typename T>
 class Ekf final
 {
-        // state mean
+        // State mean
         Vector<N, T> x_;
 
-        // state covariance
+        // State covariance
         Matrix<N, N, T> p_;
 
 public:
@@ -143,12 +143,10 @@ public:
         template <typename F, typename FJ>
         void predict(
                 // State transition function
-                // Vector<N, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Vector<N, T> f(const Vector<N, T>& x)
                 const F f,
                 // State transition function Jacobian
-                // Matrix<N, N, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Matrix<N, N, T> f(const Vector<N, T>& x)
                 const FJ fj,
                 // Process covariance
                 const Matrix<N, N, T>& q)
@@ -169,7 +167,7 @@ public:
                 const Matrix<M, N, T>& h,
                 // Measurement function transposed
                 const Matrix<N, M, T>& ht,
-                // measurement covariance
+                // Measurement covariance
                 const Matrix<M, M, T>& r,
                 // Measurement
                 const Vector<M, T>& z,
@@ -200,26 +198,20 @@ public:
         template <std::size_t M, typename H, typename HJ, typename ResidualZ, typename AddX>
         void update(
                 // Measurement function
-                // Vector<M, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
                 // Measurement function Jacobian
-                // Matrix<M, N, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Matrix<M, N, T> f(const Vector<N, T>& x)
                 const HJ hj,
                 // Measurement covariance
                 const Matrix<M, M, T>& r,
-                // measurement
+                // Measurement
                 const Vector<M, T>& z,
                 // The sum of the two state vectors
-                // Vector<N, T> operator()(
-                //   const Vector<N, T>& a,
-                //   const Vector<N, T>& b) const
+                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
                 const AddX add_x,
                 // The residual between the two measurement vectors
-                // Vector<M, T> operator()(
-                //   const Vector<M, T>& a,
-                //   const Vector<M, T>& b) const
+                // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z,
                 // H infinity parameter
                 const T theta = 0)
