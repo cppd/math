@@ -394,7 +394,7 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 template <typename T>
 class Filter final : public ProcessFilter<T>
 {
-        Ukf<9, T, SigmaPoints<9, T, Add, Subtract>, AddX, Mean, ResidualX> filter_;
+        Ukf<9, T, SigmaPoints<9, T>, AddX, Mean, ResidualX> filter_;
         const T position_variance_;
         const T angle_variance_;
         const T angle_r_variance_;
@@ -526,7 +526,7 @@ public:
                const T angle_variance,
                const T angle_r_variance)
                 : filter_(
-                        {sigma_points_alpha, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>, Add(), Subtract()},
+                        {sigma_points_alpha, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>},
                         AddX(),
                         Mean(),
                         ResidualX(),

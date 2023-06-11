@@ -34,7 +34,7 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter
 {
-template <std::size_t N, typename T, typename Add, typename Subtract>
+template <std::size_t N, typename T>
 class SigmaPoints final
 {
         static_assert(std::is_floating_point_v<T>);
@@ -72,28 +72,14 @@ class SigmaPoints final
 
         T n_plus_lambda_;
         Weights weights_;
-        Add add_;
-        Subtract subtract_;
 
 public:
         SigmaPoints(
                 const std::type_identity_t<T> alpha,
                 const std::type_identity_t<T> beta,
-                const std::type_identity_t<T> kappa,
-                // Addition
-                // Vector<N, T> operator()(
-                //   const Vector<N, T>& a,
-                //   const Vector<N, T>& b) const
-                Add add,
-                // Subtraction
-                // Vector<N, T> operator()(
-                //   const Vector<N, T>& a,
-                //   const Vector<N, T>& b) const
-                Subtract subtract)
+                const std::type_identity_t<T> kappa)
                 : n_plus_lambda_(n_plus_lambda(alpha, kappa)),
-                  weights_(create_weights(alpha, beta, kappa)),
-                  add_(std::move(add)),
-                  subtract_(std::move(subtract))
+                  weights_(create_weights(alpha, beta, kappa))
         {
         }
 
@@ -107,7 +93,14 @@ public:
                 return weights_.covariance;
         }
 
-        [[nodiscard]] std::array<Vector<N, T>, 2 * N + 1> points(const Vector<N, T>& x, const Matrix<N, N, T>& p) const
+        template <typename Add, typename Subtract>
+        [[nodiscard]] std::array<Vector<N, T>, 2 * N + 1> points(
+                const Vector<N, T>& x,
+                const Matrix<N, N, T>& p,
+                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                const Add add,
+                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                const Subtract subtract) const
         {
                 const Matrix<N, N, T> l = numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
 
@@ -116,8 +109,8 @@ public:
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const Vector<N, T> c = l.column(i);
-                        res[i + 1] = add_(x, c);
-                        res[i + N + 1] = subtract_(x, c);
+                        res[i + 1] = add(x, c);
+                        res[i + N + 1] = subtract(x, c);
                 }
                 return res;
         }

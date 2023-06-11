@@ -70,7 +70,7 @@ void test_impl(const T precision)
                 }
         };
 
-        const SigmaPoints<2, T, Add, Subtract> points(0.1L, 2, 1, Add(), Subtract());
+        const SigmaPoints<2, T> points(0.1L, 2, 1);
 
         cmp(points.wm(),
             Vector<5, T>(
@@ -88,7 +88,7 @@ void test_impl(const T precision)
                         {   1, 0.1L},
                         {0.1L,    1}
                 };
-                const std::array<Vector<2, T>, 5> s = points.points(x, p);
+                const std::array<Vector<2, T>, 5> s = points.points(x, p, Add(), Subtract());
                 cmp(s[0], Vector<2, T>(-1, 2));
                 cmp(s[1], Vector<2, T>(-0.826794919243112270664L, 2.01732050807568877304L));
                 cmp(s[2], Vector<2, T>(-1, 2.17233687939614085981L));
@@ -102,7 +102,7 @@ void test_impl(const T precision)
                         {    1, -0.2L},
                         {-0.2L,     1}
                 };
-                const std::array<Vector<2, T>, 5> s = points.points(x, p);
+                const std::array<Vector<2, T>, 5> s = points.points(x, p, Add(), Subtract());
                 cmp(s[0], Vector<2, T>(1.1L, -2.2L));
                 cmp(s[1], Vector<2, T>(1.27320508075688772936L, -2.23464101615137754591L));
                 cmp(s[2], Vector<2, T>(1.1L, -2.03029437251522859413L));

@@ -26,6 +26,8 @@ Kalman and Bayesian Filters in Python.
 
 #pragma once
 
+#include "functions.h"
+
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -191,7 +193,7 @@ public:
         {
                 namespace impl = ukf_implementation;
 
-                sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_));
+                sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_, Add(), Subtract()));
 
                 std::tie(x_, p_) = impl::unscented_transform(
                         sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, mean_x_, residual_x_);
