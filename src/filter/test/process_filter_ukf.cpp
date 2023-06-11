@@ -68,18 +68,6 @@ struct AddX final
         }
 };
 
-struct ResidualX final
-{
-        template <typename T>
-        [[nodiscard]] Vector<9, T> operator()(const Vector<9, T>& a, const Vector<9, T>& b) const
-        {
-                Vector<9, T> res = a - b;
-                res[6] = normalize_angle(res[6]);
-                res[8] = normalize_angle(res[8]);
-                return res;
-        }
-};
-
 template <typename T>
 Vector<9, T> f(const T dt, const Vector<9, T>& x)
 {
@@ -394,7 +382,7 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 template <typename T>
 class Filter final : public ProcessFilter<T>
 {
-        Ukf<9, T, SigmaPoints<9, T>, AddX, Mean, ResidualX> filter_;
+        Ukf<9, T, SigmaPoints<9, T>> filter_;
         const T position_variance_;
         const T angle_variance_;
         const T angle_r_variance_;
@@ -411,7 +399,7 @@ class Filter final : public ProcessFilter<T>
 
         void update_position(const Vector<2, T>& position, const T position_variance) override
         {
-                filter_.update(position_h<T>, position_r(position_variance), position, Mean(), position_residual<T>);
+                filter_.update(position_h<T>, position_r(position_variance), position, AddX(), position_residual<T>);
         }
 
         void update_position_speed(
@@ -422,7 +410,7 @@ class Filter final : public ProcessFilter<T>
         {
                 filter_.update(
                         position_speed_h<T>, position_speed_r(position_variance, speed_variance),
-                        Vector<3, T>(position[0], position[1], speed), Mean(), position_speed_residual<T>);
+                        Vector<3, T>(position[0], position[1], speed), AddX(), position_speed_residual<T>);
         }
 
         void update_position_speed_direction_acceleration(
@@ -440,7 +428,7 @@ class Filter final : public ProcessFilter<T>
                         position_speed_direction_acceleration_r(
                                 position_variance, speed_variance, direction_variance, acceleration_variance),
                         Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
-                        Mean(), position_speed_direction_acceleration_residual<T>);
+                        AddX(), position_speed_direction_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
@@ -454,14 +442,14 @@ class Filter final : public ProcessFilter<T>
                 filter_.update(
                         position_direction_acceleration_h<T>,
                         position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), Mean(),
+                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
                         position_direction_acceleration_residual<T>);
         }
 
         void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
         {
                 filter_.update(
-                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, Mean(),
+                        acceleration_h<T>, acceleration_r(acceleration_variance), acceleration, AddX(),
                         acceleration_residual<T>);
         }
 
@@ -473,7 +461,7 @@ class Filter final : public ProcessFilter<T>
         {
                 filter_.update(
                         speed_acceleration_h<T>, speed_acceleration_r(speed_variance, acceleration_variance),
-                        Vector<3, T>(speed, acceleration[0], acceleration[1]), Mean(), speed_acceleration_residual<T>);
+                        Vector<3, T>(speed, acceleration[0], acceleration[1]), AddX(), speed_acceleration_residual<T>);
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -525,13 +513,7 @@ public:
                const T position_variance,
                const T angle_variance,
                const T angle_r_variance)
-                : filter_(
-                        {sigma_points_alpha, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>},
-                        AddX(),
-                        Mean(),
-                        ResidualX(),
-                        x(init),
-                        p(init)),
+                : filter_({sigma_points_alpha, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>}, x(init), p(init)),
                   position_variance_(position_variance),
                   angle_variance_(angle_variance),
                   angle_r_variance_(angle_r_variance)

@@ -52,6 +52,21 @@ template <std::size_t N, typename T>
         return true;
 }
 
+struct Mean final
+{
+        template <std::size_t N, typename T, std::size_t COUNT>
+        [[nodiscard]] Vector<N, T> operator()(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w) const
+        {
+                static_assert(COUNT > 0);
+                Vector<N, T> x = p[0] * w[0];
+                for (std::size_t i = 1; i < COUNT; ++i)
+                {
+                        x.multiply_add(p[i], w[i]);
+                }
+                return x;
+        }
+};
+
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
 [[nodiscard]] std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
         const std::array<Vector<N, T>, POINT_COUNT>& points,
@@ -126,7 +141,7 @@ void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N,
 }
 }
 
-template <std::size_t N, typename T, typename SigmaPoints, typename AddX, typename MeanX, typename ResidualX>
+template <std::size_t N, typename T, typename SigmaPoints>
 class Ukf final
 {
         static constexpr std::size_t POINT_COUNT =
@@ -136,15 +151,7 @@ class Ukf final
 
         SigmaPoints sigma_points_;
 
-        // The sum of the two state vectors
-        // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
-        AddX add_x_;
-        // The mean of the sigma points and weights
-        // Vector<N, T> f(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w)
-        MeanX mean_x_;
-        // The residual between the two vectors
-        // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
-        ResidualX residual_x_;
+        std::array<Vector<N, T>, POINT_COUNT> sigmas_f_;
 
         // State mean
         Vector<N, T> x_;
@@ -152,19 +159,9 @@ class Ukf final
         // State covariance
         Matrix<N, N, T> p_;
 
-        std::array<Vector<N, T>, POINT_COUNT> sigmas_f_;
-
 public:
-        Ukf(SigmaPoints sigma_points,
-            AddX add_x,
-            MeanX mean_x,
-            ResidualX residual_x,
-            const Vector<N, T>& x,
-            const Matrix<N, N, T>& p)
+        Ukf(SigmaPoints sigma_points, const Vector<N, T>& x, const Matrix<N, N, T>& p)
                 : sigma_points_(std::move(sigma_points)),
-                  add_x_(std::move(add_x)),
-                  mean_x_(std::move(mean_x)),
-                  residual_x_(std::move(residual_x)),
                   x_(x),
                   p_(p)
         {
@@ -196,12 +193,12 @@ public:
                 sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_, Add(), Subtract()));
 
                 std::tie(x_, p_) = impl::unscented_transform(
-                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, mean_x_, residual_x_);
+                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), Subtract());
 
                 impl::check_x_p("UKF predict", x_, p_);
         }
 
-        template <std::size_t M, typename H, typename MeanZ, typename ResidualZ>
+        template <std::size_t M, typename H, typename ResidualZ, typename AddX>
         void update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
@@ -210,9 +207,9 @@ public:
                 const Matrix<M, M, T>& r,
                 // Measurement
                 const Vector<M, T>& z,
-                // The mean of the sigma points and weights
-                // Vector<M, T> f(const std::array<Vector<M, T>, COUNT>& p, const Vector<COUNT, T>& w)
-                const MeanZ mean_z,
+                // The sum of the two state vectors
+                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                const AddX add_x,
                 // The residual between the two measurement vectors
                 // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z)
@@ -222,16 +219,16 @@ public:
                 const std::array<Vector<M, T>, POINT_COUNT> sigmas_h = impl::apply(h, sigmas_f_);
 
                 const auto [x_z, p_z] = impl::unscented_transform(
-                        sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, mean_z, residual_z);
+                        sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, impl::Mean(), Subtract());
 
                 impl::check_x_p("UKF update measurement", x_z, p_z);
 
                 const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
-                        sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, residual_x_, residual_z);
+                        sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, Subtract(), Subtract());
 
                 const Matrix<N, M, T> k = p_xz * p_z.inversed();
 
-                x_ = add_x_(x_, k * residual_z(z, x_z));
+                x_ = add_x(x_, k * residual_z(z, x_z));
                 p_ = p_ - p_xz * k.transposed();
 
                 impl::check_x_p("UKF update", x_, p_);

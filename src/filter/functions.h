@@ -23,21 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter
 {
-struct Mean final
-{
-        template <std::size_t N, typename T, std::size_t COUNT>
-        [[nodiscard]] Vector<N, T> operator()(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w) const
-        {
-                static_assert(COUNT > 0);
-                Vector<N, T> x = p[0] * w[0];
-                for (std::size_t i = 1; i < COUNT; ++i)
-                {
-                        x.multiply_add(p[i], w[i]);
-                }
-                return x;
-        }
-};
-
 struct Add final
 {
         template <std::size_t N, typename T>
