@@ -103,6 +103,17 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
         return res;
 }
 
+template <std::size_t N, typename T, typename F, std::size_t COUNT>
+auto apply(const F f, const std::array<Vector<N, T>, COUNT>& points)
+{
+        std::array<std::remove_cvref_t<decltype(f(points[0]))>, COUNT> res;
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                res[i] = f(points[i]);
+        }
+        return res;
+}
+
 template <std::size_t N, typename T>
 void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
 {
@@ -124,25 +135,19 @@ class Ukf final
         SigmaPoints sigma_points_;
 
         // The sum of the two state vectors
-        // Vector<N, T> operator()(
-        //   const Vector<N, T>& a,
-        //   const Vector<N, T>& b) const
+        // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
         AddX add_x_;
         // The mean of the sigma points and weights
-        // Vector<N, T> operator()(
-        //   const std::array<Vector<N, T>, COUNT>& p,
-        //   const Vector<COUNT, T>& w) const
+        // Vector<N, T> f(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w)
         MeanX mean_x_;
         // The residual between the two vectors
-        // Vector<N, T> operator()(
-        //   const Vector<N, T>& a,
-        //   const Vector<N, T>& b) const
+        // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
         ResidualX residual_x_;
 
-        // state mean
+        // State mean
         Vector<N, T> x_;
 
-        // state covariance
+        // State covariance
         Matrix<N, N, T> p_;
 
         std::array<Vector<N, T>, POINT_COUNT> sigmas_f_;
@@ -179,20 +184,14 @@ public:
         template <typename F>
         void predict(
                 // State transition function
-                // Vector<N, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Vector<N, T> f(const Vector<N, T>& x)
                 const F f,
                 // Process covariance
                 const Matrix<N, N, T>& q)
         {
                 namespace impl = ukf_implementation;
 
-                const std::array<Vector<N, T>, POINT_COUNT> sigmas = sigma_points_.points(x_, p_);
-
-                for (std::size_t i = 0; i < POINT_COUNT; ++i)
-                {
-                        sigmas_f_[i] = f(sigmas[i]);
-                }
+                sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_));
 
                 std::tie(x_, p_) = impl::unscented_transform(
                         sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, mean_x_, residual_x_);
@@ -203,35 +202,22 @@ public:
         template <std::size_t M, typename H, typename MeanZ, typename ResidualZ>
         void update(
                 // Measurement function
-                // Vector<M, T> operator()(
-                //   const Vector<N, T>& x) const
+                // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
                 // Measurement covariance
                 const Matrix<M, M, T>& r,
                 // Measurement
                 const Vector<M, T>& z,
                 // The mean of the sigma points and weights
-                // Vector<M, T> operator()(
-                //   const std::array<Vector<M, T>, COUNT>& p,
-                //   const Vector<COUNT, T>& w) const
+                // Vector<M, T> f(const std::array<Vector<M, T>, COUNT>& p, const Vector<COUNT, T>& w)
                 const MeanZ mean_z,
                 // The residual between the two measurement vectors
-                // Vector<M, T> operator()(
-                //   const Vector<M, T>& a,
-                //   const Vector<M, T>& b) const
+                // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z)
         {
                 namespace impl = ukf_implementation;
 
-                const std::array<Vector<M, T>, POINT_COUNT> sigmas_h = [&]()
-                {
-                        std::array<Vector<M, T>, POINT_COUNT> res;
-                        for (std::size_t i = 0; i < POINT_COUNT; ++i)
-                        {
-                                res[i] = h(sigmas_f_[i]);
-                        }
-                        return res;
-                }();
+                const std::array<Vector<M, T>, POINT_COUNT> sigmas_h = impl::apply(h, sigmas_f_);
 
                 const auto [x_z, p_z] = impl::unscented_transform(
                         sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, mean_z, residual_z);
