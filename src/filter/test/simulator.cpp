@@ -37,11 +37,15 @@ struct Config final
 {
         std::size_t count = 8000;
 
-        T track_speed_min = 3;
-        T track_speed_max = 30;
-        T track_speed_variance = square(0.1);
-        T track_direction_bias_drift = degrees_to_radians(360.0);
-        T track_direction_angle = degrees_to_radians(30.0);
+        T speed_min = 0;
+        T speed_max = kph_to_mps(100.0);
+        T speed_variance = square(0.1);
+        T velocity_magnitude_period = 60;
+        T velocity_angle_period = 90;
+
+        T angle = degrees_to_radians(-170.0);
+        T angle_drift_per_hour = degrees_to_radians(-360.0);
+        T angle_r = degrees_to_radians(30.0);
 
         T measurement_dt = 0.1L;
         unsigned measurement_dt_count_acceleration = 1;
@@ -105,10 +109,9 @@ std::string make_annotation(const Config<T>& config, const std::vector<ProcessMe
                 oss << "<br>";
                 oss << "<b>bias</b>";
                 oss << "<br>";
-                oss << "direction drift: " << radians_to_degrees(config.track_direction_bias_drift) << " " << DEGREE
-                    << "/h";
+                oss << "direction drift: " << radians_to_degrees(config.angle_drift_per_hour) << " " << DEGREE << "/h";
                 oss << "<br>";
-                oss << "direction angle: " << radians_to_degrees(config.track_direction_angle) << DEGREE;
+                oss << "direction angle: " << radians_to_degrees(config.angle_r) << DEGREE;
         }
         oss << "<br>";
         oss << "<br>";
@@ -146,8 +149,11 @@ class Simulator final
         const T dt_;
         const T speed_m_;
         const T speed_a_;
-        const T direction_bias_drift_;
-        const T direction_angle_;
+        const T velocity_magnitude_period_;
+        const T velocity_angle_period_;
+
+        const T angle_drift_;
+        const T angle_r_;
 
         PCG engine_;
 
@@ -168,8 +174,9 @@ class Simulator final
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
                 static constexpr T S = 100;
-                const T magnitude = std::max<T>(0, speed_m_ + speed_a_ * std::sin(time * (PI<T> / 30)));
-                const T angle = std::cos((std::max<T>(0, time - S)) * (PI<T> / 45));
+                const T magnitude =
+                        std::max<T>(0, speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_)));
+                const T angle = std::cos((std::max<T>(0, time - S)) * (2 * PI<T> / velocity_angle_period_));
                 return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle};
         }
 
@@ -191,18 +198,21 @@ class Simulator final
 public:
         explicit Simulator(const Config<T>& config)
                 : dt_(config.measurement_dt),
-                  speed_m_((config.track_speed_min + config.track_speed_max) / 2),
-                  speed_a_((config.track_speed_max - config.track_speed_min) / 2),
-                  direction_bias_drift_(config.track_direction_bias_drift / (T{60} * T{60})),
-                  direction_angle_(config.track_direction_angle),
-                  speed_nd_(0, std::sqrt(config.track_speed_variance)),
+                  speed_m_((config.speed_min + config.speed_max) / 2),
+                  speed_a_((config.speed_max - config.speed_min) / 2),
+                  velocity_magnitude_period_(config.velocity_magnitude_period),
+                  velocity_angle_period_(config.velocity_angle_period),
+                  angle_drift_(config.measurement_dt * config.angle_drift_per_hour / (T{60} * T{60})),
+                  angle_r_(normalize_angle(config.angle_r)),
+                  speed_nd_(0, std::sqrt(config.speed_variance)),
                   measurements_direction_nd_(0, std::sqrt(config.measurement_variance_direction)),
                   measurements_acceleration_nd_(0, std::sqrt(config.measurement_variance_acceleration)),
                   measurements_position_nd_(0, std::sqrt(config.measurement_variance_position)),
                   measurements_speed_nd_(0, std::sqrt(config.measurement_variance_speed)),
                   velocity_(velocity_with_noise(time_)),
                   next_velocity_(velocity_with_noise(time_ + dt_)),
-                  acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_)
+                  acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_),
+                  angle_(normalize_angle(config.angle))
         {
         }
 
@@ -216,7 +226,7 @@ public:
                 next_velocity_ = velocity_with_noise(time_ + dt_);
                 acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
 
-                angle_ = -T{3} - time_ * direction_bias_drift_;
+                angle_ = normalize_angle(angle_ + angle_drift_);
         }
 
         [[nodiscard]] const Vector<N, T>& position() const
@@ -236,12 +246,12 @@ public:
 
         [[nodiscard]] T angle_r() const
         {
-                return direction_angle_;
+                return angle_r_;
         }
 
         [[nodiscard]] T measurement_direction()
         {
-                return velocity_.angle + direction_angle_ + angle_ + measurements_direction_nd_(engine_);
+                return normalize_angle(velocity_.angle + angle_r_ + angle_ + measurements_direction_nd_(engine_));
         }
 
         [[nodiscard]] Vector<N, T> measurement_acceleration()
@@ -266,7 +276,7 @@ Track<N, T> generate_track()
 {
         const Config<T> config;
 
-        ASSERT(config.track_speed_max >= config.track_speed_min);
+        ASSERT(config.speed_max >= config.speed_min);
         ASSERT(config.measurement_dt_count_acceleration > 0 && config.measurement_dt_count_direction > 0
                && config.measurement_dt_count_position > 0 && config.measurement_dt_count_speed > 0);
 
@@ -316,7 +326,7 @@ Track<N, T> generate_track()
                 }
                 m.speed_variance = config.measurement_variance_speed;
 
-                const auto n = std::llround(m.time / 30);
+                const auto n = std::llround(m.time / 33);
                 if ((n > 3) && ((n % 5) == 0))
                 {
                         m.position.reset();
