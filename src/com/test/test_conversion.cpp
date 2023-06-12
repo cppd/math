@@ -54,6 +54,7 @@ void test(const T precision)
         static_assert(radians_to_degrees(2 * PI<T>) == 360);
         static_assert(degrees_to_radians(T{360}) == 2 * PI<T>);
         static_assert(mps_to_kph(T{10}) == 36);
+        static_assert(kph_to_mps(T{36}) == 10);
 
         const auto cmp = [&](const T a, const T b)
         {
@@ -69,6 +70,7 @@ void test(const T precision)
         cmp(25.4L / 15, pixels_to_millimeters<T>(10, 150));
         cmp(381, pixels_to_millimeters<T>(150, 10));
         cmp(36, mps_to_kph<T>(10));
+        cmp(10, kph_to_mps<T>(36));
 }
 
 void test_conversion()

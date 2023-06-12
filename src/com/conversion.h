@@ -76,6 +76,14 @@ template <typename T>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return T{3.6L} * mps;
+        return mps * T{3.6L};
+}
+
+template <typename T>
+[[nodiscard]] constexpr T kph_to_mps(const T kph)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return kph / T{3.6L};
 }
 }
