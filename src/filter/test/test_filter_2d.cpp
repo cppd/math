@@ -114,12 +114,8 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
                 error("No measurements to estimate direction");
         }
 
-        std::optional<typename std::vector<ProcessMeasurement<2, T>>::const_iterator> direction_iter;
-        if (iter->direction)
-        {
-                direction_iter = iter;
-        }
-
+        std::optional<T> last_direction;
+        std::optional<T> last_direction_time;
         const Position<T>* angle_position = nullptr;
         T angle_p = Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE;
 
@@ -127,7 +123,8 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
         {
                 if (iter->direction)
                 {
-                        direction_iter = iter;
+                        last_direction = *iter->direction;
+                        last_direction_time = iter->time;
                 }
 
                 if (!iter->position)
@@ -136,8 +133,7 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
                 }
 
                 const bool direction =
-                        direction_iter && (iter->time - (*direction_iter)->time <= DIRECTION_TIME_DIFFERENCE)
-                        && (*direction_iter)->direction;
+                        last_direction_time && (iter->time - *last_direction_time <= DIRECTION_TIME_DIFFERENCE);
 
                 for (Position<T>& position : *positions)
                 {
@@ -146,8 +142,13 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
                         LOG(to_string(iter->time) + "; " + position.name()
                             + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.angle_p()))));
 
+                        if (!direction)
+                        {
+                                continue;
+                        }
+
                         const T position_angle_p = position.angle_p();
-                        if (direction && (position_angle_p < angle_p))
+                        if (position_angle_p < angle_p)
                         {
                                 angle_position = &position;
                                 angle_p = position_angle_p;
@@ -167,11 +168,13 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
         }
 
         ASSERT(angle_position);
+        ASSERT(last_direction);
+
         LOG("angle from " + angle_position->name());
 
         const T position_filter_angle = angle_position->angle();
         const T position_filter_angle_p = angle_position->angle_p();
-        const T measurement_angle = *(*direction_iter)->direction;
+        const T measurement_angle = *last_direction;
         const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
 
         LOG("estimation: angle = " + to_string(radians_to_degrees(position_filter_angle)) + "; "
