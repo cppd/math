@@ -102,19 +102,28 @@ typename std::vector<ProcessMeasurement<2, T>>::const_iterator find_position(con
 }
 
 template <typename T>
-class DirectionEstimation final
+struct PositionEstimate final
 {
-        std::vector<Position<T>>* const positions_;
+        T angle;
+        Vector<2, T> position;
+        Vector<2, T> velocity;
+};
+
+template <typename T>
+class PositionEstimation final
+{
+        const std::vector<Position<T>>* const positions_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
         std::optional<std::size_t> angle_position_index_;
         bool direction_ = false;
 
 public:
-        explicit DirectionEstimation(std::vector<Position<T>>* const positions)
+        explicit PositionEstimation(const std::vector<Position<T>>* const positions)
                 : positions_(positions)
         {
                 ASSERT(positions_);
+                last_direction_time_ = std::nullopt;
         }
 
         void update(const ProcessMeasurement<2, T>& m)
@@ -153,35 +162,58 @@ public:
                 }
         }
 
-        [[nodiscard]] std::optional<T> measurement_angle() const
+        [[nodiscard]] bool has_value() const
         {
-                if (!direction_)
-                {
-                        return std::nullopt;
-                }
-                ASSERT(last_direction_);
-                return *last_direction_;
+                ASSERT(!direction_ || last_direction_);
+                return direction_ && angle_position_index_;
         }
 
-        [[nodiscard]] std::optional<std::size_t> angle_position_index() const
+        [[nodiscard]] PositionEstimate<T> value() const
         {
-                return angle_position_index_;
+                if (!has_value())
+                {
+                        error("Estimation doesn't have value");
+                }
+                const Position<T>& position = (*positions_)[*angle_position_index_];
+                return {.angle = normalize_angle(*last_direction_ - position.angle()),
+                        .position = position.position(),
+                        .velocity = position.velocity()};
+        }
+
+        [[nodiscard]] std::string description() const
+        {
+                if (!has_value())
+                {
+                        error("Estimation doesn't have value");
+                }
+
+                const Position<T>& position = (*positions_)[*angle_position_index_];
+                const T filter_angle = position.angle();
+
+                std::string res;
+                res += "estimation:";
+                res += "\nfilter = " + position.name();
+                res += "\nangle = " + to_string(radians_to_degrees(filter_angle));
+                res += "\nangle stddev = " + to_string(radians_to_degrees(std::sqrt(position.angle_p())));
+                res += "\nmeasurement: angle = " + to_string(radians_to_degrees(*last_direction_));
+                res += "\nangle difference = "
+                       + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));
+                return res;
         }
 };
 
 template <typename T>
-std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Vector<2, T>, Vector<2, T>>
-        estimate_direction(
-                const Track<2, T>& track,
-                typename std::vector<ProcessMeasurement<2, T>>::const_iterator iter,
-                std::vector<Position<T>>* const positions)
+std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, PositionEstimate<T>> estimate_direction(
+        const Track<2, T>& track,
+        typename std::vector<ProcessMeasurement<2, T>>::const_iterator iter,
+        std::vector<Position<T>>* const positions)
 {
         if (iter == track.measurements.cend())
         {
                 error("No measurements to estimate direction");
         }
 
-        DirectionEstimation estimation(positions);
+        PositionEstimation estimation(positions);
 
         for (; iter != track.measurements.cend(); ++iter)
         {
@@ -197,7 +229,7 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
 
                 estimation.update(*iter);
 
-                if (estimation.measurement_angle() && estimation.angle_position_index())
+                if (estimation.has_value())
                 {
                         break;
                 }
@@ -206,26 +238,14 @@ std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, T, Ve
         if (iter == track.measurements.cend())
         {
                 LOG("Failed to estimate direction");
-                return {iter, 0, Vector<2, T>(0), Vector<2, T>(0)};
+                return {iter, {}};
         }
 
-        ASSERT(estimation.measurement_angle() && estimation.angle_position_index());
+        ASSERT(estimation.has_value());
 
-        const Position<T>& position = (*positions)[*estimation.angle_position_index()];
+        LOG(estimation.description());
 
-        LOG("angle from " + position.name());
-
-        const T position_filter_angle = position.angle();
-        const T position_filter_angle_p = position.angle_p();
-        const T measurement_angle = *estimation.measurement_angle();
-        const T angle_difference = normalize_angle(measurement_angle - position_filter_angle);
-
-        LOG("estimation: angle = " + to_string(radians_to_degrees(position_filter_angle)) + "; "
-            + "angle stddev = " + to_string(radians_to_degrees(std::sqrt(position_filter_angle_p))) + "\n"
-            + "measurement: angle = " + to_string(radians_to_degrees(measurement_angle)) + "\n"
-            + "angle difference = " + to_string(radians_to_degrees(angle_difference)));
-
-        return {iter, angle_difference, position.position(), position.velocity()};
+        return {iter, estimation.value()};
 }
 
 template <std::size_t N, typename T>
@@ -342,14 +362,14 @@ void test_impl(const Track<2, T>& track)
         std::vector<Position<T>> positions =
                 create_positions(*first_position_iter->position, first_position_iter->position_variance);
 
-        const auto [first_process_iter, init_angle, init_position, init_velocity] =
+        const auto [first_process_iter, estimate] =
                 estimate_direction(track, std::next(first_position_iter), &positions);
 
         std::vector<Process<T>> processes;
         if (first_process_iter != track.measurements.cend())
         {
                 processes = create_processes(
-                        init_position, init_velocity, init_angle, first_process_iter->position_variance);
+                        estimate.position, estimate.velocity, estimate.angle, first_process_iter->position_variance);
         }
 
         auto iter =
