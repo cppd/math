@@ -86,69 +86,6 @@ void write_to_file(
         view::write_to_file(track, Config<T>::DATA_CONNECT_INTERVAL, filters);
 }
 
-template <typename T>
-typename std::vector<ProcessMeasurement<2, T>>::const_iterator find_position(const Track<2, T>& track)
-{
-        auto iter = track.measurements.cbegin();
-        while (iter != track.measurements.cend() && !iter->position)
-        {
-                ++iter;
-        }
-        if (iter == track.measurements.cend())
-        {
-                error("No position measurement found");
-        }
-        return iter;
-}
-
-template <typename T>
-std::tuple<typename std::vector<ProcessMeasurement<2, T>>::const_iterator, PositionEstimate<T>> estimate_direction(
-        const Track<2, T>& track,
-        typename std::vector<ProcessMeasurement<2, T>>::const_iterator iter,
-        std::vector<Position<T>>* const positions)
-{
-        if (iter == track.measurements.cend())
-        {
-                error("No measurements to estimate direction");
-        }
-
-        PositionEstimation estimation(
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, positions);
-
-        for (; iter != track.measurements.cend(); ++iter)
-        {
-                if (!iter->position)
-                {
-                        continue;
-                }
-
-                for (Position<T>& position : *positions)
-                {
-                        position.update(*iter, track.points[iter->simulator_point_index]);
-                }
-
-                estimation.update(*iter);
-
-                if (estimation.has_value())
-                {
-                        break;
-                }
-        }
-
-        if (iter == track.measurements.cend())
-        {
-                LOG("Failed to estimate direction");
-                return {iter, {}};
-        }
-
-        ASSERT(estimation.has_value());
-
-        LOG(estimation.description());
-
-        return {iter, estimation.value()};
-}
-
 template <std::size_t N, typename T>
 int compute_precision(const std::array<T, N>& data)
 {
@@ -253,52 +190,19 @@ std::vector<Process<T>> create_processes(
 }
 
 template <typename T>
-void test_impl(const Track<2, T>& track)
+void write_result(
+        const Track<2, T>& track,
+        const std::vector<Position<T>>& positions,
+        const std::vector<Process<T>>& processes)
 {
-        ASSERT(!track.measurements.empty());
-
-        const auto first_position_iter = find_position(track);
-        ASSERT(first_position_iter != track.measurements.cend() && first_position_iter->position);
-
-        std::vector<Position<T>> positions =
-                create_positions(*first_position_iter->position, first_position_iter->position_variance);
-
-        const auto [first_process_iter, estimate] =
-                estimate_direction(track, std::next(first_position_iter), &positions);
-
-        std::vector<Process<T>> processes;
-        if (first_process_iter != track.measurements.cend())
+        if (positions.empty())
         {
-                processes = create_processes(
-                        estimate.position, estimate.velocity, estimate.angle, first_process_iter->position_variance);
+                error("No position measurement found");
         }
 
-        auto iter =
-                first_process_iter != track.measurements.cend() ? std::next(first_process_iter) : first_process_iter;
-        for (; iter != track.measurements.cend(); ++iter)
+        if (processes.empty())
         {
-                const auto& point = track.points[iter->simulator_point_index];
-
-                if (iter->position)
-                {
-                        for (auto& p : positions)
-                        {
-                                p.update(*iter, point);
-                        }
-                }
-
-                for (auto& p : processes)
-                {
-                        p.update(*iter, point);
-                }
-
-                if (iter->position)
-                {
-                        for (auto& p : processes)
-                        {
-                                LOG(to_string(iter->time) + "; " + p.angle_string(point));
-                        }
-                }
+                LOG("Failed to estimate direction");
         }
 
         write_to_file(track, positions, processes);
@@ -312,6 +216,62 @@ void test_impl(const Track<2, T>& track)
         {
                 LOG(p.nees_string());
         }
+}
+
+template <typename T>
+void test_impl(const Track<2, T>& track)
+{
+        std::vector<Position<T>> positions;
+        std::vector<Process<T>> processes;
+        std::optional<PositionEstimation<T>> estimation;
+
+        for (const ProcessMeasurement<2, T>& m : track.measurements)
+        {
+                const auto& point = track.points[m.simulator_point_index];
+
+                if (m.position)
+                {
+                        if (positions.empty())
+                        {
+                                positions = create_positions(*m.position, m.position_variance);
+
+                                estimation.emplace(
+                                        Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
+                                        Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, &positions);
+                        }
+
+                        for (auto& p : positions)
+                        {
+                                p.update(m, point);
+                        }
+
+                        estimation->update(m);
+
+                        if (processes.empty() && estimation->has_estimates())
+                        {
+                                LOG(estimation->description());
+
+                                processes = create_processes(
+                                        estimation->position(), estimation->velocity(), estimation->angle(),
+                                        m.position_variance);
+                        }
+                }
+
+                for (auto& p : processes)
+                {
+                        p.update(m, point);
+                }
+
+                if (m.position)
+                {
+                        for (auto& p : processes)
+                        {
+                                LOG(to_string(m.time) + "; " + p.angle_string(point));
+                        }
+                }
+        }
+
+        write_result(track, positions, processes);
 }
 
 template <typename T>

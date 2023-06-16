@@ -28,14 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-struct PositionEstimate final
-{
-        T angle;
-        Vector<2, T> position;
-        Vector<2, T> velocity;
-};
-
-template <typename T>
 class PositionEstimation final
 {
         const T angle_estimation_time_difference_;
@@ -54,10 +46,10 @@ public:
 
         void update(const ProcessMeasurement<2, T>& m);
 
-        [[nodiscard]] bool has_value() const;
-
-        [[nodiscard]] PositionEstimate<T> value() const;
-
+        [[nodiscard]] bool has_estimates() const;
+        [[nodiscard]] T angle() const;
+        [[nodiscard]] Vector<2, T> position() const;
+        [[nodiscard]] Vector<2, T> velocity() const;
         [[nodiscard]] std::string description() const;
 };
 

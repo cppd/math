@@ -73,31 +73,51 @@ void PositionEstimation<T>::update(const ProcessMeasurement<2, T>& m)
 }
 
 template <typename T>
-bool PositionEstimation<T>::has_value() const
+bool PositionEstimation<T>::has_estimates() const
 {
         ASSERT(!direction_ || last_direction_);
         return direction_ && angle_position_index_;
 }
 
 template <typename T>
-PositionEstimate<T> PositionEstimation<T>::value() const
+T PositionEstimation<T>::angle() const
 {
-        if (!has_value())
+        if (!has_estimates())
         {
-                error("Estimation doesn't have value");
+                error("Estimation doesn't have angle");
         }
         const Position<T>& position = (*positions_)[*angle_position_index_];
-        return {.angle = normalize_angle(*last_direction_ - position.angle()),
-                .position = position.position(),
-                .velocity = position.velocity()};
+        return normalize_angle(*last_direction_ - position.angle());
+}
+
+template <typename T>
+Vector<2, T> PositionEstimation<T>::position() const
+{
+        if (!has_estimates())
+        {
+                error("Estimation doesn't have position");
+        }
+        const Position<T>& position = (*positions_)[*angle_position_index_];
+        return position.position();
+}
+
+template <typename T>
+Vector<2, T> PositionEstimation<T>::velocity() const
+{
+        if (!has_estimates())
+        {
+                error("Estimation doesn't have velocity");
+        }
+        const Position<T>& position = (*positions_)[*angle_position_index_];
+        return position.velocity();
 }
 
 template <typename T>
 std::string PositionEstimation<T>::description() const
 {
-        if (!has_value())
+        if (!has_estimates())
         {
-                error("Estimation doesn't have value");
+                error("Estimation doesn't have description");
         }
 
         const Position<T>& position = (*positions_)[*angle_position_index_];
