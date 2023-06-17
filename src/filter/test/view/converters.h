@@ -72,11 +72,11 @@ std::vector<Vector<2, T>> add_offset(const std::vector<Vector<2, T>>& data, cons
 }
 
 template <typename T>
-std::vector<Vector<2, T>> track_position(const Track<2, T>& track)
+std::vector<Vector<2, T>> track_position(const std::vector<Measurement<2, T>>& measurements)
 {
         std::vector<Vector<2, T>> res;
-        res.reserve(track.measurements.size());
-        for (const Measurement<2, T>& m : track.measurements)
+        res.reserve(measurements.size());
+        for (const Measurement<2, T>& m : measurements)
         {
                 res.emplace_back(m.true_data.position);
         }
@@ -84,13 +84,13 @@ std::vector<Vector<2, T>> track_position(const Track<2, T>& track)
 }
 
 template <typename T>
-std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
+std::vector<Vector<2, T>> track_speed(const std::vector<Measurement<2, T>>& measurements)
 {
         namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
-        res.reserve(track.measurements.size());
-        for (const Measurement<2, T>& m : track.measurements)
+        res.reserve(measurements.size());
+        for (const Measurement<2, T>& m : measurements)
         {
                 res.emplace_back(impl::time_unit(m.time), mps_to_kph(m.true_data.speed));
         }
@@ -98,12 +98,14 @@ std::vector<Vector<2, T>> track_speed(const Track<2, T>& track)
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>& track, const T interval)
+std::vector<std::optional<Vector<2, T>>> position_measurements(
+        const std::vector<Measurement<2, T>>& measurements,
+        const T interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.measurements.size());
+        res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.position)
@@ -121,14 +123,16 @@ std::vector<std::optional<Vector<2, T>>> position_measurements(const Track<2, T>
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& track, const T interval)
+std::vector<std::optional<Vector<2, T>>> speed_measurements(
+        const std::vector<Measurement<2, T>>& measurements,
+        const T interval)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(track.measurements.size());
+        res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.speed)
@@ -146,15 +150,15 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(const Track<2, T>& t
 }
 
 template <typename T>
-std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track, const T interval)
+std::vector<Vector<2, T>> angle_measurements(const std::vector<Measurement<2, T>>& measurements, const T interval)
 {
         namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
-        res.reserve(track.measurements.size());
+        res.reserve(measurements.size());
         std::optional<T> previous_angle;
         std::optional<T> last_time;
-        for (const Measurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.direction)
@@ -174,15 +178,17 @@ std::vector<Vector<2, T>> angle_measurements(const Track<2, T>& track, const T i
 }
 
 template <std::size_t INDEX, typename T>
-std::vector<Vector<2, T>> acceleration_measurements(const Track<2, T>& track, const T interval)
+std::vector<Vector<2, T>> acceleration_measurements(
+        const std::vector<Measurement<2, T>>& measurements,
+        const T interval)
 {
         namespace impl = converters_implementation;
 
         static_assert(INDEX < 2);
         std::vector<Vector<2, T>> res;
-        res.reserve(track.measurements.size());
+        res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.acceleration)

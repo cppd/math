@@ -58,7 +58,8 @@ struct Config final
 
 template <typename T>
 void write_to_file(
-        const Track<2, T>& track,
+        const std::string_view annotation,
+        const std::vector<Measurement<2, T>>& measurements,
         const std::vector<Position<T>>& positions,
         const std::vector<Process<T>>& processes)
 {
@@ -83,7 +84,7 @@ void write_to_file(
                          .position = process.positions()});
         }
 
-        view::write_to_file(track, Config<T>::DATA_CONNECT_INTERVAL, filters);
+        view::write_to_file(annotation, measurements, Config<T>::DATA_CONNECT_INTERVAL, filters);
 }
 
 template <std::size_t N, typename T>
@@ -191,7 +192,8 @@ std::vector<Process<T>> create_processes(
 
 template <typename T>
 void write_result(
-        const Track<2, T>& track,
+        const std::string_view annotation,
+        const std::vector<Measurement<2, T>>& measurements,
         const std::vector<Position<T>>& positions,
         const std::vector<Process<T>>& processes)
 {
@@ -205,7 +207,7 @@ void write_result(
                 LOG("Failed to estimate direction");
         }
 
-        write_to_file(track, positions, processes);
+        write_to_file(annotation, measurements, positions, processes);
 
         for (const auto& p : positions)
         {
@@ -270,7 +272,7 @@ void test_impl(const Track<2, T>& track)
                 }
         }
 
-        write_result(track, positions, processes);
+        write_result(track.annotation, track.measurements, positions, processes);
 }
 
 template <typename T>

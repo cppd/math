@@ -38,5 +38,9 @@ struct Filter final
 };
 
 template <std::size_t N, typename T>
-void write_to_file(const Track<N, T>& track, T interval, const std::vector<Filter<N, T>>& filters);
+void write_to_file(
+        std::string_view annotation,
+        const std::vector<Measurement<N, T>>& measurements,
+        T interval,
+        const std::vector<Filter<N, T>>& filters);
 }

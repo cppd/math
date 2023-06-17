@@ -57,7 +57,7 @@ template <std::size_t N, typename T>
 struct Track final
 {
         std::vector<Measurement<N, T>> measurements;
-        std::string annotations;
+        std::string annotation;
 };
 
 template <std::size_t N, typename T>

@@ -336,7 +336,7 @@ Track<N, T> generate_track()
                 }
         }
 
-        res.annotations = make_annotation(config, res.measurements);
+        res.annotation = make_annotation(config, res.measurements);
 
         return res;
 }

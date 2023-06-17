@@ -262,29 +262,34 @@ void write_filter_position(
 }
 
 template <std::size_t N, typename T>
-void write_to_file(const Track<N, T>& track, const T interval, const std::vector<Filter<N, T>>& filters)
+void write_to_file(
+        const std::string_view annotation,
+        const std::vector<Measurement<N, T>>& measurements,
+        const T interval,
+        const std::vector<Filter<N, T>>& filters)
 {
         std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
-        if (!track.annotations.empty())
+        if (!annotation.empty())
         {
-                file << '"' << track.annotations << "\"\n";
+                file << '"' << annotation << "\"\n";
         }
 
-        write_track_position(file, add_offset(track_position(track), OFFSET));
+        write_track_position(file, add_offset(track_position(measurements), OFFSET));
 
-        write_track_speed(file, track_speed(track));
+        write_track_speed(file, track_speed(measurements));
 
-        write_measurement_angle(file, angle_measurements(track, interval));
+        write_measurement_angle(file, angle_measurements(measurements, interval));
 
         write_measurement_acceleration(
-                file, acceleration_measurements<0>(track, interval), acceleration_measurements<1>(track, interval));
+                file, acceleration_measurements<0>(measurements, interval),
+                acceleration_measurements<1>(measurements, interval));
 
-        write_measurement_position(file, add_offset(position_measurements(track, interval), OFFSET));
+        write_measurement_position(file, add_offset(position_measurements(measurements, interval), OFFSET));
 
-        write_measurement_speed(file, speed_measurements(track, interval));
+        write_measurement_speed(file, speed_measurements(measurements, interval));
 
         for (const Filter<N, T>& filter : filters)
         {
@@ -296,7 +301,9 @@ void write_to_file(const Track<N, T>& track, const T interval, const std::vector
         }
 }
 
-#define TEMPLATE(T) template void write_to_file(const Track<2, T>&, T, const std::vector<Filter<2, T>>&);
+#define TEMPLATE(T)                  \
+        template void write_to_file( \
+                std::string_view, const std::vector<Measurement<2, T>>&, T, const std::vector<Filter<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)
