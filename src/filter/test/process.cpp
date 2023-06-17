@@ -34,15 +34,15 @@ Process<T>::Process(std::string name, const color::RGB8 color, std::unique_ptr<P
 }
 
 template <typename T>
-void Process<T>::save(const T time, const SimulatorPoint<2, T>& point)
+void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         const Vector<2, T> p = filter_->position();
         position_.push_back({time, p[0], p[1]});
         speed_.push_back({time, filter_->speed()});
 
-        nees_position_.add(point.position - filter_->position(), filter_->position_p());
-        nees_angle_.add(normalize_angle(point.angle - filter_->angle()), filter_->angle_p());
-        nees_angle_r_.add(normalize_angle(point.angle_r - filter_->angle_r()), filter_->angle_r_p());
+        nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
+        nees_angle_.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
+        nees_angle_r_.add(normalize_angle(true_data.angle_r - filter_->angle_r()), filter_->angle_r_p());
 }
 
 template <typename T>
@@ -56,7 +56,7 @@ void Process<T>::predict(const T time)
 }
 
 template <typename T>
-void Process<T>::update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<2, T>& point)
+void Process<T>::update(const Measurement<2, T>& m)
 {
         predict(m.time);
 
@@ -90,7 +90,7 @@ void Process<T>::update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<
                 filter_->update_acceleration(*m.acceleration, m.acceleration_variance);
         }
 
-        save(m.time, point);
+        save(m.time, m.true_data);
 }
 
 template <typename T>
@@ -106,11 +106,10 @@ color::RGB8 Process<T>::color() const
 }
 
 template <typename T>
-std::string Process<T>::angle_string(const SimulatorPoint<2, T>& point) const
+std::string Process<T>::angle_string() const
 {
         std::string s;
         s += name_;
-        s += "; track = " + to_string(radians_to_degrees(normalize_angle(point.angle)));
         s += "; process = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
         s += "; speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
         s += "; r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r())));

@@ -31,17 +31,17 @@ Position<T>::Position(std::string name, color::RGB8 color, std::unique_ptr<Posit
 }
 
 template <typename T>
-void Position<T>::save(const T time, const SimulatorPoint<2, T>& point)
+void Position<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         const Vector<2, T> p = filter_->position();
         position_.push_back({time, p[0], p[1]});
         speed_.push_back({time, filter_->speed()});
 
-        nees_position_.add(point.position - filter_->position(), filter_->position_p());
+        nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
 }
 
 template <typename T>
-void Position<T>::update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<2, T>& point)
+void Position<T>::update(const Measurement<2, T>& m)
 {
         ASSERT(!last_time_ || *last_time_ < m.time);
 
@@ -56,7 +56,7 @@ void Position<T>::update(const ProcessMeasurement<2, T>& m, const SimulatorPoint
         filter_->predict(delta);
         filter_->update(*m.position, m.position_variance);
 
-        save(m.time, point);
+        save(m.time, m.true_data);
 }
 
 template <typename T>

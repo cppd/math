@@ -25,9 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct SimulatorPoint final
+struct TrueData final
 {
-        T time;
         Vector<N, T> position;
         T speed;
         T angle;
@@ -35,9 +34,10 @@ struct SimulatorPoint final
 };
 
 template <std::size_t N, typename T>
-struct ProcessMeasurement final
+struct Measurement final
 {
-        std::size_t simulator_point_index;
+        TrueData<N, T> true_data;
+
         T time;
 
         std::optional<Vector<N, T>> acceleration;
@@ -56,11 +56,10 @@ struct ProcessMeasurement final
 template <std::size_t N, typename T>
 struct Track final
 {
-        std::vector<SimulatorPoint<N, T>> points;
-        std::vector<ProcessMeasurement<N, T>> measurements;
+        std::vector<Measurement<N, T>> measurements;
         std::string annotations;
 };
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track();
+[[nodiscard]] Track<N, T> generate_track();
 }

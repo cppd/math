@@ -60,14 +60,14 @@ struct Config final
 };
 
 template <std::size_t N, typename T>
-std::string make_annotation(const Config<T>& config, const std::vector<ProcessMeasurement<N, T>>& measurements)
+std::string make_annotation(const Config<T>& config, const std::vector<Measurement<N, T>>& measurements)
 {
         bool position = false;
         bool speed = false;
         bool direction = false;
         bool acceleration = false;
 
-        for (const ProcessMeasurement<N, T>& m : measurements)
+        for (const Measurement<N, T>& m : measurements)
         {
                 position = position || m.position.has_value();
                 speed = speed || m.speed.has_value();
@@ -283,23 +283,20 @@ Track<N, T> generate_track()
         Simulator<N, T> simulator(config);
 
         Track<N, T> res;
-        res.points.reserve(config.count);
         res.measurements.reserve(config.count);
 
         for (std::size_t i = 0; i < config.count; ++i)
         {
                 simulator.move();
 
-                res.points.push_back(
-                        {.time = i * config.measurement_dt,
-                         .position = simulator.position(),
-                         .speed = simulator.speed(),
-                         .angle = simulator.angle(),
-                         .angle_r = simulator.angle_r()});
+                Measurement<N, T>& m = res.measurements.emplace_back();
 
-                ProcessMeasurement<N, T>& m = res.measurements.emplace_back();
+                m.true_data = {
+                        .position = simulator.position(),
+                        .speed = simulator.speed(),
+                        .angle = simulator.angle(),
+                        .angle_r = simulator.angle_r()};
 
-                m.simulator_point_index = i;
                 m.time = i * config.measurement_dt;
 
                 if (i % config.measurement_dt_count_acceleration == 0)

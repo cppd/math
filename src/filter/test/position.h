@@ -45,12 +45,12 @@ class Position final
 
         std::optional<T> last_time_;
 
-        void save(T time, const SimulatorPoint<2, T>& point);
+        void save(T time, const TrueData<2, T>& true_data);
 
 public:
         Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter);
 
-        void update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<2, T>& point);
+        void update(const Measurement<2, T>& m);
 
         [[nodiscard]] T angle() const;
         [[nodiscard]] T angle_p() const;

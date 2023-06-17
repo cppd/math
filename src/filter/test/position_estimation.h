@@ -44,7 +44,7 @@ public:
                 T angle_estimation_variance,
                 const std::vector<Position<T>>* positions);
 
-        void update(const ProcessMeasurement<2, T>& m);
+        void update(const Measurement<2, T>& m);
 
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;

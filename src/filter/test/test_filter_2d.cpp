@@ -225,10 +225,8 @@ void test_impl(const Track<2, T>& track)
         std::vector<Process<T>> processes;
         std::optional<PositionEstimation<T>> estimation;
 
-        for (const ProcessMeasurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : track.measurements)
         {
-                const auto& point = track.points[m.simulator_point_index];
-
                 if (m.position)
                 {
                         if (positions.empty())
@@ -242,7 +240,7 @@ void test_impl(const Track<2, T>& track)
 
                         for (auto& p : positions)
                         {
-                                p.update(m, point);
+                                p.update(m);
                         }
 
                         estimation->update(m);
@@ -259,14 +257,15 @@ void test_impl(const Track<2, T>& track)
 
                 for (auto& p : processes)
                 {
-                        p.update(m, point);
+                        p.update(m);
                 }
 
                 if (m.position)
                 {
                         for (auto& p : processes)
                         {
-                                LOG(to_string(m.time) + "; " + p.angle_string(point));
+                                LOG(to_string(m.time) + "; true angle = "
+                                    + to_string(radians_to_degrees(m.true_data.angle)) + "; " + p.angle_string());
                         }
                 }
         }

@@ -38,7 +38,7 @@ PositionEstimation<T>::PositionEstimation(
 }
 
 template <typename T>
-void PositionEstimation<T>::update(const ProcessMeasurement<2, T>& m)
+void PositionEstimation<T>::update(const Measurement<2, T>& m)
 {
         if (m.direction)
         {

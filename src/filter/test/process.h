@@ -48,19 +48,19 @@ class Process final
 
         std::optional<T> last_time_;
 
-        void save(T time, const SimulatorPoint<2, T>& point);
+        void save(T time, const TrueData<2, T>& true_data);
 
         void predict(T time);
 
 public:
         Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
 
-        void update(const ProcessMeasurement<2, T>& m, const SimulatorPoint<2, T>& point);
+        void update(const Measurement<2, T>& m);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] std::string angle_string(const SimulatorPoint<2, T>& point) const;
+        [[nodiscard]] std::string angle_string() const;
         [[nodiscard]] std::string nees_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
