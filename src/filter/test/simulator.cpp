@@ -272,7 +272,7 @@ public:
 }
 
 template <std::size_t N, typename T>
-Track<N, T> generate_track()
+Track<N, T> track()
 {
         const Config<T> config;
 
@@ -282,14 +282,14 @@ Track<N, T> generate_track()
 
         Simulator<N, T> simulator(config);
 
-        Track<N, T> res;
-        res.measurements.reserve(config.count);
+        std::vector<Measurement<N, T>> measurements;
+        measurements.reserve(config.count);
 
         for (std::size_t i = 0; i < config.count; ++i)
         {
                 simulator.move();
 
-                Measurement<N, T>& m = res.measurements.emplace_back();
+                Measurement<N, T>& m = measurements.emplace_back();
 
                 m.true_data = {
                         .position = simulator.position(),
@@ -336,12 +336,12 @@ Track<N, T> generate_track()
                 }
         }
 
-        res.annotation = make_annotation(config, res.measurements);
+        std::string annotation = make_annotation(config, measurements);
 
-        return res;
+        return {std::move(measurements), std::move(annotation)};
 }
 
-#define TEMPLATE(T) template Track<2, T> generate_track();
+#define TEMPLATE(T) template Track<2, T> track();
 
 TEMPLATE(float)
 TEMPLATE(double)

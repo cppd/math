@@ -54,12 +54,61 @@ struct Measurement final
 };
 
 template <std::size_t N, typename T>
-struct Track final
+class Track final
 {
-        std::vector<Measurement<N, T>> measurements;
-        std::string annotation;
+        class Iter final
+        {
+                typename std::vector<Measurement<N, T>>::const_iterator iter_;
+
+        public:
+                explicit Iter(typename std::vector<Measurement<N, T>>::const_iterator iter)
+                        : iter_(std::move(iter))
+                {
+                }
+
+                Iter& operator++()
+                {
+                        ++iter_;
+                        return *this;
+                }
+
+                [[nodiscard]] bool operator==(const Iter& a) const
+                {
+                        return iter_ == a.iter_;
+                }
+
+                [[nodiscard]] const Measurement<N, T>& operator*() const
+                {
+                        return *iter_;
+                }
+        };
+
+        std::vector<Measurement<N, T>> measurements_;
+        std::string annotation_;
+
+public:
+        Track(std::vector<Measurement<N, T>> measurements, std::string annotation)
+                : measurements_(std::move(measurements)),
+                  annotation_(std::move(annotation))
+        {
+        }
+
+        [[nodiscard]] Iter begin() const
+        {
+                return Iter(measurements_.cbegin());
+        }
+
+        [[nodiscard]] Iter end() const
+        {
+                return Iter(measurements_.cend());
+        }
+
+        [[nodiscard]] const std::string& annotation() const
+        {
+                return annotation_;
+        }
 };
 
 template <std::size_t N, typename T>
-[[nodiscard]] Track<N, T> generate_track();
+[[nodiscard]] Track<N, T> track();
 }

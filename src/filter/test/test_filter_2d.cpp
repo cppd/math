@@ -223,12 +223,15 @@ void write_result(
 template <typename T>
 void test_impl(const Track<2, T>& track)
 {
+        std::vector<Measurement<2, T>> measurements;
         std::vector<Position<T>> positions;
         std::vector<Process<T>> processes;
         std::optional<PositionEstimation<T>> estimation;
 
-        for (const Measurement<2, T>& m : track.measurements)
+        for (const Measurement<2, T>& m : track)
         {
+                measurements.push_back(m);
+
                 if (m.position)
                 {
                         if (positions.empty())
@@ -272,13 +275,13 @@ void test_impl(const Track<2, T>& track)
                 }
         }
 
-        write_result(track.annotation, track.measurements, positions, processes);
+        write_result(track.annotation(), measurements, positions, processes);
 }
 
 template <typename T>
 void test_impl()
 {
-        test_impl(generate_track<2, T>());
+        test_impl(track<2, T>());
 }
 
 void test()
