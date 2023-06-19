@@ -22,35 +22,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
+#include <functional>
 #include <optional>
 #include <vector>
 
 namespace ns::filter::test
 {
 template <typename T>
-class PositionEstimation final
+class Positions final
 {
         const T angle_estimation_time_difference_;
         const T angle_estimation_variance_;
-        const std::vector<Position<T>>* const positions_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
         std::optional<std::size_t> angle_position_index_;
         bool direction_ = false;
+        std::function<std::vector<Position<T>>(const Vector<2, T>& position, T variance)> create_;
+        std::vector<Position<T>> positions_;
+
+        [[nodiscard]] std::string description() const;
 
 public:
-        PositionEstimation(
+        Positions(
                 T angle_estimation_time_difference,
                 T angle_estimation_variance,
-                const std::vector<Position<T>>* positions);
+                std::function<std::vector<Position<T>>(const Vector<2, T>& position, T variance)> create);
 
         void update(const Measurement<2, T>& m);
 
+        [[nodiscard]] const std::vector<Position<T>>& positions() const;
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;
         [[nodiscard]] Vector<2, T> position() const;
         [[nodiscard]] Vector<2, T> velocity() const;
-        [[nodiscard]] std::string description() const;
 };
 
 }

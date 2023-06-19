@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "position.h"
-#include "position_estimation.h"
 #include "position_filter_lkf.h"
+#include "positions.h"
 #include "process.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
@@ -114,120 +114,48 @@ int compute_precision(const std::array<T, N>& data)
 }
 
 template <typename T>
-class Positions final
+std::vector<Position<T>> create_positions(const Vector<2, T>& position, const T variance)
 {
-        static std::vector<Position<T>> create_positions(
-                const Vector<2, T>& init_position,
-                const T init_position_variance)
+        const PositionFilterInit<T> init{.position = position, .position_variance = variance};
+
+        std::vector<Position<T>> res;
+
+        const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
+
+        const auto name = [&](const T theta)
         {
-                const PositionFilterInit<T> init{
-                        .position = init_position,
-                        .position_variance = init_position_variance};
+                const auto* const letter_theta = reinterpret_cast<const char*>(u8"\u03b8");
+                std::ostringstream oss;
+                oss << std::setprecision(precision) << std::fixed;
+                oss << "LKF (" << letter_theta << " " << theta << ")";
+                return oss.str();
+        };
 
-                std::vector<Position<T>> res;
-
-                const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
-
-                const auto name = [&](const T theta)
-                {
-                        const auto* const letter_theta = reinterpret_cast<const char*>(u8"\u03b8");
-                        std::ostringstream oss;
-                        oss << std::setprecision(precision) << std::fixed;
-                        oss << "LKF (" << letter_theta << " " << theta << ")";
-                        return oss.str();
-                };
-
-                const auto thetas = sort(std::array(Config<T>::POSITION_FILTER_THETAS));
-                for (std::size_t i = 0; i < thetas.size(); ++i)
-                {
-                        ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
-                        ASSERT(i <= 4);
-                        res.emplace_back(
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0),
-                                create_position_filter_lkf(init, thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
-                }
-
-                return res;
+        const auto thetas = sort(std::array(Config<T>::POSITION_FILTER_THETAS));
+        for (std::size_t i = 0; i < thetas.size(); ++i)
+        {
+                ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
+                ASSERT(i <= 4);
+                res.emplace_back(
+                        name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0),
+                        create_position_filter_lkf(init, thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
         }
 
-        std::vector<Position<T>> positions_;
-        std::optional<PositionEstimation<T>> estimation_;
-
-public:
-        Positions() = default;
-
-        Positions(const Positions&) = delete;
-        Positions& operator=(const Positions&) = delete;
-
-        void update(const Measurement<2, T>& m)
-        {
-                if (!m.position)
-                {
-                        return;
-                }
-                if (positions_.empty())
-                {
-                        positions_ = create_positions(*m.position, m.position_variance);
-
-                        estimation_.emplace(
-                                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, &positions_);
-                }
-
-                for (auto& p : positions_)
-                {
-                        p.update(m);
-                }
-
-                estimation_->update(m);
-        }
-
-        [[nodiscard]] const std::vector<Position<T>>& positions() const
-        {
-                return positions_;
-        }
-
-        [[nodiscard]] bool has_estimates() const
-        {
-                if (estimation_ && estimation_->has_estimates())
-                {
-                        LOG(estimation_->description());
-                        return true;
-                }
-                return false;
-        }
-
-        [[nodiscard]] T angle() const
-        {
-                ASSERT(estimation_);
-                return estimation_->angle();
-        }
-
-        [[nodiscard]] Vector<2, T> position() const
-        {
-                ASSERT(estimation_);
-                return estimation_->position();
-        }
-
-        [[nodiscard]] Vector<2, T> velocity() const
-        {
-                ASSERT(estimation_);
-                return estimation_->velocity();
-        }
-};
+        return res;
+}
 
 template <typename T>
 std::vector<Process<T>> create_processes(
-        const Vector<2, T>& init_position,
-        const Vector<2, T>& init_velocity,
-        const T init_angle,
-        const T init_position_variance)
+        const Vector<2, T>& position,
+        const Vector<2, T>& velocity,
+        const T angle,
+        const T position_variance)
 {
         const ProcessFilterInit<T> init{
-                .position = init_position,
-                .velocity = init_velocity,
-                .angle = init_angle,
-                .position_variance = init_position_variance};
+                .position = position,
+                .velocity = velocity,
+                .angle = angle,
+                .position_variance = position_variance};
 
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
         const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
@@ -296,7 +224,11 @@ template <typename T>
 void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurement<2, T>> measurements;
-        Positions<T> positions;
+
+        Positions<T> positions(
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, create_positions<T>);
+
         std::vector<Process<T>> processes;
 
         for (const Measurement<2, T>& m : track)
