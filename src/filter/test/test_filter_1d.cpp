@@ -440,7 +440,7 @@ void test_impl(
 
         std::unordered_map<int, unsigned> distribution;
 
-        NeesAverage<1, T> nees_average;
+        NeesAverage<1, T> nees;
 
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());
@@ -455,7 +455,7 @@ void test_impl(
                 result_data.push_back({.x = x, .standard_deviation = stddev});
                 ++distribution[static_cast<int>((x - process.x) / stddev)];
 
-                nees_average.add(process.x - x, variance);
+                nees.add(process.x - x, variance);
         }
 
         write_to_file(
@@ -465,10 +465,9 @@ void test_impl(
         compare(result_data.back().standard_deviation, expected_deviation, precision);
         compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
 
-        const T nees = nees_average.average();
-        if (!(nees < T{1.35}))
+        if (!(nees.average() < T{1.35}))
         {
-                error(nees_average.check_string());
+                error(nees.check_string());
         }
 
         check_distribution(distribution, expected_distribution);
