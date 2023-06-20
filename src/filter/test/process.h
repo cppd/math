@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "process_filter.h"
 #include "simulator.h"
 
-#include "../nees.h"
+#include "../consistency.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
@@ -42,9 +42,9 @@ class Process final
         std::vector<Vector<3, T>> position_;
         std::vector<Vector<2, T>> speed_;
 
-        NeesAverage<2, T> nees_position_;
-        NeesAverage<1, T> nees_angle_;
-        NeesAverage<1, T> nees_angle_r_;
+        NormalizedSquared<2, T> nees_position_;
+        NormalizedSquared<1, T> nees_angle_;
+        NormalizedSquared<1, T> nees_angle_r_;
 
         std::optional<T> last_time_;
 

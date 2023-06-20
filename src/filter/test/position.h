@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position_filter.h"
 #include "simulator.h"
 
-#include "../nees.h"
+#include "../consistency.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
@@ -41,7 +41,7 @@ class Position final
 
         std::vector<Vector<3, T>> position_;
         std::vector<Vector<2, T>> speed_;
-        NeesAverage<2, T> nees_position_;
+        NormalizedSquared<2, T> nees_position_;
 
         std::optional<T> last_time_;
 

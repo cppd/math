@@ -42,9 +42,10 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter
 {
-// Average of normalized (state) estimation error squared (NEES)
+// Average of normalized (state) estimation error squared (NEES).
+// Average of normalized innovation squared (NIS).
 template <std::size_t N, typename T>
-class NeesAverage final
+class NormalizedSquared final
 {
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
@@ -54,12 +55,12 @@ class NeesAverage final
 
 public:
         void add(
-                // difference between true value and the filter’s state estimate
+                // Difference between true value and the filter’s state estimate.
+                // Difference between measurement and its predicted value (innovation, residual).
                 const Vector<N, T>& difference,
                 const Matrix<N, N, T>& covariance)
         {
-                const T nees = dot(difference * covariance.inversed(), difference);
-                sum_ += nees;
+                sum_ += dot(difference * covariance.inversed(), difference);
                 ++count_;
         }
 
@@ -73,7 +74,7 @@ public:
         {
                 if (!(count_ > 0))
                 {
-                        error("No data to compute NEES average");
+                        error("No data to compute normalized squared average");
                 }
                 return sum_ / count_;
         }
@@ -86,7 +87,7 @@ public:
         [[nodiscard]] std::string check_string() const
         {
                 const T a = average();
-                return std::string("NEES average <") + type_name<T>() + "> = " + to_string(a) + "; " + to_string(N)
+                return std::string("NS average <") + type_name<T>() + "> = " + to_string(a) + "; " + to_string(N)
                        + " degree" + (N > 1 ? "s" : "") + " of freedom; check " + (a <= max() ? "passed" : "failed");
         }
 };

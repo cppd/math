@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
+#include "../consistency.h"
 #include "../ekf.h"
 #include "../models.h"
-#include "../nees.h"
 #include "../sigma_points.h"
 #include "../ukf.h"
 
@@ -440,7 +440,7 @@ void test_impl(
 
         std::unordered_map<int, unsigned> distribution;
 
-        NeesAverage<1, T> nees;
+        NormalizedSquared<1, T> nees;
 
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());
