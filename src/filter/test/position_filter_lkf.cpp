@@ -45,13 +45,10 @@ Matrix<6, 6, T> p(const PositionFilterInit<T>& init)
 }
 
 template <typename T>
-constexpr Matrix<2, 6, T> H{
-        {1, 0, 0, 0, 0, 0},
-        {0, 0, 0, 1, 0, 0}
-};
-
-template <typename T>
-constexpr Matrix<6, 2, T> H_T = H<T>.transposed();
+Vector<6, T> add_x(const Vector<6, T>& a, const Vector<6, T>& b)
+{
+        return a + b;
+}
 
 template <typename T>
 Matrix<6, 6, T> f(const T dt)
@@ -90,13 +87,39 @@ Matrix<6, 6, T> q(const T dt, const T process_variance)
 }
 
 template <typename T>
-Matrix<2, 2, T> r(const T measurement_variance)
+Matrix<2, 2, T> position_r(const T measurement_variance)
 {
         const T mv = measurement_variance;
         return {
                 {mv,  0},
                 { 0, mv}
         };
+}
+
+template <typename T>
+Vector<2, T> position_h(const Vector<6, T>& x)
+{
+        // px = px
+        // py = py
+        return {x[0], x[3]};
+}
+
+template <typename T>
+Matrix<2, 6, T> position_hj(const Vector<6, T>& /*x*/)
+{
+        // px = px
+        // py = py
+        // Jacobian
+        return {
+                {1, 0, 0, 0, 0, 0},
+                {0, 0, 0, 1, 0, 0}
+        };
+}
+
+template <typename T>
+Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+{
+        return a - b;
 }
 
 template <typename T>
@@ -135,7 +158,9 @@ class Filter final : public PositionFilter<T>
         {
                 ASSERT(position_variance >= 0);
                 ASSERT(position.is_finite());
-                filter_.update(H<T>, H_T<T>, r(position_variance), position, theta_);
+                filter_.update(
+                        position_h<T>, position_hj<T>, position_r(position_variance), position, add_x<T>,
+                        position_residual<T>, theta_);
         }
 
         [[nodiscard]] Vector<2, T> position() const override

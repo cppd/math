@@ -213,11 +213,6 @@ class TestLkf
         };
         const Matrix<2, 2, T> f_t_ = f_.transposed();
         const Matrix<2, 2, T> q_;
-
-        const Matrix<1, 2, T> h_{
-                {1, 0}
-        };
-        const Matrix<2, 1, T> h_t_ = h_.transposed();
         const Matrix<1, 1, T> r_;
 
         Ekf<2, T> filter_;
@@ -240,7 +235,22 @@ public:
         void process(const T measurement)
         {
                 filter_.predict(f_, f_t_, q_);
-                filter_.update(h_, h_t_, r_, Vector<1, T>(measurement), INFINITY_PARAMETER);
+
+                // measurement = x[0]
+                // Jacobian matrix
+                //  1 0
+                const auto h = [](const Vector<2, T>& x)
+                {
+                        return Vector<1, T>(x[0]);
+                };
+                const auto h_jacobian = [](const Vector<2, T>& /*x*/)
+                {
+                        return Matrix<1, 2, T>{
+                                {1, 0}
+                        };
+                };
+
+                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), INFINITY_PARAMETER);
         }
 
         [[nodiscard]] T x() const
