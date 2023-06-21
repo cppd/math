@@ -161,40 +161,6 @@ public:
                 impl::check_x_p("EKF predict", x_, p_);
         }
 
-        template <std::size_t M>
-        void update(
-                // Measurement function
-                const Matrix<M, N, T>& h,
-                // Measurement function transposed
-                const Matrix<N, M, T>& ht,
-                // Measurement covariance
-                const Matrix<M, M, T>& r,
-                // Measurement
-                const Vector<M, T>& z,
-                // H infinity parameter
-                const T theta = 0)
-        {
-                namespace impl = ekf_implementation;
-
-                const Matrix<N, M, T> k = [&]()
-                {
-                        if (theta == 0)
-                        {
-                                const Matrix<N, M, T> p_ht = p_ * ht;
-                                return p_ht * (h * p_ht + r).inversed();
-                        }
-                        const Matrix<N, M, T> ht_ri = ht * r.inversed();
-                        return impl::h_infinity_k("LKF update", theta, p_, h, ht_ri);
-                }();
-
-                x_ = x_ + k * (z - h * x_);
-
-                const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * h;
-                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
-
-                impl::check_x_p("LKF update", x_, p_);
-        }
-
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
         void update(
                 // Measurement function
