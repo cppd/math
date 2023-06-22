@@ -124,22 +124,6 @@ public:
                 return p_;
         }
 
-        void predict(
-                // State transition function
-                const Matrix<N, N, T>& f,
-                // State transition function transposed
-                const Matrix<N, N, T>& f_t,
-                // Process covariance
-                const Matrix<N, N, T>& q)
-        {
-                namespace impl = ekf_implementation;
-
-                x_ = f * x_;
-                p_ = f * p_ * f_t + q;
-
-                impl::check_x_p("LKF predict", x_, p_);
-        }
-
         template <typename F, typename FJ>
         void predict(
                 // State transition function
