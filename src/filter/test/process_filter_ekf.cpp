@@ -524,7 +524,15 @@ class Filter final : public ProcessFilter<T>
                 ASSERT(dt >= 0);
                 const Matrix<9, 9, T> f_matrix = f(dt);
                 filter_.predict(
-                        f_matrix, f_matrix.transposed(), q(dt, position_variance_, angle_variance_, angle_r_variance_));
+                        [&](const Vector<9, T>& x)
+                        {
+                                return f_matrix * x;
+                        },
+                        [&](const Vector<9, T>& /*x*/)
+                        {
+                                return f_matrix;
+                        },
+                        q(dt, position_variance_, angle_variance_, angle_r_variance_));
         }
 
         void update_position(const Vector<2, T>& position, const T position_variance) override

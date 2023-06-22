@@ -151,7 +151,16 @@ class Filter final : public PositionFilter<T>
         {
                 ASSERT(dt >= 0);
                 const Matrix<6, 6, T> f_matrix = f(dt);
-                filter_.predict(f_matrix, f_matrix.transposed(), q(dt, process_variance_));
+                filter_.predict(
+                        [&](const Vector<6, T>& x)
+                        {
+                                return f_matrix * x;
+                        },
+                        [&](const Vector<6, T>& /*x*/)
+                        {
+                                return f_matrix;
+                        },
+                        q(dt, process_variance_));
         }
 
         void update(const Vector<2, T>& position, const T position_variance) override

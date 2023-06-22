@@ -201,79 +201,6 @@ struct Residual final
 };
 
 template <typename T, bool INF>
-class TestLkf
-{
-        static constexpr T INFINITY_PARAMETER = INF ? 0.01L : 0;
-
-        const T dt_;
-
-        const Matrix<2, 2, T> f_{
-                {1, dt_},
-                {0,   1}
-        };
-        const Matrix<2, 2, T> f_t_ = f_.transposed();
-        const Matrix<2, 2, T> q_;
-        const Matrix<1, 1, T> r_;
-
-        Ekf<2, T> filter_;
-
-public:
-        using Type = T;
-
-        TestLkf(const std::type_identity_t<T> dt,
-                const std::type_identity_t<T> process_variance,
-                const std::type_identity_t<T> measurement_variance,
-                const Vector<2, T>& x,
-                const Matrix<2, 2, T>& p)
-                : dt_(dt),
-                  q_(discrete_white_noise<2, T>(dt, process_variance)),
-                  r_({{measurement_variance}}),
-                  filter_(x, p)
-        {
-        }
-
-        void process(const T measurement)
-        {
-                filter_.predict(f_, f_t_, q_);
-
-                // measurement = x[0]
-                // Jacobian matrix
-                //  1 0
-                const auto h = [](const Vector<2, T>& x)
-                {
-                        return Vector<1, T>(x[0]);
-                };
-                const auto h_jacobian = [](const Vector<2, T>& /*x*/)
-                {
-                        return Matrix<1, 2, T>{
-                                {1, 0}
-                        };
-                };
-
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), INFINITY_PARAMETER);
-        }
-
-        [[nodiscard]] T x() const
-        {
-                return filter_.x()[0];
-        }
-
-        [[nodiscard]] T variance() const
-        {
-                return filter_.p()(0, 0);
-        }
-
-        static std::string name()
-        {
-                if (!INF)
-                {
-                        return "LKF";
-                }
-                return "LINEAR_H_INFINITY";
-        }
-};
-
-template <typename T, bool INF>
 class TestEkf
 {
         static constexpr T INFINITY_PARAMETER = INF ? 0.01L : 0;
@@ -487,8 +414,6 @@ template <typename T>
 void test_impl(const std::type_identity_t<T> precision)
 {
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
-        test_impl<TestLkf<T, false>>(precision, 1.4306576889002234962L, 5, distribution);
-        test_impl<TestLkf<T, true>>(precision, 1.43098764352003224212L, 5, distribution);
         test_impl<TestEkf<T, false>>(precision, 1.4306576889002234962L, 5, distribution);
         test_impl<TestEkf<T, true>>(precision, 1.43098764352003224212L, 5, distribution);
         test_impl<TestUkf<T>>(precision, 1.43670888967218343853L, 5, distribution);
