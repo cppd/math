@@ -211,12 +211,12 @@ void write_result(
 
         for (const auto& p : positions)
         {
-                LOG(p.nees_string());
+                LOG(p.consistency_string());
         }
 
         for (const auto& p : processes)
         {
-                LOG(p.nees_string());
+                LOG(p.consistency_string());
         }
 }
 

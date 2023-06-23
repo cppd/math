@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <string>
+
 namespace ns::filter::test
 {
 template <typename T>
@@ -52,5 +54,7 @@ public:
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
+
+        [[nodiscard]] virtual std::string nis_position_check_string() const = 0;
 };
 }

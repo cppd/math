@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position.h"
 
 #include <src/com/error.h>
+#include <src/com/type/name.h>
 
 namespace ns::filter::test
 {
@@ -96,9 +97,14 @@ color::RGB8 Position<T>::color() const
 }
 
 template <typename T>
-std::string Position<T>::nees_string() const
+std::string Position<T>::consistency_string() const
 {
-        return "Position " + name_ + " Position: " + nees_position_.check_string();
+        const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
+        std::string s;
+        s += name + "; NEES Position; " + nees_position_.check_string();
+        s += '\n';
+        s += name + "; NIS Position; " + filter_->nis_position_check_string();
+        return s;
 }
 
 template <typename T>

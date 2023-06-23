@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_filter_lkf.h"
 
+#include "../consistency.h"
 #include "../ekf.h"
 
 #include <src/com/error.h>
@@ -144,6 +145,7 @@ template <typename T>
 class Filter final : public PositionFilter<T>
 {
         Ekf<6, T> filter_;
+        NormalizedSquared<2, T> nis_;
         T theta_;
         T process_variance_;
 
@@ -167,9 +169,16 @@ class Filter final : public PositionFilter<T>
         {
                 ASSERT(position_variance >= 0);
                 ASSERT(position.is_finite());
+                const Matrix<2, 2, T> r = position_r(position_variance);
                 filter_.update(
-                        position_h<T>, position_hj<T>, position_r(position_variance), position, add_x<T>,
-                        position_residual<T>, theta_);
+                        position_h<T>, position_hj<T>, r, position, add_x<T>,
+                        [&](const Vector<2, T>& a, const Vector<2, T>& b)
+                        {
+                                const auto residual = position_residual<T>(a, b);
+                                nis_.add(residual, r);
+                                return residual;
+                        },
+                        theta_);
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -207,6 +216,11 @@ class Filter final : public PositionFilter<T>
                         {filter_.p()(4, 1), filter_.p()(4, 4)}
                 };
                 return velocity_angle_p(velocity(), velocity_p);
+        }
+
+        [[nodiscard]] std::string nis_position_check_string() const override
+        {
+                return nis_.check_string();
         }
 
 public:

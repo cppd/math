@@ -61,7 +61,7 @@ public:
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] std::string angle_string() const;
-        [[nodiscard]] std::string nees_string() const;
+        [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
 };

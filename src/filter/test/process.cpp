@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/com/type/name.h>
 
 namespace ns::filter::test
 {
@@ -117,14 +118,15 @@ std::string Process<T>::angle_string() const
 }
 
 template <typename T>
-std::string Process<T>::nees_string() const
+std::string Process<T>::consistency_string() const
 {
+        const std::string name = std::string("Process<") + type_name<T>() + "> " + name_;
         std::string s;
-        s += "Process " + name_ + " Position: " + nees_position_.check_string();
+        s += name + "; NEES Position; " + nees_position_.check_string();
         s += '\n';
-        s += "Process " + name_ + " Angle: " + nees_angle_.check_string();
+        s += name + "; NEES Angle; " + nees_angle_.check_string();
         s += '\n';
-        s += "Process " + name_ + " Angle R: " + nees_angle_r_.check_string();
+        s += name + "; NEES Angle R; " + nees_angle_r_.check_string();
         return s;
 }
 template <typename T>
