@@ -34,7 +34,6 @@ Kalman and Bayesian Filters in Python.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/type/name.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -87,8 +86,8 @@ public:
         [[nodiscard]] std::string check_string() const
         {
                 const T a = average();
-                return std::string("NS average <") + type_name<T>() + "> = " + to_string(a) + "; " + to_string(N)
-                       + " degree" + (N > 1 ? "s" : "") + " of freedom; check " + (a <= max() ? "passed" : "failed");
+                return "average = " + to_string(a) + "; " + to_string(N) + " degree" + (N > 1 ? "s" : "")
+                       + " of freedom; check " + (a <= max() ? "passed" : "failed");
         }
 };
 }
