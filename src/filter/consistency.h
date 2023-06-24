@@ -49,6 +49,11 @@ class NormalizedSquared final
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
 
+        [[nodiscard]] static bool check(const T average)
+        {
+                return average >= (max() / 2) && average <= (2 * max());
+        }
+
         long double sum_ = 0;
         std::size_t count_ = 0;
 
@@ -87,7 +92,7 @@ public:
         {
                 const T a = average();
                 return "average = " + to_string(a) + "; " + to_string(N) + " degree" + (N > 1 ? "s" : "")
-                       + " of freedom; check " + (a <= max() ? "passed" : "failed");
+                       + " of freedom; check " + (check(a) ? "passed" : "failed");
         }
 };
 }
