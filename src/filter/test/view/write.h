@@ -34,6 +34,7 @@ struct Filter final
         std::string name;
         color::RGB8 color;
         std::vector<Vector<2, T>> speed;
+        std::vector<Vector<2, T>> speed_p;
         std::vector<Vector<N + 1, T>> position;
 };
 

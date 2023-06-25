@@ -237,6 +237,30 @@ void write_filter_speed(
 }
 
 template <std::size_t N, typename T>
+void write_filter_speed_p(
+        std::ostream& file,
+        const std::string& name,
+        const color::RGB8 color,
+        const std::vector<std::optional<Vector<N, T>>>& speed_p)
+{
+        if (!speed_p.empty())
+        {
+                file << '{';
+                file << R"("name":")" << name << " Speed P\"";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":)" << color_to_string(color);
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":1)";
+                file << "}\n";
+                for (const auto& v : speed_p)
+                {
+                        write(file, v);
+                }
+        }
+}
+
+template <std::size_t N, typename T>
 void write_filter_position(
         std::ostream& file,
         const std::string& name,
@@ -294,7 +318,9 @@ void write_to_file(
         for (const Filter<N, T>& filter : filters)
         {
                 write_filter_speed(
-                        file, filter.name, filter.color, convert_speed(optional_speed(filter.speed, interval)));
+                        file, filter.name, filter.color, convert_speed(optional_value(filter.speed, interval)));
+                write_filter_speed_p(
+                        file, filter.name, filter.color, convert_speed_p(optional_value(filter.speed_p, interval)));
                 write_filter_position(
                         file, filter.name, filter.color,
                         add_offset(optional_position(filter.position, interval), OFFSET));

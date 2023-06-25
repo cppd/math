@@ -225,7 +225,7 @@ std::vector<std::optional<Vector<2, T>>> optional_position(const std::vector<Vec
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> optional_speed(const std::vector<Vector<2, T>>& data, const T interval)
+std::vector<std::optional<Vector<2, T>>> optional_value(const std::vector<Vector<2, T>>& data, const T interval)
 {
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(data.size());
@@ -255,6 +255,27 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
                 if (s)
                 {
                         res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), mps_to_kph((*s)[1])));
+                }
+                else
+                {
+                        res.emplace_back();
+                }
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::optional<Vector<2, T>>>& speed_p)
+{
+        namespace impl = converters_implementation;
+
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(speed_p.size());
+        for (const std::optional<Vector<2, T>>& s : speed_p)
+        {
+                if (s && !std::isnan(std::sqrt((*s)[1])))
+                {
+                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), mps_to_kph(std::sqrt((*s)[1]))));
                 }
                 else
                 {

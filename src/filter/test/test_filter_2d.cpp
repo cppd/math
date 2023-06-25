@@ -72,6 +72,7 @@ void write_to_file(
                         {.name = position.name(),
                          .color = position.color(),
                          .speed = position.speeds(),
+                         .speed_p = position.speeds_p(),
                          .position = position.positions()});
         }
 
@@ -81,6 +82,7 @@ void write_to_file(
                         {.name = process.name(),
                          .color = process.color(),
                          .speed = process.speeds(),
+                         .speed_p = process.speeds_p(),
                          .position = process.positions()});
         }
 
