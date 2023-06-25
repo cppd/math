@@ -124,7 +124,7 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 }
 
 template <typename T>
-T velocity_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
         // Jacobian
@@ -139,6 +139,22 @@ T velocity_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity
         return p(0, 0);
 }
 
+template <typename T>
+T compute_speed_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+{
+        // speed = sqrt(vx*vx + vy*vy)
+        // Jacobian
+        //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
+        const T x = velocity[0];
+        const T y = velocity[1];
+        const T speed = std::sqrt(x * x + y * y);
+        const Matrix<1, 2, T> error_propagation{
+                {x / speed, y / speed}
+        };
+        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        return p(0, 0);
+}
+
 //
 
 template <typename T>
@@ -148,6 +164,14 @@ class Filter final : public PositionFilter<T>
         NormalizedSquared<2, T> nis_;
         T theta_;
         T process_variance_;
+
+        [[nodiscard]] Matrix<2, 2, T> velocity_p() const
+        {
+                return {
+                        {filter_.p()(1, 1), filter_.p()(1, 4)},
+                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                };
+        }
 
         void predict(const T dt) override
         {
@@ -199,6 +223,11 @@ class Filter final : public PositionFilter<T>
                 return velocity().norm();
         }
 
+        [[nodiscard]] T speed_p() const override
+        {
+                return compute_speed_p(velocity(), velocity_p());
+        }
+
         [[nodiscard]] Vector<2, T> velocity() const override
         {
                 return {filter_.x()[1], filter_.x()[4]};
@@ -211,11 +240,7 @@ class Filter final : public PositionFilter<T>
 
         [[nodiscard]] T angle_p() const override
         {
-                const Matrix<2, 2, T> velocity_p{
-                        {filter_.p()(1, 1), filter_.p()(1, 4)},
-                        {filter_.p()(4, 1), filter_.p()(4, 4)}
-                };
-                return velocity_angle_p(velocity(), velocity_p);
+                return compute_angle_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] std::string nis_position_check_string() const override

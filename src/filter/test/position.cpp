@@ -37,6 +37,7 @@ void Position<T>::save(const T time, const TrueData<2, T>& true_data)
         const Vector<2, T> p = filter_->position();
         position_.push_back({time, p[0], p[1]});
         speed_.push_back({time, filter_->speed()});
+        speed_p_.push_back({time, filter_->speed_p()});
 
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
 }
@@ -117,6 +118,12 @@ template <typename T>
 const std::vector<Vector<2, T>>& Position<T>::speeds() const
 {
         return speed_;
+}
+
+template <typename T>
+const std::vector<Vector<2, T>>& Position<T>::speeds_p() const
+{
+        return speed_p_;
 }
 
 template class Position<float>;
