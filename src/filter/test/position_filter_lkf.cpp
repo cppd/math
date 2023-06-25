@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_filter_lkf.h"
 
+#include "utility.h"
+
 #include "../consistency.h"
 #include "../ekf.h"
 
@@ -121,38 +123,6 @@ template <typename T>
 Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 {
         return a - b;
-}
-
-template <typename T>
-T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
-{
-        // angle = atan(y/x)
-        // Jacobian
-        //  -y/(x*x+y*y) x/(x*x+y*y)
-        const T ns = velocity.norm_squared();
-        const T x = velocity[0];
-        const T y = velocity[1];
-        const Matrix<1, 2, T> error_propagation{
-                {-y / ns, x / ns}
-        };
-        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-        return p(0, 0);
-}
-
-template <typename T>
-T compute_speed_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
-{
-        // speed = sqrt(vx*vx + vy*vy)
-        // Jacobian
-        //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
-        const T x = velocity[0];
-        const T y = velocity[1];
-        const T speed = std::sqrt(x * x + y * y);
-        const Matrix<1, 2, T> error_propagation{
-                {x / speed, y / speed}
-        };
-        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-        return p(0, 0);
 }
 
 //

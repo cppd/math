@@ -76,4 +76,36 @@ template <typename T>
         }
         return next;
 }
+
+template <typename T>
+[[nodiscard]] T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+{
+        // angle = atan(y/x)
+        // Jacobian
+        //  -y/(x*x+y*y) x/(x*x+y*y)
+        const T ns = velocity.norm_squared();
+        const T x = velocity[0];
+        const T y = velocity[1];
+        const Matrix<1, 2, T> error_propagation{
+                {-y / ns, x / ns}
+        };
+        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        return p(0, 0);
+}
+
+template <typename T>
+[[nodiscard]] T compute_speed_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+{
+        // speed = sqrt(vx*vx + vy*vy)
+        // Jacobian
+        //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
+        const T x = velocity[0];
+        const T y = velocity[1];
+        const T speed = std::sqrt(x * x + y * y);
+        const Matrix<1, 2, T> error_propagation{
+                {x / speed, y / speed}
+        };
+        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        return p(0, 0);
+}
 }
