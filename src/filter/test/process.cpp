@@ -40,6 +40,7 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
         const Vector<2, T> p = filter_->position();
         position_.push_back({time, p[0], p[1]});
         speed_.push_back({time, filter_->speed()});
+        speed_p_.push_back({time, filter_->speed_p()});
 
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
         nees_angle_.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
@@ -129,15 +130,23 @@ std::string Process<T>::consistency_string() const
         s += name + "; NEES Angle R; " + nees_angle_r_.check_string();
         return s;
 }
+
 template <typename T>
 const std::vector<Vector<3, T>>& Process<T>::positions() const
 {
         return position_;
 }
+
 template <typename T>
 const std::vector<Vector<2, T>>& Process<T>::speeds() const
 {
         return speed_;
+}
+
+template <typename T>
+const std::vector<Vector<2, T>>& Process<T>::speeds_p() const
+{
+        return speed_p_;
 }
 
 template class Process<float>;

@@ -41,6 +41,7 @@ class Process final
 
         std::vector<Vector<3, T>> position_;
         std::vector<Vector<2, T>> speed_;
+        std::vector<Vector<2, T>> speed_p_;
 
         NormalizedSquared<2, T> nees_position_;
         NormalizedSquared<1, T> nees_angle_;
@@ -64,5 +65,6 @@ public:
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
+        [[nodiscard]] const std::vector<Vector<2, T>>& speeds_p() const;
 };
 }

@@ -386,6 +386,19 @@ class Filter final : public ProcessFilter<T>
         const T angle_variance_;
         const T angle_r_variance_;
 
+        [[nodiscard]] Vector<2, T> velocity() const
+        {
+                return {filter_.x()[1], filter_.x()[4]};
+        }
+
+        [[nodiscard]] Matrix<2, 2, T> velocity_p() const
+        {
+                return {
+                        {filter_.p()(1, 1), filter_.p()(1, 4)},
+                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                };
+        }
+
         void predict(const T dt) override
         {
                 filter_.predict(
@@ -478,7 +491,12 @@ class Filter final : public ProcessFilter<T>
 
         [[nodiscard]] T speed() const override
         {
-                return Vector<2, T>(filter_.x()[1], filter_.x()[4]).norm();
+                return velocity().norm();
+        }
+
+        [[nodiscard]] T speed_p() const override
+        {
+                return compute_speed_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] T angle() const override
