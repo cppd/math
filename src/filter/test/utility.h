@@ -62,22 +62,6 @@ template <typename T, typename Angle>
 }
 
 template <typename T>
-[[nodiscard]] T normalize_angle(const T difference)
-{
-        return std::remainder(difference, 2 * PI<T>);
-}
-
-template <typename T>
-[[nodiscard]] T unbound_angle(const std::optional<T> previous, const T next)
-{
-        if (previous)
-        {
-                return *previous + normalize_angle(next - *previous);
-        }
-        return next;
-}
-
-template <typename T>
 [[nodiscard]] T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
