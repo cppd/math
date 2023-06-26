@@ -70,14 +70,15 @@ Matrix<6, 6, T> f(const T dt)
 template <typename T>
 Matrix<6, 6, T> q(const T dt, const T process_variance)
 {
-        const T dt_2 = square(dt) / 2;
+        const T dt_2 = power<2>(dt) / 2;
+        const T dt_3 = power<3>(dt) / 6;
         const Matrix<6, 2, T> noise_transition{
+                {dt_3,    0},
                 {dt_2,    0},
                 {  dt,    0},
-                {   1,    0},
+                {   0, dt_3},
                 {   0, dt_2},
                 {   0,   dt},
-                {   0,    1},
         };
 
         const T p = process_variance;
