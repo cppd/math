@@ -43,6 +43,7 @@ class Position final
         std::vector<Vector<2, T>> speed_;
         std::vector<Vector<2, T>> speed_p_;
         NormalizedSquared<2, T> nees_position_;
+        NormalizedSquared<1, T> nees_speed_;
 
         std::optional<T> last_time_;
 

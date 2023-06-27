@@ -34,12 +34,20 @@ Position<T>::Position(std::string name, color::RGB8 color, std::unique_ptr<Posit
 template <typename T>
 void Position<T>::save(const T time, const TrueData<2, T>& true_data)
 {
-        const Vector<2, T> p = filter_->position();
-        position_.push_back({time, p[0], p[1]});
+        {
+                const Vector<2, T> p = filter_->position();
+                position_.push_back({time, p[0], p[1]});
+        }
+
         speed_.push_back({time, filter_->speed()});
         speed_p_.push_back({time, filter_->speed_p()});
 
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
+
+        if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
+        {
+                nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
+        }
 }
 
 template <typename T>
@@ -103,6 +111,8 @@ std::string Position<T>::consistency_string() const
         const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
         std::string s;
         s += name + "; NEES Position; " + nees_position_.check_string();
+        s += '\n';
+        s += name + "; NEES Speed; " + nees_speed_.check_string();
         s += '\n';
         s += name + "; NIS Position; " + filter_->nis_position_check_string();
         return s;
