@@ -30,21 +30,32 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
-Vector<6, T> x(const PositionFilterInit<T>& init)
+struct Init final
 {
-        ASSERT(is_finite(init.position));
-        return Vector<6, T>(
-                init.position[0], init.VELOCITY[0], init.ACCELERAION[0], init.position[1], init.VELOCITY[1],
-                init.ACCELERAION[1]);
+        static constexpr Vector<2, T> VELOCITY{0};
+        static constexpr Vector<2, T> ACCELERAION{0};
+        static constexpr T SPEED_VARIANCE{square<T>(30)};
+        static constexpr T ACCELERATION_VARIANCE{square<T>(10)};
+};
+
+template <typename T>
+Vector<6, T> x(const Vector<2, T>& position)
+{
+        ASSERT(is_finite(position));
+
+        return {position[0], Init<T>::VELOCITY[0], Init<T>::ACCELERAION[0],
+                position[1], Init<T>::VELOCITY[1], Init<T>::ACCELERAION[1]};
 }
 
 template <typename T>
-Matrix<6, 6, T> p(const PositionFilterInit<T>& init)
+Matrix<6, 6, T> p(const T position_variance)
 {
-        ASSERT(is_finite(init.position_variance));
-        return make_diagonal_matrix<6, T>(
-                {init.position_variance, init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE, init.position_variance,
-                 init.SPEED_VARIANCE, init.ACCELERATION_VARIANCE});
+        ASSERT(is_finite(position_variance));
+
+        const T pv = position_variance;
+        const T sv = Init<T>::SPEED_VARIANCE;
+        const T av = Init<T>::ACCELERATION_VARIANCE;
+        return make_diagonal_matrix<6, T>({pv, sv, av, pv, sv, av});
 }
 
 template <typename T>
@@ -136,17 +147,11 @@ class Filter final : public PositionFilter<T>
         T theta_;
         T process_variance_;
 
-        [[nodiscard]] Matrix<2, 2, T> velocity_p() const
-        {
-                return {
-                        {filter_.p()(1, 1), filter_.p()(1, 4)},
-                        {filter_.p()(4, 1), filter_.p()(4, 4)}
-                };
-        }
-
         void predict(const T dt) override
         {
+                ASSERT(is_finite(dt));
                 ASSERT(dt >= 0);
+
                 const Matrix<6, 6, T> f_matrix = f(dt);
                 filter_.predict(
                         [&](const Vector<6, T>& x)
@@ -162,8 +167,10 @@ class Filter final : public PositionFilter<T>
 
         void update(const Vector<2, T>& position, const T position_variance) override
         {
+                ASSERT(is_finite(position));
+                ASSERT(is_finite(position_variance));
                 ASSERT(position_variance >= 0);
-                ASSERT(position.is_finite());
+
                 const Matrix<2, 2, T> r = position_r(position_variance);
                 filter_.update(
                         position_h<T>, position_hj<T>, r, position, add_x<T>,
@@ -204,6 +211,14 @@ class Filter final : public PositionFilter<T>
                 return {filter_.x()[1], filter_.x()[4]};
         }
 
+        [[nodiscard]] Matrix<2, 2, T> velocity_p() const override
+        {
+                return {
+                        {filter_.p()(1, 1), filter_.p()(1, 4)},
+                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                };
+        }
+
         [[nodiscard]] T angle() const override
         {
                 return std::atan2(filter_.x()[4], filter_.x()[1]);
@@ -220,8 +235,8 @@ class Filter final : public PositionFilter<T>
         }
 
 public:
-        Filter(const PositionFilterInit<T>& init, const T theta, const T process_variance)
-                : filter_(x(init), p(init)),
+        Filter(const Vector<2, T>& position, const T position_variance, const T theta, const T process_variance)
+                : filter_(x(position), p(position_variance)),
                   theta_(theta),
                   process_variance_(process_variance)
         {
@@ -232,15 +247,16 @@ public:
 
 template <typename T>
 std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
-        const PositionFilterInit<T>& init,
+        const Vector<2, T>& position,
+        const T position_variance,
         const T theta,
         const T process_variance)
 {
-        return std::make_unique<Filter<T>>(init, theta, process_variance);
+        return std::make_unique<Filter<T>>(position, position_variance, theta, process_variance);
 }
 
 #define TEMPLATE(T) \
-        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const PositionFilterInit<T>&, T, T);
+        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const Vector<2, T>&, T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

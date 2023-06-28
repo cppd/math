@@ -116,10 +116,8 @@ int compute_precision(const std::array<T, N>& data)
 }
 
 template <typename T>
-std::vector<Position<T>> create_positions(const Vector<2, T>& position, const T variance)
+std::vector<Position<T>> create_positions(const Vector<2, T>& position, const T position_variance)
 {
-        const PositionFilterInit<T> init{.position = position, .position_variance = variance};
-
         std::vector<Position<T>> res;
 
         const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
@@ -140,7 +138,8 @@ std::vector<Position<T>> create_positions(const Vector<2, T>& position, const T 
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0),
-                        create_position_filter_lkf(init, thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
+                        create_position_filter_lkf(
+                                position, position_variance, thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
         }
 
         return res;

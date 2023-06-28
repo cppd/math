@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -25,18 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <typename T>
-struct PositionFilterInit final
-{
-        static constexpr Vector<2, T> VELOCITY{0};
-        static constexpr Vector<2, T> ACCELERAION{0};
-        static constexpr T SPEED_VARIANCE = square(30.0);
-        static constexpr T ACCELERATION_VARIANCE = square(10.0);
-
-        Vector<2, T> position;
-        T position_variance;
-};
-
 template <typename T>
 class PositionFilter
 {
@@ -53,6 +40,7 @@ public:
         [[nodiscard]] virtual T speed_p() const = 0;
 
         [[nodiscard]] virtual Vector<2, T> velocity() const = 0;
+        [[nodiscard]] virtual Matrix<2, 2, T> velocity_p() const = 0;
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
