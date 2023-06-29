@@ -47,6 +47,7 @@ struct Config final
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(10.0));
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE = 1;
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
+        static constexpr T POSITION_FILTER_RESET_DT = 10;
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(0.1);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
@@ -137,7 +138,7 @@ std::vector<Position<T>> create_positions()
                 ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
                 ASSERT(i <= 4);
                 res.emplace_back(
-                        name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0),
+                        name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                         create_position_filter_lkf(thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
         }
 

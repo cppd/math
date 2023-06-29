@@ -37,6 +37,7 @@ class Position final
 {
         std::string name_;
         color::RGB8 color_;
+        T reset_dt_;
         std::unique_ptr<PositionFilter<T>> filter_;
 
         std::vector<Vector<3, T>> position_;
@@ -50,7 +51,7 @@ class Position final
         void save(T time, const TrueData<2, T>& true_data);
 
 public:
-        Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter);
+        Position(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter);
 
         void update(const Measurement<2, T>& m);
 

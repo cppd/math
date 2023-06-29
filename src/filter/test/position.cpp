@@ -23,9 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<T>::Position(std::string name, color::RGB8 color, std::unique_ptr<PositionFilter<T>>&& filter)
+Position<
+        T>::Position(std::string name, color::RGB8 color, const T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
+          reset_dt_(reset_dt),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -69,6 +71,12 @@ void Position<T>::update(const Measurement<2, T>& m)
 
         const T delta = m.time - *last_time_;
         last_time_ = m.time;
+
+        if (!(delta < reset_dt_))
+        {
+                filter_->reset(*m.position, m.position_variance);
+                return;
+        }
 
         filter_->predict(delta);
         filter_->update(*m.position, m.position_variance);
