@@ -60,7 +60,14 @@ void Position<T>::update(const Measurement<2, T>& m)
                 error("No position in measurement");
         }
 
-        const T delta = last_time_ ? (m.time - *last_time_) : 0;
+        if (!last_time_)
+        {
+                filter_->reset(*m.position, m.position_variance);
+                last_time_ = m.time;
+                return;
+        }
+
+        const T delta = m.time - *last_time_;
         last_time_ = m.time;
 
         filter_->predict(delta);

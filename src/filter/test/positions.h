@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-#include <functional>
 #include <optional>
 #include <vector>
 
@@ -33,20 +32,16 @@ class Positions final
 {
         const T angle_estimation_time_difference_;
         const T angle_estimation_variance_;
+        std::vector<Position<T>> positions_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
         std::optional<std::size_t> angle_position_index_;
         bool direction_ = false;
-        std::function<std::vector<Position<T>>(const Vector<2, T>& position, T variance)> create_;
-        std::vector<Position<T>> positions_;
 
         [[nodiscard]] std::string description() const;
 
 public:
-        Positions(
-                T angle_estimation_time_difference,
-                T angle_estimation_variance,
-                std::function<std::vector<Position<T>>(const Vector<2, T>& position, T variance)> create);
+        Positions(T angle_estimation_time_difference, T angle_estimation_variance, std::vector<Position<T>> positions);
 
         void update(const Measurement<2, T>& m);
 

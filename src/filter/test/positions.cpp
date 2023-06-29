@@ -27,10 +27,10 @@ template <typename T>
 Positions<T>::Positions(
         const T angle_estimation_time_difference,
         const T angle_estimation_variance,
-        std::function<std::vector<Position<T>>(const Vector<2, T>& position, T variance)> create)
+        std::vector<Position<T>> positions)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
           angle_estimation_variance_(angle_estimation_variance),
-          create_(std::move(create))
+          positions_(std::move(positions))
 {
 }
 
@@ -45,12 +45,6 @@ void Positions<T>::update(const Measurement<2, T>& m)
 
         if (!m.position)
         {
-                return;
-        }
-
-        if (positions_.empty())
-        {
-                positions_ = create_(*m.position, m.position_variance);
                 return;
         }
 

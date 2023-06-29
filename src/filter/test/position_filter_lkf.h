@@ -19,16 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_filter.h"
 
-#include <src/numerical/vector.h>
-
 #include <memory>
 
 namespace ns::filter::test
 {
 template <typename T>
-std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
-        const Vector<2, T>& position,
-        T position_variance,
-        T theta,
-        T process_variance);
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T theta, T process_variance);
 }

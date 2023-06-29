@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
+
+#include <optional>
 
 namespace ns::filter::test
 {
@@ -39,7 +43,7 @@ struct Init final
 };
 
 template <typename T>
-Vector<6, T> x(const Vector<2, T>& position)
+Vector<6, T> init_x(const Vector<2, T>& position)
 {
         ASSERT(is_finite(position));
 
@@ -48,7 +52,7 @@ Vector<6, T> x(const Vector<2, T>& position)
 }
 
 template <typename T>
-Matrix<6, 6, T> p(const T position_variance)
+Matrix<6, 6, T> init_p(const T position_variance)
 {
         ASSERT(is_finite(position_variance));
 
@@ -142,18 +146,24 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
-        Ekf<6, T> filter_;
+        std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
         T theta_;
         T process_variance_;
 
+        void reset(const Vector<2, T>& position, const T position_variance) override
+        {
+                filter_.emplace(init_x(position), init_p(position_variance));
+        }
+
         void predict(const T dt) override
         {
+                ASSERT(filter_);
                 ASSERT(is_finite(dt));
                 ASSERT(dt >= 0);
 
                 const Matrix<6, 6, T> f_matrix = f(dt);
-                filter_.predict(
+                filter_->predict(
                         [&](const Vector<6, T>& x)
                         {
                                 return f_matrix * x;
@@ -167,12 +177,13 @@ class Filter final : public PositionFilter<T>
 
         void update(const Vector<2, T>& position, const T position_variance) override
         {
+                ASSERT(filter_);
                 ASSERT(is_finite(position));
                 ASSERT(is_finite(position_variance));
                 ASSERT(position_variance >= 0);
 
                 const Matrix<2, 2, T> r = position_r(position_variance);
-                filter_.update(
+                filter_->update(
                         position_h<T>, position_hj<T>, r, position, add_x<T>,
                         [&](const Vector<2, T>& a, const Vector<2, T>& b)
                         {
@@ -185,14 +196,18 @@ class Filter final : public PositionFilter<T>
 
         [[nodiscard]] Vector<2, T> position() const override
         {
-                return {filter_.x()[0], filter_.x()[3]};
+                ASSERT(filter_);
+
+                return {filter_->x()[0], filter_->x()[3]};
         }
 
         [[nodiscard]] Matrix<2, 2, T> position_p() const override
         {
+                ASSERT(filter_);
+
                 return {
-                        {filter_.p()(0, 0), filter_.p()(0, 3)},
-                        {filter_.p()(3, 0), filter_.p()(3, 3)}
+                        {filter_->p()(0, 0), filter_->p()(0, 3)},
+                        {filter_->p()(3, 0), filter_->p()(3, 3)}
                 };
         }
 
@@ -208,20 +223,26 @@ class Filter final : public PositionFilter<T>
 
         [[nodiscard]] Vector<2, T> velocity() const override
         {
-                return {filter_.x()[1], filter_.x()[4]};
+                ASSERT(filter_);
+
+                return {filter_->x()[1], filter_->x()[4]};
         }
 
         [[nodiscard]] Matrix<2, 2, T> velocity_p() const override
         {
+                ASSERT(filter_);
+
                 return {
-                        {filter_.p()(1, 1), filter_.p()(1, 4)},
-                        {filter_.p()(4, 1), filter_.p()(4, 4)}
+                        {filter_->p()(1, 1), filter_->p()(1, 4)},
+                        {filter_->p()(4, 1), filter_->p()(4, 4)}
                 };
         }
 
         [[nodiscard]] T angle() const override
         {
-                return std::atan2(filter_.x()[4], filter_.x()[1]);
+                ASSERT(filter_);
+
+                return std::atan2(filter_->x()[4], filter_->x()[1]);
         }
 
         [[nodiscard]] T angle_p() const override
@@ -235,28 +256,23 @@ class Filter final : public PositionFilter<T>
         }
 
 public:
-        Filter(const Vector<2, T>& position, const T position_variance, const T theta, const T process_variance)
-                : filter_(x(position), p(position_variance)),
-                  theta_(theta),
+        Filter(const T theta, const T process_variance)
+                : theta_(theta),
                   process_variance_(process_variance)
         {
-                ASSERT(process_variance >= 0);
+                ASSERT(theta_ >= 0);
+                ASSERT(process_variance_ >= 0);
         }
 };
 }
 
 template <typename T>
-std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
-        const Vector<2, T>& position,
-        const T position_variance,
-        const T theta,
-        const T process_variance)
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const T theta, const T process_variance)
 {
-        return std::make_unique<Filter<T>>(position, position_variance, theta, process_variance);
+        return std::make_unique<Filter<T>>(theta, process_variance);
 }
 
-#define TEMPLATE(T) \
-        template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const Vector<2, T>&, T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

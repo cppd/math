@@ -30,6 +30,8 @@ class PositionFilter
 public:
         virtual ~PositionFilter() = default;
 
+        virtual void reset(const Vector<2, T>& position, T position_variance) = 0;
+
         virtual void predict(T dt) = 0;
         virtual void update(const Vector<2, T>& position, T position_variance) = 0;
 
