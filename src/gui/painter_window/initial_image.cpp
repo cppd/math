@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/conversion.h>
 
 #include <array>
+#include <cstdint>
 #include <cstring>
 
 namespace ns::gui::painter_window

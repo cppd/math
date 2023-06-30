@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
 
+#include <cstdint>
+
 namespace ns::image
 {
 namespace

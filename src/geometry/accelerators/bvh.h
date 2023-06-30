@@ -33,6 +33,7 @@ Elsevier, 2017.
 #include <src/com/error.h>
 #include <src/progress/progress.h>
 
+#include <cstdint>
 #include <span>
 #include <utility>
 #include <vector>

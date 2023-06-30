@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <cstdint>
 #include <cstring>
 
 namespace ns::image

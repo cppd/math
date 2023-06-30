@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <bit>
+#include <cstdint>
 
 namespace ns::gpu::convex_hull
 {

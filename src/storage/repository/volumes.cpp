@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <map>

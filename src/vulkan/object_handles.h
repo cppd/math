@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cstdint>
 #include <functional>
 #include <span>
 #include <vector>
