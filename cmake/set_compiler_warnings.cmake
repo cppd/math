@@ -88,12 +88,14 @@ function(set_compiler_warnings source_files)
                         $<$<COMPILE_LANGUAGE:CXX>:
                         -Wno-c++20-compat-pedantic
                         -Wno-c++98-compat-pedantic
+                        -Wno-cast-function-type-strict
                         -Wno-conversion
                         -Wno-double-promotion
                         -Wno-exit-time-destructors
                         -Wno-float-equal
                         -Wno-padded
                         -Wno-shadow-field-in-constructor
+                        -Wno-unsafe-buffer-usage
                         -Wno-weak-template-vtables
                         -Wno-weak-vtables
 
