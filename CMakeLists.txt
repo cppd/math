@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.26)
 
 ##################################################
 
@@ -38,8 +38,8 @@ set(qt6_disable_deprecated_before 0x060400)
 enable_language(C CXX)
 
 check_compiler_versions(
-        GCC_MINIMAL_VERSION 12
-        CLANG_MINIMAL_VERSION 15)
+        GCC_MINIMAL_VERSION 13
+        CLANG_MINIMAL_VERSION 16)
 
 # after enable_language
 set(CMAKE_C_STANDARD 17)
