@@ -38,7 +38,12 @@ class MemoryArena final
 
         class Block final
         {
-                std::vector<std::aligned_storage_t<ALIGN, ALIGN>> data_;
+                struct AlignedStorage final
+                {
+                        alignas(ALIGN) std::byte data[ALIGN];
+                };
+
+                std::vector<AlignedStorage> data_;
 
         public:
                 Block()

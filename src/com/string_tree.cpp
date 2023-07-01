@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <ranges>
 #include <stack>
 #include <tuple>
 
@@ -73,9 +74,9 @@ std::string StringTree::text(const unsigned indent) const
                         res += nodes_[index].name;
                 }
 
-                for (auto iter = nodes_[index].children.crbegin(); iter != nodes_[index].children.crend(); ++iter)
+                for (const std::size_t child : std::ranges::reverse_view(nodes_[index].children))
                 {
-                        stack.push({*iter, level + 1});
+                        stack.emplace(child, level + 1);
                 }
         }
 
