@@ -53,8 +53,7 @@ public:
                         static_assert(N <= std::size(PRIMES));
 
                         return Vector<N, T>{radical_inverse<PRIMES[I], T>(sample)...};
-                }
-                (sample_++, std::make_integer_sequence<std::size_t, N>());
+                }(sample_++, std::make_integer_sequence<std::size_t, N>());
         }
 };
 }

@@ -92,12 +92,11 @@ void test(const T& precision, RandomEngine& engine)
                 return res;
         }();
 
-        [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 (test_simplex<I + 1>(vertices, power<I + 1>(scale) / FACTORIAL<I + 1>, precision), ...);
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <typename T, typename RandomEngine>

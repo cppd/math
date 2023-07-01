@@ -53,12 +53,11 @@ namespace sphere_implementation
 template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
 Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 {
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return Vector<N, T>((static_cast<void>(I), distribution(engine))...);
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 //

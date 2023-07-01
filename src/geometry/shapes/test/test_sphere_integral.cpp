@@ -285,11 +285,10 @@ void compare_with_gamma(const T& precision)
 
         LOG(name);
 
-        [&]<unsigned... I>(std::integer_sequence<unsigned, I...> &&)
+        [&]<unsigned... I>(std::integer_sequence<unsigned, I...>&&)
         {
                 (compare_with_gamma<I + 2, T>(precision), ...);
-        }
-        (std::make_integer_sequence<unsigned, 100>());
+        }(std::make_integer_sequence<unsigned, 100>());
 
         compare_with_gamma<1'000, T>(precision);
         compare_with_gamma<1'111, T>(precision);

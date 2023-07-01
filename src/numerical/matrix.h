@@ -30,13 +30,12 @@ namespace matrix_object_implementation
 template <std::size_t N, typename T, std::size_t COLUMN>
 [[nodiscard]] constexpr Vector<N, T> make_vector(const T& v)
 {
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 static_assert(((I >= 0 && I < N) && ...));
                 return Vector<N, T>{(I == COLUMN ? v : 0)...};
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 }
 
@@ -44,13 +43,12 @@ template <std::size_t N, typename T>
 [[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
 {
         namespace impl = matrix_object_implementation;
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 static_assert(((I >= 0 && I < N) && ...));
                 return Matrix<N, N, T>({impl::make_vector<N, T, I>(v[I])...});
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t R, std::size_t C, typename T, std::size_t COUNT>

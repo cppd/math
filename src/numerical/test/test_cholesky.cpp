@@ -136,11 +136,10 @@ template <std::size_t N, typename T>
 template <typename T>
 void test(const std::type_identity_t<T> precision, PCG& pcg)
 {
-        [&]<unsigned... I>(std::integer_sequence<unsigned, I...> &&)
+        [&]<unsigned... I>(std::integer_sequence<unsigned, I...>&&)
         {
                 (test(positive_definite_matrix<1 + I, T>(pcg), precision), ...);
-        }
-        (std::make_integer_sequence<unsigned, 10>());
+        }(std::make_integer_sequence<unsigned, 10>());
 }
 
 void test_cholesky()

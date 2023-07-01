@@ -36,7 +36,7 @@ struct Dimension final
 template <typename T>
 auto apply_for_dimension(const std::size_t dimension, const T& f)
 {
-        return [&]<std::size_t... N>(std::index_sequence<N...> &&)
+        return [&]<std::size_t... N>(std::index_sequence<N...>&&)
         {
                 using ReturnType = std::common_type_t<decltype(f(Dimension<N>()))...>;
 
@@ -57,7 +57,6 @@ auto apply_for_dimension(const std::size_t dimension, const T& f)
                 }
 
                 dimension_implementation::dimension_not_supported_error(dimension);
-        }
-        (settings::Dimensions());
+        }(settings::Dimensions());
 }
 }

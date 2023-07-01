@@ -266,11 +266,10 @@ void test_performance(progress::Ratio* const progress)
 
 void performance_tests(progress::Ratio* const progress)
 {
-        [progress]<std::size_t... I>(std::index_sequence<I...> &&)
+        [progress]<std::size_t... I>(std::index_sequence<I...>&&)
         {
                 (test_performance<I>(progress), ...);
-        }
-        (settings::Dimensions2A());
+        }(settings::Dimensions2A());
 }
 
 template <std::size_t... I>

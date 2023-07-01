@@ -23,10 +23,9 @@ namespace ns::settings
 {
 std::set<unsigned> supported_dimensions()
 {
-        return []<std::size_t... N>(std::index_sequence<N...> &&)
+        return []<std::size_t... N>(std::index_sequence<N...>&&)
         {
                 return std::set<unsigned>({N...});
-        }
-        (Dimensions());
+        }(Dimensions());
 }
 }

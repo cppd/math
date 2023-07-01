@@ -27,23 +27,21 @@ namespace ns
 template <typename T, std::size_t N>
 constexpr std::array<T, N> make_array_sequence()
 {
-        return []<T... I>(std::integer_sequence<T, I...> &&)
+        return []<T... I>(std::integer_sequence<T, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return std::array<T, N>{I...};
-        }
-        (std::make_integer_sequence<T, N>());
+        }(std::make_integer_sequence<T, N>());
 }
 
 template <typename T, std::size_t N>
 constexpr std::array<T, N> make_array_value(const T& v)
 {
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return std::array<T, N>{(static_cast<void>(I), v)...};
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N>
@@ -66,13 +64,12 @@ constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, const unsigne
 {
         static_assert(N >= 5);
         ASSERT(pos < N);
-        return [&]<unsigned... I>(std::integer_sequence<unsigned, I...> &&)
+        return [&]<unsigned... I>(std::integer_sequence<unsigned, I...>&&)
         {
                 static_assert(sizeof...(I) == N - 1);
                 static_assert(((I < N - 1) && ...));
                 return std::array<T, N - 1>{(I < pos ? a[I] : a[I + 1])...};
-        }
-        (std::make_integer_sequence<unsigned, N - 1>());
+        }(std::make_integer_sequence<unsigned, N - 1>());
 }
 
 template <typename T>

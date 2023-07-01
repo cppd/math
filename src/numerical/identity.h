@@ -29,24 +29,22 @@ namespace identity_implementation
 template <std::size_t N, typename T, std::size_t VALUE_INDEX>
 constexpr Vector<N, T> make_vector_one_value(const T& value)
 {
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
                 return Vector<sizeof...(I), T>((I == VALUE_INDEX ? value : 0)...);
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N, typename T>
 constexpr std::array<Vector<N, T>, N> make_array_of_vector_one_value(const T& value)
 {
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return std::array<Vector<N, T>, N>{make_vector_one_value<sizeof...(I), T, I>(value)...};
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 }
 

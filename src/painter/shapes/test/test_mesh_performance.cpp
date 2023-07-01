@@ -146,11 +146,10 @@ Parameters parameters()
 
 void test_performance(progress::Ratio* const progress)
 {
-        [progress]<std::size_t... I>(std::index_sequence<I...> &&)
+        [progress]<std::size_t... I>(std::index_sequence<I...>&&)
         {
                 (test<I>(parameters<I>(), progress), ...);
-        }
-        (settings::Dimensions());
+        }(settings::Dimensions());
 }
 
 TEST_PERFORMANCE("Mesh Intersections", test_performance)

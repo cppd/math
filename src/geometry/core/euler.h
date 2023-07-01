@@ -70,24 +70,22 @@ int euler_characteristic(const std::vector<std::array<int, N>>& facets)
 {
         namespace impl = euler_implementation;
 
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return (((I & 1) ? -impl::simplex_count<I>(facets) : impl::simplex_count<I>(facets)) + ...);
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N>
 std::array<long long, N> simplex_counts(const std::vector<std::array<int, N>>& facets)
 {
         namespace impl = euler_implementation;
-        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...> &&)
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
                 return std::array<long long, N>{impl::simplex_count<I>(facets)...};
-        }
-        (std::make_integer_sequence<std::size_t, N>());
+        }(std::make_integer_sequence<std::size_t, N>());
 }
 
 template <std::size_t N>

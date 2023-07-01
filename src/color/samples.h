@@ -255,7 +255,7 @@ public:
 
         //
 
-        [[nodiscard]] constexpr friend bool operator==(const Derived& a, const Derived& b)
+        [[nodiscard]] friend constexpr bool operator==(const Derived& a, const Derived& b)
         {
                 return a.data_ == b.data_;
         }
@@ -281,47 +281,47 @@ public:
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator+(const Derived& a, const Derived& b)
+        [[nodiscard]] friend constexpr Derived operator+(const Derived& a, const Derived& b)
         {
                 Derived res;
                 res.data_ = a.data_ + b.data_;
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator-(const Derived& a, const Derived& b)
+        [[nodiscard]] friend constexpr Derived operator-(const Derived& a, const Derived& b)
         {
                 Derived res;
                 res.data_ = a.data_ - b.data_;
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const Derived& b)
+        [[nodiscard]] friend constexpr Derived operator*(const Derived& a, const Derived& b)
         {
                 Derived res;
                 res.data_ = a.data_ * b.data_;
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const T& b)
+        [[nodiscard]] friend constexpr Derived operator*(const Derived& a, const T& b)
         {
                 Derived res;
                 res.data_ = a.data_ * b;
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator*(const T& b, const Derived& a)
+        [[nodiscard]] friend constexpr Derived operator*(const T& b, const Derived& a)
         {
                 return a * b;
         }
 
-        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const T& b)
+        [[nodiscard]] friend constexpr Derived operator/(const Derived& a, const T& b)
         {
                 Derived res;
                 res.data_ = a.data_ / b;
                 return res;
         }
 
-        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const Derived& b)
+        [[nodiscard]] friend constexpr Derived operator/(const Derived& a, const Derived& b)
         {
                 Derived res;
                 res.data_ = a.data_ / b.data_;

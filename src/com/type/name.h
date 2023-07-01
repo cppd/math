@@ -28,8 +28,9 @@ namespace ns
 namespace type_name_implementation
 {
 template <typename T>
-concept StdFloatingPoint = (std::is_same_v<std::remove_cv_t<T>, float>) || (std::is_same_v<std::remove_cv_t<T>, double>)
-                           || (std::is_same_v<std::remove_cv_t<T>, long double>);
+concept StdFloatingPoint =
+        (std::is_same_v<std::remove_cv_t<T>, float>) || (std::is_same_v<std::remove_cv_t<T>, double>)
+        || (std::is_same_v<std::remove_cv_t<T>, long double>);
 template <typename T>
 concept BitFloatingPoint =
         (StdFloatingPoint<T> && Limits<T>::is_iec559()) || (std::is_same_v<std::remove_cv_t<T>, __float128>);
