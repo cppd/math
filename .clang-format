@@ -7,7 +7,8 @@ AlignConsecutiveDeclarations: None
 AlignConsecutiveMacros: None
 AlignEscapedNewlines: Left
 AlignOperands: Align
-AlignTrailingComments: false
+AlignTrailingComments:
+        Kind: Never
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Never
@@ -41,9 +42,11 @@ BraceWrapping:
         SplitEmptyFunction: true
         SplitEmptyRecord: true
         SplitEmptyNamespace: true
+BreakAfterAttributes: Never
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeConceptDeclarations: Always
+BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
@@ -53,7 +56,6 @@ CompactNamespaces: false
 ConstructorInitializerIndentWidth: 8
 ContinuationIndentWidth: 8
 Cpp11BracedListStyle: true
-DeriveLineEnding: false
 DerivePointerAlignment: false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: Always
@@ -83,8 +85,14 @@ IndentRequiresClause: true
 IndentWidth: 8
 IndentWrappedFunctionNames: true
 InsertBraces: true
+InsertNewlineAtEOF: true
+IntegerLiteralSeparator:
+        Binary: 0
+        Decimal: 0
+        Hex: 0
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: Signature
+LineEnding: LF
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PPIndentWidth: -1
@@ -101,14 +109,16 @@ PenaltyIndentedWhitespace: 6
 PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
 QualifierAlignment: Custom
-QualifierOrder: ['inline', 'static', 'constexpr', 'const', 'volatile', 'type', 'restrict']
+QualifierOrder: ['inline', 'static', 'friend', 'constexpr', 'const', 'volatile', 'type', 'restrict']
 ReferenceAlignment: Left
 ReflowComments: true
+RemoveSemicolon: false
 RequiresClausePosition: OwnLine
+RequiresExpressionIndentation: Keyword
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SortIncludes: CaseSensitive
-SortUsingDeclarations: true
+SortUsingDeclarations: Lexicographic
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
@@ -145,5 +155,4 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Latest
 TabWidth: 8
-UseCRLF: false
 UseTab: Never
