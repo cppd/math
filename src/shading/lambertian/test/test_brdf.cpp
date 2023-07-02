@@ -36,7 +36,7 @@ namespace
 template <std::size_t N, typename T, typename Color>
 class TestBRDF final : public compute::BRDF<N, T, Color>
 {
-        const Color color_ = testing::random_non_black_color<Color>();
+        const Color color_;
 
 public:
         template <typename RandomEngine>
