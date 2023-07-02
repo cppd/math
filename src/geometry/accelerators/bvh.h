@@ -64,10 +64,10 @@ class Intersect final
 
         static constexpr bool TERMINATE_ON_FIRST_HIT = std::is_same_v<Result, bool>;
 
-        const std::vector<unsigned>& object_indices_;
-        const std::vector<Node<N, T>>& nodes_;
-        const ObjectIntersect& object_intersect_;
-        const Ray<N, T>& ray_;
+        const std::vector<unsigned>* const object_indices_;
+        const std::vector<Node<N, T>>* const nodes_;
+        const ObjectIntersect* const object_intersect_;
+        const Ray<N, T>* const ray_;
 
         const Vector<N, T> dir_reciprocal_;
         const Vector<N, bool> dir_negative_;
@@ -103,9 +103,9 @@ class Intersect final
 
         [[nodiscard]] bool traverse()
         {
-                const Node<N, T>& node = nodes_[node_index_];
+                const Node<N, T>& node = (*nodes_)[node_index_];
 
-                if (!node.bounds.intersect(ray_.org(), dir_reciprocal_, dir_negative_, distance_))
+                if (!node.bounds.intersect(ray_->org(), dir_reciprocal_, dir_negative_, distance_))
                 {
                         return pop();
                 }
@@ -116,8 +116,8 @@ class Intersect final
                         return true;
                 }
 
-                auto info = object_intersect_(
-                        std::span(object_indices_.data() + node.object_offset, node.object_count),
+                auto info = (*object_intersect_)(
+                        std::span(object_indices_->data() + node.object_offset, node.object_count),
                         std::as_const(distance_));
 
                 static_assert(std::is_same_v<decltype(info), decltype(result_)>);
@@ -146,17 +146,17 @@ class Intersect final
 
 public:
         Intersect(
-                const std::vector<unsigned>& object_indices,
-                const std::vector<Node<N, T>>& nodes,
-                const Ray<N, T>& ray,
+                const std::vector<unsigned>* const object_indices,
+                const std::vector<Node<N, T>>* const nodes,
+                const Ray<N, T>* const ray,
                 const T& max_distance,
-                const ObjectIntersect& object_intersect)
+                const ObjectIntersect* const object_intersect)
                 : object_indices_(object_indices),
                   nodes_(nodes),
                   object_intersect_(object_intersect),
                   ray_(ray),
-                  dir_reciprocal_(ray.dir().reciprocal()),
-                  dir_negative_(ray.dir().negative_bool()),
+                  dir_reciprocal_(ray->dir().reciprocal()),
+                  dir_negative_(ray->dir().negative_bool()),
                   distance_(max_distance)
         {
         }
@@ -204,7 +204,7 @@ public:
                 const ObjectIntersect& object_intersect) const
         {
                 return bvh_implementation::Intersect<N, T, ObjectIntersect>(
-                               object_indices_, nodes_, ray, max_distance, object_intersect)
+                               &object_indices_, &nodes_, &ray, max_distance, &object_intersect)
                         .compute();
         }
 };
