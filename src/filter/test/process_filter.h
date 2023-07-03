@@ -36,11 +36,6 @@ struct ProcessFilterInit final
         static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(50.0));
         static constexpr T ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
         static constexpr T ANGLE_R_VARIANCE = square(degrees_to_radians(50.0));
-
-        Vector<2, T> position;
-        Vector<2, T> velocity;
-        T angle;
-        T position_variance;
 };
 
 template <typename T>
@@ -48,6 +43,12 @@ class ProcessFilter
 {
 public:
         virtual ~ProcessFilter() = default;
+
+        virtual void reset(
+                const Vector<2, T>& position,
+                const Vector<2, T>& velocity,
+                T angle,
+                T position_variance) = 0;
 
         virtual void predict(T dt) = 0;
 

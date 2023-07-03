@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "positions.h"
 #include "process_filter.h"
 #include "simulator.h"
 
@@ -43,25 +44,28 @@ class Process final
         std::vector<Vector<2, T>> speed_;
         std::vector<Vector<2, T>> speed_p_;
 
-        NormalizedSquared<2, T> nees_position_;
-        NormalizedSquared<1, T> nees_angle_;
-        NormalizedSquared<1, T> nees_angle_r_;
+        struct Nees final
+        {
+                NormalizedSquared<2, T> position;
+                NormalizedSquared<1, T> angle;
+                NormalizedSquared<1, T> angle_r;
+        };
 
+        std::optional<Nees> nees_;
         std::optional<T> last_time_;
 
-        void save(T time, const TrueData<2, T>& true_data);
+        [[nodiscard]] std::string angle_string() const;
 
-        void predict(T time);
+        void save(T time, const TrueData<2, T>& true_data);
 
 public:
         Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
 
-        void update(const Measurement<2, T>& m);
+        void update(const Measurement<2, T>& m, const Positions<T>& positions);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] std::string angle_string() const;
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;

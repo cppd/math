@@ -146,18 +146,8 @@ std::vector<Position<T>> create_positions()
 }
 
 template <typename T>
-std::vector<Process<T>> create_processes(
-        const Vector<2, T>& position,
-        const Vector<2, T>& velocity,
-        const T angle,
-        const T position_variance)
+std::vector<Process<T>> create_processes()
 {
-        const ProcessFilterInit<T> init{
-                .position = position,
-                .velocity = velocity,
-                .angle = angle,
-                .position_variance = position_variance};
-
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
         const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
         const T process_arv = Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE;
@@ -165,7 +155,7 @@ std::vector<Process<T>> create_processes(
         std::vector<Process<T>> res;
 
         res.emplace_back(
-                "EKF", color::RGB8(0, 200, 0), create_process_filter_ekf<T>(init, process_pv, process_av, process_arv));
+                "EKF", color::RGB8(0, 200, 0), create_process_filter_ekf<T>(process_pv, process_av, process_arv));
 
         const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
@@ -185,7 +175,7 @@ std::vector<Process<T>> create_processes(
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0),
-                        create_process_filter_ukf(init, alphas[i], process_pv, process_av, process_arv));
+                        create_process_filter_ukf(alphas[i], process_pv, process_av, process_arv));
         }
 
         return res;
@@ -200,24 +190,33 @@ void write_result(
 {
         if (positions.empty())
         {
-                error("No position measurement found");
+                error("No positions");
         }
 
         if (processes.empty())
         {
-                LOG("Failed to estimate direction");
+                error("No processes");
         }
 
         write_to_file(annotation, measurements, positions, processes);
 
+        const auto log_consistency_string = [](const auto& p)
+        {
+                const std::string s = p.consistency_string();
+                if (!s.empty())
+                {
+                        LOG(s);
+                }
+        };
+
         for (const auto& p : positions)
         {
-                LOG(p.consistency_string());
+                log_consistency_string(p);
         }
 
         for (const auto& p : processes)
         {
-                LOG(p.consistency_string());
+                log_consistency_string(p);
         }
 }
 
@@ -230,7 +229,7 @@ void test_impl(const Track<2, T>& track)
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, create_positions<T>());
 
-        std::vector<Process<T>> processes;
+        std::vector<Process<T>> processes = create_processes<T>();
 
         for (const Measurement<2, T>& m : track)
         {
@@ -238,24 +237,9 @@ void test_impl(const Track<2, T>& track)
 
                 positions.update(m);
 
-                if (processes.empty() && positions.has_estimates())
-                {
-                        processes = create_processes(
-                                positions.position(), positions.velocity(), positions.angle(), m.position_variance);
-                }
-
                 for (auto& p : processes)
                 {
-                        p.update(m);
-                }
-
-                if (m.position)
-                {
-                        for (auto& p : processes)
-                        {
-                                LOG(to_string(m.time) + "; true angle = "
-                                    + to_string(radians_to_degrees(m.true_data.angle)) + "; " + p.angle_string());
-                        }
+                        p.update(m, positions);
                 }
         }
 

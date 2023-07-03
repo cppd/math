@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/type/name.h>
 
 namespace ns::filter::test
@@ -41,25 +42,35 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
         speed_.push_back({time, filter_->speed()});
         speed_p_.push_back({time, filter_->speed_p()});
 
-        nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
-        nees_angle_.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
-        nees_angle_r_.add(normalize_angle(true_data.angle_r - filter_->angle_r()), filter_->angle_r_p());
+        if (!nees_)
+        {
+                nees_.emplace();
+        }
+        nees_->position.add(true_data.position - filter_->position(), filter_->position_p());
+        nees_->angle.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
+        nees_->angle_r.add(normalize_angle(true_data.angle_r - filter_->angle_r()), filter_->angle_r_p());
 }
 
 template <typename T>
-void Process<T>::predict(const T time)
+void Process<T>::update(const Measurement<2, T>& m, const Positions<T>& positions)
 {
-        ASSERT(!last_time_ || *last_time_ < time);
+        ASSERT(!last_time_ || *last_time_ < m.time);
 
-        const T delta = last_time_ ? (time - *last_time_) : 0;
-        last_time_ = time;
+        if (!last_time_)
+        {
+                if (positions.has_estimates())
+                {
+                        filter_->reset(
+                                positions.position(), positions.velocity(), positions.angle(), m.position_variance);
+                        last_time_ = m.time;
+                }
+                return;
+        }
+
+        const T delta = m.time - *last_time_;
+        last_time_ = m.time;
+
         filter_->predict(delta);
-}
-
-template <typename T>
-void Process<T>::update(const Measurement<2, T>& m)
-{
-        predict(m.time);
 
         if (m.position && m.speed && m.direction && m.acceleration)
         {
@@ -92,6 +103,12 @@ void Process<T>::update(const Measurement<2, T>& m)
         }
 
         save(m.time, m.true_data);
+
+        if (m.position)
+        {
+                LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
+                    + angle_string());
+        }
 }
 
 template <typename T>
@@ -120,13 +137,18 @@ std::string Process<T>::angle_string() const
 template <typename T>
 std::string Process<T>::consistency_string() const
 {
+        if (!nees_)
+        {
+                return {};
+        }
+
         const std::string name = std::string("Process<") + type_name<T>() + "> " + name_;
         std::string s;
-        s += name + "; NEES Position; " + nees_position_.check_string();
+        s += name + "; NEES Position; " + nees_->position.check_string();
         s += '\n';
-        s += name + "; NEES Angle; " + nees_angle_.check_string();
+        s += name + "; NEES Angle; " + nees_->angle.check_string();
         s += '\n';
-        s += name + "; NEES Angle R; " + nees_angle_r_.check_string();
+        s += name + "; NEES Angle R; " + nees_->angle_r.check_string();
         return s;
 }
 
