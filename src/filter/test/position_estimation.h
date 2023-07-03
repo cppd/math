@@ -28,24 +28,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-class Positions final
+class PositionEstimation final
 {
         const T angle_estimation_time_difference_;
         const T angle_estimation_variance_;
-        std::vector<Position<T>> positions_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
-        std::optional<std::size_t> angle_position_index_;
+        const Position<T>* position_ = nullptr;
         bool direction_ = false;
 
         [[nodiscard]] std::string description() const;
 
 public:
-        Positions(T angle_estimation_time_difference, T angle_estimation_variance, std::vector<Position<T>> positions);
+        PositionEstimation(T angle_estimation_time_difference, T angle_estimation_variance);
 
-        void update(const Measurement<2, T>& m);
+        void update(const Measurement<2, T>& m, const std::vector<Position<T>>* positions);
 
-        [[nodiscard]] const std::vector<Position<T>>& positions() const;
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;
         [[nodiscard]] Vector<2, T> position() const;

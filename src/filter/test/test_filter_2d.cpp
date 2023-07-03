@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "position.h"
+#include "position_estimation.h"
 #include "position_filter_lkf.h"
-#include "positions.h"
 #include "process.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
@@ -225,25 +225,31 @@ void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurement<2, T>> measurements;
 
-        Positions<T> positions(
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, create_positions<T>());
-
+        std::vector<Position<T>> positions = create_positions<T>();
         std::vector<Process<T>> processes = create_processes<T>();
+
+        PositionEstimation<T> position_estimation(
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE);
 
         for (const Measurement<2, T>& m : track)
         {
                 measurements.push_back(m);
 
-                positions.update(m);
+                for (auto& p : positions)
+                {
+                        p.update(m);
+                }
+
+                position_estimation.update(m, &std::as_const(positions));
 
                 for (auto& p : processes)
                 {
-                        p.update(m, positions);
+                        p.update(m, std::as_const(position_estimation));
                 }
         }
 
-        write_result(track.annotation(), measurements, positions.positions(), processes);
+        write_result(track.annotation(), measurements, positions, processes);
 }
 
 template <typename T>

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "positions.h"
+#include "position_estimation.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -24,18 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Positions<T>::Positions(
-        const T angle_estimation_time_difference,
-        const T angle_estimation_variance,
-        std::vector<Position<T>> positions)
+PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_difference, const T angle_estimation_variance)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
-          angle_estimation_variance_(angle_estimation_variance),
-          positions_(std::move(positions))
+          angle_estimation_variance_(angle_estimation_variance)
 {
 }
 
 template <typename T>
-void Positions<T>::update(const Measurement<2, T>& m)
+void PositionEstimation<T>::update(const Measurement<2, T>& m, const std::vector<Position<T>>* const positions)
 {
         if (m.direction)
         {
@@ -48,14 +44,9 @@ void Positions<T>::update(const Measurement<2, T>& m)
                 return;
         }
 
-        for (auto& p : positions_)
-        {
-                p.update(m);
-        }
-
         direction_ = last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_);
 
-        angle_position_index_.reset();
+        position_ = nullptr;
 
         if (!direction_)
         {
@@ -63,9 +54,9 @@ void Positions<T>::update(const Measurement<2, T>& m)
         }
 
         T angle_p = angle_estimation_variance_;
-        for (std::size_t i = 0; i < positions_.size(); ++i)
+        for (std::size_t i = 0; i < positions->size(); ++i)
         {
-                const Position<T>& position = positions_[i];
+                const Position<T>& position = (*positions)[i];
 
                 LOG(to_string(m.time) + "; " + position.name()
                     + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.angle_p()))));
@@ -73,23 +64,17 @@ void Positions<T>::update(const Measurement<2, T>& m)
                 const T position_angle_p = position.angle_p();
                 if (position_angle_p < angle_p)
                 {
-                        angle_position_index_ = i;
+                        position_ = &position;
                         angle_p = position_angle_p;
                 }
         }
 }
 
 template <typename T>
-const std::vector<Position<T>>& Positions<T>::positions() const
-{
-        return positions_;
-}
-
-template <typename T>
-bool Positions<T>::has_estimates() const
+bool PositionEstimation<T>::has_estimates() const
 {
         ASSERT(!direction_ || last_direction_);
-        if (direction_ && angle_position_index_)
+        if (direction_ && position_)
         {
                 LOG(description());
                 return true;
@@ -98,59 +83,55 @@ bool Positions<T>::has_estimates() const
 }
 
 template <typename T>
-T Positions<T>::angle() const
+T PositionEstimation<T>::angle() const
 {
         if (!has_estimates())
         {
                 error("Estimation doesn't have angle");
         }
-        const Position<T>& position = positions_[*angle_position_index_];
-        return normalize_angle(*last_direction_ - position.angle());
+        return normalize_angle(*last_direction_ - position_->angle());
 }
 
 template <typename T>
-Vector<2, T> Positions<T>::position() const
+Vector<2, T> PositionEstimation<T>::position() const
 {
         if (!has_estimates())
         {
                 error("Estimation doesn't have position");
         }
-        const Position<T>& position = positions_[*angle_position_index_];
-        return position.position();
+        return position_->position();
 }
 
 template <typename T>
-Vector<2, T> Positions<T>::velocity() const
+Vector<2, T> PositionEstimation<T>::velocity() const
 {
         if (!has_estimates())
         {
                 error("Estimation doesn't have velocity");
         }
-        const Position<T>& position = positions_[*angle_position_index_];
-        return position.velocity();
+        return position_->velocity();
 }
 
 template <typename T>
-std::string Positions<T>::description() const
+std::string PositionEstimation<T>::description() const
 {
-        ASSERT(angle_position_index_);
+        ASSERT(position_);
         ASSERT(last_direction_);
 
-        const Position<T>& position = positions_[*angle_position_index_];
-        const T filter_angle = position.angle();
+        const T filter_angle = position_->angle();
 
         std::string res;
         res += "estimation:";
-        res += "\nfilter = " + position.name();
+        res += "\nfilter = " + position_->name();
         res += "\nangle = " + to_string(radians_to_degrees(filter_angle));
-        res += "\nangle stddev = " + to_string(radians_to_degrees(std::sqrt(position.angle_p())));
+        res += "\nangle stddev = " + to_string(radians_to_degrees(std::sqrt(position_->angle_p())));
         res += "\nmeasurement: angle = " + to_string(radians_to_degrees(*last_direction_));
         res += "\nangle difference = "
                + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));
         return res;
 }
 
-template class Positions<float>;
-template class Positions<double>;
-template class Positions<long double>;
+template class PositionEstimation<float>;
+template class PositionEstimation<double>;
+template class PositionEstimation<long double>;
 }

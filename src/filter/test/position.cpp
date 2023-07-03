@@ -63,12 +63,12 @@ void Position<T>::save(const T time, const TrueData<2, T>& true_data)
 template <typename T>
 void Position<T>::update(const Measurement<2, T>& m)
 {
-        ASSERT(!last_time_ || *last_time_ < m.time);
-
         if (!m.position)
         {
-                error("No position in measurement");
+                return;
         }
+
+        ASSERT(!last_time_ || *last_time_ < m.time);
 
         if (!last_time_)
         {

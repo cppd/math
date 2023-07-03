@@ -52,16 +52,17 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Process<T>::update(const Measurement<2, T>& m, const Positions<T>& positions)
+void Process<T>::update(const Measurement<2, T>& m, const PositionEstimation<T>& position_estimation)
 {
         ASSERT(!last_time_ || *last_time_ < m.time);
 
         if (!last_time_)
         {
-                if (positions.has_estimates())
+                if (position_estimation.has_estimates())
                 {
                         filter_->reset(
-                                positions.position(), positions.velocity(), positions.angle(), m.position_variance);
+                                position_estimation.position(), position_estimation.velocity(),
+                                position_estimation.angle(), m.position_variance);
                         last_time_ = m.time;
                 }
                 return;
