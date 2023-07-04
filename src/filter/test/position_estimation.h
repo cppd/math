@@ -46,8 +46,8 @@ public:
 
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;
-        [[nodiscard]] Vector<2, T> position() const;
-        [[nodiscard]] Vector<2, T> velocity() const;
+
+        [[nodiscard]] const PositionFilter<T>* filter() const;
 };
 
 }

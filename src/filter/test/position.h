@@ -56,10 +56,7 @@ public:
 
         void update(const Measurement<2, T>& m);
 
-        [[nodiscard]] T angle() const;
-        [[nodiscard]] T angle_p() const;
-        [[nodiscard]] Vector<2, T> position() const;
-        [[nodiscard]] Vector<2, T> velocity() const;
+        [[nodiscard]] const PositionFilter<T>* filter() const;
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;

@@ -93,27 +93,9 @@ void Position<T>::update(const Measurement<2, T>& m)
 }
 
 template <typename T>
-T Position<T>::angle() const
+const PositionFilter<T>* Position<T>::filter() const
 {
-        return filter_->angle();
-}
-
-template <typename T>
-T Position<T>::angle_p() const
-{
-        return filter_->angle_p();
-}
-
-template <typename T>
-Vector<2, T> Position<T>::position() const
-{
-        return filter_->position();
-}
-
-template <typename T>
-Vector<2, T> Position<T>::velocity() const
-{
-        return filter_->velocity();
+        return filter_.get();
 }
 
 template <typename T>

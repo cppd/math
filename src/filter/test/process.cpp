@@ -61,7 +61,7 @@ void Process<T>::update(const Measurement<2, T>& m, const PositionEstimation<T>&
                 if (position_estimation.has_estimates())
                 {
                         filter_->reset(
-                                position_estimation.position(), position_estimation.velocity(),
+                                position_estimation.filter()->position(), position_estimation.filter()->velocity(),
                                 position_estimation.angle(), m.position_variance);
                         last_time_ = m.time;
                 }
