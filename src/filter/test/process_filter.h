@@ -27,12 +27,9 @@ namespace ns::filter::test
 template <typename T>
 struct ProcessFilterInit final
 {
-        static constexpr Vector<2, T> ACCELERATION{0};
         static constexpr T ANGLE_SPEED = 0;
         static constexpr T ANGLE_R = 0;
 
-        static constexpr T SPEED_VARIANCE = square(30.0);
-        static constexpr T ACCELERATION_VARIANCE = square(10.0);
         static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(50.0));
         static constexpr T ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
         static constexpr T ANGLE_R_VARIANCE = square(degrees_to_radians(50.0));
@@ -45,10 +42,9 @@ public:
         virtual ~ProcessFilter() = default;
 
         virtual void reset(
-                const Vector<2, T>& position,
-                const Vector<2, T>& velocity,
-                T angle,
-                T position_variance) = 0;
+                const Vector<6, T>& position_velocity_acceleration,
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                T angle) = 0;
 
         virtual void predict(T dt) = 0;
 

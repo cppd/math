@@ -74,12 +74,8 @@ template <typename T>
 bool PositionEstimation<T>::has_estimates() const
 {
         ASSERT(!direction_ || last_direction_);
-        if (direction_ && position_)
-        {
-                LOG(description());
-                return true;
-        }
-        return false;
+
+        return last_direction_ && direction_ && position_;
 }
 
 template <typename T>
@@ -97,7 +93,7 @@ const PositionFilter<T>* PositionEstimation<T>::filter() const
 {
         if (!has_estimates())
         {
-                error("Estimation doesn't have position");
+                error("Estimation doesn't have filter");
         }
         return position_->filter();
 }
@@ -105,18 +101,19 @@ const PositionFilter<T>* PositionEstimation<T>::filter() const
 template <typename T>
 std::string PositionEstimation<T>::description() const
 {
-        ASSERT(position_);
-        ASSERT(last_direction_);
+        if (!has_estimates())
+        {
+                error("Estimation doesn't have description");
+        }
 
         const T filter_angle = position_->filter()->angle();
 
         std::string res;
-        res += "estimation:";
-        res += "\nfilter = " + position_->name();
-        res += "\nangle = " + to_string(radians_to_degrees(filter_angle));
-        res += "\nangle stddev = " + to_string(radians_to_degrees(std::sqrt(position_->filter()->angle_p())));
-        res += "\nmeasurement: angle = " + to_string(radians_to_degrees(*last_direction_));
-        res += "\nangle difference = "
+        res += "filter = " + position_->name();
+        res += "; angle = " + to_string(radians_to_degrees(filter_angle));
+        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(position_->filter()->angle_p())));
+        res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));
+        res += "; angle difference = "
                + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));
         return res;
 }

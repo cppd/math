@@ -194,6 +194,16 @@ class Filter final : public PositionFilter<T>
                         theta_);
         }
 
+        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override
+        {
+                return filter_->x();
+        }
+
+        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override
+        {
+                return filter_->p();
+        }
+
         [[nodiscard]] Vector<2, T> position() const override
         {
                 ASSERT(filter_);

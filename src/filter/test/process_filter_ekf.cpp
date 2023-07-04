@@ -32,28 +32,44 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
-Vector<9, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle)
+Vector<9, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
-        ASSERT(is_finite(position));
-        ASSERT(is_finite(velocity));
-        ASSERT(is_finite(angle));
+        ASSERT(is_finite(position_velocity_acceleration));
 
-        return Vector<9, T>(
-                position[0], velocity[0], ProcessFilterInit<T>::ACCELERATION[0], position[1], velocity[1],
-                ProcessFilterInit<T>::ACCELERATION[1], angle, ProcessFilterInit<T>::ANGLE_SPEED,
-                ProcessFilterInit<T>::ANGLE_R);
+        Vector<9, T> res;
+
+        for (std::size_t i = 0; i < 6; ++i)
+        {
+                res[i] = position_velocity_acceleration[i];
+        }
+
+        res[6] = angle;
+        res[7] = ProcessFilterInit<T>::ANGLE_SPEED;
+        res[8] = ProcessFilterInit<T>::ANGLE_R;
+
+        return res;
 }
 
 template <typename T>
-Matrix<9, 9, T> p(const T position_variance)
+Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
 {
-        ASSERT(is_finite(position_variance));
+        ASSERT(is_finite(position_velocity_acceleration_p));
 
-        return make_diagonal_matrix<9, T>(
-                {position_variance, ProcessFilterInit<T>::SPEED_VARIANCE, ProcessFilterInit<T>::ACCELERATION_VARIANCE,
-                 position_variance, ProcessFilterInit<T>::SPEED_VARIANCE, ProcessFilterInit<T>::ACCELERATION_VARIANCE,
-                 ProcessFilterInit<T>::ANGLE_VARIANCE, ProcessFilterInit<T>::ANGLE_SPEED_VARIANCE,
-                 ProcessFilterInit<T>::ANGLE_R_VARIANCE});
+        Matrix<9, 9, T> res(0);
+
+        for (std::size_t r = 0; r < 6; ++r)
+        {
+                for (std::size_t c = 0; c < 6; ++c)
+                {
+                        res(r, c) = position_velocity_acceleration_p(r, c);
+                }
+        }
+
+        res(6, 6) = ProcessFilterInit<T>::ANGLE_VARIANCE;
+        res(7, 7) = ProcessFilterInit<T>::ANGLE_SPEED_VARIANCE;
+        res(8, 8) = ProcessFilterInit<T>::ANGLE_R_VARIANCE;
+
+        return res;
 }
 
 struct AddX final
@@ -543,10 +559,12 @@ class Filter final : public ProcessFilter<T>
                 };
         }
 
-        void reset(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle, const T position_variance)
-                override
+        void reset(
+                const Vector<6, T>& position_velocity_acceleration,
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const T angle) override
         {
-                filter_.emplace(x(position, velocity, angle), p(position_variance));
+                filter_.emplace(x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p));
         }
 
         void predict(const T dt) override

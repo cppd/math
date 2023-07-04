@@ -37,8 +37,6 @@ class PositionEstimation final
         const Position<T>* position_ = nullptr;
         bool direction_ = false;
 
-        [[nodiscard]] std::string description() const;
-
 public:
         PositionEstimation(T angle_estimation_time_difference, T angle_estimation_variance);
 
@@ -46,8 +44,9 @@ public:
 
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;
-
         [[nodiscard]] const PositionFilter<T>* filter() const;
+
+        [[nodiscard]] std::string description() const;
 };
 
 }
