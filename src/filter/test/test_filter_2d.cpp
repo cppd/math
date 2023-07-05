@@ -238,7 +238,7 @@ void test_impl(const Track<2, T>& track)
 
                 for (auto& p : positions)
                 {
-                        p.update(m);
+                        p.update_position(m);
                 }
 
                 position_estimation.update(m, &std::as_const(positions));

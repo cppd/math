@@ -47,14 +47,18 @@ class Position final
         std::optional<NormalizedSquared<2, T>> nees_position_;
         std::optional<NormalizedSquared<1, T>> nees_speed_;
 
-        std::optional<T> last_time_;
+        std::optional<T> last_filter_time_;
+        std::optional<T> last_position_time_;
 
         void save(T time, const TrueData<2, T>& true_data);
+
+        void check_time(T time) const;
 
 public:
         Position(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter);
 
-        void update(const Measurement<2, T>& m);
+        void update_position(const Measurement<2, T>& m);
+        void predict_update(const Measurement<2, T>& m);
 
         [[nodiscard]] const PositionFilter<T>* filter() const;
 

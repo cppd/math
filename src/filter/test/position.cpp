@@ -23,8 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Position<
-        T>::Position(std::string name, color::RGB8 color, const T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter)
+Position<T>::Position(
+        std::string name,
+        const color::RGB8 color,
+        const T reset_dt,
+        std::unique_ptr<PositionFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
@@ -61,33 +64,65 @@ void Position<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Position<T>::update(const Measurement<2, T>& m)
+void Position<T>::check_time(const T time) const
 {
+        if (last_filter_time_ && !(*last_filter_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_filter_time_) + " to "
+                      + to_string(time));
+        }
+
+        if (last_position_time_ && !(*last_position_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
+                      + to_string(time));
+        }
+}
+
+template <typename T>
+void Position<T>::update_position(const Measurement<2, T>& m)
+{
+        check_time(m.time);
+
         if (!m.position)
         {
                 return;
         }
 
-        ASSERT(!last_time_ || *last_time_ < m.time);
-
-        if (!last_time_)
+        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
                 filter_->reset(*m.position, m.position_variance);
-                last_time_ = m.time;
+                last_filter_time_ = m.time;
+                last_position_time_ = m.time;
                 return;
         }
 
-        const T delta = m.time - *last_time_;
-        last_time_ = m.time;
-
-        if (!(delta < reset_dt_))
-        {
-                filter_->reset(*m.position, m.position_variance);
-                return;
-        }
-
-        filter_->predict(delta);
+        filter_->predict(m.time - *last_filter_time_);
         filter_->update(*m.position, m.position_variance);
+        last_filter_time_ = m.time;
+        last_position_time_ = m.time;
+
+        save(m.time, m.true_data);
+}
+
+template <typename T>
+void Position<T>::predict_update(const Measurement<2, T>& m)
+{
+        if (m.position)
+        {
+                update_position(m);
+                return;
+        }
+
+        check_time(m.time);
+
+        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
+        {
+                return;
+        }
+
+        filter_->predict(m.time - *last_filter_time_);
+        last_filter_time_ = m.time;
 
         save(m.time, m.true_data);
 }
