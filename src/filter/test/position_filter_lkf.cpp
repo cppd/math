@@ -37,9 +37,10 @@ template <typename T>
 struct Init final
 {
         static constexpr Vector<2, T> VELOCITY{0};
-        static constexpr Vector<2, T> ACCELERAION{0};
-        static constexpr T SPEED_VARIANCE{square<T>(30)};
-        static constexpr T ACCELERATION_VARIANCE{square<T>(10)};
+        static constexpr Vector<2, T> VELOCITY_VARIANCE{square<T>(30)};
+
+        static constexpr Vector<2, T> ACCELERATION{0};
+        static constexpr Vector<2, T> ACCELERATION_VARIANCE{square<T>(10)};
 };
 
 template <typename T>
@@ -47,19 +48,19 @@ Vector<6, T> init_x(const Vector<2, T>& position)
 {
         ASSERT(is_finite(position));
 
-        return {position[0], Init<T>::VELOCITY[0], Init<T>::ACCELERAION[0],
-                position[1], Init<T>::VELOCITY[1], Init<T>::ACCELERAION[1]};
+        return {position[0], Init<T>::VELOCITY[0], Init<T>::ACCELERATION[0],
+                position[1], Init<T>::VELOCITY[1], Init<T>::ACCELERATION[1]};
 }
 
 template <typename T>
-Matrix<6, 6, T> init_p(const T position_variance)
+Matrix<6, 6, T> init_p(const Vector<2, T>& position_variance)
 {
         ASSERT(is_finite(position_variance));
 
-        const T pv = position_variance;
-        const T sv = Init<T>::SPEED_VARIANCE;
-        const T av = Init<T>::ACCELERATION_VARIANCE;
-        return make_diagonal_matrix<6, T>({pv, sv, av, pv, sv, av});
+        const Vector<2, T>& pv = position_variance;
+        const Vector<2, T>& sv = Init<T>::VELOCITY_VARIANCE;
+        const Vector<2, T>& av = Init<T>::ACCELERATION_VARIANCE;
+        return make_diagonal_matrix<6, T>({pv[0], sv[0], av[0], pv[1], sv[1], av[1]});
 }
 
 template <typename T>
@@ -71,7 +72,7 @@ Vector<6, T> add_x(const Vector<6, T>& a, const Vector<6, T>& b)
 template <typename T>
 Matrix<6, 6, T> f(const T dt)
 {
-        const T dt_2 = square(dt) / 2;
+        const T dt_2 = power<2>(dt) / 2;
         return {
                 {1, dt, dt_2, 0,  0,    0},
                 {0,  1,   dt, 0,  0,    0},
@@ -106,13 +107,9 @@ Matrix<6, 6, T> q(const T dt, const T process_variance)
 }
 
 template <typename T>
-Matrix<2, 2, T> position_r(const T measurement_variance)
+Matrix<2, 2, T> position_r(const Vector<2, T>& measurement_variance)
 {
-        const T mv = measurement_variance;
-        return {
-                {mv,  0},
-                { 0, mv}
-        };
+        return make_diagonal_matrix(measurement_variance);
 }
 
 template <typename T>
@@ -151,7 +148,7 @@ class Filter final : public PositionFilter<T>
         T theta_;
         T process_variance_;
 
-        void reset(const Vector<2, T>& position, const T position_variance) override
+        void reset(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
         {
                 filter_.emplace(init_x(position), init_p(position_variance));
         }
@@ -175,12 +172,12 @@ class Filter final : public PositionFilter<T>
                         q(dt, process_variance_));
         }
 
-        void update(const Vector<2, T>& position, const T position_variance) override
+        void update(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
         {
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
                 ASSERT(is_finite(position_variance));
-                ASSERT(position_variance >= 0);
+                ASSERT(position_variance[0] >= 0 && position_variance[1] >= 0);
 
                 const Matrix<2, 2, T> r = position_r(position_variance);
                 filter_->update(
@@ -196,11 +193,15 @@ class Filter final : public PositionFilter<T>
 
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override
         {
+                ASSERT(filter_);
+
                 return filter_->x();
         }
 
         [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override
         {
+                ASSERT(filter_);
+
                 return filter_->p();
         }
 

@@ -30,10 +30,10 @@ class PositionFilter
 public:
         virtual ~PositionFilter() = default;
 
-        virtual void reset(const Vector<2, T>& position, T position_variance) = 0;
+        virtual void reset(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
 
         virtual void predict(T dt) = 0;
-        virtual void update(const Vector<2, T>& position, T position_variance) = 0;
+        virtual void update(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
 
         [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
