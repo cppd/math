@@ -120,17 +120,18 @@ Vector<9, T> f(const T dt, const Vector<9, T>& x)
 template <typename T>
 constexpr Matrix<9, 9, T> q(const T dt, const T position_variance, const T angle_variance, const T angle_r_variance)
 {
-        const T dt_2 = square(dt) / 2;
+        const T dt_2 = power<2>(dt) / 2;
+        const T dt_3 = power<3>(dt) / 6;
         const Matrix<9, 4, T> noise_transition{
-                {dt_2,    0,    0, 0},
-                {  dt,    0,    0, 0},
-                {   1,    0,    0, 0},
-                {   0, dt_2,    0, 0},
-                {   0,   dt,    0, 0},
-                {   0,    1,    0, 0},
-                {   0,    0, dt_2, 0},
-                {   0,    0,   dt, 0},
-                {   0,    0,    0, 1}
+                {dt_3,    0,    0,  0},
+                {dt_2,    0,    0,  0},
+                {  dt,    0,    0,  0},
+                {   0, dt_3,    0,  0},
+                {   0, dt_2,    0,  0},
+                {   0,   dt,    0,  0},
+                {   0,    0, dt_2,  0},
+                {   0,    0,   dt,  0},
+                {   0,    0,    0, dt}
         };
 
         const T p = position_variance;
