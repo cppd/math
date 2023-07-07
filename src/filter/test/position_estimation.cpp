@@ -31,11 +31,11 @@ PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_differen
 }
 
 template <typename T>
-void PositionEstimation<T>::update(const Measurement<2, T>& m, const std::vector<Position<T>>* const positions)
+void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vector<Position<T>>* const positions)
 {
         if (m.direction)
         {
-                last_direction_ = *m.direction;
+                last_direction_ = m.direction->value;
                 last_direction_time_ = m.time;
         }
 

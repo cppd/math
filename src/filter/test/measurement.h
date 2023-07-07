@@ -17,31 +17,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../simulator.h"
-
-#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
-#include <string>
-#include <vector>
 
-namespace ns::filter::test::view
+namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct Filter final
+struct TrueData final
 {
-        std::string name;
-        color::RGB8 color;
-        std::vector<Vector<2, T>> speed;
-        std::vector<Vector<2, T>> speed_p;
-        std::vector<Vector<N + 1, T>> position;
+        Vector<N, T> position;
+        T speed;
+        T angle;
+        T angle_r;
 };
 
 template <std::size_t N, typename T>
-void write_to_file(
-        std::string_view annotation,
-        const std::vector<Measurements<N, T>>& measurements,
-        T interval,
-        const std::vector<Filter<N, T>>& filters);
+struct Measurement final
+{
+        Vector<N, T> value;
+        Vector<N, T> variance;
+};
+
+template <typename T>
+struct Measurement<1, T> final
+{
+        T value;
+        T variance;
+};
+
+template <std::size_t N, typename T>
+struct Measurements final
+{
+        TrueData<N, T> true_data;
+        T time;
+        std::optional<Measurement<N, T>> acceleration;
+        std::optional<Measurement<1, T>> direction;
+        std::optional<Measurement<N, T>> position;
+        std::optional<Measurement<1, T>> speed;
+};
 }

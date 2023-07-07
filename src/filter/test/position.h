@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
 #include "position_filter.h"
-#include "simulator.h"
 
 #include "../consistency.h"
 
@@ -57,8 +57,8 @@ class Position final
 public:
         Position(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter);
 
-        void update_position(const Measurement<2, T>& m);
-        void predict_update(const Measurement<2, T>& m);
+        void update_position(const Measurements<2, T>& m);
+        void predict_update(const Measurements<2, T>& m);
 
         [[nodiscard]] const PositionFilter<T>* filter() const;
 

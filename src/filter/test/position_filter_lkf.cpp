@@ -148,9 +148,9 @@ class Filter final : public PositionFilter<T>
         std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
 
-        void reset(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
+        void reset(const Measurement<2, T>& position) override
         {
-                filter_.emplace(init_x(position), init_p(position_variance));
+                filter_.emplace(init_x(position.value), init_p(position.variance));
         }
 
         void predict(const T dt) override
@@ -172,16 +172,16 @@ class Filter final : public PositionFilter<T>
                         q(dt, process_variance_));
         }
 
-        void update(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
+        void update(const Measurement<2, T>& position) override
         {
                 ASSERT(filter_);
-                ASSERT(is_finite(position));
-                ASSERT(is_finite(position_variance));
-                ASSERT(position_variance[0] >= 0 && position_variance[1] >= 0);
+                ASSERT(is_finite(position.value));
+                ASSERT(is_finite(position.variance));
+                ASSERT(position.variance[0] >= 0 && position.variance[1] >= 0);
 
-                const Matrix<2, 2, T> r = position_r(position_variance);
+                const Matrix<2, 2, T> r = position_r(position.variance);
                 filter_->update(
-                        position_h<T>, position_hj<T>, r, position, add_x<T>,
+                        position_h<T>, position_hj<T>, r, position.value, add_x<T>,
                         [&](const Vector<2, T>& a, const Vector<2, T>& b)
                         {
                                 const auto residual = position_residual<T>(a, b);

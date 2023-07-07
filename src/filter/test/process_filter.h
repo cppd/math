@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
+
 #include <src/com/conversion.h>
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
@@ -48,41 +50,26 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        virtual void update_position(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
+        virtual void update_position(const Measurement<2, T>& position) = 0;
 
-        virtual void update_position_speed(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                T speed,
-                T speed_variance) = 0;
+        virtual void update_position_speed(const Measurement<2, T>& position, const Measurement<1, T>& speed) = 0;
 
         virtual void update_position_speed_direction_acceleration(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                T speed,
-                T speed_variance,
-                T direction,
-                T direction_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) = 0;
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration) = 0;
 
         virtual void update_position_direction_acceleration(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                T direction,
-                T direction_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) = 0;
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration) = 0;
 
-        virtual void update_acceleration(
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) = 0;
+        virtual void update_acceleration(const Measurement<2, T>& acceleration) = 0;
 
         virtual void update_speed_acceleration(
-                T speed,
-                T speed_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) = 0;
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration) = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;

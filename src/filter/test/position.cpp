@@ -80,7 +80,7 @@ void Position<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Position<T>::update_position(const Measurement<2, T>& m)
+void Position<T>::update_position(const Measurements<2, T>& m)
 {
         check_time(m.time);
 
@@ -91,14 +91,14 @@ void Position<T>::update_position(const Measurement<2, T>& m)
 
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->reset(*m.position, {m.position_variance, m.position_variance});
+                filter_->reset(*m.position);
                 last_filter_time_ = m.time;
                 last_position_time_ = m.time;
                 return;
         }
 
         filter_->predict(m.time - *last_filter_time_);
-        filter_->update(*m.position, {m.position_variance, m.position_variance});
+        filter_->update(*m.position);
         last_filter_time_ = m.time;
         last_position_time_ = m.time;
 
@@ -106,7 +106,7 @@ void Position<T>::update_position(const Measurement<2, T>& m)
 }
 
 template <typename T>
-void Position<T>::predict_update(const Measurement<2, T>& m)
+void Position<T>::predict_update(const Measurements<2, T>& m)
 {
         if (m.position)
         {

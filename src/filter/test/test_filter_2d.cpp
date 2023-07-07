@@ -60,7 +60,7 @@ struct Config final
 template <typename T>
 void write_to_file(
         const std::string_view annotation,
-        const std::vector<Measurement<2, T>>& measurements,
+        const std::vector<Measurements<2, T>>& measurements,
         const std::vector<Position<T>>& positions,
         const std::vector<Process<T>>& processes)
 {
@@ -184,7 +184,7 @@ std::vector<Process<T>> create_processes()
 template <typename T>
 void write_result(
         const std::string_view annotation,
-        const std::vector<Measurement<2, T>>& measurements,
+        const std::vector<Measurements<2, T>>& measurements,
         const std::vector<Position<T>>& positions,
         const std::vector<Process<T>>& processes)
 {
@@ -223,7 +223,7 @@ void write_result(
 template <typename T>
 void test_impl(const Track<2, T>& track)
 {
-        std::vector<Measurement<2, T>> measurements;
+        std::vector<Measurements<2, T>> measurements;
 
         std::vector<Position<T>> positions = create_positions<T>();
         std::vector<Process<T>> processes = create_processes<T>();
@@ -232,7 +232,7 @@ void test_impl(const Track<2, T>& track)
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE);
 
-        for (const Measurement<2, T>& m : track)
+        for (const Measurements<2, T>& m : track)
         {
                 measurements.push_back(m);
 

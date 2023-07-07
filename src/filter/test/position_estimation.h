@@ -40,7 +40,7 @@ class PositionEstimation final
 public:
         PositionEstimation(T angle_estimation_time_difference, T angle_estimation_variance);
 
-        void update(const Measurement<2, T>& m, const std::vector<Position<T>>* positions);
+        void update(const Measurements<2, T>& m, const std::vector<Position<T>>* positions);
 
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;

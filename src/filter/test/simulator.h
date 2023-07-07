@@ -17,51 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vector.h>
+#include "measurement.h"
 
-#include <optional>
+#include <string>
 #include <vector>
 
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct TrueData final
-{
-        Vector<N, T> position;
-        T speed;
-        T angle;
-        T angle_r;
-};
-
-template <std::size_t N, typename T>
-struct Measurement final
-{
-        TrueData<N, T> true_data;
-
-        T time;
-
-        std::optional<Vector<N, T>> acceleration;
-        T acceleration_variance;
-
-        std::optional<T> direction;
-        T direction_variance;
-
-        std::optional<Vector<N, T>> position;
-        T position_variance;
-
-        std::optional<T> speed;
-        T speed_variance;
-};
-
-template <std::size_t N, typename T>
 class Track final
 {
         class Iter final
         {
-                typename std::vector<Measurement<N, T>>::const_iterator iter_;
+                typename std::vector<Measurements<N, T>>::const_iterator iter_;
 
         public:
-                explicit Iter(typename std::vector<Measurement<N, T>>::const_iterator iter)
+                explicit Iter(typename std::vector<Measurements<N, T>>::const_iterator iter)
                         : iter_(std::move(iter))
                 {
                 }
@@ -77,17 +48,17 @@ class Track final
                         return iter_ == a.iter_;
                 }
 
-                [[nodiscard]] const Measurement<N, T>& operator*() const
+                [[nodiscard]] const Measurements<N, T>& operator*() const
                 {
                         return *iter_;
                 }
         };
 
-        std::vector<Measurement<N, T>> measurements_;
+        std::vector<Measurements<N, T>> measurements_;
         std::string annotation_;
 
 public:
-        Track(std::vector<Measurement<N, T>> measurements, std::string annotation)
+        Track(std::vector<Measurements<N, T>> measurements, std::string annotation)
                 : measurements_(std::move(measurements)),
                   annotation_(std::move(annotation))
         {

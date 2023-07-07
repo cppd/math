@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
 #include "position_estimation.h"
 #include "process_filter.h"
-#include "simulator.h"
 
 #include "../consistency.h"
 
@@ -61,7 +61,7 @@ class Process final
 public:
         Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
 
-        void update(const Measurement<2, T>& m, const PositionEstimation<T>& position_estimation);
+        void update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;

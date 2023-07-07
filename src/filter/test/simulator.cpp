@@ -61,14 +61,14 @@ struct Config final
 };
 
 template <std::size_t N, typename T>
-std::string make_annotation(const Config<T>& config, const std::vector<Measurement<N, T>>& measurements)
+std::string make_annotation(const Config<T>& config, const std::vector<Measurements<N, T>>& measurements)
 {
         bool position = false;
         bool speed = false;
         bool direction = false;
         bool acceleration = false;
 
-        for (const Measurement<N, T>& m : measurements)
+        for (const Measurements<N, T>& m : measurements)
         {
                 position = position || m.position.has_value();
                 speed = speed || m.speed.has_value();
@@ -283,14 +283,14 @@ Track<N, T> track()
 
         Simulator<N, T> simulator(config);
 
-        std::vector<Measurement<N, T>> measurements;
+        std::vector<Measurements<N, T>> measurements;
         measurements.reserve(config.count);
 
         for (std::size_t i = 0; i < config.count; ++i)
         {
                 simulator.move();
 
-                Measurement<N, T>& m = measurements.emplace_back();
+                Measurements<N, T>& m = measurements.emplace_back();
 
                 m.true_data = {
                         .position = simulator.position(),
@@ -302,27 +302,31 @@ Track<N, T> track()
 
                 if (i % config.measurement_dt_count_acceleration == 0)
                 {
-                        m.acceleration = simulator.measurement_acceleration();
+                        m.acceleration = {
+                                .value = simulator.measurement_acceleration(),
+                                .variance = Vector<N, T>(config.measurement_variance_acceleration)};
                 }
-                m.acceleration_variance = config.measurement_variance_acceleration;
 
                 if (i % config.measurement_dt_count_direction == 0)
                 {
-                        m.direction = simulator.measurement_direction();
+                        m.direction = {
+                                .value = simulator.measurement_direction(),
+                                .variance = config.measurement_variance_direction};
                 }
-                m.direction_variance = config.measurement_variance_direction;
 
                 if (i % config.measurement_dt_count_position == 0)
                 {
-                        m.position = simulator.measurement_position();
+                        m.position = {
+                                .value = simulator.measurement_position(),
+                                .variance = Vector<N, T>(config.measurement_variance_position)};
                 }
-                m.position_variance = config.measurement_variance_position;
 
                 if (i % config.measurement_dt_count_speed == 0)
                 {
-                        m.speed = simulator.measurement_speed();
+                        m.speed = {
+                                .value = simulator.measurement_speed(),
+                                .variance = config.measurement_variance_speed};
                 }
-                m.speed_variance = config.measurement_variance_speed;
 
                 const auto n = std::llround(m.time / 33);
                 if ((n > 3) && ((n % 5) == 0))

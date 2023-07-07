@@ -557,86 +557,77 @@ class Filter final : public ProcessFilter<T>
                         q(dt, position_variance_, angle_variance_, angle_r_variance_));
         }
 
-        void update_position(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
+        void update_position(const Measurement<2, T>& position) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_h<T>, position_hj<T>, position_r(position_variance), position, AddX(),
+                        position_h<T>, position_hj<T>, position_r(position.variance), position.value, AddX(),
                         position_residual<T>);
         }
 
-        void update_position_speed(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                const T speed,
-                const T speed_variance) override
+        void update_position_speed(const Measurement<2, T>& position, const Measurement<1, T>& speed) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_speed_h<T>, position_speed_hj<T>, position_speed_r(position_variance, speed_variance),
-                        Vector<3, T>(position[0], position[1], speed), AddX(), position_speed_residual<T>);
+                        position_speed_h<T>, position_speed_hj<T>, position_speed_r(position.variance, speed.variance),
+                        Vector<3, T>(position.value[0], position.value[1], speed.value), AddX(),
+                        position_speed_residual<T>);
         }
 
         void update_position_speed_direction_acceleration(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                const T speed,
-                const T speed_variance,
-                const T direction,
-                const T direction_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) override
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_speed_direction_acceleration_h<T>, position_speed_direction_acceleration_hj<T>,
                         position_speed_direction_acceleration_r(
-                                position_variance, speed_variance, direction_variance, acceleration_variance),
-                        Vector<6, T>(position[0], position[1], speed, direction, acceleration[0], acceleration[1]),
+                                position.variance, speed.variance, direction.variance, acceleration.variance),
+                        Vector<6, T>(
+                                position.value[0], position.value[1], speed.value, direction.value,
+                                acceleration.value[0], acceleration.value[1]),
                         AddX(), position_speed_direction_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                const T direction,
-                const T direction_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) override
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_direction_acceleration_h<T>, position_direction_acceleration_hj<T>,
-                        position_direction_acceleration_r(position_variance, direction_variance, acceleration_variance),
-                        Vector<5, T>(position[0], position[1], direction, acceleration[0], acceleration[1]), AddX(),
-                        position_direction_acceleration_residual<T>);
+                        position_direction_acceleration_r(position.variance, direction.variance, acceleration.variance),
+                        Vector<5, T>(
+                                position.value[0], position.value[1], direction.value, acceleration.value[0],
+                                acceleration.value[1]),
+                        AddX(), position_direction_acceleration_residual<T>);
         }
 
-        void update_acceleration(const Vector<2, T>& acceleration, const Vector<2, T>& acceleration_variance) override
+        void update_acceleration(const Measurement<2, T>& acceleration) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
-                        acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration_variance), acceleration,
-                        AddX(), acceleration_residual<T>);
+                        acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration.variance),
+                        acceleration.value, AddX(), acceleration_residual<T>);
         }
 
-        void update_speed_acceleration(
-                const T speed,
-                const T speed_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) override
+        void update_speed_acceleration(const Measurement<1, T>& speed, const Measurement<2, T>& acceleration) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         speed_acceleration_h<T>, speed_acceleration_hj<T>,
-                        speed_acceleration_r(speed_variance, acceleration_variance),
-                        Vector<3, T>(speed, acceleration[0], acceleration[1]), AddX(), speed_acceleration_residual<T>);
+                        speed_acceleration_r(speed.variance, acceleration.variance),
+                        Vector<3, T>(speed.value, acceleration.value[0], acceleration.value[1]), AddX(),
+                        speed_acceleration_residual<T>);
         }
 
         [[nodiscard]] Vector<2, T> position() const override

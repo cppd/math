@@ -288,7 +288,7 @@ void write_filter_position(
 template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
-        const std::vector<Measurement<N, T>>& measurements,
+        const std::vector<Measurements<N, T>>& measurements,
         const T interval,
         const std::vector<Filter<N, T>>& filters)
 {
@@ -329,7 +329,7 @@ void write_to_file(
 
 #define TEMPLATE(T)                  \
         template void write_to_file( \
-                std::string_view, const std::vector<Measurement<2, T>>&, T, const std::vector<Filter<2, T>>&);
+                std::string_view, const std::vector<Measurements<2, T>>&, T, const std::vector<Filter<2, T>>&);
 
 TEMPLATE(float)
 TEMPLATE(double)

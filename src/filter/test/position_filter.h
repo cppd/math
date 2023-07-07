@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -30,10 +32,10 @@ class PositionFilter
 public:
         virtual ~PositionFilter() = default;
 
-        virtual void reset(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
+        virtual void reset(const Measurement<2, T>& position) = 0;
 
         virtual void predict(T dt) = 0;
-        virtual void update(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
+        virtual void update(const Measurement<2, T>& position) = 0;
 
         [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
