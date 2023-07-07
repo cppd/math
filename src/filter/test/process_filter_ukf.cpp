@@ -150,13 +150,9 @@ constexpr Matrix<9, 9, T> q(const T dt, const T position_variance, const T angle
 //
 
 template <typename T>
-Matrix<2, 2, T> position_r(const T position_variance)
+Matrix<2, 2, T> position_r(const Vector<2, T>& position_variance)
 {
-        const T pv = position_variance;
-        return {
-                {pv,  0},
-                { 0, pv}
-        };
+        return make_diagonal_matrix(position_variance);
 }
 
 template <typename T>
@@ -176,15 +172,11 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
-Matrix<3, 3, T> position_speed_r(const T position_variance, const T speed_variance)
+Matrix<3, 3, T> position_speed_r(const Vector<2, T>& position_variance, const T speed_variance)
 {
-        const T pv = position_variance;
+        const Vector<2, T>& pv = position_variance;
         const T sv = speed_variance;
-        return {
-                {pv,  0,  0},
-                { 0, pv,  0},
-                { 0,  0, sv}
-        };
+        return make_diagonal_matrix<3, T>({pv[0], pv[1], sv});
 }
 
 template <typename T>
@@ -214,23 +206,16 @@ Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& 
 
 template <typename T>
 Matrix<6, 6, T> position_speed_direction_acceleration_r(
-        const T position_variance,
+        const Vector<2, T>& position_variance,
         const T speed_variance,
         const T direction_variance,
-        const T acceleration_variance)
+        const Vector<2, T>& acceleration_variance)
 {
-        const T pv = position_variance;
+        const Vector<2, T>& pv = position_variance;
         const T sv = speed_variance;
         const T dv = direction_variance;
-        const T av = acceleration_variance;
-        return {
-                {pv,  0,  0,  0,  0,  0},
-                { 0, pv,  0,  0,  0,  0},
-                { 0,  0, sv,  0,  0,  0},
-                { 0,  0,  0, dv,  0,  0},
-                { 0,  0,  0,  0, av,  0},
-                { 0,  0,  0,  0,  0, av}
-        };
+        const Vector<2, T>& av = acceleration_variance;
+        return make_diagonal_matrix<6, T>({pv[0], pv[1], sv, dv, av[0], av[1]});
 }
 
 template <typename T>
@@ -274,20 +259,14 @@ Vector<6, T> position_speed_direction_acceleration_residual(const Vector<6, T>& 
 
 template <typename T>
 Matrix<5, 5, T> position_direction_acceleration_r(
-        const T position_variance,
+        const Vector<2, T>& position_variance,
         const T direction_variance,
-        const T acceleration_variance)
+        const Vector<2, T>& acceleration_variance)
 {
-        const T pv = position_variance;
+        const Vector<2, T>& pv = position_variance;
         const T dv = direction_variance;
-        const T av = acceleration_variance;
-        return {
-                {pv,  0,  0,  0,  0},
-                { 0, pv,  0,  0,  0},
-                { 0,  0, dv,  0,  0},
-                { 0,  0,  0, av,  0},
-                { 0,  0,  0,  0, av}
-        };
+        const Vector<2, T>& av = acceleration_variance;
+        return make_diagonal_matrix<5, T>({pv[0], pv[1], dv, av[0], av[1]});
 }
 
 template <typename T>
@@ -328,13 +307,9 @@ Vector<5, T> position_direction_acceleration_residual(const Vector<5, T>& a, con
 //
 
 template <typename T>
-Matrix<2, 2, T> acceleration_r(const T acceleration_variance)
+Matrix<2, 2, T> acceleration_r(const Vector<2, T>& acceleration_variance)
 {
-        const T av = acceleration_variance;
-        return {
-                {av,  0},
-                { 0, av}
-        };
+        return make_diagonal_matrix(acceleration_variance);
 }
 
 template <typename T>
@@ -362,15 +337,11 @@ Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
-Matrix<3, 3, T> speed_acceleration_r(const T speed_variance, const T acceleration_variance)
+Matrix<3, 3, T> speed_acceleration_r(const T speed_variance, const Vector<2, T>& acceleration_variance)
 {
         const T sv = speed_variance;
-        const T av = acceleration_variance;
-        return {
-                {sv,  0,  0},
-                { 0, av,  0},
-                { 0,  0, av}
-        };
+        const Vector<2, T>& av = acceleration_variance;
+        return make_diagonal_matrix<3, T>({sv, av[0], av[1]});
 }
 
 template <typename T>
@@ -449,7 +420,7 @@ class Filter final : public ProcessFilter<T>
                         q(dt, position_variance_, angle_variance_, angle_r_variance_));
         }
 
-        void update_position(const Vector<2, T>& position, const T position_variance) override
+        void update_position(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
         {
                 ASSERT(filter_);
 
@@ -458,8 +429,8 @@ class Filter final : public ProcessFilter<T>
 
         void update_position_speed(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 const T speed,
-                const T position_variance,
                 const T speed_variance) override
         {
                 ASSERT(filter_);
@@ -471,13 +442,13 @@ class Filter final : public ProcessFilter<T>
 
         void update_position_speed_direction_acceleration(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 const T speed,
-                const T direction,
-                const Vector<2, T>& acceleration,
-                const T position_variance,
                 const T speed_variance,
+                const T direction,
                 const T direction_variance,
-                const T acceleration_variance) override
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) override
         {
                 ASSERT(filter_);
 
@@ -491,11 +462,11 @@ class Filter final : public ProcessFilter<T>
 
         void update_position_direction_acceleration(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 const T direction,
-                const Vector<2, T>& acceleration,
-                const T position_variance,
                 const T direction_variance,
-                const T acceleration_variance) override
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) override
         {
                 ASSERT(filter_);
 
@@ -506,7 +477,7 @@ class Filter final : public ProcessFilter<T>
                         position_direction_acceleration_residual<T>);
         }
 
-        void update_acceleration(const Vector<2, T>& acceleration, const T acceleration_variance) override
+        void update_acceleration(const Vector<2, T>& acceleration, const Vector<2, T>& acceleration_variance) override
         {
                 ASSERT(filter_);
 
@@ -517,9 +488,9 @@ class Filter final : public ProcessFilter<T>
 
         void update_speed_acceleration(
                 const T speed,
-                const Vector<2, T>& acceleration,
                 const T speed_variance,
-                const T acceleration_variance) override
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) override
         {
                 ASSERT(filter_);
 

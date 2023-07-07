@@ -80,31 +80,34 @@ void Process<T>::update(const Measurement<2, T>& m, const PositionEstimation<T>&
         if (m.position && m.speed && m.direction && m.acceleration)
         {
                 filter_->update_position_speed_direction_acceleration(
-                        *m.position, *m.speed, *m.direction, *m.acceleration, m.position_variance, m.speed_variance,
-                        m.direction_variance, m.acceleration_variance);
+                        *m.position, {m.position_variance, m.position_variance}, *m.speed, m.speed_variance,
+                        *m.direction, m.direction_variance, *m.acceleration,
+                        {m.acceleration_variance, m.acceleration_variance});
         }
         else if (m.position && m.speed && !m.direction && !m.acceleration)
         {
-                filter_->update_position_speed(*m.position, *m.speed, m.position_variance, m.speed_variance);
+                filter_->update_position_speed(
+                        *m.position, {m.position_variance, m.position_variance}, *m.speed, m.speed_variance);
         }
         else if (m.position && !m.speed && m.direction && m.acceleration)
         {
                 filter_->update_position_direction_acceleration(
-                        *m.position, *m.direction, *m.acceleration, m.position_variance, m.direction_variance,
-                        m.acceleration_variance);
+                        *m.position, {m.position_variance, m.position_variance}, *m.direction, m.direction_variance,
+                        *m.acceleration, {m.acceleration_variance, m.acceleration_variance});
         }
         else if (m.position && !m.speed && !m.direction && !m.acceleration)
         {
-                filter_->update_position(*m.position, m.position_variance);
+                filter_->update_position(*m.position, {m.position_variance, m.position_variance});
         }
         else if (!m.position && m.speed && !m.direction && m.acceleration)
         {
                 filter_->update_speed_acceleration(
-                        *m.speed, *m.acceleration, m.speed_variance, m.acceleration_variance);
+                        *m.speed, m.speed_variance, *m.acceleration,
+                        {m.acceleration_variance, m.acceleration_variance});
         }
         else if (m.acceleration)
         {
-                filter_->update_acceleration(*m.acceleration, m.acceleration_variance);
+                filter_->update_acceleration(*m.acceleration, {m.acceleration_variance, m.acceleration_variance});
         }
 
         save(m.time, m.true_data);

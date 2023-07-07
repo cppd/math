@@ -48,39 +48,41 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        virtual void update_position(const Vector<2, T>& position, T position_variance) = 0;
+        virtual void update_position(const Vector<2, T>& position, const Vector<2, T>& position_variance) = 0;
 
         virtual void update_position_speed(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 T speed,
-                T position_variance,
                 T speed_variance) = 0;
 
         virtual void update_position_speed_direction_acceleration(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 T speed,
-                T direction,
-                const Vector<2, T>& acceleration,
-                T position_variance,
                 T speed_variance,
+                T direction,
                 T direction_variance,
-                T acceleration_variance) = 0;
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) = 0;
 
         virtual void update_position_direction_acceleration(
                 const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
                 T direction,
-                const Vector<2, T>& acceleration,
-                T position_variance,
                 T direction_variance,
-                T acceleration_variance) = 0;
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) = 0;
 
-        virtual void update_acceleration(const Vector<2, T>& acceleration, T acceleration_variance) = 0;
+        virtual void update_acceleration(
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) = 0;
 
         virtual void update_speed_acceleration(
                 T speed,
-                const Vector<2, T>& acceleration,
                 T speed_variance,
-                T acceleration_variance) = 0;
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance) = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
