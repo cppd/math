@@ -143,10 +143,10 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
+        const T theta_;
+        const T process_variance_;
         std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
-        T theta_;
-        T process_variance_;
 
         void reset(const Vector<2, T>& position, const Vector<2, T>& position_variance) override
         {

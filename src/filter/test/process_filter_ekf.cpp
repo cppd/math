@@ -509,10 +509,10 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 template <typename T>
 class Filter final : public ProcessFilter<T>
 {
-        std::optional<Ekf<9, T>> filter_;
         const T position_variance_;
         const T angle_variance_;
         const T angle_r_variance_;
+        std::optional<Ekf<9, T>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
         {
