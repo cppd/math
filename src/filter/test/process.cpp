@@ -72,36 +72,53 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                 return;
         }
 
-        const T delta = m.time - *last_time_;
-        last_time_ = m.time;
-
-        filter_->predict(delta);
+        const auto predict = [&]()
+        {
+                filter_->predict(m.time - *last_time_);
+        };
 
         if (m.position && m.speed && m.direction && m.acceleration)
         {
+                predict();
                 filter_->update_position_speed_direction_acceleration(
                         *m.position, *m.speed, *m.direction, *m.acceleration);
         }
         else if (m.position && m.speed && !m.direction && !m.acceleration)
         {
+                predict();
                 filter_->update_position_speed(*m.position, *m.speed);
         }
         else if (m.position && !m.speed && m.direction && m.acceleration)
         {
+                predict();
                 filter_->update_position_direction_acceleration(*m.position, *m.direction, *m.acceleration);
         }
         else if (m.position && !m.speed && !m.direction && !m.acceleration)
         {
+                predict();
                 filter_->update_position(*m.position);
         }
         else if (!m.position && m.speed && !m.direction && m.acceleration)
         {
+                predict();
                 filter_->update_speed_acceleration(*m.speed, *m.acceleration);
+        }
+        else if (m.direction && m.acceleration)
+        {
+                predict();
+                filter_->update_direction_acceleration(*m.direction, *m.acceleration);
         }
         else if (m.acceleration)
         {
+                predict();
                 filter_->update_acceleration(*m.acceleration);
         }
+        else
+        {
+                return;
+        }
+
+        last_time_ = m.time;
 
         save(m.time, m.true_data);
 

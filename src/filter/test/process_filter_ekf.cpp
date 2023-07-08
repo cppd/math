@@ -396,6 +396,73 @@ Vector<5, T> position_direction_acceleration_residual(const Vector<5, T>& a, con
 //
 
 template <typename T>
+Matrix<3, 3, T> direction_acceleration_r(const T direction_variance, const Vector<2, T>& acceleration_variance)
+{
+        const T dv = direction_variance;
+        const Vector<2, T>& av = acceleration_variance;
+        return make_diagonal_matrix<3, T>({dv, av[0], av[1]});
+}
+
+template <typename T>
+Vector<3, T> direction_acceleration_h(const Vector<9, T>& x)
+{
+        // angle = atan(vy, vx) + angle + angle_r
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
+        const T vx = x[1];
+        const T ax = x[2];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T angle_r = x[8];
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        return {
+                std::atan2(vy, vx) + angle + angle_r, // angle
+                ax * cos - ay * sin, // ax
+                ax * sin + ay * cos // ay
+        };
+}
+
+template <typename T>
+Matrix<3, 9, T> direction_acceleration_hj(const Vector<9, T>& x)
+{
+        // angle = atan(vy, vx) + angle + angle_r
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
+        // Jacobian
+        // mAngle=ArcTan[Vx,Vy]+Bc+Br;
+        // mAx=(Ax*Cos[Bc]-Ay*Sin[Bc]);
+        // mAy=(Ax*Sin[Bc]+Ay*Cos[Bc]);
+        // Simplify[D[{mAngle,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
+        const T vx = x[1];
+        const T ax = x[2];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T s_2 = vx * vx + vy * vy;
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        const T a_1 = -ax * sin - ay * cos;
+        const T a_2 = ax * cos - ay * sin;
+        return {
+                {0, -vy / s_2,   0, 0, vx / s_2,    0,   1, 0, 1},
+                {0,         0, cos, 0,        0, -sin, a_1, 0, 0},
+                {0,         0, sin, 0,        0,  cos, a_2, 0, 0}
+        };
+}
+
+template <typename T>
+Vector<3, T> direction_acceleration_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+{
+        Vector<3, T> res = a - b;
+        res[0] = normalize_angle(res[0]);
+        return res;
+}
+
+//
+
+template <typename T>
 Matrix<2, 2, T> acceleration_r(const Vector<2, T>& acceleration_variance)
 {
         return make_diagonal_matrix(acceleration_variance);
@@ -608,6 +675,18 @@ class Filter final : public ProcessFilter<T>
                                 position.value[0], position.value[1], direction.value, acceleration.value[0],
                                 acceleration.value[1]),
                         AddX(), position_direction_acceleration_residual<T>);
+        }
+
+        void update_direction_acceleration(const Measurement<1, T>& direction, const Measurement<2, T>& acceleration)
+                override
+        {
+                ASSERT(filter_);
+
+                filter_->update(
+                        direction_acceleration_h<T>, direction_acceleration_hj<T>,
+                        direction_acceleration_r(direction.variance, acceleration.variance),
+                        Vector<3, T>(direction.value, acceleration.value[0], acceleration.value[1]), AddX(),
+                        direction_acceleration_residual<T>);
         }
 
         void update_acceleration(const Measurement<2, T>& acceleration) override
