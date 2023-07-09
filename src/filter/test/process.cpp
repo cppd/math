@@ -113,6 +113,11 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                 predict();
                 filter_->update_acceleration(*m.acceleration);
         }
+        else if (m.direction)
+        {
+                predict();
+                filter_->update_direction(*m.direction);
+        }
         else
         {
                 return;

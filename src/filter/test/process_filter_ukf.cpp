@@ -376,6 +376,36 @@ Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
+Matrix<1, 1, T> direction_r(const T direction_variance)
+{
+        const T dv = direction_variance;
+        return {{dv}};
+}
+
+template <typename T>
+Vector<1, T> direction_h(const Vector<9, T>& x)
+{
+        // angle = atan(vy, vx) + angle + angle_r
+        const T vx = x[1];
+        const T vy = x[4];
+        const T angle = x[6];
+        const T angle_r = x[8];
+        return Vector<1, T>{
+                std::atan2(vy, vx) + angle + angle_r // angle
+        };
+}
+
+template <typename T>
+Vector<1, T> direction_residual(const Vector<1, T>& a, const Vector<1, T>& b)
+{
+        Vector<1, T> res = a - b;
+        res[0] = normalize_angle(res[0]);
+        return res;
+}
+
+//
+
+template <typename T>
 Matrix<3, 3, T> speed_acceleration_r(const T speed_variance, const Vector<2, T>& acceleration_variance)
 {
         const T sv = speed_variance;
@@ -530,6 +560,15 @@ class Filter final : public ProcessFilter<T>
                 filter_->update(
                         acceleration_h<T>, acceleration_r(acceleration.variance), acceleration.value, AddX(),
                         acceleration_residual<T>);
+        }
+
+        void update_direction(const Measurement<1, T>& direction) override
+        {
+                ASSERT(filter_);
+
+                filter_->update(
+                        direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
+                        direction_residual<T>);
         }
 
         void update_speed_acceleration(const Measurement<1, T>& speed, const Measurement<2, T>& acceleration) override
