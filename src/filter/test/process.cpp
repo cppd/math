@@ -87,60 +87,104 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                 filter_->predict(m.time - *last_time_);
         };
 
-        if (m.position && m.speed && m.direction && m.acceleration)
+        if (m.position)
         {
-                predict();
-                filter_->update_position_speed_direction_acceleration(
-                        *m.position, *m.speed, *m.direction, *m.acceleration);
-        }
-        else if (m.position && m.speed && m.direction && !m.acceleration)
-        {
-                predict();
-                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
-        }
-        else if (m.position && m.speed && !m.direction && m.acceleration)
-        {
-                predict();
-                filter_->update_position_speed_acceleration(*m.position, *m.speed, *m.acceleration);
-        }
-        else if (m.position && m.speed && !m.direction && !m.acceleration)
-        {
-                predict();
-                filter_->update_position_speed(*m.position, *m.speed);
-        }
-        else if (m.position && !m.speed && m.direction && m.acceleration)
-        {
-                predict();
-                filter_->update_position_direction_acceleration(*m.position, *m.direction, *m.acceleration);
-        }
-        else if (m.position && !m.speed && !m.direction && !m.acceleration)
-        {
-                predict();
-                filter_->update_position(*m.position);
-        }
-        else if (!m.position && m.speed && !m.direction && m.acceleration)
-        {
-                predict();
-                filter_->update_speed_acceleration(*m.speed, *m.acceleration);
-        }
-        else if (m.direction && m.acceleration)
-        {
-                predict();
-                filter_->update_direction_acceleration(*m.direction, *m.acceleration);
-        }
-        else if (m.acceleration)
-        {
-                predict();
-                filter_->update_acceleration(*m.acceleration);
-        }
-        else if (m.direction)
-        {
-                predict();
-                filter_->update_direction(*m.direction);
+                if (m.speed)
+                {
+                        if (m.direction && m.acceleration)
+                        {
+                                predict();
+                                filter_->update_position_speed_direction_acceleration(
+                                        *m.position, *m.speed, *m.direction, *m.acceleration);
+                        }
+                        else if (m.direction)
+                        {
+                                predict();
+                                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
+                        }
+                        else if (m.acceleration)
+                        {
+                                predict();
+                                filter_->update_position_speed_acceleration(*m.position, *m.speed, *m.acceleration);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_position_speed(*m.position, *m.speed);
+                        }
+                }
+                else
+                {
+                        if (m.direction && m.acceleration)
+                        {
+                                predict();
+                                filter_->update_position_direction_acceleration(
+                                        *m.position, *m.direction, *m.acceleration);
+                        }
+                        else if (m.direction)
+                        {
+                                predict();
+                                filter_->update_position_direction(*m.position, *m.direction);
+                        }
+                        else if (m.acceleration)
+                        {
+                                predict();
+                                filter_->update_position_acceleration(*m.position, *m.acceleration);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_position(*m.position);
+                        }
+                }
         }
         else
         {
-                return;
+                if (m.speed)
+                {
+                        if (m.direction && m.acceleration)
+                        {
+                                predict();
+                                filter_->update_speed_direction_acceleration(*m.speed, *m.direction, *m.acceleration);
+                        }
+                        else if (m.direction)
+                        {
+                                predict();
+                                filter_->update_speed_direction(*m.speed, *m.direction);
+                        }
+                        else if (m.acceleration)
+                        {
+                                predict();
+                                filter_->update_speed_acceleration(*m.speed, *m.acceleration);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_speed(*m.speed);
+                        }
+                }
+                else
+                {
+                        if (m.direction && m.acceleration)
+                        {
+                                predict();
+                                filter_->update_direction_acceleration(*m.direction, *m.acceleration);
+                        }
+                        else if (m.direction)
+                        {
+                                predict();
+                                filter_->update_direction(*m.direction);
+                        }
+                        else if (m.acceleration)
+                        {
+                                predict();
+                                filter_->update_acceleration(*m.acceleration);
+                        }
+                        else
+                        {
+                                return;
+                        }
+                }
         }
 
         last_time_ = m.time;

@@ -75,6 +75,21 @@ public:
                 const Measurement<1, T>& direction,
                 const Measurement<2, T>& acceleration) = 0;
 
+        virtual void update_position_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction) = 0;
+
+        virtual void update_position_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<2, T>& acceleration) = 0;
+
+        virtual void update_speed_direction_acceleration(
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration) = 0;
+
+        virtual void update_speed_direction(const Measurement<1, T>& speed, const Measurement<1, T>& direction) = 0;
+
         virtual void update_direction_acceleration(
                 const Measurement<1, T>& direction,
                 const Measurement<2, T>& acceleration) = 0;
@@ -82,6 +97,8 @@ public:
         virtual void update_acceleration(const Measurement<2, T>& acceleration) = 0;
 
         virtual void update_direction(const Measurement<1, T>& direction) = 0;
+
+        virtual void update_speed(const Measurement<1, T>& speed) = 0;
 
         virtual void update_speed_acceleration(
                 const Measurement<1, T>& speed,
