@@ -26,9 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Process<T>::Process(std::string name, const color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter)
+Process<T>::Process(
+        std::string name,
+        const color::RGB8 color,
+        const T reset_dt,
+        std::unique_ptr<ProcessFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
+          reset_dt_(reset_dt),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -55,9 +60,13 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 template <typename T>
 void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
 {
-        ASSERT(!last_time_ || *last_time_ < m.time);
+        if (last_time_ && !(*last_time_ < m.time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_time_) + " to "
+                      + to_string(m.time));
+        }
 
-        if (!last_time_)
+        if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
                 if (position_estimation.has_estimates())
                 {
@@ -83,6 +92,16 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                 predict();
                 filter_->update_position_speed_direction_acceleration(
                         *m.position, *m.speed, *m.direction, *m.acceleration);
+        }
+        else if (m.position && m.speed && m.direction && !m.acceleration)
+        {
+                predict();
+                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
+        }
+        else if (m.position && m.speed && !m.direction && m.acceleration)
+        {
+                predict();
+                filter_->update_position_speed_acceleration(*m.position, *m.speed, *m.acceleration);
         }
         else if (m.position && m.speed && !m.direction && !m.acceleration)
         {

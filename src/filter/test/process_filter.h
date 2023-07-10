@@ -60,6 +60,16 @@ public:
                 const Measurement<1, T>& direction,
                 const Measurement<2, T>& acceleration) = 0;
 
+        virtual void update_position_speed_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction) = 0;
+
+        virtual void update_position_speed_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration) = 0;
+
         virtual void update_position_direction_acceleration(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,

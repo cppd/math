@@ -38,6 +38,7 @@ class Process final
 {
         std::string name_;
         color::RGB8 color_;
+        T reset_dt_;
         std::unique_ptr<ProcessFilter<T>> filter_;
 
         std::vector<Vector<3, T>> position_;
@@ -60,7 +61,7 @@ class Process final
         void save(T time, const TrueData<2, T>& true_data);
 
 public:
-        Process(std::string name, color::RGB8 color, std::unique_ptr<ProcessFilter<T>>&& filter);
+        Process(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<ProcessFilter<T>>&& filter);
 
         void update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation);
 

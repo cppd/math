@@ -313,6 +313,154 @@ Vector<6, T> position_speed_direction_acceleration_residual(const Vector<6, T>& 
 //
 
 template <typename T>
+Matrix<4, 4, T> position_speed_direction_r(
+        const Vector<2, T>& position_variance,
+        const T speed_variance,
+        const T direction_variance)
+{
+        const Vector<2, T>& pv = position_variance;
+        const T sv = speed_variance;
+        const T dv = direction_variance;
+        return make_diagonal_matrix<4, T>({pv[0], pv[1], sv, dv});
+}
+
+template <typename T>
+Vector<4, T> position_speed_direction_h(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        // angle = atan(vy, vx) + angle + angle_r
+        const T px = x[0];
+        const T vx = x[1];
+        const T py = x[3];
+        const T vy = x[4];
+        const T angle = x[6];
+        const T angle_r = x[8];
+        return {
+                px, // px
+                py, // py
+                std::sqrt(vx * vx + vy * vy), // speed
+                std::atan2(vy, vx) + angle + angle_r // angle
+        };
+}
+
+template <typename T>
+Matrix<4, 9, T> position_speed_direction_hj(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        // angle = atan(vy, vx) + angle + angle_r
+        // Jacobian
+        // mPx=Px;
+        // mPy=Py;
+        // mSpeed=Sqrt[Vx*Vx+Vy*Vy];
+        // mAngle=ArcTan[Vx,Vy]+Bc+Br;
+        // Simplify[D[{mPx,mPy,mSpeed,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
+        const T vx = x[1];
+        const T vy = x[4];
+        const T speed_2 = vx * vx + vy * vy;
+        const T speed = std::sqrt(speed_2);
+        return {
+                {1,             0, 0, 0,            0, 0, 0, 0, 0},
+                {0,             0, 0, 1,            0, 0, 0, 0, 0},
+                {0,    vx / speed, 0, 0,   vy / speed, 0, 0, 0, 0},
+                {0, -vy / speed_2, 0, 0, vx / speed_2, 0, 1, 0, 1}
+        };
+}
+
+template <typename T>
+Vector<4, T> position_speed_direction_residual(const Vector<4, T>& a, const Vector<4, T>& b)
+{
+        Vector<4, T> res = a - b;
+        res[3] = normalize_angle(res[3]);
+        return res;
+}
+
+//
+
+template <typename T>
+Matrix<5, 5, T> position_speed_acceleration_r(
+        const Vector<2, T>& position_variance,
+        const T speed_variance,
+        const Vector<2, T>& acceleration_variance)
+{
+        const Vector<2, T>& pv = position_variance;
+        const T sv = speed_variance;
+        const Vector<2, T>& av = acceleration_variance;
+        return make_diagonal_matrix<5, T>({pv[0], pv[1], sv, av[0], av[1]});
+}
+
+template <typename T>
+Vector<5, T> position_speed_acceleration_h(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
+        const T px = x[0];
+        const T vx = x[1];
+        const T ax = x[2];
+        const T py = x[3];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        return {
+                px, // px
+                py, // py
+                std::sqrt(vx * vx + vy * vy), // speed
+                ax * cos - ay * sin, // ax
+                ax * sin + ay * cos // ay
+        };
+}
+
+template <typename T>
+Matrix<5, 9, T> position_speed_acceleration_hj(const Vector<9, T>& x)
+{
+        // px = px
+        // py = py
+        // speed = sqrt(vx*vx + vy*vy)
+        // ax = ax*cos(angle) - ay*sin(angle)
+        // ay = ax*sin(angle) + ay*cos(angle)
+        // Jacobian
+        // mPx=Px;
+        // mPy=Py;
+        // mSpeed=Sqrt[Vx*Vx+Vy*Vy];
+        // mAx=(Ax*Cos[Bc]-Ay*Sin[Bc]);
+        // mAy=(Ax*Sin[Bc]+Ay*Cos[Bc]);
+        // Simplify[D[{mPx,mPy,mSpeed,mAx,mAy},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
+        const T vx = x[1];
+        const T ax = x[2];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T speed = std::sqrt(vx * vx + vy * vy);
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        const T a_1 = -ax * sin - ay * cos;
+        const T a_2 = ax * cos - ay * sin;
+        return {
+                {1,          0,   0, 0,          0,    0,   0, 0, 0},
+                {0,          0,   0, 1,          0,    0,   0, 0, 0},
+                {0, vx / speed,   0, 0, vy / speed,    0,   0, 0, 0},
+                {0,          0, cos, 0,          0, -sin, a_1, 0, 0},
+                {0,          0, sin, 0,          0,  cos, a_2, 0, 0}
+        };
+}
+
+template <typename T>
+Vector<5, T> position_speed_acceleration_residual(const Vector<5, T>& a, const Vector<5, T>& b)
+{
+        return a - b;
+}
+
+//
+
+template <typename T>
 Matrix<5, 5, T> position_direction_acceleration_r(
         const Vector<2, T>& position_variance,
         const T direction_variance,
@@ -704,6 +852,36 @@ class Filter final : public ProcessFilter<T>
                                 position.value[0], position.value[1], speed.value, direction.value,
                                 acceleration.value[0], acceleration.value[1]),
                         AddX(), position_speed_direction_acceleration_residual<T>);
+        }
+
+        void update_position_speed_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction) override
+        {
+                ASSERT(filter_);
+
+                filter_->update(
+                        position_speed_direction_h<T>, position_speed_direction_hj<T>,
+                        position_speed_direction_r(position.variance, speed.variance, direction.variance),
+                        Vector<4, T>(position.value[0], position.value[1], speed.value, direction.value), AddX(),
+                        position_speed_direction_residual<T>);
+        }
+
+        void update_position_speed_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration) override
+        {
+                ASSERT(filter_);
+
+                filter_->update(
+                        position_speed_acceleration_h<T>, position_speed_acceleration_hj<T>,
+                        position_speed_acceleration_r(position.variance, speed.variance, acceleration.variance),
+                        Vector<5, T>(
+                                position.value[0], position.value[1], speed.value, acceleration.value[0],
+                                acceleration.value[1]),
+                        AddX(), position_speed_acceleration_residual<T>);
         }
 
         void update_position_direction_acceleration(
