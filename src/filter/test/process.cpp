@@ -47,6 +47,7 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
                 nees_.emplace();
         }
         nees_->position.add(true_data.position - filter_->position(), filter_->position_p());
+        nees_->speed.add(true_data.speed - filter_->speed(), filter_->speed_p());
         nees_->angle.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
         nees_->angle_r.add(normalize_angle(true_data.angle_r - filter_->angle_r()), filter_->angle_r_p());
 }
@@ -151,9 +152,9 @@ std::string Process<T>::angle_string() const
 {
         std::string s;
         s += name_;
-        s += "; process = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-        s += "; speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
-        s += "; r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r())));
+        s += "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
+        s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
+        s += "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r())));
         return s;
 }
 
@@ -167,11 +168,13 @@ std::string Process<T>::consistency_string() const
 
         const std::string name = std::string("Process<") + type_name<T>() + "> " + name_;
         std::string s;
-        s += name + "; NEES Position; " + nees_->position.check_string();
+        s += name + "; NEES position; " + nees_->position.check_string();
         s += '\n';
-        s += name + "; NEES Angle; " + nees_->angle.check_string();
+        s += name + "; NEES speed; " + nees_->speed.check_string();
         s += '\n';
-        s += name + "; NEES Angle R; " + nees_->angle_r.check_string();
+        s += name + "; NEES angle; " + nees_->angle.check_string();
+        s += '\n';
+        s += name + "; NEES angle r; " + nees_->angle_r.check_string();
         return s;
 }
 

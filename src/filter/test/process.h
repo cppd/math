@@ -47,6 +47,7 @@ class Process final
         struct Nees final
         {
                 NormalizedSquared<2, T> position;
+                NormalizedSquared<1, T> speed;
                 NormalizedSquared<1, T> angle;
                 NormalizedSquared<1, T> angle_r;
         };

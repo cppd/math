@@ -797,6 +797,13 @@ class Filter final : public ProcessFilter<T>
                 return filter_->x()[6];
         }
 
+        [[nodiscard]] T angle_p() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->p()(6, 6);
+        }
+
         [[nodiscard]] T angle_speed() const override
         {
                 ASSERT(filter_);
@@ -804,11 +811,11 @@ class Filter final : public ProcessFilter<T>
                 return filter_->x()[7];
         }
 
-        [[nodiscard]] T angle_p() const override
+        [[nodiscard]] T angle_speed_p() const override
         {
                 ASSERT(filter_);
 
-                return filter_->p()(6, 6);
+                return filter_->p()(7, 7);
         }
 
         [[nodiscard]] T angle_r() const override

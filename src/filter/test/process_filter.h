@@ -79,12 +79,12 @@ public:
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
-
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
         [[nodiscard]] virtual T angle() const = 0;
-        [[nodiscard]] virtual T angle_speed() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
+        [[nodiscard]] virtual T angle_speed() const = 0;
+        [[nodiscard]] virtual T angle_speed_p() const = 0;
         [[nodiscard]] virtual T angle_r() const = 0;
         [[nodiscard]] virtual T angle_r_p() const = 0;
 };
