@@ -84,20 +84,60 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
         if (m.position)
         {
-                if (m.direction)
+                if (m.speed)
                 {
-                        predict();
-                        filter_->update_position_direction(*m.position, *m.direction);
+                        if (m.direction)
+                        {
+                                predict();
+                                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_position_speed(*m.position, *m.speed);
+                        }
                 }
                 else
                 {
-                        predict();
-                        filter_->update_position(*m.position);
+                        if (m.direction)
+                        {
+                                predict();
+                                filter_->update_position_direction(*m.position, *m.direction);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_position(*m.position);
+                        }
                 }
         }
         else
         {
-                return;
+                if (m.speed)
+                {
+                        if (m.direction)
+                        {
+                                predict();
+                                filter_->update_speed_direction(*m.speed, *m.direction);
+                        }
+                        else
+                        {
+                                predict();
+                                filter_->update_speed(*m.speed);
+                        }
+                }
+                else
+                {
+                        if (m.direction)
+                        {
+                                predict();
+                                filter_->update_direction(*m.direction);
+                        }
+                        else
+                        {
+                                return;
+                        }
+                }
         }
 
         last_time_ = m.time;
@@ -107,7 +147,8 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
         if (m.position)
         {
                 LOG(to_string(m.time) + "; true angle = "
-                    + to_string(radians_to_degrees(m.true_data.angle + m.true_data.angle_r)) + "; " + angle_string());
+                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r))) + "; "
+                    + angle_string());
         }
 }
 
