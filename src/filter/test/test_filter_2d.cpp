@@ -241,21 +241,6 @@ void write_result(
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
 {
-        if (positions.empty())
-        {
-                error("No positions");
-        }
-
-        if (processes.empty())
-        {
-                error("No processes");
-        }
-
-        if (moves.empty())
-        {
-                error("No moves");
-        }
-
         write_to_file(annotation, measurements, positions, processes, moves);
 
         const auto log_consistency_string = [](const auto& p)
