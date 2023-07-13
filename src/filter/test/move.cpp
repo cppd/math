@@ -53,15 +53,27 @@ void Move<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
+void Move<T>::check_time(const T time) const
 {
-        if (last_time_ && !(*last_time_ < m.time))
+        if (last_filter_time_ && !(*last_filter_time_ < time))
         {
-                error("Measurement time does not increase; from " + to_string(*last_time_) + " to "
-                      + to_string(m.time));
+                error("Measurement time does not increase; from " + to_string(*last_filter_time_) + " to "
+                      + to_string(time));
         }
 
-        if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
+        if (last_position_time_ && !(*last_position_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
+                      + to_string(time));
+        }
+}
+
+template <typename T>
+void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
+{
+        check_time(m.time);
+
+        if (!last_filter_time_ || !(m.time - *last_filter_time_ < reset_dt_))
         {
                 if (position_estimation.has_estimates())
                 {
@@ -72,18 +84,21 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                                 position_estimation.filter()->position_velocity_acceleration_p(),
                                 position_estimation.angle());
 
-                        last_time_ = m.time;
+                        last_filter_time_ = m.time;
+                        last_position_time_ = m.time;
                 }
                 return;
         }
 
         const auto predict = [&]()
         {
-                filter_->predict(m.time - *last_time_);
+                filter_->predict(m.time - *last_filter_time_);
         };
 
         if (m.position)
         {
+                last_position_time_ = m.time;
+
                 if (m.speed)
                 {
                         if (m.direction)
@@ -140,7 +155,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 }
         }
 
-        last_time_ = m.time;
+        last_filter_time_ = m.time;
 
         save(m.time, m.true_data);
 

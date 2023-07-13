@@ -53,11 +53,15 @@ class Move final
         };
 
         std::optional<Nees> nees_;
-        std::optional<T> last_time_;
+
+        std::optional<T> last_filter_time_;
+        std::optional<T> last_position_time_;
 
         [[nodiscard]] std::string angle_string() const;
 
         void save(T time, const TrueData<2, T>& true_data);
+
+        void check_time(const T time) const;
 
 public:
         Move(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<MoveFilter<T>>&& filter);
