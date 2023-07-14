@@ -29,8 +29,8 @@ class MovingVariance final
         std::size_t window_size_;
         std::vector<T> data_;
         std::size_t n_ = -1;
-        T mean_ = 0;
-        T sum_ = 0;
+        T mean_{0};
+        T sum_{0};
 
 public:
         explicit MovingVariance(const std::size_t window_size)
