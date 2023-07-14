@@ -73,7 +73,8 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 {
         check_time(m.time);
 
-        if (!last_filter_time_ || !(m.time - *last_filter_time_ < reset_dt_))
+        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_filter_time_ < reset_dt_)
+            || !(m.time - *last_position_time_ < reset_dt_))
         {
                 if (position_estimation.has_estimates())
                 {

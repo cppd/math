@@ -39,14 +39,14 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                 last_direction_time_ = m.time;
         }
 
+        position_ = nullptr;
+
         if (!m.position)
         {
                 return;
         }
 
         direction_ = last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_);
-
-        position_ = nullptr;
 
         if (!direction_)
         {
