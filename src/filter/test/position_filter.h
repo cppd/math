@@ -52,6 +52,6 @@ public:
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
 
-        [[nodiscard]] virtual std::string nis_position_check_string() const = 0;
+        [[nodiscard]] virtual std::string check_string() const = 0;
 };
 }

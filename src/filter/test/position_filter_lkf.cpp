@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/variance.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -143,14 +144,21 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
+        static constexpr std::size_t VARIANCE_WINDOW_SIZE = 500;
+        static constexpr unsigned VARIANCE_UPDATE_COUNT = 5;
+
         const T theta_;
         const T process_variance_;
         std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
+        unsigned long long update_count_{0};
+        std::optional<numerical::MovingVariance<T>> variance_x_;
+        std::optional<numerical::MovingVariance<T>> variance_y_;
 
         void reset(const Measurement<2, T>& position) override
         {
                 filter_.emplace(init_x(position.value), init_p(position.variance));
+                update_count_ = 0;
         }
 
         void predict(const T dt) override
@@ -179,6 +187,8 @@ class Filter final : public PositionFilter<T>
                 ASSERT(is_finite(position.variance));
                 ASSERT(position.variance[0] >= 0 && position.variance[1] >= 0);
 
+                ++update_count_;
+
                 const Matrix<2, 2, T> r = position_r(position.variance);
                 filter_->update(
                         position_h<T>, position_hj<T>, r, position.value, add_x<T>,
@@ -186,6 +196,16 @@ class Filter final : public PositionFilter<T>
                         {
                                 const auto residual = position_residual<T>(a, b);
                                 nis_.add(residual, r);
+                                if (update_count_ >= VARIANCE_UPDATE_COUNT)
+                                {
+                                        if (!variance_x_ || !variance_x_)
+                                        {
+                                                variance_x_.emplace(VARIANCE_WINDOW_SIZE);
+                                                variance_y_.emplace(VARIANCE_WINDOW_SIZE);
+                                        }
+                                        variance_x_->push(residual[0]);
+                                        variance_y_->push(residual[1]);
+                                }
                                 return residual;
                         },
                         theta_);
@@ -261,9 +281,21 @@ class Filter final : public PositionFilter<T>
                 return compute_angle_p(velocity(), velocity_p());
         }
 
-        [[nodiscard]] std::string nis_position_check_string() const override
+        [[nodiscard]] std::string check_string() const override
         {
-                return nis_.check_string();
+                std::string s;
+                s += "NIS Position; " + nis_.check_string();
+                if (variance_x_ && variance_y_)
+                {
+                        s += "; mean (" + to_string(variance_x_->mean()) + ", " + to_string(variance_y_->mean()) + ")";
+                        s += "; standard deviation (" + to_string(std::sqrt(variance_x_->variance())) + ", "
+                             + to_string(std::sqrt(variance_y_->variance())) + ")";
+                }
+                else
+                {
+                        s += "; no variance";
+                }
+                return s;
         }
 
 public:

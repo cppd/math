@@ -168,7 +168,7 @@ std::string Position<T>::consistency_string() const
                 s += name + "; NEES Speed; " + nees_speed_->check_string();
         }
         s += '\n';
-        s += name + "; NIS Position; " + filter_->nis_position_check_string();
+        s += name + "; " + filter_->check_string();
         return s;
 }
 
