@@ -152,8 +152,7 @@ class Filter final : public PositionFilter<T>
         std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
         unsigned long long update_count_{0};
-        std::optional<numerical::MovingVariance<T>> variance_x_;
-        std::optional<numerical::MovingVariance<T>> variance_y_;
+        numerical::MovingVariance<Vector<2, T>> variance_{VARIANCE_WINDOW_SIZE};
 
         void reset(const Measurement<2, T>& position) override
         {
@@ -198,13 +197,7 @@ class Filter final : public PositionFilter<T>
                                 nis_.add(residual, r);
                                 if (update_count_ >= VARIANCE_UPDATE_COUNT)
                                 {
-                                        if (!variance_x_ || !variance_x_)
-                                        {
-                                                variance_x_.emplace(VARIANCE_WINDOW_SIZE);
-                                                variance_y_.emplace(VARIANCE_WINDOW_SIZE);
-                                        }
-                                        variance_x_->push(residual[0]);
-                                        variance_y_->push(residual[1]);
+                                        variance_.push(residual);
                                 }
                                 return residual;
                         },
@@ -285,11 +278,10 @@ class Filter final : public PositionFilter<T>
         {
                 std::string s;
                 s += "NIS Position; " + nis_.check_string();
-                if (variance_x_ && variance_y_)
+                if (variance_.has_variance())
                 {
-                        s += "; mean (" + to_string(variance_x_->mean()) + ", " + to_string(variance_y_->mean()) + ")";
-                        s += "; standard deviation (" + to_string(std::sqrt(variance_x_->variance())) + ", "
-                             + to_string(std::sqrt(variance_y_->variance())) + ")";
+                        s += "; mean " + to_string(variance_.mean());
+                        s += "; standard deviation " + to_string(variance_.standard_deviation());
                 }
                 else
                 {
