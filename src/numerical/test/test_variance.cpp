@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../variance.h"
+#include "../vector.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -30,37 +31,79 @@ namespace ns::numerical
 namespace
 {
 template <typename T>
+        requires (std::is_floating_point_v<T>)
 void compare(const T a, const T b, const T precision)
 {
-        if (std::abs(a - b) < precision)
+        if (!(std::abs(a - b) <= precision))
         {
-                return;
+                error(to_string(a) + " is not equal to " + to_string(b));
         }
-        error(to_string(a) + " is not equal to " + to_string(b));
+}
+
+template <std::size_t N, typename T>
+void compare(const Vector<N, T>& a, const Vector<N, T>& b, const Vector<N, T>& precision)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(std::abs(a[i] - b[i]) <= precision[i]))
+                {
+                        error(to_string(a) + " is not equal to " + to_string(b));
+                }
+        }
 }
 
 template <typename T>
-void test(const T precision)
+        requires (std::is_floating_point_v<T>)
+[[nodiscard]] T sqrt(const T a)
 {
-        const auto cmp = [&](const T a, const T b)
+        return std::sqrt(a);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] Vector<N, T> sqrt(const Vector<N, T>& a)
+{
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = std::sqrt(a[i]);
+        }
+        return res;
+}
+
+template <typename T>
+void test(const T& precision)
+{
+        const auto cmp = [&](const T& a, const T& b)
         {
                 compare(a, b, precision);
         };
 
         MovingVariance<T> variance(3);
 
-        if (!variance.empty())
+        if (variance.has_variance())
         {
                 error("Variance is not empty");
         }
 
-        variance.push(1);
-        if (variance.empty())
+        if (variance.has_variance_n())
+        {
+                error("Variance is not empty");
+        }
+
+        variance.push(T{1});
+
+        if (variance.has_variance())
+        {
+                error("Variance has variance");
+        }
+
+        if (!variance.has_variance_n())
         {
                 error("Variance is empty");
         }
-        cmp(1, variance.mean());
-        cmp(0, variance.variance_n());
+
+        cmp(T{1}, variance.mean());
+        cmp(T{0}, variance.variance_n());
 
         struct Data final
         {
@@ -71,34 +114,44 @@ void test(const T precision)
         };
 
         constexpr std::array DATA = std::to_array<Data>({
-                { 2,  T{3} / 2,   T{1} / 2,   T{1} / 4},
-                {-2,  T{1} / 3,  T{13} / 3,  T{26} / 9},
-                {10, T{10} / 3, T{112} / 3, T{224} / 9},
-                { 3, T{11} / 3, T{109} / 3, T{218} / 9},
-                {-8,  T{5} / 3, T{247} / 3, T{494} / 9},
-                { 1, T{-4} / 3, T{103} / 3, T{206} / 9},
-                { 9,  T{2} / 3, T{217} / 3, T{434} / 9}
+                { T{2},  T{3} / T{2},   T{1} / T{2},   T{1} / T{4}},
+                {T{-2},  T{1} / T{3},  T{13} / T{3},  T{26} / T{9}},
+                {T{10}, T{10} / T{3}, T{112} / T{3}, T{224} / T{9}},
+                { T{3}, T{11} / T{3}, T{109} / T{3}, T{218} / T{9}},
+                {T{-8},  T{5} / T{3}, T{247} / T{3}, T{494} / T{9}},
+                { T{1}, T{-4} / T{3}, T{103} / T{3}, T{206} / T{9}},
+                { T{9},  T{2} / T{3}, T{217} / T{3}, T{434} / T{9}}
         });
 
         for (const Data& d : DATA)
         {
                 variance.push(d.value);
-                if (variance.empty())
+
+                if (!(variance.has_variance() && variance.has_variance_n()))
                 {
                         error("Variance is empty");
                 }
+
                 cmp(d.mean, variance.mean());
                 cmp(d.variance, variance.variance());
                 cmp(d.variance_n, variance.variance_n());
+                cmp(sqrt(d.variance), variance.standard_deviation());
+                cmp(sqrt(d.variance_n), variance.standard_deviation_n());
         }
 }
 
 void test_variance()
 {
         LOG("Test variance");
+
         test<float>(1e-5);
         test<double>(1e-13);
         test<long double>(1e-17);
+
+        test(Vector<3, float>(1e-5));
+        test(Vector<3, double>(1e-13));
+        test(Vector<3, long double>(1e-17));
+
         LOG("Test variance passed");
 }
 

@@ -19,13 +19,50 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cmath>
+#include <utility>
 #include <vector>
 
 namespace ns::numerical
 {
+namespace variance_implemetation
+{
+template <typename T>
+        requires (std::is_floating_point_v<T>)
+[[nodiscard]] T standard_deviation(const T data)
+{
+        return std::sqrt(data);
+}
+
+template <typename T>
+        requires requires { std::declval<T>()[0]; }
+[[nodiscard]] T standard_deviation(const T& data)
+{
+        T res;
+        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
+        {
+                res[i] = std::sqrt(data[i]);
+        }
+        return res;
+}
+}
+
 template <typename T>
 class MovingVariance final
 {
+        [[nodiscard]] static auto to_data_type(const std::size_t size)
+        {
+                if constexpr (requires { std::declval<T>().data(); })
+                {
+                        using Value = std::remove_pointer_t<decltype(std::declval<T>().data())>;
+                        return static_cast<std::remove_cvref_t<Value>>(size);
+                }
+                else
+                {
+                        return static_cast<T>(size);
+                }
+        }
+
         std::size_t window_size_;
         std::vector<T> data_;
         std::size_t n_ = -1;
@@ -43,7 +80,7 @@ public:
                 data_.reserve(window_size_);
         }
 
-        void push(const T value)
+        void push(const T& value)
         {
                 // Based on Welford's algorithm
 
@@ -52,7 +89,7 @@ public:
                         data_.push_back(value);
                         ++n_;
                         const T delta = value - mean_;
-                        mean_ += delta / data_.size();
+                        mean_ += delta / to_data_type(data_.size());
                         sum_ += delta * (value - mean_);
                         return;
                 }
@@ -63,13 +100,18 @@ public:
 
                 const T old_mean = mean_;
                 const T delta = value - old_value;
-                mean_ += delta / window_size_;
+                mean_ += delta / to_data_type(window_size_);
                 sum_ += delta * (value + old_value - mean_ - old_mean);
         }
 
-        [[nodiscard]] bool empty() const
+        [[nodiscard]] bool has_variance_n() const
         {
-                return data_.empty();
+                return !data_.empty();
+        }
+
+        [[nodiscard]] bool has_variance() const
+        {
+                return data_.size() >= 2;
         }
 
         [[nodiscard]] T mean() const
@@ -81,13 +123,23 @@ public:
         [[nodiscard]] T variance_n() const
         {
                 ASSERT(!data_.empty());
-                return sum_ / data_.size();
+                return sum_ / to_data_type(data_.size());
         }
 
         [[nodiscard]] T variance() const
         {
                 ASSERT(data_.size() >= 2);
-                return sum_ / (data_.size() - 1);
+                return sum_ / to_data_type(data_.size() - 1);
+        }
+
+        [[nodiscard]] T standard_deviation_n() const
+        {
+                return variance_implemetation::standard_deviation(variance_n());
+        }
+
+        [[nodiscard]] T standard_deviation() const
+        {
+                return variance_implemetation::standard_deviation(variance());
         }
 };
 }
