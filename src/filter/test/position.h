@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "measurement.h"
 #include "position_filter.h"
+#include "position_variance.h"
 
 #include "../consistency.h"
 
 #include <src/color/rgb8.h>
-#include <src/numerical/variance.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
@@ -49,11 +49,12 @@ class Position final
         NormalizedSquared<2, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
 
-        numerical::MovingVariance<Vector<2, T>> variance_;
-        unsigned long long update_count_{0};
+        PositionVariance<T> measurement_variance_;
 
         std::optional<T> last_filter_time_;
         std::optional<T> last_position_time_;
+
+        std::optional<Vector<2, T>> last_measurement_variance_;
 
         void save(T time, const TrueData<2, T>& true_data);
 
@@ -69,6 +70,8 @@ public:
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
+
+        [[nodiscard]] const std::optional<Vector<2, T>>& measurement_variance() const;
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;

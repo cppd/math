@@ -22,12 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-namespace
-{
-constexpr std::size_t VARIANCE_WINDOW_SIZE = 500;
-constexpr unsigned VARIANCE_SKIP_UPDATE_COUNT = 5;
-}
-
 template <typename T>
 Position<T>::Position(
         std::string name,
@@ -37,8 +31,7 @@ Position<T>::Position(
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          filter_(std::move(filter)),
-          variance_(VARIANCE_WINDOW_SIZE)
+          filter_(std::move(filter))
 {
         ASSERT(filter_);
 }
@@ -91,25 +84,24 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
+        const Vector<2, T> measurement_variance =
+                last_measurement_variance_ ? *last_measurement_variance_ : measurement_variance_.default_variance();
+
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->reset(m.position->value, m.position->variance);
+                filter_->reset(m.position->value, measurement_variance);
                 last_filter_time_ = m.time;
                 last_position_time_ = m.time;
-                update_count_ = 0;
                 return;
         }
 
         filter_->predict(m.time - *last_filter_time_);
-        const PositionFilterUpdate update = filter_->update(m.position->value, m.position->variance);
+        const PositionFilterUpdate update = filter_->update(m.position->value, measurement_variance);
         last_filter_time_ = m.time;
         last_position_time_ = m.time;
 
-        ++update_count_;
-        if (update_count_ > VARIANCE_SKIP_UPDATE_COUNT)
-        {
-                variance_.push(update.residual);
-        }
+        measurement_variance_.push(update.residual);
+        last_measurement_variance_ = measurement_variance_.compute();
 
         save(m.time, m.true_data);
 }
@@ -155,6 +147,12 @@ color::RGB8 Position<T>::color() const
 }
 
 template <typename T>
+const std::optional<Vector<2, T>>& Position<T>::measurement_variance() const
+{
+        return last_measurement_variance_;
+}
+
+template <typename T>
 std::string Position<T>::consistency_string() const
 {
         const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
@@ -173,15 +171,15 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; NEES Speed; " + nees_speed_.check_string();
         }
-        if (variance_.has_variance())
+        if (measurement_variance_.variance().has_variance())
         {
                 if (!s.empty())
                 {
                         s += '\n';
                 }
                 s += name;
-                s += "; Mean " + to_string(variance_.mean());
-                s += "; Standard Deviation " + to_string(variance_.standard_deviation());
+                s += "; Mean " + to_string(measurement_variance_.variance().mean());
+                s += "; Standard Deviation " + to_string(measurement_variance_.variance().standard_deviation());
         }
         if (const std::string check_string = filter_->check_string(); !check_string.empty())
         {
