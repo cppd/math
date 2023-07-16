@@ -78,7 +78,9 @@ void test(const T& precision)
                 compare(a, b, precision);
         };
 
-        MovingVariance<T> variance(3);
+        static constexpr std::size_t WINDOW_SIZE = 3;
+
+        MovingVariance<T> variance(WINDOW_SIZE);
 
         if (variance.has_variance())
         {
@@ -86,6 +88,11 @@ void test(const T& precision)
         }
 
         if (variance.has_variance_n())
+        {
+                error("Variance is not empty");
+        }
+
+        if (!(variance.size() == 0))
         {
                 error("Variance is not empty");
         }
@@ -100,6 +107,11 @@ void test(const T& precision)
         if (!variance.has_variance_n())
         {
                 error("Variance is empty");
+        }
+
+        if (!(variance.size() == 1))
+        {
+                error("Variance data size " + to_string(variance.size()) + " is not equal to 1");
         }
 
         cmp(T{1}, variance.mean());
@@ -137,6 +149,12 @@ void test(const T& precision)
                 cmp(d.variance_n, variance.variance_n());
                 cmp(sqrt(d.variance), variance.standard_deviation());
                 cmp(sqrt(d.variance_n), variance.standard_deviation_n());
+        }
+
+        if (!(variance.size() == 3))
+        {
+                error("Variance data size " + to_string(variance.size()) + " is not equal to "
+                      + to_string(WINDOW_SIZE));
         }
 }
 

@@ -104,6 +104,11 @@ public:
                 sum_ += delta * (value + old_value - mean_ - old_mean);
         }
 
+        [[nodiscard]] std::size_t size() const
+        {
+                return data_.size();
+        }
+
         [[nodiscard]] bool has_variance_n() const
         {
                 return !data_.empty();
