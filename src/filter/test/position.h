@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../consistency.h"
 
 #include <src/color/rgb8.h>
+#include <src/numerical/variance.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
@@ -40,12 +41,15 @@ class Position final
         T reset_dt_;
         std::unique_ptr<PositionFilter<T>> filter_;
 
-        std::vector<Vector<3, T>> position_;
-        std::vector<Vector<2, T>> speed_;
-        std::vector<Vector<2, T>> speed_p_;
+        std::vector<Vector<3, T>> positions_;
+        std::vector<Vector<2, T>> speeds_;
+        std::vector<Vector<2, T>> speeds_p_;
 
-        std::optional<NormalizedSquared<2, T>> nees_position_;
-        std::optional<NormalizedSquared<1, T>> nees_speed_;
+        NormalizedSquared<2, T> nees_position_;
+        NormalizedSquared<1, T> nees_speed_;
+
+        numerical::MovingVariance<Vector<2, T>> variance_;
+        unsigned long long update_count_{0};
 
         std::optional<T> last_filter_time_;
         std::optional<T> last_position_time_;

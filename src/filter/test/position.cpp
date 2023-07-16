@@ -22,6 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
+namespace
+{
+constexpr std::size_t VARIANCE_WINDOW_SIZE = 500;
+constexpr unsigned VARIANCE_SKIP_UPDATE_COUNT = 5;
+}
+
 template <typename T>
 Position<T>::Position(
         std::string name,
@@ -31,7 +37,8 @@ Position<T>::Position(
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          filter_(std::move(filter))
+          filter_(std::move(filter)),
+          variance_(VARIANCE_WINDOW_SIZE)
 {
         ASSERT(filter_);
 }
@@ -41,25 +48,17 @@ void Position<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         {
                 const Vector<2, T> p = filter_->position();
-                position_.push_back({time, p[0], p[1]});
+                positions_.push_back({time, p[0], p[1]});
         }
 
-        speed_.push_back({time, filter_->speed()});
-        speed_p_.push_back({time, filter_->speed_p()});
+        speeds_.push_back({time, filter_->speed()});
+        speeds_p_.push_back({time, filter_->speed_p()});
 
-        if (!nees_position_)
-        {
-                nees_position_.emplace();
-        }
-        nees_position_->add(true_data.position - filter_->position(), filter_->position_p());
+        nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
 
         if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
         {
-                if (!nees_speed_)
-                {
-                        nees_speed_.emplace();
-                }
-                nees_speed_->add(true_data.speed - filter_->speed(), speed_p);
+                nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
         }
 }
 
@@ -91,16 +90,23 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->reset(*m.position);
+                filter_->reset(m.position->value, m.position->variance);
                 last_filter_time_ = m.time;
                 last_position_time_ = m.time;
+                update_count_ = 0;
                 return;
         }
 
         filter_->predict(m.time - *last_filter_time_);
-        filter_->update(*m.position);
+        const PositionFilterUpdate update = filter_->update(m.position->value, m.position->variance);
         last_filter_time_ = m.time;
         last_position_time_ = m.time;
+
+        ++update_count_;
+        if (update_count_ > VARIANCE_SKIP_UPDATE_COUNT)
+        {
+                variance_.push(update.residual);
+        }
 
         save(m.time, m.true_data);
 }
@@ -148,46 +154,60 @@ color::RGB8 Position<T>::color() const
 template <typename T>
 std::string Position<T>::consistency_string() const
 {
-        if (!nees_position_ && !nees_speed_)
-        {
-                return {};
-        }
-
         const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
         std::string s;
-        if (nees_position_)
+        if (!nees_position_.empty())
         {
-                s += name + "; NEES Position; " + nees_position_->check_string();
+                s += name;
+                s += "; NEES Position; " + nees_position_.check_string();
         }
-        if (nees_speed_)
+        if (!nees_speed_.empty())
         {
                 if (!s.empty())
                 {
                         s += '\n';
                 }
-                s += name + "; NEES Speed; " + nees_speed_->check_string();
+                s += name;
+                s += "; NEES Speed; " + nees_speed_.check_string();
         }
-        s += '\n';
-        s += name + "; " + filter_->check_string();
+        if (variance_.has_variance())
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+                s += "; Mean " + to_string(variance_.mean());
+                s += "; Standard Deviation " + to_string(variance_.standard_deviation());
+        }
+        if (const std::string check_string = filter_->check_string(); !check_string.empty())
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+                s += "; " + check_string;
+        }
         return s;
 }
 
 template <typename T>
 const std::vector<Vector<3, T>>& Position<T>::positions() const
 {
-        return position_;
+        return positions_;
 }
 
 template <typename T>
 const std::vector<Vector<2, T>>& Position<T>::speeds() const
 {
-        return speed_;
+        return speeds_;
 }
 
 template <typename T>
 const std::vector<Vector<2, T>>& Position<T>::speeds_p() const
 {
-        return speed_p_;
+        return speeds_p_;
 }
 
 template class Position<float>;

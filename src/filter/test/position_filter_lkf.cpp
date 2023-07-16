@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
-#include <src/numerical/variance.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -144,20 +143,14 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
-        static constexpr std::size_t VARIANCE_WINDOW_SIZE = 500;
-        static constexpr unsigned VARIANCE_UPDATE_COUNT = 5;
-
         const T theta_;
         const T process_variance_;
         std::optional<Ekf<6, T>> filter_;
         NormalizedSquared<2, T> nis_;
-        unsigned long long update_count_{0};
-        numerical::MovingVariance<Vector<2, T>> variance_{VARIANCE_WINDOW_SIZE};
 
-        void reset(const Measurement<2, T>& position) override
+        void reset(const Vector<2, T>& position, const Vector<2, T>& variance) override
         {
-                filter_.emplace(init_x(position.value), init_p(position.variance));
-                update_count_ = 0;
+                filter_.emplace(init_x(position), init_p(variance));
         }
 
         void predict(const T dt) override
@@ -179,29 +172,27 @@ class Filter final : public PositionFilter<T>
                         q(dt, process_variance_));
         }
 
-        void update(const Measurement<2, T>& position) override
+        PositionFilterUpdate<T> update(const Vector<2, T>& position, const Vector<2, T>& variance) override
         {
                 ASSERT(filter_);
-                ASSERT(is_finite(position.value));
-                ASSERT(is_finite(position.variance));
-                ASSERT(position.variance[0] >= 0 && position.variance[1] >= 0);
+                ASSERT(is_finite(position));
+                ASSERT(is_finite(variance));
+                ASSERT(variance[0] >= 0 && variance[1] >= 0);
 
-                ++update_count_;
+                Vector<2, T> residual;
 
-                const Matrix<2, 2, T> r = position_r(position.variance);
+                const Matrix<2, 2, T> r = position_r(variance);
                 filter_->update(
-                        position_h<T>, position_hj<T>, r, position.value, add_x<T>,
+                        position_h<T>, position_hj<T>, r, position, add_x<T>,
                         [&](const Vector<2, T>& a, const Vector<2, T>& b)
                         {
-                                const auto residual = position_residual<T>(a, b);
+                                residual = position_residual<T>(a, b);
                                 nis_.add(residual, r);
-                                if (update_count_ >= VARIANCE_UPDATE_COUNT)
-                                {
-                                        variance_.push(residual);
-                                }
                                 return residual;
                         },
                         theta_);
+
+                return {.residual = residual};
         }
 
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override
@@ -276,18 +267,7 @@ class Filter final : public PositionFilter<T>
 
         [[nodiscard]] std::string check_string() const override
         {
-                std::string s;
-                s += "NIS Position; " + nis_.check_string();
-                if (variance_.has_variance())
-                {
-                        s += "; mean " + to_string(variance_.mean());
-                        s += "; standard deviation " + to_string(variance_.standard_deviation());
-                }
-                else
-                {
-                        s += "; no variance";
-                }
-                return s;
+                return "NIS Position; " + nis_.check_string();
         }
 
 public:
