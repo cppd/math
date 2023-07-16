@@ -74,9 +74,14 @@ public:
                 add(Vector<1, T>(difference), Matrix<1, 1, T>{{variance}});
         }
 
+        [[nodiscard]] bool empty() const
+        {
+                return count_ == 0;
+        }
+
         [[nodiscard]] T average() const
         {
-                if (!(count_ > 0))
+                if (empty())
                 {
                         error("No data to compute normalized squared average");
                 }
