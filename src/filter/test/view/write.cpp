@@ -283,6 +283,47 @@ void write_filter_position(
                 }
         }
 }
+
+template <std::size_t N, typename T>
+void write_filter_position_p(
+        std::ostream& file,
+        const std::string& name,
+        const color::RGB8 color,
+        const std::vector<std::optional<Vector<N, T>>>& position_p_x,
+        const std::vector<std::optional<Vector<N, T>>>& position_p_y)
+{
+        if (!position_p_x.empty())
+        {
+                file << '{';
+                file << R"("name":")" << name << " Position P X\"";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":)" << color_to_string(color);
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":1)";
+                file << "}\n";
+                for (const auto& v : position_p_x)
+                {
+                        write(file, v);
+                }
+        }
+
+        if (!position_p_y.empty())
+        {
+                file << '{';
+                file << R"("name":")" << name << " Position P Y\"";
+                file << R"(, "mode":"lines+markers")";
+                file << R"(, "line_color":)" << color_to_string(color);
+                file << R"(, "line_width":0.25)";
+                file << R"(, "line_dash":None)";
+                file << R"(, "marker_size":1)";
+                file << "}\n";
+                for (const auto& v : position_p_y)
+                {
+                        write(file, v);
+                }
+        }
+}
 }
 
 template <std::size_t N, typename T>
@@ -324,6 +365,9 @@ void write_to_file(
                 write_filter_position(
                         file, filter.name, filter.color,
                         add_offset(optional_position(filter.position, interval), OFFSET));
+                write_filter_position_p(
+                        file, filter.name, filter.color, convert_position_p<1>(filter.position_p, interval),
+                        convert_position_p<2>(filter.position_p, interval));
         }
 }
 

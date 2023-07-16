@@ -41,9 +41,10 @@ class Move final
         T reset_dt_;
         std::unique_ptr<MoveFilter<T>> filter_;
 
-        std::vector<Vector<3, T>> position_;
-        std::vector<Vector<2, T>> speed_;
-        std::vector<Vector<2, T>> speed_p_;
+        std::vector<Vector<3, T>> positions_;
+        std::vector<Vector<3, T>> positions_p_;
+        std::vector<Vector<2, T>> speeds_;
+        std::vector<Vector<2, T>> speeds_p_;
 
         struct Nees final
         {
@@ -73,6 +74,7 @@ public:
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& positions_p() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds_p() const;
 };

@@ -36,6 +36,7 @@ struct Filter final
         std::vector<Vector<2, T>> speed;
         std::vector<Vector<2, T>> speed_p;
         std::vector<Vector<N + 1, T>> position;
+        std::vector<Vector<N + 1, T>> position_p;
 };
 
 template <std::size_t N, typename T>

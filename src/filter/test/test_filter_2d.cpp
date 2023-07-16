@@ -76,34 +76,30 @@ void write_to_file(
         std::vector<view::Filter<2, T>> filters;
         filters.reserve(positions.size() + processes.size() + moves.size());
 
-        for (const Position<T>& position : positions)
+        const auto push = [&](const auto& f, const bool position_p)
         {
                 filters.push_back(
-                        {.name = position.name(),
-                         .color = position.color(),
-                         .speed = position.speeds(),
-                         .speed_p = position.speeds_p(),
-                         .position = position.positions()});
+                        {.name = f.name(),
+                         .color = f.color(),
+                         .speed = f.speeds(),
+                         .speed_p = f.speeds_p(),
+                         .position = f.positions(),
+                         .position_p = position_p ? f.positions_p() : decltype(f.positions_p()){}});
+        };
+
+        for (const Position<T>& f : positions)
+        {
+                push(f, true);
         }
 
-        for (const Process<T>& process : processes)
+        for (const Process<T>& f : processes)
         {
-                filters.push_back(
-                        {.name = process.name(),
-                         .color = process.color(),
-                         .speed = process.speeds(),
-                         .speed_p = process.speeds_p(),
-                         .position = process.positions()});
+                push(f, false);
         }
 
-        for (const Move<T>& move : moves)
+        for (const Move<T>& f : moves)
         {
-                filters.push_back(
-                        {.name = move.name(),
-                         .color = move.color(),
-                         .speed = move.speeds(),
-                         .speed_p = move.speeds_p(),
-                         .position = move.positions()});
+                push(f, false);
         }
 
         view::write_to_file(annotation, measurements, Config<T>::DATA_CONNECT_INTERVAL, filters);

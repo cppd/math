@@ -42,6 +42,7 @@ class Position final
         std::unique_ptr<PositionFilter<T>> filter_;
 
         std::vector<Vector<3, T>> positions_;
+        std::vector<Vector<3, T>> positions_p_;
         std::vector<Vector<2, T>> speeds_;
         std::vector<Vector<2, T>> speeds_p_;
 
@@ -71,6 +72,7 @@ public:
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
+        [[nodiscard]] const std::vector<Vector<3, T>>& positions_p() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
         [[nodiscard]] const std::vector<Vector<2, T>>& speeds_p() const;
 };

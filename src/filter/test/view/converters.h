@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../simulator.h"
+#include "../measurement.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -281,6 +281,37 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
                 {
                         res.emplace_back();
                 }
+        }
+        return res;
+}
+
+template <std::size_t INDEX, typename T>
+std::vector<std::optional<Vector<2, T>>> convert_position_p(
+        const std::vector<Vector<3, T>>& position_p,
+        const T interval)
+{
+        namespace impl = converters_implementation;
+        static_assert(INDEX >= 1 && INDEX <= 2);
+
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(position_p.size());
+        std::optional<T> last_time;
+        for (const Vector<3, T>& p : position_p)
+        {
+                ASSERT(!last_time || *last_time < p[0]);
+                if (last_time && p[0] > *last_time + interval)
+                {
+                        res.emplace_back();
+                }
+                if (!std::isnan(std::sqrt(p[INDEX])))
+                {
+                        res.push_back(Vector<2, T>(impl::time_unit(p[0]), std::sqrt(p[INDEX])));
+                }
+                else
+                {
+                        res.emplace_back();
+                }
+                last_time = p[0];
         }
         return res;
 }

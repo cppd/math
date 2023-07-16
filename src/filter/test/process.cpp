@@ -42,10 +42,16 @@ Process<T>::Process(
 template <typename T>
 void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 {
-        const Vector<2, T> p = filter_->position();
-        position_.push_back({time, p[0], p[1]});
-        speed_.push_back({time, filter_->speed()});
-        speed_p_.push_back({time, filter_->speed_p()});
+        {
+                const Vector<2, T> p = filter_->position();
+                positions_.push_back({time, p[0], p[1]});
+        }
+        {
+                const Matrix<2, 2, T> p = filter_->position_p();
+                positions_p_.push_back({time, p(0, 0), p(1, 1)});
+        }
+        speeds_.push_back({time, filter_->speed()});
+        speeds_p_.push_back({time, filter_->speed_p()});
 
         if (!nees_)
         {
@@ -244,19 +250,25 @@ std::string Process<T>::consistency_string() const
 template <typename T>
 const std::vector<Vector<3, T>>& Process<T>::positions() const
 {
-        return position_;
+        return positions_;
+}
+
+template <typename T>
+const std::vector<Vector<3, T>>& Process<T>::positions_p() const
+{
+        return positions_p_;
 }
 
 template <typename T>
 const std::vector<Vector<2, T>>& Process<T>::speeds() const
 {
-        return speed_;
+        return speeds_;
 }
 
 template <typename T>
 const std::vector<Vector<2, T>>& Process<T>::speeds_p() const
 {
-        return speed_p_;
+        return speeds_p_;
 }
 
 template class Process<float>;
