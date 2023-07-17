@@ -174,10 +174,9 @@ class Simulator final
 
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
-                static constexpr T S = 100;
                 const T magnitude =
                         std::max<T>(0, speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_)));
-                const T angle = std::cos((std::max<T>(0, time - S)) * (2 * PI<T> / velocity_angle_period_));
+                const T angle = std::cos(time * (2 * PI<T> / velocity_angle_period_));
                 return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle};
         }
 

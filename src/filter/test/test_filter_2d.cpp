@@ -76,7 +76,7 @@ void write_to_file(
         std::vector<view::Filter<2, T>> filters;
         filters.reserve(positions.size() + processes.size() + moves.size());
 
-        const auto push = [&](const auto& f, const bool position_p)
+        const auto push = [&](const auto& f)
         {
                 filters.push_back(
                         {.name = f.name(),
@@ -84,22 +84,22 @@ void write_to_file(
                          .speed = f.speeds(),
                          .speed_p = f.speeds_p(),
                          .position = f.positions(),
-                         .position_p = position_p ? f.positions_p() : decltype(f.positions_p()){}});
+                         .position_p = f.positions_p()});
         };
 
         for (const Position<T>& f : positions)
         {
-                push(f, true);
+                push(f);
         }
 
         for (const Process<T>& f : processes)
         {
-                push(f, false);
+                push(f);
         }
 
         for (const Move<T>& f : moves)
         {
-                push(f, false);
+                push(f);
         }
 
         view::write_to_file(annotation, measurements, Config<T>::DATA_CONNECT_INTERVAL, filters);

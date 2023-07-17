@@ -127,9 +127,9 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         }
         last_measurement_variance_ = new_variance;
 
+        save_results(m.time);
         if (last_measurement_variance_)
         {
-                save_results(m.time);
                 add_checks(m.true_data);
                 add_checks(update);
         }
