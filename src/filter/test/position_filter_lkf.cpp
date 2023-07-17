@@ -146,7 +146,6 @@ class Filter final : public PositionFilter<T>
         const T theta_;
         const T process_variance_;
         std::optional<Ekf<6, T>> filter_;
-        NormalizedSquared<2, T> nis_;
 
         void reset(const Vector<2, T>& position, const Vector<2, T>& variance) override
         {
@@ -187,12 +186,11 @@ class Filter final : public PositionFilter<T>
                         [&](const Vector<2, T>& a, const Vector<2, T>& b)
                         {
                                 residual = position_residual<T>(a, b);
-                                nis_.add(residual, r);
                                 return residual;
                         },
                         theta_);
 
-                return {.residual = residual};
+                return {.r = r, .residual = residual};
         }
 
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override
@@ -263,11 +261,6 @@ class Filter final : public PositionFilter<T>
         [[nodiscard]] T angle_p() const override
         {
                 return compute_angle_p(velocity(), velocity_p());
-        }
-
-        [[nodiscard]] std::string check_string() const override
-        {
-                return "NIS Position; " + nis_.check_string();
         }
 
 public:

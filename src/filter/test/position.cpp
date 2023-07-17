@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/type/name.h>
 
 namespace ns::filter::test
@@ -37,7 +38,7 @@ Position<T>::Position(
 }
 
 template <typename T>
-void Position<T>::save(const T time, const TrueData<2, T>& true_data)
+void Position<T>::save_results(const T time)
 {
         {
                 const Vector<2, T> p = filter_->position();
@@ -49,13 +50,22 @@ void Position<T>::save(const T time, const TrueData<2, T>& true_data)
         }
         speeds_.push_back({time, filter_->speed()});
         speeds_p_.push_back({time, filter_->speed_p()});
+}
 
+template <typename T>
+void Position<T>::add_checks(const TrueData<2, T>& true_data)
+{
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
-
         if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
         {
                 nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
         }
+}
+
+template <typename T>
+void Position<T>::add_checks(const PositionFilterUpdate<T>& update_data)
+{
+        nis_.add(update_data.residual, update_data.r);
 }
 
 template <typename T>
@@ -101,14 +111,38 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         last_position_time_ = m.time;
 
         measurement_variance_.push(update.residual);
-        last_measurement_variance_ = measurement_variance_.compute();
 
-        save(m.time, m.true_data);
+        if (measurement_variance_.variance().has_variance())
+        {
+                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation "
+                    + to_string(measurement_variance_.variance().standard_deviation()));
+        }
+
+        const auto new_variance = measurement_variance_.compute();
+        if (new_variance && !last_measurement_variance_)
+        {
+                filter_->reset(m.position->value, *new_variance);
+                last_measurement_variance_ = new_variance;
+                return;
+        }
+        last_measurement_variance_ = new_variance;
+
+        if (last_measurement_variance_)
+        {
+                save_results(m.time);
+                add_checks(m.true_data);
+                add_checks(update);
+        }
 }
 
 template <typename T>
 void Position<T>::predict_update(const Measurements<2, T>& m)
 {
+        if (!last_measurement_variance_)
+        {
+                error("Prediction without variance");
+        }
+
         if (m.position)
         {
                 update_position(m);
@@ -125,7 +159,8 @@ void Position<T>::predict_update(const Measurements<2, T>& m)
         filter_->predict(m.time - *last_filter_time_);
         last_filter_time_ = m.time;
 
-        save(m.time, m.true_data);
+        save_results(m.time);
+        add_checks(m.true_data);
 }
 
 template <typename T>
@@ -147,9 +182,9 @@ color::RGB8 Position<T>::color() const
 }
 
 template <typename T>
-const std::optional<Vector<2, T>>& Position<T>::measurement_variance() const
+bool Position<T>::has_variance() const
 {
-        return last_measurement_variance_;
+        return last_measurement_variance_.has_value();
 }
 
 template <typename T>
@@ -171,6 +206,15 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; NEES Speed; " + nees_speed_.check_string();
         }
+        if (!nis_.empty())
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+                s += "; NIS Position; " + nis_.check_string();
+        }
         if (measurement_variance_.variance().has_variance())
         {
                 if (!s.empty())
@@ -180,15 +224,6 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; Mean " + to_string(measurement_variance_.variance().mean());
                 s += "; Standard Deviation " + to_string(measurement_variance_.variance().standard_deviation());
-        }
-        if (const std::string check_string = filter_->check_string(); !check_string.empty())
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += name;
-                s += "; " + check_string;
         }
         return s;
 }

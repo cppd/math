@@ -28,11 +28,11 @@ namespace ns::filter::test
 template <typename T>
 class PositionVariance final
 {
-        static constexpr std::size_t VARIANCE_WINDOW_SIZE = 500;
-        static constexpr unsigned VARIANCE_ESTIMATION_COUNT = 50;
-        static constexpr Vector<2, T> VARIANCE_DEFAULT{square(T{30})};
-        static constexpr T VARIANCE_MIN = square(T{0.1L});
-        static constexpr T VARIANCE_MAX = square(T{1000});
+        static constexpr std::size_t VARIANCE_WINDOW_SIZE{500};
+        static constexpr unsigned VARIANCE_ESTIMATION_COUNT{50};
+        static constexpr Vector<2, T> VARIANCE_DEFAULT{square(T{1})};
+        static constexpr T VARIANCE_MIN{square(T{0.1L})};
+        static constexpr T VARIANCE_MAX{square(T{500})};
 
         numerical::MovingVariance<Vector<2, T>> variance_;
 

@@ -27,6 +27,7 @@ namespace ns::filter::test
 template <typename T>
 struct PositionFilterUpdate final
 {
+        Matrix<2, 2, T> r;
         Vector<2, T> residual;
 };
 
@@ -58,7 +59,5 @@ public:
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
-
-        [[nodiscard]] virtual std::string check_string() const = 0;
 };
 }

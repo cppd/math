@@ -58,6 +58,11 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
         {
                 const Position<T>& position = (*positions)[i];
 
+                if (!position.has_variance())
+                {
+                        continue;
+                }
+
                 LOG(to_string(m.time) + "; " + position.name()
                     + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.filter()->angle_p()))));
 

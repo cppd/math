@@ -48,6 +48,7 @@ class Position final
 
         NormalizedSquared<2, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
+        NormalizedSquared<2, T> nis_;
 
         PositionVariance<T> measurement_variance_;
 
@@ -56,7 +57,9 @@ class Position final
 
         std::optional<Vector<2, T>> last_measurement_variance_;
 
-        void save(T time, const TrueData<2, T>& true_data);
+        void save_results(T time);
+        void add_checks(const TrueData<2, T>& true_data);
+        void add_checks(const PositionFilterUpdate<T>& update_data);
 
         void check_time(T time) const;
 
@@ -71,7 +74,7 @@ public:
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] const std::optional<Vector<2, T>>& measurement_variance() const;
+        [[nodiscard]] bool has_variance() const;
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
