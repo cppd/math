@@ -203,7 +203,8 @@ struct Residual final
 template <typename T, bool INF>
 class TestEkf
 {
-        static constexpr T INFINITY_PARAMETER = INF ? 0.01L : 0;
+        static constexpr std::optional<T> GATE{};
+        static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
 
         const T dt_;
 
@@ -261,7 +262,7 @@ public:
                 };
 
                 filter_.predict(f, f_jacobian, q_);
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), INFINITY_PARAMETER);
+                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA);
         }
 
         [[nodiscard]] T x() const

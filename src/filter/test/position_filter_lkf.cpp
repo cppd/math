@@ -143,7 +143,9 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
-        const T theta_;
+        static constexpr std::optional<T> GATE{};
+
+        const std::optional<T> theta_;
         const T process_variance_;
         std::optional<Ekf<6, T>> filter_;
 
@@ -188,7 +190,7 @@ class Filter final : public PositionFilter<T>
                                 residual = position_residual<T>(a, b);
                                 return residual;
                         },
-                        theta_);
+                        GATE, theta_);
 
                 return {.r = r, .residual = residual};
         }

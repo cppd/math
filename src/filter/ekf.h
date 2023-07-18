@@ -21,6 +21,7 @@ Kalman and Bayesian Filters in Python.
 
 6.9 The Kalman Filter Equations
 7.4 Stable Compution of the Posterior Covariance
+9.6 Detecting and Rejecting Bad Measurement
 11.1 Linearizing the Kalman Filter
 */
 
@@ -44,8 +45,11 @@ Sequential filters
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
+
+#include <optional>
 
 namespace ns::filter
 {
@@ -146,7 +150,7 @@ public:
         }
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
-        void update(
+        bool update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -163,30 +167,56 @@ public:
                 // The residual between the two measurement vectors
                 // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z,
+                // Mahalanobis distance gate
+                const std::optional<T> gate,
                 // H infinity parameter
-                const T theta = 0)
+                const std::optional<T> theta)
         {
                 namespace impl = ekf_implementation;
 
                 const Matrix<M, N, T> hjx = hj(x_);
+                const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
+
+                const std::optional<Matrix<M, M, T>> s_inversed = [&]() -> std::optional<Matrix<M, M, T>>
+                {
+                        if (!theta || gate)
+                        {
+                                return (hjx * p_hjxt + r).inversed();
+                        }
+                        return {};
+                }();
+
+                const Vector<M, T> residual = residual_z(z, h(x_));
+
+                if (gate)
+                {
+                        ASSERT(s_inversed);
+                        const T mahalanobis_distance_squared = dot(residual * (*s_inversed), residual);
+                        if (!(mahalanobis_distance_squared <= square(*gate)))
+                        {
+                                return false;
+                        }
+                }
 
                 const Matrix<N, M, T> k = [&]()
                 {
-                        if (theta == 0)
+                        if (!theta)
                         {
-                                const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
-                                return p_hjxt * (hjx * p_hjxt + r).inversed();
+                                ASSERT(s_inversed);
+                                return p_hjxt * (*s_inversed);
                         }
                         const Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
-                        return impl::h_infinity_k("EKF update", theta, p_, hjx, ht_ri);
+                        return impl::h_infinity_k("EKF update", *theta, p_, hjx, ht_ri);
                 }();
 
-                x_ = add_x(x_, k * residual_z(z, h(x_)));
+                x_ = add_x(x_, k * residual);
 
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
 
                 impl::check_x_p("EKF update", x_, p_);
+
+                return true;
         }
 };
 }
