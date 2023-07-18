@@ -46,6 +46,7 @@ Sequential filters
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
