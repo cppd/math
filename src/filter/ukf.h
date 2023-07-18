@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Roger R Labbe Jr.
 Kalman and Bayesian Filters in Python.
 
+9.6 Detecting and Rejecting Bad Measurement
 10.4 The Unscented Transform
 10.5 The Unscented Kalman Filter
 10.11 Implementation of the UKF
@@ -27,9 +28,11 @@ Kalman and Bayesian Filters in Python.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <optional>
 #include <tuple>
 
 namespace ns::filter
@@ -215,7 +218,7 @@ public:
         }
 
         template <std::size_t M, typename H, typename AddX, typename ResidualZ>
-        void update(
+        bool update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -228,7 +231,9 @@ public:
                 const AddX add_x,
                 // The residual between the two measurement vectors
                 // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
-                const ResidualZ residual_z)
+                const ResidualZ residual_z,
+                // Mahalanobis distance gate
+                const std::optional<T> gate = {})
         {
                 namespace impl = ukf_implementation;
 
@@ -242,12 +247,26 @@ public:
                 const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
                         sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, impl::Subtract(), impl::Subtract());
 
-                const Matrix<N, M, T> k = p_xz * p_z.inversed();
+                const Matrix<M, M, T> p_z_inversed = p_z.inversed();
+                const Vector<M, T> residual = residual_z(z, x_z);
 
-                x_ = add_x(x_, k * residual_z(z, x_z));
+                if (gate)
+                {
+                        const T mahalanobis_distance_squared = dot(residual * p_z_inversed, residual);
+                        if (!(mahalanobis_distance_squared <= square(*gate)))
+                        {
+                                return false;
+                        }
+                }
+
+                const Matrix<N, M, T> k = p_xz * p_z_inversed;
+
+                x_ = add_x(x_, k * residual);
                 p_ = p_ - p_xz * k.transposed();
 
                 impl::check_x_p("UKF update", x_, p_);
+
+                return true;
         }
 };
 }
