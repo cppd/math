@@ -56,7 +56,6 @@ class Move final
         std::optional<Nees> nees_;
 
         std::optional<T> last_filter_time_;
-        std::optional<T> last_position_time_;
 
         [[nodiscard]] std::string angle_string() const;
 

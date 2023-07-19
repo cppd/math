@@ -367,6 +367,7 @@ class Filter final : public MoveFilter<T>
         const T sigma_points_alpha_;
         const T position_variance_;
         const T angle_variance_;
+        const std::optional<T> gate_;
         std::optional<Ukf<8, T, SigmaPoints<8, T>>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
@@ -408,72 +409,74 @@ class Filter final : public MoveFilter<T>
                         q(dt, position_variance_, angle_variance_));
         }
 
-        void update_position(const Measurement<2, T>& position) override
+        bool update_position(const Measurement<2, T>& position) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
-                        position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>);
+                return filter_->update(
+                        position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>,
+                        gate_);
         }
 
-        void update_position_speed(const Measurement<2, T>& position, const Measurement<1, T>& speed) override
+        bool update_position_speed(const Measurement<2, T>& position, const Measurement<1, T>& speed) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                return filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
                         Vector<3, T>(position.value[0], position.value[1], speed.value), AddX(),
-                        position_speed_residual<T>);
+                        position_speed_residual<T>, gate_);
         }
 
-        void update_position_speed_direction(
+        bool update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                return filter_->update(
                         position_speed_direction_h<T>,
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
                         Vector<4, T>(position.value[0], position.value[1], speed.value, direction.value), AddX(),
-                        position_speed_direction_residual<T>);
+                        position_speed_direction_residual<T>, gate_);
         }
 
-        void update_position_direction(const Measurement<2, T>& position, const Measurement<1, T>& direction) override
+        bool update_position_direction(const Measurement<2, T>& position, const Measurement<1, T>& direction) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                return filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
                         Vector<3, T>(position.value[0], position.value[1], direction.value), AddX(),
-                        position_direction_residual<T>);
+                        position_direction_residual<T>, gate_);
         }
 
-        void update_speed_direction(const Measurement<1, T>& speed, const Measurement<1, T>& direction) override
+        bool update_speed_direction(const Measurement<1, T>& speed, const Measurement<1, T>& direction) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                return filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
-                        Vector<2, T>(speed.value, direction.value), AddX(), speed_direction_residual<T>);
+                        Vector<2, T>(speed.value, direction.value), AddX(), speed_direction_residual<T>, gate_);
         }
 
-        void update_direction(const Measurement<1, T>& direction) override
+        bool update_direction(const Measurement<1, T>& direction) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                return filter_->update(
                         direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
-                        direction_residual<T>);
+                        direction_residual<T>, gate_);
         }
 
-        void update_speed(const Measurement<1, T>& speed) override
+        bool update_speed(const Measurement<1, T>& speed) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
-                        speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>);
+                return filter_->update(
+                        speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>,
+                        gate_);
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -532,10 +535,14 @@ class Filter final : public MoveFilter<T>
         }
 
 public:
-        Filter(const T sigma_points_alpha, const T position_variance, const T angle_variance)
+        Filter(const T sigma_points_alpha,
+               const T position_variance,
+               const T angle_variance,
+               const std::optional<T> gate)
                 : sigma_points_alpha_(sigma_points_alpha),
                   position_variance_(position_variance),
-                  angle_variance_(angle_variance)
+                  angle_variance_(angle_variance),
+                  gate_(gate)
         {
         }
 };
@@ -545,12 +552,13 @@ template <typename T>
 std::unique_ptr<MoveFilter<T>> create_move_filter_ukf(
         const T sigma_points_alpha,
         const T position_variance,
-        const T angle_variance)
+        const T angle_variance,
+        const std::optional<T> gate)
 {
-        return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance);
+        return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance, gate);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<MoveFilter<T>> create_move_filter_ukf(T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<MoveFilter<T>> create_move_filter_ukf(T, T, T, std::optional<T>);
 
 TEMPLATE(float)
 TEMPLATE(double)

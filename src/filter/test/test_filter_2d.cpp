@@ -62,6 +62,7 @@ struct Config final
         static constexpr T MOVE_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr std::array MOVE_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T MOVE_FILTER_RESET_DT = 10;
+        static constexpr std::optional<T> MOVE_FILTER_GATE = 5;
 
         static constexpr T DATA_CONNECT_INTERVAL = 10;
 };
@@ -225,7 +226,7 @@ std::vector<Move<T>> create_moves()
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 120), Config<T>::MOVE_FILTER_RESET_DT,
-                        create_move_filter_ukf(alphas[i], move_pv, move_av));
+                        create_move_filter_ukf(alphas[i], move_pv, move_av, Config<T>::MOVE_FILTER_GATE));
         }
 
         return res;
