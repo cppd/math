@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "utility.h"
 
-#include "../consistency.h"
 #include "../ekf.h"
 
 #include <src/com/error.h>
@@ -143,10 +142,9 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 template <typename T>
 class Filter final : public PositionFilter<T>
 {
-        static constexpr std::optional<T> GATE{};
-
         const std::optional<T> theta_;
         const T process_variance_;
+        const T gate_;
         std::optional<Ekf<6, T>> filter_;
 
         void reset(const Vector<2, T>& position, const Vector<2, T>& variance) override
@@ -173,26 +171,35 @@ class Filter final : public PositionFilter<T>
                         q(dt, process_variance_));
         }
 
-        PositionFilterUpdate<T> update(const Vector<2, T>& position, const Vector<2, T>& variance) override
+        [[nodiscard]] std::optional<PositionFilterUpdate<T>> update(
+                const Vector<2, T>& position,
+                const Vector<2, T>& variance,
+                const bool use_gate) override
         {
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
                 ASSERT(is_finite(variance));
                 ASSERT(variance[0] >= 0 && variance[1] >= 0);
 
+                const Matrix<2, 2, T> r = position_r(variance);
+                const std::optional<T> gate = use_gate ? gate_ : std::optional<T>();
+
                 Vector<2, T> residual;
 
-                const Matrix<2, 2, T> r = position_r(variance);
-                filter_->update(
-                        position_h<T>, position_hj<T>, r, position, add_x<T>,
-                        [&](const Vector<2, T>& a, const Vector<2, T>& b)
-                        {
-                                residual = position_residual<T>(a, b);
-                                return residual;
-                        },
-                        GATE, theta_);
+                const auto f_residual = [&](const Vector<2, T>& a, const Vector<2, T>& b)
+                {
+                        residual = position_residual<T>(a, b);
+                        return residual;
+                };
 
-                return {.r = r, .residual = residual};
+                if (filter_->update(position_h<T>, position_hj<T>, r, position, add_x<T>, f_residual, gate, theta_))
+                {
+                        return {
+                                {.r = r, .residual = residual}
+                        };
+                }
+                ASSERT(use_gate);
+                return {};
         }
 
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override
@@ -266,9 +273,10 @@ class Filter final : public PositionFilter<T>
         }
 
 public:
-        Filter(const T theta, const T process_variance)
+        Filter(const T theta, const T process_variance, const T gate)
                 : theta_(theta),
-                  process_variance_(process_variance)
+                  process_variance_(process_variance),
+                  gate_(gate)
         {
                 ASSERT(theta_ >= 0);
                 ASSERT(process_variance_ >= 0);
@@ -277,12 +285,12 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const T theta, const T process_variance)
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const T theta, const T process_variance, const T gate)
 {
-        return std::make_unique<Filter<T>>(theta, process_variance);
+        return std::make_unique<Filter<T>>(theta, process_variance, gate);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T, T);
+#define TEMPLATE(T) template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

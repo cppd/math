@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <optional>
 #include <string>
 
 namespace ns::filter::test
@@ -41,9 +42,10 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        [[nodiscard]] virtual PositionFilterUpdate<T> update(
+        [[nodiscard]] virtual std::optional<PositionFilterUpdate<T>> update(
                 const Vector<2, T>& position,
-                const Vector<2, T>& variance) = 0;
+                const Vector<2, T>& variance,
+                bool use_gate) = 0;
 
         [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;

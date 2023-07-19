@@ -106,11 +106,23 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         }
 
         filter_->predict(m.time - *last_filter_time_);
-        const PositionFilterUpdate update = filter_->update(m.position->value, measurement_variance);
+
+        const auto update =
+                filter_->update(m.position->value, measurement_variance, last_measurement_variance_.has_value());
+
+        if (!update)
+        {
+                ASSERT(last_measurement_variance_);
+                last_filter_time_ = m.time;
+                save_results(m.time);
+                add_checks(m.true_data);
+                return;
+        }
+
         last_filter_time_ = m.time;
         last_position_time_ = m.time;
 
-        measurement_variance_.push(update.residual);
+        measurement_variance_.push(update->residual);
 
         if (measurement_variance_.variance().has_variance())
         {
@@ -131,7 +143,7 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         if (last_measurement_variance_)
         {
                 add_checks(m.true_data);
-                add_checks(update);
+                add_checks(*update);
         }
 }
 
