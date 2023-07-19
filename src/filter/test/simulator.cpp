@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
 #include <random>
@@ -58,6 +59,9 @@ struct Config final
         T measurement_variance_direction = square(degrees_to_radians(2.0));
         T measurement_variance_position = square(20.0);
         T measurement_variance_speed = square(0.2);
+
+        T bad_measurement_position = 1000;
+        T bad_measurement_position_probability = T{0} / 20;
 };
 
 template <std::size_t N, typename T>
@@ -156,6 +160,9 @@ class Simulator final
         const T angle_drift_;
         const T angle_r_;
 
+        const T bad_measurement_position_;
+        const T bad_measurement_position_probability_;
+
         PCG engine_;
 
         std::normal_distribution<T> speed_nd_;
@@ -204,6 +211,8 @@ public:
                   velocity_angle_period_(config.velocity_angle_period),
                   angle_drift_(config.measurement_dt * config.angle_drift_per_hour / (T{60} * T{60})),
                   angle_r_(normalize_angle(config.angle_r)),
+                  bad_measurement_position_(config.bad_measurement_position),
+                  bad_measurement_position_probability_(config.bad_measurement_position_probability),
                   speed_nd_(0, std::sqrt(config.speed_variance)),
                   measurements_direction_nd_(0, std::sqrt(config.measurement_variance_direction)),
                   measurements_acceleration_nd_(0, std::sqrt(config.measurement_variance_acceleration)),
@@ -261,7 +270,12 @@ public:
 
         [[nodiscard]] Vector<N, T> measurement_position()
         {
-                return position_ + vector(measurements_position_nd_);
+                const Vector<N, T> m = position_ + vector(measurements_position_nd_);
+                if (time_ > 100 && std::bernoulli_distribution(bad_measurement_position_probability_)(engine_))
+                {
+                        return m + bad_measurement_position_ * sampling::uniform_on_sphere<N, T>(engine_);
+                }
+                return m;
         }
 
         [[nodiscard]] T measurement_speed()
