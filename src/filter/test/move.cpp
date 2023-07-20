@@ -66,6 +66,12 @@ void Move<T>::check_time(const T time) const
                 error("Measurement time does not increase; from " + to_string(*last_filter_time_) + " to "
                       + to_string(time));
         }
+
+        if (last_position_time_ && !(*last_position_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
+                      + to_string(time));
+        }
 }
 
 template <typename T>
@@ -73,7 +79,8 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 {
         check_time(m.time);
 
-        if (!last_filter_time_ || !(m.time - *last_filter_time_ < reset_dt_))
+        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_filter_time_ < reset_dt_)
+            || !(m.time - *last_position_time_ < reset_dt_))
         {
                 if (position_estimation.has_estimates())
                 {
@@ -85,6 +92,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                                 position_estimation.angle());
 
                         last_filter_time_ = m.time;
+                        last_position_time_ = m.time;
                 }
                 return;
         }
@@ -96,6 +104,8 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
         if (m.position)
         {
+                last_position_time_ = m.time;
+
                 if (m.speed)
                 {
                         if (m.direction)

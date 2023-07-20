@@ -144,7 +144,7 @@ class Filter final : public PositionFilter<T>
 {
         const std::optional<T> theta_;
         const T process_variance_;
-        const T gate_;
+        const std::optional<T> gate_;
         std::optional<Ekf<6, T>> filter_;
 
         void reset(const Vector<2, T>& position, const Vector<2, T>& variance) override
@@ -273,24 +273,28 @@ class Filter final : public PositionFilter<T>
         }
 
 public:
-        Filter(const T theta, const T process_variance, const T gate)
+        Filter(const T theta, const T process_variance, const std::optional<T> gate)
                 : theta_(theta),
                   process_variance_(process_variance),
                   gate_(gate)
         {
                 ASSERT(theta_ >= 0);
                 ASSERT(process_variance_ >= 0);
+                ASSERT(!gate_ || *gate_ > 0);
         }
 };
 }
 
 template <typename T>
-std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(const T theta, const T process_variance, const T gate)
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(
+        const T theta,
+        const T process_variance,
+        const std::optional<T> gate)
 {
         return std::make_unique<Filter<T>>(theta, process_variance, gate);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T, T, std::optional<T>);
 
 TEMPLATE(float)
 TEMPLATE(double)

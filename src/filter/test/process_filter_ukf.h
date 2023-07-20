@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "process_filter.h"
 
 #include <memory>
+#include <optional>
 
 namespace ns::filter::test
 {
@@ -28,5 +29,6 @@ std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
         T sigma_points_alpha,
         T position_variance,
         T angle_variance,
-        T angle_r_variance);
+        T angle_r_variance,
+        std::optional<T> gate);
 }

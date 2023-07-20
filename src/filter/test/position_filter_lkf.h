@@ -20,9 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position_filter.h"
 
 #include <memory>
+#include <optional>
 
 namespace ns::filter::test
 {
 template <typename T>
-std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T theta, T process_variance, T gate);
+std::unique_ptr<PositionFilter<T>> create_position_filter_lkf(T theta, T process_variance, std::optional<T> gate);
 }

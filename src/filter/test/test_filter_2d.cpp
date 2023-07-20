@@ -50,19 +50,20 @@ struct Config final
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE = 1;
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
         static constexpr T POSITION_FILTER_RESET_DT = 10;
-        static constexpr T POSITION_FILTER_GATE = 5;
+        static constexpr std::optional<T> POSITION_FILTER_GATE{};
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(1.0);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr std::array PROCESS_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
         static constexpr T PROCESS_FILTER_RESET_DT = 10;
+        static constexpr std::optional<T> PROCESS_FILTER_GATE{};
 
         static constexpr T MOVE_FILTER_POSITION_VARIANCE = square(1.0);
         static constexpr T MOVE_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
         static constexpr std::array MOVE_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T MOVE_FILTER_RESET_DT = 10;
-        static constexpr std::optional<T> MOVE_FILTER_GATE = 5;
+        static constexpr std::optional<T> MOVE_FILTER_GATE{};
 
         static constexpr T DATA_CONNECT_INTERVAL = 10;
 };
@@ -174,7 +175,7 @@ std::vector<Process<T>> create_processes()
 
         res.emplace_back(
                 "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                create_process_filter_ekf<T>(process_pv, process_av, process_arv));
+                create_process_filter_ekf<T>(process_pv, process_av, process_arv, Config<T>::PROCESS_FILTER_GATE));
 
         const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
@@ -194,7 +195,8 @@ std::vector<Process<T>> create_processes()
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                        create_process_filter_ukf(alphas[i], process_pv, process_av, process_arv));
+                        create_process_filter_ukf(
+                                alphas[i], process_pv, process_av, process_arv, Config<T>::PROCESS_FILTER_GATE));
         }
 
         return res;
