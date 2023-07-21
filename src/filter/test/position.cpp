@@ -107,8 +107,8 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 
         filter_->predict(m.time - *last_filter_time_);
 
-        const auto update =
-                filter_->update(m.position->value, measurement_variance, last_measurement_variance_.has_value());
+        const auto update = filter_->update(
+                m.position->value, measurement_variance, /*use_gate=*/last_measurement_variance_.has_value());
 
         if (!update)
         {
@@ -139,9 +139,9 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         }
         last_measurement_variance_ = new_variance;
 
-        save_results(m.time);
         if (last_measurement_variance_)
         {
+                save_results(m.time);
                 add_checks(m.true_data);
                 add_checks(*update);
         }
@@ -194,9 +194,9 @@ color::RGB8 Position<T>::color() const
 }
 
 template <typename T>
-bool Position<T>::has_variance() const
+const std::optional<Vector<2, T>>& Position<T>::last_measurement_variance() const
 {
-        return last_measurement_variance_.has_value();
+        return last_measurement_variance_;
 }
 
 template <typename T>

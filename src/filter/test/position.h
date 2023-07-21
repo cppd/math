@@ -74,7 +74,7 @@ public:
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] bool has_variance() const;
+        [[nodiscard]] const std::optional<Vector<2, T>>& last_measurement_variance() const;
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;

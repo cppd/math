@@ -36,6 +36,7 @@ class PositionEstimation final
         std::optional<T> last_direction_time_;
         const Position<T>* position_ = nullptr;
         bool direction_ = false;
+        std::optional<Vector<2, T>> variance_;
 
 public:
         PositionEstimation(T angle_estimation_time_difference, T angle_estimation_variance);
@@ -45,6 +46,7 @@ public:
         [[nodiscard]] bool has_estimates() const;
         [[nodiscard]] T angle() const;
         [[nodiscard]] const PositionFilter<T>* filter() const;
+        [[nodiscard]] const std::optional<Vector<2, T>>& variance() const;
 
         [[nodiscard]] std::string description() const;
 };

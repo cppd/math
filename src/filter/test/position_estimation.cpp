@@ -23,6 +23,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
+namespace
+{
+template <typename T>
+std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& positions)
+{
+        std::optional<Vector<2, T>> sum;
+        std::size_t count = 0;
+        for (const Position<T>& position : positions)
+        {
+                const auto& variance = position.last_measurement_variance();
+                if (!variance)
+                {
+                        continue;
+                }
+                ++count;
+                if (sum)
+                {
+                        (*sum)[0] += std::sqrt((*variance)[0]);
+                        (*sum)[1] += std::sqrt((*variance)[1]);
+                }
+                else
+                {
+                        (*sum)[0] = std::sqrt((*variance)[0]);
+                        (*sum)[1] = std::sqrt((*variance)[1]);
+                }
+        }
+        if (sum)
+        {
+                *sum /= static_cast<T>(count);
+                (*sum)[0] = square((*sum)[0]);
+                (*sum)[1] = square((*sum)[1]);
+                return *sum;
+        }
+        return {};
+}
+}
+
 template <typename T>
 PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_difference, const T angle_estimation_variance)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
@@ -33,6 +70,11 @@ PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_differen
 template <typename T>
 void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vector<Position<T>>* const positions)
 {
+        if (const auto& v = compute_variance(*positions))
+        {
+                variance_ = *v;
+        }
+
         if (m.direction)
         {
                 last_direction_ = m.direction->value;
@@ -58,7 +100,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
         {
                 const Position<T>& position = (*positions)[i];
 
-                if (!position.has_variance())
+                if (!position.last_measurement_variance())
                 {
                         continue;
                 }
@@ -101,6 +143,12 @@ const PositionFilter<T>* PositionEstimation<T>::filter() const
                 error("Estimation doesn't have filter");
         }
         return position_->filter();
+}
+
+template <typename T>
+const std::optional<Vector<2, T>>& PositionEstimation<T>::variance() const
+{
+        return variance_;
 }
 
 template <typename T>
