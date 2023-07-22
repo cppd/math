@@ -79,9 +79,8 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                         LOG(name_ + "; " + position_estimation.description());
 
                         filter_->reset(
-                                position_estimation.filter()->position_velocity_acceleration(),
-                                position_estimation.filter()->position_velocity_acceleration_p(),
-                                position_estimation.angle());
+                                position_estimation.position_velocity_acceleration(),
+                                position_estimation.position_velocity_acceleration_p(), position_estimation.angle());
 
                         last_time_ = m.time;
                 }

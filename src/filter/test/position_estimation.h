@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
 #include "position.h"
-#include "simulator.h"
 
 #include <src/numerical/vector.h>
 
@@ -44,8 +44,9 @@ public:
         void update(const Measurements<2, T>& m, const std::vector<Position<T>>* positions);
 
         [[nodiscard]] bool has_estimates() const;
+        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
+        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
         [[nodiscard]] T angle() const;
-        [[nodiscard]] const PositionFilter<T>* filter() const;
         [[nodiscard]] const std::optional<Vector<2, T>>& variance() const;
 
         [[nodiscard]] std::string description() const;

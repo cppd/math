@@ -126,6 +126,26 @@ bool PositionEstimation<T>::has_estimates() const
 }
 
 template <typename T>
+Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
+{
+        if (!has_estimates())
+        {
+                error("Estimation doesn't have angle");
+        }
+        return position_->filter()->position_velocity_acceleration();
+}
+
+template <typename T>
+Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
+{
+        if (!has_estimates())
+        {
+                error("Estimation doesn't have angle");
+        }
+        return position_->filter()->position_velocity_acceleration_p();
+}
+
+template <typename T>
 T PositionEstimation<T>::angle() const
 {
         if (!has_estimates())
@@ -133,16 +153,6 @@ T PositionEstimation<T>::angle() const
                 error("Estimation doesn't have angle");
         }
         return normalize_angle(*last_direction_ - position_->filter()->angle());
-}
-
-template <typename T>
-const PositionFilter<T>* PositionEstimation<T>::filter() const
-{
-        if (!has_estimates())
-        {
-                error("Estimation doesn't have filter");
-        }
-        return position_->filter();
 }
 
 template <typename T>
