@@ -82,13 +82,14 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_filter_time_ < reset_dt_)
             || !(m.time - *last_position_time_ < reset_dt_))
         {
-                if (position_estimation.has_estimates())
+                if (position_estimation.has_angle_difference())
                 {
                         LOG(name_ + "; " + position_estimation.description());
 
                         filter_->reset(
                                 position_estimation.position_velocity_acceleration(),
-                                position_estimation.position_velocity_acceleration_p(), position_estimation.angle());
+                                position_estimation.position_velocity_acceleration_p(),
+                                position_estimation.angle_difference());
 
                         last_filter_time_ = m.time;
                         last_position_time_ = m.time;

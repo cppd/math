@@ -28,6 +28,11 @@ namespace
 template <typename T>
 std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& positions)
 {
+        if (positions.size() == 1)
+        {
+                return positions.front().last_measurement_variance();
+        }
+
         std::optional<Vector<2, T>> sum;
         std::size_t count = 0;
         for (const Position<T>& position : positions)
@@ -45,8 +50,7 @@ std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& pos
                 }
                 else
                 {
-                        (*sum)[0] = std::sqrt((*variance)[0]);
-                        (*sum)[1] = std::sqrt((*variance)[1]);
+                        sum = Vector<2, T>(std::sqrt((*variance)[0]), std::sqrt((*variance)[1]));
                 }
         }
         if (sum)
@@ -72,7 +76,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
 {
         if (const auto& v = compute_variance(*positions))
         {
-                variance_ = *v;
+                position_variance_ = *v;
         }
 
         if (m.direction)
@@ -81,16 +85,10 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                 last_direction_time_ = m.time;
         }
 
-        position_ = nullptr;
+        angle_position_ = nullptr;
 
-        if (!m.position)
-        {
-                return;
-        }
-
-        direction_ = last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_);
-
-        if (!direction_)
+        if (!(m.position && last_direction_time_
+              && (m.time - *last_direction_time_ <= angle_estimation_time_difference_)))
         {
                 return;
         }
@@ -111,70 +109,70 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                 const T position_angle_p = position.filter()->angle_p();
                 if (position_angle_p < angle_p)
                 {
-                        position_ = &position;
+                        angle_position_ = &position;
                         angle_p = position_angle_p;
                 }
         }
 }
 
 template <typename T>
-bool PositionEstimation<T>::has_estimates() const
+bool PositionEstimation<T>::has_angle_difference() const
 {
-        ASSERT(!direction_ || last_direction_);
-
-        return last_direction_ && direction_ && position_;
+        return angle_position_ != nullptr;
 }
 
 template <typename T>
 Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
 {
-        if (!has_estimates())
+        if (!has_angle_difference())
         {
-                error("Estimation doesn't have angle");
+                error("Estimation doesn't have angle difference");
         }
-        return position_->filter()->position_velocity_acceleration();
+        return angle_position_->filter()->position_velocity_acceleration();
 }
 
 template <typename T>
 Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
 {
-        if (!has_estimates())
+        if (!has_angle_difference())
         {
-                error("Estimation doesn't have angle");
+                error("Estimation doesn't have angle difference");
         }
-        return position_->filter()->position_velocity_acceleration_p();
+        return angle_position_->filter()->position_velocity_acceleration_p();
 }
 
 template <typename T>
-T PositionEstimation<T>::angle() const
+T PositionEstimation<T>::angle_difference() const
 {
-        if (!has_estimates())
+        if (!has_angle_difference())
         {
-                error("Estimation doesn't have angle");
+                error("Estimation doesn't have angle difference");
         }
-        return normalize_angle(*last_direction_ - position_->filter()->angle());
+        return normalize_angle(*last_direction_ - angle_position_->filter()->angle());
 }
 
 template <typename T>
-const std::optional<Vector<2, T>>& PositionEstimation<T>::variance() const
+const std::optional<Vector<2, T>>& PositionEstimation<T>::position_variance() const
 {
-        return variance_;
+        return position_variance_;
 }
 
 template <typename T>
 std::string PositionEstimation<T>::description() const
 {
-        if (!has_estimates())
+        if (!has_angle_difference())
         {
                 error("Estimation doesn't have description");
         }
 
-        const T filter_angle = position_->filter()->angle();
+        ASSERT(last_direction_);
+
+        const T filter_angle = angle_position_->filter()->angle();
 
         std::string res;
-        res += "filter = " + position_->name();
+        res += "filter = " + angle_position_->name();
         res += "; angle = " + to_string(radians_to_degrees(filter_angle));
-        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(position_->filter()->angle_p())));
+        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_position_->filter()->angle_p())));
         res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));
         res += "; angle difference = "
                + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));
