@@ -124,10 +124,13 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 
         measurement_variance_.push(update->residual);
 
-        if (measurement_variance_.variance().has_variance())
+        if (const auto& standard_deviation = measurement_variance_.standard_deviation())
         {
-                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation "
-                    + to_string(measurement_variance_.variance().standard_deviation()));
+                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation " + to_string(*standard_deviation));
+        }
+        else
+        {
+                LOG(to_string(m.time) + "; " + name_ + "; Residual " + to_string(update->residual));
         }
 
         const auto new_variance = measurement_variance_.compute();
@@ -227,15 +230,23 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; NIS Position; " + nis_.check_string();
         }
-        if (measurement_variance_.variance().has_variance())
+        if (const auto& mean = measurement_variance_.mean())
         {
                 if (!s.empty())
                 {
                         s += '\n';
                 }
                 s += name;
-                s += "; Mean " + to_string(measurement_variance_.variance().mean());
-                s += "; Standard Deviation " + to_string(measurement_variance_.variance().standard_deviation());
+                s += "; Mean " + to_string(*mean);
+        }
+        if (const auto& standard_deviation = measurement_variance_.standard_deviation())
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+                s += "; Standard Deviation " + to_string(*standard_deviation);
         }
         return s;
 }

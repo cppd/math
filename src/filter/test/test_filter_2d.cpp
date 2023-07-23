@@ -50,7 +50,7 @@ struct Config final
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE = 1;
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
         static constexpr T POSITION_FILTER_RESET_DT = 10;
-        static constexpr std::optional<T> POSITION_FILTER_GATE{};
+        static constexpr std::optional<T> POSITION_FILTER_GATE{5};
 
         static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(1.0);
         static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
