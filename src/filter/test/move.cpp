@@ -104,6 +104,14 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
         if (m.position)
         {
+                const auto position_variance = position_estimation.position_variance();
+                if (!position_variance)
+                {
+                        return;
+                }
+
+                const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
+
                 last_position_time_ = m.time;
 
                 if (m.speed)
@@ -111,12 +119,12 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                         if (m.direction)
                         {
                                 predict();
-                                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
+                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction);
                         }
                         else
                         {
                                 predict();
-                                filter_->update_position_speed(*m.position, *m.speed);
+                                filter_->update_position_speed(mp, *m.speed);
                         }
                 }
                 else
@@ -124,12 +132,12 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                         if (m.direction)
                         {
                                 predict();
-                                filter_->update_position_direction(*m.position, *m.direction);
+                                filter_->update_position_direction(mp, *m.direction);
                         }
                         else
                         {
                                 predict();
-                                filter_->update_position(*m.position);
+                                filter_->update_position(mp);
                         }
                 }
         }

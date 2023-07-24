@@ -95,28 +95,36 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
 
         if (m.position)
         {
+                const auto position_variance = position_estimation.position_variance();
+                if (!position_variance)
+                {
+                        return;
+                }
+
+                const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
+
                 if (m.speed)
                 {
                         if (m.direction && m.acceleration)
                         {
                                 predict();
                                 filter_->update_position_speed_direction_acceleration(
-                                        *m.position, *m.speed, *m.direction, *m.acceleration);
+                                        mp, *m.speed, *m.direction, *m.acceleration);
                         }
                         else if (m.direction)
                         {
                                 predict();
-                                filter_->update_position_speed_direction(*m.position, *m.speed, *m.direction);
+                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction);
                         }
                         else if (m.acceleration)
                         {
                                 predict();
-                                filter_->update_position_speed_acceleration(*m.position, *m.speed, *m.acceleration);
+                                filter_->update_position_speed_acceleration(mp, *m.speed, *m.acceleration);
                         }
                         else
                         {
                                 predict();
-                                filter_->update_position_speed(*m.position, *m.speed);
+                                filter_->update_position_speed(mp, *m.speed);
                         }
                 }
                 else
@@ -124,23 +132,22 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                         if (m.direction && m.acceleration)
                         {
                                 predict();
-                                filter_->update_position_direction_acceleration(
-                                        *m.position, *m.direction, *m.acceleration);
+                                filter_->update_position_direction_acceleration(mp, *m.direction, *m.acceleration);
                         }
                         else if (m.direction)
                         {
                                 predict();
-                                filter_->update_position_direction(*m.position, *m.direction);
+                                filter_->update_position_direction(mp, *m.direction);
                         }
                         else if (m.acceleration)
                         {
                                 predict();
-                                filter_->update_position_acceleration(*m.position, *m.acceleration);
+                                filter_->update_position_acceleration(mp, *m.acceleration);
                         }
                         else
                         {
                                 predict();
-                                filter_->update_position(*m.position);
+                                filter_->update_position(mp);
                         }
                 }
         }
