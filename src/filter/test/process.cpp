@@ -64,13 +64,18 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
+void Process<T>::check_time(const T time) const
+{
+        if (last_time_ && !(*last_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_time_) + " to " + to_string(time));
+        }
+}
+
+template <typename T>
 void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
 {
-        if (last_time_ && !(*last_time_ < m.time))
-        {
-                error("Measurement time does not increase; from " + to_string(*last_time_) + " to "
-                      + to_string(m.time));
-        }
+        check_time(m.time);
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {

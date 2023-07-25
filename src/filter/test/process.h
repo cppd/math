@@ -61,6 +61,8 @@ class Process final
 
         void save(T time, const TrueData<2, T>& true_data);
 
+        void check_time(T time) const;
+
 public:
         Process(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<ProcessFilter<T>>&& filter);
 
