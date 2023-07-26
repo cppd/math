@@ -94,12 +94,12 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
-        const Vector<2, T> measurement_variance =
-                last_measurement_variance_ ? *last_measurement_variance_ : measurement_variance_.default_variance();
+        const Vector<2, T> position_variance =
+                last_position_variance_ ? *last_position_variance_ : position_variance_.default_variance();
 
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->reset(m.position->value, measurement_variance);
+                filter_->reset(m.position->value, position_variance);
                 last_filter_time_ = m.time;
                 last_position_time_ = m.time;
                 return;
@@ -107,12 +107,12 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 
         filter_->predict(m.time - *last_filter_time_);
 
-        const auto update = filter_->update(
-                m.position->value, measurement_variance, /*use_gate=*/last_measurement_variance_.has_value());
+        const auto update =
+                filter_->update(m.position->value, position_variance, /*use_gate=*/last_position_variance_.has_value());
 
         if (!update)
         {
-                ASSERT(last_measurement_variance_);
+                ASSERT(last_position_variance_);
                 last_filter_time_ = m.time;
                 save_results(m.time);
                 add_checks(m.true_data);
@@ -122,9 +122,9 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         last_filter_time_ = m.time;
         last_position_time_ = m.time;
 
-        measurement_variance_.push(update->residual);
+        position_variance_.push(update->residual);
 
-        if (const auto& standard_deviation = measurement_variance_.standard_deviation())
+        if (const auto& standard_deviation = position_variance_.standard_deviation())
         {
                 LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation " + to_string(*standard_deviation));
         }
@@ -133,16 +133,16 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 LOG(to_string(m.time) + "; " + name_ + "; Residual " + to_string(update->residual));
         }
 
-        const auto new_variance = measurement_variance_.compute();
-        if (new_variance && !last_measurement_variance_)
+        const auto new_variance = position_variance_.compute();
+        if (new_variance && !last_position_variance_)
         {
                 filter_->reset(m.position->value, *new_variance);
-                last_measurement_variance_ = new_variance;
+                last_position_variance_ = new_variance;
                 return;
         }
-        last_measurement_variance_ = new_variance;
+        last_position_variance_ = new_variance;
 
-        if (last_measurement_variance_)
+        if (last_position_variance_)
         {
                 save_results(m.time);
                 add_checks(m.true_data);
@@ -153,7 +153,7 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 template <typename T>
 void Position<T>::predict_update(const Measurements<2, T>& m)
 {
-        if (!last_measurement_variance_)
+        if (!last_position_variance_)
         {
                 error("Prediction without variance");
         }
@@ -197,9 +197,9 @@ color::RGB8 Position<T>::color() const
 }
 
 template <typename T>
-const std::optional<Vector<2, T>>& Position<T>::last_measurement_variance() const
+const std::optional<Vector<2, T>>& Position<T>::last_position_variance() const
 {
-        return last_measurement_variance_;
+        return last_position_variance_;
 }
 
 template <typename T>
@@ -230,7 +230,7 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; NIS Position; " + nis_.check_string();
         }
-        if (const auto& mean = measurement_variance_.mean())
+        if (const auto& mean = position_variance_.mean())
         {
                 if (!s.empty())
                 {
@@ -239,7 +239,7 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; Mean " + to_string(*mean);
         }
-        if (const auto& standard_deviation = measurement_variance_.standard_deviation())
+        if (const auto& standard_deviation = position_variance_.standard_deviation())
         {
                 if (!s.empty())
                 {

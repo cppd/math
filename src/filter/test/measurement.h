@@ -33,6 +33,13 @@ struct TrueData final
 };
 
 template <std::size_t N, typename T>
+struct PositionMeasurement final
+{
+        Vector<N, T> value;
+        std::optional<Vector<N, T>> variance;
+};
+
+template <std::size_t N, typename T>
 struct Measurement final
 {
         Vector<N, T> value;
@@ -51,9 +58,9 @@ struct Measurements final
 {
         TrueData<N, T> true_data;
         T time;
+        std::optional<PositionMeasurement<N, T>> position;
         std::optional<Measurement<N, T>> acceleration;
         std::optional<Measurement<1, T>> direction;
-        std::optional<Measurement<N, T>> position;
         std::optional<Measurement<1, T>> speed;
 };
 }

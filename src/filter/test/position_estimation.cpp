@@ -30,14 +30,14 @@ std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& pos
 {
         if (positions.size() == 1)
         {
-                return positions.front().last_measurement_variance();
+                return positions.front().last_position_variance();
         }
 
         std::optional<Vector<2, T>> sum;
         std::size_t count = 0;
         for (const Position<T>& position : positions)
         {
-                const auto& variance = position.last_measurement_variance();
+                const auto& variance = position.last_position_variance();
                 if (!variance)
                 {
                         continue;
@@ -98,7 +98,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
         {
                 const Position<T>& position = (*positions)[i];
 
-                if (!position.last_measurement_variance())
+                if (!position.last_position_variance())
                 {
                         continue;
                 }
@@ -148,6 +148,7 @@ T PositionEstimation<T>::angle_difference() const
         {
                 error("Estimation doesn't have angle difference");
         }
+        ASSERT(last_direction_);
         return normalize_angle(*last_direction_ - angle_position_->filter()->angle());
 }
 
