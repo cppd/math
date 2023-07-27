@@ -283,17 +283,10 @@ public:
                 return velocity_.magnitude + measurements_speed_nd_(engine_);
         }
 };
-}
 
 template <std::size_t N, typename T>
-Track<N, T> track()
+std::vector<Measurements<N, T>> simulate(const Config<T>& config)
 {
-        const Config<T> config;
-
-        ASSERT(config.speed_max >= config.speed_min);
-        ASSERT(config.measurement_dt_count_acceleration > 0 && config.measurement_dt_count_direction > 0
-               && config.measurement_dt_count_position > 0 && config.measurement_dt_count_speed > 0);
-
         Simulator<N, T> simulator(config);
 
         std::vector<Measurements<N, T>> measurements;
@@ -340,6 +333,22 @@ Track<N, T> track()
                                 .value = simulator.measurement_speed(),
                                 .variance = config.measurement_variance_speed};
                 }
+        }
+
+        return measurements;
+}
+
+template <std::size_t N, typename T>
+void correct_measurements(std::vector<Measurements<N, T>>* const measurements)
+{
+        for (std::size_t i = 0; i < measurements->size(); ++i)
+        {
+                Measurements<N, T>& m = (*measurements)[i];
+
+                if (m.position)
+                {
+                        m.position->variance.reset();
+                }
 
                 const auto n = std::llround(m.time / 33);
                 if ((n > 3) && ((n % 5) == 0))
@@ -348,11 +357,26 @@ Track<N, T> track()
                         m.speed.reset();
                 }
 
-                if ((std::llround(m.time / 10) % 8) == 0)
+                if (std::llround(m.time / 10) % 8 == 0)
                 {
                         m.speed.reset();
                 }
         }
+}
+}
+
+template <std::size_t N, typename T>
+Track<N, T> track()
+{
+        const Config<T> config;
+
+        ASSERT(config.speed_max >= config.speed_min);
+        ASSERT(config.measurement_dt_count_acceleration > 0 && config.measurement_dt_count_direction > 0
+               && config.measurement_dt_count_position > 0 && config.measurement_dt_count_speed > 0);
+
+        std::vector<Measurements<N, T>> measurements = simulate<N, T>(config);
+
+        correct_measurements(&measurements);
 
         std::string annotation = make_annotation(config, measurements);
 
