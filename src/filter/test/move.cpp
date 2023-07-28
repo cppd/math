@@ -65,6 +65,12 @@ void Move<T>::check_time(const T time) const
         {
                 error("Measurement time does not increase; from " + to_string(*last_time_) + " to " + to_string(time));
         }
+
+        if (last_position_time_ && !(*last_position_time_ < time))
+        {
+                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
+                      + to_string(time));
+        }
 }
 
 template <typename T>
@@ -88,10 +94,13 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 return;
         }
 
-        const auto predict = [&]()
+        if (!m.position && last_position_time_ && !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->predict(m.time - *last_time_);
-        };
+                return;
+        }
+
+        const T dt = m.time - *last_time_;
+        const bool use_gate = true;
 
         if (m.position)
         {
@@ -101,32 +110,34 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                         return;
                 }
 
+                last_position_time_ = m.time;
+
                 const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
 
                 if (m.speed)
                 {
                         if (m.direction)
                         {
-                                predict();
-                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction);
+                                filter_->predict(dt);
+                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction, use_gate);
                         }
                         else
                         {
-                                predict();
-                                filter_->update_position_speed(mp, *m.speed);
+                                filter_->predict(dt);
+                                filter_->update_position_speed(mp, *m.speed, use_gate);
                         }
                 }
                 else
                 {
                         if (m.direction)
                         {
-                                predict();
-                                filter_->update_position_direction(mp, *m.direction);
+                                filter_->predict(dt);
+                                filter_->update_position_direction(mp, *m.direction, use_gate);
                         }
                         else
                         {
-                                predict();
-                                filter_->update_position(mp);
+                                filter_->predict(dt);
+                                filter_->update_position(mp, use_gate);
                         }
                 }
         }
@@ -136,21 +147,21 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 {
                         if (m.direction)
                         {
-                                predict();
-                                filter_->update_speed_direction(*m.speed, *m.direction);
+                                filter_->predict(dt);
+                                filter_->update_speed_direction(*m.speed, *m.direction, use_gate);
                         }
                         else
                         {
-                                predict();
-                                filter_->update_speed(*m.speed);
+                                filter_->predict(dt);
+                                filter_->update_speed(*m.speed, use_gate);
                         }
                 }
                 else
                 {
                         if (m.direction)
                         {
-                                predict();
-                                filter_->update_direction(*m.direction);
+                                filter_->predict(dt);
+                                filter_->update_direction(*m.direction, use_gate);
                         }
                         else
                         {
