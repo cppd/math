@@ -370,7 +370,7 @@ class Filter final : public MoveFilter<T>
         const std::optional<T> gate_;
         std::optional<Ukf<8, T, SigmaPoints<8, T>>> filter_;
 
-        std::optional<T> gate(const bool use_gate) const
+        [[nodiscard]] std::optional<T> gate(const bool use_gate) const
         {
                 if (use_gate)
                 {
