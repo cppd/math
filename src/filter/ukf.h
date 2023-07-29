@@ -27,6 +27,8 @@ Kalman and Bayesian Filters in Python.
 
 #pragma once
 
+#include "checks.h"
+
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
@@ -39,20 +41,6 @@ namespace ns::filter
 {
 namespace ukf_implementation
 {
-template <std::size_t N, typename T>
-[[nodiscard]] bool positive_definite(const Matrix<N, N, T>& p)
-{
-        // this is insufficient check based on diagonal only
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!(p(i, i) > 0))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
 [[nodiscard]] std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
         const std::array<Vector<N, T>, POINT_COUNT>& points,
@@ -117,15 +105,6 @@ template <std::size_t N, typename T, typename F, std::size_t COUNT>
         return res;
 }
 
-template <std::size_t N, typename T>
-void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
-{
-        if (!positive_definite(p))
-        {
-                error(std::string(name) + ", diagonal is not positive\nx\n" + to_string(x) + "\np\n" + to_string(p));
-        }
-}
-
 struct Add final
 {
         template <std::size_t N, typename T>
@@ -184,9 +163,7 @@ public:
                   x_(x),
                   p_(p)
         {
-                namespace impl = ukf_implementation;
-
-                impl::check_x_p("UKF constructor", x_, p_);
+                check_x_p("UKF constructor", x_, p_);
         }
 
         [[nodiscard]] const Vector<N, T>& x() const
@@ -214,7 +191,7 @@ public:
                 std::tie(x_, p_) = impl::unscented_transform(
                         sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), impl::Subtract());
 
-                impl::check_x_p("UKF predict", x_, p_);
+                check_x_p("UKF predict", x_, p_);
         }
 
         template <std::size_t M, typename H, typename AddX, typename ResidualZ>
@@ -242,7 +219,7 @@ public:
                 const auto [x_z, p_z] = impl::unscented_transform(
                         sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, impl::Mean(), impl::Subtract());
 
-                impl::check_x_p("UKF update measurement", x_z, p_z);
+                check_x_p("UKF update measurement", x_z, p_z);
 
                 const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
                         sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, impl::Subtract(), impl::Subtract());
@@ -264,7 +241,7 @@ public:
                 x_ = add_x(x_, k * residual);
                 p_ = p_ - p_xz * k.transposed();
 
-                impl::check_x_p("UKF update", x_, p_);
+                check_x_p("UKF update", x_, p_);
 
                 return true;
         }

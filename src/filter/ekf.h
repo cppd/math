@@ -45,6 +45,8 @@ Sequential filters
 
 #pragma once
 
+#include "checks.h"
+
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
@@ -56,20 +58,6 @@ namespace ns::filter
 {
 namespace ekf_implementation
 {
-template <std::size_t N, typename T>
-[[nodiscard]] bool positive_definite(const Matrix<N, N, T>& p)
-{
-        // this is insufficient check based on diagonal only
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!(p(i, i) > 0))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
 // Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
 // 11 The H infinity filter
 // 11.89, 11.90
@@ -92,15 +80,6 @@ template <std::size_t N, std::size_t M, typename T>
         }
         return p * (I - theta * p + ht_ri * h * p).inversed() * ht_ri;
 }
-
-template <std::size_t N, typename T>
-void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
-{
-        if (!positive_definite(p))
-        {
-                error(std::string(name) + ", P is not positive definite\nx\n" + to_string(x) + "\nP\n" + to_string(p));
-        }
-}
 }
 
 template <std::size_t N, typename T>
@@ -117,6 +96,7 @@ public:
                 : x_(x),
                   p_(p)
         {
+                check_x_p("EKF constructor", x_, p_);
         }
 
         [[nodiscard]] const Vector<N, T>& x() const
@@ -140,14 +120,12 @@ public:
                 // Process covariance
                 const Matrix<N, N, T>& q)
         {
-                namespace impl = ekf_implementation;
-
                 x_ = f(x_);
 
                 const Matrix<N, N, T> fjx = fj(x_);
                 p_ = fjx * p_ * fjx.transposed() + q;
 
-                impl::check_x_p("EKF predict", x_, p_);
+                check_x_p("EKF predict", x_, p_);
         }
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
@@ -215,7 +193,7 @@ public:
                 const Matrix<N, N, T> i_kh = IDENTITY_MATRIX<N, T> - k * hjx;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
 
-                impl::check_x_p("EKF update", x_, p_);
+                check_x_p("EKF update", x_, p_);
 
                 return true;
         }
