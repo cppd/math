@@ -94,60 +94,68 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
-        const Vector<2, T> position_variance =
-                last_position_variance_ ? *last_position_variance_ : position_variance_.default_variance();
-
         if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
         {
-                filter_->reset(m.position->value, position_variance);
+                filter_->reset(
+                        m.position->value,
+                        last_position_variance_ ? *last_position_variance_ : position_variance_.default_variance());
                 last_filter_time_ = m.time;
                 last_position_time_ = m.time;
                 return;
         }
 
+        if (!position_variance_.has_variance())
+        {
+                filter_->predict(m.time - *last_filter_time_);
+                const auto update =
+                        filter_->update(m.position->value, position_variance_.default_variance(), /*use_gate=*/false);
+                ASSERT(update);
+                last_filter_time_ = m.time;
+                last_position_time_ = m.time;
+
+                position_variance_.push(update->residual);
+                LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
+                const auto new_variance = position_variance_.compute();
+                if (!new_variance)
+                {
+                        return;
+                }
+
+                filter_->reset(m.position->value, *new_variance);
+                last_position_variance_ = *new_variance;
+                const auto standard_deviation = position_variance_.standard_deviation();
+                ASSERT(standard_deviation);
+                LOG(to_string(m.time) + "; " + name_
+                    + "; Initial Standard Deviation = " + to_string(*standard_deviation));
+        }
+
+        ASSERT(last_position_variance_);
+
         filter_->predict(m.time - *last_filter_time_);
+        last_filter_time_ = m.time;
 
-        const auto update =
-                filter_->update(m.position->value, position_variance, /*use_gate=*/last_position_variance_.has_value());
-
+        const auto update = filter_->update(m.position->value, *last_position_variance_, /*use_gate=*/true);
         if (!update)
         {
-                ASSERT(last_position_variance_);
-                last_filter_time_ = m.time;
                 save_results(m.time);
                 add_checks(m.true_data);
                 return;
         }
-
-        last_filter_time_ = m.time;
         last_position_time_ = m.time;
 
         position_variance_.push(update->residual);
 
-        if (const auto& standard_deviation = position_variance_.standard_deviation())
-        {
-                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation " + to_string(*standard_deviation));
-        }
-        else
-        {
-                LOG(to_string(m.time) + "; " + name_ + "; Residual " + to_string(update->residual));
-        }
+        const auto standard_deviation = position_variance_.standard_deviation();
+        ASSERT(standard_deviation);
+        LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
 
         const auto new_variance = position_variance_.compute();
-        if (new_variance && !last_position_variance_)
-        {
-                filter_->reset(m.position->value, *new_variance);
-                last_position_variance_ = new_variance;
-                return;
-        }
-        last_position_variance_ = new_variance;
+        ASSERT(new_variance);
+        last_position_variance_ = *new_variance;
 
-        if (last_position_variance_)
-        {
-                save_results(m.time);
-                add_checks(m.true_data);
-                add_checks(*update);
-        }
+        save_results(m.time);
+        add_checks(m.true_data);
+        add_checks(*update);
 }
 
 template <typename T>

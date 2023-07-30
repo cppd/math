@@ -93,9 +93,14 @@ public:
                 variance_.push(residual);
         }
 
+        [[nodiscard]] bool has_variance() const
+        {
+                return variance_.size() >= VARIANCE_ESTIMATION_COUNT;
+        }
+
         [[nodiscard]] std::optional<Vector<2, T>> mean() const
         {
-                if (variance_.size() < VARIANCE_ESTIMATION_COUNT)
+                if (!has_variance())
                 {
                         return {};
                 }
@@ -106,7 +111,7 @@ public:
 
         [[nodiscard]] std::optional<Vector<2, T>> standard_deviation() const
         {
-                if (variance_.size() < VARIANCE_ESTIMATION_COUNT)
+                if (!has_variance())
                 {
                         return {};
                 }
@@ -117,7 +122,7 @@ public:
 
         [[nodiscard]] std::optional<Vector<2, T>> compute() const
         {
-                if (variance_.size() < VARIANCE_ESTIMATION_COUNT)
+                if (!has_variance())
                 {
                         return {};
                 }
