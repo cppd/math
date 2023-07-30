@@ -51,11 +51,10 @@ class Position final
         NormalizedSquared<2, T> nis_;
 
         PositionVariance<T> position_variance_;
-
-        std::optional<T> last_filter_time_;
-        std::optional<T> last_position_time_;
-
         std::optional<Vector<2, T>> last_position_variance_;
+
+        std::optional<T> last_predict_time_;
+        std::optional<T> last_update_time_;
 
         void save_results(T time);
         void add_checks(const TrueData<2, T>& true_data);

@@ -71,15 +71,15 @@ void Position<T>::add_checks(const PositionFilterUpdate<T>& update_data)
 template <typename T>
 void Position<T>::check_time(const T time) const
 {
-        if (last_filter_time_ && !(*last_filter_time_ < time))
+        if (last_predict_time_ && !(*last_predict_time_ < time))
         {
-                error("Measurement time does not increase; from " + to_string(*last_filter_time_) + " to "
+                error("Measurement time does not increase; from " + to_string(*last_predict_time_) + " to "
                       + to_string(time));
         }
 
-        if (last_position_time_ && !(*last_position_time_ < time))
+        if (last_update_time_ && !(*last_update_time_ < time))
         {
-                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
+                error("Measurement time does not increase; from " + to_string(*last_update_time_) + " to "
                       + to_string(time));
         }
 }
@@ -94,24 +94,24 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
-        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
+        if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
                 filter_->reset(
                         m.position->value,
                         last_position_variance_ ? *last_position_variance_ : position_variance_.default_variance());
-                last_filter_time_ = m.time;
-                last_position_time_ = m.time;
+                last_predict_time_ = m.time;
+                last_update_time_ = m.time;
                 return;
         }
 
         if (!position_variance_.has_variance())
         {
-                filter_->predict(m.time - *last_filter_time_);
+                filter_->predict(m.time - *last_predict_time_);
                 const auto update =
                         filter_->update(m.position->value, position_variance_.default_variance(), /*use_gate=*/false);
                 ASSERT(update);
-                last_filter_time_ = m.time;
-                last_position_time_ = m.time;
+                last_predict_time_ = m.time;
+                last_update_time_ = m.time;
 
                 position_variance_.push(update->residual);
                 LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
@@ -131,8 +131,8 @@ void Position<T>::update_position(const Measurements<2, T>& m)
 
         ASSERT(last_position_variance_);
 
-        filter_->predict(m.time - *last_filter_time_);
-        last_filter_time_ = m.time;
+        filter_->predict(m.time - *last_predict_time_);
+        last_predict_time_ = m.time;
 
         const auto update = filter_->update(m.position->value, *last_position_variance_, /*use_gate=*/true);
         if (!update)
@@ -141,7 +141,7 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 add_checks(m.true_data);
                 return;
         }
-        last_position_time_ = m.time;
+        last_update_time_ = m.time;
 
         position_variance_.push(update->residual);
 
@@ -174,13 +174,13 @@ void Position<T>::predict_update(const Measurements<2, T>& m)
 
         check_time(m.time);
 
-        if (!last_filter_time_ || !last_position_time_ || !(m.time - *last_position_time_ < reset_dt_))
+        if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
                 return;
         }
 
-        filter_->predict(m.time - *last_filter_time_);
-        last_filter_time_ = m.time;
+        filter_->predict(m.time - *last_predict_time_);
+        last_predict_time_ = m.time;
 
         save_results(m.time);
         add_checks(m.true_data);
