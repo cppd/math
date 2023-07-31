@@ -94,39 +94,68 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
+        if (use_measurement_variance_)
+        {
+                if (*use_measurement_variance_ != m.position->variance.has_value())
+                {
+                        error("Different variance modes are not supported");
+                }
+        }
+        else
+        {
+                use_measurement_variance_ = m.position->variance.has_value();
+                if (!*use_measurement_variance_)
+                {
+                        position_variance_.emplace();
+                }
+        }
+
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
-                filter_->reset(
-                        m.position->value,
-                        last_position_variance_ ? *last_position_variance_ : position_variance_.default_variance());
+                ASSERT(position_variance_.has_value() != m.position->variance.has_value());
+                const auto variance =
+                        !position_variance_
+                                ? *m.position->variance
+                                : (last_position_variance_ ? *last_position_variance_
+                                                           : position_variance_->default_variance());
+                filter_->reset(m.position->value, variance);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
                 return;
         }
 
-        if (!position_variance_.has_variance())
+        if (position_variance_)
         {
-                filter_->predict(m.time - *last_predict_time_);
-                const auto update =
-                        filter_->update(m.position->value, position_variance_.default_variance(), /*use_gate=*/false);
-                ASSERT(update);
-                last_predict_time_ = m.time;
-                last_update_time_ = m.time;
-
-                position_variance_.push(update->residual);
-                LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
-                const auto new_variance = position_variance_.compute();
-                if (!new_variance)
+                ASSERT(!m.position->variance);
+                if (!position_variance_->has_variance())
                 {
-                        return;
-                }
+                        filter_->predict(m.time - *last_predict_time_);
+                        const auto update = filter_->update(
+                                m.position->value, position_variance_->default_variance(), /*use_gate=*/false);
+                        ASSERT(update);
+                        last_predict_time_ = m.time;
+                        last_update_time_ = m.time;
 
-                filter_->reset(m.position->value, *new_variance);
-                last_position_variance_ = *new_variance;
-                const auto standard_deviation = position_variance_.standard_deviation();
-                ASSERT(standard_deviation);
-                LOG(to_string(m.time) + "; " + name_
-                    + "; Initial Standard Deviation = " + to_string(*standard_deviation));
+                        position_variance_->push(update->residual);
+                        LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
+                        const auto new_variance = position_variance_->compute();
+                        if (!new_variance)
+                        {
+                                return;
+                        }
+
+                        filter_->reset(m.position->value, *new_variance);
+                        last_position_variance_ = *new_variance;
+                        const auto standard_deviation = position_variance_->standard_deviation();
+                        ASSERT(standard_deviation);
+                        LOG(to_string(m.time) + "; " + name_
+                            + "; Initial Standard Deviation = " + to_string(*standard_deviation));
+                }
+        }
+        else
+        {
+                ASSERT(m.position->variance);
+                last_position_variance_ = *m.position->variance;
         }
 
         ASSERT(last_position_variance_);
@@ -143,15 +172,18 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         }
         last_update_time_ = m.time;
 
-        position_variance_.push(update->residual);
+        if (position_variance_)
+        {
+                position_variance_->push(update->residual);
 
-        const auto standard_deviation = position_variance_.standard_deviation();
-        ASSERT(standard_deviation);
-        LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
+                const auto standard_deviation = position_variance_->standard_deviation();
+                ASSERT(standard_deviation);
+                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
 
-        const auto new_variance = position_variance_.compute();
-        ASSERT(new_variance);
-        last_position_variance_ = *new_variance;
+                const auto new_variance = position_variance_->compute();
+                ASSERT(new_variance);
+                last_position_variance_ = *new_variance;
+        }
 
         save_results(m.time);
         add_checks(m.true_data);
@@ -238,23 +270,26 @@ std::string Position<T>::consistency_string() const
                 s += name;
                 s += "; NIS Position; " + nis_.check_string();
         }
-        if (const auto& mean = position_variance_.mean())
+        if (position_variance_)
         {
-                if (!s.empty())
+                if (const auto& mean = position_variance_->mean())
                 {
-                        s += '\n';
+                        if (!s.empty())
+                        {
+                                s += '\n';
+                        }
+                        s += name;
+                        s += "; Mean " + to_string(*mean);
                 }
-                s += name;
-                s += "; Mean " + to_string(*mean);
-        }
-        if (const auto& standard_deviation = position_variance_.standard_deviation())
-        {
-                if (!s.empty())
+                if (const auto& standard_deviation = position_variance_->standard_deviation())
                 {
-                        s += '\n';
+                        if (!s.empty())
+                        {
+                                s += '\n';
+                        }
+                        s += name;
+                        s += "; Standard Deviation " + to_string(*standard_deviation);
                 }
-                s += name;
-                s += "; Standard Deviation " + to_string(*standard_deviation);
         }
         return s;
 }
