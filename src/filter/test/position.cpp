@@ -28,10 +28,12 @@ Position<T>::Position(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
+        const T linear_dt,
         std::unique_ptr<PositionFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
+          linear_dt_(linear_dt),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -53,19 +55,13 @@ void Position<T>::save_results(const T time)
 }
 
 template <typename T>
-void Position<T>::add_checks(const TrueData<2, T>& true_data)
+void Position<T>::add_nees_checks(const TrueData<2, T>& true_data)
 {
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
         if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
         {
                 nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
         }
-}
-
-template <typename T>
-void Position<T>::add_checks(const PositionFilterUpdate<T>& update_data)
-{
-        nis_.add(update_data.residual, update_data.r);
 }
 
 template <typename T>
@@ -85,6 +81,97 @@ void Position<T>::check_time(const T time) const
 }
 
 template <typename T>
+void Position<T>::check_position_variance(const PositionMeasurement<2, T>& m)
+{
+        if (use_measurement_variance_)
+        {
+                if (*use_measurement_variance_ != m.variance.has_value())
+                {
+                        error("Different variance modes are not supported");
+                }
+                return;
+        }
+
+        use_measurement_variance_ = m.variance.has_value();
+        if (!*use_measurement_variance_)
+        {
+                position_variance_.emplace();
+        }
+}
+
+template <typename T>
+bool Position<T>::prepare_position_variance(const Measurements<2, T>& m)
+{
+        ASSERT(m.position);
+        ASSERT(last_predict_time_);
+        ASSERT(last_update_time_);
+
+        if (!position_variance_)
+        {
+                ASSERT(m.position->variance);
+                last_position_variance_ = *m.position->variance;
+                return true;
+        }
+
+        const T dt = m.time - *last_update_time_;
+        if (!(dt <= linear_dt_))
+        {
+                error("Variance computations require dt " + to_string(dt) + " to be less than or equal to "
+                      + to_string(linear_dt_));
+        }
+
+        ASSERT(!m.position->variance);
+        if (last_position_variance_)
+        {
+                return true;
+        }
+
+        ASSERT(!position_variance_->has_variance());
+
+        filter_->predict(m.time - *last_predict_time_);
+        const auto update =
+                filter_->update(m.position->value, position_variance_->default_variance(), /*use_gate=*/false);
+        ASSERT(update);
+        last_predict_time_ = m.time;
+        last_update_time_ = m.time;
+
+        position_variance_->push(update->residual);
+        LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
+        const auto new_variance = position_variance_->compute();
+        if (!new_variance)
+        {
+                return false;
+        }
+
+        filter_->reset(m.position->value, *new_variance);
+        last_position_variance_ = *new_variance;
+        const auto standard_deviation = position_variance_->standard_deviation();
+        ASSERT(standard_deviation);
+        LOG(to_string(m.time) + "; " + name_ + "; Initial Standard Deviation = " + to_string(*standard_deviation));
+
+        return false;
+}
+
+template <typename T>
+void Position<T>::update_position_variance(const Measurements<2, T>& m, const PositionFilterUpdate<T>& update)
+{
+        if (!position_variance_)
+        {
+                return;
+        }
+
+        position_variance_->push(update.residual);
+
+        const auto standard_deviation = position_variance_->standard_deviation();
+        ASSERT(standard_deviation);
+        LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
+
+        const auto new_variance = position_variance_->compute();
+        ASSERT(new_variance);
+        last_position_variance_ = *new_variance;
+}
+
+template <typename T>
 void Position<T>::update_position(const Measurements<2, T>& m)
 {
         check_time(m.time);
@@ -94,21 +181,7 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 return;
         }
 
-        if (use_measurement_variance_)
-        {
-                if (*use_measurement_variance_ != m.position->variance.has_value())
-                {
-                        error("Different variance modes are not supported");
-                }
-        }
-        else
-        {
-                use_measurement_variance_ = m.position->variance.has_value();
-                if (!*use_measurement_variance_)
-                {
-                        position_variance_.emplace();
-                }
-        }
+        check_position_variance(*m.position);
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
@@ -121,41 +194,14 @@ void Position<T>::update_position(const Measurements<2, T>& m)
                 filter_->reset(m.position->value, variance);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
+                save_results(m.time);
+                add_nees_checks(m.true_data);
                 return;
         }
 
-        if (position_variance_)
+        if (!prepare_position_variance(m))
         {
-                ASSERT(!m.position->variance);
-                if (!position_variance_->has_variance())
-                {
-                        filter_->predict(m.time - *last_predict_time_);
-                        const auto update = filter_->update(
-                                m.position->value, position_variance_->default_variance(), /*use_gate=*/false);
-                        ASSERT(update);
-                        last_predict_time_ = m.time;
-                        last_update_time_ = m.time;
-
-                        position_variance_->push(update->residual);
-                        LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
-                        const auto new_variance = position_variance_->compute();
-                        if (!new_variance)
-                        {
-                                return;
-                        }
-
-                        filter_->reset(m.position->value, *new_variance);
-                        last_position_variance_ = *new_variance;
-                        const auto standard_deviation = position_variance_->standard_deviation();
-                        ASSERT(standard_deviation);
-                        LOG(to_string(m.time) + "; " + name_
-                            + "; Initial Standard Deviation = " + to_string(*standard_deviation));
-                }
-        }
-        else
-        {
-                ASSERT(m.position->variance);
-                last_position_variance_ = *m.position->variance;
+                return;
         }
 
         ASSERT(last_position_variance_);
@@ -167,27 +213,20 @@ void Position<T>::update_position(const Measurements<2, T>& m)
         if (!update)
         {
                 save_results(m.time);
-                add_checks(m.true_data);
+                add_nees_checks(m.true_data);
                 return;
         }
+        const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
 
-        if (position_variance_)
-        {
-                position_variance_->push(update->residual);
-
-                const auto standard_deviation = position_variance_->standard_deviation();
-                ASSERT(standard_deviation);
-                LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
-
-                const auto new_variance = position_variance_->compute();
-                ASSERT(new_variance);
-                last_position_variance_ = *new_variance;
-        }
+        update_position_variance(m, *update);
 
         save_results(m.time);
-        add_checks(m.true_data);
-        add_checks(*update);
+        add_nees_checks(m.true_data);
+        if (update_dt <= linear_dt_)
+        {
+                nis_.add(update->residual, update->r);
+        }
 }
 
 template <typename T>
@@ -215,7 +254,7 @@ void Position<T>::predict_update(const Measurements<2, T>& m)
         last_predict_time_ = m.time;
 
         save_results(m.time);
-        add_checks(m.true_data);
+        add_nees_checks(m.true_data);
 }
 
 template <typename T>

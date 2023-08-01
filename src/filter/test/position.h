@@ -39,6 +39,7 @@ class Position final
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
+        T linear_dt_;
         std::unique_ptr<PositionFilter<T>> filter_;
 
         std::vector<Vector<3, T>> positions_;
@@ -59,13 +60,21 @@ class Position final
         std::optional<bool> use_measurement_variance_;
 
         void save_results(T time);
-        void add_checks(const TrueData<2, T>& true_data);
-        void add_checks(const PositionFilterUpdate<T>& update_data);
+        void add_nees_checks(const TrueData<2, T>& true_data);
 
         void check_time(T time) const;
 
+        void check_position_variance(const PositionMeasurement<2, T>& m);
+        [[nodiscard]] bool prepare_position_variance(const Measurements<2, T>& m);
+        void update_position_variance(const Measurements<2, T>& m, const PositionFilterUpdate<T>& update);
+
 public:
-        Position(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<PositionFilter<T>>&& filter);
+        Position(
+                std::string name,
+                color::RGB8 color,
+                T reset_dt,
+                T linear_dt,
+                std::unique_ptr<PositionFilter<T>>&& filter);
 
         void update_position(const Measurements<2, T>& m);
         void predict_update(const Measurements<2, T>& m);
