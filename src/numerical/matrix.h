@@ -55,6 +55,8 @@ template <std::size_t R, std::size_t C, typename T, std::size_t COUNT>
 [[nodiscard]] constexpr Matrix<R * COUNT, C * COUNT, T> block_diagonal(
         const std::array<Matrix<R, C, T>, COUNT>& matrices)
 {
+        static_assert(COUNT > 0);
+
         constexpr std::size_t RESULT_R = R * COUNT;
         constexpr std::size_t RESULT_C = C * COUNT;
 
@@ -81,6 +83,74 @@ template <std::size_t R, std::size_t C, typename T, std::size_t COUNT>
                 }
         }
 
+        return res;
+}
+
+template <std::size_t COUNT, std::size_t R, std::size_t C, typename T>
+[[nodiscard]] constexpr Matrix<R * COUNT, C * COUNT, T> block_diagonal(const Matrix<R, C, T>& matrix)
+{
+        static_assert(COUNT > 0);
+
+        constexpr std::size_t RESULT_R = R * COUNT;
+        constexpr std::size_t RESULT_C = C * COUNT;
+
+        Matrix<RESULT_R, RESULT_C, T> res;
+        for (std::size_t r = 0; r < RESULT_R; ++r)
+        {
+                for (std::size_t c = 0; c < RESULT_C; ++c)
+                {
+                        res(r, c) = 0;
+                }
+        }
+
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                const std::size_t base_r = i * R;
+                const std::size_t base_c = i * C;
+                for (std::size_t r = 0; r < R; ++r)
+                {
+                        for (std::size_t c = 0; c < C; ++c)
+                        {
+                                res(base_r + r, base_c + c) = matrix(r, c);
+                        }
+                }
+        }
+
+        return res;
+}
+
+template <std::size_t START, std::size_t STEP, std::size_t N, typename T>
+[[nodiscard]] Vector<N / STEP, T> slice(const Vector<N, T>& v)
+{
+        static_assert(START < STEP);
+        static_assert(N % STEP == 0);
+
+        constexpr std::size_t R_SIZE = N / STEP;
+
+        Vector<R_SIZE, T> res;
+        for (std::size_t i = 0; i < R_SIZE; ++i)
+        {
+                res[i] = v[START + STEP * i];
+        }
+        return res;
+}
+
+template <std::size_t START, std::size_t STEP, std::size_t N, typename T>
+[[nodiscard]] Matrix<N / STEP, N / STEP, T> slice(const Matrix<N, N, T>& v)
+{
+        static_assert(START < STEP);
+        static_assert(N % STEP == 0);
+
+        constexpr std::size_t R_SIZE = N / STEP;
+
+        Matrix<R_SIZE, R_SIZE, T> res;
+        for (std::size_t r = 0; r < R_SIZE; ++r)
+        {
+                for (std::size_t c = 0; c < R_SIZE; ++c)
+                {
+                        res(r, c) = v(START + STEP * r, START + STEP * c);
+                }
+        }
         return res;
 }
 
