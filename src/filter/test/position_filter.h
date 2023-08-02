@@ -25,39 +25,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <typename T>
+template <std::size_t N, typename T>
 struct PositionFilterUpdate final
 {
-        Matrix<2, 2, T> r;
-        Vector<2, T> residual;
+        Matrix<N, N, T> r;
+        Vector<N, T> residual;
 };
 
-template <typename T>
+template <std::size_t N, typename T>
 class PositionFilter
 {
 public:
         virtual ~PositionFilter() = default;
 
-        virtual void reset(const Vector<2, T>& position, const Vector<2, T>& variance) = 0;
+        virtual void reset(const Vector<N, T>& position, const Vector<N, T>& variance) = 0;
 
         virtual void predict(T dt) = 0;
 
-        [[nodiscard]] virtual std::optional<PositionFilterUpdate<T>> update(
-                const Vector<2, T>& position,
-                const Vector<2, T>& variance,
+        [[nodiscard]] virtual std::optional<PositionFilterUpdate<N, T>> update(
+                const Vector<N, T>& position,
+                const Vector<N, T>& variance,
                 bool use_gate) = 0;
 
-        [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
-        [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
+        [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
+        [[nodiscard]] virtual Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;
 
-        [[nodiscard]] virtual Vector<2, T> position() const = 0;
-        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+        [[nodiscard]] virtual Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 
-        [[nodiscard]] virtual Vector<2, T> velocity() const = 0;
-        [[nodiscard]] virtual Matrix<2, 2, T> velocity_p() const = 0;
+        [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
+        [[nodiscard]] virtual Matrix<N, N, T> velocity_p() const = 0;
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;

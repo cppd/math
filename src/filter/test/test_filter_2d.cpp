@@ -159,7 +159,7 @@ std::vector<Position<T>> create_positions()
                 res.emplace_back(
                         name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                         Config<T>::POSITION_FILTER_LINEAR_DT,
-                        create_position_filter_lkf(
+                        create_position_filter_lkf<2, T>(
                                 thetas[i], Config<T>::POSITION_FILTER_VARIANCE, Config<T>::POSITION_FILTER_GATE));
         }
 

@@ -29,7 +29,7 @@ Position<T>::Position(
         const color::RGB8 color,
         const T reset_dt,
         const T linear_dt,
-        std::unique_ptr<PositionFilter<T>>&& filter)
+        std::unique_ptr<PositionFilter<2, T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
@@ -153,7 +153,7 @@ bool Position<T>::prepare_position_variance(const Measurements<2, T>& m)
 }
 
 template <typename T>
-void Position<T>::update_position_variance(const Measurements<2, T>& m, const PositionFilterUpdate<T>& update)
+void Position<T>::update_position_variance(const Measurements<2, T>& m, const PositionFilterUpdate<2, T>& update)
 {
         if (!position_variance_)
         {
@@ -258,7 +258,7 @@ void Position<T>::predict_update(const Measurements<2, T>& m)
 }
 
 template <typename T>
-const PositionFilter<T>* Position<T>::filter() const
+const PositionFilter<2, T>* Position<T>::filter() const
 {
         return filter_.get();
 }
