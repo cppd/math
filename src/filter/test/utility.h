@@ -62,6 +62,12 @@ template <typename T, typename Angle>
 }
 
 template <typename T>
+[[nodiscard]] T compute_angle(const Vector<2, T>& velocity)
+{
+        return std::atan2(velocity[1], velocity[0]);
+}
+
+template <typename T>
 [[nodiscard]] T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
@@ -77,18 +83,13 @@ template <typename T>
         return p(0, 0);
 }
 
-template <typename T>
-[[nodiscard]] T compute_speed_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+template <std::size_t N, typename T>
+[[nodiscard]] T compute_speed_p(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // Jacobian
         //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
-        const T x = velocity[0];
-        const T y = velocity[1];
-        const T speed = std::sqrt(x * x + y * y);
-        const Matrix<1, 2, T> error_propagation{
-                {x / speed, y / speed}
-        };
+        const Matrix<1, N, T> error_propagation(velocity.normalized());
         const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
         return p(0, 0);
 }
