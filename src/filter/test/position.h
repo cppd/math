@@ -79,12 +79,14 @@ public:
         void update_position(const Measurements<2, T>& m);
         void predict_update(const Measurements<2, T>& m);
 
-        [[nodiscard]] const PositionFilter<2, T>* filter() const;
-
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] const std::optional<Vector<2, T>>& last_position_variance() const;
+        [[nodiscard]] T angle() const;
+        [[nodiscard]] T angle_p() const;
+        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
+        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
 
         [[nodiscard]] std::string consistency_string() const;
         [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;

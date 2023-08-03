@@ -104,9 +104,9 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                 }
 
                 LOG(to_string(m.time) + "; " + position.name()
-                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.filter()->angle_p()))));
+                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.angle_p()))));
 
-                const T position_angle_p = position.filter()->angle_p();
+                const T position_angle_p = position.angle_p();
                 if (position_angle_p < angle_p)
                 {
                         angle_position_ = &position;
@@ -128,7 +128,7 @@ Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
         {
                 error("Estimation doesn't have angle difference");
         }
-        return angle_position_->filter()->position_velocity_acceleration();
+        return angle_position_->position_velocity_acceleration();
 }
 
 template <typename T>
@@ -138,7 +138,7 @@ Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
         {
                 error("Estimation doesn't have angle difference");
         }
-        return angle_position_->filter()->position_velocity_acceleration_p();
+        return angle_position_->position_velocity_acceleration_p();
 }
 
 template <typename T>
@@ -149,7 +149,7 @@ T PositionEstimation<T>::angle_difference() const
                 error("Estimation doesn't have angle difference");
         }
         ASSERT(last_direction_);
-        return normalize_angle(*last_direction_ - angle_position_->filter()->angle());
+        return normalize_angle(*last_direction_ - angle_position_->angle());
 }
 
 template <typename T>
@@ -168,12 +168,12 @@ std::string PositionEstimation<T>::description() const
 
         ASSERT(last_direction_);
 
-        const T filter_angle = angle_position_->filter()->angle();
+        const T filter_angle = angle_position_->angle();
 
         std::string res;
         res += "filter = " + angle_position_->name();
         res += "; angle = " + to_string(radians_to_degrees(filter_angle));
-        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_position_->filter()->angle_p())));
+        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_position_->angle_p())));
         res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));
         res += "; angle difference = "
                + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));

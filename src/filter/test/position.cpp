@@ -258,12 +258,6 @@ void Position<T>::predict_update(const Measurements<2, T>& m)
 }
 
 template <typename T>
-const PositionFilter<2, T>* Position<T>::filter() const
-{
-        return filter_.get();
-}
-
-template <typename T>
 const std::string& Position<T>::name() const
 {
         return name_;
@@ -279,6 +273,30 @@ template <typename T>
 const std::optional<Vector<2, T>>& Position<T>::last_position_variance() const
 {
         return last_position_variance_;
+}
+
+template <typename T>
+T Position<T>::angle() const
+{
+        return filter_->angle();
+}
+
+template <typename T>
+T Position<T>::angle_p() const
+{
+        return filter_->angle_p();
+}
+
+template <typename T>
+Vector<6, T> Position<T>::position_velocity_acceleration() const
+{
+        return filter_->position_velocity_acceleration();
+}
+
+template <typename T>
+Matrix<6, 6, T> Position<T>::position_velocity_acceleration_p() const
+{
+        return filter_->position_velocity_acceleration_p();
 }
 
 template <typename T>
