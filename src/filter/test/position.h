@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "measurement.h"
+#include "point.h"
 #include "position_filter.h"
 #include "position_variance.h"
 
@@ -42,10 +43,10 @@ class Position final
         T linear_dt_;
         std::unique_ptr<PositionFilter<2, T>> filter_;
 
-        std::vector<Vector<3, T>> positions_;
-        std::vector<Vector<3, T>> positions_p_;
-        std::vector<Vector<2, T>> speeds_;
-        std::vector<Vector<2, T>> speeds_p_;
+        std::vector<Point<2, T>> positions_;
+        std::vector<Point<2, T>> positions_p_;
+        std::vector<Point<1, T>> speeds_;
+        std::vector<Point<1, T>> speeds_p_;
 
         NormalizedSquared<2, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
@@ -89,9 +90,9 @@ public:
         [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
 
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speeds_p() const;
+        [[nodiscard]] const std::vector<Point<2, T>>& positions() const;
+        [[nodiscard]] const std::vector<Point<2, T>>& positions_p() const;
+        [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
+        [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
 };
 }

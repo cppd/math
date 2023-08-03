@@ -364,10 +364,11 @@ void write_to_file(
                         file, filter.name, filter.color, convert_speed_p(optional_value(filter.speed_p, interval)));
                 write_filter_position(
                         file, filter.name, filter.color,
-                        add_offset(optional_position(filter.position, interval), OFFSET));
+                        add_offset(convert_position(optional_value(filter.position, interval)), OFFSET));
                 write_filter_position_p(
-                        file, filter.name, filter.color, convert_position_p<1>(filter.position_p, interval),
-                        convert_position_p<2>(filter.position_p, interval));
+                        file, filter.name, filter.color,
+                        convert_position_p<0>(optional_value(filter.position_p, interval)),
+                        convert_position_p<1>(optional_value(filter.position_p, interval)));
         }
 }
 

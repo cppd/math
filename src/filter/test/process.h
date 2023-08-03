@@ -41,10 +41,10 @@ class Process final
         T reset_dt_;
         std::unique_ptr<ProcessFilter<T>> filter_;
 
-        std::vector<Vector<3, T>> positions_;
-        std::vector<Vector<3, T>> positions_p_;
-        std::vector<Vector<2, T>> speeds_;
-        std::vector<Vector<2, T>> speeds_p_;
+        std::vector<Point<2, T>> positions_;
+        std::vector<Point<2, T>> positions_p_;
+        std::vector<Point<1, T>> speeds_;
+        std::vector<Point<1, T>> speeds_p_;
 
         struct Nees final
         {
@@ -72,9 +72,9 @@ public:
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& positions() const;
-        [[nodiscard]] const std::vector<Vector<3, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speeds() const;
-        [[nodiscard]] const std::vector<Vector<2, T>>& speeds_p() const;
+        [[nodiscard]] const std::vector<Point<2, T>>& positions() const;
+        [[nodiscard]] const std::vector<Point<2, T>>& positions_p() const;
+        [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
+        [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
 };
 }

@@ -42,16 +42,10 @@ Position<T>::Position(
 template <typename T>
 void Position<T>::save_results(const T time)
 {
-        {
-                const Vector<2, T> p = filter_->position();
-                positions_.push_back({time, p[0], p[1]});
-        }
-        {
-                const Matrix<2, 2, T> p = filter_->position_p();
-                positions_p_.push_back({time, p(0, 0), p(1, 1)});
-        }
-        speeds_.push_back({time, filter_->speed()});
-        speeds_p_.push_back({time, filter_->speed_p()});
+        positions_.push_back({.time = time, .point = filter_->position()});
+        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
+        speeds_.push_back({.time = time, .point = filter_->speed()});
+        speeds_p_.push_back({.time = time, .point = filter_->speed_p()});
 }
 
 template <typename T>
@@ -352,25 +346,25 @@ std::string Position<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Position<T>::positions() const
+const std::vector<Point<2, T>>& Position<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Position<T>::positions_p() const
+const std::vector<Point<2, T>>& Position<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<Vector<2, T>>& Position<T>::speeds() const
+const std::vector<Point<1, T>>& Position<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<Vector<2, T>>& Position<T>::speeds_p() const
+const std::vector<Point<1, T>>& Position<T>::speeds_p() const
 {
         return speeds_p_;
 }

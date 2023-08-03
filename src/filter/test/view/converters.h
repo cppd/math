@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../measurement.h"
+#include "../point.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -205,56 +206,35 @@ std::vector<Vector<2, T>> acceleration_measurements(
         return res;
 }
 
-template <typename T>
-std::vector<std::optional<Vector<2, T>>> optional_position(const std::vector<Vector<3, T>>& data, const T interval)
+template <std::size_t N, typename T>
+std::vector<std::optional<Point<N, T>>> optional_value(const std::vector<Point<N, T>>& points, const T interval)
 {
-        std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(data.size());
+        std::vector<std::optional<Point<N, T>>> res;
+        res.reserve(points.size());
         std::optional<T> last_time;
-        for (const Vector<3, T>& d : data)
+        for (const Point<N, T>& p : points)
         {
-                ASSERT(!last_time || *last_time < d[0]);
-                if (last_time && d[0] > *last_time + interval)
+                ASSERT(!last_time || *last_time < p.time);
+                if (last_time && p.time > *last_time + interval)
                 {
                         res.emplace_back();
                 }
-                res.push_back(Vector<2, T>(d[1], d[2]));
-                last_time = d[0];
+                res.push_back(p);
+                last_time = p.time;
         }
         return res;
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> optional_value(const std::vector<Vector<2, T>>& data, const T interval)
+std::vector<std::optional<Vector<2, T>>> convert_position(const std::vector<std::optional<Point<2, T>>>& position)
 {
         std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(data.size());
-        std::optional<T> last_time;
-        for (const Vector<2, T>& d : data)
+        res.reserve(position.size());
+        for (const std::optional<Point<2, T>>& p : position)
         {
-                ASSERT(!last_time || *last_time < d[0]);
-                if (last_time && d[0] > *last_time + interval)
+                if (p)
                 {
-                        res.emplace_back();
-                }
-                res.push_back(d);
-                last_time = d[0];
-        }
-        return res;
-}
-
-template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<Vector<2, T>>>& speed)
-{
-        namespace impl = converters_implementation;
-
-        std::vector<std::optional<Vector<2, T>>> res;
-        res.reserve(speed.size());
-        for (const std::optional<Vector<2, T>>& s : speed)
-        {
-                if (s)
-                {
-                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), mps_to_kph((*s)[1])));
+                        res.push_back(p->point);
                 }
                 else
                 {
@@ -265,17 +245,42 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::optional<Vector<2, T>>>& speed_p)
+std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<Point<1, T>>>& speed)
+{
+        namespace impl = converters_implementation;
+
+        std::vector<std::optional<Vector<2, T>>> res;
+        res.reserve(speed.size());
+        for (const std::optional<Point<1, T>>& s : speed)
+        {
+                if (s)
+                {
+                        res.push_back({
+                                {impl::time_unit(s->time), mps_to_kph(s->point)}
+                        });
+                }
+                else
+                {
+                        res.emplace_back();
+                }
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::optional<Point<1, T>>>& speed_p)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(speed_p.size());
-        for (const std::optional<Vector<2, T>>& s : speed_p)
+        for (const std::optional<Point<1, T>>& s : speed_p)
         {
-                if (s && !std::isnan(std::sqrt((*s)[1])))
+                if (s && !std::isnan(std::sqrt(s->point)))
                 {
-                        res.push_back(Vector<2, T>(impl::time_unit((*s)[0]), mps_to_kph(std::sqrt((*s)[1]))));
+                        res.push_back({
+                                {impl::time_unit(s->time), mps_to_kph(std::sqrt(s->point))}
+                        });
                 }
                 else
                 {
@@ -286,32 +291,25 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
 }
 
 template <std::size_t INDEX, typename T>
-std::vector<std::optional<Vector<2, T>>> convert_position_p(
-        const std::vector<Vector<3, T>>& position_p,
-        const T interval)
+std::vector<std::optional<Vector<2, T>>> convert_position_p(const std::vector<std::optional<Point<2, T>>>& position_p)
 {
         namespace impl = converters_implementation;
-        static_assert(INDEX >= 1 && INDEX <= 2);
+        static_assert(INDEX < 2);
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(position_p.size());
-        std::optional<T> last_time;
-        for (const Vector<3, T>& p : position_p)
+        for (const std::optional<Point<2, T>>& p : position_p)
         {
-                ASSERT(!last_time || *last_time < p[0]);
-                if (last_time && p[0] > *last_time + interval)
+                if (p && !std::isnan(std::sqrt(p->point[INDEX])))
                 {
-                        res.emplace_back();
-                }
-                if (!std::isnan(std::sqrt(p[INDEX])))
-                {
-                        res.push_back(Vector<2, T>(impl::time_unit(p[0]), std::sqrt(p[INDEX])));
+                        res.push_back({
+                                {impl::time_unit(p->time), std::sqrt(p->point[INDEX])}
+                        });
                 }
                 else
                 {
                         res.emplace_back();
                 }
-                last_time = p[0];
         }
         return res;
 }

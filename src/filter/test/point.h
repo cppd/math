@@ -17,33 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../measurement.h"
-#include "../point.h"
-
-#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
-#include <optional>
-#include <string>
-#include <vector>
-
-namespace ns::filter::test::view
+namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct Filter final
+struct Point final
 {
-        std::string name;
-        color::RGB8 color;
-        std::vector<Point<1, T>> speed;
-        std::vector<Point<1, T>> speed_p;
-        std::vector<Point<N, T>> position;
-        std::vector<Point<N, T>> position_p;
+        T time;
+        Vector<N, T> point;
 };
 
-template <std::size_t N, typename T>
-void write_to_file(
-        std::string_view annotation,
-        const std::vector<Measurements<N, T>>& measurements,
-        T interval,
-        const std::vector<Filter<N, T>>& filters);
+template <typename T>
+struct Point<1, T> final
+{
+        T time;
+        T point;
+};
 }

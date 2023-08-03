@@ -38,16 +38,10 @@ Move<T>::Move(std::string name, const color::RGB8 color, const T reset_dt, std::
 template <typename T>
 void Move<T>::save(const T time, const TrueData<2, T>& true_data)
 {
-        {
-                const Vector<2, T> p = filter_->position();
-                positions_.push_back({time, p[0], p[1]});
-        }
-        {
-                const Matrix<2, 2, T> p = filter_->position_p();
-                positions_p_.push_back({time, p(0, 0), p(1, 1)});
-        }
-        speeds_.push_back({time, filter_->speed()});
-        speeds_p_.push_back({time, filter_->speed_p()});
+        positions_.push_back({.time = time, .point = filter_->position()});
+        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
+        speeds_.push_back({.time = time, .point = filter_->speed()});
+        speeds_p_.push_back({.time = time, .point = filter_->speed_p()});
 
         if (!nees_)
         {
@@ -223,25 +217,25 @@ std::string Move<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Move<T>::positions() const
+const std::vector<Point<2, T>>& Move<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<Vector<3, T>>& Move<T>::positions_p() const
+const std::vector<Point<2, T>>& Move<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<Vector<2, T>>& Move<T>::speeds() const
+const std::vector<Point<1, T>>& Move<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<Vector<2, T>>& Move<T>::speeds_p() const
+const std::vector<Point<1, T>>& Move<T>::speeds_p() const
 {
         return speeds_p_;
 }
