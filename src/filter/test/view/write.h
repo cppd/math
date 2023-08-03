@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../simulator.h"
+#include "../measurement.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
