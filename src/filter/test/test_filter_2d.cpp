@@ -73,7 +73,7 @@ template <typename T>
 void write_to_file(
         const std::string_view annotation,
         const std::vector<Measurements<2, T>>& measurements,
-        const std::vector<Position<T>>& positions,
+        const std::vector<Position<2, T>>& positions,
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
 {
@@ -91,7 +91,7 @@ void write_to_file(
                          .position_p = f.positions_p()});
         };
 
-        for (const Position<T>& f : positions)
+        for (const Position<2, T>& f : positions)
         {
                 push(f);
         }
@@ -135,10 +135,10 @@ int compute_precision(const std::array<T, N>& data)
         return std::abs(std::floor(std::log10(*min)));
 }
 
-template <typename T>
-std::vector<Position<T>> create_positions()
+template <std::size_t N, typename T>
+std::vector<Position<N, T>> create_positions()
 {
-        std::vector<Position<T>> res;
+        std::vector<Position<N, T>> res;
 
         const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
 
@@ -159,7 +159,7 @@ std::vector<Position<T>> create_positions()
                 res.emplace_back(
                         name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                         Config<T>::POSITION_FILTER_LINEAR_DT,
-                        create_position_filter_lkf<2, T>(
+                        create_position_filter_lkf<N, T>(
                                 thetas[i], Config<T>::POSITION_FILTER_VARIANCE, Config<T>::POSITION_FILTER_GATE));
         }
 
@@ -240,7 +240,7 @@ template <typename T>
 void write_result(
         const std::string_view annotation,
         const std::vector<Measurements<2, T>>& measurements,
-        const std::vector<Position<T>>& positions,
+        const std::vector<Position<2, T>>& positions,
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
 {
@@ -276,7 +276,7 @@ void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurements<2, T>> measurements;
 
-        std::vector<Position<T>> positions = create_positions<T>();
+        std::vector<Position<2, T>> positions = create_positions<2, T>();
         std::vector<Process<T>> processes = create_processes<T>();
         std::vector<Move<T>> moves = create_moves<T>();
 

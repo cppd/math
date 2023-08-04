@@ -27,49 +27,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <typename T>
+template <std::size_t N, typename T>
 class PositionVariance final
 {
+        static_assert(N > 0);
+
         static constexpr std::size_t VARIANCE_WINDOW_SIZE{500};
         static constexpr unsigned VARIANCE_ESTIMATION_COUNT{80};
         static constexpr unsigned VARIANCE_ESTIMATION_FILTER_COUNT{15};
-        static constexpr Vector<2, T> VARIANCE_DEFAULT{square(T{1})};
+        static constexpr Vector<N, T> VARIANCE_DEFAULT{square(T{1})};
         static constexpr T VARIANCE_MIN{square(T{0.1L})};
         static constexpr T VARIANCE_MAX{square(T{500})};
 
-        std::optional<std::array<std::vector<T>, 2>> estimation_residuals_;
-        numerical::MovingVariance<Vector<2, T>> variance_;
+        std::optional<std::array<std::vector<T>, N>> estimation_residuals_;
+        numerical::MovingVariance<Vector<N, T>> variance_;
 
-        void fill_estimation(const Vector<2, T>& residual)
+        void fill_estimation(const Vector<N, T>& residual)
         {
                 static constexpr std::size_t FILTER = VARIANCE_ESTIMATION_FILTER_COUNT;
                 static constexpr std::size_t SIZE = VARIANCE_ESTIMATION_COUNT + 2 * FILTER;
 
                 ASSERT(estimation_residuals_);
 
-                std::array<std::vector<T>, 2>& r = *estimation_residuals_;
+                std::array<std::vector<T>, N>& r = *estimation_residuals_;
 
-                ASSERT(r[0].size() == r[1].size());
-                ASSERT(r[0].size() < SIZE);
+                ASSERT(std::ranges::all_of(
+                        r,
+                        [&](const std::vector<T>& v)
+                        {
+                                return v.size() == r[0].size() && v.size() < SIZE;
+                        }));
 
-                r[0].push_back(residual[0]);
-                r[1].push_back(residual[1]);
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        r[i].push_back(residual[i]);
+                }
 
-                ASSERT(r[0].size() == r[1].size());
                 if (r[0].size() < SIZE)
                 {
                         return;
                 }
 
-                std::ranges::sort(r[0]);
-                std::ranges::sort(r[1]);
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        std::ranges::sort(r[i]);
+                }
 
-                ASSERT(r[0].size() == SIZE);
-                ASSERT(r[1].size() == SIZE);
+                ASSERT(std::ranges::all_of(
+                        r,
+                        [&](const std::vector<T>& v)
+                        {
+                                return v.size() == SIZE;
+                        }));
+
                 static_assert(SIZE > 2 * FILTER);
                 for (std::size_t i = FILTER; i < SIZE - FILTER; ++i)
                 {
-                        variance_.push({r[0][i], r[1][i]});
+                        Vector<N, T> v;
+                        for (std::size_t n = 0; n < N; ++n)
+                        {
+                                v[n] = r[n][i];
+                        }
+                        variance_.push(v);
                 }
 
                 ASSERT(variance_.size() == VARIANCE_ESTIMATION_COUNT);
@@ -83,7 +102,7 @@ public:
                 estimation_residuals_.emplace();
         }
 
-        void push(const Vector<2, T>& residual)
+        void push(const Vector<N, T>& residual)
         {
                 if (estimation_residuals_)
                 {
@@ -98,7 +117,7 @@ public:
                 return variance_.size() >= VARIANCE_ESTIMATION_COUNT;
         }
 
-        [[nodiscard]] std::optional<Vector<2, T>> mean() const
+        [[nodiscard]] std::optional<Vector<N, T>> mean() const
         {
                 if (!has_variance())
                 {
@@ -109,7 +128,7 @@ public:
                 return variance_.mean();
         }
 
-        [[nodiscard]] std::optional<Vector<2, T>> standard_deviation() const
+        [[nodiscard]] std::optional<Vector<N, T>> standard_deviation() const
         {
                 if (!has_variance())
                 {
@@ -120,7 +139,7 @@ public:
                 return variance_.standard_deviation();
         }
 
-        [[nodiscard]] std::optional<Vector<2, T>> compute() const
+        [[nodiscard]] std::optional<Vector<N, T>> compute() const
         {
                 if (!has_variance())
                 {
@@ -128,13 +147,18 @@ public:
                 }
 
                 ASSERT(variance_.has_variance());
-                const Vector<2, T> v2 = variance_.variance();
-                const T sd = (std::sqrt(v2[0]) + std::sqrt(v2[1])) / 2;
-                const T v1 = std::clamp<T>(square(sd), VARIANCE_MIN, VARIANCE_MAX);
-                return Vector<2, T>(v1);
+
+                const Vector<N, T> v = variance_.variance();
+                T sum = 0;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        sum += std::sqrt(v[i]);
+                }
+                const T sd = sum / N;
+                return Vector<N, T>(std::clamp<T>(square(sd), VARIANCE_MIN, VARIANCE_MAX));
         }
 
-        [[nodiscard]] static const Vector<2, T>& default_variance()
+        [[nodiscard]] static const Vector<N, T>& default_variance()
         {
                 return VARIANCE_DEFAULT;
         }

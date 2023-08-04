@@ -34,26 +34,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <typename T>
+template <std::size_t N, typename T>
 class Position final
 {
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
         T linear_dt_;
-        std::unique_ptr<PositionFilter<2, T>> filter_;
+        std::unique_ptr<PositionFilter<N, T>> filter_;
 
-        std::vector<Point<2, T>> positions_;
-        std::vector<Point<2, T>> positions_p_;
+        std::vector<Point<N, T>> positions_;
+        std::vector<Point<N, T>> positions_p_;
         std::vector<Point<1, T>> speeds_;
         std::vector<Point<1, T>> speeds_p_;
 
-        NormalizedSquared<2, T> nees_position_;
+        NormalizedSquared<N, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
-        NormalizedSquared<2, T> nis_;
+        NormalizedSquared<N, T> nis_;
 
-        std::optional<PositionVariance<T>> position_variance_;
-        std::optional<Vector<2, T>> last_position_variance_;
+        std::optional<PositionVariance<N, T>> position_variance_;
+        std::optional<Vector<N, T>> last_position_variance_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
@@ -61,13 +61,13 @@ class Position final
         std::optional<bool> use_measurement_variance_;
 
         void save_results(T time);
-        void add_nees_checks(const TrueData<2, T>& true_data);
+        void add_nees_checks(const TrueData<N, T>& true_data);
 
         void check_time(T time) const;
 
-        void check_position_variance(const PositionMeasurement<2, T>& m);
-        [[nodiscard]] bool prepare_position_variance(const Measurements<2, T>& m);
-        void update_position_variance(const Measurements<2, T>& m, const PositionFilterUpdate<2, T>& update);
+        void check_position_variance(const PositionMeasurement<N, T>& m);
+        [[nodiscard]] bool prepare_position_variance(const Measurements<N, T>& m);
+        void update_position_variance(const Measurements<N, T>& m, const PositionFilterUpdate<N, T>& update);
 
 public:
         Position(
@@ -75,23 +75,25 @@ public:
                 color::RGB8 color,
                 T reset_dt,
                 T linear_dt,
-                std::unique_ptr<PositionFilter<2, T>>&& filter);
+                std::unique_ptr<PositionFilter<N, T>>&& filter);
 
-        void update_position(const Measurements<2, T>& m);
-        void predict_update(const Measurements<2, T>& m);
+        void update_position(const Measurements<N, T>& m);
+        void predict_update(const Measurements<N, T>& m);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] const std::optional<Vector<2, T>>& last_position_variance() const;
-        [[nodiscard]] T angle() const;
-        [[nodiscard]] T angle_p() const;
-        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
-        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
+        [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
+        [[nodiscard]] T angle() const
+                requires (N == 2);
+        [[nodiscard]] T angle_p() const
+                requires (N == 2);
+        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const;
+        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
 
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Point<2, T>>& positions() const;
-        [[nodiscard]] const std::vector<Point<2, T>>& positions_p() const;
+        [[nodiscard]] const std::vector<Point<N, T>>& positions() const;
+        [[nodiscard]] const std::vector<Point<N, T>>& positions_p() const;
         [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
         [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
 };

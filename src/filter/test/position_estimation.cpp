@@ -26,7 +26,7 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
-std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& positions)
+std::optional<Vector<2, T>> compute_variance(const std::vector<Position<2, T>>& positions)
 {
         if (positions.size() == 1)
         {
@@ -35,7 +35,7 @@ std::optional<Vector<2, T>> compute_variance(const std::vector<Position<T>>& pos
 
         std::optional<Vector<2, T>> sum;
         std::size_t count = 0;
-        for (const Position<T>& position : positions)
+        for (const Position<2, T>& position : positions)
         {
                 const auto& variance = position.last_position_variance();
                 if (!variance)
@@ -72,7 +72,7 @@ PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_differen
 }
 
 template <typename T>
-void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vector<Position<T>>* const positions)
+void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vector<Position<2, T>>* const positions)
 {
         if (const auto& v = compute_variance(*positions))
         {
@@ -96,7 +96,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
         T angle_p = angle_estimation_variance_;
         for (std::size_t i = 0; i < positions->size(); ++i)
         {
-                const Position<T>& position = (*positions)[i];
+                const Position<2, T>& position = (*positions)[i];
 
                 if (!position.last_position_variance())
                 {
