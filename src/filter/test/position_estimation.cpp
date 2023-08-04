@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_estimation.h"
 
+#include "utility.h"
+
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/log.h>
@@ -103,10 +105,11 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                         continue;
                 }
 
-                LOG(to_string(m.time) + "; " + position.name()
-                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position.angle_p()))));
+                const T position_angle_p = compute_angle_p(position.velocity(), position.velocity_p());
 
-                const T position_angle_p = position.angle_p();
+                LOG(to_string(m.time) + "; " + position.name()
+                    + "; angle p = " + to_string(radians_to_degrees(std::sqrt(position_angle_p))));
+
                 if (position_angle_p < angle_p)
                 {
                         angle_position_ = &position;
@@ -149,7 +152,7 @@ T PositionEstimation<T>::angle_difference() const
                 error("Estimation doesn't have angle difference");
         }
         ASSERT(last_direction_);
-        return normalize_angle(*last_direction_ - angle_position_->angle());
+        return normalize_angle(*last_direction_ - compute_angle(angle_position_->velocity()));
 }
 
 template <typename T>
@@ -168,15 +171,17 @@ std::string PositionEstimation<T>::description() const
 
         ASSERT(last_direction_);
 
-        const T filter_angle = angle_position_->angle();
+        const Vector<2, T> velocity = angle_position_->velocity();
+        const Matrix<2, 2, T> velocity_p = angle_position_->velocity_p();
+        const T angle = compute_angle(velocity);
+        const T angle_p = compute_angle_p(velocity, velocity_p);
 
         std::string res;
         res += "filter = " + angle_position_->name();
-        res += "; angle = " + to_string(radians_to_degrees(filter_angle));
-        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_position_->angle_p())));
+        res += "; angle = " + to_string(radians_to_degrees(angle));
+        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
         res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));
-        res += "; angle difference = "
-               + to_string(radians_to_degrees(normalize_angle(*last_direction_ - filter_angle)));
+        res += "; angle difference = " + to_string(radians_to_degrees(normalize_angle(*last_direction_ - angle)));
         return res;
 }
 

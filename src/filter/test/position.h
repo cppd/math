@@ -84,10 +84,8 @@ public:
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
-        [[nodiscard]] T angle() const
-                requires (N == 2);
-        [[nodiscard]] T angle_p() const
-                requires (N == 2);
+        [[nodiscard]] Vector<N, T> velocity() const;
+        [[nodiscard]] Matrix<N, N, T> velocity_p() const;
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const;
         [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
 

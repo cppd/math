@@ -271,24 +271,6 @@ class Filter final : public PositionFilter<N, T>
                 return slice<1, 3>(filter_->p());
         }
 
-        [[nodiscard]] T angle() const override
-        {
-                if constexpr (N == 2)
-                {
-                        return compute_angle(velocity());
-                }
-                error("Angle requires 2 dimensions");
-        }
-
-        [[nodiscard]] T angle_p() const override
-        {
-                if constexpr (N == 2)
-                {
-                        return compute_angle_p(velocity(), velocity_p());
-                }
-                error("Angle P requires 2 dimensions");
-        }
-
 public:
         Filter(const T theta, const T process_variance, const std::optional<T> gate)
                 : theta_(theta),

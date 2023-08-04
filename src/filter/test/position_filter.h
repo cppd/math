@@ -58,8 +58,5 @@ public:
 
         [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
         [[nodiscard]] virtual Matrix<N, N, T> velocity_p() const = 0;
-
-        [[nodiscard]] virtual T angle() const = 0;
-        [[nodiscard]] virtual T angle_p() const = 0;
 };
 }

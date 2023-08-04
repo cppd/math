@@ -270,17 +270,15 @@ const std::optional<Vector<N, T>>& Position<N, T>::last_position_variance() cons
 }
 
 template <std::size_t N, typename T>
-T Position<N, T>::angle() const
-        requires (N == 2)
+[[nodiscard]] Vector<N, T> Position<N, T>::velocity() const
 {
-        return filter_->angle();
+        return filter_->velocity();
 }
 
 template <std::size_t N, typename T>
-T Position<N, T>::angle_p() const
-        requires (N == 2)
+[[nodiscard]] Matrix<N, N, T> Position<N, T>::velocity_p() const
 {
-        return filter_->angle_p();
+        return filter_->velocity_p();
 }
 
 template <std::size_t N, typename T>
