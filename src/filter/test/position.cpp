@@ -42,18 +42,10 @@ Position<N, T>::Position(
 template <std::size_t N, typename T>
 void Position<N, T>::save_results(const T time)
 {
-        if constexpr (N == 1)
-        {
-                positions_.push_back({.time = time, .point = filter_->position()[0]});
-                positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()[0]});
-        }
-        else
-        {
-                positions_.push_back({.time = time, .point = filter_->position()});
-                positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
-        }
-        speeds_.push_back({.time = time, .point = filter_->speed()});
-        speeds_p_.push_back({.time = time, .point = filter_->speed_p()});
+        positions_.push_back({.time = time, .point = filter_->position()});
+        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
+        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
+        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
 }
 
 template <std::size_t N, typename T>

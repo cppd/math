@@ -256,7 +256,7 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
                 if (s)
                 {
                         res.push_back({
-                                {impl::time_unit(s->time), mps_to_kph(s->point)}
+                                {impl::time_unit(s->time), mps_to_kph(s->point[0])}
                         });
                 }
                 else
@@ -276,16 +276,18 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
         res.reserve(speed_p.size());
         for (const std::optional<Point<1, T>>& s : speed_p)
         {
-                if (s && !std::isnan(std::sqrt(s->point)))
+                if (s)
                 {
-                        res.push_back({
-                                {impl::time_unit(s->time), mps_to_kph(std::sqrt(s->point))}
-                        });
+                        const T sd = std::sqrt(s->point[0]);
+                        if (!std::isnan(sd))
+                        {
+                                res.push_back({
+                                        {impl::time_unit(s->time), mps_to_kph(sd)}
+                                });
+                                continue;
+                        }
                 }
-                else
-                {
-                        res.emplace_back();
-                }
+                res.emplace_back();
         }
         return res;
 }
@@ -293,23 +295,26 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
 template <std::size_t INDEX, typename T>
 std::vector<std::optional<Vector<2, T>>> convert_position_p(const std::vector<std::optional<Point<2, T>>>& position_p)
 {
-        namespace impl = converters_implementation;
         static_assert(INDEX < 2);
+
+        namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(position_p.size());
         for (const std::optional<Point<2, T>>& p : position_p)
         {
-                if (p && !std::isnan(std::sqrt(p->point[INDEX])))
+                if (p)
                 {
-                        res.push_back({
-                                {impl::time_unit(p->time), std::sqrt(p->point[INDEX])}
-                        });
+                        const T sd = std::sqrt(p->point[INDEX]);
+                        if (!std::isnan(sd))
+                        {
+                                res.push_back({
+                                        {impl::time_unit(p->time), sd}
+                                });
+                                continue;
+                        }
                 }
-                else
-                {
-                        res.emplace_back();
-                }
+                res.emplace_back();
         }
         return res;
 }

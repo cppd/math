@@ -27,11 +27,4 @@ struct Point final
         T time;
         Vector<N, T> point;
 };
-
-template <typename T>
-struct Point<1, T> final
-{
-        T time;
-        T point;
-};
 }

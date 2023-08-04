@@ -40,8 +40,8 @@ void Move<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
-        speeds_.push_back({.time = time, .point = filter_->speed()});
-        speeds_p_.push_back({.time = time, .point = filter_->speed_p()});
+        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
+        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
 
         if (!nees_)
         {
