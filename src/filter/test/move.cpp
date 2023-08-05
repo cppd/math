@@ -80,8 +80,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
                         filter_->reset(
                                 position_estimation.position_velocity_acceleration(),
-                                position_estimation.position_velocity_acceleration_p(),
-                                position_estimation.angle_difference());
+                                position_estimation.position_velocity_acceleration_p());
 
                         last_time_ = m.time;
                 }

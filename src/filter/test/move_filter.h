@@ -29,8 +29,9 @@ namespace ns::filter::test
 template <typename T>
 struct MoveFilterInit final
 {
+        static constexpr T ANGLE = 0;
+        static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(100.0));
         static constexpr T ANGLE_SPEED = 0;
-        static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(50.0));
         static constexpr T ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
 };
 
@@ -42,8 +43,7 @@ public:
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
-                T angle) = 0;
+                const Matrix<6, 6, T>& position_velocity_acceleration_p) = 0;
 
         virtual void predict(T dt) = 0;
 

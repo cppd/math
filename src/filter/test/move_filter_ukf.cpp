@@ -38,7 +38,7 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
-Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
+Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
@@ -49,7 +49,7 @@ Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle
                 res[i] = position_velocity_acceleration[i];
         }
 
-        res[6] = angle;
+        res[6] = MoveFilterInit<T>::ANGLE;
         res[7] = MoveFilterInit<T>::ANGLE_SPEED;
 
         return res;
@@ -398,12 +398,11 @@ class Filter final : public MoveFilter<T>
 
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
-                const T angle) override
+                const Matrix<6, 6, T>& position_velocity_acceleration_p) override
         {
                 filter_.emplace(
                         SigmaPoints<8, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<8, T>),
-                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p));
+                        x(position_velocity_acceleration), p(position_velocity_acceleration_p));
         }
 
         void predict(const T dt) override
