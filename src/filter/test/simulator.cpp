@@ -39,11 +39,13 @@ struct Config final
 {
         std::size_t count = 8000;
 
-        T speed_min = 0;
-        T speed_max = kph_to_mps(100.0);
+        T speed_min = kph_to_mps(-30.0);
+        T speed_max = kph_to_mps(130.0);
+        T speed_clamp_min = kph_to_mps(0.0);
+        T speed_clamp_max = kph_to_mps(100.0);
         T speed_variance = square(0.1);
-        T velocity_magnitude_period = 60;
-        T velocity_angle_period = 90;
+        T velocity_magnitude_period = 110;
+        T velocity_angle_period = 70;
 
         T angle = degrees_to_radians(-170.0);
         T angle_drift_per_hour = degrees_to_radians(-360.0);
@@ -57,7 +59,7 @@ struct Config final
 
         T measurement_variance_acceleration = square(1.0);
         T measurement_variance_direction = square(degrees_to_radians(2.0));
-        T measurement_variance_position = square(20.0);
+        T measurement_variance_position = square(25.0);
         T measurement_variance_speed = square(0.2);
 
         T bad_measurement_position = 1000;
@@ -154,6 +156,8 @@ class Simulator final
         const T dt_;
         const T speed_m_;
         const T speed_a_;
+        const T speed_clamp_min_;
+        const T speed_clamp_max_;
         const T velocity_magnitude_period_;
         const T velocity_angle_period_;
 
@@ -181,8 +185,8 @@ class Simulator final
 
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
-                const T magnitude =
-                        std::max<T>(0, speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_)));
+                const T speed = speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_));
+                const T magnitude = std::clamp(speed, speed_clamp_min_, speed_clamp_max_);
                 const T angle = std::cos(time * (2 * PI<T> / velocity_angle_period_));
                 return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle};
         }
@@ -207,6 +211,8 @@ public:
                 : dt_(config.measurement_dt),
                   speed_m_((config.speed_min + config.speed_max) / 2),
                   speed_a_((config.speed_max - config.speed_min) / 2),
+                  speed_clamp_min_(config.speed_clamp_min),
+                  speed_clamp_max_(config.speed_clamp_max),
                   velocity_magnitude_period_(config.velocity_magnitude_period),
                   velocity_angle_period_(config.velocity_angle_period),
                   angle_drift_(config.measurement_dt * config.angle_drift_per_hour / (T{60} * T{60})),
@@ -351,7 +357,7 @@ void correct_measurements(std::vector<Measurements<N, T>>* const measurements)
                 }
 
                 const auto n = std::llround(m.time / 33);
-                if ((n > 3) && ((n % 5) == 0))
+                if ((n > 3) && ((n % 9) == 0))
                 {
                         m.position.reset();
                         m.speed.reset();
