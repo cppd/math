@@ -34,22 +34,28 @@ class PositionEstimation final
         const T angle_estimation_variance_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
-        const Position<2, T>* angle_position_ = nullptr;
         std::optional<Vector<2, T>> position_variance_;
+        const Position<2, T>* position_ = nullptr;
+        std::optional<T> position_angle_p_;
+        const Position<2, T>* angle_difference_position_ = nullptr;
 
 public:
         PositionEstimation(T angle_estimation_time_difference, T angle_estimation_variance);
 
         void update(const Measurements<2, T>& m, const std::vector<Position<2, T>>* positions);
 
-        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
-        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
         [[nodiscard]] bool has_angle_difference() const;
         [[nodiscard]] T angle_difference() const;
 
         [[nodiscard]] const std::optional<Vector<2, T>>& position_variance() const;
 
-        [[nodiscard]] std::string description() const;
+        [[nodiscard]] bool has_position() const;
+        [[nodiscard]] T position_angle_p() const;
+        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
+        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
+
+        [[nodiscard]] std::string position_description() const;
+        [[nodiscard]] std::string angle_difference_description() const;
 };
 
 }

@@ -26,10 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Move<T>::Move(std::string name, const color::RGB8 color, const T reset_dt, std::unique_ptr<MoveFilter<T>>&& filter)
+Move<T>::Move(
+        std::string name,
+        const color::RGB8 color,
+        const T reset_dt,
+        const T angle_p,
+        std::unique_ptr<MoveFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
+          angle_p_(angle_p),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -72,11 +78,14 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 {
         check_time(m.time);
 
+        const bool has_angle =
+                position_estimation.has_position() && (position_estimation.position_angle_p() <= angle_p_);
+
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (position_estimation.has_angle_difference())
+                if (m.position && has_angle)
                 {
-                        LOG(name_ + "; " + position_estimation.description());
+                        LOG(name_ + "; " + position_estimation.position_description());
 
                         filter_->reset(
                                 position_estimation.position_velocity_acceleration(),

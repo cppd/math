@@ -75,7 +75,7 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
         {
                 if (position_estimation.has_angle_difference())
                 {
-                        LOG(name_ + "; " + position_estimation.description());
+                        LOG(name_ + "; " + position_estimation.angle_difference_description());
 
                         filter_->reset(
                                 position_estimation.position_velocity_acceleration(),

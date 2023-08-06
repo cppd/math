@@ -40,6 +40,7 @@ class Move final
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
+        T angle_p_;
         std::unique_ptr<MoveFilter<T>> filter_;
 
         std::vector<Point<2, T>> positions_;
@@ -66,7 +67,7 @@ class Move final
         void check_time(T time) const;
 
 public:
-        Move(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<MoveFilter<T>>&& filter);
+        Move(std::string name, color::RGB8 color, T reset_dt, T angle_p, std::unique_ptr<MoveFilter<T>>&& filter);
 
         void update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation);
 
