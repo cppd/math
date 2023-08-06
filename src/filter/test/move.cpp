@@ -78,6 +78,11 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 {
         check_time(m.time);
 
+        if (!m.position)
+        {
+                return;
+        }
+
         const bool has_angle =
                 position_estimation.has_position() && (position_estimation.position_angle_p() <= angle_p_);
 
@@ -118,7 +123,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
                 if (m.speed)
                 {
-                        if (m.direction)
+                        if (has_angle && m.direction)
                         {
                                 filter_->predict(dt);
                                 filter_->update_position_speed_direction(mp, *m.speed, *m.direction, use_gate);
@@ -131,7 +136,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 }
                 else
                 {
-                        if (m.direction)
+                        if (has_angle && m.direction)
                         {
                                 filter_->predict(dt);
                                 filter_->update_position_direction(mp, *m.direction, use_gate);
@@ -147,7 +152,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
         {
                 if (m.speed)
                 {
-                        if (m.direction)
+                        if (has_angle && m.direction)
                         {
                                 filter_->predict(dt);
                                 filter_->update_speed_direction(*m.speed, *m.direction, use_gate);
@@ -160,7 +165,7 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 }
                 else
                 {
-                        if (m.direction)
+                        if (has_angle && m.direction)
                         {
                                 filter_->predict(dt);
                                 filter_->update_direction(*m.direction, use_gate);
