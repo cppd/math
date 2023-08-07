@@ -147,6 +147,8 @@ std::string make_annotation(const Config<T>& config, const std::vector<Measureme
 template <std::size_t N, typename T>
 class Simulator final
 {
+        static constexpr T OFFSET = 500;
+
         struct Velocity final
         {
                 T magnitude;
@@ -183,12 +185,27 @@ class Simulator final
         Vector<N, T> acceleration_;
         T angle_;
 
+        [[nodiscard]] T angle(const T time) const
+        {
+                if ((false))
+                {
+                        return std::cos(time * (2 * PI<T> / velocity_angle_period_));
+                }
+
+                static constexpr T PERIOD = 31;
+                static constexpr T CHANGE_PERIOD = 9;
+                const T period_number = std::floor(time / PERIOD);
+                const T time_in_period = time - period_number * PERIOD;
+                const T angle_time = period_number + std::clamp<T>(time_in_period / CHANGE_PERIOD, 0, 1);
+                const T angle = -0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
+                return angle;
+        }
+
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
                 const T speed = speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_));
                 const T magnitude = std::clamp(speed, speed_clamp_min_, speed_clamp_max_);
-                const T angle = std::cos(time * (2 * PI<T> / velocity_angle_period_));
-                return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle};
+                return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle(time)};
         }
 
         [[nodiscard]] Vector<2, T> to_vector(const Velocity& v) const
@@ -229,6 +246,7 @@ public:
                   acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_),
                   angle_(normalize_angle(config.angle))
         {
+                position_[N - 1] = OFFSET;
         }
 
         void move()
