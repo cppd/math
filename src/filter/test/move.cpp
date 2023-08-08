@@ -74,6 +74,89 @@ void Move<T>::check_time(const T time) const
 }
 
 template <typename T>
+bool Move<T>::update_position(
+        const Measurements<2, T>& m,
+        const PositionEstimation<T>& position_estimation,
+        const T dt,
+        const bool has_angle,
+        const bool use_gate)
+{
+        ASSERT(m.position);
+
+        const auto position_variance = position_estimation.position_variance();
+
+        if (!position_variance)
+        {
+                return false;
+        }
+
+        const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
+
+        if (m.speed)
+        {
+                if (has_angle && m.direction)
+                {
+                        filter_->predict(dt);
+                        filter_->update_position_speed_direction(mp, *m.speed, *m.direction, use_gate);
+                }
+                else
+                {
+                        filter_->predict(dt);
+                        filter_->update_position_speed(mp, *m.speed, use_gate);
+                }
+        }
+        else
+        {
+                if (has_angle && m.direction)
+                {
+                        filter_->predict(dt);
+                        filter_->update_position_direction(mp, *m.direction, use_gate);
+                }
+                else
+                {
+                        filter_->predict(dt);
+                        filter_->update_position(mp, use_gate);
+                }
+        }
+
+        return true;
+}
+
+template <typename T>
+bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle, const bool use_gate)
+{
+        ASSERT(!m.position);
+
+        if (m.speed)
+        {
+                if (has_angle && m.direction)
+                {
+                        filter_->predict(dt);
+                        filter_->update_speed_direction(*m.speed, *m.direction, use_gate);
+                }
+                else
+                {
+                        filter_->predict(dt);
+                        filter_->update_speed(*m.speed, use_gate);
+                }
+        }
+        else
+        {
+                if (has_angle && m.direction)
+                {
+                        filter_->predict(dt);
+                        filter_->update_direction(*m.direction, use_gate);
+                }
+                else
+                {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
+template <typename T>
 void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
 {
         check_time(m.time);
@@ -111,69 +194,18 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
         if (m.position)
         {
-                const auto position_variance = position_estimation.position_variance();
-                if (!position_variance)
+                if (!update_position(m, position_estimation, dt, has_angle, use_gate))
                 {
                         return;
                 }
 
                 last_position_time_ = m.time;
-
-                const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
-
-                if (m.speed)
-                {
-                        if (has_angle && m.direction)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction, use_gate);
-                        }
-                        else
-                        {
-                                filter_->predict(dt);
-                                filter_->update_position_speed(mp, *m.speed, use_gate);
-                        }
-                }
-                else
-                {
-                        if (has_angle && m.direction)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_position_direction(mp, *m.direction, use_gate);
-                        }
-                        else
-                        {
-                                filter_->predict(dt);
-                                filter_->update_position(mp, use_gate);
-                        }
-                }
         }
         else
         {
-                if (m.speed)
+                if (!update_non_position(m, dt, has_angle, use_gate))
                 {
-                        if (has_angle && m.direction)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_speed_direction(*m.speed, *m.direction, use_gate);
-                        }
-                        else
-                        {
-                                filter_->predict(dt);
-                                filter_->update_speed(*m.speed, use_gate);
-                        }
-                }
-                else
-                {
-                        if (has_angle && m.direction)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_direction(*m.direction, use_gate);
-                        }
-                        else
-                        {
-                                return;
-                        }
+                        return;
                 }
         }
 

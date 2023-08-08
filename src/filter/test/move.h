@@ -66,6 +66,15 @@ class Move final
 
         void check_time(T time) const;
 
+        [[nodiscard]] bool update_position(
+                const Measurements<2, T>& m,
+                const PositionEstimation<T>& position_estimation,
+                T dt,
+                bool has_angle,
+                bool use_gate);
+
+        [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt, bool has_angle, bool use_gate);
+
 public:
         Move(std::string name, color::RGB8 color, T reset_dt, T angle_p, std::unique_ptr<MoveFilter<T>>&& filter);
 
