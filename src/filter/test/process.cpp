@@ -67,6 +67,118 @@ void Process<T>::check_time(const T time) const
 }
 
 template <typename T>
+void Process<T>::update_position(const Measurement<2, T>& position, const Measurements<2, T>& m, const T dt)
+{
+        if (m.speed)
+        {
+                if (m.direction)
+                {
+                        if (m.acceleration)
+                        {
+                                filter_->predict(dt);
+                                filter_->update_position_speed_direction_acceleration(
+                                        position, *m.speed, *m.direction, *m.acceleration);
+                                return;
+                        }
+
+                        filter_->predict(dt);
+                        filter_->update_position_speed_direction(position, *m.speed, *m.direction);
+                        return;
+                }
+
+                if (m.acceleration)
+                {
+                        filter_->predict(dt);
+                        filter_->update_position_speed_acceleration(position, *m.speed, *m.acceleration);
+                        return;
+                }
+
+                filter_->predict(dt);
+                filter_->update_position_speed(position, *m.speed);
+                return;
+        }
+
+        if (m.direction)
+        {
+                if (m.acceleration)
+                {
+                        filter_->predict(dt);
+                        filter_->update_position_direction_acceleration(position, *m.direction, *m.acceleration);
+                        return;
+                }
+
+                filter_->predict(dt);
+                filter_->update_position_direction(position, *m.direction);
+                return;
+        }
+
+        if (m.acceleration)
+        {
+                filter_->predict(dt);
+                filter_->update_position_acceleration(position, *m.acceleration);
+                return;
+        }
+
+        filter_->predict(dt);
+        filter_->update_position(position);
+}
+
+template <typename T>
+bool Process<T>::update_non_position(const Measurements<2, T>& m, const T dt)
+{
+        if (m.speed)
+        {
+                if (m.direction)
+                {
+                        if (m.acceleration)
+                        {
+                                filter_->predict(dt);
+                                filter_->update_speed_direction_acceleration(*m.speed, *m.direction, *m.acceleration);
+                                return true;
+                        }
+
+                        filter_->predict(dt);
+                        filter_->update_speed_direction(*m.speed, *m.direction);
+                        return true;
+                }
+
+                if (m.acceleration)
+                {
+                        filter_->predict(dt);
+                        filter_->update_speed_acceleration(*m.speed, *m.acceleration);
+                        return true;
+                }
+
+                filter_->predict(dt);
+                filter_->update_speed(*m.speed);
+                return true;
+        }
+
+        if (m.direction)
+        {
+                if (m.acceleration)
+                {
+                        filter_->predict(dt);
+                        filter_->update_direction_acceleration(*m.direction, *m.acceleration);
+                        return true;
+                }
+
+                filter_->predict(dt);
+                filter_->update_direction(*m.direction);
+                return true;
+        }
+
+        if (m.acceleration)
+        {
+                filter_->predict(dt);
+                filter_->update_acceleration(*m.acceleration);
+                return true;
+        }
+
+        return false;
+}
+
+template <typename T>
 void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
 {
         check_time(m.time);
@@ -87,127 +199,35 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
                 return;
         }
 
-        const auto predict = [&]()
-        {
-                filter_->predict(m.time - *last_time_);
-        };
+        const T dt = m.time - *last_time_;
 
         if (m.position)
         {
                 const auto position_variance = position_estimation.position_variance();
+
                 if (!position_variance)
                 {
                         return;
                 }
 
-                const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
+                const Measurement<2, T> position = {.value = m.position->value, .variance = *position_variance};
 
-                if (m.speed)
-                {
-                        if (m.direction && m.acceleration)
-                        {
-                                predict();
-                                filter_->update_position_speed_direction_acceleration(
-                                        mp, *m.speed, *m.direction, *m.acceleration);
-                        }
-                        else if (m.direction)
-                        {
-                                predict();
-                                filter_->update_position_speed_direction(mp, *m.speed, *m.direction);
-                        }
-                        else if (m.acceleration)
-                        {
-                                predict();
-                                filter_->update_position_speed_acceleration(mp, *m.speed, *m.acceleration);
-                        }
-                        else
-                        {
-                                predict();
-                                filter_->update_position_speed(mp, *m.speed);
-                        }
-                }
-                else
-                {
-                        if (m.direction && m.acceleration)
-                        {
-                                predict();
-                                filter_->update_position_direction_acceleration(mp, *m.direction, *m.acceleration);
-                        }
-                        else if (m.direction)
-                        {
-                                predict();
-                                filter_->update_position_direction(mp, *m.direction);
-                        }
-                        else if (m.acceleration)
-                        {
-                                predict();
-                                filter_->update_position_acceleration(mp, *m.acceleration);
-                        }
-                        else
-                        {
-                                predict();
-                                filter_->update_position(mp);
-                        }
-                }
+                update_position(position, m, dt);
+
+                LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
+                    + angle_string());
         }
         else
         {
-                if (m.speed)
+                if (!update_non_position(m, dt))
                 {
-                        if (m.direction && m.acceleration)
-                        {
-                                predict();
-                                filter_->update_speed_direction_acceleration(*m.speed, *m.direction, *m.acceleration);
-                        }
-                        else if (m.direction)
-                        {
-                                predict();
-                                filter_->update_speed_direction(*m.speed, *m.direction);
-                        }
-                        else if (m.acceleration)
-                        {
-                                predict();
-                                filter_->update_speed_acceleration(*m.speed, *m.acceleration);
-                        }
-                        else
-                        {
-                                predict();
-                                filter_->update_speed(*m.speed);
-                        }
-                }
-                else
-                {
-                        if (m.direction && m.acceleration)
-                        {
-                                predict();
-                                filter_->update_direction_acceleration(*m.direction, *m.acceleration);
-                        }
-                        else if (m.direction)
-                        {
-                                predict();
-                                filter_->update_direction(*m.direction);
-                        }
-                        else if (m.acceleration)
-                        {
-                                predict();
-                                filter_->update_acceleration(*m.acceleration);
-                        }
-                        else
-                        {
-                                return;
-                        }
+                        return;
                 }
         }
 
         last_time_ = m.time;
 
         save(m.time, m.true_data);
-
-        if (m.position)
-        {
-                LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
-                    + angle_string());
-        }
 }
 
 template <typename T>

@@ -63,6 +63,10 @@ class Process final
 
         void check_time(T time) const;
 
+        void update_position(const Measurement<2, T>& position, const Measurements<2, T>& m, T dt);
+
+        [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt);
+
 public:
         Process(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<ProcessFilter<T>>&& filter);
 
