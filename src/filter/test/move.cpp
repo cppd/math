@@ -244,12 +244,27 @@ std::string Move<T>::consistency_string() const
         }
 
         const std::string name = std::string("Move<") + type_name<T>() + "> " + name_;
+
         std::string s;
-        s += name + "; NEES position; " + nees_->position.check_string();
-        s += '\n';
-        s += name + "; NEES speed; " + nees_->speed.check_string();
-        s += '\n';
-        s += name + "; NEES angle; " + nees_->angle.check_string();
+
+        const auto new_line = [&]()
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+        };
+
+        new_line();
+        s += "; NEES position; " + nees_->position.check_string();
+
+        new_line();
+        s += "; NEES speed; " + nees_->speed.check_string();
+
+        new_line();
+        s += "; NEES angle; " + nees_->angle.check_string();
+
         return s;
 }
 
