@@ -297,51 +297,51 @@ template <std::size_t N, typename T>
 std::string Position<N, T>::consistency_string() const
 {
         const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
+
         std::string s;
+
+        const auto new_line = [&]()
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += name;
+        };
+
         if (!nees_position_.empty())
         {
-                s += name;
+                new_line();
                 s += "; NEES Position; " + nees_position_.check_string();
         }
+
         if (!nees_speed_.empty())
         {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += name;
+                new_line();
                 s += "; NEES Speed; " + nees_speed_.check_string();
         }
+
         if (!nis_.empty())
         {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += name;
+                new_line();
                 s += "; NIS Position; " + nis_.check_string();
         }
+
         if (position_variance_)
         {
                 if (const auto& mean = position_variance_->mean())
                 {
-                        if (!s.empty())
-                        {
-                                s += '\n';
-                        }
-                        s += name;
+                        new_line();
                         s += "; Mean " + to_string(*mean);
                 }
+
                 if (const auto& standard_deviation = position_variance_->standard_deviation())
                 {
-                        if (!s.empty())
-                        {
-                                s += '\n';
-                        }
-                        s += name;
+                        new_line();
                         s += "; Standard Deviation " + to_string(*standard_deviation);
                 }
         }
+
         return s;
 }
 
