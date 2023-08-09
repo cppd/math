@@ -74,35 +74,26 @@ void Move<T>::check_time(const T time) const
 }
 
 template <typename T>
-bool Move<T>::update_position(
+void Move<T>::update_position(
+        const Measurement<2, T>& position,
         const Measurements<2, T>& m,
-        const PositionEstimation<T>& position_estimation,
         const T dt,
         const bool has_angle,
         const bool use_gate)
 {
         ASSERT(m.position);
 
-        const auto position_variance = position_estimation.position_variance();
-
-        if (!position_variance)
-        {
-                return false;
-        }
-
-        const Measurement<2, T> mp = {.value = m.position->value, .variance = *position_variance};
-
         if (m.speed)
         {
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_speed_direction(mp, *m.speed, *m.direction, use_gate);
+                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, use_gate);
                 }
                 else
                 {
                         filter_->predict(dt);
-                        filter_->update_position_speed(mp, *m.speed, use_gate);
+                        filter_->update_position_speed(position, *m.speed, use_gate);
                 }
         }
         else
@@ -110,16 +101,14 @@ bool Move<T>::update_position(
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_direction(mp, *m.direction, use_gate);
+                        filter_->update_position_direction(position, *m.direction, use_gate);
                 }
                 else
                 {
                         filter_->predict(dt);
-                        filter_->update_position(mp, use_gate);
+                        filter_->update_position(position, use_gate);
                 }
         }
-
-        return true;
 }
 
 template <typename T>
@@ -194,12 +183,22 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
 
         if (m.position)
         {
-                if (!update_position(m, position_estimation, dt, has_angle, use_gate))
+                const auto position_variance = position_estimation.position_variance();
+
+                if (!position_variance)
                 {
                         return;
                 }
 
+                const Measurement<2, T> position = {.value = m.position->value, .variance = *position_variance};
+
+                update_position(position, m, dt, has_angle, use_gate);
+
                 last_position_time_ = m.time;
+
+                LOG(to_string(m.time) + "; true angle = "
+                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r))) + "; "
+                    + angle_string());
         }
         else
         {
@@ -212,13 +211,6 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
         last_time_ = m.time;
 
         save(m.time, m.true_data);
-
-        if (m.position)
-        {
-                LOG(to_string(m.time) + "; true angle = "
-                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r))) + "; "
-                    + angle_string());
-        }
 }
 
 template <typename T>

@@ -66,9 +66,9 @@ class Move final
 
         void check_time(T time) const;
 
-        [[nodiscard]] bool update_position(
+        void update_position(
+                const Measurement<2, T>& position,
                 const Measurements<2, T>& m,
-                const PositionEstimation<T>& position_estimation,
                 T dt,
                 bool has_angle,
                 bool use_gate);
