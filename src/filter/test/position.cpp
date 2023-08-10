@@ -23,6 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
+namespace
+{
+template <std::size_t N, typename T>
+constexpr Vector<N, T> VARIANCE_DEFAULT{square(T{1})};
+}
+
 template <std::size_t N, typename T>
 Position<N, T>::Position(
         std::string name,
@@ -123,8 +129,7 @@ bool Position<N, T>::prepare_position_variance(const Measurements<N, T>& m)
         ASSERT(!position_variance_->has_variance());
 
         filter_->predict(m.time - *last_predict_time_);
-        const auto update =
-                filter_->update(m.position->value, position_variance_->default_variance(), /*use_gate=*/false);
+        const auto update = filter_->update(m.position->value, VARIANCE_DEFAULT<N, T>, /*use_gate=*/false);
         ASSERT(update);
         last_predict_time_ = m.time;
         last_update_time_ = m.time;
@@ -183,8 +188,7 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
                 const auto variance =
                         !position_variance_
                                 ? *m.position->variance
-                                : (last_position_variance_ ? *last_position_variance_
-                                                           : position_variance_->default_variance());
+                                : (last_position_variance_ ? *last_position_variance_ : VARIANCE_DEFAULT<N, T>);
                 filter_->reset(m.position->value, variance);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;

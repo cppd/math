@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurement.h"
 #include "point.h"
 #include "position_filter.h"
-#include "position_variance.h"
+#include "variance.h"
 
 #include "../consistency.h"
 
@@ -52,7 +52,7 @@ class Position final
         NormalizedSquared<1, T> nees_speed_;
         NormalizedSquared<N, T> nis_;
 
-        std::optional<PositionVariance<N, T>> position_variance_;
+        std::optional<MovingVariance<N, T>> position_variance_;
         std::optional<Vector<N, T>> last_position_variance_;
 
         std::optional<T> last_predict_time_;
