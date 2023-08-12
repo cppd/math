@@ -32,13 +32,14 @@ constexpr T VARIANCE_MIN{square(T{0.1L})};
 template <typename T>
 constexpr T VARIANCE_MAX{square(T{500})};
 
-constexpr unsigned VARIANCE_ESTIMATION_FILTER_COUNT{15};
+constexpr unsigned VARIANCE_FILTER_COUNT{10};
 }
 
 template <std::size_t N, typename T>
 void MovingVariance<N, T>::fill_estimation(const Vector<N, T>& residual)
 {
-        static constexpr std::size_t FILTER = VARIANCE_ESTIMATION_FILTER_COUNT;
+        static_assert(VARIANCE_FILTER_COUNT % 2 == 0);
+        static constexpr std::size_t FILTER = VARIANCE_FILTER_COUNT / 2;
         static constexpr std::size_t SIZE = VARIANCE_MIN_COUNT + 2 * FILTER;
 
         ASSERT(estimation_residuals_);
