@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position.h"
 #include "position_estimation.h"
 #include "position_filter_lkf.h"
+#include "position_variance.h"
 #include "process.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
@@ -137,6 +138,21 @@ int compute_precision(const std::array<T, N>& data)
 }
 
 template <std::size_t N, typename T>
+std::vector<PositionVariance<N, T>> create_position_variance()
+{
+        static constexpr T THETA{0};
+
+        std::vector<PositionVariance<N, T>> res;
+
+        res.emplace_back(
+                "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
+                create_position_filter_lkf<N, T>(
+                        THETA, Config<T>::POSITION_FILTER_VARIANCE, Config<T>::POSITION_FILTER_GATE));
+
+        return res;
+}
+
+template <std::size_t N, typename T>
 std::vector<Position<N, T>> create_positions()
 {
         std::vector<Position<N, T>> res;
@@ -242,6 +258,7 @@ template <typename T>
 void write_result(
         const std::string_view annotation,
         const std::vector<Measurements<2, T>>& measurements,
+        const std::vector<PositionVariance<2, T>>& position_variance,
         const std::vector<Position<2, T>>& positions,
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
@@ -256,6 +273,11 @@ void write_result(
                         LOG(s);
                 }
         };
+
+        for (const auto& p : position_variance)
+        {
+                log_consistency_string(p);
+        }
 
         for (const auto& p : positions)
         {
@@ -278,6 +300,7 @@ void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurements<2, T>> measurements;
 
+        std::vector<PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
         std::vector<Position<2, T>> positions = create_positions<2, T>();
         std::vector<Process<T>> processes = create_processes<T>();
         std::vector<Move<T>> moves = create_moves<T>();
@@ -289,6 +312,11 @@ void test_impl(const Track<2, T>& track)
         for (const Measurements<2, T>& measurement : track)
         {
                 measurements.push_back(measurement);
+
+                for (auto& p : position_variance)
+                {
+                        p.update_position(measurement);
+                }
 
                 for (auto& p : positions)
                 {
@@ -308,7 +336,7 @@ void test_impl(const Track<2, T>& track)
                 }
         }
 
-        write_result(track.annotation(), measurements, positions, processes, moves);
+        write_result(track.annotation(), measurements, position_variance, positions, processes, moves);
 }
 
 template <typename T>

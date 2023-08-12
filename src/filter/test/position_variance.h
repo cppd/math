@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position_filter.h"
 #include "variance.h"
 
-#include "../consistency.h"
-
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
@@ -40,17 +38,12 @@ class PositionVariance final
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
-        T linear_dt_;
         std::unique_ptr<PositionFilter<N, T>> filter_;
 
         std::vector<Point<N, T>> positions_;
         std::vector<Point<N, T>> positions_p_;
         std::vector<Point<1, T>> speeds_;
         std::vector<Point<1, T>> speeds_p_;
-
-        NormalizedSquared<N, T> nees_position_;
-        NormalizedSquared<1, T> nees_speed_;
-        NormalizedSquared<N, T> nis_;
 
         MovingVariance<N, T> position_variance_;
         std::optional<Vector<N, T>> last_position_variance_;
@@ -59,19 +52,14 @@ class PositionVariance final
         std::optional<T> last_update_time_;
 
         void save_results(T time);
-        void add_nees_checks(const TrueData<N, T>& true_data);
-
         void check_time(T time) const;
-
-        [[nodiscard]] bool prepare_position_variance(const Measurements<N, T>& m);
-        void update_position_variance(const Measurements<N, T>& m, const PositionFilterUpdate<N, T>& update);
+        void update_position_variance(const Measurements<N, T>& m);
 
 public:
         PositionVariance(
                 std::string name,
                 color::RGB8 color,
                 T reset_dt,
-                T linear_dt,
                 std::unique_ptr<PositionFilter<N, T>>&& filter);
 
         void update_position(const Measurements<N, T>& m);
@@ -80,15 +68,6 @@ public:
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
-        [[nodiscard]] Vector<N, T> velocity() const;
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const;
-        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const;
-        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
-
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Point<N, T>>& positions() const;
-        [[nodiscard]] const std::vector<Point<N, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
 };
 }
