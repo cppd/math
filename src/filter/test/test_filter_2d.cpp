@@ -294,6 +294,44 @@ void write_result(
 }
 
 template <typename T>
+std::optional<Vector<2, T>> compute_variance(const std::vector<PositionVariance<2, T>>& positions)
+{
+        if (positions.size() == 1)
+        {
+                return positions.front().last_position_variance();
+        }
+
+        std::optional<Vector<2, T>> sum;
+        std::size_t count = 0;
+        for (const PositionVariance<2, T>& position : positions)
+        {
+                const auto& variance = position.last_position_variance();
+                if (!variance)
+                {
+                        continue;
+                }
+                ++count;
+                if (sum)
+                {
+                        (*sum)[0] += std::sqrt((*variance)[0]);
+                        (*sum)[1] += std::sqrt((*variance)[1]);
+                }
+                else
+                {
+                        sum = Vector<2, T>(std::sqrt((*variance)[0]), std::sqrt((*variance)[1]));
+                }
+        }
+        if (sum)
+        {
+                *sum /= static_cast<T>(count);
+                (*sum)[0] = square((*sum)[0]);
+                (*sum)[1] = square((*sum)[1]);
+                return *sum;
+        }
+        return {};
+}
+
+template <typename T>
 void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurements<2, T>> measurements;
@@ -307,15 +345,8 @@ void test_impl(const Track<2, T>& track)
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE);
 
-        for (const Measurements<2, T>& measurement : track)
+        const auto update = [&](const Measurements<2, T>& measurement)
         {
-                measurements.push_back(measurement);
-
-                for (auto& p : position_variance)
-                {
-                        p.update_position(measurement);
-                }
-
                 for (auto& p : positions)
                 {
                         p.update_position(measurement);
@@ -332,6 +363,23 @@ void test_impl(const Track<2, T>& track)
                 {
                         m.update(measurement, std::as_const(position_estimation));
                 }
+        };
+
+        for (Measurements<2, T> measurement : track)
+        {
+                measurements.push_back(measurement);
+
+                for (auto& p : position_variance)
+                {
+                        p.update_position(measurement);
+                }
+
+                if (measurement.position && !measurement.position->variance)
+                {
+                        measurement.position->variance = compute_variance(position_variance);
+                }
+
+                update(measurement);
         }
 
         write_result(track.annotation(), measurements, position_variance, positions, processes, moves);

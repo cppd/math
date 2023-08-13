@@ -23,12 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-namespace
-{
-template <std::size_t N, typename T>
-constexpr Vector<N, T> VARIANCE_DEFAULT{square(T{1})};
-}
-
 template <std::size_t N, typename T>
 Position<N, T>::Position(
         std::string name,
@@ -83,115 +77,18 @@ void Position<N, T>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::check_position_variance(const PositionMeasurement<N, T>& m)
-{
-        if (use_measurement_variance_)
-        {
-                if (*use_measurement_variance_ != m.variance.has_value())
-                {
-                        error("Different variance modes are not supported");
-                }
-                return;
-        }
-
-        use_measurement_variance_ = m.variance.has_value();
-        if (!*use_measurement_variance_)
-        {
-                position_variance_.emplace();
-        }
-}
-
-template <std::size_t N, typename T>
-bool Position<N, T>::prepare_position_variance(const Measurements<N, T>& m)
-{
-        ASSERT(m.position);
-        ASSERT(last_predict_time_);
-        ASSERT(last_update_time_);
-
-        if (!position_variance_)
-        {
-                ASSERT(m.position->variance);
-                last_position_variance_ = *m.position->variance;
-                return true;
-        }
-
-        const T dt = m.time - *last_update_time_;
-        if (!(dt <= linear_dt_))
-        {
-                error("Variance computations require dt " + to_string(dt) + " to be less than or equal to "
-                      + to_string(linear_dt_));
-        }
-
-        ASSERT(!m.position->variance);
-        if (last_position_variance_)
-        {
-                return true;
-        }
-
-        ASSERT(!position_variance_->has_variance());
-
-        filter_->predict(m.time - *last_predict_time_);
-        const auto update = filter_->update(m.position->value, VARIANCE_DEFAULT<N, T>, /*gate=*/{});
-        ASSERT(update);
-        last_predict_time_ = m.time;
-        last_update_time_ = m.time;
-
-        position_variance_->push(update->residual);
-        LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
-        const auto new_variance = position_variance_->compute();
-        if (!new_variance)
-        {
-                return false;
-        }
-
-        filter_->reset(m.position->value, *new_variance);
-        last_position_variance_ = *new_variance;
-        const auto standard_deviation = position_variance_->standard_deviation();
-        ASSERT(standard_deviation);
-        LOG(to_string(m.time) + "; " + name_ + "; Initial Standard Deviation = " + to_string(*standard_deviation));
-
-        return false;
-}
-
-template <std::size_t N, typename T>
-void Position<N, T>::update_position_variance(const Measurements<N, T>& m, const PositionFilterUpdate<N, T>& update)
-{
-        if (!position_variance_)
-        {
-                return;
-        }
-
-        position_variance_->push(update.residual);
-
-        const auto standard_deviation = position_variance_->standard_deviation();
-        ASSERT(standard_deviation);
-        LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
-
-        const auto new_variance = position_variance_->compute();
-        ASSERT(new_variance);
-        last_position_variance_ = *new_variance;
-}
-
-template <std::size_t N, typename T>
 void Position<N, T>::update_position(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
-        if (!m.position)
+        if (!m.position || !m.position->variance)
         {
                 return;
         }
 
-        check_position_variance(*m.position);
-
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
-                ASSERT(position_variance_.has_value() != m.position->variance.has_value());
-                const auto variance =
-                        !position_variance_
-                                ? *m.position->variance
-                                : (last_position_variance_ ? *last_position_variance_ : VARIANCE_DEFAULT<N, T>);
-                filter_->reset(m.position->value, variance);
+                filter_->reset(m.position->value, *m.position->variance);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
                 save_results(m.time);
@@ -199,17 +96,10 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
                 return;
         }
 
-        if (!prepare_position_variance(m))
-        {
-                return;
-        }
-
-        ASSERT(last_position_variance_);
-
         filter_->predict(m.time - *last_predict_time_);
         last_predict_time_ = m.time;
 
-        const auto update = filter_->update(m.position->value, *last_position_variance_, gate_);
+        const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
         if (!update)
         {
                 save_results(m.time);
@@ -218,8 +108,6 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
         }
         const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
-
-        update_position_variance(m, *update);
 
         save_results(m.time);
         add_nees_checks(m.true_data);
@@ -232,11 +120,6 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
 template <std::size_t N, typename T>
 void Position<N, T>::predict_update(const Measurements<N, T>& m)
 {
-        if (!last_position_variance_)
-        {
-                error("Prediction without variance");
-        }
-
         if (m.position)
         {
                 update_position(m);
@@ -258,6 +141,12 @@ void Position<N, T>::predict_update(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] bool Position<N, T>::empty() const
+{
+        return !last_predict_time_ || !last_update_time_;
+}
+
+template <std::size_t N, typename T>
 const std::string& Position<N, T>::name() const
 {
         return name_;
@@ -267,12 +156,6 @@ template <std::size_t N, typename T>
 color::RGB8 Position<N, T>::color() const
 {
         return color_;
-}
-
-template <std::size_t N, typename T>
-const std::optional<Vector<N, T>>& Position<N, T>::last_position_variance() const
-{
-        return last_position_variance_;
 }
 
 template <std::size_t N, typename T>
@@ -331,21 +214,6 @@ std::string Position<N, T>::consistency_string() const
         {
                 new_line();
                 s += "; NIS Position; " + nis_.check_string();
-        }
-
-        if (position_variance_)
-        {
-                if (const auto& mean = position_variance_->mean())
-                {
-                        new_line();
-                        s += "; Mean " + to_string(*mean);
-                }
-
-                if (const auto& standard_deviation = position_variance_->standard_deviation())
-                {
-                        new_line();
-                        s += "; Standard Deviation " + to_string(*standard_deviation);
-                }
         }
 
         return s;

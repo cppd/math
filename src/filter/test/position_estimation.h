@@ -34,7 +34,6 @@ class PositionEstimation final
         const T angle_estimation_variance_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
-        std::optional<Vector<2, T>> position_variance_;
         const Position<2, T>* position_ = nullptr;
         std::optional<T> position_angle_p_;
         const Position<2, T>* angle_difference_position_ = nullptr;
@@ -46,8 +45,6 @@ public:
 
         [[nodiscard]] bool has_angle_difference() const;
         [[nodiscard]] T angle_difference() const;
-
-        [[nodiscard]] const std::optional<Vector<2, T>>& position_variance() const;
 
         [[nodiscard]] bool has_position() const;
         [[nodiscard]] T position_angle_p() const;

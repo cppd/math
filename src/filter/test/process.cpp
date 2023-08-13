@@ -203,14 +203,12 @@ void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>
 
         if (m.position)
         {
-                const auto position_variance = position_estimation.position_variance();
-
-                if (!position_variance)
+                if (!m.position->variance)
                 {
                         return;
                 }
 
-                const Measurement<2, T> position = {.value = m.position->value, .variance = *position_variance};
+                const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
                 update_position(position, m, dt);
 

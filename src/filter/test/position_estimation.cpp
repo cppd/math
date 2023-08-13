@@ -25,47 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-namespace
-{
-template <typename T>
-std::optional<Vector<2, T>> compute_variance(const std::vector<Position<2, T>>& positions)
-{
-        if (positions.size() == 1)
-        {
-                return positions.front().last_position_variance();
-        }
-
-        std::optional<Vector<2, T>> sum;
-        std::size_t count = 0;
-        for (const Position<2, T>& position : positions)
-        {
-                const auto& variance = position.last_position_variance();
-                if (!variance)
-                {
-                        continue;
-                }
-                ++count;
-                if (sum)
-                {
-                        (*sum)[0] += std::sqrt((*variance)[0]);
-                        (*sum)[1] += std::sqrt((*variance)[1]);
-                }
-                else
-                {
-                        sum = Vector<2, T>(std::sqrt((*variance)[0]), std::sqrt((*variance)[1]));
-                }
-        }
-        if (sum)
-        {
-                *sum /= static_cast<T>(count);
-                (*sum)[0] = square((*sum)[0]);
-                (*sum)[1] = square((*sum)[1]);
-                return *sum;
-        }
-        return {};
-}
-}
-
 template <typename T>
 PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_difference, const T angle_estimation_variance)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
@@ -91,16 +50,11 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
         position_ = nullptr;
         position_angle_p_.reset();
 
-        if (const auto& v = compute_variance(*positions))
-        {
-                position_variance_ = *v;
-        }
-
         for (std::size_t i = 0; i < positions->size(); ++i)
         {
                 const Position<2, T>* const position = &(*positions)[i];
 
-                if (!position->last_position_variance())
+                if (position->empty())
                 {
                         continue;
                 }
@@ -186,12 +140,6 @@ Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
                 error("Estimation doesn't have position");
         }
         return position_->position_velocity_acceleration_p();
-}
-
-template <typename T>
-const std::optional<Vector<2, T>>& PositionEstimation<T>::position_variance() const
-{
-        return position_variance_;
 }
 
 template <typename T>

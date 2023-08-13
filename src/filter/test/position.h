@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurement.h"
 #include "point.h"
 #include "position_filter.h"
-#include "variance.h"
 
 #include "../consistency.h"
 
@@ -53,22 +52,13 @@ class Position final
         NormalizedSquared<1, T> nees_speed_;
         NormalizedSquared<N, T> nis_;
 
-        std::optional<MovingVariance<N, T>> position_variance_;
-        std::optional<Vector<N, T>> last_position_variance_;
-
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
-
-        std::optional<bool> use_measurement_variance_;
 
         void save_results(T time);
         void add_nees_checks(const TrueData<N, T>& true_data);
 
         void check_time(T time) const;
-
-        void check_position_variance(const PositionMeasurement<N, T>& m);
-        [[nodiscard]] bool prepare_position_variance(const Measurements<N, T>& m);
-        void update_position_variance(const Measurements<N, T>& m, const PositionFilterUpdate<N, T>& update);
 
 public:
         Position(
@@ -82,10 +72,11 @@ public:
         void update_position(const Measurements<N, T>& m);
         void predict_update(const Measurements<N, T>& m);
 
+        [[nodiscard]] bool empty() const;
+
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;
 
-        [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
         [[nodiscard]] Vector<N, T> velocity() const;
         [[nodiscard]] Matrix<N, N, T> velocity_p() const;
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const;
