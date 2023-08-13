@@ -32,25 +32,29 @@ constexpr T VARIANCE_MIN{square(T{0.1L})};
 template <typename T>
 constexpr T VARIANCE_MAX{square(T{500})};
 
-constexpr unsigned VARIANCE_FILTER_COUNT{10};
+constexpr std::size_t WINDOW_SIZE{500};
+constexpr unsigned FILTER_WINDOW_SIZE{50};
+constexpr unsigned FILTER_SIZE{5};
 }
 
 template <std::size_t N, typename T>
-void MovingVariance<N, T>::fill_estimation(const Vector<N, T>& residual)
+MovingVariance<N, T>::MovingVariance()
+        : variance_{WINDOW_SIZE}
 {
-        static_assert(VARIANCE_FILTER_COUNT % 2 == 0);
-        static constexpr std::size_t FILTER = VARIANCE_FILTER_COUNT / 2;
-        static constexpr std::size_t SIZE = VARIANCE_MIN_COUNT + 2 * FILTER;
+}
 
-        ASSERT(estimation_residuals_);
+template <std::size_t N, typename T>
+void MovingVariance<N, T>::push(const Vector<N, T>& residual)
+{
+        static constexpr std::size_t SIZE = FILTER_WINDOW_SIZE + 2 * FILTER_SIZE;
 
-        std::array<std::vector<T>, N>& r = *estimation_residuals_;
+        std::array<std::vector<T>, N>& r = estimation_residuals_;
 
         ASSERT(std::ranges::all_of(
                 r,
                 [&](const std::vector<T>& v)
                 {
-                        return v.size() == r[0].size() && v.size() < SIZE;
+                        return v.size() == r.front().size() && v.size() < SIZE;
                 }));
 
         for (std::size_t i = 0; i < N; ++i)
@@ -58,14 +62,14 @@ void MovingVariance<N, T>::fill_estimation(const Vector<N, T>& residual)
                 r[i].push_back(residual[i]);
         }
 
-        if (r[0].size() < SIZE)
+        if (r.front().size() < SIZE)
         {
                 return;
         }
 
-        for (std::size_t i = 0; i < N; ++i)
+        for (std::vector<T>& v : r)
         {
-                std::ranges::sort(r[i]);
+                std::ranges::sort(v);
         }
 
         ASSERT(std::ranges::all_of(
@@ -75,8 +79,8 @@ void MovingVariance<N, T>::fill_estimation(const Vector<N, T>& residual)
                         return v.size() == SIZE;
                 }));
 
-        static_assert(SIZE > 2 * FILTER);
-        for (std::size_t i = FILTER; i < SIZE - FILTER; ++i)
+        static_assert(SIZE > 2 * FILTER_SIZE);
+        for (std::size_t i = FILTER_SIZE; i < SIZE - FILTER_SIZE; ++i)
         {
                 Vector<N, T> v;
                 for (std::size_t n = 0; n < N; ++n)
@@ -86,8 +90,10 @@ void MovingVariance<N, T>::fill_estimation(const Vector<N, T>& residual)
                 variance_.push(v);
         }
 
-        ASSERT(variance_.size() == VARIANCE_MIN_COUNT);
-        estimation_residuals_.reset();
+        for (std::vector<T>& v : r)
+        {
+                v.clear();
+        }
 }
 
 template <std::size_t N, typename T>

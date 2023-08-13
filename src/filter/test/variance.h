@@ -31,34 +31,19 @@ class MovingVariance final
 {
         static_assert(N > 0);
 
-        static constexpr std::size_t VARIANCE_WINDOW_SIZE{500};
-        static constexpr unsigned VARIANCE_MIN_COUNT{80};
-
-        std::optional<std::array<std::vector<T>, N>> estimation_residuals_;
+        std::array<std::vector<T>, N> estimation_residuals_;
         numerical::MovingVariance<Vector<N, T>> variance_;
 
         void fill_estimation(const Vector<N, T>& residual);
 
 public:
-        MovingVariance()
-                : variance_{VARIANCE_WINDOW_SIZE}
-        {
-                estimation_residuals_.emplace();
-        }
+        MovingVariance();
 
-        void push(const Vector<N, T>& residual)
-        {
-                if (estimation_residuals_)
-                {
-                        fill_estimation(residual);
-                        return;
-                }
-                variance_.push(residual);
-        }
+        void push(const Vector<N, T>& residual);
 
         [[nodiscard]] bool has_variance() const
         {
-                return variance_.size() >= VARIANCE_MIN_COUNT;
+                return variance_.has_variance();
         }
 
         [[nodiscard]] std::optional<Vector<N, T>> mean() const
@@ -68,7 +53,6 @@ public:
                         return {};
                 }
 
-                ASSERT(variance_.has_variance());
                 return variance_.mean();
         }
 
@@ -79,7 +63,6 @@ public:
                         return {};
                 }
 
-                ASSERT(variance_.has_variance());
                 return variance_.standard_deviation();
         }
 
