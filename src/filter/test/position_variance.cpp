@@ -28,6 +28,9 @@ namespace
 {
 template <std::size_t N, typename T>
 constexpr Vector<N, T> VARIANCE{square(T{0.5})};
+
+template <typename T>
+constexpr std::optional<T> GATE{};
 }
 
 template <std::size_t N, typename T>
@@ -78,7 +81,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 
         const T predict_dt = m.time - *last_predict_time_;
         filter_->predict(predict_dt);
-        const auto update = filter_->update(m.position->value, VARIANCE<N, T>, /*use_gate=*/false);
+        const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);
         ASSERT(update);
 
         position_variance_.push(update->residual / (predict_dt + 1));

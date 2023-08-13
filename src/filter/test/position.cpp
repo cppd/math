@@ -35,11 +35,13 @@ Position<N, T>::Position(
         const color::RGB8 color,
         const T reset_dt,
         const T linear_dt,
+        const std::optional<T> gate,
         std::unique_ptr<PositionFilter<N, T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           linear_dt_(linear_dt),
+          gate_(gate),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -129,7 +131,7 @@ bool Position<N, T>::prepare_position_variance(const Measurements<N, T>& m)
         ASSERT(!position_variance_->has_variance());
 
         filter_->predict(m.time - *last_predict_time_);
-        const auto update = filter_->update(m.position->value, VARIANCE_DEFAULT<N, T>, /*use_gate=*/false);
+        const auto update = filter_->update(m.position->value, VARIANCE_DEFAULT<N, T>, /*gate=*/{});
         ASSERT(update);
         last_predict_time_ = m.time;
         last_update_time_ = m.time;
@@ -207,7 +209,7 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
         filter_->predict(m.time - *last_predict_time_);
         last_predict_time_ = m.time;
 
-        const auto update = filter_->update(m.position->value, *last_position_variance_, /*use_gate=*/true);
+        const auto update = filter_->update(m.position->value, *last_position_variance_, gate_);
         if (!update)
         {
                 save_results(m.time);

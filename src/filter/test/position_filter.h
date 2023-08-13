@@ -45,7 +45,7 @@ public:
         [[nodiscard]] virtual std::optional<PositionFilterUpdate<N, T>> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
-                bool use_gate) = 0;
+                std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;

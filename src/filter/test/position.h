@@ -41,6 +41,7 @@ class Position final
         color::RGB8 color_;
         T reset_dt_;
         T linear_dt_;
+        std::optional<T> gate_;
         std::unique_ptr<PositionFilter<N, T>> filter_;
 
         std::vector<Point<N, T>> positions_;
@@ -75,6 +76,7 @@ public:
                 color::RGB8 color,
                 T reset_dt,
                 T linear_dt,
+                std::optional<T> gate,
                 std::unique_ptr<PositionFilter<N, T>>&& filter);
 
         void update_position(const Measurements<N, T>& m);

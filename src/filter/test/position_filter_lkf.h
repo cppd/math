@@ -25,5 +25,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf(T theta, T process_variance, std::optional<T> gate);
+std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf(T theta, T process_variance);
 }

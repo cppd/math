@@ -161,7 +161,6 @@ class Filter final : public PositionFilter<N, T>
 {
         const std::optional<T> theta_;
         const T process_variance_;
-        const std::optional<T> gate_;
         std::optional<Ekf<3 * N, T>> filter_;
 
         void reset(const Vector<N, T>& position, const Vector<N, T>& variance) override
@@ -191,7 +190,7 @@ class Filter final : public PositionFilter<N, T>
         [[nodiscard]] std::optional<PositionFilterUpdate<N, T>> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
-                const bool use_gate) override
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
@@ -199,7 +198,6 @@ class Filter final : public PositionFilter<N, T>
                 ASSERT(variance[0] >= 0 && variance[1] >= 0);
 
                 const Matrix<N, N, T> r = position_r(variance);
-                const std::optional<T> gate = use_gate ? gate_ : std::optional<T>();
 
                 Vector<N, T> residual;
 
@@ -215,7 +213,7 @@ class Filter final : public PositionFilter<N, T>
                                 {.r = r, .residual = residual}
                         };
                 }
-                ASSERT(use_gate);
+                ASSERT(gate);
                 return {};
         }
 
@@ -272,29 +270,23 @@ class Filter final : public PositionFilter<N, T>
         }
 
 public:
-        Filter(const T theta, const T process_variance, const std::optional<T> gate)
+        Filter(const T theta, const T process_variance)
                 : theta_(theta),
-                  process_variance_(process_variance),
-                  gate_(gate)
+                  process_variance_(process_variance)
         {
                 ASSERT(theta_ >= 0);
                 ASSERT(process_variance_ >= 0);
-                ASSERT(!gate_ || *gate_ > 0);
         }
 };
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf(
-        const T theta,
-        const T process_variance,
-        const std::optional<T> gate)
+std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf(const T theta, const T process_variance)
 {
-        return std::make_unique<Filter<N, T>>(theta, process_variance, gate);
+        return std::make_unique<Filter<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) \
-        template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf<(N), T>(T, T, std::optional<T>);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

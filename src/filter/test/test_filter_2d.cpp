@@ -146,8 +146,7 @@ std::vector<PositionVariance<N, T>> create_position_variance()
 
         res.emplace_back(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                create_position_filter_lkf<N, T>(
-                        THETA, Config<T>::POSITION_FILTER_VARIANCE, Config<T>::POSITION_FILTER_GATE));
+                create_position_filter_lkf<N, T>(THETA, Config<T>::POSITION_FILTER_VARIANCE));
 
         return res;
 }
@@ -175,9 +174,8 @@ std::vector<Position<N, T>> create_positions()
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                        Config<T>::POSITION_FILTER_LINEAR_DT,
-                        create_position_filter_lkf<N, T>(
-                                thetas[i], Config<T>::POSITION_FILTER_VARIANCE, Config<T>::POSITION_FILTER_GATE));
+                        Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE,
+                        create_position_filter_lkf<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE));
         }
 
         return res;
