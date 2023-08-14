@@ -56,6 +56,16 @@ public:
                 return variance_.mean();
         }
 
+        [[nodiscard]] std::optional<Vector<N, T>> variance() const
+        {
+                if (!has_variance())
+                {
+                        return {};
+                }
+
+                return variance_.variance();
+        }
+
         [[nodiscard]] std::optional<Vector<N, T>> standard_deviation() const
         {
                 if (!has_variance())
