@@ -30,7 +30,13 @@ template <std::size_t N, typename T>
 constexpr Vector<N, T> VARIANCE{square(T{0.5})};
 
 template <typename T>
-constexpr std::optional<T> GATE{};
+constexpr std::optional<T> GATE{1000};
+
+template <std::size_t N, typename T>
+[[nodiscard]] Vector<N, T> correct_residual(const Vector<N, T>& residual, const T dt)
+{
+        return residual / (dt + 1);
+}
 }
 
 template <std::size_t N, typename T>
@@ -81,10 +87,16 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 
         const T predict_dt = m.time - *last_predict_time_;
         filter_->predict(predict_dt);
-        const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);
-        ASSERT(update);
+        last_predict_time_ = m.time;
 
-        position_variance_.push(update->residual / (predict_dt + 1));
+        const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);
+        if (!update)
+        {
+                return;
+        }
+        last_update_time_ = m.time;
+
+        position_variance_.push(correct_residual(update->residual, predict_dt));
 
         if (!position_variance_.has_variance())
         {
@@ -115,14 +127,13 @@ void PositionVariance<N, T>::update_position(const Measurements<N, T>& m)
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
                 filter_->reset(m.position->value, VARIANCE<N, T>);
+                last_predict_time_ = m.time;
+                last_update_time_ = m.time;
         }
         else
         {
                 update_position_variance(m);
         }
-
-        last_predict_time_ = m.time;
-        last_update_time_ = m.time;
 
         save_results(m.time);
 }
