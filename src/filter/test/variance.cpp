@@ -34,7 +34,7 @@ constexpr T VARIANCE_MAX{square(T{500})};
 
 constexpr std::size_t WINDOW_SIZE{500};
 constexpr std::size_t FILTER_WINDOW_SIZE{50};
-constexpr std::size_t FILTER_SIZE{3};
+constexpr std::size_t FILTER_SIZE{5};
 }
 
 template <std::size_t N, typename T>
