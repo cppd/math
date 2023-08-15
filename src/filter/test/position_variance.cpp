@@ -27,15 +27,37 @@ namespace ns::filter::test
 namespace
 {
 template <std::size_t N, typename T>
-constexpr Vector<N, T> VARIANCE{square(T{0.5})};
+constexpr Vector<N, T> VARIANCE{square(T{1})};
 
 template <typename T>
-constexpr std::optional<T> GATE{1000};
+constexpr std::optional<T> GATE{T{250}};
+
+template <typename T>
+constexpr T VARIANCE_GATE_SQUARED{square(T{10})};
 
 template <std::size_t N, typename T>
 [[nodiscard]] Vector<N, T> correct_residual(const Vector<N, T>& residual, const T dt)
 {
         return residual / (dt + 1);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] bool check_residual(const Vector<N, T>& residual, const std::optional<Vector<N, T>>& variance)
+{
+        if (!variance)
+        {
+                return true;
+        }
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(square(residual[i]) <= (*variance)[i] * VARIANCE_GATE_SQUARED<T>))
+                {
+                        return false;
+                }
+        }
+
+        return true;
 }
 }
 
@@ -96,7 +118,15 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         }
         last_update_time_ = m.time;
 
-        position_variance_.push(correct_residual(update->residual, predict_dt));
+        const Vector<N, T> residual = correct_residual(update->residual, predict_dt);
+
+        if (!check_residual(residual, position_variance_.variance()))
+        {
+                LOG(to_string(m.time) + "; " + name_ + "; Discarded Residual = " + to_string(update->residual));
+                return;
+        }
+
+        position_variance_.push(residual);
 
         if (!position_variance_.has_variance())
         {
