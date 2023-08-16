@@ -71,15 +71,15 @@ struct Config final
         static constexpr T DATA_CONNECT_INTERVAL = 10;
 };
 
-template <typename T>
+template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
-        const std::vector<Measurements<2, T>>& measurements,
-        const std::vector<Position<2, T>>& positions,
+        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<Position<N, T>>& positions,
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
 {
-        std::vector<view::Filter<2, T>> filters;
+        std::vector<view::Filter<N, T>> filters;
         filters.reserve(positions.size() + processes.size() + moves.size());
 
         const auto push = [&](const auto& f)
@@ -93,17 +93,17 @@ void write_to_file(
                          .position_p = f.positions_p()});
         };
 
-        for (const Position<2, T>& f : positions)
+        for (const auto& f : positions)
         {
                 push(f);
         }
 
-        for (const Process<T>& f : processes)
+        for (const auto& f : processes)
         {
                 push(f);
         }
 
-        for (const Move<T>& f : moves)
+        for (const auto& f : moves)
         {
                 push(f);
         }
@@ -252,12 +252,12 @@ std::vector<Move<T>> create_moves()
         return res;
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 void write_result(
         const std::string_view annotation,
-        const std::vector<Measurements<2, T>>& measurements,
-        const std::vector<PositionVariance<2, T>>& position_variance,
-        const std::vector<Position<2, T>>& positions,
+        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<PositionVariance<N, T>>& position_variance,
+        const std::vector<Position<N, T>>& positions,
         const std::vector<Process<T>>& processes,
         const std::vector<Move<T>>& moves)
 {
@@ -293,42 +293,42 @@ void write_result(
         }
 }
 
-template <typename T>
-std::optional<Vector<2, T>> compute_variance(const std::vector<PositionVariance<2, T>>& positions)
+template <std::size_t N, typename T>
+std::optional<Vector<N, T>> compute_variance(const std::vector<PositionVariance<N, T>>& positions)
 {
         if (positions.size() == 1)
         {
                 return positions.front().last_position_variance();
         }
 
-        std::optional<Vector<2, T>> sum;
+        Vector<N, T> sum(0);
         std::size_t count = 0;
-        for (const PositionVariance<2, T>& position : positions)
+        for (const PositionVariance<N, T>& position : positions)
         {
                 const auto& variance = position.last_position_variance();
                 if (!variance)
                 {
                         continue;
                 }
+
                 ++count;
-                if (sum)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        (*sum)[0] += std::sqrt((*variance)[0]);
-                        (*sum)[1] += std::sqrt((*variance)[1]);
-                }
-                else
-                {
-                        sum = Vector<2, T>(std::sqrt((*variance)[0]), std::sqrt((*variance)[1]));
+                        sum[i] += std::sqrt((*variance)[i]);
                 }
         }
-        if (sum)
+
+        if (count == 0)
         {
-                *sum /= static_cast<T>(count);
-                (*sum)[0] = square((*sum)[0]);
-                (*sum)[1] = square((*sum)[1]);
-                return *sum;
+                return {};
         }
-        return {};
+
+        sum /= static_cast<T>(count);
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                sum[i] = square(sum[i]);
+        }
+        return sum;
 }
 
 template <typename T>
