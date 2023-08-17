@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "measurement.h"
-#include "position_estimation.h"
 #include "process_filter.h"
+
+#include "position/position_estimation.h"
 
 #include "../consistency.h"
 

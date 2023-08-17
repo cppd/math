@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "measurement.h"
-#include "point.h"
+#include "moving_variance.h"
 #include "position_filter.h"
-#include "variance.h"
+
+#include "../measurement.h"
+#include "../point.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>

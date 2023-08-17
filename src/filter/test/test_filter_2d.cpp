@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "move.h"
 #include "move_filter_ukf.h"
-#include "position.h"
-#include "position_estimation.h"
-#include "position_filter_lkf.h"
-#include "position_variance.h"
 #include "process.h"
 #include "process_filter_ekf.h"
 #include "process_filter_ukf.h"
 #include "simulator.h"
 
+#include "position/position.h"
+#include "position/position_estimation.h"
+#include "position/position_filter_lkf.h"
+#include "position/position_variance.h"
 #include "view/write.h"
 
 #include <src/com/conversion.h>

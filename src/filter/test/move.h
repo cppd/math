@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurement.h"
 #include "move_filter.h"
 #include "point.h"
-#include "position_estimation.h"
+
+#include "position/position_estimation.h"
 
 #include "../consistency.h"
 
