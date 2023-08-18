@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "move_filter_ukf.h"
 
-#include "utility.h"
-
-#include "../sigma_points.h"
-#include "../ukf.h"
+#include "../../sigma_points.h"
+#include "../../ukf.h"
+#include "../utility.h"
 
 #include <src/com/angle.h>
 #include <src/com/error.h>
