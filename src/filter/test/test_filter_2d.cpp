@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process.h"
-#include "process_filter_ekf.h"
-#include "process_filter_ukf.h"
 #include "simulator.h"
 
 #include "move/move.h"
@@ -26,6 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position/position_estimation.h"
 #include "position/position_filter_lkf.h"
 #include "position/position_variance.h"
+#include "process/process.h"
+#include "process/process_filter_ekf.h"
+#include "process/process_filter_ukf.h"
 #include "view/write.h"
 
 #include <src/com/conversion.h>
