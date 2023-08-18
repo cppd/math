@@ -179,20 +179,19 @@ bool Process<T>::update_non_position(const Measurements<2, T>& m, const T dt)
 }
 
 template <typename T>
-void Process<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
+void Process<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (position_estimation.has_angle_difference())
+                if (estimation.has_angle_difference())
                 {
-                        LOG(name_ + "; " + position_estimation.angle_difference_description());
+                        LOG(name_ + "; " + estimation.angle_difference_description());
 
                         filter_->reset(
-                                position_estimation.position_velocity_acceleration(),
-                                position_estimation.position_velocity_acceleration_p(),
-                                position_estimation.angle_difference());
+                                estimation.position_velocity_acceleration(),
+                                estimation.position_velocity_acceleration_p(), estimation.angle_difference());
 
                         last_time_ = m.time;
                 }

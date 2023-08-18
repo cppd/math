@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position.h"
 
+#include "../estimation.h"
 #include "../measurement.h"
 
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -29,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-class PositionEstimation final
+class PositionEstimation final : public Estimation<T>
 {
         const T angle_estimation_time_difference_;
         const T angle_estimation_variance_;
@@ -44,16 +46,15 @@ public:
 
         void update(const Measurements<2, T>& m, const std::vector<Position<2, T>>* positions);
 
-        [[nodiscard]] bool has_angle_difference() const;
-        [[nodiscard]] T angle_difference() const;
+        [[nodiscard]] bool has_angle_difference() const override;
+        [[nodiscard]] T angle_difference() const override;
 
-        [[nodiscard]] bool has_position() const;
-        [[nodiscard]] T position_angle_p() const;
-        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const;
-        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const;
+        [[nodiscard]] bool has_position() const override;
+        [[nodiscard]] T position_angle_p() const override;
+        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override;
+        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override;
 
-        [[nodiscard]] std::string position_description() const;
-        [[nodiscard]] std::string angle_difference_description() const;
+        [[nodiscard]] std::string position_description() const override;
+        [[nodiscard]] std::string angle_difference_description() const override;
 };
-
 }

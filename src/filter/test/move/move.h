@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "move_filter.h"
 
 #include "../../consistency.h"
+#include "../estimation.h"
 #include "../measurement.h"
 #include "../point.h"
-#include "../position/position_estimation.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
@@ -78,7 +78,7 @@ class Move final
 public:
         Move(std::string name, color::RGB8 color, T reset_dt, T angle_p, std::unique_ptr<MoveFilter<T>>&& filter);
 
-        void update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation);
+        void update(const Measurements<2, T>& m, const Estimation<T>& estimation);
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] color::RGB8 color() const;

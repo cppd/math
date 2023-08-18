@@ -146,7 +146,7 @@ bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const
 }
 
 template <typename T>
-void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& position_estimation)
+void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -155,18 +155,17 @@ void Move<T>::update(const Measurements<2, T>& m, const PositionEstimation<T>& p
                 return;
         }
 
-        const bool has_angle =
-                position_estimation.has_position() && (position_estimation.position_angle_p() <= angle_p_);
+        const bool has_angle = estimation.has_position() && (estimation.position_angle_p() <= angle_p_);
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
                 if (m.position && has_angle)
                 {
-                        LOG(name_ + "; " + position_estimation.position_description());
+                        LOG(name_ + "; " + estimation.position_description());
 
                         filter_->reset(
-                                position_estimation.position_velocity_acceleration(),
-                                position_estimation.position_velocity_acceleration_p());
+                                estimation.position_velocity_acceleration(),
+                                estimation.position_velocity_acceleration_p());
 
                         last_time_ = m.time;
                 }
