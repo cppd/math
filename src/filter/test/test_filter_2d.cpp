@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "move/move_filter_ukf.h"
 #include "position/position.h"
 #include "position/position_estimation.h"
-#include "position/position_filter_lkf.h"
 #include "position/position_filter_lkf_1.h"
+#include "position/position_filter_lkf_2.h"
 #include "position/position_variance.h"
 #include "process/process.h"
 #include "process/process_filter_ekf.h"
@@ -149,7 +149,7 @@ std::vector<PositionVariance<N, T>> create_position_variance()
 
         res.emplace_back(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                create_position_filter_lkf<N, T>(THETA, Config<T>::POSITION_FILTER_VARIANCE_2));
+                create_position_filter_lkf_2<N, T>(THETA, Config<T>::POSITION_FILTER_VARIANCE_2));
 
         return res;
 }
@@ -191,7 +191,7 @@ std::vector<Position<N, T>> create_positions()
                         res.emplace_back(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2,
-                                create_position_filter_lkf<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
+                                create_position_filter_lkf_2<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
                 }
         }
 

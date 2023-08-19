@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position_filter_lkf.h"
+#include "position_filter_lkf_2.h"
 
 #include "../../ekf.h"
 #include "../utility.h"
@@ -280,12 +280,12 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf(const T theta, const T process_variance)
+std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_2(const T theta, const T process_variance)
 {
         return std::make_unique<Filter<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf<(N), T>(T, T);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf_2<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 
