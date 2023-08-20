@@ -37,7 +37,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
 {
         if (m.direction)
         {
-                last_direction_ = m.direction->value;
+                last_direction_ = m.direction->value[0];
                 last_direction_time_ = m.time;
         }
 

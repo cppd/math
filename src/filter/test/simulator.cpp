@@ -340,8 +340,8 @@ std::vector<Measurements<N, T>> simulate(const Config<T>& config)
                 if (i % config.measurement_dt_count_direction == 0)
                 {
                         m.direction = {
-                                .value = simulator.measurement_direction(),
-                                .variance = config.measurement_variance_direction};
+                                .value = Vector<1, T>(simulator.measurement_direction()),
+                                .variance = Vector<1, T>(config.measurement_variance_direction)};
                 }
 
                 if (i % config.measurement_dt_count_position == 0)
@@ -354,8 +354,8 @@ std::vector<Measurements<N, T>> simulate(const Config<T>& config)
                 if (i % config.measurement_dt_count_speed == 0)
                 {
                         m.speed = {
-                                .value = simulator.measurement_speed(),
-                                .variance = config.measurement_variance_speed};
+                                .value = Vector<1, T>(simulator.measurement_speed()),
+                                .variance = Vector<1, T>(config.measurement_variance_speed)};
                 }
         }
 

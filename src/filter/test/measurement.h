@@ -46,13 +46,6 @@ struct Measurement final
         Vector<N, T> variance;
 };
 
-template <typename T>
-struct Measurement<1, T> final
-{
-        T value;
-        T variance;
-};
-
 template <std::size_t N, typename T>
 struct Measurements final
 {

@@ -145,7 +145,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
                         res.emplace_back();
                 }
                 res.push_back({
-                        {impl::time_unit(m.time), mps_to_kph(m.speed->value)}
+                        {impl::time_unit(m.time), mps_to_kph(m.speed->value[0])}
                 });
                 last_time = m.time;
         }
@@ -174,7 +174,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
                 {
                         res.emplace_back();
                 }
-                const T unbounded_angle = unbound_angle(previous_angle, m.direction->value);
+                const T unbounded_angle = unbound_angle(previous_angle, m.direction->value[0]);
                 previous_angle = unbounded_angle;
                 res.push_back({
                         {impl::time_unit(m.time), radians_to_degrees(unbounded_angle)}
