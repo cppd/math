@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-std::unique_ptr<MoveFilter<T>> create_move_filter_ukf(
+std::unique_ptr<MoveFilter<T>> create_move_filter_ukf_2(
         T sigma_points_alpha,
         T position_variance,
         T angle_variance,
