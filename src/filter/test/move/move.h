@@ -41,6 +41,7 @@ class Move final
         color::RGB8 color_;
         T reset_dt_;
         T angle_p_;
+        std::optional<T> gate_;
         std::unique_ptr<MoveFilter<T>> filter_;
 
         std::vector<Point<2, T>> positions_;
@@ -66,17 +67,17 @@ class Move final
 
         void check_time(T time) const;
 
-        void update_position(
-                const Measurement<2, T>& position,
-                const Measurements<2, T>& m,
-                T dt,
-                bool has_angle,
-                bool use_gate);
+        void update_position(const Measurement<2, T>& position, const Measurements<2, T>& m, T dt, bool has_angle);
 
-        [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt, bool has_angle, bool use_gate);
+        [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt, bool has_angle);
 
 public:
-        Move(std::string name, color::RGB8 color, T reset_dt, T angle_p, std::unique_ptr<MoveFilter<T>>&& filter);
+        Move(std::string name,
+             color::RGB8 color,
+             T reset_dt,
+             T angle_p,
+             std::optional<T> gate,
+             std::unique_ptr<MoveFilter<T>>&& filter);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation);
 

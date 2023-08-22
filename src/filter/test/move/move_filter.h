@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <optional>
+
 namespace ns::filter::test
 {
 template <typename T>
@@ -47,32 +49,32 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        virtual bool update_position(const Measurement<2, T>& position, bool use_gate) = 0;
+        virtual bool update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
 
         virtual bool update_position_speed(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
-                bool use_gate) = 0;
+                std::optional<T> gate) = 0;
 
         virtual bool update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
-                bool use_gate) = 0;
+                std::optional<T> gate) = 0;
 
         virtual bool update_position_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,
-                bool use_gate) = 0;
+                std::optional<T> gate) = 0;
 
         virtual bool update_speed_direction(
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
-                bool use_gate) = 0;
+                std::optional<T> gate) = 0;
 
-        virtual bool update_direction(const Measurement<1, T>& direction, bool use_gate) = 0;
+        virtual bool update_direction(const Measurement<1, T>& direction, std::optional<T> gate) = 0;
 
-        virtual bool update_speed(const Measurement<1, T>& speed, bool use_gate) = 0;
+        virtual bool update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;

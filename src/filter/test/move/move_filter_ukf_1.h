@@ -20,14 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "move_filter.h"
 
 #include <memory>
-#include <optional>
 
 namespace ns::filter::test
 {
 template <typename T>
-std::unique_ptr<MoveFilter<T>> create_move_filter_ukf_1(
-        T sigma_points_alpha,
-        T position_variance,
-        T angle_variance,
-        std::optional<T> gate);
+std::unique_ptr<MoveFilter<T>> create_move_filter_ukf_1(T sigma_points_alpha, T position_variance, T angle_variance);
 }

@@ -31,11 +31,13 @@ Move<T>::Move(
         const color::RGB8 color,
         const T reset_dt,
         const T angle_p,
+        const std::optional<T> gate,
         std::unique_ptr<MoveFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           angle_p_(angle_p),
+          gate_(gate),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -78,8 +80,7 @@ void Move<T>::update_position(
         const Measurement<2, T>& position,
         const Measurements<2, T>& m,
         const T dt,
-        const bool has_angle,
-        const bool use_gate)
+        const bool has_angle)
 {
         ASSERT(m.position);
 
@@ -88,12 +89,12 @@ void Move<T>::update_position(
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, use_gate);
+                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, gate_);
                 }
                 else
                 {
                         filter_->predict(dt);
-                        filter_->update_position_speed(position, *m.speed, use_gate);
+                        filter_->update_position_speed(position, *m.speed, gate_);
                 }
         }
         else
@@ -101,18 +102,18 @@ void Move<T>::update_position(
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_direction(position, *m.direction, use_gate);
+                        filter_->update_position_direction(position, *m.direction, gate_);
                 }
                 else
                 {
                         filter_->predict(dt);
-                        filter_->update_position(position, use_gate);
+                        filter_->update_position(position, gate_);
                 }
         }
 }
 
 template <typename T>
-bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle, const bool use_gate)
+bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle)
 {
         ASSERT(!m.position);
 
@@ -121,12 +122,12 @@ bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_speed_direction(*m.speed, *m.direction, use_gate);
+                        filter_->update_speed_direction(*m.speed, *m.direction, gate_);
                 }
                 else
                 {
                         filter_->predict(dt);
-                        filter_->update_speed(*m.speed, use_gate);
+                        filter_->update_speed(*m.speed, gate_);
                 }
         }
         else
@@ -134,7 +135,7 @@ bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const
                 if (has_angle && m.direction)
                 {
                         filter_->predict(dt);
-                        filter_->update_direction(*m.direction, use_gate);
+                        filter_->update_direction(*m.direction, gate_);
                 }
                 else
                 {
@@ -178,7 +179,6 @@ void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimatio
         }
 
         const T dt = m.time - *last_time_;
-        const bool use_gate = true;
 
         if (m.position)
         {
@@ -189,7 +189,7 @@ void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimatio
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                update_position(position, m, dt, has_angle, use_gate);
+                update_position(position, m, dt, has_angle);
 
                 last_position_time_ = m.time;
 
@@ -199,7 +199,7 @@ void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimatio
         }
         else
         {
-                if (!update_non_position(m, dt, has_angle, use_gate))
+                if (!update_non_position(m, dt, has_angle))
                 {
                         return;
                 }

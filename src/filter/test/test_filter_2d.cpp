@@ -269,20 +269,18 @@ std::vector<Move<T>> create_moves()
                 {
                         res.emplace_back(
                                 name(alphas[i]), color::RGB8(0, 160 - 40 * i, 200), Config<T>::MOVE_FILTER_RESET_DT,
-                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
                                 create_move_filter_ukf_1(
-                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1, move_av,
-                                        Config<T>::MOVE_FILTER_GATE));
+                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1, move_av));
                 }
 
                 if (ORDER == 2)
                 {
                         res.emplace_back(
                                 name(alphas[i]), color::RGB8(0, 160 - 40 * i, 100), Config<T>::MOVE_FILTER_RESET_DT,
-                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
                                 create_move_filter_ukf_2(
-                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2, move_av,
-                                        Config<T>::MOVE_FILTER_GATE));
+                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2, move_av));
                 }
         }
 
