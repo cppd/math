@@ -719,7 +719,6 @@ class Filter final : public ProcessFilter<T>
         const T position_variance_;
         const T angle_variance_;
         const T angle_r_variance_;
-        const std::optional<T> gate_;
         std::optional<Ukf<9, T, SigmaPoints<9, T>>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
@@ -761,30 +760,34 @@ class Filter final : public ProcessFilter<T>
                         q(dt, position_variance_, angle_variance_, angle_r_variance_));
         }
 
-        void update_position(const Measurement<2, T>& position) override
+        void update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>,
-                        gate_);
+                        gate);
         }
 
-        void update_position_speed(const Measurement<2, T>& position, const Measurement<1, T>& speed) override
+        void update_position_speed(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
                         Vector<3, T>(position.value[0], position.value[1], speed.value[0]), AddX(),
-                        position_speed_residual<T>, gate_);
+                        position_speed_residual<T>, gate);
         }
 
         void update_position_speed_direction_acceleration(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
-                const Measurement<2, T>& acceleration) override
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -795,13 +798,14 @@ class Filter final : public ProcessFilter<T>
                         Vector<6, T>(
                                 position.value[0], position.value[1], speed.value[0], direction.value[0],
                                 acceleration.value[0], acceleration.value[1]),
-                        AddX(), position_speed_direction_acceleration_residual<T>, gate_);
+                        AddX(), position_speed_direction_acceleration_residual<T>, gate);
         }
 
         void update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
-                const Measurement<1, T>& direction) override
+                const Measurement<1, T>& direction,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -809,13 +813,14 @@ class Filter final : public ProcessFilter<T>
                         position_speed_direction_h<T>,
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
                         Vector<4, T>(position.value[0], position.value[1], speed.value[0], direction.value[0]), AddX(),
-                        position_speed_direction_residual<T>, gate_);
+                        position_speed_direction_residual<T>, gate);
         }
 
         void update_position_speed_acceleration(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
-                const Measurement<2, T>& acceleration) override
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -825,13 +830,14 @@ class Filter final : public ProcessFilter<T>
                         Vector<5, T>(
                                 position.value[0], position.value[1], speed.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        AddX(), position_speed_acceleration_residual<T>, gate_);
+                        AddX(), position_speed_acceleration_residual<T>, gate);
         }
 
         void update_position_direction_acceleration(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,
-                const Measurement<2, T>& acceleration) override
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -841,21 +847,26 @@ class Filter final : public ProcessFilter<T>
                         Vector<5, T>(
                                 position.value[0], position.value[1], direction.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        AddX(), position_direction_acceleration_residual<T>, gate_);
+                        AddX(), position_direction_acceleration_residual<T>, gate);
         }
 
-        void update_position_direction(const Measurement<2, T>& position, const Measurement<1, T>& direction) override
+        void update_position_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
                         Vector<3, T>(position.value[0], position.value[1], direction.value[0]), AddX(),
-                        position_direction_residual<T>, gate_);
+                        position_direction_residual<T>, gate);
         }
 
-        void update_position_acceleration(const Measurement<2, T>& position, const Measurement<2, T>& acceleration)
-                override
+        void update_position_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -863,13 +874,14 @@ class Filter final : public ProcessFilter<T>
                         position_acceleration_h<T>, position_acceleration_r(position.variance, acceleration.variance),
                         Vector<4, T>(
                                 position.value[0], position.value[1], acceleration.value[0], acceleration.value[1]),
-                        AddX(), position_acceleration_residual<T>, gate_);
+                        AddX(), position_acceleration_residual<T>, gate);
         }
 
         void update_speed_direction_acceleration(
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
-                const Measurement<2, T>& acceleration) override
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -877,20 +889,25 @@ class Filter final : public ProcessFilter<T>
                         speed_direction_acceleration_h<T>,
                         speed_direction_acceleration_r(speed.variance, direction.variance, acceleration.variance),
                         Vector<4, T>(speed.value[0], direction.value[0], acceleration.value[0], acceleration.value[1]),
-                        AddX(), speed_direction_acceleration_residual<T>, gate_);
+                        AddX(), speed_direction_acceleration_residual<T>, gate);
         }
 
-        void update_speed_direction(const Measurement<1, T>& speed, const Measurement<1, T>& direction) override
+        void update_speed_direction(
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
-                        Vector<2, T>(speed.value[0], direction.value[0]), AddX(), speed_direction_residual<T>, gate_);
+                        Vector<2, T>(speed.value[0], direction.value[0]), AddX(), speed_direction_residual<T>, gate);
         }
 
-        void update_direction_acceleration(const Measurement<1, T>& direction, const Measurement<2, T>& acceleration)
-                override
+        void update_direction_acceleration(
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
@@ -898,44 +915,47 @@ class Filter final : public ProcessFilter<T>
                         direction_acceleration_h<T>,
                         direction_acceleration_r(direction.variance, acceleration.variance),
                         Vector<3, T>(direction.value[0], acceleration.value[0], acceleration.value[1]), AddX(),
-                        direction_acceleration_residual<T>, gate_);
+                        direction_acceleration_residual<T>, gate);
         }
 
-        void update_acceleration(const Measurement<2, T>& acceleration) override
+        void update_acceleration(const Measurement<2, T>& acceleration, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         acceleration_h<T>, acceleration_r(acceleration.variance), acceleration.value, AddX(),
-                        acceleration_residual<T>, gate_);
+                        acceleration_residual<T>, gate);
         }
 
-        void update_direction(const Measurement<1, T>& direction) override
+        void update_direction(const Measurement<1, T>& direction, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
-                        direction_residual<T>, gate_);
+                        direction_residual<T>, gate);
         }
 
-        void update_speed(const Measurement<1, T>& speed) override
+        void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>,
-                        gate_);
+                        gate);
         }
 
-        void update_speed_acceleration(const Measurement<1, T>& speed, const Measurement<2, T>& acceleration) override
+        void update_speed_acceleration(
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         speed_acceleration_h<T>, speed_acceleration_r(speed.variance, acceleration.variance),
                         Vector<3, T>(speed.value[0], acceleration.value[0], acceleration.value[1]), AddX(),
-                        speed_acceleration_residual<T>, gate_);
+                        speed_acceleration_residual<T>, gate);
         }
 
         [[nodiscard]] Vector<2, T> position() const override
@@ -1008,16 +1028,11 @@ class Filter final : public ProcessFilter<T>
         }
 
 public:
-        Filter(const T sigma_points_alpha,
-               const T position_variance,
-               const T angle_variance,
-               const T angle_r_variance,
-               const std::optional<T> gate)
+        Filter(const T sigma_points_alpha, const T position_variance, const T angle_variance, const T angle_r_variance)
                 : sigma_points_alpha_(sigma_points_alpha),
                   position_variance_(position_variance),
                   angle_variance_(angle_variance),
-                  angle_r_variance_(angle_r_variance),
-                  gate_(gate)
+                  angle_r_variance_(angle_r_variance)
         {
         }
 };
@@ -1028,14 +1043,12 @@ std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
-        const T angle_r_variance,
-        const std::optional<T> gate)
+        const T angle_r_variance)
 {
-        return std::make_unique<Filter<T>>(
-                sigma_points_alpha, position_variance, angle_variance, angle_r_variance, gate);
+        return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(T, T, T, T, std::optional<T>);
+#define TEMPLATE(T) template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(T, T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

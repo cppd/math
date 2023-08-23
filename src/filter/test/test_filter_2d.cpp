@@ -211,8 +211,8 @@ std::vector<Process<T>> create_processes()
         std::vector<Process<T>> res;
 
         res.emplace_back(
-                "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                create_process_filter_ekf<T>(process_pv, process_av, process_arv, Config<T>::PROCESS_FILTER_GATE));
+                "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT, Config<T>::PROCESS_FILTER_GATE,
+                create_process_filter_ekf<T>(process_pv, process_av, process_arv));
 
         const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
@@ -232,8 +232,8 @@ std::vector<Process<T>> create_processes()
                 ASSERT(i <= 4);
                 res.emplace_back(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                        create_process_filter_ukf(
-                                alphas[i], process_pv, process_av, process_arv, Config<T>::PROCESS_FILTER_GATE));
+                        Config<T>::PROCESS_FILTER_GATE,
+                        create_process_filter_ukf(alphas[i], process_pv, process_av, process_arv));
         }
 
         return res;

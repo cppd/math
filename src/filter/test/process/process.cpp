@@ -30,10 +30,12 @@ Process<T>::Process(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
+        const std::optional<T> gate,
         std::unique_ptr<ProcessFilter<T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
+          gate_(gate),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -77,24 +79,24 @@ void Process<T>::update_position(const Measurement<2, T>& position, const Measur
                         {
                                 filter_->predict(dt);
                                 filter_->update_position_speed_direction_acceleration(
-                                        position, *m.speed, *m.direction, *m.acceleration);
+                                        position, *m.speed, *m.direction, *m.acceleration, gate_);
                                 return;
                         }
 
                         filter_->predict(dt);
-                        filter_->update_position_speed_direction(position, *m.speed, *m.direction);
+                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, gate_);
                         return;
                 }
 
                 if (m.acceleration)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_speed_acceleration(position, *m.speed, *m.acceleration);
+                        filter_->update_position_speed_acceleration(position, *m.speed, *m.acceleration, gate_);
                         return;
                 }
 
                 filter_->predict(dt);
-                filter_->update_position_speed(position, *m.speed);
+                filter_->update_position_speed(position, *m.speed, gate_);
                 return;
         }
 
@@ -103,24 +105,24 @@ void Process<T>::update_position(const Measurement<2, T>& position, const Measur
                 if (m.acceleration)
                 {
                         filter_->predict(dt);
-                        filter_->update_position_direction_acceleration(position, *m.direction, *m.acceleration);
+                        filter_->update_position_direction_acceleration(position, *m.direction, *m.acceleration, gate_);
                         return;
                 }
 
                 filter_->predict(dt);
-                filter_->update_position_direction(position, *m.direction);
+                filter_->update_position_direction(position, *m.direction, gate_);
                 return;
         }
 
         if (m.acceleration)
         {
                 filter_->predict(dt);
-                filter_->update_position_acceleration(position, *m.acceleration);
+                filter_->update_position_acceleration(position, *m.acceleration, gate_);
                 return;
         }
 
         filter_->predict(dt);
-        filter_->update_position(position);
+        filter_->update_position(position, gate_);
 }
 
 template <typename T>
@@ -133,24 +135,25 @@ bool Process<T>::update_non_position(const Measurements<2, T>& m, const T dt)
                         if (m.acceleration)
                         {
                                 filter_->predict(dt);
-                                filter_->update_speed_direction_acceleration(*m.speed, *m.direction, *m.acceleration);
+                                filter_->update_speed_direction_acceleration(
+                                        *m.speed, *m.direction, *m.acceleration, gate_);
                                 return true;
                         }
 
                         filter_->predict(dt);
-                        filter_->update_speed_direction(*m.speed, *m.direction);
+                        filter_->update_speed_direction(*m.speed, *m.direction, gate_);
                         return true;
                 }
 
                 if (m.acceleration)
                 {
                         filter_->predict(dt);
-                        filter_->update_speed_acceleration(*m.speed, *m.acceleration);
+                        filter_->update_speed_acceleration(*m.speed, *m.acceleration, gate_);
                         return true;
                 }
 
                 filter_->predict(dt);
-                filter_->update_speed(*m.speed);
+                filter_->update_speed(*m.speed, gate_);
                 return true;
         }
 
@@ -159,19 +162,19 @@ bool Process<T>::update_non_position(const Measurements<2, T>& m, const T dt)
                 if (m.acceleration)
                 {
                         filter_->predict(dt);
-                        filter_->update_direction_acceleration(*m.direction, *m.acceleration);
+                        filter_->update_direction_acceleration(*m.direction, *m.acceleration, gate_);
                         return true;
                 }
 
                 filter_->predict(dt);
-                filter_->update_direction(*m.direction);
+                filter_->update_direction(*m.direction, gate_);
                 return true;
         }
 
         if (m.acceleration)
         {
                 filter_->predict(dt);
-                filter_->update_acceleration(*m.acceleration);
+                filter_->update_acceleration(*m.acceleration, gate_);
                 return true;
         }
 

@@ -40,6 +40,7 @@ class Process final
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
+        std::optional<T> gate_;
         std::unique_ptr<ProcessFilter<T>> filter_;
 
         std::vector<Point<2, T>> positions_;
@@ -69,7 +70,11 @@ class Process final
         [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt);
 
 public:
-        Process(std::string name, color::RGB8 color, T reset_dt, std::unique_ptr<ProcessFilter<T>>&& filter);
+        Process(std::string name,
+                color::RGB8 color,
+                T reset_dt,
+                std::optional<T> gate,
+                std::unique_ptr<ProcessFilter<T>>&& filter);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation);
 

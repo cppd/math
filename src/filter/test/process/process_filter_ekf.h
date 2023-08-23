@@ -20,14 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "process_filter.h"
 
 #include <memory>
-#include <optional>
 
 namespace ns::filter::test
 {
 template <typename T>
-std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(
-        T position_variance,
-        T angle_variance,
-        T angle_r_variance,
-        std::optional<T> gate);
+std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(T position_variance, T angle_variance, T angle_r_variance);
 }
