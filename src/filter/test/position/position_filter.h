@@ -47,16 +47,19 @@ public:
                 const Vector<N, T>& variance,
                 std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
-        [[nodiscard]] virtual Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;
-
         [[nodiscard]] virtual Vector<N, T> position() const = 0;
         [[nodiscard]] virtual Matrix<N, N, T> position_p() const = 0;
 
+        [[nodiscard]] virtual bool has_speed() const = 0;
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 
+        [[nodiscard]] virtual bool has_velocity() const = 0;
         [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
         [[nodiscard]] virtual Matrix<N, N, T> velocity_p() const = 0;
+
+        [[nodiscard]] virtual bool has_position_velocity_acceleration() const = 0;
+        [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
+        [[nodiscard]] virtual Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;
 };
 }

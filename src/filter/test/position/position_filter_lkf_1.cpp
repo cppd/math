@@ -207,16 +207,6 @@ class Filter final : public PositionFilter<N, T>
                 return {};
         }
 
-        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
-        {
-                error("Acceleration is not supported");
-        }
-
-        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
-        {
-                error("Acceleration P is not supported");
-        }
-
         [[nodiscard]] Vector<N, T> position() const override
         {
                 ASSERT(filter_);
@@ -231,6 +221,11 @@ class Filter final : public PositionFilter<N, T>
                 return slice<0, 2>(filter_->p());
         }
 
+        [[nodiscard]] bool has_speed() const override
+        {
+                return true;
+        }
+
         [[nodiscard]] T speed() const override
         {
                 return velocity().norm();
@@ -239,6 +234,11 @@ class Filter final : public PositionFilter<N, T>
         [[nodiscard]] T speed_p() const override
         {
                 return compute_speed_p(velocity(), velocity_p());
+        }
+
+        [[nodiscard]] bool has_velocity() const override
+        {
+                return true;
         }
 
         [[nodiscard]] Vector<N, T> velocity() const override
@@ -253,6 +253,21 @@ class Filter final : public PositionFilter<N, T>
                 ASSERT(filter_);
 
                 return slice<1, 2>(filter_->p());
+        }
+
+        [[nodiscard]] bool has_position_velocity_acceleration() const override
+        {
+                return false;
+        }
+
+        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
+        {
+                error("no position_velocity_acceleration is not supported");
+        }
+
+        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
+        {
+                error("position_velocity_acceleration_p is not supported");
         }
 
 public:
