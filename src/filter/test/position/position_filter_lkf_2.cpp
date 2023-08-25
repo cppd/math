@@ -194,7 +194,7 @@ class Filter final : public PositionFilter<N, T>
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
                 ASSERT(is_finite(variance));
-                ASSERT(variance[0] >= 0 && variance[1] >= 0);
+                ASSERT(is_positive(variance));
 
                 const Matrix<N, N, T> r = position_r(variance);
 

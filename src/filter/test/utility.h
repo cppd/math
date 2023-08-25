@@ -61,6 +61,19 @@ template <typename T, typename Angle>
         return settings::test_directory() / path_from_utf8(name);
 }
 
+template <std::size_t N, typename T>
+[[nodiscard]] T is_positive(const Vector<N, T>& v)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (!(v[i] > 0))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 template <typename T>
 [[nodiscard]] T compute_angle(const Vector<2, T>& velocity)
 {
