@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "move/move_filter_ukf_2.h"
 #include "position/position.h"
 #include "position/position_estimation.h"
+#include "position/position_filter_lkf_0.h"
 #include "position/position_filter_lkf_1.h"
 #include "position/position_filter_lkf_2.h"
 #include "position/position_variance.h"
@@ -48,10 +49,15 @@ namespace
 template <typename T>
 struct Config final
 {
+        static constexpr T POSITION_FILTER_VARIANCE_0 = square(0.5);
+        static constexpr std::optional<T> POSITION_FILTER_GATE_0{};
+
         static constexpr T POSITION_FILTER_VARIANCE_1 = square(1);
         static constexpr std::optional<T> POSITION_FILTER_GATE_1{10};
+
         static constexpr T POSITION_FILTER_VARIANCE_2 = square(0.5);
         static constexpr std::optional<T> POSITION_FILTER_GATE_2{5};
+
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
         static constexpr T POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE = 1;
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
@@ -179,7 +185,16 @@ std::vector<Position<N, T>> create_positions()
                 ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
                 ASSERT(i <= 4);
 
-                static_assert(ORDER == 1 || ORDER == 2);
+                static_assert(ORDER >= 0 && ORDER <= 2);
+
+                if (ORDER == 0)
+                {
+                        res.emplace_back(
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200),
+                                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                Config<T>::POSITION_FILTER_GATE_0,
+                                create_position_filter_lkf_0<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
+                }
 
                 if (ORDER == 1)
                 {
@@ -374,6 +389,7 @@ void test_impl(const Track<2, T>& track)
         std::vector<Measurements<2, T>> measurements;
 
         std::vector<PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
+        std::vector<Position<2, T>> positions_0 = create_positions<2, T, 0>();
         std::vector<Position<2, T>> positions_1 = create_positions<2, T, 1>();
         std::vector<Position<2, T>> positions_2 = create_positions<2, T, 2>();
         std::vector<Process<T>> processes = create_processes<T>();
@@ -432,8 +448,8 @@ void test_impl(const Track<2, T>& track)
         }
 
         write_result(
-                track.annotation(), measurements, position_variance, {&positions_1, &positions_2}, {&processes},
-                {&moves_1, &moves_2});
+                track.annotation(), measurements, position_variance, {&positions_0, &positions_1, &positions_2},
+                {&processes}, {&moves_1, &moves_2});
 }
 
 template <typename T>
