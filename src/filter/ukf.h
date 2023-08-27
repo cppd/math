@@ -28,6 +28,7 @@ Kalman and Bayesian Filters in Python.
 #pragma once
 
 #include "checks.h"
+#include "gaussian.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -194,8 +195,14 @@ public:
                 check_x_p("UKF predict", x_, p_);
         }
 
+        struct Update final
+        {
+                bool gate = false;
+                std::optional<T> likelihood;
+        };
+
         template <std::size_t M, typename H, typename AddX, typename ResidualZ>
-        bool update(
+        Update update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -210,7 +217,9 @@ public:
                 // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z,
                 // Mahalanobis distance gate
-                const std::optional<T> gate = {})
+                const std::optional<T> gate,
+                // compute likelihood
+                const bool likelihood)
         {
                 namespace impl = ukf_implementation;
 
@@ -227,12 +236,21 @@ public:
                 const Matrix<M, M, T> p_z_inversed = p_z.inversed();
                 const Vector<M, T> residual = residual_z(z, x_z);
 
-                if (gate)
+                Update res;
+
+                if (gate || likelihood)
                 {
-                        const T mahalanobis_distance_squared = dot(residual * p_z_inversed, residual);
-                        if (!(mahalanobis_distance_squared <= square(*gate)))
+                        const T mahalanobis_distance_squared =
+                                compute_mahalanobis_distance_squared(residual, p_z_inversed);
+
+                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
                         {
-                                return false;
+                                return {.gate = true, .likelihood = {}};
+                        }
+
+                        if (likelihood)
+                        {
+                                res.likelihood = compute_likelihood(mahalanobis_distance_squared, p_z);
                         }
                 }
 
@@ -243,7 +261,7 @@ public:
 
                 check_x_p("UKF update", x_, p_);
 
-                return true;
+                return res;
         }
 };
 }

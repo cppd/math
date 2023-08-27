@@ -122,6 +122,8 @@ Vector<N, T> position_residual(const Vector<N, T>& a, const Vector<N, T>& b)
 template <std::size_t N, typename T>
 class Filter final : public PositionFilter<N, T>
 {
+        static constexpr bool LIKELIHOOD{false};
+
         const std::optional<T> theta_;
         const T process_variance_;
         std::optional<Ekf<N, T>> filter_;
@@ -170,12 +172,16 @@ class Filter final : public PositionFilter<N, T>
                         return residual;
                 };
 
-                if (filter_->update(PositionH(), PositionHJ(), r, position, AddX(), f_residual, gate, theta_))
+                if (!filter_->update(
+                                    PositionH(), PositionHJ(), r, position, AddX(), f_residual, gate, theta_,
+                                    LIKELIHOOD)
+                             .gate)
                 {
                         return {
                                 {.r = r, .residual = residual}
                         };
                 }
+
                 ASSERT(gate);
                 return {};
         }

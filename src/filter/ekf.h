@@ -46,6 +46,7 @@ Sequential filters
 #pragma once
 
 #include "checks.h"
+#include "gaussian.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -128,8 +129,14 @@ public:
                 check_x_p("EKF predict", x_, p_);
         }
 
+        struct Update final
+        {
+                bool gate = false;
+                std::optional<T> likelihood;
+        };
+
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
-        bool update(
+        Update update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -149,31 +156,52 @@ public:
                 // Mahalanobis distance gate
                 const std::optional<T> gate,
                 // H infinity parameter
-                const std::optional<T> theta)
+                const std::optional<T> theta,
+                // compute likelihood
+                const bool likelihood)
         {
                 namespace impl = ekf_implementation;
 
                 const Matrix<M, N, T> hjx = hj(x_);
                 const Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
 
-                const std::optional<Matrix<M, M, T>> s_inversed = [&]() -> std::optional<Matrix<M, M, T>>
+                struct Matrices final
                 {
-                        if (!theta || gate)
+                        Matrix<M, M, T> s;
+                        Matrix<M, M, T> s_inversed;
+                };
+
+                const std::optional<Matrices> matrices = [&]() -> std::optional<Matrices>
+                {
+                        if (!theta || gate || likelihood)
                         {
-                                return (hjx * p_hjxt + r).inversed();
+                                const Matrix<M, M, T> s = hjx * p_hjxt + r;
+                                return {
+                                        {.s = s, .s_inversed = s.inversed()}
+                                };
                         }
                         return {};
                 }();
 
                 const Vector<M, T> residual = residual_z(z, h(x_));
 
-                if (gate)
+                Update res;
+
+                if (gate || likelihood)
                 {
-                        ASSERT(s_inversed);
-                        const T mahalanobis_distance_squared = dot(residual * (*s_inversed), residual);
-                        if (!(mahalanobis_distance_squared <= square(*gate)))
+                        ASSERT(matrices);
+
+                        const T mahalanobis_distance_squared =
+                                compute_mahalanobis_distance_squared(residual, matrices->s_inversed);
+
+                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
                         {
-                                return false;
+                                return {.gate = true, .likelihood = {}};
+                        }
+
+                        if (likelihood)
+                        {
+                                res.likelihood = compute_likelihood(mahalanobis_distance_squared, matrices->s);
                         }
                 }
 
@@ -181,8 +209,8 @@ public:
                 {
                         if (!theta)
                         {
-                                ASSERT(s_inversed);
-                                return p_hjxt * (*s_inversed);
+                                ASSERT(matrices);
+                                return p_hjxt * matrices->s_inversed;
                         }
                         const Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
                         return impl::h_infinity_k("EKF update", *theta, p_, hjx, ht_ri);
@@ -195,7 +223,7 @@ public:
 
                 check_x_p("EKF update", x_, p_);
 
-                return true;
+                return res;
         }
 };
 }

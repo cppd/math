@@ -204,6 +204,7 @@ template <typename T, bool INF>
 class TestEkf
 {
         static constexpr std::optional<T> GATE{};
+        static constexpr bool LIKELIHOOD{true};
         static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
 
         const T dt_;
@@ -262,7 +263,8 @@ public:
                 };
 
                 filter_.predict(f, f_jacobian, q_);
-                filter_.update(h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA);
+                filter_.update(
+                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const
@@ -288,6 +290,9 @@ public:
 template <typename T>
 class TestUkf
 {
+        static constexpr std::optional<T> GATE{};
+        static constexpr bool LIKELIHOOD{true};
+
         static constexpr T ALPHA = 0.1;
         static constexpr T BETA = 2; // 2 for Gaussian
         static constexpr T KAPPA = 1; // 3 − N
@@ -330,7 +335,7 @@ public:
                 };
 
                 filter_.predict(f, q_);
-                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Residual());
+                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const
