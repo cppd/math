@@ -111,11 +111,14 @@ struct PositionHJ final
         }
 };
 
-template <std::size_t N, typename T>
-Vector<N, T> position_residual(const Vector<N, T>& a, const Vector<N, T>& b)
+struct PositionResidual final
 {
-        return a - b;
-}
+        template <std::size_t N, typename T>
+        Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        {
+                return a - b;
+        }
+};
 
 //
 
@@ -164,21 +167,13 @@ class Filter final : public PositionFilter<N, T>
 
                 const Matrix<N, N, T> r = position_r(variance);
 
-                Vector<N, T> residual;
+                const auto result = filter_->update(
+                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate, theta_, LIKELIHOOD);
 
-                const auto f_residual = [&](const Vector<N, T>& a, const Vector<N, T>& b)
-                {
-                        residual = position_residual(a, b);
-                        return residual;
-                };
-
-                if (!filter_->update(
-                                    PositionH(), PositionHJ(), r, position, AddX(), f_residual, gate, theta_,
-                                    LIKELIHOOD)
-                             .gate)
+                if (!result.gate_distance_squared)
                 {
                         return {
-                                {.r = r, .residual = residual}
+                                {.r = r, .residual = result.residual}
                         };
                 }
 

@@ -416,7 +416,7 @@ class Filter final : public MoveFilter<T>
                         position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>,
                         gate, LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_position_speed(
@@ -431,7 +431,7 @@ class Filter final : public MoveFilter<T>
                         Vector<3, T>(position.value[0], position.value[1], speed.value[0]), AddX(),
                         position_speed_residual<T>, gate, LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_position_speed_direction(
@@ -448,7 +448,7 @@ class Filter final : public MoveFilter<T>
                         Vector<4, T>(position.value[0], position.value[1], speed.value[0], direction.value[0]), AddX(),
                         position_speed_direction_residual<T>, gate, LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_position_direction(
@@ -463,7 +463,7 @@ class Filter final : public MoveFilter<T>
                         Vector<3, T>(position.value[0], position.value[1], direction.value[0]), AddX(),
                         position_direction_residual<T>, gate, LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_speed_direction(
@@ -478,7 +478,7 @@ class Filter final : public MoveFilter<T>
                         Vector<2, T>(speed.value[0], direction.value[0]), AddX(), speed_direction_residual<T>, gate,
                         LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_direction(const Measurement<1, T>& direction, const std::optional<T> gate) override
@@ -489,7 +489,7 @@ class Filter final : public MoveFilter<T>
                         direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
                         direction_residual<T>, gate, LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         bool update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
@@ -500,7 +500,7 @@ class Filter final : public MoveFilter<T>
                         speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>, gate,
                         LIKELIHOOD);
 
-                return !update.gate;
+                return !update.gate_distance_squared;
         }
 
         [[nodiscard]] Vector<2, T> position() const override

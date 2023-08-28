@@ -129,14 +129,16 @@ public:
                 check_x_p("EKF predict", x_, p_);
         }
 
+        template <std::size_t M>
         struct Update final
         {
-                bool gate = false;
+                Vector<M, T> residual;
+                std::optional<T> gate_distance_squared;
                 std::optional<T> likelihood;
         };
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
-        Update update(
+        Update<M> update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -185,7 +187,9 @@ public:
 
                 const Vector<M, T> residual = residual_z(z, h(x_));
 
-                Update res;
+                Update<M> res;
+
+                res.residual = residual;
 
                 if (gate || likelihood)
                 {
@@ -194,14 +198,15 @@ public:
                         const T mahalanobis_distance_squared =
                                 compute_mahalanobis_distance_squared(residual, matrices->s_inversed);
 
-                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
-                        {
-                                return {.gate = true, .likelihood = {}};
-                        }
-
                         if (likelihood)
                         {
                                 res.likelihood = compute_likelihood(mahalanobis_distance_squared, matrices->s);
+                        }
+
+                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
+                        {
+                                res.gate_distance_squared = mahalanobis_distance_squared;
+                                return res;
                         }
                 }
 
