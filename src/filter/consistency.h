@@ -58,11 +58,7 @@ class NormalizedSquared final
         std::size_t count_ = 0;
 
 public:
-        void add(
-                // Difference between true value and the filter’s state estimate.
-                // Difference between measurement and its predicted value (innovation, residual).
-                const Vector<N, T>& difference,
-                const Matrix<N, N, T>& covariance)
+        void add(const Vector<N, T>& difference, const Matrix<N, N, T>& covariance)
         {
                 sum_ += dot(difference * covariance.inversed(), difference);
                 ++count_;
@@ -72,6 +68,12 @@ public:
                 requires (N == 1)
         {
                 add(Vector<1, T>(difference), Matrix<1, 1, T>{{variance}});
+        }
+
+        void add(const T normalized_squared)
+        {
+                sum_ += normalized_squared;
+                ++count_;
         }
 
         [[nodiscard]] bool empty() const

@@ -50,7 +50,7 @@ class Position final
 
         NormalizedSquared<N, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
-        NormalizedSquared<N, T> nis_;
+        NormalizedSquared<1, T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;

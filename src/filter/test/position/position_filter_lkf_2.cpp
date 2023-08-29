@@ -191,7 +191,7 @@ class Filter final : public PositionFilter<N, T>
                         q<N, T>(dt, process_variance_));
         }
 
-        [[nodiscard]] std::optional<PositionFilterUpdate<N, T>> update(
+        [[nodiscard]] PositionFilterUpdate<N, T> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 const std::optional<T> gate) override
@@ -204,17 +204,13 @@ class Filter final : public PositionFilter<N, T>
                 const Matrix<N, N, T> r = position_r(variance);
 
                 const auto result = filter_->update(
-                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate, theta_, LIKELIHOOD);
+                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate, theta_,
+                        /*normalized_innovation=*/true, LIKELIHOOD);
 
-                if (!result.gate_distance_squared)
-                {
-                        return {
-                                {.r = r, .residual = result.residual}
-                        };
-                }
-
-                ASSERT(gate);
-                return {};
+                ASSERT(result.normalized_innovation_squared);
+                return {.residual = result.residual,
+                        .gate = result.gate,
+                        .normalized_innovation_squared = *result.normalized_innovation_squared};
         }
 
         [[nodiscard]] Vector<N, T> position() const override

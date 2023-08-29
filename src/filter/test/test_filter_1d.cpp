@@ -204,6 +204,7 @@ template <typename T, bool INF>
 class TestEkf
 {
         static constexpr std::optional<T> GATE{};
+        static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
         static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
 
@@ -264,7 +265,8 @@ public:
 
                 filter_.predict(f, f_jacobian, q_);
                 filter_.update(
-                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA, LIKELIHOOD);
+                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA,
+                        NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const

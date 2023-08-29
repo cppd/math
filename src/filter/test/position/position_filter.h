@@ -28,8 +28,9 @@ namespace ns::filter::test
 template <std::size_t N, typename T>
 struct PositionFilterUpdate final
 {
-        Matrix<N, N, T> r;
         Vector<N, T> residual;
+        bool gate;
+        T normalized_innovation_squared;
 };
 
 template <std::size_t N, typename T>
@@ -42,7 +43,7 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        [[nodiscard]] virtual std::optional<PositionFilterUpdate<N, T>> update(
+        [[nodiscard]] virtual PositionFilterUpdate<N, T> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 std::optional<T> gate) = 0;

@@ -112,17 +112,17 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         last_predict_time_ = m.time;
 
         const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);
-        if (!update)
+        if (update.gate)
         {
                 return;
         }
         last_update_time_ = m.time;
 
-        const Vector<N, T> residual = correct_residual(update->residual, predict_dt);
+        const Vector<N, T> residual = correct_residual(update.residual, predict_dt);
 
         if (!check_residual(residual, position_variance_.variance()))
         {
-                LOG(to_string(m.time) + "; " + name_ + "; Discarded Residual = " + to_string(update->residual));
+                LOG(to_string(m.time) + "; " + name_ + "; Discarded Residual = " + to_string(update.residual));
                 return;
         }
 
@@ -131,7 +131,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         if (!position_variance_.has_variance())
         {
                 ASSERT(!last_position_variance_);
-                LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update->residual));
+                LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update.residual));
                 return;
         }
 

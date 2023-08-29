@@ -108,7 +108,7 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
         last_predict_time_ = m.time;
 
         const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
-        if (!update)
+        if (update.gate)
         {
                 save_results(m.time);
                 add_nees_checks(m.true_data);
@@ -121,7 +121,7 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
         add_nees_checks(m.true_data);
         if (update_dt <= linear_dt_)
         {
-                nis_.add(update->residual, update->r);
+                nis_.add(update.normalized_innovation_squared);
         }
 }
 
