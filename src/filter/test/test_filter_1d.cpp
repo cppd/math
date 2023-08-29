@@ -293,6 +293,7 @@ template <typename T>
 class TestUkf
 {
         static constexpr std::optional<T> GATE{};
+        static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
 
         static constexpr T ALPHA = 0.1;
@@ -337,7 +338,8 @@ public:
                 };
 
                 filter_.predict(f, q_);
-                filter_.update(h, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, LIKELIHOOD);
+                filter_.update(
+                        h, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const

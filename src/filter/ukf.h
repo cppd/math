@@ -199,7 +199,8 @@ public:
         struct Update final
         {
                 Vector<M, T> residual;
-                std::optional<T> gate_distance_squared;
+                bool gate = false;
+                std::optional<T> normalized_innovation_squared;
                 std::optional<T> likelihood;
         };
 
@@ -220,6 +221,8 @@ public:
                 const ResidualZ residual_z,
                 // Mahalanobis distance gate
                 const std::optional<T> gate,
+                // compute normalized innovation
+                const bool normalized_innovation,
                 // compute likelihood
                 const bool likelihood)
         {
@@ -242,10 +245,15 @@ public:
 
                 res.residual = residual;
 
-                if (gate || likelihood)
+                if (gate || likelihood || normalized_innovation)
                 {
                         const T mahalanobis_distance_squared =
                                 compute_mahalanobis_distance_squared(residual, p_z_inversed);
+
+                        if (gate || normalized_innovation)
+                        {
+                                res.normalized_innovation_squared = mahalanobis_distance_squared;
+                        }
 
                         if (likelihood)
                         {
@@ -254,7 +262,7 @@ public:
 
                         if (gate && !(mahalanobis_distance_squared <= square(*gate)))
                         {
-                                res.gate_distance_squared = mahalanobis_distance_squared;
+                                res.gate = true;
                                 return res;
                         }
                 }
