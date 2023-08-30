@@ -47,6 +47,7 @@ Sequential filters
 
 #include "checks.h"
 #include "gaussian.h"
+#include "update_info.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -129,17 +130,8 @@ public:
                 check_x_p("EKF predict", x_, p_);
         }
 
-        template <std::size_t M>
-        struct Update final
-        {
-                Vector<M, T> residual;
-                bool gate = false;
-                std::optional<T> normalized_innovation_squared;
-                std::optional<T> likelihood;
-        };
-
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
-        Update<M> update(
+        UpdateInfo<M, T> update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -190,32 +182,21 @@ public:
 
                 const Vector<M, T> residual = residual_z(z, h(x_));
 
-                Update<M> res;
-
-                res.residual = residual;
-
-                if (gate || likelihood || normalized_innovation)
+                const UpdateInfo<M, T> res = [&]()
                 {
-                        ASSERT(matrices);
-
-                        const T mahalanobis_distance_squared =
-                                compute_mahalanobis_distance_squared(residual, matrices->s_inversed);
-
-                        if (gate || normalized_innovation)
+                        if (gate || likelihood || normalized_innovation)
                         {
-                                res.normalized_innovation_squared = mahalanobis_distance_squared;
+                                ASSERT(matrices);
+                                return make_update_info(
+                                        residual, matrices->s, matrices->s_inversed, gate, likelihood,
+                                        normalized_innovation);
                         }
+                        return make_update_info(residual);
+                }();
 
-                        if (likelihood)
-                        {
-                                res.likelihood = compute_likelihood(mahalanobis_distance_squared, matrices->s);
-                        }
-
-                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
-                        {
-                                res.gate = true;
-                                return res;
-                        }
+                if (res.gate)
+                {
+                        return res;
                 }
 
                 const Matrix<N, M, T> k = [&]()

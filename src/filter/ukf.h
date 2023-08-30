@@ -29,6 +29,7 @@ Kalman and Bayesian Filters in Python.
 
 #include "checks.h"
 #include "gaussian.h"
+#include "update_info.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -195,17 +196,8 @@ public:
                 check_x_p("UKF predict", x_, p_);
         }
 
-        template <std::size_t M>
-        struct Update final
-        {
-                Vector<M, T> residual;
-                bool gate = false;
-                std::optional<T> normalized_innovation_squared;
-                std::optional<T> likelihood;
-        };
-
         template <std::size_t M, typename H, typename AddX, typename ResidualZ>
-        Update<M> update(
+        UpdateInfo<M, T> update(
                 // Measurement function
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
@@ -241,30 +233,12 @@ public:
                 const Matrix<M, M, T> p_z_inversed = p_z.inversed();
                 const Vector<M, T> residual = residual_z(z, x_z);
 
-                Update<M> res;
+                const UpdateInfo<M, T> res =
+                        make_update_info(residual, p_z, p_z_inversed, gate, likelihood, normalized_innovation);
 
-                res.residual = residual;
-
-                if (gate || likelihood || normalized_innovation)
+                if (res.gate)
                 {
-                        const T mahalanobis_distance_squared =
-                                compute_mahalanobis_distance_squared(residual, p_z_inversed);
-
-                        if (gate || normalized_innovation)
-                        {
-                                res.normalized_innovation_squared = mahalanobis_distance_squared;
-                        }
-
-                        if (likelihood)
-                        {
-                                res.likelihood = compute_likelihood(mahalanobis_distance_squared, p_z);
-                        }
-
-                        if (gate && !(mahalanobis_distance_squared <= square(*gate)))
-                        {
-                                res.gate = true;
-                                return res;
-                        }
+                        return res;
                 }
 
                 const Matrix<N, M, T> k = p_xz * p_z_inversed;
