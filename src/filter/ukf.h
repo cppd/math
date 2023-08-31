@@ -28,7 +28,6 @@ Kalman and Bayesian Filters in Python.
 #pragma once
 
 #include "checks.h"
-#include "gaussian.h"
 #include "update_info.h"
 
 #include <src/com/error.h>
