@@ -46,7 +46,6 @@ Sequential filters
 #pragma once
 
 #include "checks.h"
-#include "gaussian.h"
 #include "update_info.h"
 
 #include <src/com/error.h>
@@ -148,10 +147,10 @@ public:
                 // The residual between the two measurement vectors
                 // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
                 const ResidualZ residual_z,
-                // Mahalanobis distance gate
-                const std::optional<T> gate,
                 // H infinity parameter
                 const std::optional<T> theta,
+                // Mahalanobis distance gate
+                const std::optional<T> gate,
                 // compute normalized innovation
                 const bool normalized_innovation,
                 // compute likelihood

@@ -265,7 +265,7 @@ public:
 
                 filter_.predict(f, f_jacobian, q_);
                 filter_.update(
-                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, THETA,
+                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), THETA, GATE,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 

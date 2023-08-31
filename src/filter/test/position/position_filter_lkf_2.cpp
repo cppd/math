@@ -204,7 +204,7 @@ class Filter final : public PositionFilter<N, T>
                 const Matrix<N, N, T> r = position_r(variance);
 
                 const UpdateInfo update = filter_->update(
-                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate, theta_,
+                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
                         /*normalized_innovation=*/true, LIKELIHOOD);
 
                 ASSERT(update.normalized_innovation_squared);
