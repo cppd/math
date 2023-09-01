@@ -274,25 +274,25 @@ std::string Process<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<Point<2, T>>& Process<T>::positions() const
+const std::vector<TimePoint<2, T>>& Process<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<Point<2, T>>& Process<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& Process<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<Point<1, T>>& Process<T>::speeds() const
+const std::vector<TimePoint<1, T>>& Process<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<Point<1, T>>& Process<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Process<T>::speeds_p() const
 {
         return speeds_p_;
 }

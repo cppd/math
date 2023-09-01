@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../consistency.h"
 #include "../estimation.h"
 #include "../measurement.h"
-#include "../point.h"
+#include "../time_point.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
@@ -44,10 +44,10 @@ class Move final
         std::optional<T> gate_;
         std::unique_ptr<MoveFilter<T>> filter_;
 
-        std::vector<Point<2, T>> positions_;
-        std::vector<Point<2, T>> positions_p_;
-        std::vector<Point<1, T>> speeds_;
-        std::vector<Point<1, T>> speeds_p_;
+        std::vector<TimePoint<2, T>> positions_;
+        std::vector<TimePoint<2, T>> positions_p_;
+        std::vector<TimePoint<1, T>> speeds_;
+        std::vector<TimePoint<1, T>> speeds_p_;
 
         struct Nees final
         {
@@ -85,9 +85,9 @@ public:
         [[nodiscard]] color::RGB8 color() const;
 
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Point<2, T>>& positions() const;
-        [[nodiscard]] const std::vector<Point<2, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
+        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions() const;
+        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions_p() const;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const;
 };
 }

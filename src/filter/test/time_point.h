@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-struct Point final
+struct TimePoint final
 {
         T time;
         Vector<N, T> point;

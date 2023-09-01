@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../consistency.h"
 #include "../measurement.h"
-#include "../point.h"
+#include "../time_point.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
@@ -43,10 +43,10 @@ class Position final
         std::optional<T> gate_;
         std::unique_ptr<PositionFilter<N, T>> filter_;
 
-        std::vector<Point<N, T>> positions_;
-        std::vector<Point<N, T>> positions_p_;
-        std::vector<Point<1, T>> speeds_;
-        std::vector<Point<1, T>> speeds_p_;
+        std::vector<TimePoint<N, T>> positions_;
+        std::vector<TimePoint<N, T>> positions_p_;
+        std::vector<TimePoint<1, T>> speeds_;
+        std::vector<TimePoint<1, T>> speeds_p_;
 
         NormalizedSquared<N, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
@@ -83,9 +83,9 @@ public:
         [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
 
         [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<Point<N, T>>& positions() const;
-        [[nodiscard]] const std::vector<Point<N, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds() const;
-        [[nodiscard]] const std::vector<Point<1, T>>& speeds_p() const;
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions() const;
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions_p() const;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const;
 };
 }

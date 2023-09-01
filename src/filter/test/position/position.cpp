@@ -228,25 +228,25 @@ std::string Position<N, T>::consistency_string() const
 }
 
 template <std::size_t N, typename T>
-const std::vector<Point<N, T>>& Position<N, T>::positions() const
+const std::vector<TimePoint<N, T>>& Position<N, T>::positions() const
 {
         return positions_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<Point<N, T>>& Position<N, T>::positions_p() const
+const std::vector<TimePoint<N, T>>& Position<N, T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<Point<1, T>>& Position<N, T>::speeds() const
+const std::vector<TimePoint<1, T>>& Position<N, T>::speeds() const
 {
         return speeds_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<Point<1, T>>& Position<N, T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Position<N, T>::speeds_p() const
 {
         return speeds_p_;
 }
