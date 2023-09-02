@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simulator.h"
 
 #include "move/move.h"
-#include "move/move_filter_ukf_1.h"
-#include "move/move_filter_ukf_2.h"
+#include "move/move_filter_ukf_1_0.h"
+#include "move/move_filter_ukf_1_1.h"
+#include "move/move_filter_ukf_2_1.h"
 #include "position/position.h"
 #include "position/position_estimation.h"
 #include "position/position_filter_lkf_0.h"
@@ -71,9 +72,12 @@ struct Config final
         static constexpr T PROCESS_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> PROCESS_FILTER_GATE{};
 
-        static constexpr T MOVE_FILTER_POSITION_VARIANCE_1 = square(2.0);
-        static constexpr T MOVE_FILTER_POSITION_VARIANCE_2 = square(1.0);
-        static constexpr T MOVE_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T MOVE_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
+        static constexpr T MOVE_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
+        static constexpr T MOVE_FILTER_POSITION_VARIANCE_2_1 = square(1.0);
+        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_1_0 = square(degrees_to_radians(0.2));
+        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_1_1 = square(degrees_to_radians(0.001));
+        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_2_1 = square(degrees_to_radians(0.001));
         static constexpr T MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
         static constexpr std::array MOVE_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T MOVE_FILTER_RESET_DT = 10;
@@ -254,11 +258,9 @@ std::vector<Process<T>> create_processes()
         return res;
 }
 
-template <typename T, std::size_t ORDER>
+template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
 std::vector<Move<T>> create_moves()
 {
-        const T move_av = Config<T>::MOVE_FILTER_ANGLE_VARIANCE;
-
         std::vector<Move<T>> res;
 
         const int precision = compute_precision(Config<T>::MOVE_FILTER_UKF_ALPHAS);
@@ -268,7 +270,7 @@ std::vector<Move<T>> create_moves()
                 const auto* const letter_alpha = reinterpret_cast<const char*>(u8"\u03b1");
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Move UKF " << ORDER << " (" << letter_alpha << " " << alpha << ")";
+                oss << "Move UKF " << ORDER_P << '.' << ORDER_A << " (" << letter_alpha << " " << alpha << ")";
                 return oss.str();
         };
 
@@ -278,24 +280,36 @@ std::vector<Move<T>> create_moves()
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
 
-                static_assert(ORDER == 1 || ORDER == 2);
+                static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
 
-                if (ORDER == 1)
+                if (ORDER_P == 1 && ORDER_A == 0)
                 {
                         res.emplace_back(
-                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 200), Config<T>::MOVE_FILTER_RESET_DT,
+                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 250), Config<T>::MOVE_FILTER_RESET_DT,
                                 Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
-                                create_move_filter_ukf_1(
-                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1, move_av));
+                                create_move_filter_ukf_1_0(
+                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_0,
+                                        Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_0));
                 }
 
-                if (ORDER == 2)
+                if (ORDER_P == 1 && ORDER_A == 1)
                 {
                         res.emplace_back(
-                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 100), Config<T>::MOVE_FILTER_RESET_DT,
+                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 150), Config<T>::MOVE_FILTER_RESET_DT,
                                 Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
-                                create_move_filter_ukf_2(
-                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2, move_av));
+                                create_move_filter_ukf_1_1(
+                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_1,
+                                        Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_1));
+                }
+
+                if (ORDER_P == 2 && ORDER_A == 1)
+                {
+                        res.emplace_back(
+                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 50), Config<T>::MOVE_FILTER_RESET_DT,
+                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
+                                create_move_filter_ukf_2_1(
+                                        alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2_1,
+                                        Config<T>::MOVE_FILTER_ANGLE_VARIANCE_2_1));
                 }
         }
 
@@ -393,8 +407,9 @@ void test_impl(const Track<2, T>& track)
         std::vector<Position<2, T>> positions_1 = create_positions<2, T, 1>();
         std::vector<Position<2, T>> positions_2 = create_positions<2, T, 2>();
         std::vector<Process<T>> processes = create_processes<T>();
-        std::vector<Move<T>> moves_1 = create_moves<T, 1>();
-        std::vector<Move<T>> moves_2 = create_moves<T, 2>();
+        std::vector<Move<T>> moves_1_0 = create_moves<T, 1, 0>();
+        std::vector<Move<T>> moves_1_1 = create_moves<T, 1, 1>();
+        std::vector<Move<T>> moves_2_1 = create_moves<T, 2, 1>();
 
         PositionEstimation<T> position_estimation(
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
@@ -419,12 +434,17 @@ void test_impl(const Track<2, T>& track)
                         p.update(measurement, std::as_const(position_estimation));
                 }
 
-                for (auto& m : moves_1)
+                for (auto& m : moves_1_0)
                 {
                         m.update(measurement, std::as_const(position_estimation));
                 }
 
-                for (auto& m : moves_2)
+                for (auto& m : moves_1_1)
+                {
+                        m.update(measurement, std::as_const(position_estimation));
+                }
+
+                for (auto& m : moves_2_1)
                 {
                         m.update(measurement, std::as_const(position_estimation));
                 }
@@ -449,7 +469,7 @@ void test_impl(const Track<2, T>& track)
 
         write_result(
                 track.annotation(), measurements, position_variance, {&positions_0, &positions_1, &positions_2},
-                {&processes}, {&moves_1, &moves_2});
+                {&processes}, {&moves_1_0, &moves_1_1, &moves_2_1});
 }
 
 template <typename T>

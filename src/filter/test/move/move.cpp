@@ -228,7 +228,10 @@ std::string Move<T>::angle_string() const
         std::string s;
         s += name_;
         s += "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-        s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
+        if (filter_->has_angle_speed())
+        {
+                s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
+        }
         return s;
 }
 

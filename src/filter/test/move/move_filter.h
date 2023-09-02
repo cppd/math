@@ -82,6 +82,7 @@ public:
         [[nodiscard]] virtual T speed_p() const = 0;
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
+        [[nodiscard]] virtual bool has_angle_speed() const = 0;
         [[nodiscard]] virtual T angle_speed() const = 0;
         [[nodiscard]] virtual T angle_speed_p() const = 0;
 };
