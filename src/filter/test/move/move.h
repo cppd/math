@@ -17,77 +17,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "move_filter.h"
-
-#include "../../consistency.h"
 #include "../estimation.h"
 #include "../measurement.h"
 #include "../time_point.h"
 
 #include <src/color/rgb8.h>
-#include <src/numerical/vector.h>
 
-#include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
 namespace ns::filter::test
 {
 template <typename T>
-class Move final
+struct Move
 {
-        std::string name_;
-        color::RGB8 color_;
-        T reset_dt_;
-        T angle_p_;
-        std::optional<T> gate_;
-        std::unique_ptr<MoveFilter<T>> filter_;
+        virtual ~Move() = default;
 
-        std::vector<TimePoint<2, T>> positions_;
-        std::vector<TimePoint<2, T>> positions_p_;
-        std::vector<TimePoint<1, T>> speeds_;
-        std::vector<TimePoint<1, T>> speeds_p_;
+        virtual void update(const Measurements<2, T>& m, const Estimation<T>& estimation) = 0;
 
-        struct Nees final
-        {
-                NormalizedSquared<2, T> position;
-                NormalizedSquared<1, T> speed;
-                NormalizedSquared<1, T> angle;
-        };
+        [[nodiscard]] virtual const std::string& name() const = 0;
+        [[nodiscard]] virtual color::RGB8 color() const = 0;
 
-        std::optional<Nees> nees_;
-
-        std::optional<T> last_time_;
-        std::optional<T> last_position_time_;
-
-        [[nodiscard]] std::string angle_string() const;
-
-        void save(T time, const TrueData<2, T>& true_data);
-
-        void check_time(T time) const;
-
-        void update_position(const Measurement<2, T>& position, const Measurements<2, T>& m, T dt, bool has_angle);
-
-        [[nodiscard]] bool update_non_position(const Measurements<2, T>& m, T dt, bool has_angle);
-
-public:
-        Move(std::string name,
-             color::RGB8 color,
-             T reset_dt,
-             T angle_p,
-             std::optional<T> gate,
-             std::unique_ptr<MoveFilter<T>>&& filter);
-
-        void update(const Measurements<2, T>& m, const Estimation<T>& estimation);
-
-        [[nodiscard]] const std::string& name() const;
-        [[nodiscard]] color::RGB8 color() const;
-
-        [[nodiscard]] std::string consistency_string() const;
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions() const;
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions_p() const;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const;
+        [[nodiscard]] virtual std::string consistency_string() const = 0;
+        [[nodiscard]] virtual const std::vector<TimePoint<2, T>>& positions() const = 0;
+        [[nodiscard]] virtual const std::vector<TimePoint<2, T>>& positions_p() const = 0;
+        [[nodiscard]] virtual const std::vector<TimePoint<1, T>>& speeds() const = 0;
+        [[nodiscard]] virtual const std::vector<TimePoint<1, T>>& speeds_p() const = 0;
 };
 }

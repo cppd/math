@@ -15,7 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "move.h"
+#include "move_1_1.h"
+
+#include "move_filter_ukf_1_1.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -26,25 +28,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Move<T>::Move(
+Move11<T>::Move11(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
         const T angle_p,
         const std::optional<T> gate,
-        std::unique_ptr<MoveFilter<T>>&& filter)
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           angle_p_(angle_p),
           gate_(gate),
-          filter_(std::move(filter))
+          filter_(create_move_filter_ukf_1_1(sigma_points_alpha, position_variance, angle_variance))
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void Move<T>::save(const T time, const TrueData<2, T>& true_data)
+void Move11<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -61,7 +65,7 @@ void Move<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Move<T>::check_time(const T time) const
+void Move11<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -76,7 +80,7 @@ void Move<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Move<T>::update_position(
+void Move11<T>::update_position(
         const Measurement<2, T>& position,
         const Measurements<2, T>& m,
         const T dt,
@@ -113,7 +117,7 @@ void Move<T>::update_position(
 }
 
 template <typename T>
-bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle)
+bool Move11<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle)
 {
         ASSERT(!m.position);
 
@@ -147,7 +151,7 @@ bool Move<T>::update_non_position(const Measurements<2, T>& m, const T dt, const
 }
 
 template <typename T>
-void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Move11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -211,19 +215,19 @@ void Move<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimatio
 }
 
 template <typename T>
-const std::string& Move<T>::name() const
+const std::string& Move11<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-color::RGB8 Move<T>::color() const
+color::RGB8 Move11<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string Move<T>::angle_string() const
+std::string Move11<T>::angle_string() const
 {
         std::string s;
         s += name_;
@@ -236,7 +240,7 @@ std::string Move<T>::angle_string() const
 }
 
 template <typename T>
-std::string Move<T>::consistency_string() const
+std::string Move11<T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -269,30 +273,30 @@ std::string Move<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move<T>::positions() const
+const std::vector<TimePoint<2, T>>& Move11<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& Move11<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move<T>::speeds() const
+const std::vector<TimePoint<1, T>>& Move11<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Move11<T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-template class Move<float>;
-template class Move<double>;
-template class Move<long double>;
+template class Move11<float>;
+template class Move11<double>;
+template class Move11<long double>;
 }
