@@ -37,7 +37,7 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
-Vector<5, T> x(const Vector<6, T>& position_velocity_acceleration)
+Vector<5, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
@@ -47,13 +47,13 @@ Vector<5, T> x(const Vector<6, T>& position_velocity_acceleration)
         res[1] = position_velocity_acceleration[1];
         res[2] = position_velocity_acceleration[3];
         res[3] = position_velocity_acceleration[4];
-        res[4] = MoveFilterInit<T>::ANGLE;
+        res[4] = angle;
 
         return res;
 }
 
 template <typename T>
-Matrix<5, 5, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
+Matrix<5, 5, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
@@ -77,7 +77,7 @@ Matrix<5, 5, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
                 }
         }
 
-        res(4, 4) = MoveFilterInit<T>::ANGLE_VARIANCE;
+        res(4, 4) = angle_variance;
 
         return res;
 }
@@ -386,11 +386,13 @@ class Filter final : public MoveFilter<T>
 
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p) override
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const T angle,
+                const T angle_variance) override
         {
                 filter_.emplace(
                         SigmaPoints<5, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<5, T>),
-                        x(position_velocity_acceleration), p(position_velocity_acceleration_p));
+                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
         }
 
         void predict(const T dt) override
@@ -541,19 +543,14 @@ class Filter final : public MoveFilter<T>
                 return filter_->p()(4, 4);
         }
 
-        [[nodiscard]] bool has_angle_speed() const override
+        [[nodiscard]] std::optional<T> angle_speed() const override
         {
-                return false;
+                return {};
         }
 
-        [[nodiscard]] T angle_speed() const override
+        [[nodiscard]] std::optional<T> angle_speed_p() const override
         {
-                error("angle_speed is not supported");
-        }
-
-        [[nodiscard]] T angle_speed_p() const override
-        {
-                error("angle_speed_p is not supported");
+                return {};
         }
 
 public:

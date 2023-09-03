@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../utility.h"
 
 #include <src/com/angle.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 
@@ -37,7 +38,12 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
-Vector<6, T> x(const Vector<6, T>& position_velocity_acceleration)
+constexpr T INIT_ANGLE_SPEED = 0;
+template <typename T>
+constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
+
+template <typename T>
+Vector<6, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
@@ -47,14 +53,14 @@ Vector<6, T> x(const Vector<6, T>& position_velocity_acceleration)
         res[1] = position_velocity_acceleration[1];
         res[2] = position_velocity_acceleration[3];
         res[3] = position_velocity_acceleration[4];
-        res[4] = MoveFilterInit<T>::ANGLE;
-        res[5] = MoveFilterInit<T>::ANGLE_SPEED;
+        res[4] = angle;
+        res[5] = INIT_ANGLE_SPEED<T>;
 
         return res;
 }
 
 template <typename T>
-Matrix<6, 6, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
+Matrix<6, 6, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
@@ -78,8 +84,8 @@ Matrix<6, 6, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
                 }
         }
 
-        res(4, 4) = MoveFilterInit<T>::ANGLE_VARIANCE;
-        res(5, 5) = MoveFilterInit<T>::ANGLE_SPEED_VARIANCE;
+        res(4, 4) = angle_variance;
+        res(5, 5) = INIT_ANGLE_SPEED_VARIANCE<T>;
 
         return res;
 }
@@ -391,11 +397,13 @@ class Filter final : public MoveFilter<T>
 
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p) override
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const T angle,
+                const T angle_variance) override
         {
                 filter_.emplace(
                         SigmaPoints<6, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<6, T>),
-                        x(position_velocity_acceleration), p(position_velocity_acceleration_p));
+                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
         }
 
         void predict(const T dt) override
@@ -546,19 +554,14 @@ class Filter final : public MoveFilter<T>
                 return filter_->p()(4, 4);
         }
 
-        [[nodiscard]] bool has_angle_speed() const override
-        {
-                return true;
-        }
-
-        [[nodiscard]] T angle_speed() const override
+        [[nodiscard]] std::optional<T> angle_speed() const override
         {
                 ASSERT(filter_);
 
                 return filter_->x()[5];
         }
 
-        [[nodiscard]] T angle_speed_p() const override
+        [[nodiscard]] std::optional<T> angle_speed_p() const override
         {
                 ASSERT(filter_);
 

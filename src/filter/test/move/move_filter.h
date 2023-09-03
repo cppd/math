@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../measurement.h"
 
-#include <src/com/conversion.h>
-#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -29,15 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-struct MoveFilterInit final
-{
-        static constexpr T ANGLE = 0;
-        static constexpr T ANGLE_VARIANCE = square(degrees_to_radians(100.0));
-        static constexpr T ANGLE_SPEED = 0;
-        static constexpr T ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
-};
-
-template <typename T>
 class MoveFilter
 {
 public:
@@ -45,7 +34,9 @@ public:
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p) = 0;
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                T angle,
+                T angle_variance) = 0;
 
         virtual void predict(T dt) = 0;
 
@@ -78,12 +69,14 @@ public:
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
+
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
-        [[nodiscard]] virtual bool has_angle_speed() const = 0;
-        [[nodiscard]] virtual T angle_speed() const = 0;
-        [[nodiscard]] virtual T angle_speed_p() const = 0;
+
+        [[nodiscard]] virtual std::optional<T> angle_speed() const = 0;
+        [[nodiscard]] virtual std::optional<T> angle_speed_p() const = 0;
 };
 }

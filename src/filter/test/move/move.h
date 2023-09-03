@@ -29,8 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-struct Move
+class Move
 {
+public:
         virtual ~Move() = default;
 
         virtual void update(const Measurements<2, T>& m, const Estimation<T>& estimation) = 0;

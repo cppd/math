@@ -22,11 +22,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
 namespace ns::filter::test
 {
+namespace
+{
+template <typename T>
+constexpr T INIT_ANGLE = 0;
+template <typename T>
+constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
+}
+
 template <typename T>
 Move21<T>::Move21(
         std::string name,
@@ -170,7 +179,7 @@ void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 
                         filter_->reset(
                                 estimation.position_velocity_acceleration(),
-                                estimation.position_velocity_acceleration_p());
+                                estimation.position_velocity_acceleration_p(), INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>);
 
                         last_time_ = m.time;
                 }
@@ -232,10 +241,9 @@ std::string Move21<T>::angle_string() const
         std::string s;
         s += name_;
         s += "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-        if (filter_->has_angle_speed())
-        {
-                s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
-        }
+        const auto angle_speed = filter_->angle_speed();
+        ASSERT(angle_speed);
+        s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(*angle_speed)));
         return s;
 }
 
