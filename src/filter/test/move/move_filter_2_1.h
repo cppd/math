@@ -22,15 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <memory>
 #include <optional>
 
 namespace ns::filter::test
 {
 template <typename T>
-class MoveFilter
+class MoveFilter21
 {
 public:
-        virtual ~MoveFilter() = default;
+        virtual ~MoveFilter21() = default;
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
@@ -76,7 +77,10 @@ public:
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
 
-        [[nodiscard]] virtual std::optional<T> angle_speed() const = 0;
-        [[nodiscard]] virtual std::optional<T> angle_speed_p() const = 0;
+        [[nodiscard]] virtual T angle_speed() const = 0;
+        [[nodiscard]] virtual T angle_speed_p() const = 0;
 };
+
+template <typename T>
+std::unique_ptr<MoveFilter21<T>> create_move_filter_2_1(T sigma_points_alpha, T position_variance, T angle_variance);
 }

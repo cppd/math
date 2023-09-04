@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "move_1_0.h"
 
-#include "move_filter_ukf_1_0.h"
-
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -51,7 +49,7 @@ Move10<T>::Move10(
           reset_dt_(reset_dt),
           angle_p_(angle_p),
           gate_(gate),
-          filter_(create_move_filter_ukf_1_0(sigma_points_alpha, position_variance, angle_variance))
+          filter_(create_move_filter_1_0(sigma_points_alpha, position_variance, angle_variance))
 {
         ASSERT(filter_);
 }

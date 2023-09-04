@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "move_1_1.h"
 
-#include "move_filter_ukf_1_1.h"
-
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -51,7 +49,7 @@ Move11<T>::Move11(
           reset_dt_(reset_dt),
           angle_p_(angle_p),
           gate_(gate),
-          filter_(create_move_filter_ukf_1_1(sigma_points_alpha, position_variance, angle_variance))
+          filter_(create_move_filter_1_1(sigma_points_alpha, position_variance, angle_variance))
 {
         ASSERT(filter_);
 }
@@ -241,9 +239,7 @@ std::string Move11<T>::angle_string() const
         std::string s;
         s += name_;
         s += "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-        const auto angle_speed = filter_->angle_speed();
-        ASSERT(angle_speed);
-        s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(*angle_speed)));
+        s += "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed())));
         return s;
 }
 
