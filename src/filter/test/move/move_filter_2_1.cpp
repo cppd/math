@@ -43,6 +43,58 @@ template <typename T>
 constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
 
 template <typename T>
+Vector<8, T> x(
+        const Vector<2, T>& position,
+        const Vector<2, T>& velocity,
+        const Vector<2, T>& acceleration,
+        const T angle)
+{
+        ASSERT(is_finite(position));
+        ASSERT(is_finite(velocity));
+        ASSERT(is_finite(acceleration));
+        ASSERT(is_finite(angle));
+
+        Vector<8, T> res;
+
+        res[0] = position[0];
+        res[1] = velocity[0];
+        res[2] = acceleration[0];
+        res[3] = position[1];
+        res[4] = velocity[1];
+        res[5] = acceleration[1];
+        res[6] = angle;
+        res[7] = INIT_ANGLE_SPEED<T>;
+
+        return res;
+}
+
+template <typename T>
+Matrix<8, 8, T> p(
+        const Vector<2, T>& position_variance,
+        const Vector<2, T>& velocity_variance,
+        const Vector<2, T>& acceleration_variance,
+        const T angle_variance)
+{
+        ASSERT(is_finite(position_variance));
+        ASSERT(is_finite(velocity_variance));
+        ASSERT(is_finite(acceleration_variance));
+        ASSERT(is_finite(angle_variance));
+
+        Matrix<8, 8, T> res(0);
+
+        res(0, 0) = position_variance[0];
+        res(1, 1) = velocity_variance[0];
+        res(2, 2) = acceleration_variance[0];
+        res(3, 3) = position_variance[1];
+        res(4, 4) = velocity_variance[1];
+        res(5, 5) = acceleration_variance[1];
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+
+        return res;
+}
+
+template <typename T>
 Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
         ASSERT(is_finite(position_velocity_acceleration));
@@ -393,6 +445,22 @@ class Filter final : public MoveFilter21<T>
                         {filter_->p()(1, 1), filter_->p()(1, 4)},
                         {filter_->p()(4, 1), filter_->p()(4, 4)}
                 };
+        }
+
+        void reset(
+                const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
+                const Vector<2, T>& velocity,
+                const Vector<2, T>& velocity_variance,
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance,
+                const T angle,
+                const T angle_variance) override
+        {
+                filter_.emplace(
+                        SigmaPoints<8, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<8, T>),
+                        x(position, velocity, acceleration, angle),
+                        p(position_variance, velocity_variance, acceleration_variance, angle_variance));
         }
 
         void reset(

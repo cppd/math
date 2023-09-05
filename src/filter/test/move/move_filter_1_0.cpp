@@ -37,6 +37,41 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
+Vector<5, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle)
+{
+        ASSERT(is_finite(position));
+        ASSERT(is_finite(velocity));
+
+        Vector<5, T> res;
+
+        res[0] = position[0];
+        res[1] = velocity[0];
+        res[2] = position[1];
+        res[3] = velocity[1];
+        res[4] = angle;
+
+        return res;
+}
+
+template <typename T>
+Matrix<5, 5, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& velocity_variance, const T angle_variance)
+{
+        ASSERT(is_finite(position_variance));
+        ASSERT(is_finite(velocity_variance));
+        ASSERT(is_finite(angle_variance));
+
+        Matrix<5, 5, T> res(0);
+
+        res(0, 0) = position_variance[0];
+        res(1, 1) = velocity_variance[0];
+        res(2, 2) = position_variance[1];
+        res(3, 3) = velocity_variance[1];
+        res(4, 4) = angle_variance;
+
+        return res;
+}
+
+template <typename T>
 Vector<5, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
         ASSERT(is_finite(position_velocity_acceleration));
@@ -382,6 +417,19 @@ class Filter final : public MoveFilter10<T>
                         {filter_->p()(1, 1), filter_->p()(1, 3)},
                         {filter_->p()(3, 1), filter_->p()(3, 3)}
                 };
+        }
+
+        void reset(
+                const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
+                const Vector<2, T>& velocity,
+                const Vector<2, T>& velocity_variance,
+                const T angle,
+                const T angle_variance) override
+        {
+                filter_.emplace(
+                        SigmaPoints<5, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<5, T>),
+                        x(position, velocity, angle), p(position_variance, velocity_variance, angle_variance));
         }
 
         void reset(

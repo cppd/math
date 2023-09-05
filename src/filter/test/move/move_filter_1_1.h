@@ -34,6 +34,14 @@ public:
         virtual ~MoveFilter11() = default;
 
         virtual void reset(
+                const Vector<2, T>& position,
+                const Vector<2, T>& position_variance,
+                const Vector<2, T>& velocity,
+                const Vector<2, T>& velocity_variance,
+                T angle,
+                T angle_variance) = 0;
+
+        virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
                 const Matrix<6, 6, T>& position_velocity_acceleration_p,
                 T angle,
