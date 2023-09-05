@@ -163,13 +163,11 @@ int compute_precision(const std::array<T, N>& data)
 template <std::size_t N, typename T>
 std::vector<PositionVariance<N, T>> create_position_variance()
 {
-        static constexpr T THETA{0};
-
         std::vector<PositionVariance<N, T>> res;
 
         res.emplace_back(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                create_position_filter_lkf_2<N, T>(THETA, Config<T>::POSITION_FILTER_VARIANCE_2));
+                Config<T>::POSITION_FILTER_VARIANCE_2);
 
         return res;
 }

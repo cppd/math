@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_variance.h"
 
+#include "position_filter_lkf_2.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -34,6 +36,9 @@ constexpr std::optional<T> GATE{T{250}};
 
 template <typename T>
 constexpr T VARIANCE_GATE_SQUARED{square(T{10})};
+
+template <typename T>
+constexpr T THETA{0};
 
 template <std::size_t N, typename T>
 [[nodiscard]] Vector<N, T> correct_residual(const Vector<N, T>& residual, const T dt)
@@ -66,11 +71,11 @@ PositionVariance<N, T>::PositionVariance(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
-        std::unique_ptr<PositionFilter<N, T>>&& filter)
+        const T process_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          filter_(std::move(filter))
+          filter_(create_position_filter_lkf_2<N, T>(THETA<T>, process_variance))
 {
         ASSERT(filter_);
 }

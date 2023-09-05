@@ -57,11 +57,7 @@ class PositionVariance final
         void update_position_variance(const Measurements<N, T>& m);
 
 public:
-        PositionVariance(
-                std::string name,
-                color::RGB8 color,
-                T reset_dt,
-                std::unique_ptr<PositionFilter<N, T>>&& filter);
+        PositionVariance(std::string name, color::RGB8 color, T reset_dt, T process_variance);
 
         void update_position(const Measurements<N, T>& m);
 
