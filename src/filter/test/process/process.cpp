@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process.h"
 
+#include "update.h"
+
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -69,119 +71,6 @@ void Process<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Process<T>::update_position(const Measurement<2, T>& position, const Measurements<2, T>& m, const T dt)
-{
-        if (m.speed)
-        {
-                if (m.direction)
-                {
-                        if (m.acceleration)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_position_speed_direction_acceleration(
-                                        position, *m.speed, *m.direction, *m.acceleration, gate_);
-                                return;
-                        }
-
-                        filter_->predict(dt);
-                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, gate_);
-                        return;
-                }
-
-                if (m.acceleration)
-                {
-                        filter_->predict(dt);
-                        filter_->update_position_speed_acceleration(position, *m.speed, *m.acceleration, gate_);
-                        return;
-                }
-
-                filter_->predict(dt);
-                filter_->update_position_speed(position, *m.speed, gate_);
-                return;
-        }
-
-        if (m.direction)
-        {
-                if (m.acceleration)
-                {
-                        filter_->predict(dt);
-                        filter_->update_position_direction_acceleration(position, *m.direction, *m.acceleration, gate_);
-                        return;
-                }
-
-                filter_->predict(dt);
-                filter_->update_position_direction(position, *m.direction, gate_);
-                return;
-        }
-
-        if (m.acceleration)
-        {
-                filter_->predict(dt);
-                filter_->update_position_acceleration(position, *m.acceleration, gate_);
-                return;
-        }
-
-        filter_->predict(dt);
-        filter_->update_position(position, gate_);
-}
-
-template <typename T>
-bool Process<T>::update_non_position(const Measurements<2, T>& m, const T dt)
-{
-        if (m.speed)
-        {
-                if (m.direction)
-                {
-                        if (m.acceleration)
-                        {
-                                filter_->predict(dt);
-                                filter_->update_speed_direction_acceleration(
-                                        *m.speed, *m.direction, *m.acceleration, gate_);
-                                return true;
-                        }
-
-                        filter_->predict(dt);
-                        filter_->update_speed_direction(*m.speed, *m.direction, gate_);
-                        return true;
-                }
-
-                if (m.acceleration)
-                {
-                        filter_->predict(dt);
-                        filter_->update_speed_acceleration(*m.speed, *m.acceleration, gate_);
-                        return true;
-                }
-
-                filter_->predict(dt);
-                filter_->update_speed(*m.speed, gate_);
-                return true;
-        }
-
-        if (m.direction)
-        {
-                if (m.acceleration)
-                {
-                        filter_->predict(dt);
-                        filter_->update_direction_acceleration(*m.direction, *m.acceleration, gate_);
-                        return true;
-                }
-
-                filter_->predict(dt);
-                filter_->update_direction(*m.direction, gate_);
-                return true;
-        }
-
-        if (m.acceleration)
-        {
-                filter_->predict(dt);
-                filter_->update_acceleration(*m.acceleration, gate_);
-                return true;
-        }
-
-        return false;
-}
-
-template <typename T>
 void Process<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
@@ -212,14 +101,14 @@ void Process<T>::update(const Measurements<2, T>& m, const Estimation<T>& estima
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                update_position(position, m, dt);
+                update_position(filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt);
 
                 LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
                     + angle_string());
         }
         else
         {
-                if (!update_non_position(m, dt))
+                if (!update_non_position(filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt))
                 {
                         return;
                 }
