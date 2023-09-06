@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "move_2_1.h"
 
+#include "update.h"
+
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -87,77 +89,6 @@ void Move21<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Move21<T>::update_position(
-        const Measurement<2, T>& position,
-        const Measurements<2, T>& m,
-        const T dt,
-        const bool has_angle)
-{
-        ASSERT(m.position);
-
-        if (m.speed)
-        {
-                if (has_angle && m.direction)
-                {
-                        filter_->predict(dt);
-                        filter_->update_position_speed_direction(position, *m.speed, *m.direction, gate_);
-                }
-                else
-                {
-                        filter_->predict(dt);
-                        filter_->update_position_speed(position, *m.speed, gate_);
-                }
-        }
-        else
-        {
-                if (has_angle && m.direction)
-                {
-                        filter_->predict(dt);
-                        filter_->update_position_direction(position, *m.direction, gate_);
-                }
-                else
-                {
-                        filter_->predict(dt);
-                        filter_->update_position(position, gate_);
-                }
-        }
-}
-
-template <typename T>
-bool Move21<T>::update_non_position(const Measurements<2, T>& m, const T dt, const bool has_angle)
-{
-        ASSERT(!m.position);
-
-        if (m.speed)
-        {
-                if (has_angle && m.direction)
-                {
-                        filter_->predict(dt);
-                        filter_->update_speed_direction(*m.speed, *m.direction, gate_);
-                }
-                else
-                {
-                        filter_->predict(dt);
-                        filter_->update_speed(*m.speed, gate_);
-                }
-        }
-        else
-        {
-                if (has_angle && m.direction)
-                {
-                        filter_->predict(dt);
-                        filter_->update_direction(*m.direction, gate_);
-                }
-                else
-                {
-                        return false;
-                }
-        }
-
-        return true;
-}
-
-template <typename T>
 void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
@@ -199,8 +130,8 @@ void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
                 }
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
-
-                update_position(position, m, dt, has_angle);
+                const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
+                update_position(filter_.get(), position, direction, m.speed, gate_, dt);
 
                 last_position_time_ = m.time;
 
@@ -210,7 +141,8 @@ void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
         }
         else
         {
-                if (!update_non_position(m, dt, has_angle))
+                const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
+                if (!update_non_position(filter_.get(), direction, m.speed, gate_, dt))
                 {
                         return;
                 }
