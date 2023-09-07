@@ -15,8 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process.h"
+#include "process_ekf.h"
 
+#include "process_filter_ekf.h"
 #include "update.h"
 
 #include <src/com/angle.h>
@@ -28,23 +29,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <typename T>
-Process<T>::Process(
+ProcessEkf<T>::ProcessEkf(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
         const std::optional<T> gate,
-        std::unique_ptr<ProcessFilter<T>>&& filter)
+        const T position_variance,
+        const T angle_variance,
+        const T angle_r_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           gate_(gate),
-          filter_(std::move(filter))
+          filter_(create_process_filter_ekf(position_variance, angle_variance, angle_r_variance))
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void Process<T>::save(const T time, const TrueData<2, T>& true_data)
+void ProcessEkf<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -62,7 +65,7 @@ void Process<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Process<T>::check_time(const T time) const
+void ProcessEkf<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -71,7 +74,7 @@ void Process<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Process<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void ProcessEkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -120,19 +123,19 @@ void Process<T>::update(const Measurements<2, T>& m, const Estimation<T>& estima
 }
 
 template <typename T>
-const std::string& Process<T>::name() const
+const std::string& ProcessEkf<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-color::RGB8 Process<T>::color() const
+color::RGB8 ProcessEkf<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string Process<T>::angle_string() const
+std::string ProcessEkf<T>::angle_string() const
 {
         std::string s;
         s += name_;
@@ -143,7 +146,7 @@ std::string Process<T>::angle_string() const
 }
 
 template <typename T>
-std::string Process<T>::consistency_string() const
+std::string ProcessEkf<T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -163,30 +166,30 @@ std::string Process<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Process<T>::positions() const
+const std::vector<TimePoint<2, T>>& ProcessEkf<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Process<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& ProcessEkf<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Process<T>::speeds() const
+const std::vector<TimePoint<1, T>>& ProcessEkf<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Process<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& ProcessEkf<T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-template class Process<float>;
-template class Process<double>;
-template class Process<long double>;
+template class ProcessEkf<float>;
+template class ProcessEkf<double>;
+template class ProcessEkf<long double>;
 }

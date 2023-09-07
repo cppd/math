@@ -27,9 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position/position_filter_lkf_1.h"
 #include "position/position_filter_lkf_2.h"
 #include "position/position_variance.h"
-#include "process/process.h"
-#include "process/process_filter_ekf.h"
-#include "process/process_filter_ukf.h"
+#include "process/process_ekf.h"
+#include "process/process_ukf.h"
 #include "view/write.h"
 
 #include <src/com/conversion.h>
@@ -91,7 +90,7 @@ void write_to_file(
         const std::string_view annotation,
         const std::vector<Measurements<N, T>>& measurements,
         const std::vector<const std::vector<Position<N, T>>*>& positions,
-        const std::vector<const std::vector<Process<T>>*>& processes,
+        const std::vector<const std::vector<std::unique_ptr<Process<T>>>*>& processes,
         const std::vector<const std::vector<std::unique_ptr<Move<T>>>*>& moves)
 {
         std::vector<view::Filter<N, T>> filters;
@@ -226,17 +225,17 @@ std::vector<Position<N, T>> create_positions()
 }
 
 template <typename T>
-std::vector<Process<T>> create_processes()
+std::vector<std::unique_ptr<Process<T>>> create_processes()
 {
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
         const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
         const T process_arv = Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE;
 
-        std::vector<Process<T>> res;
+        std::vector<std::unique_ptr<Process<T>>> res;
 
-        res.emplace_back(
+        res.push_back(std::make_unique<ProcessEkf<T>>(
                 "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT, Config<T>::PROCESS_FILTER_GATE,
-                create_process_filter_ekf<T>(process_pv, process_av, process_arv));
+                process_pv, process_av, process_arv));
 
         const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
@@ -254,10 +253,9 @@ std::vector<Process<T>> create_processes()
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.emplace_back(
+                res.push_back(std::make_unique<ProcessUkf<T>>(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                        Config<T>::PROCESS_FILTER_GATE,
-                        create_process_filter_ukf(alphas[i], process_pv, process_av, process_arv));
+                        Config<T>::PROCESS_FILTER_GATE, alphas[i], process_pv, process_av, process_arv));
         }
 
         return res;
@@ -324,7 +322,7 @@ void write_result(
         const std::vector<Measurements<N, T>>& measurements,
         const std::vector<PositionVariance<N, T>>& position_variance,
         const std::vector<const std::vector<Position<N, T>>*>& positions,
-        const std::vector<const std::vector<Process<T>>*>& processes,
+        const std::vector<const std::vector<std::unique_ptr<Process<T>>>*>& processes,
         const std::vector<const std::vector<std::unique_ptr<Move<T>>>*>& moves)
 {
         write_to_file(annotation, measurements, positions, processes, moves);
@@ -415,7 +413,7 @@ void test_impl(const Track<2, T>& track)
         std::vector<Position<2, T>> positions_0 = create_positions<2, T, 0>();
         std::vector<Position<2, T>> positions_1 = create_positions<2, T, 1>();
         std::vector<Position<2, T>> positions_2 = create_positions<2, T, 2>();
-        std::vector<Process<T>> processes = create_processes<T>();
+        std::vector<std::unique_ptr<Process<T>>> processes = create_processes<T>();
         std::vector<std::unique_ptr<Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
         std::vector<std::unique_ptr<Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
         std::vector<std::unique_ptr<Move<T>>> moves_2_1 = create_moves<T, 2, 1>();
@@ -440,7 +438,7 @@ void test_impl(const Track<2, T>& track)
 
                 for (auto& p : processes)
                 {
-                        p.update(measurement, std::as_const(position_estimation));
+                        p->update(measurement, std::as_const(position_estimation));
                 }
 
                 for (auto& m : moves_1_0)
