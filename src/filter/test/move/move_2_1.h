@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "filter_2_1.h"
 #include "move.h"
-#include "move_filter_2_1.h"
 
 #include "../../consistency.h"
 #include "../estimation.h"
@@ -43,7 +43,7 @@ class Move21 final : public Move<T>
         T reset_dt_;
         T angle_p_;
         std::optional<T> gate_;
-        std::unique_ptr<MoveFilter21<T>> filter_;
+        std::unique_ptr<Filter21<T>> filter_;
 
         std::vector<TimePoint<2, T>> positions_;
         std::vector<TimePoint<2, T>> positions_p_;

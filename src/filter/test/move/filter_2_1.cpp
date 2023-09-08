@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "move_filter_2_1.h"
+#include "filter_2_1.h"
 
 #include "../../sigma_points.h"
 #include "../../ukf.h"
@@ -420,7 +420,7 @@ Vector<1, T> speed_residual(const Vector<1, T>& a, const Vector<1, T>& b)
 //
 
 template <typename T>
-class Filter final : public MoveFilter21<T>
+class Filter final : public Filter21<T>
 {
         static constexpr bool NORMALIZED_INNOVATION{false};
         static constexpr bool LIKELIHOOD{false};
@@ -647,7 +647,7 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<MoveFilter21<T>> create_move_filter_2_1(
+std::unique_ptr<Filter21<T>> create_filter_2_1(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance)
@@ -655,7 +655,7 @@ std::unique_ptr<MoveFilter21<T>> create_move_filter_2_1(
         return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<MoveFilter21<T>> create_move_filter_2_1(T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<Filter21<T>> create_filter_2_1(T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

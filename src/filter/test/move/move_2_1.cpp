@@ -51,7 +51,7 @@ Move21<T>::Move21(
           reset_dt_(reset_dt),
           angle_p_(angle_p),
           gate_(gate),
-          filter_(create_move_filter_2_1(sigma_points_alpha, position_variance, angle_variance))
+          filter_(create_filter_2_1(sigma_points_alpha, position_variance, angle_variance))
 {
         ASSERT(filter_);
 }

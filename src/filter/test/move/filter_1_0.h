@@ -28,18 +28,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::move
 {
 template <typename T>
-class MoveFilter21
+class Filter10
 {
 public:
-        virtual ~MoveFilter21() = default;
+        virtual ~Filter10() = default;
 
         virtual void reset(
                 const Vector<2, T>& position,
                 const Vector<2, T>& position_variance,
                 const Vector<2, T>& velocity,
                 const Vector<2, T>& velocity_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance,
                 T angle,
                 T angle_variance) = 0;
 
@@ -86,11 +84,8 @@ public:
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
-
-        [[nodiscard]] virtual T angle_speed() const = 0;
-        [[nodiscard]] virtual T angle_speed_p() const = 0;
 };
 
 template <typename T>
-std::unique_ptr<MoveFilter21<T>> create_move_filter_2_1(T sigma_points_alpha, T position_variance, T angle_variance);
+std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha, T position_variance, T angle_variance);
 }
