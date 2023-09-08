@@ -89,9 +89,9 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
         const std::vector<Measurements<N, T>>& measurements,
-        const std::vector<const std::vector<Position<N, T>>*>& positions,
-        const std::vector<const std::vector<std::unique_ptr<Process<T>>>*>& processes,
-        const std::vector<const std::vector<std::unique_ptr<Move<T>>>*>& moves)
+        const std::vector<const std::vector<position::Position<N, T>>*>& positions,
+        const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
+        const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
 {
         std::vector<view::Filter<N, T>> filters;
 
@@ -160,9 +160,9 @@ int compute_precision(const std::array<T, N>& data)
 }
 
 template <std::size_t N, typename T>
-std::vector<PositionVariance<N, T>> create_position_variance()
+std::vector<position::PositionVariance<N, T>> create_position_variance()
 {
-        std::vector<PositionVariance<N, T>> res;
+        std::vector<position::PositionVariance<N, T>> res;
 
         res.emplace_back(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
@@ -172,9 +172,9 @@ std::vector<PositionVariance<N, T>> create_position_variance()
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<Position<N, T>> create_positions()
+std::vector<position::Position<N, T>> create_positions()
 {
-        std::vector<Position<N, T>> res;
+        std::vector<position::Position<N, T>> res;
 
         const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
 
@@ -201,7 +201,8 @@ std::vector<Position<N, T>> create_positions()
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200),
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_0,
-                                create_position_filter_lkf_0<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
+                                position::create_position_filter_lkf_0<N, T>(
+                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
                 }
 
                 if (ORDER == 1)
@@ -209,7 +210,8 @@ std::vector<Position<N, T>> create_positions()
                         res.emplace_back(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1,
-                                create_position_filter_lkf_1<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_1));
+                                position::create_position_filter_lkf_1<N, T>(
+                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_1));
                 }
 
                 if (ORDER == 2)
@@ -217,7 +219,8 @@ std::vector<Position<N, T>> create_positions()
                         res.emplace_back(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2,
-                                create_position_filter_lkf_2<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
+                                position::create_position_filter_lkf_2<N, T>(
+                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
                 }
         }
 
@@ -225,15 +228,15 @@ std::vector<Position<N, T>> create_positions()
 }
 
 template <typename T>
-std::vector<std::unique_ptr<Process<T>>> create_processes()
+std::vector<std::unique_ptr<process::Process<T>>> create_processes()
 {
         const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
         const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
         const T process_arv = Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE;
 
-        std::vector<std::unique_ptr<Process<T>>> res;
+        std::vector<std::unique_ptr<process::Process<T>>> res;
 
-        res.push_back(std::make_unique<ProcessEkf<T>>(
+        res.push_back(std::make_unique<process::ProcessEkf<T>>(
                 "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT, Config<T>::PROCESS_FILTER_GATE,
                 process_pv, process_av, process_arv));
 
@@ -253,7 +256,7 @@ std::vector<std::unique_ptr<Process<T>>> create_processes()
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.push_back(std::make_unique<ProcessUkf<T>>(
+                res.push_back(std::make_unique<process::ProcessUkf<T>>(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
                         Config<T>::PROCESS_FILTER_GATE, alphas[i], process_pv, process_av, process_arv));
         }
@@ -262,9 +265,9 @@ std::vector<std::unique_ptr<Process<T>>> create_processes()
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::vector<std::unique_ptr<Move<T>>> create_moves()
+std::vector<std::unique_ptr<move::Move<T>>> create_moves()
 {
-        std::vector<std::unique_ptr<Move<T>>> res;
+        std::vector<std::unique_ptr<move::Move<T>>> res;
 
         const int precision = compute_precision(Config<T>::MOVE_FILTER_UKF_ALPHAS);
 
@@ -287,7 +290,7 @@ std::vector<std::unique_ptr<Move<T>>> create_moves()
 
                 if (ORDER_P == 1 && ORDER_A == 0)
                 {
-                        res.push_back(std::make_unique<Move10<T>>(
+                        res.push_back(std::make_unique<move::Move10<T>>(
                                 name(alphas[i]), color::RGB8(0, 160 - 40 * i, 250), Config<T>::MOVE_FILTER_RESET_DT,
                                 Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
                                 alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_0,
@@ -296,7 +299,7 @@ std::vector<std::unique_ptr<Move<T>>> create_moves()
 
                 if (ORDER_P == 1 && ORDER_A == 1)
                 {
-                        res.push_back(std::make_unique<Move11<T>>(
+                        res.push_back(std::make_unique<move::Move11<T>>(
                                 name(alphas[i]), color::RGB8(0, 160 - 40 * i, 150), Config<T>::MOVE_FILTER_RESET_DT,
                                 Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
                                 alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_1,
@@ -305,7 +308,7 @@ std::vector<std::unique_ptr<Move<T>>> create_moves()
 
                 if (ORDER_P == 2 && ORDER_A == 1)
                 {
-                        res.push_back(std::make_unique<Move21<T>>(
+                        res.push_back(std::make_unique<move::Move21<T>>(
                                 name(alphas[i]), color::RGB8(0, 160 - 40 * i, 50), Config<T>::MOVE_FILTER_RESET_DT,
                                 Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
                                 alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2_1,
@@ -320,10 +323,10 @@ template <std::size_t N, typename T>
 void write_result(
         const std::string_view annotation,
         const std::vector<Measurements<N, T>>& measurements,
-        const std::vector<PositionVariance<N, T>>& position_variance,
-        const std::vector<const std::vector<Position<N, T>>*>& positions,
-        const std::vector<const std::vector<std::unique_ptr<Process<T>>>*>& processes,
-        const std::vector<const std::vector<std::unique_ptr<Move<T>>>*>& moves)
+        const std::vector<position::PositionVariance<N, T>>& position_variance,
+        const std::vector<const std::vector<position::Position<N, T>>*>& positions,
+        const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
+        const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
 {
         write_to_file(annotation, measurements, positions, processes, moves);
 
@@ -367,7 +370,7 @@ void write_result(
 }
 
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> compute_variance(const std::vector<PositionVariance<N, T>>& positions)
+std::optional<Vector<N, T>> compute_variance(const std::vector<position::PositionVariance<N, T>>& positions)
 {
         if (positions.size() == 1)
         {
@@ -376,7 +379,7 @@ std::optional<Vector<N, T>> compute_variance(const std::vector<PositionVariance<
 
         Vector<N, T> sum(0);
         std::size_t count = 0;
-        for (const PositionVariance<N, T>& position : positions)
+        for (const position::PositionVariance<N, T>& position : positions)
         {
                 const auto& variance = position.last_position_variance();
                 if (!variance)
@@ -409,16 +412,16 @@ void test_impl(const Track<2, T>& track)
 {
         std::vector<Measurements<2, T>> measurements;
 
-        std::vector<PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
-        std::vector<Position<2, T>> positions_0 = create_positions<2, T, 0>();
-        std::vector<Position<2, T>> positions_1 = create_positions<2, T, 1>();
-        std::vector<Position<2, T>> positions_2 = create_positions<2, T, 2>();
-        std::vector<std::unique_ptr<Process<T>>> processes = create_processes<T>();
-        std::vector<std::unique_ptr<Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
-        std::vector<std::unique_ptr<Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
-        std::vector<std::unique_ptr<Move<T>>> moves_2_1 = create_moves<T, 2, 1>();
+        std::vector<position::PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
+        std::vector<position::Position<2, T>> positions_0 = create_positions<2, T, 0>();
+        std::vector<position::Position<2, T>> positions_1 = create_positions<2, T, 1>();
+        std::vector<position::Position<2, T>> positions_2 = create_positions<2, T, 2>();
+        std::vector<std::unique_ptr<process::Process<T>>> processes = create_processes<T>();
+        std::vector<std::unique_ptr<move::Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
+        std::vector<std::unique_ptr<move::Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
+        std::vector<std::unique_ptr<move::Move<T>>> moves_2_1 = create_moves<T, 2, 1>();
 
-        PositionEstimation<T> position_estimation(
+        position::PositionEstimation<T> position_estimation(
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE);
 

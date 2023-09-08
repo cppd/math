@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-namespace ns::filter::test
+namespace ns::filter::test::process
 {
 template <typename T>
 struct ProcessFilterInit final

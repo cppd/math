@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::test
+namespace ns::filter::test::move
 {
 namespace
 {

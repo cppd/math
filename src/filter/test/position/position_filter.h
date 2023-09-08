@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::filter::test
+namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
 struct PositionFilterUpdate final

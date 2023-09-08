@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 
-namespace ns::filter::test
+namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
 std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_1(T theta, T process_variance);

@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test
+namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
 class Position final

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test
+namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
 Position<N, T>::Position(

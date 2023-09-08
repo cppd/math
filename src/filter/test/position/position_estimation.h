@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::test
+namespace ns::filter::test::position
 {
 template <typename T>
 class PositionEstimation final : public Estimation<T>
