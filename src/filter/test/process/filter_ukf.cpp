@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../utility.h"
 
 #include <src/com/angle.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 
@@ -37,6 +38,16 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
+constexpr T INIT_ANGLE_SPEED = 0;
+template <typename T>
+constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
+
+template <typename T>
+constexpr T INIT_ANGLE_R = 0;
+template <typename T>
+constexpr T INIT_ANGLE_R_VARIANCE = square(degrees_to_radians(50.0));
+
+template <typename T>
 Vector<9, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
         ASSERT(is_finite(position_velocity_acceleration));
@@ -49,14 +60,14 @@ Vector<9, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle
         }
 
         res[6] = angle;
-        res[7] = ProcessFilterInit<T>::ANGLE_SPEED;
-        res[8] = ProcessFilterInit<T>::ANGLE_R;
+        res[7] = INIT_ANGLE_SPEED<T>;
+        res[8] = INIT_ANGLE_R<T>;
 
         return res;
 }
 
 template <typename T>
-Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
+Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
@@ -70,9 +81,9 @@ Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p)
                 }
         }
 
-        res(6, 6) = ProcessFilterInit<T>::ANGLE_VARIANCE;
-        res(7, 7) = ProcessFilterInit<T>::ANGLE_SPEED_VARIANCE;
-        res(8, 8) = ProcessFilterInit<T>::ANGLE_R_VARIANCE;
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(8, 8) = INIT_ANGLE_R_VARIANCE<T>;
 
         return res;
 }
@@ -713,7 +724,7 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 //
 
 template <typename T>
-class Filter final : public ProcessFilter<T>
+class Filter final : public FilterUkf<T>
 {
         static constexpr bool NORMALIZED_INNOVATION{false};
         static constexpr bool LIKELIHOOD{false};
@@ -744,11 +755,12 @@ class Filter final : public ProcessFilter<T>
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
                 const Matrix<6, 6, T>& position_velocity_acceleration_p,
-                const T angle) override
+                const T angle,
+                const T angle_variance) override
         {
                 filter_.emplace(
                         SigmaPoints<9, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>),
-                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p));
+                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
         }
 
         void predict(const T dt) override
@@ -1044,7 +1056,7 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+std::unique_ptr<FilterUkf<T>> create_filter_ukf(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
@@ -1053,7 +1065,7 @@ std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
         return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(T, T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<FilterUkf<T>> create_filter_ukf(T, T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

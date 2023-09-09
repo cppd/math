@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter.h"
+#include "../measurement.h"
+
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
@@ -25,7 +28,102 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::process
 {
 template <typename T>
-std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+class FilterUkf
+{
+public:
+        virtual ~FilterUkf() = default;
+
+        virtual void reset(
+                const Vector<6, T>& position_velocity_acceleration,
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                T angle,
+                T angle_variance) = 0;
+
+        virtual void predict(T dt) = 0;
+
+        virtual void update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
+
+        virtual void update_position_speed(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_speed_direction_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_speed_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_speed_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_direction_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_direction(
+                const Measurement<2, T>& position,
+                const Measurement<1, T>& direction,
+                std::optional<T> gate) = 0;
+
+        virtual void update_position_acceleration(
+                const Measurement<2, T>& position,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_speed_direction_acceleration(
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_speed_direction(
+                const Measurement<1, T>& speed,
+                const Measurement<1, T>& direction,
+                std::optional<T> gate) = 0;
+
+        virtual void update_direction_acceleration(
+                const Measurement<1, T>& direction,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        virtual void update_acceleration(const Measurement<2, T>& acceleration, std::optional<T> gate) = 0;
+
+        virtual void update_direction(const Measurement<1, T>& direction, std::optional<T> gate) = 0;
+
+        virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
+
+        virtual void update_speed_acceleration(
+                const Measurement<1, T>& speed,
+                const Measurement<2, T>& acceleration,
+                std::optional<T> gate) = 0;
+
+        [[nodiscard]] virtual Vector<2, T> position() const = 0;
+        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+        [[nodiscard]] virtual T speed() const = 0;
+        [[nodiscard]] virtual T speed_p() const = 0;
+        [[nodiscard]] virtual T angle() const = 0;
+        [[nodiscard]] virtual T angle_p() const = 0;
+        [[nodiscard]] virtual T angle_speed() const = 0;
+        [[nodiscard]] virtual T angle_speed_p() const = 0;
+        [[nodiscard]] virtual T angle_r() const = 0;
+        [[nodiscard]] virtual T angle_r_p() const = 0;
+};
+
+template <typename T>
+std::unique_ptr<FilterUkf<T>> create_filter_ukf(
         T sigma_points_alpha,
         T position_variance,
         T angle_variance,

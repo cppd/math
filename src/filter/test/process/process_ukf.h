@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter.h"
+#include "filter_ukf.h"
 #include "process.h"
 
 #include "../../consistency.h"
@@ -42,7 +42,7 @@ class ProcessUkf final : public Process<T>
         color::RGB8 color_;
         T reset_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<ProcessFilter<T>> filter_;
+        std::unique_ptr<FilterUkf<T>> filter_;
 
         std::vector<TimePoint<2, T>> positions_;
         std::vector<TimePoint<2, T>> positions_p_;

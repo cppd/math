@@ -28,6 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::process
 {
+namespace
+{
+template <typename T>
+constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
+}
+
 template <typename T>
 ProcessUkf<T>::ProcessUkf(
         std::string name,
@@ -42,7 +48,7 @@ ProcessUkf<T>::ProcessUkf(
           color_(color),
           reset_dt_(reset_dt),
           gate_(gate),
-          filter_(create_process_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance))
+          filter_(create_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance))
 {
         ASSERT(filter_);
 }
@@ -87,7 +93,8 @@ void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
 
                         filter_->reset(
                                 estimation.position_velocity_acceleration(),
-                                estimation.position_velocity_acceleration_p(), estimation.angle_difference());
+                                estimation.position_velocity_acceleration_p(), estimation.angle_difference(),
+                                INIT_ANGLE_VARIANCE<T>);
 
                         last_time_ = m.time;
                 }
