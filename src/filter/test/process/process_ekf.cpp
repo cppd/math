@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process_ekf.h"
 
-#include "process_filter_ekf.h"
+#include "filter_ekf.h"
 #include "update.h"
 
 #include <src/com/angle.h>

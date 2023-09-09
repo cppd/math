@@ -17,12 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "process_filter.h"
+#include "filter.h"
 
 #include <memory>
+#include <optional>
 
 namespace ns::filter::test::process
 {
 template <typename T>
-std::unique_ptr<ProcessFilter<T>> create_process_filter_ekf(T position_variance, T angle_variance, T angle_r_variance);
+std::unique_ptr<ProcessFilter<T>> create_process_filter_ukf(
+        T sigma_points_alpha,
+        T position_variance,
+        T angle_variance,
+        T angle_r_variance);
 }

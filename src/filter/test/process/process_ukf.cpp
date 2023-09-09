@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process_ukf.h"
 
-#include "process_filter_ukf.h"
+#include "filter_ukf.h"
 #include "update.h"
 
 #include <src/com/angle.h>

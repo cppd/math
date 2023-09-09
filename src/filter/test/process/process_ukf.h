@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "filter.h"
 #include "process.h"
-#include "process_filter.h"
 
 #include "../../consistency.h"
 #include "../estimation.h"
