@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position_filter_lkf_0.h"
+#include "filter_0.h"
 
 #include "../../ekf.h"
 #include "../utility.h"

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position_filter_lkf_1.h"
+#include "filter_2.h"
 
 #include "../../ekf.h"
 #include "../utility.h"
@@ -36,34 +36,39 @@ struct Init final
 {
         static constexpr Vector<N, T> VELOCITY{0};
         static constexpr Vector<N, T> VELOCITY_VARIANCE{square<T>(30)};
+
+        static constexpr Vector<N, T> ACCELERATION{0};
+        static constexpr Vector<N, T> ACCELERATION_VARIANCE{square<T>(10)};
 };
 
 template <std::size_t N, typename T>
-Vector<2 * N, T> init_x(const Vector<N, T>& position)
+Vector<3 * N, T> init_x(const Vector<N, T>& position)
 {
         ASSERT(is_finite(position));
 
-        Vector<2 * N, T> res;
+        Vector<3 * N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                const std::size_t b = 2 * i;
+                const std::size_t b = 3 * i;
                 res[b + 0] = position[i];
                 res[b + 1] = Init<N, T>::VELOCITY[i];
+                res[b + 2] = Init<N, T>::ACCELERATION[i];
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance)
+Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance)
 {
         ASSERT(is_finite(position_variance));
 
-        Matrix<2 * N, 2 * N, T> res(0);
+        Matrix<3 * N, 3 * N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
-                const std::size_t b = 2 * i;
+                const std::size_t b = 3 * i;
                 res(b + 0, b + 0) = position_variance[i];
                 res(b + 1, b + 1) = Init<N, T>::VELOCITY_VARIANCE[i];
+                res(b + 2, b + 2) = Init<N, T>::ACCELERATION_VARIANCE[i];
         }
         return res;
 }
@@ -78,20 +83,24 @@ struct AddX final
 };
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> f_matrix(const T dt)
+Matrix<3 * N, 3 * N, T> f_matrix(const T dt)
 {
-        return block_diagonal<N>(Matrix<2, 2, T>{
-                {1, dt},
-                {0,  1}
+        const T dt_2 = power<2>(dt) / 2;
+
+        return block_diagonal<N>(Matrix<3, 3, T>{
+                {1, dt, dt_2},
+                {0,  1,   dt},
+                {0,  0,    1}
         });
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> q(const T dt, const T process_variance)
+Matrix<3 * N, 3 * N, T> q(const T dt, const T process_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
+        const T dt_3 = power<3>(dt) / 6;
 
-        const Matrix<2 * N, N, T> noise_transition = block_diagonal<N>(Matrix<2, 1, T>{{dt_2}, {dt}});
+        const Matrix<3 * N, N, T> noise_transition = block_diagonal<N>(Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
         const Matrix<N, N, T> process_covariance = make_diagonal_matrix(Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
@@ -106,15 +115,15 @@ Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
 struct PositionH final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N / 2, T> operator()(const Vector<N, T>& x) const
+        [[nodiscard]] Vector<N / 3, T> operator()(const Vector<N, T>& x) const
         {
-                static_assert(N % 2 == 0);
+                static_assert(N % 3 == 0);
                 // px = px
                 // py = py
-                Vector<N / 2, T> res;
-                for (std::size_t i = 0; i < N / 2; ++i)
+                Vector<N / 3, T> res;
+                for (std::size_t i = 0; i < N / 3; ++i)
                 {
-                        res[i] = x[2 * i];
+                        res[i] = x[3 * i];
                 }
                 return res;
         }
@@ -123,16 +132,16 @@ struct PositionH final
 struct PositionHJ final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Matrix<N / 2, N, T> operator()(const Vector<N, T>& /*x*/) const
+        [[nodiscard]] Matrix<N / 3, N, T> operator()(const Vector<N, T>& /*x*/) const
         {
-                static_assert(N % 2 == 0);
+                static_assert(N % 3 == 0);
                 // px = px
                 // py = py
                 // Jacobian
-                Matrix<N / 2, N, T> res(0);
-                for (std::size_t i = 0; i < N / 2; ++i)
+                Matrix<N / 3, N, T> res(0);
+                for (std::size_t i = 0; i < N / 3; ++i)
                 {
-                        res(i, 2 * i) = 1;
+                        res(i, 3 * i) = 1;
                 }
                 return res;
         }
@@ -156,7 +165,7 @@ class Filter final : public PositionFilter<N, T>
 
         const std::optional<T> theta_;
         const T process_variance_;
-        std::optional<Ekf<2 * N, T>> filter_;
+        std::optional<Ekf<3 * N, T>> filter_;
 
         void reset(const Vector<N, T>& position, const Vector<N, T>& variance) override
         {
@@ -169,13 +178,13 @@ class Filter final : public PositionFilter<N, T>
                 ASSERT(is_finite(dt));
                 ASSERT(dt >= 0);
 
-                const Matrix<2 * N, 2 * N, T> f = f_matrix<N, T>(dt);
+                const Matrix<3 * N, 3 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
-                        [&](const Vector<2 * N, T>& x)
+                        [&](const Vector<3 * N, T>& x)
                         {
                                 return f * x;
                         },
-                        [&](const Vector<2 * N, T>& /*x*/)
+                        [&](const Vector<3 * N, T>& /*x*/)
                         {
                                 return f;
                         },
@@ -208,14 +217,14 @@ class Filter final : public PositionFilter<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<0, 2>(filter_->x());
+                return slice<0, 3>(filter_->x());
         }
 
         [[nodiscard]] Matrix<N, N, T> position_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<0, 2>(filter_->p());
+                return slice<0, 3>(filter_->p());
         }
 
         [[nodiscard]] bool has_speed() const override
@@ -242,29 +251,33 @@ class Filter final : public PositionFilter<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<1, 2>(filter_->x());
+                return slice<1, 3>(filter_->x());
         }
 
         [[nodiscard]] Matrix<N, N, T> velocity_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<1, 2>(filter_->p());
+                return slice<1, 3>(filter_->p());
         }
 
         [[nodiscard]] bool has_position_velocity_acceleration() const override
         {
-                return false;
+                return true;
         }
 
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
         {
-                error("no position_velocity_acceleration is not supported");
+                ASSERT(filter_);
+
+                return filter_->x();
         }
 
         [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
         {
-                error("position_velocity_acceleration_p is not supported");
+                ASSERT(filter_);
+
+                return filter_->p();
         }
 
 public:
@@ -279,12 +292,12 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_1(const T theta, const T process_variance)
+std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_2(const T theta, const T process_variance)
 {
         return std::make_unique<Filter<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf_1<(N), T>(T, T);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf_2<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 
