@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "position_filter.h"
+#include "filter.h"
 
 #include "../../consistency.h"
 #include "../measurement.h"
@@ -41,7 +41,7 @@ class Position final
         T reset_dt_;
         T linear_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<PositionFilter<N, T>> filter_;
+        std::unique_ptr<Filter<N, T>> filter_;
 
         std::vector<TimePoint<N, T>> positions_;
         std::vector<TimePoint<N, T>> positions_p_;
@@ -67,7 +67,7 @@ public:
                 T reset_dt,
                 T linear_dt,
                 std::optional<T> gate,
-                std::unique_ptr<PositionFilter<N, T>>&& filter);
+                std::unique_ptr<Filter<N, T>>&& filter);
 
         void update_position(const Measurements<N, T>& m);
         void predict_update(const Measurements<N, T>& m);

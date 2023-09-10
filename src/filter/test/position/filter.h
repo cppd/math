@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
-struct PositionFilterUpdate final
+struct FilterUpdate final
 {
         Vector<N, T> residual;
         bool gate;
@@ -34,16 +34,16 @@ struct PositionFilterUpdate final
 };
 
 template <std::size_t N, typename T>
-class PositionFilter
+class Filter
 {
 public:
-        virtual ~PositionFilter() = default;
+        virtual ~Filter() = default;
 
         virtual void reset(const Vector<N, T>& position, const Vector<N, T>& variance) = 0;
 
         virtual void predict(T dt) = 0;
 
-        [[nodiscard]] virtual PositionFilterUpdate<N, T> update(
+        [[nodiscard]] virtual FilterUpdate<N, T> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 std::optional<T> gate) = 0;

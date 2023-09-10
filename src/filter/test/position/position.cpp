@@ -30,7 +30,7 @@ Position<N, T>::Position(
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
-        std::unique_ptr<PositionFilter<N, T>>&& filter)
+        std::unique_ptr<Filter<N, T>>&& filter)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),

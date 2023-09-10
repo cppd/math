@@ -75,7 +75,7 @@ PositionVariance<N, T>::PositionVariance(
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          filter_(create_position_filter_lkf_2<N, T>(THETA<T>, process_variance))
+          filter_(create_filter_2<N, T>(THETA<T>, process_variance))
 {
         ASSERT(filter_);
 }

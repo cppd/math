@@ -201,8 +201,7 @@ std::vector<position::Position<N, T>> create_positions()
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200),
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_0,
-                                position::create_position_filter_lkf_0<N, T>(
-                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
+                                position::create_filter_0<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
                 }
 
                 if (ORDER == 1)
@@ -210,8 +209,7 @@ std::vector<position::Position<N, T>> create_positions()
                         res.emplace_back(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1,
-                                position::create_position_filter_lkf_1<N, T>(
-                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_1));
+                                position::create_filter_1<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_1));
                 }
 
                 if (ORDER == 2)
@@ -219,8 +217,7 @@ std::vector<position::Position<N, T>> create_positions()
                         res.emplace_back(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2,
-                                position::create_position_filter_lkf_2<N, T>(
-                                        thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
+                                position::create_filter_2<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
                 }
         }
 

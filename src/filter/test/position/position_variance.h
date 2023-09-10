@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "position_filter.h"
+#include "filter.h"
 
 #include "../measurement.h"
 #include "../moving_variance.h"
@@ -39,7 +39,7 @@ class PositionVariance final
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
-        std::unique_ptr<PositionFilter<N, T>> filter_;
+        std::unique_ptr<Filter<N, T>> filter_;
 
         std::vector<TimePoint<N, T>> positions_;
         std::vector<TimePoint<N, T>> positions_p_;

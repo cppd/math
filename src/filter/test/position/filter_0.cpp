@@ -123,7 +123,7 @@ struct PositionResidual final
 //
 
 template <std::size_t N, typename T>
-class Filter final : public PositionFilter<N, T>
+class FilterImpl final : public Filter<N, T>
 {
         static constexpr bool LIKELIHOOD{false};
 
@@ -155,7 +155,7 @@ class Filter final : public PositionFilter<N, T>
                         q<N, T>(dt, process_variance_));
         }
 
-        [[nodiscard]] PositionFilterUpdate<N, T> update(
+        [[nodiscard]] FilterUpdate<N, T> update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 const std::optional<T> gate) override
@@ -237,7 +237,7 @@ class Filter final : public PositionFilter<N, T>
         }
 
 public:
-        Filter(const T theta, const T process_variance)
+        FilterImpl(const T theta, const T process_variance)
                 : theta_(theta),
                   process_variance_(process_variance)
         {
@@ -248,12 +248,12 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_0(const T theta, const T process_variance)
+std::unique_ptr<Filter<N, T>> create_filter_0(const T theta, const T process_variance)
 {
-        return std::make_unique<Filter<N, T>>(theta, process_variance);
+        return std::make_unique<FilterImpl<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<PositionFilter<(N), T>> create_position_filter_lkf_0<(N), T>(T, T);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter<(N), T>> create_filter_0<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

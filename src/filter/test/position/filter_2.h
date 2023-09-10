@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "position_filter.h"
+#include "filter.h"
 
 #include <memory>
 #include <optional>
@@ -25,5 +25,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
-std::unique_ptr<PositionFilter<N, T>> create_position_filter_lkf_2(T theta, T process_variance);
+std::unique_ptr<Filter<N, T>> create_filter_2(T theta, T process_variance);
 }
