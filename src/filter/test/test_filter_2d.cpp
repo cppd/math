@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
-#include "move/move.h"
 #include "move/move_1_0.h"
 #include "move/move_1_1.h"
 #include "move/move_2_1.h"
