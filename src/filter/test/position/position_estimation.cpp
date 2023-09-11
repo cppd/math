@@ -26,14 +26,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::position
 {
 template <typename T>
-PositionEstimation<T>::PositionEstimation(const T angle_estimation_time_difference, const T angle_estimation_variance)
+PositionEstimation<T>::PositionEstimation(
+        const T angle_estimation_time_difference,
+        const T angle_estimation_variance,
+        const Position<2, T>* const position)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
-          angle_estimation_variance_(angle_estimation_variance)
+          angle_estimation_variance_(angle_estimation_variance),
+          position_(position)
 {
 }
 
 template <typename T>
-void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vector<Position<2, T>>* const positions)
+void PositionEstimation<T>::update(const Measurements<2, T>& m)
 {
         if (m.direction)
         {
@@ -46,52 +50,34 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m, const std::vecto
                 return;
         }
 
-        angle_difference_position_ = nullptr;
-        position_ = nullptr;
-        position_angle_p_.reset();
+        has_angle_difference_ = false;
+        angle_p_.reset();
 
-        for (std::size_t i = 0; i < positions->size(); ++i)
-        {
-                const Position<2, T>* const position = &(*positions)[i];
-
-                if (position->empty())
-                {
-                        continue;
-                }
-
-                const T angle_p = compute_angle_p(position->velocity(), position->velocity_p());
-                if (!is_finite(angle_p))
-                {
-                        continue;
-                }
-                if (!position_angle_p_ || angle_p < *position_angle_p_)
-                {
-                        position_angle_p_ = angle_p;
-                        position_ = position;
-                }
-        }
-
-        if (!position_angle_p_)
+        if (position_->empty())
         {
                 return;
         }
 
-        ASSERT(position_);
+        const T angle_p = compute_angle_p(position_->velocity(), position_->velocity_p());
+        if (!is_finite(angle_p))
+        {
+                return;
+        }
+
+        angle_p_ = angle_p;
 
         LOG(to_string(m.time) + "; " + position_->name()
-            + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*position_angle_p_))));
+            + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*angle_p_))));
 
-        if (last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_)
-            && *position_angle_p_ <= angle_estimation_variance_)
-        {
-                angle_difference_position_ = position_;
-        }
+        has_angle_difference_ =
+                last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_)
+                && *angle_p_ <= angle_estimation_variance_;
 }
 
 template <typename T>
 bool PositionEstimation<T>::has_angle_difference() const
 {
-        return angle_difference_position_ != nullptr;
+        return has_angle_difference_;
 }
 
 template <typename T>
@@ -102,54 +88,41 @@ T PositionEstimation<T>::angle_difference() const
                 error("Estimation doesn't have angle difference");
         }
         ASSERT(last_direction_);
-        return normalize_angle(*last_direction_ - compute_angle(angle_difference_position_->velocity()));
+        return normalize_angle(*last_direction_ - compute_angle(position_->velocity()));
 }
 
 template <typename T>
-bool PositionEstimation<T>::has_position() const
+bool PositionEstimation<T>::has_angle_p() const
 {
-        return position_ != nullptr;
+        return angle_p_.has_value();
 }
 
 template <typename T>
-T PositionEstimation<T>::position_angle_p() const
+T PositionEstimation<T>::angle_p() const
 {
-        if (!has_position())
+        if (!has_angle_p())
         {
-                error("Estimation doesn't have position");
+                error("Estimation doesn't have angle p");
         }
-        ASSERT(position_angle_p_);
-        return *position_angle_p_;
+        ASSERT(angle_p_);
+        return *angle_p_;
 }
 
 template <typename T>
 Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
 {
-        if (!has_position())
-        {
-                error("Estimation doesn't have position");
-        }
         return position_->position_velocity_acceleration();
 }
 
 template <typename T>
 Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
 {
-        if (!has_position())
-        {
-                error("Estimation doesn't have position");
-        }
         return position_->position_velocity_acceleration_p();
 }
 
 template <typename T>
 std::string PositionEstimation<T>::position_description() const
 {
-        if (!has_position())
-        {
-                error("Estimation doesn't have position");
-        }
-
         const Vector<2, T> velocity = position_->velocity();
         const Matrix<2, 2, T> velocity_p = position_->velocity_p();
         const T angle = compute_angle(velocity);
@@ -172,13 +145,13 @@ std::string PositionEstimation<T>::angle_difference_description() const
 
         ASSERT(last_direction_);
 
-        const Vector<2, T> velocity = angle_difference_position_->velocity();
-        const Matrix<2, 2, T> velocity_p = angle_difference_position_->velocity_p();
+        const Vector<2, T> velocity = position_->velocity();
+        const Matrix<2, 2, T> velocity_p = position_->velocity_p();
         const T angle = compute_angle(velocity);
         const T angle_p = compute_angle_p(velocity, velocity_p);
 
         std::string res;
-        res += "filter = " + angle_difference_position_->name();
+        res += "filter = " + position_->name();
         res += "; angle = " + to_string(radians_to_degrees(angle));
         res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
         res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));

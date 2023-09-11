@@ -419,7 +419,7 @@ void test_impl(const Track<2, T>& track)
 
         position::PositionEstimation<T> position_estimation(
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE);
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, &std::as_const(positions_2.front()));
 
         const auto update = [&](const Measurements<2, T>& measurement)
         {
@@ -428,7 +428,7 @@ void test_impl(const Track<2, T>& track)
                         p.update_position(measurement);
                 }
 
-                position_estimation.update(measurement, &std::as_const(positions_2));
+                position_estimation.update(measurement);
 
                 for (auto& p : positions_1)
                 {
