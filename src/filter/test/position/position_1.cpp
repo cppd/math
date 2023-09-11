@@ -15,7 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position.h"
+#include "position_1.h"
+
+#include "filter_1.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -24,25 +26,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
-Position<N, T>::Position(
+Position1<N, T>::Position1(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
-        std::unique_ptr<Filter<N, T>>&& filter)
+        const T theta,
+        const T process_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           linear_dt_(linear_dt),
           gate_(gate),
-          filter_(std::move(filter))
+          filter_(create_filter_1<N, T>(theta, process_variance))
 {
         ASSERT(filter_);
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::save_results(const T time)
+void Position1<N, T>::save_results(const T time)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -55,7 +58,7 @@ void Position<N, T>::save_results(const T time)
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::add_nees_checks(const TrueData<N, T>& true_data)
+void Position1<N, T>::add_nees_checks(const TrueData<N, T>& true_data)
 {
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
 
@@ -69,7 +72,7 @@ void Position<N, T>::add_nees_checks(const TrueData<N, T>& true_data)
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::check_time(const T time) const
+void Position1<N, T>::check_time(const T time) const
 {
         if (last_predict_time_ && !(*last_predict_time_ < time))
         {
@@ -85,7 +88,7 @@ void Position<N, T>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::update_position(const Measurements<N, T>& m)
+void Position1<N, T>::update_position(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
@@ -126,7 +129,7 @@ void Position<N, T>::update_position(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
-void Position<N, T>::predict_update(const Measurements<N, T>& m)
+void Position1<N, T>::predict_update(const Measurements<N, T>& m)
 {
         if (m.position)
         {
@@ -149,49 +152,37 @@ void Position<N, T>::predict_update(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] bool Position<N, T>::empty() const
+[[nodiscard]] bool Position1<N, T>::empty() const
 {
         return !last_predict_time_ || !last_update_time_;
 }
 
 template <std::size_t N, typename T>
-const std::string& Position<N, T>::name() const
+const std::string& Position1<N, T>::name() const
 {
         return name_;
 }
 
 template <std::size_t N, typename T>
-color::RGB8 Position<N, T>::color() const
+color::RGB8 Position1<N, T>::color() const
 {
         return color_;
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> Position<N, T>::velocity() const
+[[nodiscard]] Vector<N, T> Position1<N, T>::velocity() const
 {
         return filter_->velocity();
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Matrix<N, N, T> Position<N, T>::velocity_p() const
+[[nodiscard]] Matrix<N, N, T> Position1<N, T>::velocity_p() const
 {
         return filter_->velocity_p();
 }
 
 template <std::size_t N, typename T>
-Vector<3 * N, T> Position<N, T>::position_velocity_acceleration() const
-{
-        return filter_->position_velocity_acceleration();
-}
-
-template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> Position<N, T>::position_velocity_acceleration_p() const
-{
-        return filter_->position_velocity_acceleration_p();
-}
-
-template <std::size_t N, typename T>
-std::string Position<N, T>::consistency_string() const
+std::string Position1<N, T>::consistency_string() const
 {
         const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
 
@@ -228,30 +219,30 @@ std::string Position<N, T>::consistency_string() const
 }
 
 template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& Position<N, T>::positions() const
+const std::vector<TimePoint<N, T>>& Position1<N, T>::positions() const
 {
         return positions_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& Position<N, T>::positions_p() const
+const std::vector<TimePoint<N, T>>& Position1<N, T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& Position<N, T>::speeds() const
+const std::vector<TimePoint<1, T>>& Position1<N, T>::speeds() const
 {
         return speeds_;
 }
 
 template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& Position<N, T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Position1<N, T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-#define TEMPLATE_N_T(N, T) template class Position<(N), T>;
+#define TEMPLATE_N_T(N, T) template class Position1<(N), T>;
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

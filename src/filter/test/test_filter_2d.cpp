@@ -20,10 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "move/move_1_0.h"
 #include "move/move_1_1.h"
 #include "move/move_2_1.h"
-#include "position/filter_0.h"
-#include "position/filter_1.h"
-#include "position/filter_2.h"
-#include "position/position.h"
+#include "position/position_0.h"
+#include "position/position_1.h"
+#include "position/position_2.h"
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
 #include "process/process_ekf.h"
@@ -88,7 +87,7 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string_view annotation,
         const std::vector<Measurements<N, T>>& measurements,
-        const std::vector<const std::vector<position::Position<N, T>>*>& positions,
+        const std::vector<const std::vector<std::unique_ptr<position::Position<N, T>>>*>& positions,
         const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
         const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
 {
@@ -111,14 +110,7 @@ void write_to_file(
                 {
                         for (const auto& p1 : *p0)
                         {
-                                if constexpr (requires { *p1; })
-                                {
-                                        push(*p1);
-                                }
-                                else
-                                {
-                                        push(p1);
-                                }
+                                push(*p1);
                         }
                 }
         };
@@ -171,9 +163,9 @@ std::vector<position::PositionVariance<N, T>> create_position_variance()
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<position::Position<N, T>> create_positions()
+std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 {
-        std::vector<position::Position<N, T>> res;
+        std::vector<std::unique_ptr<position::Position<N, T>>> res;
 
         const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
 
@@ -196,27 +188,26 @@ std::vector<position::Position<N, T>> create_positions()
 
                 if (ORDER == 0)
                 {
-                        res.emplace_back(
+                        res.emplace_back(std::make_unique<position::Position0<N, T>>(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200),
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                Config<T>::POSITION_FILTER_GATE_0,
-                                position::create_filter_0<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
+                                Config<T>::POSITION_FILTER_GATE_0, thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
                 }
 
                 if (ORDER == 1)
                 {
-                        res.emplace_back(
+                        res.emplace_back(std::make_unique<position::Position1<N, T>>(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200), Config<T>::POSITION_FILTER_RESET_DT,
-                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1,
-                                position::create_filter_1<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_1));
+                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1, thetas[i],
+                                Config<T>::POSITION_FILTER_VARIANCE_1));
                 }
 
                 if (ORDER == 2)
                 {
-                        res.emplace_back(
+                        res.emplace_back(std::make_unique<position::Position2<N, T>>(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2,
-                                position::create_filter_2<N, T>(thetas[i], Config<T>::POSITION_FILTER_VARIANCE_2));
+                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2, thetas[i],
+                                Config<T>::POSITION_FILTER_VARIANCE_2));
                 }
         }
 
@@ -320,7 +311,7 @@ void write_result(
         const std::string_view annotation,
         const std::vector<Measurements<N, T>>& measurements,
         const std::vector<position::PositionVariance<N, T>>& position_variance,
-        const std::vector<const std::vector<position::Position<N, T>>*>& positions,
+        const std::vector<const std::vector<std::unique_ptr<position::Position<N, T>>>*>& positions,
         const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
         const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
 {
@@ -346,14 +337,7 @@ void write_result(
                 {
                         for (const auto& p1 : *p0)
                         {
-                                if constexpr (requires { *p1; })
-                                {
-                                        log_consistency_string(*p1);
-                                }
-                                else
-                                {
-                                        log_consistency_string(p1);
-                                }
+                                log_consistency_string(*p1);
                         }
                 }
         };
@@ -409,9 +393,9 @@ void test_impl(const Track<2, T>& track)
         std::vector<Measurements<2, T>> measurements;
 
         std::vector<position::PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
-        std::vector<position::Position<2, T>> positions_0 = create_positions<2, T, 0>();
-        std::vector<position::Position<2, T>> positions_1 = create_positions<2, T, 1>();
-        std::vector<position::Position<2, T>> positions_2 = create_positions<2, T, 2>();
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_0 = create_positions<2, T, 0>();
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_1 = create_positions<2, T, 1>();
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_2 = create_positions<2, T, 2>();
         std::vector<std::unique_ptr<process::Process<T>>> processes = create_processes<T>();
         std::vector<std::unique_ptr<move::Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
         std::vector<std::unique_ptr<move::Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
@@ -419,20 +403,21 @@ void test_impl(const Track<2, T>& track)
 
         position::PositionEstimation<T> position_estimation(
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE, &std::as_const(positions_2.front()));
+                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                static_cast<const position::Position2<2, T>*>(positions_2.front().get()));
 
         const auto update = [&](const Measurements<2, T>& measurement)
         {
                 for (auto& p : positions_2)
                 {
-                        p.update_position(measurement);
+                        p->update_position(measurement);
                 }
 
                 position_estimation.update(measurement);
 
                 for (auto& p : positions_1)
                 {
-                        p.update_position(measurement);
+                        p->update_position(measurement);
                 }
 
                 for (auto& p : processes)

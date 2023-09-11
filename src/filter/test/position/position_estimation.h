@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "position.h"
+#include "position_2.h"
 
 #include "../estimation.h"
 #include "../measurement.h"
@@ -34,7 +34,7 @@ class PositionEstimation final : public Estimation<T>
 {
         const T angle_estimation_time_difference_;
         const T angle_estimation_variance_;
-        const Position<2, T>* const position_;
+        const Position2<2, T>* const position_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
         std::optional<T> angle_p_;
@@ -44,7 +44,7 @@ public:
         PositionEstimation(
                 T angle_estimation_time_difference,
                 T angle_estimation_variance,
-                const Position<2, T>* position);
+                const Position2<2, T>* position);
 
         void update(const Measurements<2, T>& m);
 

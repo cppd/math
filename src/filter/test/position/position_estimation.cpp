@@ -29,7 +29,7 @@ template <typename T>
 PositionEstimation<T>::PositionEstimation(
         const T angle_estimation_time_difference,
         const T angle_estimation_variance,
-        const Position<2, T>* const position)
+        const Position2<2, T>* const position)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
           angle_estimation_variance_(angle_estimation_variance),
           position_(position)
