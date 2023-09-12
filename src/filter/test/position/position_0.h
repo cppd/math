@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter.h"
+#include "filter_0.h"
 #include "position.h"
 
 #include "../../consistency.h"
@@ -42,7 +42,7 @@ class Position0 final : public Position<N, T>
         T reset_dt_;
         T linear_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<Filter<N, T>> filter_;
+        std::unique_ptr<Filter0<N, T>> filter_;
 
         std::vector<TimePoint<N, T>> positions_;
         std::vector<TimePoint<N, T>> positions_p_;

@@ -123,7 +123,7 @@ struct PositionResidual final
 //
 
 template <std::size_t N, typename T>
-class FilterImpl final : public Filter<N, T>
+class FilterImpl final : public Filter0<N, T>
 {
         static constexpr bool LIKELIHOOD{false};
 
@@ -155,7 +155,7 @@ class FilterImpl final : public Filter<N, T>
                         q<N, T>(dt, process_variance_));
         }
 
-        [[nodiscard]] FilterUpdate<N, T> update(
+        [[nodiscard]] Filter0<N, T>::Update update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 const std::optional<T> gate) override
@@ -191,51 +191,6 @@ class FilterImpl final : public Filter<N, T>
                 return filter_->p();
         }
 
-        [[nodiscard]] bool has_speed() const override
-        {
-                return false;
-        }
-
-        [[nodiscard]] T speed() const override
-        {
-                error("speed is not supported");
-        }
-
-        [[nodiscard]] T speed_p() const override
-        {
-                error("speed_p is not supported");
-        }
-
-        [[nodiscard]] bool has_velocity() const override
-        {
-                return false;
-        }
-
-        [[nodiscard]] Vector<N, T> velocity() const override
-        {
-                error("velocity is not supported");
-        }
-
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const override
-        {
-                error("velocity_p is not supported");
-        }
-
-        [[nodiscard]] bool has_position_velocity_acceleration() const override
-        {
-                return false;
-        }
-
-        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
-        {
-                error("position_velocity_acceleration is not supported");
-        }
-
-        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
-        {
-                error("position_velocity_acceleration_p is not supported");
-        }
-
 public:
         FilterImpl(const T theta, const T process_variance)
                 : theta_(theta),
@@ -248,12 +203,12 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter<N, T>> create_filter_0(const T theta, const T process_variance)
+std::unique_ptr<Filter0<N, T>> create_filter_0(const T theta, const T process_variance)
 {
         return std::make_unique<FilterImpl<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter<(N), T>> create_filter_0<(N), T>(T, T);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter0<(N), T>> create_filter_0<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

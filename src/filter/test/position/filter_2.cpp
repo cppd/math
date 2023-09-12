@@ -159,7 +159,7 @@ struct PositionResidual final
 //
 
 template <std::size_t N, typename T>
-class FilterImpl final : public Filter<N, T>
+class FilterImpl final : public Filter2<N, T>
 {
         static constexpr bool LIKELIHOOD{false};
 
@@ -191,7 +191,7 @@ class FilterImpl final : public Filter<N, T>
                         q<N, T>(dt, process_variance_));
         }
 
-        [[nodiscard]] FilterUpdate<N, T> update(
+        [[nodiscard]] Filter2<N, T>::Update update(
                 const Vector<N, T>& position,
                 const Vector<N, T>& variance,
                 const std::optional<T> gate) override
@@ -227,11 +227,6 @@ class FilterImpl final : public Filter<N, T>
                 return slice<0, 3>(filter_->p());
         }
 
-        [[nodiscard]] bool has_speed() const override
-        {
-                return true;
-        }
-
         [[nodiscard]] T speed() const override
         {
                 return velocity().norm();
@@ -240,11 +235,6 @@ class FilterImpl final : public Filter<N, T>
         [[nodiscard]] T speed_p() const override
         {
                 return compute_speed_p(velocity(), velocity_p());
-        }
-
-        [[nodiscard]] bool has_velocity() const override
-        {
-                return true;
         }
 
         [[nodiscard]] Vector<N, T> velocity() const override
@@ -259,11 +249,6 @@ class FilterImpl final : public Filter<N, T>
                 ASSERT(filter_);
 
                 return slice<1, 3>(filter_->p());
-        }
-
-        [[nodiscard]] bool has_position_velocity_acceleration() const override
-        {
-                return true;
         }
 
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
@@ -292,12 +277,12 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter<N, T>> create_filter_2(const T theta, const T process_variance)
+std::unique_ptr<Filter2<N, T>> create_filter_2(const T theta, const T process_variance)
 {
         return std::make_unique<FilterImpl<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter<(N), T>> create_filter_2<(N), T>(T, T);
+#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter2<(N), T>> create_filter_2<(N), T>(T, T);
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

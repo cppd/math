@@ -50,11 +50,8 @@ void Position2<N, T>::save_results(const T time)
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
 
-        if (filter_->has_speed())
-        {
-                speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
-                speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
-        }
+        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
+        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
 }
 
 template <std::size_t N, typename T>
@@ -62,12 +59,9 @@ void Position2<N, T>::add_nees_checks(const TrueData<N, T>& true_data)
 {
         nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
 
-        if (filter_->has_speed())
+        if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
         {
-                if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
-                {
-                        nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
-                }
+                nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
         }
 }
 
