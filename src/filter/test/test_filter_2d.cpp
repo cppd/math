@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "simulator.h"
+#include "string.h"
 
 #include "move/move_1_0.h"
 #include "move/move_1_1.h"
@@ -171,10 +172,9 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 
         const auto name = [&](const T theta)
         {
-                const auto* const letter_theta = reinterpret_cast<const char*>(u8"\u03b8");
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "LKF " << ORDER << " (" << letter_theta << " " << theta << ")";
+                oss << "LKF " << ORDER << " (" << THETA << " " << theta << ")";
                 return oss.str();
         };
 
@@ -231,10 +231,9 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
 
         const auto name = [&](const T alpha)
         {
-                const auto* const letter_alpha = reinterpret_cast<const char*>(u8"\u03b1");
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "UKF (" << letter_alpha << " " << alpha << ")";
+                oss << "UKF (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
@@ -260,10 +259,9 @@ std::vector<std::unique_ptr<move::Move<T>>> create_moves()
 
         const auto name = [&](const T alpha)
         {
-                const auto* const letter_alpha = reinterpret_cast<const char*>(u8"\u03b1");
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Move UKF " << ORDER_P << '.' << ORDER_A << " (" << letter_alpha << " " << alpha << ")";
+                oss << "Move UKF " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
