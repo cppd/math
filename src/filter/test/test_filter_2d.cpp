@@ -126,32 +126,6 @@ void write_to_file(
 }
 
 template <std::size_t N, typename T>
-int compute_precision(const std::array<T, N>& data)
-{
-        std::optional<T> min;
-        for (const T v : data)
-        {
-                ASSERT(v >= 0);
-                if (!(v > 0))
-                {
-                        continue;
-                }
-                if (min)
-                {
-                        min = std::min(v, *min);
-                        continue;
-                }
-                min = v;
-        }
-        if (!min)
-        {
-                return 0;
-        }
-        ASSERT(*min >= 1e-6L);
-        return std::abs(std::floor(std::log10(*min)));
-}
-
-template <std::size_t N, typename T>
 std::vector<position::PositionVariance<N, T>> create_position_variance()
 {
         std::vector<position::PositionVariance<N, T>> res;
@@ -168,7 +142,7 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 {
         std::vector<std::unique_ptr<position::Position<N, T>>> res;
 
-        const int precision = compute_precision(Config<T>::POSITION_FILTER_THETAS);
+        const int precision = compute_string_precision(Config<T>::POSITION_FILTER_THETAS);
 
         const auto name = [&](const T theta)
         {
@@ -227,7 +201,7 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
                 "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT, Config<T>::PROCESS_FILTER_GATE,
                 process_pv, process_av, process_arv));
 
-        const int precision = compute_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
+        const int precision = compute_string_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
         const auto name = [&](const T alpha)
         {
@@ -255,7 +229,7 @@ std::vector<std::unique_ptr<move::Move<T>>> create_moves()
 {
         std::vector<std::unique_ptr<move::Move<T>>> res;
 
-        const int precision = compute_precision(Config<T>::MOVE_FILTER_UKF_ALPHAS);
+        const int precision = compute_string_precision(Config<T>::MOVE_FILTER_UKF_ALPHAS);
 
         const auto name = [&](const T alpha)
         {

@@ -17,8 +17,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
+
+#include <array>
+#include <cmath>
+#include <optional>
+
 namespace ns::filter
 {
 const auto* const ALPHA = reinterpret_cast<const char*>(u8"\u03b1");
 const auto* const THETA = reinterpret_cast<const char*>(u8"\u03b8");
+
+template <std::size_t N, typename T>
+[[nodiscard]] int compute_string_precision(const std::array<T, N>& data)
+{
+        std::optional<T> min;
+        for (const T v : data)
+        {
+                ASSERT(v >= 0);
+                if (!(v > 0))
+                {
+                        continue;
+                }
+                if (min)
+                {
+                        min = std::min(v, *min);
+                        continue;
+                }
+                min = v;
+        }
+        if (!min)
+        {
+                return 0;
+        }
+        ASSERT(*min >= 1e-6L);
+        return std::abs(std::floor(std::log10(*min)));
+}
 }
