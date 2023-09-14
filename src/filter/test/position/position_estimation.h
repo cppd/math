@@ -57,7 +57,6 @@ public:
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override;
         [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override;
 
-        [[nodiscard]] std::string position_description() const override;
-        [[nodiscard]] std::string angle_difference_description() const override;
+        [[nodiscard]] std::string description() const override;
 };
 }

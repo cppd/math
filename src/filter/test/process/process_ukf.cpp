@@ -89,7 +89,7 @@ void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
         {
                 if (estimation.has_angle_difference())
                 {
-                        LOG(name_ + "; " + estimation.angle_difference_description());
+                        LOG(name_ + "; " + estimation.description());
 
                         filter_->reset(
                                 estimation.position_velocity_acceleration(),

@@ -104,7 +104,7 @@ void Move11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
         {
                 if (m.position && has_angle)
                 {
-                        LOG(name_ + "; " + estimation.position_description());
+                        LOG(name_ + "; " + estimation.description());
 
                         filter_->reset(
                                 estimation.position_velocity_acceleration(),

@@ -32,12 +32,12 @@ public:
         [[nodiscard]] virtual bool has_angle_p() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
 
-        [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
-        [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
-        [[nodiscard]] virtual std::string position_description() const = 0;
-
         [[nodiscard]] virtual bool has_angle_difference() const = 0;
         [[nodiscard]] virtual T angle_difference() const;
-        [[nodiscard]] virtual std::string angle_difference_description() const = 0;
+
+        [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
+        [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
+
+        [[nodiscard]] virtual std::string description() const = 0;
 };
 }

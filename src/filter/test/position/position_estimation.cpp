@@ -121,7 +121,7 @@ Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
 }
 
 template <typename T>
-std::string PositionEstimation<T>::position_description() const
+std::string PositionEstimation<T>::description() const
 {
         const Vector<2, T> velocity = position_->velocity();
         const Matrix<2, 2, T> velocity_p = position_->velocity_p();
@@ -129,33 +129,19 @@ std::string PositionEstimation<T>::position_description() const
         const T angle_p = compute_angle_p(velocity, velocity_p);
 
         std::string res;
+
         res += "filter = " + position_->name();
         res += "; angle = " + to_string(radians_to_degrees(angle));
         res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
-        return res;
-}
 
-template <typename T>
-std::string PositionEstimation<T>::angle_difference_description() const
-{
-        if (!has_angle_difference())
+        if (has_angle_difference())
         {
-                error("Estimation doesn't have angle difference");
+                ASSERT(last_direction_);
+                res += "; measurement angle = " + to_string(radians_to_degrees(*last_direction_));
+                res += "; angle difference = "
+                       + to_string(radians_to_degrees(normalize_angle(*last_direction_ - angle)));
         }
 
-        ASSERT(last_direction_);
-
-        const Vector<2, T> velocity = position_->velocity();
-        const Matrix<2, 2, T> velocity_p = position_->velocity_p();
-        const T angle = compute_angle(velocity);
-        const T angle_p = compute_angle_p(velocity, velocity_p);
-
-        std::string res;
-        res += "filter = " + position_->name();
-        res += "; angle = " + to_string(radians_to_degrees(angle));
-        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
-        res += "; measurement: angle = " + to_string(radians_to_degrees(*last_direction_));
-        res += "; angle difference = " + to_string(radians_to_degrees(normalize_angle(*last_direction_ - angle)));
         return res;
 }
 
