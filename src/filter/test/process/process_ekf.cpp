@@ -42,11 +42,13 @@ ProcessEkf<T>::ProcessEkf(
         const std::optional<T> gate,
         const T position_variance,
         const T angle_variance,
-        const T angle_r_variance)
+        const T angle_r_variance,
+        const T estimation_angle_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           gate_(gate),
+          estimation_angle_variance_(estimation_angle_variance),
           filter_(create_filter_ekf(position_variance, angle_variance, angle_r_variance))
 {
         ASSERT(filter_);
@@ -86,13 +88,16 @@ void ProcessEkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (estimation.has_angle_difference())
+                const auto measurement_angle = estimation.measurement_angle();
+                if (measurement_angle && estimation.has_angle() && estimation.angle_p() <= estimation_angle_variance_)
                 {
+                        const T angle_difference = normalize_angle(*measurement_angle - estimation.angle());
+
                         LOG(name_ + "; " + estimation.description());
 
                         filter_->reset(
                                 estimation.position_velocity_acceleration(),
-                                estimation.position_velocity_acceleration_p(), estimation.angle_difference(),
+                                estimation.position_velocity_acceleration_p(), angle_difference,
                                 INIT_ANGLE_VARIANCE<T>);
 
                         last_time_ = m.time;

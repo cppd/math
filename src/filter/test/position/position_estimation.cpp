@@ -28,10 +28,8 @@ namespace ns::filter::test::position
 template <typename T>
 PositionEstimation<T>::PositionEstimation(
         const T angle_estimation_time_difference,
-        const T angle_estimation_variance,
         const Position2<2, T>* const position)
         : angle_estimation_time_difference_(angle_estimation_time_difference),
-          angle_estimation_variance_(angle_estimation_variance),
           position_(position)
 {
 }
@@ -44,14 +42,24 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
                 last_direction_ = m.direction->value[0];
                 last_direction_time_ = m.time;
         }
+        else
+        {
+                ASSERT(!last_direction_time_ || m.time >= *last_direction_time_);
+        }
+
+        angle_p_.reset();
+        measurement_angle_.reset();
+
+        if (last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_))
+        {
+                ASSERT(last_direction_);
+                measurement_angle_ = *last_direction_;
+        }
 
         if (!m.position)
         {
                 return;
         }
-
-        has_angle_difference_ = false;
-        angle_p_.reset();
 
         if (position_->empty())
         {
@@ -68,41 +76,36 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
 
         LOG(to_string(m.time) + "; " + position_->name()
             + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*angle_p_))));
-
-        has_angle_difference_ =
-                last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_)
-                && *angle_p_ <= angle_estimation_variance_;
 }
 
 template <typename T>
-bool PositionEstimation<T>::has_angle_difference() const
+std::optional<T> PositionEstimation<T>::measurement_angle() const
 {
-        return has_angle_difference_;
+        return measurement_angle_;
 }
 
 template <typename T>
-T PositionEstimation<T>::angle_difference() const
-{
-        if (!has_angle_difference())
-        {
-                error("Estimation doesn't have angle difference");
-        }
-        ASSERT(last_direction_);
-        return normalize_angle(*last_direction_ - compute_angle(position_->velocity()));
-}
-
-template <typename T>
-bool PositionEstimation<T>::has_angle_p() const
+bool PositionEstimation<T>::has_angle() const
 {
         return angle_p_.has_value();
 }
 
 template <typename T>
+T PositionEstimation<T>::angle() const
+{
+        if (!has_angle())
+        {
+                error("Estimation doesn't have angle");
+        }
+        return compute_angle(position_->velocity());
+}
+
+template <typename T>
 T PositionEstimation<T>::angle_p() const
 {
-        if (!has_angle_p())
+        if (!has_angle())
         {
-                error("Estimation doesn't have angle p");
+                error("Estimation doesn't have angle");
         }
         ASSERT(angle_p_);
         return *angle_p_;
@@ -134,12 +137,11 @@ std::string PositionEstimation<T>::description() const
         res += "; angle = " + to_string(radians_to_degrees(angle));
         res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
 
-        if (has_angle_difference())
+        if (measurement_angle_)
         {
-                ASSERT(last_direction_);
-                res += "; measurement angle = " + to_string(radians_to_degrees(*last_direction_));
+                res += "; measurement angle = " + to_string(radians_to_degrees(*measurement_angle_));
                 res += "; angle difference = "
-                       + to_string(radians_to_degrees(normalize_angle(*last_direction_ - angle)));
+                       + to_string(radians_to_degrees(normalize_angle(*measurement_angle_ - angle)));
         }
 
         return res;

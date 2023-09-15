@@ -98,7 +98,7 @@ void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
                 return;
         }
 
-        const bool has_angle = estimation.has_angle_p() && (estimation.angle_p() <= angle_p_);
+        const bool has_angle = estimation.has_angle() && (estimation.angle_p() <= angle_p_);
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {

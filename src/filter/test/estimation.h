@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <optional>
+
 namespace ns::filter::test
 {
 template <typename T>
@@ -29,11 +31,11 @@ protected:
         ~Estimation() = default;
 
 public:
-        [[nodiscard]] virtual bool has_angle_p() const = 0;
+        [[nodiscard]] virtual bool has_angle() const = 0;
+        [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
 
-        [[nodiscard]] virtual bool has_angle_difference() const = 0;
-        [[nodiscard]] virtual T angle_difference() const;
+        [[nodiscard]] virtual std::optional<T> measurement_angle() const = 0;
 
         [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;

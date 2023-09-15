@@ -42,6 +42,7 @@ class ProcessUkf final : public Process<T>
         color::RGB8 color_;
         T reset_dt_;
         std::optional<T> gate_;
+        T estimation_angle_variance_;
         std::unique_ptr<FilterUkf<T>> filter_;
 
         std::vector<TimePoint<2, T>> positions_;
@@ -75,7 +76,8 @@ public:
                 T sigma_points_alpha,
                 T position_variance,
                 T angle_variance,
-                T angle_r_variance);
+                T angle_r_variance,
+                T estimation_angle_variance);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
 

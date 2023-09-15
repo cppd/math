@@ -33,25 +33,21 @@ template <typename T>
 class PositionEstimation final : public Estimation<T>
 {
         const T angle_estimation_time_difference_;
-        const T angle_estimation_variance_;
         const Position2<2, T>* const position_;
         std::optional<T> last_direction_;
         std::optional<T> last_direction_time_;
+        std::optional<T> measurement_angle_;
         std::optional<T> angle_p_;
-        bool has_angle_difference_{false};
 
 public:
-        PositionEstimation(
-                T angle_estimation_time_difference,
-                T angle_estimation_variance,
-                const Position2<2, T>* position);
+        PositionEstimation(T angle_estimation_time_difference, const Position2<2, T>* position);
 
         void update(const Measurements<2, T>& m);
 
-        [[nodiscard]] bool has_angle_difference() const override;
-        [[nodiscard]] T angle_difference() const override;
+        [[nodiscard]] std::optional<T> measurement_angle() const override;
 
-        [[nodiscard]] bool has_angle_p() const override;
+        [[nodiscard]] bool has_angle() const override;
+        [[nodiscard]] T angle() const override;
         [[nodiscard]] T angle_p() const override;
 
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override;

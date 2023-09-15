@@ -199,7 +199,7 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
 
         res.push_back(std::make_unique<process::ProcessEkf<T>>(
                 "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT, Config<T>::PROCESS_FILTER_GATE,
-                process_pv, process_av, process_arv));
+                process_pv, process_av, process_arv, Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE));
 
         const int precision = compute_string_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
 
@@ -218,7 +218,8 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
                 ASSERT(i <= 4);
                 res.push_back(std::make_unique<process::ProcessUkf<T>>(
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                        Config<T>::PROCESS_FILTER_GATE, alphas[i], process_pv, process_av, process_arv));
+                        Config<T>::PROCESS_FILTER_GATE, alphas[i], process_pv, process_av, process_arv,
+                        Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE));
         }
 
         return res;
@@ -375,7 +376,6 @@ void test_impl(const Track<2, T>& track)
 
         position::PositionEstimation<T> position_estimation(
                 Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_TIME_DIFFERENCE,
-                Config<T>::POSITION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                 static_cast<const position::Position2<2, T>*>(positions_2.front().get()));
 
         const auto update = [&](const Measurements<2, T>& measurement)
