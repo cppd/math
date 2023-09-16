@@ -41,7 +41,7 @@ class Move21 final : public Move<T>
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
-        T angle_p_;
+        T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<Filter21<T>> filter_;
 
@@ -72,7 +72,7 @@ public:
         Move21(std::string name,
                color::RGB8 color,
                T reset_dt,
-               T angle_p,
+               T angle_estimation_variance,
                std::optional<T> gate,
                T sigma_points_alpha,
                T position_variance,

@@ -39,17 +39,17 @@ ProcessUkf<T>::ProcessUkf(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
+        const T angle_estimation_variance,
         const std::optional<T> gate,
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
-        const T angle_r_variance,
-        const T estimation_angle_variance)
+        const T angle_r_variance)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
+          angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          estimation_angle_variance_(estimation_angle_variance),
           filter_(create_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance))
 {
         ASSERT(filter_);
@@ -90,7 +90,7 @@ void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
                 const auto measurement_angle = estimation.measurement_angle();
-                if (measurement_angle && estimation.has_angle() && estimation.angle_p() <= estimation_angle_variance_)
+                if (measurement_angle && estimation.has_angle() && estimation.angle_p() <= angle_estimation_variance_)
                 {
                         const T angle_difference = normalize_angle(*measurement_angle - estimation.angle());
 

@@ -41,7 +41,7 @@ Move10<T>::Move10(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
-        const T angle_p,
+        const T angle_estimation_variance,
         const std::optional<T> gate,
         const T sigma_points_alpha,
         const T position_variance,
@@ -49,7 +49,7 @@ Move10<T>::Move10(
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          angle_p_(angle_p),
+          angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           filter_(create_filter_1_0(sigma_points_alpha, position_variance, angle_variance))
 {
@@ -98,7 +98,7 @@ void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
                 return;
         }
 
-        const bool has_angle = estimation.has_angle() && (estimation.angle_p() <= angle_p_);
+        const bool has_angle = estimation.has_angle() && (estimation.angle_p() <= angle_estimation_variance_);
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
