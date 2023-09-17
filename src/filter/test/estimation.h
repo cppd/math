@@ -37,6 +37,10 @@ public:
 
         [[nodiscard]] virtual std::optional<T> measurement_angle() const = 0;
 
+        [[nodiscard]] virtual Vector<2, T> position() const = 0;
+        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+        [[nodiscard]] virtual Vector<4, T> position_velocity() const = 0;
+        [[nodiscard]] virtual Matrix<4, 4, T> position_velocity_p() const = 0;
         [[nodiscard]] virtual Vector<6, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<6, 6, T> position_velocity_acceleration_p() const = 0;
 

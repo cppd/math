@@ -79,8 +79,12 @@ public:
         [[nodiscard]] const std::string& name() const override;
         [[nodiscard]] color::RGB8 color() const override;
 
+        [[nodiscard]] Vector<N, T> position() const;
+        [[nodiscard]] Matrix<N, N, T> position_p() const;
         [[nodiscard]] Vector<N, T> velocity() const;
         [[nodiscard]] Matrix<N, N, T> velocity_p() const;
+        [[nodiscard]] Vector<2 * N, T> position_velocity() const;
+        [[nodiscard]] Matrix<2 * N, 2 * N, T> position_velocity_p() const;
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const;
         [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
 

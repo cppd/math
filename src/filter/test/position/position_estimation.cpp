@@ -112,6 +112,30 @@ T PositionEstimation<T>::angle_p() const
 }
 
 template <typename T>
+Vector<2, T> PositionEstimation<T>::position() const
+{
+        return position_->position();
+}
+
+template <typename T>
+Matrix<2, 2, T> PositionEstimation<T>::position_p() const
+{
+        return position_->position_p();
+}
+
+template <typename T>
+Vector<4, T> PositionEstimation<T>::position_velocity() const
+{
+        return position_->position_velocity();
+}
+
+template <typename T>
+Matrix<4, 4, T> PositionEstimation<T>::position_velocity_p() const
+{
+        return position_->position_velocity_p();
+}
+
+template <typename T>
 Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
 {
         return position_->position_velocity_acceleration();

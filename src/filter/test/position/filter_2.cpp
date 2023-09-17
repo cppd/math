@@ -251,6 +251,44 @@ class FilterImpl final : public Filter2<N, T>
                 return slice<1, 3>(filter_->p());
         }
 
+        [[nodiscard]] Vector<2 * N, T> position_velocity() const override
+        {
+                ASSERT(filter_);
+
+                const Vector<3 * N, T>& x = filter_->x();
+                Vector<2 * N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        for (std::size_t j = 0; j < 2; ++j)
+                        {
+                                res[2 * i + j] = x[3 * i + j];
+                        }
+                }
+                return res;
+        }
+
+        [[nodiscard]] Matrix<2 * N, 2 * N, T> position_velocity_p() const override
+        {
+                ASSERT(filter_);
+
+                const Matrix<3 * N, 3 * N, T>& p = filter_->p();
+                Matrix<2 * N, 2 * N, T> res;
+                for (std::size_t r = 0; r < N; ++r)
+                {
+                        for (std::size_t i = 0; i < 2; ++i)
+                        {
+                                for (std::size_t c = 0; c < N; ++c)
+                                {
+                                        for (std::size_t j = 0; j < 2; ++j)
+                                        {
+                                                res(2 * r + i, 2 * c + j) = p(3 * r + i, 3 * c + j);
+                                        }
+                                }
+                        }
+                }
+                return res;
+        }
+
         [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override
         {
                 ASSERT(filter_);

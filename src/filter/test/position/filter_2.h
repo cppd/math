@@ -56,6 +56,9 @@ public:
         [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
         [[nodiscard]] virtual Matrix<N, N, T> velocity_p() const = 0;
 
+        [[nodiscard]] virtual Vector<2 * N, T> position_velocity() const = 0;
+        [[nodiscard]] virtual Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
+
         [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;
 };

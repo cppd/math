@@ -50,6 +50,10 @@ public:
         [[nodiscard]] T angle() const override;
         [[nodiscard]] T angle_p() const override;
 
+        [[nodiscard]] Vector<2, T> position() const override;
+        [[nodiscard]] Matrix<2, 2, T> position_p() const override;
+        [[nodiscard]] Vector<4, T> position_velocity() const override;
+        [[nodiscard]] Matrix<4, 4, T> position_velocity_p() const override;
         [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override;
         [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override;
 
