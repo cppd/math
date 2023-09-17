@@ -107,8 +107,8 @@ void Move11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
                         LOG(name_ + "; " + estimation.description());
 
                         filter_->reset(
-                                estimation.position_velocity_acceleration(),
-                                estimation.position_velocity_acceleration_p(), INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>);
+                                estimation.position_velocity(), estimation.position_velocity_p(), INIT_ANGLE<T>,
+                                INIT_ANGLE_VARIANCE<T>);
 
                         last_time_ = m.time;
                 }

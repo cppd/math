@@ -42,8 +42,8 @@ public:
                 T angle_variance) = 0;
 
         virtual void reset(
-                const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const Vector<4, T>& position_velocity,
+                const Matrix<4, 4, T>& position_velocity_p,
                 T angle,
                 T angle_variance) = 0;
 

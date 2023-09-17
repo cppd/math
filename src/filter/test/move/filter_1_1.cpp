@@ -81,16 +81,16 @@ Matrix<6, 6, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& vel
 }
 
 template <typename T>
-Vector<6, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
+Vector<6, T> x(const Vector<4, T>& position_velocity, const T angle)
 {
-        ASSERT(is_finite(position_velocity_acceleration));
+        ASSERT(is_finite(position_velocity));
 
         Vector<6, T> res;
 
-        res[0] = position_velocity_acceleration[0];
-        res[1] = position_velocity_acceleration[1];
-        res[2] = position_velocity_acceleration[3];
-        res[3] = position_velocity_acceleration[4];
+        res[0] = position_velocity[0];
+        res[1] = position_velocity[1];
+        res[2] = position_velocity[2];
+        res[3] = position_velocity[3];
         res[4] = angle;
         res[5] = INIT_ANGLE_SPEED<T>;
 
@@ -98,27 +98,17 @@ Vector<6, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle
 }
 
 template <typename T>
-Matrix<6, 6, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
+Matrix<6, 6, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
 {
-        ASSERT(is_finite(position_velocity_acceleration_p));
+        ASSERT(is_finite(position_velocity_p));
 
         Matrix<6, 6, T> res(0);
 
-        for (std::size_t r = 0; r < 5; ++r)
+        for (std::size_t r = 0; r < 4; ++r)
         {
-                if (r == 2)
+                for (std::size_t c = 0; c < 4; ++c)
                 {
-                        continue;
-                }
-                for (std::size_t c = 0; c < 5; ++c)
-                {
-                        if (c == 2)
-                        {
-                                continue;
-                        }
-                        const std::size_t res_r = (r >= 3) ? r - 1 : r;
-                        const std::size_t res_c = (c >= 3) ? c - 1 : c;
-                        res(res_r, res_c) = position_velocity_acceleration_p(r, c);
+                        res(r, c) = position_velocity_p(r, c);
                 }
         }
 
@@ -447,14 +437,14 @@ class Filter final : public Filter11<T>
         }
 
         void reset(
-                const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const Vector<4, T>& position_velocity,
+                const Matrix<4, 4, T>& position_velocity_p,
                 const T angle,
                 const T angle_variance) override
         {
                 filter_.emplace(
                         SigmaPoints<6, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<6, T>),
-                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
+                        x(position_velocity, angle), p(position_velocity_p, angle_variance));
         }
 
         void predict(const T dt) override
