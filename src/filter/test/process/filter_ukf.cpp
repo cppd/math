@@ -38,6 +38,9 @@ template <std::size_t N, typename T>
 constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
+constexpr T INIT_ACCELERATION = 0;
+
+template <typename T>
 constexpr T INIT_ANGLE_SPEED = 0;
 template <typename T>
 constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
@@ -87,6 +90,58 @@ Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const
 
         return res;
 }
+
+template <typename T>
+Vector<9, T> x(const Vector<4, T>& position_velocity, const T angle)
+{
+        ASSERT(is_finite(position_velocity));
+
+        Vector<9, T> res;
+
+        res[0] = position_velocity[0];
+        res[1] = position_velocity[1];
+        res[2] = INIT_ACCELERATION<T>;
+        res[3] = position_velocity[2];
+        res[4] = position_velocity[3];
+        res[5] = INIT_ACCELERATION<T>;
+        res[6] = angle;
+        res[7] = INIT_ANGLE_SPEED<T>;
+        res[8] = INIT_ANGLE_R<T>;
+
+        return res;
+}
+
+template <typename T>
+Matrix<9, 9, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
+{
+        ASSERT(is_finite(position_velocity_p));
+
+        const Matrix<4, 4, T>& p = position_velocity_p;
+        static constexpr std::size_t N = 2;
+
+        Matrix<9, 9, T> res(0);
+
+        for (std::size_t r = 0; r < N; ++r)
+        {
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                for (std::size_t j = 0; j < 2; ++j)
+                                {
+                                        res(3 * r + i, 3 * c + j) = p(2 * r + i, 2 * c + j);
+                                }
+                        }
+                }
+        }
+
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(8, 8) = INIT_ANGLE_R_VARIANCE<T>;
+
+        return res;
+}
+
 struct AddX final
 {
         template <typename T>
@@ -755,6 +810,17 @@ class Filter final : public FilterUkf<T>
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
                 const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const T angle,
+                const T angle_variance) override
+        {
+                filter_.emplace(
+                        SigmaPoints<9, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>),
+                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
+        }
+
+        void reset(
+                const Vector<4, T>& position_velocity_acceleration,
+                const Matrix<4, 4, T>& position_velocity_acceleration_p,
                 const T angle,
                 const T angle_variance) override
         {

@@ -39,6 +39,12 @@ public:
                 T angle,
                 T angle_variance) = 0;
 
+        virtual void reset(
+                const Vector<4, T>& position_velocity,
+                const Matrix<4, 4, T>& position_velocity_p,
+                T angle,
+                T angle_variance) = 0;
+
         virtual void predict(T dt) = 0;
 
         virtual void update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
