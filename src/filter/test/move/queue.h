@@ -37,6 +37,7 @@ class Queue final
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> last_time_;
+        T init_time_;
         Vector<2 * N, T> init_position_velocity_;
         Matrix<2 * N, 2 * N, T> init_position_velocity_p_;
         std::vector<Measurements<N, T>> measurements_;
@@ -73,6 +74,7 @@ public:
 
                 if (measurements_.empty())
                 {
+                        init_time_ = m.time;
                         init_position_velocity_ = estimation.position_velocity();
                         init_position_velocity_p_ = estimation.position_velocity_p();
                         return;
@@ -84,6 +86,13 @@ public:
         [[nodiscard]] std::size_t empty() const
         {
                 return measurements_.size() < SIZE;
+        }
+
+        [[nodiscard]] T init_time() const
+        {
+                ASSERT(!empty());
+
+                return init_time_;
         }
 
         [[nodiscard]] const Vector<2 * N, T>& init_position_velocity() const
