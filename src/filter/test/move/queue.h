@@ -70,17 +70,20 @@ public:
                         return;
                 }
 
+                const bool init = !last_time_;
+
                 last_time_ = m.time;
 
-                if (measurements_.empty())
+                if (!init)
                 {
-                        init_time_ = m.time;
-                        init_position_velocity_ = estimation.position_velocity();
-                        init_position_velocity_p_ = estimation.position_velocity_p();
+                        measurements_.push_back(m);
                         return;
                 }
 
-                measurements_.push_back(m);
+                ASSERT(measurements_.empty());
+                init_time_ = m.time;
+                init_position_velocity_ = estimation.position_velocity();
+                init_position_velocity_p_ = estimation.position_velocity_p();
         }
 
         [[nodiscard]] std::size_t empty() const
@@ -116,4 +119,34 @@ public:
                 return measurements_;
         }
 };
+
+template <std::size_t N, typename T, template <typename> typename Filter>
+void update_filter(
+        const Queue<N, T>& queue,
+        Filter<T>* const filter,
+        const T init_angle,
+        const T init_angle_variance,
+        const std::optional<T> gate)
+{
+        ASSERT(!queue.empty());
+
+        filter->reset(
+                queue.init_position_velocity(), queue.init_position_velocity_p(), init_angle, init_angle_variance);
+
+        T last_time = queue.init_time();
+        for (const Measurements<2, T>& measurement : queue.measurements())
+        {
+                ASSERT(measurement.position);
+                ASSERT(measurement.position->variance);
+
+                const T dt = measurement.time - last_time;
+                const Measurement<2, T> position = {
+                        .value = measurement.position->value,
+                        .variance = *measurement.position->variance};
+
+                update_position(filter, position, measurement.direction, measurement.speed, gate, dt);
+
+                last_time = measurement.time;
+        }
+}
 }
