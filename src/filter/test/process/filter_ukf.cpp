@@ -39,6 +39,8 @@ constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
 
 template <typename T>
 constexpr T INIT_ACCELERATION = 0;
+template <typename T>
+constexpr T INIT_ACCELERATION_VARIANCE = square(10);
 
 template <typename T>
 constexpr T INIT_ANGLE_SPEED = 0;
@@ -135,6 +137,8 @@ Matrix<9, 9, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_vari
                 }
         }
 
+        res(2, 2) = INIT_ACCELERATION_VARIANCE<T>;
+        res(5, 5) = INIT_ACCELERATION_VARIANCE<T>;
         res(6, 6) = angle_variance;
         res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
         res(8, 8) = INIT_ANGLE_R_VARIANCE<T>;
