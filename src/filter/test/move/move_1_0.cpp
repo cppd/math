@@ -51,7 +51,8 @@ Move10<T>::Move10(
           reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_1_0(sigma_points_alpha, position_variance, angle_variance))
+          filter_(create_filter_1_0(sigma_points_alpha, position_variance, angle_variance)),
+          queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
@@ -93,25 +94,25 @@ void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 {
         check_time(m.time);
 
+        queue_.update(m, estimation);
+
         if (!m.position)
         {
                 return;
         }
 
-        const bool has_angle = estimation.has_angle() && (estimation.angle_p() <= angle_estimation_variance_);
-
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (m.position && has_angle)
+                if (!m.position || queue_.empty())
                 {
-                        LOG(name_ + "; " + estimation.description());
-
-                        filter_->reset(
-                                estimation.position_velocity(), estimation.position_velocity_p(), INIT_ANGLE<T>,
-                                INIT_ANGLE_VARIANCE<T>);
-
-                        last_time_ = m.time;
+                        return;
                 }
+
+                ASSERT(queue_.measurements().back().time == m.time);
+                LOG(name_ + "; " + estimation.description());
+                update_filter(queue_, filter_.get(), INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>, gate_);
+                last_time_ = m.time;
+                last_position_time_ = m.time;
                 return;
         }
 
@@ -121,6 +122,7 @@ void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
         }
 
         const T dt = m.time - *last_time_;
+        const bool has_angle = estimation.has_angle() && (estimation.angle_p() <= angle_estimation_variance_);
 
         if (m.position)
         {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1_0.h"
 #include "move.h"
+#include "queue.h"
 
 #include "../../consistency.h"
 #include "../estimation.h"
@@ -44,6 +45,8 @@ class Move10 final : public Move<T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<Filter10<T>> filter_;
+
+        Queue<2, T> queue_;
 
         std::vector<TimePoint<2, T>> positions_;
         std::vector<TimePoint<2, T>> positions_p_;
