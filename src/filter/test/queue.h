@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::test::move
+namespace ns::filter::test
 {
 template <std::size_t N, typename T>
 class Queue final
@@ -144,7 +144,23 @@ void update_filter(
                         .value = measurement.position->value,
                         .variance = *measurement.position->variance};
 
-                update_position(filter, position, measurement.direction, measurement.speed, gate, dt);
+                if constexpr (requires {
+                                      update_position(
+                                              filter, position, measurement.direction, measurement.speed, gate, dt);
+                              })
+                {
+                        update_position(filter, position, measurement.direction, measurement.speed, gate, dt);
+                }
+                else if constexpr (requires {
+                                           update_position(
+                                                   filter, position, measurement.acceleration, measurement.direction,
+                                                   measurement.speed, gate, dt);
+                                   })
+                {
+                        update_position(
+                                filter, position, measurement.acceleration, measurement.direction, measurement.speed,
+                                gate, dt);
+                }
 
                 last_time = measurement.time;
         }
