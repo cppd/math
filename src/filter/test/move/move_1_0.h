@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1_0.h"
 #include "move.h"
-#include "queue.h"
 
 #include "../../consistency.h"
 #include "../estimation.h"
 #include "../measurement.h"
+#include "../queue.h"
 #include "../time_point.h"
 
 #include <src/color/rgb8.h>

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../estimation.h"
-#include "../measurement.h"
+#include "estimation.h"
+#include "measurement.h"
 
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
