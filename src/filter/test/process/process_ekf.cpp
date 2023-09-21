@@ -31,6 +31,8 @@ namespace ns::filter::test::process
 namespace
 {
 template <typename T>
+constexpr T INIT_ANGLE = 0;
+template <typename T>
 constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
 }
 
@@ -49,7 +51,8 @@ ProcessEkf<T>::ProcessEkf(
           reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_ekf(position_variance, angle_variance, angle_r_variance))
+          filter_(create_filter_ekf(position_variance, angle_variance, angle_r_variance)),
+          queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
@@ -86,22 +89,19 @@ void ProcessEkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
 {
         check_time(m.time);
 
+        queue_.update(m, estimation);
+
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                const auto measurement_angle = estimation.measurement_angle();
-                if (measurement_angle && estimation.has_angle() && estimation.angle_p() <= angle_estimation_variance_)
+                if (!m.position || queue_.empty())
                 {
-                        const T angle_difference = normalize_angle(*measurement_angle - estimation.angle());
-
-                        LOG(name_ + "; " + estimation.description());
-
-                        filter_->reset(
-                                estimation.position_velocity_acceleration(),
-                                estimation.position_velocity_acceleration_p(), angle_difference,
-                                INIT_ANGLE_VARIANCE<T>);
-
-                        last_time_ = m.time;
+                        return;
                 }
+
+                ASSERT(queue_.measurements().back().time == m.time);
+                LOG(name_ + "; " + estimation.description());
+                update_filter(queue_, filter_.get(), INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>, gate_);
+                last_time_ = m.time;
                 return;
         }
 

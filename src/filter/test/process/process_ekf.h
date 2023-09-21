@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../consistency.h"
 #include "../estimation.h"
 #include "../measurement.h"
+#include "../queue.h"
 #include "../time_point.h"
 
 #include <src/color/rgb8.h>
@@ -44,6 +45,8 @@ class ProcessEkf final : public Process<T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<FilterEkf<T>> filter_;
+
+        Queue<2, T> queue_;
 
         std::vector<TimePoint<2, T>> positions_;
         std::vector<TimePoint<2, T>> positions_p_;
