@@ -43,13 +43,13 @@ class Queue final
         std::vector<Measurements<N, T>> measurements_;
 
 public:
-        Queue(T reset_dt, const T angle_estimation_variance)
+        Queue(const T reset_dt, const T angle_estimation_variance)
                 : reset_dt_(reset_dt),
                   angle_estimation_variance_(angle_estimation_variance)
         {
         }
 
-        void update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+        void update(const Measurements<N, T>& m, const Estimation<T>& estimation)
         {
                 if (!m.position || !m.position->variance)
                 {
@@ -120,49 +120,25 @@ public:
         }
 };
 
-template <std::size_t N, typename T, template <typename> typename Filter>
-void update_filter(
-        const Queue<N, T>& queue,
-        Filter<T>* const filter,
-        const T init_angle,
-        const T init_angle_variance,
-        const std::optional<T> gate)
+template <std::size_t N, typename T, typename Init, typename Update>
+void update_filter(const Queue<N, T>& queue, const Init init, const Update update)
 {
         ASSERT(!queue.empty());
 
-        filter->reset(
-                queue.init_position_velocity(), queue.init_position_velocity_p(), init_angle, init_angle_variance);
+        init();
 
         T last_time = queue.init_time();
-        for (const Measurements<2, T>& measurement : queue.measurements())
+        for (const Measurements<N, T>& m : queue.measurements())
         {
-                ASSERT(measurement.position);
-                ASSERT(measurement.position->variance);
+                ASSERT(m.position);
+                ASSERT(m.position->variance);
 
-                const T dt = measurement.time - last_time;
-                const Measurement<2, T> position = {
-                        .value = measurement.position->value,
-                        .variance = *measurement.position->variance};
+                const T dt = m.time - last_time;
+                last_time = m.time;
 
-                if constexpr (requires {
-                                      update_position(
-                                              filter, position, measurement.direction, measurement.speed, gate, dt);
-                              })
-                {
-                        update_position(filter, position, measurement.direction, measurement.speed, gate, dt);
-                }
-                else if constexpr (requires {
-                                           update_position(
-                                                   filter, position, measurement.acceleration, measurement.direction,
-                                                   measurement.speed, gate, dt);
-                                   })
-                {
-                        update_position(
-                                filter, position, measurement.acceleration, measurement.direction, measurement.speed,
-                                gate, dt);
-                }
+                const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                last_time = measurement.time;
+                update(position, m, dt);
         }
 }
 }

@@ -100,7 +100,21 @@ void ProcessEkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
 
                 ASSERT(queue_.measurements().back().time == m.time);
                 LOG(name_ + "; " + estimation.description());
-                update_filter(queue_, filter_.get(), INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>, gate_);
+                update_filter(
+                        queue_,
+                        [&]()
+                        {
+                                filter_->reset(
+                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(),
+                                        INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>);
+                        },
+                        [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
+                        {
+                                update_position(
+                                        filter_.get(), position, measurements.acceleration, measurements.direction,
+                                        measurements.speed, gate_, dt);
+                        });
+
                 last_time_ = m.time;
                 return;
         }
