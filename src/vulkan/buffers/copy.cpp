@@ -53,6 +53,7 @@ public:
         }
 
         [[nodiscard]] VkBuffer handle() const&& = delete;
+
         [[nodiscard]] VkBuffer handle() const&
         {
                 return buffer_.handle();

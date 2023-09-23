@@ -34,10 +34,10 @@ namespace ns::gpu::renderer
 namespace
 {
 // clang-format off
-constexpr std::array DEPTH_IMAGE_FORMATS = std::to_array<VkFormat>
-({
+constexpr std::array DEPTH_IMAGE_FORMATS
+{
         VK_FORMAT_D32_SFLOAT
-});
+};
 // clang-format on
 
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;

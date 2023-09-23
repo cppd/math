@@ -70,7 +70,7 @@ constexpr VkSurfaceFormatKHR SWAPCHAIN_SURFACE_FORMAT{
 constexpr bool SWAPCHAIN_INITIAL_VERTICAL_SYNC = false;
 
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
+constexpr std::array DEPTH_FORMATS = {VK_FORMAT_D32_SFLOAT};
 
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 

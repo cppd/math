@@ -41,12 +41,12 @@ constexpr float MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 constexpr Vector2f NULL_TEXTURE_COORDINATES = Vector2f(-1e10);
 
 // clang-format off
-constexpr std::array COLOR_IMAGE_FORMATS = std::to_array<VkFormat>
-({
+constexpr std::array COLOR_IMAGE_FORMATS
+{
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_FORMAT_R16G16B16A16_UNORM,
         VK_FORMAT_R32G32B32A32_SFLOAT
-});
+};
 // clang-format on
 
 std::string time_string(const double time)

@@ -25,12 +25,12 @@ namespace ns::gpu::text_writer
 namespace
 {
 // clang-format off
-constexpr std::array GRAYSCALE_IMAGE_FORMATS = std::to_array<VkFormat>
-({
+constexpr std::array GRAYSCALE_IMAGE_FORMATS
+{
         VK_FORMAT_R8_SRGB,
         VK_FORMAT_R16_UNORM,
         VK_FORMAT_R32_SFLOAT
-});
+};
 // clang-format on
 
 std::vector<unsigned char> font_data()
