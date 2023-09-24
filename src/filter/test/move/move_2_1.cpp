@@ -90,6 +90,35 @@ void Move21<T>::check_time(const T time) const
 }
 
 template <typename T>
+void Move21<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
+{
+        if (!m.position || queue_.empty())
+        {
+                return;
+        }
+
+        ASSERT(queue_.measurements().back().time == m.time);
+
+        LOG(name_ + "; " + estimation.description());
+
+        update_filter(
+                queue_,
+                [&]()
+                {
+                        filter_->reset(
+                                queue_.init_position_velocity(), queue_.init_position_velocity_p(), INIT_ANGLE<T>,
+                                INIT_ANGLE_VARIANCE<T>);
+                },
+                [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
+                {
+                        update_position(filter_.get(), position, measurements.direction, measurements.speed, gate_, dt);
+                });
+
+        last_time_ = m.time;
+        last_position_time_ = m.time;
+}
+
+template <typename T>
 void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
@@ -103,28 +132,7 @@ void Move21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (!m.position || queue_.empty())
-                {
-                        return;
-                }
-
-                ASSERT(queue_.measurements().back().time == m.time);
-                LOG(name_ + "; " + estimation.description());
-                update_filter(
-                        queue_,
-                        [&]()
-                        {
-                                filter_->reset(
-                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(),
-                                        INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>);
-                        },
-                        [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
-                        {
-                                update_position(
-                                        filter_.get(), position, measurements.direction, measurements.speed, gate_, dt);
-                        });
-                last_time_ = m.time;
-                last_position_time_ = m.time;
+                reset(m, estimation);
                 return;
         }
 

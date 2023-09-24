@@ -71,6 +71,8 @@ class Move21 final : public Move<T>
 
         void check_time(T time) const;
 
+        void reset(const Measurements<2, T>& m, const Estimation<T>& estimation);
+
 public:
         Move21(std::string name,
                color::RGB8 color,
