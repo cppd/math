@@ -227,6 +227,39 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
+std::unique_ptr<move::Move<T>> create_move(const unsigned i, const T alpha, const std::string& name)
+{
+        ASSERT(alpha > 0 && alpha <= 1);
+        ASSERT(i <= 4);
+
+        static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
+
+        if (ORDER_P == 1 && ORDER_A == 0)
+        {
+                return std::make_unique<move::Move10<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 250), Config<T>::MOVE_FILTER_RESET_DT,
+                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
+                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_0, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_0);
+        }
+
+        if (ORDER_P == 1 && ORDER_A == 1)
+        {
+                return std::make_unique<move::Move11<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 150), Config<T>::MOVE_FILTER_RESET_DT,
+                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
+                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_1, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_1);
+        }
+
+        if (ORDER_P == 2 && ORDER_A == 1)
+        {
+                return std::make_unique<move::Move21<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 50), Config<T>::MOVE_FILTER_RESET_DT,
+                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
+                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_2_1, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_2_1);
+        }
+}
+
+template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
 std::vector<std::unique_ptr<move::Move<T>>> create_moves()
 {
         std::vector<std::unique_ptr<move::Move<T>>> res;
@@ -244,37 +277,7 @@ std::vector<std::unique_ptr<move::Move<T>>> create_moves()
         const auto alphas = sort(std::array(Config<T>::MOVE_FILTER_UKF_ALPHAS));
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                ASSERT(alphas[i] > 0 && alphas[i] <= 1);
-                ASSERT(i <= 4);
-
-                static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
-
-                if (ORDER_P == 1 && ORDER_A == 0)
-                {
-                        res.push_back(std::make_unique<move::Move10<T>>(
-                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 250), Config<T>::MOVE_FILTER_RESET_DT,
-                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
-                                alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_0,
-                                Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_0));
-                }
-
-                if (ORDER_P == 1 && ORDER_A == 1)
-                {
-                        res.push_back(std::make_unique<move::Move11<T>>(
-                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 150), Config<T>::MOVE_FILTER_RESET_DT,
-                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
-                                alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_1,
-                                Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_1));
-                }
-
-                if (ORDER_P == 2 && ORDER_A == 1)
-                {
-                        res.push_back(std::make_unique<move::Move21<T>>(
-                                name(alphas[i]), color::RGB8(0, 160 - 40 * i, 50), Config<T>::MOVE_FILTER_RESET_DT,
-                                Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE,
-                                alphas[i], Config<T>::MOVE_FILTER_POSITION_VARIANCE_2_1,
-                                Config<T>::MOVE_FILTER_ANGLE_VARIANCE_2_1));
-                }
+                res.push_back(create_move<T, ORDER_P, ORDER_A>(i, alphas[i], name(alphas[i])));
         }
 
         return res;
