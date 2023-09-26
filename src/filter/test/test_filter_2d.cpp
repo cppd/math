@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/sort.h>
 #include <src/test/test.h>
 
+#include <array>
 #include <cmath>
 #include <optional>
 #include <sstream>
@@ -85,44 +86,41 @@ struct Config final
 };
 
 template <std::size_t N, typename T>
-void write_to_file(
-        const std::string_view annotation,
-        const std::vector<Measurements<N, T>>& measurements,
-        const std::vector<const std::vector<std::unique_ptr<position::Position<N, T>>>*>& positions,
-        const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
-        const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
+std::optional<Vector<N, T>> compute_variance(const std::vector<position::PositionVariance<N, T>>& positions)
 {
-        std::vector<view::Filter<N, T>> filters;
-
-        const auto push = [&](const auto& f)
+        if (positions.size() == 1)
         {
-                filters.push_back(
-                        {.name = f.name(),
-                         .color = f.color(),
-                         .speed = f.speeds(),
-                         .speed_p = f.speeds_p(),
-                         .position = f.positions(),
-                         .position_p = f.positions_p()});
-        };
+                return positions.front().last_position_variance();
+        }
 
-        const auto push_all = [&](const auto v)
+        Vector<N, T> sum(0);
+        std::size_t count = 0;
+        for (const position::PositionVariance<N, T>& position : positions)
         {
-                for (const auto& p0 : v)
+                const auto& variance = position.last_position_variance();
+                if (!variance)
                 {
-                        for (const auto& p1 : *p0)
-                        {
-                                push(*p1);
-                        }
+                        continue;
                 }
-        };
 
-        push_all(positions);
+                ++count;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        sum[i] += std::sqrt((*variance)[i]);
+                }
+        }
 
-        push_all(processes);
+        if (count == 0)
+        {
+                return {};
+        }
 
-        push_all(moves);
-
-        view::write_to_file(annotation, measurements, Config<T>::DATA_CONNECT_INTERVAL, filters);
+        sum /= static_cast<T>(count);
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                sum[i] = square(sum[i]);
+        }
+        return sum;
 }
 
 template <std::size_t N, typename T>
@@ -283,17 +281,63 @@ std::vector<std::unique_ptr<move::Move<T>>> create_moves()
         return res;
 }
 
-template <std::size_t N, typename T>
-void write_result(
-        const std::string_view annotation,
-        const std::vector<Measurements<N, T>>& measurements,
-        const std::vector<position::PositionVariance<N, T>>& position_variance,
-        const std::vector<const std::vector<std::unique_ptr<position::Position<N, T>>>*>& positions,
-        const std::vector<const std::vector<std::unique_ptr<process::Process<T>>>*>& processes,
-        const std::vector<const std::vector<std::unique_ptr<move::Move<T>>>*>& moves)
+template <typename T>
+struct Test final
 {
-        write_to_file(annotation, measurements, positions, processes, moves);
+        std::vector<Measurements<2, T>> measurements;
 
+        std::vector<position::PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
+
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_0 = create_positions<2, T, 0>();
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_1 = create_positions<2, T, 1>();
+        std::vector<std::unique_ptr<position::Position<2, T>>> positions_2 = create_positions<2, T, 2>();
+
+        std::vector<std::unique_ptr<process::Process<T>>> processes = create_processes<T>();
+
+        std::vector<std::unique_ptr<move::Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
+        std::vector<std::unique_ptr<move::Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
+        std::vector<std::unique_ptr<move::Move<T>>> moves_2_1 = create_moves<T, 2, 1>();
+
+        position::PositionEstimation<T> position_estimation = position::PositionEstimation<T>(
+                Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,
+                static_cast<const position::Position2<2, T>*>(positions_2.front().get()));
+};
+
+template <typename T>
+void write_file(const std::string_view annotation, const Test<T>& test)
+{
+        std::vector<view::Filter<2, T>> filters;
+
+        const auto push = [&](const auto& v)
+        {
+                for (const auto& p : v)
+                {
+                        filters.push_back(
+                                {.name = p->name(),
+                                 .color = p->color(),
+                                 .speed = p->speeds(),
+                                 .speed_p = p->speeds_p(),
+                                 .position = p->positions(),
+                                 .position_p = p->positions_p()});
+                }
+        };
+
+        push(test.positions_0);
+        push(test.positions_1);
+        push(test.positions_2);
+
+        push(test.processes);
+
+        push(test.moves_1_0);
+        push(test.moves_1_1);
+        push(test.moves_2_1);
+
+        view::write_to_file(annotation, test.measurements, Config<T>::DATA_CONNECT_INTERVAL, filters);
+}
+
+template <typename T>
+void write_log(const Test<T>& test)
+{
         const auto log_consistency_string = [](const auto& p)
         {
                 const std::string s = p.consistency_string();
@@ -303,146 +347,101 @@ void write_result(
                 }
         };
 
-        for (const auto& p : position_variance)
-        {
-                log_consistency_string(p);
-        }
-
         const auto log = [&](const auto& v)
         {
-                for (const auto& p0 : v)
+                for (const auto& p : v)
                 {
-                        for (const auto& p1 : *p0)
+                        if constexpr (requires { log_consistency_string(*p); })
                         {
-                                log_consistency_string(*p1);
+                                log_consistency_string(*p);
+                        }
+                        else
+                        {
+                                log_consistency_string(p);
                         }
                 }
         };
 
-        log(positions);
+        log(test.position_variance);
 
-        log(processes);
+        log(test.positions_0);
+        log(test.positions_1);
+        log(test.positions_2);
 
-        log(moves);
-}
+        log(test.processes);
 
-template <std::size_t N, typename T>
-std::optional<Vector<N, T>> compute_variance(const std::vector<position::PositionVariance<N, T>>& positions)
-{
-        if (positions.size() == 1)
-        {
-                return positions.front().last_position_variance();
-        }
-
-        Vector<N, T> sum(0);
-        std::size_t count = 0;
-        for (const position::PositionVariance<N, T>& position : positions)
-        {
-                const auto& variance = position.last_position_variance();
-                if (!variance)
-                {
-                        continue;
-                }
-
-                ++count;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        sum[i] += std::sqrt((*variance)[i]);
-                }
-        }
-
-        if (count == 0)
-        {
-                return {};
-        }
-
-        sum /= static_cast<T>(count);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                sum[i] = square(sum[i]);
-        }
-        return sum;
+        log(test.moves_1_0);
+        log(test.moves_1_1);
+        log(test.moves_2_1);
 }
 
 template <typename T>
-void test_impl(const Track<2, T>& track)
+void update(Measurements<2, T> measurement, Test<T>* const test)
 {
-        std::vector<Measurements<2, T>> measurements;
+        test->measurements.push_back(measurement);
 
-        std::vector<position::PositionVariance<2, T>> position_variance = create_position_variance<2, T>();
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_0 = create_positions<2, T, 0>();
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_1 = create_positions<2, T, 1>();
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_2 = create_positions<2, T, 2>();
-        std::vector<std::unique_ptr<process::Process<T>>> processes = create_processes<T>();
-        std::vector<std::unique_ptr<move::Move<T>>> moves_1_0 = create_moves<T, 1, 0>();
-        std::vector<std::unique_ptr<move::Move<T>>> moves_1_1 = create_moves<T, 1, 1>();
-        std::vector<std::unique_ptr<move::Move<T>>> moves_2_1 = create_moves<T, 2, 1>();
-
-        position::PositionEstimation<T> position_estimation(
-                Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,
-                static_cast<const position::Position2<2, T>*>(positions_2.front().get()));
-
-        const auto update = [&](const Measurements<2, T>& measurement)
+        for (auto& p : test->position_variance)
         {
-                for (auto& p : positions_2)
-                {
-                        p->update_position(measurement);
-                }
-
-                position_estimation.update(measurement);
-
-                for (auto& p : positions_1)
-                {
-                        p->update_position(measurement);
-                }
-
-                for (auto& p : processes)
-                {
-                        p->update(measurement, std::as_const(position_estimation));
-                }
-
-                for (auto& m : moves_1_0)
-                {
-                        m->update(measurement, std::as_const(position_estimation));
-                }
-
-                for (auto& m : moves_1_1)
-                {
-                        m->update(measurement, std::as_const(position_estimation));
-                }
-
-                for (auto& m : moves_2_1)
-                {
-                        m->update(measurement, std::as_const(position_estimation));
-                }
-        };
-
-        for (Measurements<2, T> measurement : track)
-        {
-                measurements.push_back(measurement);
-
-                for (auto& p : position_variance)
-                {
-                        p.update_position(measurement);
-                }
-
-                if (measurement.position && !measurement.position->variance)
-                {
-                        measurement.position->variance = compute_variance(position_variance);
-                }
-
-                update(measurement);
+                p.update_position(measurement);
         }
 
-        write_result(
-                track.annotation(), measurements, position_variance, {&positions_0, &positions_1, &positions_2},
-                {&processes}, {&moves_1_0, &moves_1_1, &moves_2_1});
+        if (measurement.position && !measurement.position->variance)
+        {
+                measurement.position->variance = compute_variance(test->position_variance);
+        }
+
+        for (auto& p : test->positions_2)
+        {
+                p->update_position(measurement);
+        }
+
+        test->position_estimation.update(measurement);
+
+        for (auto& p : test->positions_1)
+        {
+                p->update_position(measurement);
+        }
+
+        for (auto& p : test->processes)
+        {
+                p->update(measurement, std::as_const(test->position_estimation));
+        }
+
+        for (auto& m : test->moves_1_0)
+        {
+                m->update(measurement, std::as_const(test->position_estimation));
+        }
+
+        for (auto& m : test->moves_1_1)
+        {
+                m->update(measurement, std::as_const(test->position_estimation));
+        }
+
+        for (auto& m : test->moves_2_1)
+        {
+                m->update(measurement, std::as_const(test->position_estimation));
+        }
+}
+
+template <typename T>
+void run(const Track<2, T>& track)
+{
+        Test<T> test;
+
+        for (const Measurements<2, T>& measurement : track)
+        {
+                update(measurement, &test);
+        }
+
+        write_file(track.annotation(), test);
+
+        write_log(test);
 }
 
 template <typename T>
 void test_impl()
 {
-        test_impl(track<2, T>());
+        run(track<2, T>());
 }
 
 void test()
