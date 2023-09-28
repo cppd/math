@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/test/test.h>
 
-#include <cmath>
 #include <optional>
 #include <vector>
 
@@ -34,45 +33,6 @@ namespace
 {
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
-
-template <std::size_t N, typename T>
-std::optional<Vector<N, T>> compute_variance(
-        const std::vector<std::unique_ptr<position::PositionVariance<N, T>>>& positions)
-{
-        if (positions.size() == 1)
-        {
-                return positions.front()->last_position_variance();
-        }
-
-        Vector<N, T> sum(0);
-        std::size_t count = 0;
-        for (const auto& position : positions)
-        {
-                const auto& variance = position->last_position_variance();
-                if (!variance)
-                {
-                        continue;
-                }
-
-                ++count;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        sum[i] += std::sqrt((*variance)[i]);
-                }
-        }
-
-        if (count == 0)
-        {
-                return {};
-        }
-
-        sum /= static_cast<T>(count);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                sum[i] = square(sum[i]);
-        }
-        return sum;
-}
 
 template <typename T>
 void write_file(
@@ -136,7 +96,7 @@ void write_log(const Test<T>& test)
                 }
         };
 
-        log(test.position_variance);
+        log_consistency_string(*test.position_variance);
 
         log(test.positions_0);
         log(test.positions_1);
@@ -154,14 +114,11 @@ void update(Measurements<2, T> measurement, std::vector<Measurements<2, T>>* con
 {
         measurements->push_back(measurement);
 
-        for (auto& p : test->position_variance)
-        {
-                p->update_position(measurement);
-        }
+        test->position_variance->update_position(measurement);
 
         if (measurement.position && !measurement.position->variance)
         {
-                measurement.position->variance = compute_variance(test->position_variance);
+                measurement.position->variance = test->position_variance->last_position_variance();
         }
 
         for (auto& p : test->positions_2)

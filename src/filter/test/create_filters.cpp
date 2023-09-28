@@ -108,15 +108,11 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-std::vector<std::unique_ptr<position::PositionVariance<N, T>>> create_position_variance()
+std::unique_ptr<position::PositionVariance<N, T>> create_position_variance()
 {
-        std::vector<std::unique_ptr<position::PositionVariance<N, T>>> res;
-
-        res.emplace_back(std::make_unique<position::PositionVariance<N, T>>(
+        return std::make_unique<position::PositionVariance<N, T>>(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                Config<T>::POSITION_FILTER_VARIANCE_2));
-
-        return res;
+                Config<T>::POSITION_FILTER_VARIANCE_2);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
