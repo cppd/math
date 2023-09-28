@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "filter_2.h"
+#include "position.h"
 
 #include "../measurement.h"
 #include "../moving_variance.h"
@@ -34,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::position
 {
 template <std::size_t N, typename T>
-class PositionVariance final
+class PositionVariance final : public Position<N, T>
 {
         std::string name_;
         color::RGB8 color_;
@@ -59,12 +60,18 @@ class PositionVariance final
 public:
         PositionVariance(std::string name, color::RGB8 color, T reset_dt, T process_variance);
 
-        void update_position(const Measurements<N, T>& m);
+        void update_position(const Measurements<N, T>& m) override;
+        void predict_update(const Measurements<N, T>& m) override;
 
-        [[nodiscard]] const std::string& name() const;
-        [[nodiscard]] color::RGB8 color() const;
+        [[nodiscard]] const std::string& name() const override;
+        [[nodiscard]] color::RGB8 color() const override;
 
         [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
-        [[nodiscard]] std::string consistency_string() const;
+
+        [[nodiscard]] std::string consistency_string() const override;
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions() const override;
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions_p() const override;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const override;
+        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const override;
 };
 }

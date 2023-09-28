@@ -172,6 +172,12 @@ void PositionVariance<N, T>::update_position(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
+void PositionVariance<N, T>::predict_update(const Measurements<N, T>& /*m*/)
+{
+        error("predict_update is not supported");
+}
+
+template <std::size_t N, typename T>
 const std::string& PositionVariance<N, T>::name() const
 {
         return name_;
@@ -218,6 +224,30 @@ std::string PositionVariance<N, T>::consistency_string() const
         }
 
         return s;
+}
+
+template <std::size_t N, typename T>
+const std::vector<TimePoint<N, T>>& PositionVariance<N, T>::positions() const
+{
+        return positions_;
+}
+
+template <std::size_t N, typename T>
+const std::vector<TimePoint<N, T>>& PositionVariance<N, T>::positions_p() const
+{
+        return positions_p_;
+}
+
+template <std::size_t N, typename T>
+const std::vector<TimePoint<1, T>>& PositionVariance<N, T>::speeds() const
+{
+        return speeds_;
+}
+
+template <std::size_t N, typename T>
+const std::vector<TimePoint<1, T>>& PositionVariance<N, T>::speeds_p() const
+{
+        return speeds_p_;
 }
 
 #define TEMPLATE_N_T(N, T) template class PositionVariance<(N), T>;

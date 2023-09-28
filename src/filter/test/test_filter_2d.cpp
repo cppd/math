@@ -36,18 +36,19 @@ template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
 
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> compute_variance(const std::vector<position::PositionVariance<N, T>>& positions)
+std::optional<Vector<N, T>> compute_variance(
+        const std::vector<std::unique_ptr<position::PositionVariance<N, T>>>& positions)
 {
         if (positions.size() == 1)
         {
-                return positions.front().last_position_variance();
+                return positions.front()->last_position_variance();
         }
 
         Vector<N, T> sum(0);
         std::size_t count = 0;
-        for (const position::PositionVariance<N, T>& position : positions)
+        for (const auto& position : positions)
         {
-                const auto& variance = position.last_position_variance();
+                const auto& variance = position->last_position_variance();
                 if (!variance)
                 {
                         continue;
@@ -155,7 +156,7 @@ void update(Measurements<2, T> measurement, std::vector<Measurements<2, T>>* con
 
         for (auto& p : test->position_variance)
         {
-                p.update_position(measurement);
+                p->update_position(measurement);
         }
 
         if (measurement.position && !measurement.position->variance)

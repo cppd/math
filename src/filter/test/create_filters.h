@@ -31,7 +31,7 @@ namespace ns::filter::test
 template <typename T>
 struct Test final
 {
-        std::vector<position::PositionVariance<2, T>> position_variance;
+        std::vector<std::unique_ptr<position::PositionVariance<2, T>>> position_variance;
 
         std::vector<std::unique_ptr<position::Position<2, T>>> positions_0;
         std::vector<std::unique_ptr<position::Position<2, T>>> positions_1;
