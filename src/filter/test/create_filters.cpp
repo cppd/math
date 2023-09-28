@@ -15,9 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create_data.h"
-
-#include "string.h"
+#include "create_filters.h"
 
 #include "move/move_1_0.h"
 #include "move/move_1_1.h"
@@ -30,16 +28,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "process/process_ukf.h"
 
 #include <src/com/conversion.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/sort.h>
 
 #include <array>
+#include <cmath>
+#include <optional>
 #include <sstream>
 
 namespace ns::filter::test
 {
 namespace
 {
+const auto* const ALPHA = reinterpret_cast<const char*>(u8"\u03b1");
+const auto* const THETA = reinterpret_cast<const char*>(u8"\u03b8");
+
 template <typename T>
 struct Config final
 {
@@ -76,6 +80,32 @@ struct Config final
         static constexpr T MOVE_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> MOVE_FILTER_GATE{};
 };
+
+template <std::size_t N, typename T>
+[[nodiscard]] int compute_string_precision(const std::array<T, N>& data)
+{
+        std::optional<T> min;
+        for (const T v : data)
+        {
+                ASSERT(v >= 0);
+                if (!(v > 0))
+                {
+                        continue;
+                }
+                if (min)
+                {
+                        min = std::min(v, *min);
+                        continue;
+                }
+                min = v;
+        }
+        if (!min)
+        {
+                return 0;
+        }
+        ASSERT(*min >= 1e-6L);
+        return std::abs(std::floor(std::log10(*min)));
+}
 
 template <std::size_t N, typename T>
 std::vector<position::PositionVariance<N, T>> create_position_variance()
