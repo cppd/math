@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
-class Queue final
+class MeasurementQueue final
 {
         static constexpr std::size_t SIZE = 20;
 
@@ -43,7 +43,7 @@ class Queue final
         std::vector<Measurements<N, T>> measurements_;
 
 public:
-        Queue(const T reset_dt, const T angle_estimation_variance)
+        MeasurementQueue(const T reset_dt, const T angle_estimation_variance)
                 : reset_dt_(reset_dt),
                   angle_estimation_variance_(angle_estimation_variance)
         {
@@ -121,7 +121,7 @@ public:
 };
 
 template <std::size_t N, typename T, typename Init, typename Update>
-void update_filter(const Queue<N, T>& queue, const Init init, const Update update)
+void update_filter(const MeasurementQueue<N, T>& queue, const Init init, const Update update)
 {
         ASSERT(!queue.empty());
 
