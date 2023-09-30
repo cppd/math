@@ -49,32 +49,32 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        virtual bool update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
+        virtual void update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
 
-        virtual bool update_position_speed(
+        virtual void update_position_speed(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 std::optional<T> gate) = 0;
 
-        virtual bool update_position_speed_direction(
+        virtual void update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual bool update_position_direction(
+        virtual void update_position_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual bool update_speed_direction(
+        virtual void update_speed_direction(
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual bool update_direction(const Measurement<1, T>& direction, std::optional<T> gate) = 0;
+        virtual void update_direction(const Measurement<1, T>& direction, std::optional<T> gate) = 0;
 
-        virtual bool update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
+        virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
