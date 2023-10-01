@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "move/move.h"
-#include "position/position.h"
-#include "position/position_estimation.h"
-#include "position/position_variance.h"
-#include "process/process.h"
+#include "../move/move.h"
+#include "../position/position.h"
+#include "../position/position_estimation.h"
+#include "../position/position_variance.h"
+#include "../process/process.h"
 
 #include <memory>
 #include <vector>

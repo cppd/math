@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position.h"
 
 #include "../../consistency.h"
-#include "../measurement.h"
-#include "../time_point.h"
+#include "../filter/measurement.h"
+#include "../filter/time_point.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>

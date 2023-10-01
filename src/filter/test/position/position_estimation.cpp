@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_estimation.h"
 
-#include "../utility.h"
+#include "../utility/utility.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>

@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
-#include "move/move_1_0.h"
-#include "move/move_1_1.h"
-#include "move/move_2_1.h"
-#include "position/position_0.h"
-#include "position/position_1.h"
-#include "position/position_2.h"
-#include "position/position_estimation.h"
-#include "process/process_ekf.h"
-#include "process/process_ukf.h"
+#include "../move/move_1_0.h"
+#include "../move/move_1_1.h"
+#include "../move/move_2_1.h"
+#include "../position/position_0.h"
+#include "../position/position_1.h"
+#include "../position/position_2.h"
+#include "../position/position_estimation.h"
+#include "../process/process_ekf.h"
+#include "../process/process_ukf.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>

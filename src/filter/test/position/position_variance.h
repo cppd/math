@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_2.h"
 #include "position.h"
 
-#include "../measurement.h"
-#include "../moving_variance.h"
-#include "../time_point.h"
+#include "../filter/measurement.h"
+#include "../filter/moving_variance.h"
+#include "../filter/time_point.h"
 
 #include <src/color/rgb8.h>
 #include <src/numerical/vector.h>

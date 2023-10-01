@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_2.h"
 
-#include "../estimation.h"
-#include "../measurement.h"
+#include "../filter/estimation.h"
+#include "../filter/measurement.h"
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
