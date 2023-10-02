@@ -327,7 +327,7 @@ void write_to_file(
         const T interval,
         const std::vector<Filter<N, T>>& filters)
 {
-        std::ofstream file(test_file_path("filter_2d_" + replace_space(type_name<T>()) + ".txt"));
+        std::ofstream file(utility::test_file_path("filter_2d_" + utility::replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 

@@ -289,7 +289,7 @@ public:
 
         [[nodiscard]] Vector<N, T> measurement_acceleration()
         {
-                return rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
+                return utility::rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
         }
 
         [[nodiscard]] Vector<N, T> measurement_position()

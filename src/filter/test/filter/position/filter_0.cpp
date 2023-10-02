@@ -163,7 +163,7 @@ class FilterImpl final : public Filter0<N, T>
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
                 ASSERT(is_finite(variance));
-                ASSERT(is_positive(variance));
+                ASSERT(utility::is_positive(variance));
 
                 const Matrix<N, N, T> r = position_r(variance);
 

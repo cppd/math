@@ -66,7 +66,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
                 return;
         }
 
-        const T angle_p = compute_angle_p(position_->velocity(), position_->velocity_p());
+        const T angle_p = utility::compute_angle_p(position_->velocity(), position_->velocity_p());
         if (!is_finite(angle_p))
         {
                 return;
@@ -97,7 +97,7 @@ T PositionEstimation<T>::angle() const
         {
                 error("Estimation doesn't have angle");
         }
-        return compute_angle(position_->velocity());
+        return utility::compute_angle(position_->velocity());
 }
 
 template <typename T>
@@ -152,8 +152,8 @@ std::string PositionEstimation<T>::description() const
 {
         const Vector<2, T> velocity = position_->velocity();
         const Matrix<2, 2, T> velocity_p = position_->velocity_p();
-        const T angle = compute_angle(velocity);
-        const T angle_p = compute_angle_p(velocity, velocity_p);
+        const T angle = utility::compute_angle(velocity);
+        const T angle_p = utility::compute_angle_p(velocity, velocity_p);
 
         std::string res;
 

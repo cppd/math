@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::filter::test
+namespace ns::filter::test::utility
 {
 template <typename T, typename Angle>
 [[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)

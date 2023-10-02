@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <optional>
 
-namespace ns::filter::test
+namespace ns::filter::test::utility
 {
 template <typename T>
 class LowPassFilter final

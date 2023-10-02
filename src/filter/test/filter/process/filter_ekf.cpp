@@ -1430,7 +1430,7 @@ class Filter final : public FilterEkf<T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return compute_speed_p(velocity(), velocity_p());
+                return utility::compute_speed_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] T angle() const override
