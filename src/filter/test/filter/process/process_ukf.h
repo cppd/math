@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::process
+namespace ns::filter::test::filter::process
 {
 template <typename T>
 class ProcessUkf final : public Process<T>

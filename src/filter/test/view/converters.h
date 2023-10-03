@@ -73,11 +73,11 @@ std::vector<Vector<N, T>> add_offset(const std::vector<Vector<N, T>>& data, cons
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> track_position(const std::vector<Measurements<N, T>>& measurements)
+std::vector<Vector<N, T>> track_position(const std::vector<filter::Measurements<N, T>>& measurements)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(measurements.size());
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 res.emplace_back(m.true_data.position);
         }
@@ -85,13 +85,13 @@ std::vector<Vector<N, T>> track_position(const std::vector<Measurements<N, T>>& 
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<2, T>> track_speed(const std::vector<Measurements<N, T>>& measurements)
+std::vector<Vector<2, T>> track_speed(const std::vector<filter::Measurements<N, T>>& measurements)
 {
         namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
         res.reserve(measurements.size());
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 res.emplace_back(impl::time_unit(m.time), mps_to_kph(m.true_data.speed));
         }
@@ -100,13 +100,13 @@ std::vector<Vector<2, T>> track_speed(const std::vector<Measurements<N, T>>& mea
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<N, T>>> position_measurements(
-        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<filter::Measurements<N, T>>& measurements,
         const T interval)
 {
         std::vector<std::optional<Vector<N, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.position)
@@ -125,7 +125,7 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> speed_measurements(
-        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<filter::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
@@ -133,7 +133,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.speed)
@@ -154,7 +154,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> angle_measurements(
-        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<filter::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
@@ -163,7 +163,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
         res.reserve(measurements.size());
         std::optional<T> previous_angle;
         std::optional<T> last_time;
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.direction)
@@ -186,7 +186,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
 
 template <std::size_t INDEX, std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
-        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<filter::Measurements<N, T>>& measurements,
         const T interval)
 {
         static_assert(INDEX < N);
@@ -196,7 +196,7 @@ std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.acceleration)
@@ -216,12 +216,14 @@ std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<TimePoint<N, T>>> optional_value(const std::vector<TimePoint<N, T>>& points, const T interval)
+std::vector<std::optional<filter::TimePoint<N, T>>> optional_value(
+        const std::vector<filter::TimePoint<N, T>>& points,
+        const T interval)
 {
-        std::vector<std::optional<TimePoint<N, T>>> res;
+        std::vector<std::optional<filter::TimePoint<N, T>>> res;
         res.reserve(points.size());
         std::optional<T> last_time;
-        for (const TimePoint<N, T>& p : points)
+        for (const filter::TimePoint<N, T>& p : points)
         {
                 ASSERT(!last_time || *last_time < p.time);
                 if (last_time && p.time > *last_time + interval)
@@ -235,11 +237,12 @@ std::vector<std::optional<TimePoint<N, T>>> optional_value(const std::vector<Tim
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> convert_position(const std::vector<std::optional<TimePoint<N, T>>>& position)
+std::vector<std::optional<Vector<N, T>>> convert_position(
+        const std::vector<std::optional<filter::TimePoint<N, T>>>& position)
 {
         std::vector<std::optional<Vector<N, T>>> res;
         res.reserve(position.size());
-        for (const std::optional<TimePoint<N, T>>& p : position)
+        for (const std::optional<filter::TimePoint<N, T>>& p : position)
         {
                 if (p)
                 {
@@ -254,13 +257,13 @@ std::vector<std::optional<Vector<N, T>>> convert_position(const std::vector<std:
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<TimePoint<1, T>>>& speed)
+std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<filter::TimePoint<1, T>>>& speed)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(speed.size());
-        for (const std::optional<TimePoint<1, T>>& s : speed)
+        for (const std::optional<filter::TimePoint<1, T>>& s : speed)
         {
                 if (s)
                 {
@@ -277,13 +280,14 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::optional<TimePoint<1, T>>>& speed_p)
+std::vector<std::optional<Vector<2, T>>> convert_speed_p(
+        const std::vector<std::optional<filter::TimePoint<1, T>>>& speed_p)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(speed_p.size());
-        for (const std::optional<TimePoint<1, T>>& s : speed_p)
+        for (const std::optional<filter::TimePoint<1, T>>& s : speed_p)
         {
                 if (s)
                 {
@@ -303,7 +307,7 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
 
 template <std::size_t INDEX, std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> convert_position_p(
-        const std::vector<std::optional<TimePoint<N, T>>>& position_p)
+        const std::vector<std::optional<filter::TimePoint<N, T>>>& position_p)
 {
         static_assert(INDEX < N);
 
@@ -311,7 +315,7 @@ std::vector<std::optional<Vector<2, T>>> convert_position_p(
 
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(position_p.size());
-        for (const std::optional<TimePoint<N, T>>& p : position_p)
+        for (const std::optional<filter::TimePoint<N, T>>& p : position_p)
         {
                 if (p)
                 {

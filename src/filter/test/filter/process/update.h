@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::test::process
+namespace ns::filter::test::filter::process
 {
 template <typename Filter, typename T, std::size_t P, std::size_t D, std::size_t S>
 void update_position(

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::move
+namespace ns::filter::test::filter::move
 {
 template <typename T>
 class Move21 final : public Move<T>

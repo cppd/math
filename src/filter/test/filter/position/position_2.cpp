@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test::position
+namespace ns::filter::test::filter::position
 {
 template <std::size_t N, typename T>
 Position2<N, T>::Position2(

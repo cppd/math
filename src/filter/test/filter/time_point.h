@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-namespace ns::filter::test
+namespace ns::filter::test::filter
 {
 template <std::size_t N, typename T>
 struct TimePoint final

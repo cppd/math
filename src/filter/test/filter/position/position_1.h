@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::position
+namespace ns::filter::test::filter::position
 {
 template <std::size_t N, typename T>
 class Position1 final : public Position<N, T>

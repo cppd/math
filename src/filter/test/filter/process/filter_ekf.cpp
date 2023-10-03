@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::test::process
+namespace ns::filter::test::filter::process
 {
 namespace
 {

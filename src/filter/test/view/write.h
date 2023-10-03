@@ -34,16 +34,16 @@ struct Filter final
 {
         std::string name;
         color::RGB8 color;
-        std::vector<TimePoint<1, T>> speed;
-        std::vector<TimePoint<1, T>> speed_p;
-        std::vector<TimePoint<N, T>> position;
-        std::vector<TimePoint<N, T>> position_p;
+        std::vector<filter::TimePoint<1, T>> speed;
+        std::vector<filter::TimePoint<1, T>> speed_p;
+        std::vector<filter::TimePoint<N, T>> position;
+        std::vector<filter::TimePoint<N, T>> position_p;
 };
 
 template <std::size_t N, typename T>
 void write_to_file(
         std::string_view annotation,
-        const std::vector<Measurements<N, T>>& measurements,
+        const std::vector<filter::Measurements<N, T>>& measurements,
         T interval,
         const std::vector<Filter<N, T>>& filters);
 }

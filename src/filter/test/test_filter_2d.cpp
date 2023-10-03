@@ -36,8 +36,8 @@ constexpr T DATA_CONNECT_INTERVAL = 10;
 template <typename T>
 void write_file(
         const std::string_view annotation,
-        const std::vector<Measurements<2, T>>& measurements,
-        const Test<T>& test)
+        const std::vector<filter::Measurements<2, T>>& measurements,
+        const filter::Test<T>& test)
 {
         std::vector<view::Filter<2, T>> filters;
 
@@ -69,7 +69,7 @@ void write_file(
 }
 
 template <typename T>
-void write_log(const Test<T>& test)
+void write_log(const filter::Test<T>& test)
 {
         const auto log_consistency_string = [](const auto& p)
         {
@@ -109,7 +109,10 @@ void write_log(const Test<T>& test)
 }
 
 template <typename T>
-void update(Measurements<2, T> measurement, std::vector<Measurements<2, T>>* const measurements, Test<T>* const test)
+void update(
+        filter::Measurements<2, T> measurement,
+        std::vector<filter::Measurements<2, T>>* const measurements,
+        filter::Test<T>* const test)
 {
         measurements->push_back(measurement);
 
@@ -154,12 +157,12 @@ void update(Measurements<2, T> measurement, std::vector<Measurements<2, T>>* con
 }
 
 template <typename T>
-void run(const Track<2, T>& track)
+void run(const filter::Track<2, T>& track)
 {
-        Test<T> test = create_data<T>();
-        std::vector<Measurements<2, T>> measurements;
+        filter::Test<T> test = filter::create_data<T>();
+        std::vector<filter::Measurements<2, T>> measurements;
 
-        for (const Measurements<2, T>& measurement : track)
+        for (const filter::Measurements<2, T>& measurement : track)
         {
                 update(measurement, &measurements, &test);
         }
@@ -172,7 +175,7 @@ void run(const Track<2, T>& track)
 template <typename T>
 void test_impl()
 {
-        run(track<2, T>());
+        run(filter::track<2, T>());
 }
 
 void test()

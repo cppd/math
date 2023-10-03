@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 
-namespace ns::filter::test::move
+namespace ns::filter::test::filter::move
 {
 template <typename T>
 class Filter10
