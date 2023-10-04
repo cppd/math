@@ -17,17 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/constant.h>
-#include <src/com/file/path.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
-#include <src/settings/directory.h>
 
-#include <cctype>
 #include <cmath>
-#include <filesystem>
-#include <optional>
-#include <string>
 
 namespace ns::filter::test::utility
 {
@@ -43,22 +36,6 @@ template <typename T, typename Angle>
                 {sin,  cos}
         };
         return m * v;
-}
-
-[[nodiscard]] inline std::string replace_space(const std::string_view s)
-{
-        std::string res;
-        res.reserve(s.size());
-        for (const char c : s)
-        {
-                res += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
-        }
-        return res;
-}
-
-[[nodiscard]] inline std::filesystem::path test_file_path(const std::string_view name)
-{
-        return settings::test_directory() / path_from_utf8(name);
 }
 
 template <std::size_t N, typename T>
