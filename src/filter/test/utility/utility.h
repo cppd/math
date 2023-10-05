@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -39,11 +40,11 @@ template <typename T, typename Angle>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T is_positive(const Vector<N, T>& v)
+[[nodiscard]] bool check_variance(const Vector<N, T>& v)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (!(v[i] > 0))
+                if (!(std::isfinite(v[i]) && v[i] > 0))
                 {
                         return false;
                 }
