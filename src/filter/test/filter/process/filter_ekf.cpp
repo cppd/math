@@ -1183,7 +1183,7 @@ class Filter final : public FilterEkf<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(dt >= 0);
+                ASSERT(utility::check_dt(dt));
 
                 const Matrix<9, 9, T> f_matrix = f(dt);
                 filter_->predict(

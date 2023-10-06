@@ -544,6 +544,7 @@ class Filter final : public Filter21<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_dt(dt));
 
                 filter_->predict(
                         [dt](const Vector<8, T>& x)

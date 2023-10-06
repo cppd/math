@@ -836,6 +836,7 @@ class Filter final : public FilterUkf<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_dt(dt));
 
                 filter_->predict(
                         [dt](const Vector<9, T>& x)

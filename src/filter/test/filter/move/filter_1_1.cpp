@@ -450,6 +450,7 @@ class Filter final : public Filter11<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_dt(dt));
 
                 filter_->predict(
                         [dt](const Vector<6, T>& x)

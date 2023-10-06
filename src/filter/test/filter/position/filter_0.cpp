@@ -139,8 +139,7 @@ class FilterImpl final : public Filter0<N, T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(is_finite(dt));
-                ASSERT(dt >= 0);
+                ASSERT(utility::check_dt(dt));
 
                 const Matrix<N, N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(

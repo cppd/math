@@ -25,18 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::utility
 {
-template <typename T, typename Angle>
-[[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
+template <typename T>
+[[nodiscard]] bool check_dt(const T v)
 {
-        static_assert(std::is_floating_point_v<Angle>);
-
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
-        const Matrix<2, 2, T> m{
-                {cos, -sin},
-                {sin,  cos}
-        };
-        return m * v;
+        return std::isfinite(v) && v >= 0;
 }
 
 template <std::size_t N, typename T>
@@ -50,6 +42,20 @@ template <std::size_t N, typename T>
                 }
         }
         return true;
+}
+
+template <typename T, typename Angle>
+[[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const Angle angle)
+{
+        static_assert(std::is_floating_point_v<Angle>);
+
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        const Matrix<2, 2, T> m{
+                {cos, -sin},
+                {sin,  cos}
+        };
+        return m * v;
 }
 
 template <typename T>
