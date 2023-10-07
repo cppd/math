@@ -449,6 +449,7 @@ class Filter final : public Filter10<T>
         void update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(position.variance));
 
                 filter_->update(
                         position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>,
@@ -461,6 +462,8 @@ class Filter final : public Filter10<T>
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(position.variance));
+                ASSERT(utility::check_variance(speed.variance));
 
                 filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
@@ -475,6 +478,9 @@ class Filter final : public Filter10<T>
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(position.variance));
+                ASSERT(utility::check_variance(speed.variance));
+                ASSERT(utility::check_variance(direction.variance));
 
                 filter_->update(
                         position_speed_direction_h<T>,
@@ -489,6 +495,8 @@ class Filter final : public Filter10<T>
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(position.variance));
+                ASSERT(utility::check_variance(direction.variance));
 
                 filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
@@ -502,6 +510,8 @@ class Filter final : public Filter10<T>
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(speed.variance));
+                ASSERT(utility::check_variance(direction.variance));
 
                 filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
@@ -512,6 +522,7 @@ class Filter final : public Filter10<T>
         void update_direction(const Measurement<1, T>& direction, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(direction.variance));
 
                 filter_->update(
                         direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
@@ -521,6 +532,7 @@ class Filter final : public Filter10<T>
         void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
+                ASSERT(utility::check_variance(speed.variance));
 
                 filter_->update(
                         speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>, gate,
