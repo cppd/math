@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
 #include "process/process.h"
+#include "speed/speed.h"
 
 #include <memory>
 #include <vector>
@@ -42,6 +43,9 @@ struct Test final
         std::vector<std::unique_ptr<move::Move<T>>> moves_1_0;
         std::vector<std::unique_ptr<move::Move<T>>> moves_1_1;
         std::vector<std::unique_ptr<move::Move<T>>> moves_2_1;
+
+        std::vector<std::unique_ptr<speed::Speed<T>>> speeds_1;
+        std::vector<std::unique_ptr<speed::Speed<T>>> speeds_2;
 
         std::unique_ptr<position::PositionEstimation<T>> position_estimation;
 };

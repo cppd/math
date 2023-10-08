@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position/position_estimation.h"
 #include "process/process_ekf.h"
 #include "process/process_ukf.h"
+#include "speed/speed_1.h"
+#include "speed/speed_2.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -79,6 +81,13 @@ struct Config final
         static constexpr std::array MOVE_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T MOVE_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> MOVE_FILTER_GATE{};
+
+        static constexpr T SPEED_FILTER_POSITION_VARIANCE_1 = square(2.0);
+        static constexpr T SPEED_FILTER_POSITION_VARIANCE_2 = square(2.0);
+        static constexpr T SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr std::array SPEED_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
+        static constexpr T SPEED_FILTER_RESET_DT = 10;
+        static constexpr std::optional<T> SPEED_FILTER_GATE{};
 };
 
 template <std::size_t N, typename T>
@@ -260,6 +269,49 @@ std::vector<std::unique_ptr<move::Move<T>>> create_moves()
 
         return res;
 }
+
+template <typename T, std::size_t ORDER_P>
+std::vector<std::unique_ptr<speed::Speed<T>>> create_speeds()
+{
+        std::vector<std::unique_ptr<speed::Speed<T>>> res;
+
+        const int precision = compute_string_precision(Config<T>::SPEED_FILTER_UKF_ALPHAS);
+
+        const auto name = [&](const T alpha)
+        {
+                std::ostringstream oss;
+                oss << std::setprecision(precision) << std::fixed;
+                oss << "Speed " << ORDER_P << " (" << ALPHA << " " << alpha << ")";
+                return oss.str();
+        };
+
+        const auto alphas = sort(std::array(Config<T>::SPEED_FILTER_UKF_ALPHAS));
+        for (std::size_t i = 0; i < alphas.size(); ++i)
+        {
+                ASSERT(alphas[i] > 0 && alphas[i] <= 1);
+                ASSERT(i <= 2);
+
+                static_assert(ORDER_P == 1 || ORDER_P == 2);
+
+                if (ORDER_P == 1)
+                {
+                        res.push_back(std::make_unique<speed::Speed1<T>>(
+                                name(alphas[i]), color::RGB8(0, 200 - 40 * i, 0), Config<T>::SPEED_FILTER_RESET_DT,
+                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
+                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_1));
+                }
+
+                if (ORDER_P == 2)
+                {
+                        res.push_back(std::make_unique<speed::Speed2<T>>(
+                                name(alphas[i]), color::RGB8(0, 150 - 40 * i, 0), Config<T>::SPEED_FILTER_RESET_DT,
+                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
+                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_2));
+                }
+        }
+
+        return res;
+}
 }
 
 template <typename T>
@@ -278,6 +330,9 @@ Test<T> create_data()
         res.moves_1_0 = create_moves<T, 1, 0>();
         res.moves_1_1 = create_moves<T, 1, 1>();
         res.moves_2_1 = create_moves<T, 2, 1>();
+
+        res.speeds_1 = create_speeds<T, 1>();
+        res.speeds_2 = create_speeds<T, 2>();
 
         res.position_estimation = std::make_unique<position::PositionEstimation<T>>(
                 Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,

@@ -65,6 +65,9 @@ void write_file(
         push(test.moves_1_1);
         push(test.moves_2_1);
 
+        push(test.speeds_1);
+        push(test.speeds_2);
+
         view::write_to_file(annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
 }
 
@@ -106,6 +109,9 @@ void write_log(const filter::Test<T>& test)
         log(test.moves_1_0);
         log(test.moves_1_1);
         log(test.moves_2_1);
+
+        log(test.speeds_1);
+        log(test.speeds_2);
 }
 
 template <typename T>
@@ -151,6 +157,16 @@ void update(
         }
 
         for (auto& m : test->moves_2_1)
+        {
+                m->update(measurement, std::as_const(*test->position_estimation));
+        }
+
+        for (auto& m : test->speeds_1)
+        {
+                m->update(measurement, std::as_const(*test->position_estimation));
+        }
+
+        for (auto& m : test->speeds_2)
         {
                 m->update(measurement, std::as_const(*test->position_estimation));
         }
