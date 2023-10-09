@@ -38,30 +38,32 @@ namespace ns::vulkan
 {
 namespace
 {
+// clang-format off
+constexpr std::array DEPTH_FORMATS
+{
+        VK_FORMAT_D16_UNORM,
+        VK_FORMAT_D16_UNORM_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_X8_D24_UNORM_PACK32
+};
+
+constexpr std::array STENCIL_FORMATS
+{
+        VK_FORMAT_S8_UINT
+};
+// clang-format on
+
 const std::unordered_set<VkFormat>& depth_format_set()
 {
-        // clang-format off
-        static const std::unordered_set<VkFormat> formats
-        {
-                VK_FORMAT_D16_UNORM,
-                VK_FORMAT_D16_UNORM_S8_UINT,
-                VK_FORMAT_D24_UNORM_S8_UINT,
-                VK_FORMAT_D32_SFLOAT,
-                VK_FORMAT_D32_SFLOAT_S8_UINT,
-                VK_FORMAT_X8_D24_UNORM_PACK32
-        };
-        // clang-format on
+        static const std::unordered_set<VkFormat> formats{DEPTH_FORMATS.cbegin(), DEPTH_FORMATS.cend()};
         return formats;
 }
 
 const std::unordered_set<VkFormat>& stencil_format_set()
 {
-        // clang-format off
-        static const std::unordered_set<VkFormat> formats
-        {
-                VK_FORMAT_S8_UINT
-        };
-        // clang-format on
+        static const std::unordered_set<VkFormat> formats{STENCIL_FORMATS.cbegin(), STENCIL_FORMATS.cend()};
         return formats;
 }
 
@@ -76,6 +78,7 @@ const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
         {
                 error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
         }
+
         return formats;
 }
 
@@ -90,6 +93,7 @@ const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
         {
                 error("Not a color format: " + formats_to_sorted_string(formats, ", "));
         }
+
         return formats;
 }
 
