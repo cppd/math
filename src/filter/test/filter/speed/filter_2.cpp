@@ -430,20 +430,6 @@ class Filter final : public Filter2<T>
                 return utility::compute_speed_p(velocity(), velocity_p());
         }
 
-        [[nodiscard]] T angle() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->x()[6];
-        }
-
-        [[nodiscard]] T angle_p() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->p()(6, 6);
-        }
-
 public:
         Filter(const T sigma_points_alpha, const T position_variance)
                 : sigma_points_alpha_(sigma_points_alpha),

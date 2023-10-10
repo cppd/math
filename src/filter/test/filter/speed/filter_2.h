@@ -63,9 +63,6 @@ public:
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
-
-        [[nodiscard]] virtual T angle() const = 0;
-        [[nodiscard]] virtual T angle_p() const = 0;
 };
 
 template <typename T>
