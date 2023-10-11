@@ -39,7 +39,7 @@ Speed2<T>::Speed2(
           color_(color),
           reset_dt_(reset_dt),
           gate_(gate),
-          filter_(create_filter_2(sigma_points_alpha, position_variance)),
+          filter_(create_filter_2<2, T>(sigma_points_alpha, position_variance)),
           queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);

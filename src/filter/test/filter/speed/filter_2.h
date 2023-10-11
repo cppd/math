@@ -27,44 +27,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter::speed
 {
-template <typename T>
+template <std::size_t N, typename T>
 class Filter2
 {
 public:
         virtual ~Filter2() = default;
 
         virtual void reset(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                const Vector<2, T>& velocity,
-                const Vector<2, T>& velocity_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance) = 0;
+                const Vector<N, T>& position,
+                const Vector<N, T>& position_variance,
+                const Vector<N, T>& velocity,
+                const Vector<N, T>& velocity_variance,
+                const Vector<N, T>& acceleration,
+                const Vector<N, T>& acceleration_variance) = 0;
 
         virtual void reset(
-                const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p) = 0;
+                const Vector<3 * N, T>& position_velocity_acceleration,
+                const Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) = 0;
 
-        virtual void reset(const Vector<4, T>& position_velocity, const Matrix<4, 4, T>& position_velocity_p) = 0;
+        virtual void reset(
+                const Vector<2 * N, T>& position_velocity,
+                const Matrix<2 * N, 2 * N, T>& position_velocity_p) = 0;
 
         virtual void predict(T dt) = 0;
 
-        virtual void update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
+        virtual void update_position(const Measurement<N, T>& position, std::optional<T> gate) = 0;
 
         virtual void update_position_speed(
-                const Measurement<2, T>& position,
+                const Measurement<N, T>& position,
                 const Measurement<1, T>& speed,
                 std::optional<T> gate) = 0;
 
         virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<2, T> position() const = 0;
-        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+        [[nodiscard]] virtual Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 };
 
-template <typename T>
-std::unique_ptr<Filter2<T>> create_filter_2(T sigma_points_alpha, T position_variance);
+template <std::size_t N, typename T>
+std::unique_ptr<Filter2<N, T>> create_filter_2(T sigma_points_alpha, T position_variance);
 }

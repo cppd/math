@@ -43,7 +43,7 @@ class Speed2 final : public Speed<T>
         color::RGB8 color_;
         T reset_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<Filter2<T>> filter_;
+        std::unique_ptr<Filter2<2, T>> filter_;
 
         MeasurementQueue<2, T> queue_;
 
