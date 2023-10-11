@@ -206,8 +206,7 @@ Vector<1, T> speed_z(const Vector<1, T>& speed)
 template <typename T>
 Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
 {
-        const Vector<1, T>& sv = speed_variance;
-        return {{sv[0]}};
+        return {{speed_variance[0]}};
 }
 
 template <std::size_t N, typename T>
