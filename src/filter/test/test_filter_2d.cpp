@@ -115,6 +115,42 @@ void write_log(const filter::Test<T>& test)
 }
 
 template <typename T>
+void update(const filter::Measurements<2, T>& measurement, filter::Test<T>* const test)
+{
+        const auto& position_estimation = *test->position_estimation;
+
+        for (auto& p : test->processes)
+        {
+                p->update(measurement, position_estimation);
+        }
+
+        for (auto& m : test->moves_1_0)
+        {
+                m->update(measurement, position_estimation);
+        }
+
+        for (auto& m : test->moves_1_1)
+        {
+                m->update(measurement, position_estimation);
+        }
+
+        for (auto& m : test->moves_2_1)
+        {
+                m->update(measurement, position_estimation);
+        }
+
+        for (auto& m : test->speeds_1)
+        {
+                m->update(measurement, position_estimation);
+        }
+
+        for (auto& m : test->speeds_2)
+        {
+                m->update(measurement, position_estimation);
+        }
+}
+
+template <typename T>
 void update(
         filter::Measurements<2, T> measurement,
         std::vector<filter::Measurements<2, T>>* const measurements,
@@ -129,6 +165,11 @@ void update(
                 measurement.position->variance = test->position_variance->last_position_variance();
         }
 
+        for (auto& p : test->positions_1)
+        {
+                p->update_position(measurement);
+        }
+
         for (auto& p : test->positions_2)
         {
                 p->update_position(measurement);
@@ -136,40 +177,7 @@ void update(
 
         test->position_estimation->update(measurement);
 
-        for (auto& p : test->positions_1)
-        {
-                p->update_position(measurement);
-        }
-
-        for (auto& p : test->processes)
-        {
-                p->update(measurement, std::as_const(*test->position_estimation));
-        }
-
-        for (auto& m : test->moves_1_0)
-        {
-                m->update(measurement, std::as_const(*test->position_estimation));
-        }
-
-        for (auto& m : test->moves_1_1)
-        {
-                m->update(measurement, std::as_const(*test->position_estimation));
-        }
-
-        for (auto& m : test->moves_2_1)
-        {
-                m->update(measurement, std::as_const(*test->position_estimation));
-        }
-
-        for (auto& m : test->speeds_1)
-        {
-                m->update(measurement, std::as_const(*test->position_estimation));
-        }
-
-        for (auto& m : test->speeds_2)
-        {
-                m->update(measurement, std::as_const(*test->position_estimation));
-        }
+        update(measurement, test);
 }
 
 template <typename T>
