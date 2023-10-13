@@ -81,6 +81,63 @@ template <typename T>
 }
 
 template <std::size_t N, typename T>
+        requires (N >= 2)
+[[nodiscard]] Vector<N, T> compute_angles_p(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
+{
+        // angle0 = acos(x0/sqrt(x0*x0+x1*x1+x2*x2+...))
+        // angle1 = acos(x1/sqrt(x0*x0+x1*x1+x2*x2+...))
+        // angle2 = acos(x2/sqrt(x0*x0+x1*x1+x2*x2+...))
+        //
+        // Jacobian
+        // a0=ArcCos[x0/Sqrt[x0*x0+x1*x1+x2*x2]];
+        // a1=ArcCos[x1/Sqrt[x0*x0+x1*x1+x2*x2]];
+        // a2=ArcCos[x2/Sqrt[x0*x0+x1*x1+x2*x2]];
+        // Assuming[x0>0&&x1>0&&x2>0,Simplify[D[{a0,a1,a2},{{x0,x1,x2}}]]]
+        //
+        // -(Sqrt[x1^2 + x2^2]/(x0^2 + x1^2 + x2^2)),
+        // (x0*x1)/(Sqrt[x1^2 + x2^2]*(x0^2 + x1^2 + x2^2)),
+        // (x0*x2)/(Sqrt[x1^2 + x2^2]*(x0^2 + x1^2 + x2^2))
+
+        const auto norm_exclude_i = [&](const std::size_t i)
+        {
+                Vector<N - 1, T> v;
+                std::size_t n = 0;
+                for (std::size_t j = 0; j < N; ++j)
+                {
+                        if (i != j)
+                        {
+                                v[n++] = velocity[j];
+                        }
+                }
+                return v.norm();
+        };
+
+        const T norm_squared = velocity.norm_squared();
+
+        Vector<N, T> res;
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                const T norm_i = norm_exclude_i(i);
+                const T denominator = norm_i * norm_squared;
+
+                Matrix<1, N, T> error_propagation;
+                error_propagation(0, i) = -norm_i / norm_squared;
+                for (std::size_t j = 0; j < N; ++j)
+                {
+                        if (i != j)
+                        {
+                                error_propagation(0, j) = velocity[i] * velocity[j] / denominator;
+                        }
+                }
+                const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+                res[i] = p(0, 0);
+        }
+
+        return res;
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] T compute_speed_p(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
 {
         // speed = sqrt(vx*vx + vy*vy)
