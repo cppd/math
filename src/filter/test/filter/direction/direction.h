@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 template <typename T>
-class Move
+class Direction
 {
 public:
-        virtual ~Move() = default;
+        virtual ~Direction() = default;
 
         virtual void update(const Measurements<2, T>& m, const Estimation<T>& estimation) = 0;
 

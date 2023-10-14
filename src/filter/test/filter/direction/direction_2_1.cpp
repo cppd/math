@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "move_1_1.h"
+#include "direction_2_1.h"
 
 #include "update.h"
 
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 namespace
 {
@@ -37,7 +37,7 @@ constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
 }
 
 template <typename T>
-Move11<T>::Move11(
+Direction21<T>::Direction21(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
@@ -51,14 +51,14 @@ Move11<T>::Move11(
           reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_1_1(sigma_points_alpha, position_variance, angle_variance)),
+          filter_(create_filter_2_1(sigma_points_alpha, position_variance, angle_variance)),
           queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void Move11<T>::save(const T time, const TrueData<2, T>& true_data)
+void Direction21<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -75,7 +75,7 @@ void Move11<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Move11<T>::check_time(const T time) const
+void Direction21<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -90,7 +90,7 @@ void Move11<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Move11<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Direction21<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         if (!m.position || queue_.empty())
         {
@@ -119,7 +119,7 @@ void Move11<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimati
 }
 
 template <typename T>
-void Move11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Direction21<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -176,19 +176,19 @@ void Move11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 }
 
 template <typename T>
-const std::string& Move11<T>::name() const
+const std::string& Direction21<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-color::RGB8 Move11<T>::color() const
+color::RGB8 Direction21<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string Move11<T>::angle_string() const
+std::string Direction21<T>::angle_string() const
 {
         std::string s;
         s += name_;
@@ -198,14 +198,14 @@ std::string Move11<T>::angle_string() const
 }
 
 template <typename T>
-std::string Move11<T>::consistency_string() const
+std::string Direction21<T>::consistency_string() const
 {
         if (!nees_)
         {
                 return {};
         }
 
-        const std::string name = std::string("Move<") + type_name<T>() + "> " + name_;
+        const std::string name = std::string("Direction<") + type_name<T>() + "> " + name_;
 
         std::string s;
 
@@ -231,30 +231,30 @@ std::string Move11<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move11<T>::positions() const
+const std::vector<TimePoint<2, T>>& Direction21<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move11<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& Direction21<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move11<T>::speeds() const
+const std::vector<TimePoint<1, T>>& Direction21<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move11<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Direction21<T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-template class Move11<float>;
-template class Move11<double>;
-template class Move11<long double>;
+template class Direction21<float>;
+template class Direction21<double>;
+template class Direction21<long double>;
 }

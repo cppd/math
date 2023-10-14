@@ -61,9 +61,9 @@ void write_file(
 
         push(test.processes);
 
-        push(test.moves_1_0);
-        push(test.moves_1_1);
-        push(test.moves_2_1);
+        push(test.directions_1_0);
+        push(test.directions_1_1);
+        push(test.directions_2_1);
 
         push(test.speeds_1);
         push(test.speeds_2);
@@ -106,9 +106,9 @@ void write_log(const filter::Test<T>& test)
 
         log(test.processes);
 
-        log(test.moves_1_0);
-        log(test.moves_1_1);
-        log(test.moves_2_1);
+        log(test.directions_1_0);
+        log(test.directions_1_1);
+        log(test.directions_2_1);
 
         log(test.speeds_1);
         log(test.speeds_2);
@@ -124,17 +124,17 @@ void update(const filter::Measurements<2, T>& measurement, filter::Test<T>* cons
                 p->update(measurement, position_estimation);
         }
 
-        for (auto& m : test->moves_1_0)
+        for (auto& m : test->directions_1_0)
         {
                 m->update(measurement, position_estimation);
         }
 
-        for (auto& m : test->moves_1_1)
+        for (auto& m : test->directions_1_1)
         {
                 m->update(measurement, position_estimation);
         }
 
-        for (auto& m : test->moves_2_1)
+        for (auto& m : test->directions_2_1)
         {
                 m->update(measurement, position_estimation);
         }

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "move_1_0.h"
+#include "direction_1_0.h"
 
 #include "update.h"
 
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 namespace
 {
@@ -37,7 +37,7 @@ constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
 }
 
 template <typename T>
-Move10<T>::Move10(
+Direction10<T>::Direction10(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
@@ -58,7 +58,7 @@ Move10<T>::Move10(
 }
 
 template <typename T>
-void Move10<T>::save(const T time, const TrueData<2, T>& true_data)
+void Direction10<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -75,7 +75,7 @@ void Move10<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void Move10<T>::check_time(const T time) const
+void Direction10<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -90,7 +90,7 @@ void Move10<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Move10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Direction10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         if (!m.position || queue_.empty())
         {
@@ -119,7 +119,7 @@ void Move10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimati
 }
 
 template <typename T>
-void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -176,19 +176,19 @@ void Move10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 }
 
 template <typename T>
-const std::string& Move10<T>::name() const
+const std::string& Direction10<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-color::RGB8 Move10<T>::color() const
+color::RGB8 Direction10<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string Move10<T>::angle_string() const
+std::string Direction10<T>::angle_string() const
 {
         std::string s;
         s += name_;
@@ -197,14 +197,14 @@ std::string Move10<T>::angle_string() const
 }
 
 template <typename T>
-std::string Move10<T>::consistency_string() const
+std::string Direction10<T>::consistency_string() const
 {
         if (!nees_)
         {
                 return {};
         }
 
-        const std::string name = std::string("Move<") + type_name<T>() + "> " + name_;
+        const std::string name = std::string("Direction<") + type_name<T>() + "> " + name_;
 
         std::string s;
 
@@ -230,30 +230,30 @@ std::string Move10<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move10<T>::positions() const
+const std::vector<TimePoint<2, T>>& Direction10<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& Move10<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& Direction10<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move10<T>::speeds() const
+const std::vector<TimePoint<1, T>>& Direction10<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& Move10<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& Direction10<T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-template class Move10<float>;
-template class Move10<double>;
-template class Move10<long double>;
+template class Direction10<float>;
+template class Direction10<double>;
+template class Direction10<long double>;
 }

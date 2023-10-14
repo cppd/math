@@ -25,19 +25,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 template <typename T>
-class Filter10
+class Filter21
 {
 public:
-        virtual ~Filter10() = default;
+        virtual ~Filter21() = default;
 
         virtual void reset(
                 const Vector<2, T>& position,
                 const Vector<2, T>& position_variance,
                 const Vector<2, T>& velocity,
                 const Vector<2, T>& velocity_variance,
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance,
+                T angle,
+                T angle_variance) = 0;
+
+        virtual void reset(
+                const Vector<6, T>& position_velocity_acceleration,
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
                 T angle,
                 T angle_variance) = 0;
 
@@ -84,8 +92,11 @@ public:
 
         [[nodiscard]] virtual T angle() const = 0;
         [[nodiscard]] virtual T angle_p() const = 0;
+
+        [[nodiscard]] virtual T angle_speed() const = 0;
+        [[nodiscard]] virtual T angle_speed_p() const = 0;
 };
 
 template <typename T>
-std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha, T position_variance, T angle_variance);
+std::unique_ptr<Filter21<T>> create_filter_2_1(T sigma_points_alpha, T position_variance, T angle_variance);
 }

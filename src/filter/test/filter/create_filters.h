@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "move/move.h"
+#include "direction/direction.h"
 #include "position/position.h"
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
@@ -40,9 +40,9 @@ struct Test final
 
         std::vector<std::unique_ptr<process::Process<T>>> processes;
 
-        std::vector<std::unique_ptr<move::Move<T>>> moves_1_0;
-        std::vector<std::unique_ptr<move::Move<T>>> moves_1_1;
-        std::vector<std::unique_ptr<move::Move<T>>> moves_2_1;
+        std::vector<std::unique_ptr<direction::Direction<T>>> directions_1_0;
+        std::vector<std::unique_ptr<direction::Direction<T>>> directions_1_1;
+        std::vector<std::unique_ptr<direction::Direction<T>>> directions_2_1;
 
         std::vector<std::unique_ptr<speed::Speed<T>>> speeds_1;
         std::vector<std::unique_ptr<speed::Speed<T>>> speeds_2;

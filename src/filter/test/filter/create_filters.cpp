@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
-#include "move/move_1_0.h"
-#include "move/move_1_1.h"
-#include "move/move_2_1.h"
+#include "direction/direction_1_0.h"
+#include "direction/direction_1_1.h"
+#include "direction/direction_2_1.h"
 #include "position/position_0.h"
 #include "position/position_1.h"
 #include "position/position_2.h"
@@ -71,16 +71,16 @@ struct Config final
         static constexpr T PROCESS_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> PROCESS_FILTER_GATE{};
 
-        static constexpr T MOVE_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
-        static constexpr T MOVE_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
-        static constexpr T MOVE_FILTER_POSITION_VARIANCE_2_1 = square(1.0);
-        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_1_0 = square(degrees_to_radians(0.2));
-        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_1_1 = square(degrees_to_radians(0.001));
-        static constexpr T MOVE_FILTER_ANGLE_VARIANCE_2_1 = square(degrees_to_radians(0.001));
-        static constexpr T MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr std::array MOVE_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
-        static constexpr T MOVE_FILTER_RESET_DT = 10;
-        static constexpr std::optional<T> MOVE_FILTER_GATE{};
+        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
+        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
+        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_2_1 = square(1.0);
+        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_1_0 = square(degrees_to_radians(0.2));
+        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_1_1 = square(degrees_to_radians(0.001));
+        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_2_1 = square(degrees_to_radians(0.001));
+        static constexpr T DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr std::array DIRECTION_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
+        static constexpr T DIRECTION_FILTER_RESET_DT = 10;
+        static constexpr std::optional<T> DIRECTION_FILTER_GATE{};
 
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_1 = square(2.0);
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_2 = square(2.0);
@@ -214,7 +214,7 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::unique_ptr<move::Move<T>> create_move(const unsigned i, const T alpha, const std::string& name)
+std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, const T alpha, const std::string& name)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
@@ -223,48 +223,51 @@ std::unique_ptr<move::Move<T>> create_move(const unsigned i, const T alpha, cons
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return std::make_unique<move::Move10<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 250), Config<T>::MOVE_FILTER_RESET_DT,
-                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
-                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_0, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_0);
+                return std::make_unique<direction::Direction10<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 250), Config<T>::DIRECTION_FILTER_RESET_DT,
+                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
+                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0);
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return std::make_unique<move::Move11<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 150), Config<T>::MOVE_FILTER_RESET_DT,
-                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
-                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_1_1, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_1_1);
+                return std::make_unique<direction::Direction11<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 150), Config<T>::DIRECTION_FILTER_RESET_DT,
+                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
+                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1);
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return std::make_unique<move::Move21<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 50), Config<T>::MOVE_FILTER_RESET_DT,
-                        Config<T>::MOVE_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::MOVE_FILTER_GATE, alpha,
-                        Config<T>::MOVE_FILTER_POSITION_VARIANCE_2_1, Config<T>::MOVE_FILTER_ANGLE_VARIANCE_2_1);
+                return std::make_unique<direction::Direction21<T>>(
+                        name, color::RGB8(0, 160 - 40 * i, 50), Config<T>::DIRECTION_FILTER_RESET_DT,
+                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
+                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1);
         }
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::vector<std::unique_ptr<move::Move<T>>> create_moves()
+std::vector<std::unique_ptr<direction::Direction<T>>> create_directions()
 {
-        std::vector<std::unique_ptr<move::Move<T>>> res;
+        std::vector<std::unique_ptr<direction::Direction<T>>> res;
 
-        const int precision = compute_string_precision(Config<T>::MOVE_FILTER_UKF_ALPHAS);
+        const int precision = compute_string_precision(Config<T>::DIRECTION_FILTER_UKF_ALPHAS);
 
         const auto name = [&](const T alpha)
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Move UKF " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
+                oss << "Direction UKF " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
-        const auto alphas = sort(std::array(Config<T>::MOVE_FILTER_UKF_ALPHAS));
+        const auto alphas = sort(std::array(Config<T>::DIRECTION_FILTER_UKF_ALPHAS));
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_move<T, ORDER_P, ORDER_A>(i, alphas[i], name(alphas[i])));
+                res.push_back(create_direction<T, ORDER_P, ORDER_A>(i, alphas[i], name(alphas[i])));
         }
 
         return res;
@@ -327,9 +330,9 @@ Test<T> create_data()
 
         res.processes = create_processes<T>();
 
-        res.moves_1_0 = create_moves<T, 1, 0>();
-        res.moves_1_1 = create_moves<T, 1, 1>();
-        res.moves_2_1 = create_moves<T, 2, 1>();
+        res.directions_1_0 = create_directions<T, 1, 0>();
+        res.directions_1_1 = create_directions<T, 1, 1>();
+        res.directions_2_1 = create_directions<T, 2, 1>();
 
         res.speeds_1 = create_speeds<T, 1>();
         res.speeds_2 = create_speeds<T, 2>();

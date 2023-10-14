@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "filter_1_1.h"
+#include "filter_2_1.h"
 
 #include "../../../sigma_points.h"
 #include "../../../ukf.h"
@@ -28,87 +28,158 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 namespace
 {
+template <typename T>
+constexpr T INIT_ACCELERATION = 0;
+template <typename T>
+constexpr T INIT_ACCELERATION_VARIANCE = square(10);
+
 template <typename T>
 constexpr T INIT_ANGLE_SPEED = 0;
 template <typename T>
 constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
 
 template <typename T>
-Vector<6, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle)
+Vector<8, T> x(
+        const Vector<2, T>& position,
+        const Vector<2, T>& velocity,
+        const Vector<2, T>& acceleration,
+        const T angle)
 {
         ASSERT(is_finite(position));
         ASSERT(is_finite(velocity));
+        ASSERT(is_finite(acceleration));
         ASSERT(is_finite(angle));
 
-        Vector<6, T> res;
+        Vector<8, T> res;
 
         res[0] = position[0];
         res[1] = velocity[0];
-        res[2] = position[1];
-        res[3] = velocity[1];
-        res[4] = angle;
-        res[5] = INIT_ANGLE_SPEED<T>;
+        res[2] = acceleration[0];
+        res[3] = position[1];
+        res[4] = velocity[1];
+        res[5] = acceleration[1];
+        res[6] = angle;
+        res[7] = INIT_ANGLE_SPEED<T>;
 
         return res;
 }
 
 template <typename T>
-Matrix<6, 6, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& velocity_variance, const T angle_variance)
+Matrix<8, 8, T> p(
+        const Vector<2, T>& position_variance,
+        const Vector<2, T>& velocity_variance,
+        const Vector<2, T>& acceleration_variance,
+        const T angle_variance)
 {
         ASSERT(is_finite(position_variance));
         ASSERT(is_finite(velocity_variance));
+        ASSERT(is_finite(acceleration_variance));
         ASSERT(is_finite(angle_variance));
 
-        Matrix<6, 6, T> res(0);
+        Matrix<8, 8, T> res(0);
 
         res(0, 0) = position_variance[0];
         res(1, 1) = velocity_variance[0];
-        res(2, 2) = position_variance[1];
-        res(3, 3) = velocity_variance[1];
-        res(4, 4) = angle_variance;
-        res(5, 5) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(2, 2) = acceleration_variance[0];
+        res(3, 3) = position_variance[1];
+        res(4, 4) = velocity_variance[1];
+        res(5, 5) = acceleration_variance[1];
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
 
         return res;
 }
 
 template <typename T>
-Vector<6, T> x(const Vector<4, T>& position_velocity, const T angle)
+Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
 {
-        ASSERT(is_finite(position_velocity));
+        ASSERT(is_finite(position_velocity_acceleration));
 
-        Vector<6, T> res;
+        Vector<8, T> res;
 
-        res[0] = position_velocity[0];
-        res[1] = position_velocity[1];
-        res[2] = position_velocity[2];
-        res[3] = position_velocity[3];
-        res[4] = angle;
-        res[5] = INIT_ANGLE_SPEED<T>;
-
-        return res;
-}
-
-template <typename T>
-Matrix<6, 6, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
-{
-        ASSERT(is_finite(position_velocity_p));
-
-        Matrix<6, 6, T> res(0);
-
-        for (std::size_t r = 0; r < 4; ++r)
+        for (std::size_t i = 0; i < 6; ++i)
         {
-                for (std::size_t c = 0; c < 4; ++c)
+                res[i] = position_velocity_acceleration[i];
+        }
+
+        res[6] = angle;
+        res[7] = INIT_ANGLE_SPEED<T>;
+
+        return res;
+}
+
+template <typename T>
+Matrix<8, 8, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
+{
+        ASSERT(is_finite(position_velocity_acceleration_p));
+
+        Matrix<8, 8, T> res(0);
+
+        for (std::size_t r = 0; r < 6; ++r)
+        {
+                for (std::size_t c = 0; c < 6; ++c)
                 {
-                        res(r, c) = position_velocity_p(r, c);
+                        res(r, c) = position_velocity_acceleration_p(r, c);
                 }
         }
 
-        res(4, 4) = angle_variance;
-        res(5, 5) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+
+        return res;
+}
+
+template <typename T>
+Vector<8, T> x(const Vector<4, T>& position_velocity, const T angle)
+{
+        ASSERT(is_finite(position_velocity));
+
+        Vector<8, T> res;
+
+        res[0] = position_velocity[0];
+        res[1] = position_velocity[1];
+        res[2] = INIT_ACCELERATION<T>;
+        res[3] = position_velocity[2];
+        res[4] = position_velocity[3];
+        res[5] = INIT_ACCELERATION<T>;
+        res[6] = angle;
+        res[7] = INIT_ANGLE_SPEED<T>;
+
+        return res;
+}
+
+template <typename T>
+Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
+{
+        ASSERT(is_finite(position_velocity_p));
+
+        const Matrix<4, 4, T>& p = position_velocity_p;
+        static constexpr std::size_t N = 2;
+
+        Matrix<8, 8, T> res(0);
+
+        for (std::size_t r = 0; r < N; ++r)
+        {
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                for (std::size_t j = 0; j < 2; ++j)
+                                {
+                                        res(3 * r + i, 3 * c + j) = p(2 * r + i, 2 * c + j);
+                                }
+                        }
+                }
+        }
+
+        res(2, 2) = INIT_ACCELERATION_VARIANCE<T>;
+        res(5, 5) = INIT_ACCELERATION_VARIANCE<T>;
+        res(6, 6) = angle_variance;
+        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
 
         return res;
 }
@@ -116,41 +187,50 @@ Matrix<6, 6, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_vari
 struct AddX final
 {
         template <typename T>
-        [[nodiscard]] Vector<6, T> operator()(const Vector<6, T>& a, const Vector<6, T>& b) const
+        [[nodiscard]] Vector<8, T> operator()(const Vector<8, T>& a, const Vector<8, T>& b) const
         {
-                Vector<6, T> res = a + b;
-                res[4] = normalize_angle(res[4]);
+                Vector<8, T> res = a + b;
+                res[6] = normalize_angle(res[6]);
                 return res;
         }
 };
 
 template <typename T>
-Vector<6, T> f(const T dt, const Vector<6, T>& x)
+Vector<8, T> f(const T dt, const Vector<8, T>& x)
 {
+        const T dt_2 = square(dt) / 2;
+
         const T px = x[0];
         const T vx = x[1];
-        const T py = x[2];
-        const T vy = x[3];
-        const T angle = x[4];
-        const T angle_v = x[5];
+        const T ax = x[2];
+        const T py = x[3];
+        const T vy = x[4];
+        const T ay = x[5];
+        const T angle = x[6];
+        const T angle_v = x[7];
 
         return {
-                px + dt * vx, // px
-                vx, // vx
-                py + dt * vy, // py
-                vy, // vy
+                px + dt * vx + dt_2 * ax, // px
+                vx + dt * ax, // vx
+                ax, // ax
+                py + dt * vy + dt_2 * ay, // py
+                vy + dt * ay, // vy
+                ay, // ay
                 angle + dt * angle_v, // angle
                 angle_v // angle_v
         };
 }
 
 template <typename T>
-constexpr Matrix<6, 6, T> q(const T dt, const T position_variance, const T angle_variance)
+constexpr Matrix<8, 8, T> q(const T dt, const T position_variance, const T angle_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
-        const Matrix<6, 3, T> noise_transition{
+        const T dt_3 = power<3>(dt) / 6;
+        const Matrix<8, 3, T> noise_transition{
+                {dt_3,    0,    0},
                 {dt_2,    0,    0},
                 {  dt,    0,    0},
+                {   0, dt_3,    0},
                 {   0, dt_2,    0},
                 {   0,   dt,    0},
                 {   0,    0, dt_2},
@@ -159,13 +239,13 @@ constexpr Matrix<6, 6, T> q(const T dt, const T position_variance, const T angle
 
         const T p = position_variance;
         const T a = angle_variance;
-        const Matrix<3, 3, T> move_covariance{
+        const Matrix<3, 3, T> covariance{
                 {p, 0, 0},
                 {0, p, 0},
                 {0, 0, a}
         };
 
-        return noise_transition * move_covariance * noise_transition.transposed();
+        return noise_transition * covariance * noise_transition.transposed();
 }
 
 //
@@ -177,11 +257,11 @@ Matrix<2, 2, T> position_r(const Vector<2, T>& position_variance)
 }
 
 template <typename T>
-Vector<2, T> position_h(const Vector<6, T>& x)
+Vector<2, T> position_h(const Vector<8, T>& x)
 {
         // px = px
         // py = py
-        return {x[0], x[2]};
+        return {x[0], x[3]};
 }
 
 template <typename T>
@@ -201,15 +281,15 @@ Matrix<3, 3, T> position_speed_r(const Vector<2, T>& position_variance, const Ve
 }
 
 template <typename T>
-Vector<3, T> position_speed_h(const Vector<6, T>& x)
+Vector<3, T> position_speed_h(const Vector<8, T>& x)
 {
         // px = px
         // py = py
         // speed = sqrt(vx*vx + vy*vy)
         const T px = x[0];
         const T vx = x[1];
-        const T py = x[2];
-        const T vy = x[3];
+        const T py = x[3];
+        const T vy = x[4];
         return {
                 px, // px
                 py, // py
@@ -238,7 +318,7 @@ Matrix<4, 4, T> position_speed_direction_r(
 }
 
 template <typename T>
-Vector<4, T> position_speed_direction_h(const Vector<6, T>& x)
+Vector<4, T> position_speed_direction_h(const Vector<8, T>& x)
 {
         // px = px
         // py = py
@@ -246,9 +326,9 @@ Vector<4, T> position_speed_direction_h(const Vector<6, T>& x)
         // angle = atan(vy, vx) + angle
         const T px = x[0];
         const T vx = x[1];
-        const T py = x[2];
-        const T vy = x[3];
-        const T angle = x[4];
+        const T py = x[3];
+        const T vy = x[4];
+        const T angle = x[6];
         return {
                 px, // px
                 py, // py
@@ -276,16 +356,16 @@ Matrix<3, 3, T> position_direction_r(const Vector<2, T>& position_variance, cons
 }
 
 template <typename T>
-Vector<3, T> position_direction_h(const Vector<6, T>& x)
+Vector<3, T> position_direction_h(const Vector<8, T>& x)
 {
         // px = px
         // py = py
         // angle = atan(vy, vx) + angle
         const T px = x[0];
         const T vx = x[1];
-        const T py = x[2];
-        const T vy = x[3];
-        const T angle = x[4];
+        const T py = x[3];
+        const T vy = x[4];
+        const T angle = x[6];
         return {
                 px, // px
                 py, // py
@@ -312,13 +392,13 @@ Matrix<2, 2, T> speed_direction_r(const Vector<1, T>& speed_variance, const Vect
 }
 
 template <typename T>
-Vector<2, T> speed_direction_h(const Vector<6, T>& x)
+Vector<2, T> speed_direction_h(const Vector<8, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle
         const T vx = x[1];
-        const T vy = x[3];
-        const T angle = x[4];
+        const T vy = x[4];
+        const T angle = x[6];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
                 std::atan2(vy, vx) + angle // angle
@@ -343,12 +423,12 @@ Matrix<1, 1, T> direction_r(const Vector<1, T>& direction_variance)
 }
 
 template <typename T>
-Vector<1, T> direction_h(const Vector<6, T>& x)
+Vector<1, T> direction_h(const Vector<8, T>& x)
 {
         // angle = atan(vy, vx) + angle
         const T vx = x[1];
-        const T vy = x[3];
-        const T angle = x[4];
+        const T vy = x[4];
+        const T angle = x[6];
         return Vector<1, T>{
                 std::atan2(vy, vx) + angle // angle
         };
@@ -372,11 +452,11 @@ Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
 }
 
 template <typename T>
-Vector<1, T> speed_h(const Vector<6, T>& x)
+Vector<1, T> speed_h(const Vector<8, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         const T vx = x[1];
-        const T vy = x[3];
+        const T vy = x[4];
         return Vector<1, T>{
                 std::sqrt(vx * vx + vy * vy) // speed
         };
@@ -391,7 +471,7 @@ Vector<1, T> speed_residual(const Vector<1, T>& a, const Vector<1, T>& b)
 //
 
 template <typename T>
-class Filter final : public Filter11<T>
+class Filter final : public Filter21<T>
 {
         static constexpr bool NORMALIZED_INNOVATION{false};
         static constexpr bool LIKELIHOOD{false};
@@ -399,13 +479,13 @@ class Filter final : public Filter11<T>
         const T sigma_points_alpha_;
         const T position_variance_;
         const T angle_variance_;
-        std::optional<Ukf<6, T, SigmaPoints<6, T>>> filter_;
+        std::optional<Ukf<8, T, SigmaPoints<8, T>>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
         {
                 ASSERT(filter_);
 
-                return {filter_->x()[1], filter_->x()[3]};
+                return {filter_->x()[1], filter_->x()[4]};
         }
 
         [[nodiscard]] Matrix<2, 2, T> velocity_p() const
@@ -413,8 +493,8 @@ class Filter final : public Filter11<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(1, 1), filter_->p()(1, 3)},
-                        {filter_->p()(3, 1), filter_->p()(3, 3)}
+                        {filter_->p()(1, 1), filter_->p()(1, 4)},
+                        {filter_->p()(4, 1), filter_->p()(4, 4)}
                 };
         }
 
@@ -423,12 +503,25 @@ class Filter final : public Filter11<T>
                 const Vector<2, T>& position_variance,
                 const Vector<2, T>& velocity,
                 const Vector<2, T>& velocity_variance,
+                const Vector<2, T>& acceleration,
+                const Vector<2, T>& acceleration_variance,
                 const T angle,
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        create_sigma_points<6, T>(sigma_points_alpha_), x(position, velocity, angle),
-                        p(position_variance, velocity_variance, angle_variance));
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position, velocity, acceleration, angle),
+                        p(position_variance, velocity_variance, acceleration_variance, angle_variance));
+        }
+
+        void reset(
+                const Vector<6, T>& position_velocity_acceleration,
+                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const T angle,
+                const T angle_variance) override
+        {
+                filter_.emplace(
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity_acceleration, angle),
+                        p(position_velocity_acceleration_p, angle_variance));
         }
 
         void reset(
@@ -438,7 +531,7 @@ class Filter final : public Filter11<T>
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        create_sigma_points<6, T>(sigma_points_alpha_), x(position_velocity, angle),
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity, angle),
                         p(position_velocity_p, angle_variance));
         }
 
@@ -448,7 +541,7 @@ class Filter final : public Filter11<T>
                 ASSERT(utility::check_dt(dt));
 
                 filter_->predict(
-                        [dt](const Vector<6, T>& x)
+                        [dt](const Vector<8, T>& x)
                         {
                                 return f(dt, x);
                         },
@@ -552,7 +645,7 @@ class Filter final : public Filter11<T>
         {
                 ASSERT(filter_);
 
-                return {filter_->x()[0], filter_->x()[2]};
+                return {filter_->x()[0], filter_->x()[3]};
         }
 
         [[nodiscard]] Matrix<2, 2, T> position_p() const override
@@ -560,8 +653,8 @@ class Filter final : public Filter11<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(0, 0), filter_->p()(0, 2)},
-                        {filter_->p()(2, 0), filter_->p()(2, 2)}
+                        {filter_->p()(0, 0), filter_->p()(0, 3)},
+                        {filter_->p()(3, 0), filter_->p()(3, 3)}
                 };
         }
 
@@ -579,28 +672,28 @@ class Filter final : public Filter11<T>
         {
                 ASSERT(filter_);
 
-                return filter_->x()[4];
+                return filter_->x()[6];
         }
 
         [[nodiscard]] T angle_p() const override
         {
                 ASSERT(filter_);
 
-                return filter_->p()(4, 4);
+                return filter_->p()(6, 6);
         }
 
         [[nodiscard]] T angle_speed() const override
         {
                 ASSERT(filter_);
 
-                return filter_->x()[5];
+                return filter_->x()[7];
         }
 
         [[nodiscard]] T angle_speed_p() const override
         {
                 ASSERT(filter_);
 
-                return filter_->p()(5, 5);
+                return filter_->p()(7, 7);
         }
 
 public:
@@ -614,7 +707,7 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<Filter11<T>> create_filter_1_1(
+std::unique_ptr<Filter21<T>> create_filter_2_1(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance)
@@ -622,7 +715,7 @@ std::unique_ptr<Filter11<T>> create_filter_1_1(
         return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<Filter11<T>> create_filter_1_1(T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<Filter21<T>> create_filter_2_1(T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

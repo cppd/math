@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 namespace
 {
@@ -145,13 +145,13 @@ constexpr Matrix<5, 5, T> q(const T dt, const T position_variance, const T angle
 
         const T p = position_variance;
         const T a = angle_variance;
-        const Matrix<3, 3, T> move_covariance{
+        const Matrix<3, 3, T> covariance{
                 {p, 0, 0},
                 {0, p, 0},
                 {0, 0, a}
         };
 
-        return noise_transition * move_covariance * noise_transition.transposed();
+        return noise_transition * covariance * noise_transition.transposed();
 }
 
 //

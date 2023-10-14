@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter_1_0.h"
-#include "move.h"
+#include "direction.h"
+#include "filter_1_1.h"
 
 #include "../../../consistency.h"
 #include "../estimation.h"
@@ -34,17 +34,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::filter::move
+namespace ns::filter::test::filter::direction
 {
 template <typename T>
-class Move10 final : public Move<T>
+class Direction11 final : public Direction<T>
 {
         std::string name_;
         color::RGB8 color_;
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> gate_;
-        std::unique_ptr<Filter10<T>> filter_;
+        std::unique_ptr<Filter11<T>> filter_;
 
         MeasurementQueue<2, T> queue_;
 
@@ -74,14 +74,15 @@ class Move10 final : public Move<T>
         void reset(const Measurements<2, T>& m, const Estimation<T>& estimation);
 
 public:
-        Move10(std::string name,
-               color::RGB8 color,
-               T reset_dt,
-               T angle_estimation_variance,
-               std::optional<T> gate,
-               T sigma_points_alpha,
-               T position_variance,
-               T angle_variance);
+        Direction11(
+                std::string name,
+                color::RGB8 color,
+                T reset_dt,
+                T angle_estimation_variance,
+                std::optional<T> gate,
+                T sigma_points_alpha,
+                T position_variance,
+                T angle_variance);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
 
