@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::filter::process
+namespace ns::filter::test::filter::acceleration
 {
 template <typename T>
-class Process
+class Acceleration
 {
 public:
-        virtual ~Process() = default;
+        virtual ~Acceleration() = default;
 
         virtual void update(const Measurements<2, T>& m, const Estimation<T>& estimation) = 0;
 

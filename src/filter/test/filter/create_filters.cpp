@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
+#include "acceleration/acceleration_ekf.h"
+#include "acceleration/acceleration_ukf.h"
 #include "direction/direction_1_0.h"
 #include "direction/direction_1_1.h"
 #include "direction/direction_2_1.h"
@@ -24,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position/position_1.h"
 #include "position/position_2.h"
 #include "position/position_estimation.h"
-#include "process/process_ekf.h"
-#include "process/process_ukf.h"
 #include "speed/speed_1.h"
 #include "speed/speed_2.h"
 
@@ -63,13 +63,13 @@ struct Config final
         static constexpr T POSITION_FILTER_RESET_DT = 10;
         static constexpr T POSITION_FILTER_LINEAR_DT = 2;
 
-        static constexpr T PROCESS_FILTER_POSITION_VARIANCE = square(1.0);
-        static constexpr T PROCESS_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
-        static constexpr T PROCESS_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
-        static constexpr T PROCESS_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr std::array PROCESS_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
-        static constexpr T PROCESS_FILTER_RESET_DT = 10;
-        static constexpr std::optional<T> PROCESS_FILTER_GATE{};
+        static constexpr T ACCELERATION_FILTER_POSITION_VARIANCE = square(1.0);
+        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr std::array ACCELERATION_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
+        static constexpr T ACCELERATION_FILTER_RESET_DT = 10;
+        static constexpr std::optional<T> ACCELERATION_FILTER_GATE{};
 
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
@@ -176,20 +176,17 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 }
 
 template <typename T>
-std::vector<std::unique_ptr<process::Process<T>>> create_processes()
+std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations()
 {
-        const T process_pv = Config<T>::PROCESS_FILTER_POSITION_VARIANCE;
-        const T process_av = Config<T>::PROCESS_FILTER_ANGLE_VARIANCE;
-        const T process_arv = Config<T>::PROCESS_FILTER_ANGLE_R_VARIANCE;
+        std::vector<std::unique_ptr<acceleration::Acceleration<T>>> res;
 
-        std::vector<std::unique_ptr<process::Process<T>>> res;
+        res.push_back(std::make_unique<acceleration::AccelerationEkf<T>>(
+                "EKF", color::RGB8(0, 200, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
+                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
+                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
+                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE));
 
-        res.push_back(std::make_unique<process::ProcessEkf<T>>(
-                "EKF", color::RGB8(0, 200, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                Config<T>::PROCESS_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::PROCESS_FILTER_GATE, process_pv,
-                process_av, process_arv));
-
-        const int precision = compute_string_precision(Config<T>::PROCESS_FILTER_UKF_ALPHAS);
+        const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
         const auto name = [&](const T alpha)
         {
@@ -199,15 +196,17 @@ std::vector<std::unique_ptr<process::Process<T>>> create_processes()
                 return oss.str();
         };
 
-        const auto alphas = sort(std::array(Config<T>::PROCESS_FILTER_UKF_ALPHAS));
+        const auto alphas = sort(std::array(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS));
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.push_back(std::make_unique<process::ProcessUkf<T>>(
-                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::PROCESS_FILTER_RESET_DT,
-                        Config<T>::PROCESS_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::PROCESS_FILTER_GATE, alphas[i],
-                        process_pv, process_av, process_arv));
+                res.push_back(std::make_unique<acceleration::AccelerationUkf<T>>(
+                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
+                        alphas[i], Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE));
         }
 
         return res;
@@ -328,7 +327,7 @@ Test<T> create_data()
         res.positions_1 = create_positions<2, T, 1>();
         res.positions_2 = create_positions<2, T, 2>();
 
-        res.processes = create_processes<T>();
+        res.accelerations = create_accelerations<T>();
 
         res.directions_1_0 = create_directions<T, 1, 0>();
         res.directions_1_1 = create_directions<T, 1, 1>();

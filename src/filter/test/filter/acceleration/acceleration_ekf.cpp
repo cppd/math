@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process_ukf.h"
+#include "acceleration_ekf.h"
 
-#include "filter_ukf.h"
+#include "filter_ekf.h"
 #include "update.h"
 
 #include <src/com/angle.h>
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test::filter::process
+namespace ns::filter::test::filter::acceleration
 {
 namespace
 {
@@ -37,13 +37,12 @@ constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
 }
 
 template <typename T>
-ProcessUkf<T>::ProcessUkf(
+AccelerationEkf<T>::AccelerationEkf(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
-        const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
         const T angle_r_variance)
@@ -52,14 +51,14 @@ ProcessUkf<T>::ProcessUkf(
           reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance)),
+          filter_(create_filter_ekf(position_variance, angle_variance, angle_r_variance)),
           queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
 
 template <typename T>
-void ProcessUkf<T>::save(const T time, const TrueData<2, T>& true_data)
+void AccelerationEkf<T>::save(const T time, const TrueData<2, T>& true_data)
 {
         positions_.push_back({.time = time, .point = filter_->position()});
         positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
@@ -77,7 +76,7 @@ void ProcessUkf<T>::save(const T time, const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void ProcessUkf<T>::check_time(const T time) const
+void AccelerationEkf<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -86,7 +85,7 @@ void ProcessUkf<T>::check_time(const T time) const
 }
 
 template <typename T>
-void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void AccelerationEkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -115,6 +114,7 @@ void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
                                         filter_.get(), position, measurements.acceleration, measurements.direction,
                                         measurements.speed, gate_, dt);
                         });
+
                 last_time_ = m.time;
                 return;
         }
@@ -149,19 +149,19 @@ void ProcessUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& est
 }
 
 template <typename T>
-const std::string& ProcessUkf<T>::name() const
+const std::string& AccelerationEkf<T>::name() const
 {
         return name_;
 }
 
 template <typename T>
-color::RGB8 ProcessUkf<T>::color() const
+color::RGB8 AccelerationEkf<T>::color() const
 {
         return color_;
 }
 
 template <typename T>
-std::string ProcessUkf<T>::angle_string() const
+std::string AccelerationEkf<T>::angle_string() const
 {
         std::string s;
         s += name_;
@@ -172,14 +172,14 @@ std::string ProcessUkf<T>::angle_string() const
 }
 
 template <typename T>
-std::string ProcessUkf<T>::consistency_string() const
+std::string AccelerationEkf<T>::consistency_string() const
 {
         if (!nees_)
         {
                 return {};
         }
 
-        const std::string name = std::string("Process<") + type_name<T>() + "> " + name_;
+        const std::string name = std::string("Acceleration<") + type_name<T>() + "> " + name_;
         std::string s;
         s += name + "; NEES position; " + nees_->position.check_string();
         s += '\n';
@@ -192,30 +192,30 @@ std::string ProcessUkf<T>::consistency_string() const
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& ProcessUkf<T>::positions() const
+const std::vector<TimePoint<2, T>>& AccelerationEkf<T>::positions() const
 {
         return positions_;
 }
 
 template <typename T>
-const std::vector<TimePoint<2, T>>& ProcessUkf<T>::positions_p() const
+const std::vector<TimePoint<2, T>>& AccelerationEkf<T>::positions_p() const
 {
         return positions_p_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& ProcessUkf<T>::speeds() const
+const std::vector<TimePoint<1, T>>& AccelerationEkf<T>::speeds() const
 {
         return speeds_;
 }
 
 template <typename T>
-const std::vector<TimePoint<1, T>>& ProcessUkf<T>::speeds_p() const
+const std::vector<TimePoint<1, T>>& AccelerationEkf<T>::speeds_p() const
 {
         return speeds_p_;
 }
 
-template class ProcessUkf<float>;
-template class ProcessUkf<double>;
-template class ProcessUkf<long double>;
+template class AccelerationEkf<float>;
+template class AccelerationEkf<double>;
+template class AccelerationEkf<long double>;
 }

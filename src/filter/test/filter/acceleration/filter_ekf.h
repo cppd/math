@@ -25,13 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 
-namespace ns::filter::test::filter::process
+namespace ns::filter::test::filter::acceleration
 {
 template <typename T>
-class FilterUkf
+class FilterEkf
 {
 public:
-        virtual ~FilterUkf() = default;
+        virtual ~FilterEkf() = default;
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
@@ -129,9 +129,5 @@ public:
 };
 
 template <typename T>
-std::unique_ptr<FilterUkf<T>> create_filter_ukf(
-        T sigma_points_alpha,
-        T position_variance,
-        T angle_variance,
-        T angle_r_variance);
+std::unique_ptr<FilterEkf<T>> create_filter_ekf(T position_variance, T angle_variance, T angle_r_variance);
 }

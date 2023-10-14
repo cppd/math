@@ -59,7 +59,7 @@ void write_file(
         push(test.positions_1);
         push(test.positions_2);
 
-        push(test.processes);
+        push(test.accelerations);
 
         push(test.directions_1_0);
         push(test.directions_1_1);
@@ -104,7 +104,7 @@ void write_log(const filter::Test<T>& test)
         log(test.positions_1);
         log(test.positions_2);
 
-        log(test.processes);
+        log(test.accelerations);
 
         log(test.directions_1_0);
         log(test.directions_1_1);
@@ -119,7 +119,7 @@ void update(const filter::Measurements<2, T>& measurement, filter::Test<T>* cons
 {
         const auto& position_estimation = *test->position_estimation;
 
-        for (auto& p : test->processes)
+        for (auto& p : test->accelerations)
         {
                 p->update(measurement, position_estimation);
         }

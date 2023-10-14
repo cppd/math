@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "acceleration.h"
 #include "filter_ekf.h"
-#include "process.h"
 
 #include "../../../consistency.h"
 #include "../estimation.h"
@@ -34,10 +34,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::filter::process
+namespace ns::filter::test::filter::acceleration
 {
 template <typename T>
-class ProcessEkf final : public Process<T>
+class AccelerationEkf final : public Acceleration<T>
 {
         std::string name_;
         color::RGB8 color_;
@@ -71,7 +71,7 @@ class ProcessEkf final : public Process<T>
         void check_time(T time) const;
 
 public:
-        ProcessEkf(
+        AccelerationEkf(
                 std::string name,
                 color::RGB8 color,
                 T reset_dt,
