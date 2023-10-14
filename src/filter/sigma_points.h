@@ -115,4 +115,13 @@ public:
                 return res;
         }
 };
+
+template <std::size_t N, typename T>
+[[nodiscard]] SigmaPoints<N, T> create_sigma_points(const std::type_identity_t<T> alpha)
+{
+        static constexpr T BETA = 2; // 2 for Gaussian
+        static constexpr T KAPPA = 3 - T{N};
+
+        return {alpha, BETA, KAPPA};
+}
 }
