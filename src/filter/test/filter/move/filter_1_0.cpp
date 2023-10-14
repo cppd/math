@@ -32,11 +32,6 @@ namespace ns::filter::test::filter::move
 namespace
 {
 template <typename T>
-constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
-template <std::size_t N, typename T>
-constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
-
-template <typename T>
 Vector<5, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle)
 {
         ASSERT(is_finite(position));
@@ -418,8 +413,8 @@ class Filter final : public Filter10<T>
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<5, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<5, T>),
-                        x(position, velocity, angle), p(position_variance, velocity_variance, angle_variance));
+                        create_sigma_points<5, T>(sigma_points_alpha_), x(position, velocity, angle),
+                        p(position_variance, velocity_variance, angle_variance));
         }
 
         void reset(
@@ -429,8 +424,8 @@ class Filter final : public Filter10<T>
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<5, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<5, T>),
-                        x(position_velocity, angle), p(position_velocity_p, angle_variance));
+                        create_sigma_points<5, T>(sigma_points_alpha_), x(position_velocity, angle),
+                        p(position_velocity_p, angle_variance));
         }
 
         void predict(const T dt) override

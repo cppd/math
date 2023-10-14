@@ -33,11 +33,6 @@ namespace ns::filter::test::filter::process
 namespace
 {
 template <typename T>
-constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
-template <std::size_t N, typename T>
-constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
-
-template <typename T>
 constexpr T INIT_ACCELERATION = 0;
 template <typename T>
 constexpr T INIT_ACCELERATION_VARIANCE = square(10);
@@ -818,8 +813,8 @@ class Filter final : public FilterUkf<T>
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<9, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>),
-                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
+                        create_sigma_points<9, T>(sigma_points_alpha_), x(position_velocity_acceleration, angle),
+                        p(position_velocity_acceleration_p, angle_variance));
         }
 
         void reset(
@@ -829,8 +824,8 @@ class Filter final : public FilterUkf<T>
                 const T angle_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<9, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<9, T>),
-                        x(position_velocity_acceleration, angle), p(position_velocity_acceleration_p, angle_variance));
+                        create_sigma_points<9, T>(sigma_points_alpha_), x(position_velocity_acceleration, angle),
+                        p(position_velocity_acceleration_p, angle_variance));
         }
 
         void predict(const T dt) override

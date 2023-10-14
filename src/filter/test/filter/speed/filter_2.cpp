@@ -31,11 +31,6 @@ namespace ns::filter::test::filter::speed
 namespace
 {
 template <typename T>
-constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
-template <std::size_t N, typename T>
-constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
-
-template <typename T>
 constexpr T INIT_ACCELERATION = 0;
 template <typename T>
 constexpr T INIT_ACCELERATION_VARIANCE = square(10);
@@ -323,8 +318,7 @@ class Filter final : public Filter2<N, T>
                 const Vector<N, T>& acceleration_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<3 * N, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<3 * N, T>),
-                        x(position, velocity, acceleration),
+                        create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position, velocity, acceleration),
                         p(position_variance, velocity_variance, acceleration_variance));
         }
 
@@ -333,16 +327,16 @@ class Filter final : public Filter2<N, T>
                 const Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) override
         {
                 filter_.emplace(
-                        SigmaPoints<3 * N, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<3 * N, T>),
-                        x(position_velocity_acceleration), p(position_velocity_acceleration_p));
+                        create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position_velocity_acceleration),
+                        p(position_velocity_acceleration_p));
         }
 
         void reset(const Vector<2 * N, T>& position_velocity, const Matrix<2 * N, 2 * N, T>& position_velocity_p)
                 override
         {
                 filter_.emplace(
-                        SigmaPoints<3 * N, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<3 * N, T>),
-                        x<N, T>(position_velocity), p<N, T>(position_velocity_p));
+                        create_sigma_points<3 * N, T>(sigma_points_alpha_), x<N, T>(position_velocity),
+                        p<N, T>(position_velocity_p));
         }
 
         void predict(const T dt) override

@@ -30,11 +30,6 @@ namespace ns::filter::test::filter::speed
 {
 namespace
 {
-template <typename T>
-constexpr T SIGMA_POINTS_BETA = 2; // 2 for Gaussian
-template <std::size_t N, typename T>
-constexpr T SIGMA_POINTS_KAPPA = 3 - T{N};
-
 template <std::size_t N, typename T>
 Vector<2 * N, T> x(const Vector<N, T>& position, const Vector<N, T>& velocity)
 {
@@ -259,16 +254,16 @@ class Filter final : public Filter1<N, T>
                 const Vector<N, T>& velocity_variance) override
         {
                 filter_.emplace(
-                        SigmaPoints<2 * N, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<2 * N, T>),
-                        x(position, velocity), p(position_variance, velocity_variance));
+                        create_sigma_points<2 * N, T>(sigma_points_alpha_), x(position, velocity),
+                        p(position_variance, velocity_variance));
         }
 
         void reset(const Vector<2 * N, T>& position_velocity, const Matrix<2 * N, 2 * N, T>& position_velocity_p)
                 override
         {
                 filter_.emplace(
-                        SigmaPoints<2 * N, T>(sigma_points_alpha_, SIGMA_POINTS_BETA<T>, SIGMA_POINTS_KAPPA<2 * N, T>),
-                        x(position_velocity), p(position_velocity_p));
+                        create_sigma_points<2 * N, T>(sigma_points_alpha_), x(position_velocity),
+                        p(position_velocity_p));
         }
 
         void predict(const T dt) override
