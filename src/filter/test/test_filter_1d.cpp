@@ -296,9 +296,7 @@ class TestUkf
         static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
 
-        static constexpr T ALPHA = 0.1;
-        static constexpr T BETA = 2; // 2 for Gaussian
-        static constexpr T KAPPA = 1; // 3 − N
+        static constexpr T SIGMA_POINTS_ALPHA = 0.1;
 
         const T dt_;
 
@@ -318,7 +316,7 @@ public:
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
-                  filter_({ALPHA, BETA, KAPPA}, x, p)
+                  filter_(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p)
         {
         }
 
