@@ -173,7 +173,7 @@ std::string Speed1<T>::consistency_string() const
                 return {};
         }
 
-        const std::string name = std::string("Move<") + type_name<T>() + "> " + name_;
+        const std::string name = std::string("Speed<") + type_name<T>() + "> " + name_;
 
         std::string s;
 
