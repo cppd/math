@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "init.h"
+
 #include "../measurement.h"
 
 #include <src/numerical/matrix.h>
@@ -40,20 +42,17 @@ public:
                 const Vector<2, T>& velocity_variance,
                 const Vector<2, T>& acceleration,
                 const Vector<2, T>& acceleration_variance,
-                T angle,
-                T angle_variance) = 0;
+                const Init<T>& init) = 0;
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
                 const Matrix<6, 6, T>& position_velocity_acceleration_p,
-                T angle,
-                T angle_variance) = 0;
+                const Init<T>& init) = 0;
 
         virtual void reset(
                 const Vector<4, T>& position_velocity,
                 const Matrix<4, 4, T>& position_velocity_p,
-                T angle,
-                T angle_variance) = 0;
+                const Init<T>& init) = 0;
 
         virtual void predict(T dt) = 0;
 

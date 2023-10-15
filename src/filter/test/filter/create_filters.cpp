@@ -90,6 +90,13 @@ struct Config final
         static constexpr std::array DIRECTION_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T DIRECTION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> DIRECTION_FILTER_GATE{};
+        static constexpr direction::Init<T> DIRECTION_INIT{
+                .angle = 0,
+                .angle_variance = square(degrees_to_radians(100.0)),
+                .acceleration = 0,
+                .acceleration_variance = square(10),
+                .angle_speed = 0,
+                .angle_speed_variance = square(degrees_to_radians(1.0))};
 
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_1 = square(2.0);
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_2 = square(2.0);
@@ -235,7 +242,7 @@ std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, cons
                         name, color::RGB8(0, 160 - 40 * i, 250), Config<T>::DIRECTION_FILTER_RESET_DT,
                         Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
                         Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0);
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT);
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
@@ -244,7 +251,7 @@ std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, cons
                         name, color::RGB8(0, 160 - 40 * i, 150), Config<T>::DIRECTION_FILTER_RESET_DT,
                         Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
                         Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1);
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT);
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
@@ -253,7 +260,7 @@ std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, cons
                         name, color::RGB8(0, 160 - 40 * i, 50), Config<T>::DIRECTION_FILTER_RESET_DT,
                         Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
                         Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1);
+                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT);
         }
 }
 

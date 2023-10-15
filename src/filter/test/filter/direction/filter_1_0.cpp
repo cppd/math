@@ -32,7 +32,7 @@ namespace ns::filter::test::filter::direction
 namespace
 {
 template <typename T>
-Vector<5, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const T angle)
+Vector<5, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position));
         ASSERT(is_finite(velocity));
@@ -43,17 +43,17 @@ Vector<5, T> x(const Vector<2, T>& position, const Vector<2, T>& velocity, const
         res[1] = velocity[0];
         res[2] = position[1];
         res[3] = velocity[1];
-        res[4] = angle;
+        res[4] = init.angle;
 
         return res;
 }
 
 template <typename T>
-Matrix<5, 5, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& velocity_variance, const T angle_variance)
+Matrix<5, 5, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& velocity_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
         ASSERT(is_finite(velocity_variance));
-        ASSERT(is_finite(angle_variance));
+        ASSERT(is_finite(init.angle_variance));
 
         Matrix<5, 5, T> res(0);
 
@@ -61,13 +61,13 @@ Matrix<5, 5, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& vel
         res(1, 1) = velocity_variance[0];
         res(2, 2) = position_variance[1];
         res(3, 3) = velocity_variance[1];
-        res(4, 4) = angle_variance;
+        res(4, 4) = init.angle_variance;
 
         return res;
 }
 
 template <typename T>
-Vector<5, T> x(const Vector<4, T>& position_velocity, const T angle)
+Vector<5, T> x(const Vector<4, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
 
@@ -77,13 +77,13 @@ Vector<5, T> x(const Vector<4, T>& position_velocity, const T angle)
         res[1] = position_velocity[1];
         res[2] = position_velocity[2];
         res[3] = position_velocity[3];
-        res[4] = angle;
+        res[4] = init.angle;
 
         return res;
 }
 
 template <typename T>
-Matrix<5, 5, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
+Matrix<5, 5, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_p));
 
@@ -97,7 +97,7 @@ Matrix<5, 5, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_vari
                 }
         }
 
-        res(4, 4) = angle_variance;
+        res(4, 4) = init.angle_variance;
 
         return res;
 }
@@ -409,23 +409,21 @@ class Filter final : public Filter10<T>
                 const Vector<2, T>& position_variance,
                 const Vector<2, T>& velocity,
                 const Vector<2, T>& velocity_variance,
-                const T angle,
-                const T angle_variance) override
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<5, T>(sigma_points_alpha_), x(position, velocity, angle),
-                        p(position_variance, velocity_variance, angle_variance));
+                        create_sigma_points<5, T>(sigma_points_alpha_), x(position, velocity, init),
+                        p(position_variance, velocity_variance, init));
         }
 
         void reset(
                 const Vector<4, T>& position_velocity,
                 const Matrix<4, 4, T>& position_velocity_p,
-                const T angle,
-                const T angle_variance) override
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<5, T>(sigma_points_alpha_), x(position_velocity, angle),
-                        p(position_velocity_p, angle_variance));
+                        create_sigma_points<5, T>(sigma_points_alpha_), x(position_velocity, init),
+                        p(position_velocity_p, init));
         }
 
         void predict(const T dt) override

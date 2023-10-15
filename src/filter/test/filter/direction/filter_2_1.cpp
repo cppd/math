@@ -33,26 +33,16 @@ namespace ns::filter::test::filter::direction
 namespace
 {
 template <typename T>
-constexpr T INIT_ACCELERATION = 0;
-template <typename T>
-constexpr T INIT_ACCELERATION_VARIANCE = square(10);
-
-template <typename T>
-constexpr T INIT_ANGLE_SPEED = 0;
-template <typename T>
-constexpr T INIT_ANGLE_SPEED_VARIANCE = square(degrees_to_radians(1.0));
-
-template <typename T>
 Vector<8, T> x(
         const Vector<2, T>& position,
         const Vector<2, T>& velocity,
         const Vector<2, T>& acceleration,
-        const T angle)
+        const Init<T>& init)
 {
         ASSERT(is_finite(position));
         ASSERT(is_finite(velocity));
         ASSERT(is_finite(acceleration));
-        ASSERT(is_finite(angle));
+        ASSERT(is_finite(init.angle));
 
         Vector<8, T> res;
 
@@ -62,8 +52,8 @@ Vector<8, T> x(
         res[3] = position[1];
         res[4] = velocity[1];
         res[5] = acceleration[1];
-        res[6] = angle;
-        res[7] = INIT_ANGLE_SPEED<T>;
+        res[6] = init.angle;
+        res[7] = init.angle_speed;
 
         return res;
 }
@@ -73,12 +63,12 @@ Matrix<8, 8, T> p(
         const Vector<2, T>& position_variance,
         const Vector<2, T>& velocity_variance,
         const Vector<2, T>& acceleration_variance,
-        const T angle_variance)
+        const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
         ASSERT(is_finite(velocity_variance));
         ASSERT(is_finite(acceleration_variance));
-        ASSERT(is_finite(angle_variance));
+        ASSERT(is_finite(init.angle_variance));
 
         Matrix<8, 8, T> res(0);
 
@@ -88,14 +78,14 @@ Matrix<8, 8, T> p(
         res(3, 3) = position_variance[1];
         res(4, 4) = velocity_variance[1];
         res(5, 5) = acceleration_variance[1];
-        res(6, 6) = angle_variance;
-        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(6, 6) = init.angle_variance;
+        res(7, 7) = init.angle_speed_variance;
 
         return res;
 }
 
 template <typename T>
-Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle)
+Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
@@ -106,14 +96,14 @@ Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const T angle
                 res[i] = position_velocity_acceleration[i];
         }
 
-        res[6] = angle;
-        res[7] = INIT_ANGLE_SPEED<T>;
+        res[6] = init.angle;
+        res[7] = init.angle_speed;
 
         return res;
 }
 
 template <typename T>
-Matrix<8, 8, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const T angle_variance)
+Matrix<8, 8, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
@@ -127,14 +117,14 @@ Matrix<8, 8, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const
                 }
         }
 
-        res(6, 6) = angle_variance;
-        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(6, 6) = init.angle_variance;
+        res(7, 7) = init.angle_speed_variance;
 
         return res;
 }
 
 template <typename T>
-Vector<8, T> x(const Vector<4, T>& position_velocity, const T angle)
+Vector<8, T> x(const Vector<4, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
 
@@ -142,18 +132,18 @@ Vector<8, T> x(const Vector<4, T>& position_velocity, const T angle)
 
         res[0] = position_velocity[0];
         res[1] = position_velocity[1];
-        res[2] = INIT_ACCELERATION<T>;
+        res[2] = init.acceleration;
         res[3] = position_velocity[2];
         res[4] = position_velocity[3];
-        res[5] = INIT_ACCELERATION<T>;
-        res[6] = angle;
-        res[7] = INIT_ANGLE_SPEED<T>;
+        res[5] = init.acceleration;
+        res[6] = init.angle;
+        res[7] = init.angle_speed;
 
         return res;
 }
 
 template <typename T>
-Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_variance)
+Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_p));
 
@@ -176,10 +166,10 @@ Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const T angle_vari
                 }
         }
 
-        res(2, 2) = INIT_ACCELERATION_VARIANCE<T>;
-        res(5, 5) = INIT_ACCELERATION_VARIANCE<T>;
-        res(6, 6) = angle_variance;
-        res(7, 7) = INIT_ANGLE_SPEED_VARIANCE<T>;
+        res(2, 2) = init.acceleration_variance;
+        res(5, 5) = init.acceleration_variance;
+        res(6, 6) = init.angle_variance;
+        res(7, 7) = init.angle_speed_variance;
 
         return res;
 }
@@ -505,34 +495,31 @@ class Filter final : public Filter21<T>
                 const Vector<2, T>& velocity_variance,
                 const Vector<2, T>& acceleration,
                 const Vector<2, T>& acceleration_variance,
-                const T angle,
-                const T angle_variance) override
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position, velocity, acceleration, angle),
-                        p(position_variance, velocity_variance, acceleration_variance, angle_variance));
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position, velocity, acceleration, init),
+                        p(position_variance, velocity_variance, acceleration_variance, init));
         }
 
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
                 const Matrix<6, 6, T>& position_velocity_acceleration_p,
-                const T angle,
-                const T angle_variance) override
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity_acceleration, angle),
-                        p(position_velocity_acceleration_p, angle_variance));
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity_acceleration, init),
+                        p(position_velocity_acceleration_p, init));
         }
 
         void reset(
                 const Vector<4, T>& position_velocity,
                 const Matrix<4, 4, T>& position_velocity_p,
-                const T angle,
-                const T angle_variance) override
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity, angle),
-                        p(position_velocity_p, angle_variance));
+                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity, init),
+                        p(position_velocity_p, init));
         }
 
         void predict(const T dt) override

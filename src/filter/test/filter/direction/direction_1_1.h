@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "direction.h"
 #include "filter_1_1.h"
+#include "init.h"
 
 #include "../../../consistency.h"
 #include "../estimation.h"
@@ -45,6 +46,7 @@ class Direction11 final : public Direction<T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<Filter11<T>> filter_;
+        Init<T> init_;
 
         MeasurementQueue<2, T> queue_;
 
@@ -82,7 +84,8 @@ public:
                 std::optional<T> gate,
                 T sigma_points_alpha,
                 T position_variance,
-                T angle_variance);
+                T angle_variance,
+                const Init<T>& init);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
 
