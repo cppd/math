@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "filter_2.h"
+#include "init.h"
 #include "position.h"
 
 #include "../../../consistency.h"
@@ -43,6 +44,7 @@ class Position2 final : public Position<N, T>
         T linear_dt_;
         std::optional<T> gate_;
         std::unique_ptr<Filter2<N, T>> filter_;
+        Init<T> init_;
 
         std::vector<TimePoint<N, T>> positions_;
         std::vector<TimePoint<N, T>> positions_p_;
@@ -69,7 +71,8 @@ public:
                 T linear_dt,
                 std::optional<T> gate,
                 T theta,
-                T process_variance);
+                T process_variance,
+                const Init<T>& init);
 
         void update_position(const Measurements<N, T>& m) override;
         void predict_update(const Measurements<N, T>& m) override;

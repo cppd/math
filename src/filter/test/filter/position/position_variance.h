@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "filter_2.h"
+#include "init.h"
 #include "position.h"
 
 #include "../measurement.h"
@@ -41,6 +42,7 @@ class PositionVariance final : public Position<N, T>
         color::RGB8 color_;
         T reset_dt_;
         std::unique_ptr<Filter2<N, T>> filter_;
+        Init<T> init_;
 
         std::vector<TimePoint<N, T>> positions_;
         std::vector<TimePoint<N, T>> positions_p_;
@@ -58,7 +60,7 @@ class PositionVariance final : public Position<N, T>
         void update_position_variance(const Measurements<N, T>& m);
 
 public:
-        PositionVariance(std::string name, color::RGB8 color, T reset_dt, T process_variance);
+        PositionVariance(std::string name, color::RGB8 color, T reset_dt, T process_variance, const Init<T>& init);
 
         void update_position(const Measurements<N, T>& m) override;
         void predict_update(const Measurements<N, T>& m) override;

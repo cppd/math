@@ -32,17 +32,7 @@ namespace ns::filter::test::filter::position
 namespace
 {
 template <std::size_t N, typename T>
-struct Init final
-{
-        static constexpr Vector<N, T> VELOCITY{0};
-        static constexpr Vector<N, T> VELOCITY_VARIANCE{square<T>(30)};
-
-        static constexpr Vector<N, T> ACCELERATION{0};
-        static constexpr Vector<N, T> ACCELERATION_VARIANCE{square<T>(10)};
-};
-
-template <std::size_t N, typename T>
-Vector<3 * N, T> init_x(const Vector<N, T>& position)
+Vector<3 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
 {
         ASSERT(is_finite(position));
 
@@ -51,14 +41,14 @@ Vector<3 * N, T> init_x(const Vector<N, T>& position)
         {
                 const std::size_t b = 3 * i;
                 res[b + 0] = position[i];
-                res[b + 1] = Init<N, T>::VELOCITY[i];
-                res[b + 2] = Init<N, T>::ACCELERATION[i];
+                res[b + 1] = init.speed;
+                res[b + 2] = init.acceleration;
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance)
+Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
 
@@ -67,8 +57,8 @@ Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance)
         {
                 const std::size_t b = 3 * i;
                 res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = Init<N, T>::VELOCITY_VARIANCE[i];
-                res(b + 2, b + 2) = Init<N, T>::ACCELERATION_VARIANCE[i];
+                res(b + 1, b + 1) = init.speed_variance;
+                res(b + 2, b + 2) = init.acceleration_variance;
         }
         return res;
 }
@@ -167,9 +157,9 @@ class FilterImpl final : public Filter2<N, T>
         const T process_variance_;
         std::optional<Ekf<3 * N, T>> filter_;
 
-        void reset(const Vector<N, T>& position, const Vector<N, T>& variance) override
+        void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) override
         {
-                filter_.emplace(init_x(position), init_p(variance));
+                filter_.emplace(init_x(position, init), init_p(variance, init));
         }
 
         void predict(const T dt) override

@@ -69,11 +69,13 @@ PositionVariance<N, T>::PositionVariance(
         std::string name,
         const color::RGB8 color,
         const T reset_dt,
-        const T process_variance)
+        const T process_variance,
+        const Init<T>& init)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
-          filter_(create_filter_2<N, T>(THETA<T>, process_variance))
+          filter_(create_filter_2<N, T>(THETA<T>, process_variance)),
+          init_(init)
 {
         ASSERT(filter_);
 }
@@ -159,7 +161,7 @@ void PositionVariance<N, T>::update_position(const Measurements<N, T>& m)
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
-                filter_->reset(m.position->value, VARIANCE<N, T>);
+                filter_->reset(m.position->value, VARIANCE<N, T>, init_);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
         }

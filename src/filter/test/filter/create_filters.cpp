@@ -62,6 +62,16 @@ struct Config final
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
         static constexpr T POSITION_FILTER_RESET_DT = 10;
         static constexpr T POSITION_FILTER_LINEAR_DT = 2;
+        static constexpr position::Init<T> POSITION_INIT{
+                .speed = 0,
+                .speed_variance = square<T>(30),
+                .acceleration = 0,
+                .acceleration_variance = square<T>(10)};
+        static constexpr position::Init<T> POSITION_VARIANCE_INIT{
+                .speed = 0,
+                .speed_variance = square<T>(30),
+                .acceleration = 0,
+                .acceleration_variance = square<T>(10)};
 
         static constexpr T ACCELERATION_FILTER_POSITION_VARIANCE = square(1.0);
         static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
@@ -137,7 +147,7 @@ std::unique_ptr<position::PositionVariance<N, T>> create_position_variance()
 {
         return std::make_unique<position::PositionVariance<N, T>>(
                 "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                Config<T>::POSITION_FILTER_VARIANCE_2);
+                Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_VARIANCE_INIT);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -176,7 +186,7 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
                         res.emplace_back(std::make_unique<position::Position1<N, T>>(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1, thetas[i],
-                                Config<T>::POSITION_FILTER_VARIANCE_1));
+                                Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT));
                 }
 
                 if (ORDER == 2)
@@ -184,7 +194,7 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
                         res.emplace_back(std::make_unique<position::Position2<N, T>>(
                                 name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
                                 Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2, thetas[i],
-                                Config<T>::POSITION_FILTER_VARIANCE_2));
+                                Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT));
                 }
         }
 

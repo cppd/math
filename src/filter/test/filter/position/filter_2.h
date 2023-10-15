@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "init.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -31,7 +33,7 @@ class Filter2
 public:
         virtual ~Filter2() = default;
 
-        virtual void reset(const Vector<N, T>& position, const Vector<N, T>& variance) = 0;
+        virtual void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) = 0;
 
         virtual void predict(T dt) = 0;
 

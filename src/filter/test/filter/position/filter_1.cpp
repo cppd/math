@@ -32,14 +32,7 @@ namespace ns::filter::test::filter::position
 namespace
 {
 template <std::size_t N, typename T>
-struct Init final
-{
-        static constexpr Vector<N, T> VELOCITY{0};
-        static constexpr Vector<N, T> VELOCITY_VARIANCE{square<T>(30)};
-};
-
-template <std::size_t N, typename T>
-Vector<2 * N, T> init_x(const Vector<N, T>& position)
+Vector<2 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
 {
         ASSERT(is_finite(position));
 
@@ -48,13 +41,13 @@ Vector<2 * N, T> init_x(const Vector<N, T>& position)
         {
                 const std::size_t b = 2 * i;
                 res[b + 0] = position[i];
-                res[b + 1] = Init<N, T>::VELOCITY[i];
+                res[b + 1] = init.speed;
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance)
+Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
 
@@ -63,7 +56,7 @@ Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance)
         {
                 const std::size_t b = 2 * i;
                 res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = Init<N, T>::VELOCITY_VARIANCE[i];
+                res(b + 1, b + 1) = init.speed_variance;
         }
         return res;
 }
@@ -158,9 +151,9 @@ class FilterImpl final : public Filter1<N, T>
         const T process_variance_;
         std::optional<Ekf<2 * N, T>> filter_;
 
-        void reset(const Vector<N, T>& position, const Vector<N, T>& variance) override
+        void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) override
         {
-                filter_.emplace(init_x(position), init_p(variance));
+                filter_.emplace(init_x(position, init), init_p(variance, init));
         }
 
         void predict(const T dt) override
