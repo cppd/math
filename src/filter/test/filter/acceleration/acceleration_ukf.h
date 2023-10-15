@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration.h"
 #include "filter_ukf.h"
+#include "init.h"
 
 #include "../../../consistency.h"
 #include "../estimation.h"
@@ -45,6 +46,7 @@ class AccelerationUkf final : public Acceleration<T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<FilterUkf<T>> filter_;
+        const Init<T>& init_;
 
         MeasurementQueue<2, T> queue_;
 
@@ -80,7 +82,8 @@ public:
                 T sigma_points_alpha,
                 T position_variance,
                 T angle_variance,
-                T angle_r_variance);
+                T angle_r_variance,
+                const Init<T>& init);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
 

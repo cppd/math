@@ -70,6 +70,15 @@ struct Config final
         static constexpr std::array ACCELERATION_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
         static constexpr T ACCELERATION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> ACCELERATION_FILTER_GATE{};
+        static constexpr acceleration::Init<T> ACCELERATION_INIT{
+                .angle = 0,
+                .angle_variance = square(degrees_to_radians(100.0)),
+                .acceleration = 0,
+                .acceleration_variance = square(10),
+                .angle_speed = 0,
+                .angle_speed_variance = square(degrees_to_radians(1.0)),
+                .angle_r = 0,
+                .angle_r_variance = square(degrees_to_radians(50.0))};
 
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
@@ -184,7 +193,7 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
                 "EKF", color::RGB8(0, 200, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
-                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE));
+                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT));
 
         const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
@@ -205,8 +214,8 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
                         name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         alphas[i], Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE));
+                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE,
+                        Config<T>::ACCELERATION_INIT));
         }
 
         return res;

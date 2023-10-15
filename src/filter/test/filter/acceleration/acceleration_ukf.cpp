@@ -28,14 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter::acceleration
 {
-namespace
-{
-template <typename T>
-constexpr T INIT_ANGLE = 0;
-template <typename T>
-constexpr T INIT_ANGLE_VARIANCE = square(degrees_to_radians(100.0));
-}
-
 template <typename T>
 AccelerationUkf<T>::AccelerationUkf(
         std::string name,
@@ -46,13 +38,15 @@ AccelerationUkf<T>::AccelerationUkf(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
-        const T angle_r_variance)
+        const T angle_r_variance,
+        const Init<T>& init)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           filter_(create_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance)),
+          init_(init),
           queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
@@ -106,8 +100,7 @@ void AccelerationUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>
                         [&]()
                         {
                                 filter_->reset(
-                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(),
-                                        INIT_ANGLE<T>, INIT_ANGLE_VARIANCE<T>);
+                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
                         },
                         [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
                         {
