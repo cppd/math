@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "filter_2.h"
+#include "init.h"
 #include "speed.h"
 
 #include "../../../consistency.h"
@@ -44,6 +45,7 @@ class Speed2 final : public Speed<T>
         T reset_dt_;
         std::optional<T> gate_;
         std::unique_ptr<Filter2<2, T>> filter_;
+        Init<T> init_;
 
         MeasurementQueue<2, T> queue_;
 
@@ -76,7 +78,8 @@ public:
                T angle_estimation_variance,
                std::optional<T> gate,
                T sigma_points_alpha,
-               T position_variance);
+               T position_variance,
+               const Init<T>& init);
 
         void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
 

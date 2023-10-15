@@ -114,6 +114,7 @@ struct Config final
         static constexpr std::array SPEED_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T SPEED_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> SPEED_FILTER_GATE{};
+        static constexpr speed::Init<T> SPEED_INIT{.acceleration = 0, .acceleration_variance = square(10)};
 };
 
 template <std::size_t N, typename T>
@@ -334,7 +335,7 @@ std::vector<std::unique_ptr<speed::Speed<T>>> create_speeds()
                         res.push_back(std::make_unique<speed::Speed2<T>>(
                                 name(alphas[i]), color::RGB8(0, 150 - 40 * i, 0), Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_2));
+                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT));
                 }
         }
 

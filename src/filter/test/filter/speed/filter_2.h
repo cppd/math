@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "init.h"
+
 #include "../measurement.h"
 
 #include <src/numerical/matrix.h>
@@ -47,7 +49,8 @@ public:
 
         virtual void reset(
                 const Vector<2 * N, T>& position_velocity,
-                const Matrix<2 * N, 2 * N, T>& position_velocity_p) = 0;
+                const Matrix<2 * N, 2 * N, T>& position_velocity_p,
+                const Init<T>& init) = 0;
 
         virtual void predict(T dt) = 0;
 

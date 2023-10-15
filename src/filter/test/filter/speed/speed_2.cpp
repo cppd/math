@@ -34,12 +34,14 @@ Speed2<T>::Speed2(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const T sigma_points_alpha,
-        const T position_variance)
+        const T position_variance,
+        const Init<T>& init)
         : name_(std::move(name)),
           color_(color),
           reset_dt_(reset_dt),
           gate_(gate),
           filter_(create_filter_2<2, T>(sigma_points_alpha, position_variance)),
+          init_(init),
           queue_(reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
@@ -92,7 +94,7 @@ void Speed2<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimati
                 queue_,
                 [&]()
                 {
-                        filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p());
+                        filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
                 },
                 [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
                 {

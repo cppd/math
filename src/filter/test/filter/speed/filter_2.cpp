@@ -30,11 +30,6 @@ namespace ns::filter::test::filter::speed
 {
 namespace
 {
-template <typename T>
-constexpr T INIT_ACCELERATION = 0;
-template <typename T>
-constexpr T INIT_ACCELERATION_VARIANCE = square(10);
-
 template <std::size_t N, typename T>
 Vector<3 * N, T> x(const Vector<N, T>& position, const Vector<N, T>& velocity, const Vector<N, T>& acceleration)
 {
@@ -91,7 +86,7 @@ Matrix<N, N, T> p(const Matrix<N, N, T>& position_velocity_acceleration_p)
 }
 
 template <std::size_t N, typename T>
-Vector<3 * N, T> x(const Vector<2 * N, T>& position_velocity)
+Vector<3 * N, T> x(const Vector<2 * N, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
 
@@ -102,13 +97,13 @@ Vector<3 * N, T> x(const Vector<2 * N, T>& position_velocity)
                 const std::size_t b = 2 * i;
                 res[a + 0] = position_velocity[b + 0];
                 res[a + 1] = position_velocity[b + 1];
-                res[a + 2] = INIT_ACCELERATION<T>;
+                res[a + 2] = init.acceleration;
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> p(const Matrix<2 * N, 2 * N, T>& position_velocity_p)
+Matrix<3 * N, 3 * N, T> p(const Matrix<2 * N, 2 * N, T>& position_velocity_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_p));
 
@@ -129,7 +124,7 @@ Matrix<3 * N, 3 * N, T> p(const Matrix<2 * N, 2 * N, T>& position_velocity_p)
                         res(ar + 1, ac + 0) = p(br + 1, bc + 0);
                         res(ar + 1, ac + 1) = p(br + 1, bc + 1);
                 }
-                res(ar + 2, ar + 2) = INIT_ACCELERATION_VARIANCE<T>;
+                res(ar + 2, ar + 2) = init.acceleration_variance;
         }
 
         return res;
@@ -331,12 +326,14 @@ class Filter final : public Filter2<N, T>
                         p(position_velocity_acceleration_p));
         }
 
-        void reset(const Vector<2 * N, T>& position_velocity, const Matrix<2 * N, 2 * N, T>& position_velocity_p)
-                override
+        void reset(
+                const Vector<2 * N, T>& position_velocity,
+                const Matrix<2 * N, 2 * N, T>& position_velocity_p,
+                const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<3 * N, T>(sigma_points_alpha_), x<N, T>(position_velocity),
-                        p<N, T>(position_velocity_p));
+                        create_sigma_points<3 * N, T>(sigma_points_alpha_), x<N, T>(position_velocity, init),
+                        p<N, T>(position_velocity_p, init));
         }
 
         void predict(const T dt) override
