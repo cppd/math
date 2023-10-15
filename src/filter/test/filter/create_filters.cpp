@@ -162,7 +162,7 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "LKF " << ORDER << " (" << THETA << " " << theta << ")";
+                oss << "Position " << ORDER << " (" << THETA << " " << theta << ")";
                 return oss.str();
         };
 
@@ -208,7 +208,7 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
         std::vector<std::unique_ptr<acceleration::Acceleration<T>>> res;
 
         res.push_back(std::make_unique<acceleration::AccelerationEkf<T>>(
-                "EKF", color::RGB8(0, 200, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
+                "Acceleration EKF", color::RGB8(0, 200, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                 Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT));
@@ -219,7 +219,7 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "UKF (" << ALPHA << " " << alpha << ")";
+                oss << "Acceleration UKF (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
@@ -286,7 +286,7 @@ std::vector<std::unique_ptr<direction::Direction<T>>> create_directions()
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Direction UKF " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
+                oss << "Direction " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
