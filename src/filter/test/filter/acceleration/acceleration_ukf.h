@@ -46,7 +46,7 @@ class AccelerationUkf final : public Acceleration<T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         std::unique_ptr<FilterUkf<T>> filter_;
-        const Init<T>& init_;
+        Init<T> init_;
 
         MeasurementQueue<2, T> queue_;
 
