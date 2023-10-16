@@ -17,31 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "direction.h"
 #include "filter_2_1.h"
 #include "init.h"
 
 #include "../../../consistency.h"
 #include "../estimation.h"
+#include "../filter.h"
 #include "../measurement.h"
 #include "../measurement_queue.h"
-#include "../time_point.h"
-
-#include <src/color/rgb8.h>
-#include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace ns::filter::test::filter::direction
 {
 template <typename T>
-class Direction21 final : public Direction<T>
+class Direction21 final : public Filter<T>
 {
-        std::string name_;
-        color::RGB8 color_;
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> gate_;
@@ -49,11 +42,6 @@ class Direction21 final : public Direction<T>
         Init<T> init_;
 
         MeasurementQueue<2, T> queue_;
-
-        std::vector<TimePoint<2, T>> positions_;
-        std::vector<TimePoint<2, T>> positions_p_;
-        std::vector<TimePoint<1, T>> speeds_;
-        std::vector<TimePoint<1, T>> speeds_p_;
 
         struct Nees final
         {
@@ -67,18 +55,14 @@ class Direction21 final : public Direction<T>
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
 
-        [[nodiscard]] std::string angle_string() const;
-
-        void save(T time, const TrueData<2, T>& true_data);
+        void save(const TrueData<2, T>& true_data);
 
         void check_time(T time) const;
 
-        void reset(const Measurements<2, T>& m, const Estimation<T>& estimation);
+        void reset(const Measurements<2, T>& m);
 
 public:
         Direction21(
-                std::string name,
-                color::RGB8 color,
                 T reset_dt,
                 T angle_estimation_variance,
                 std::optional<T> gate,
@@ -87,15 +71,9 @@ public:
                 T angle_variance,
                 const Init<T>& init);
 
-        void update(const Measurements<2, T>& m, const Estimation<T>& estimation) override;
+        [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+                override;
 
-        [[nodiscard]] const std::string& name() const override;
-        [[nodiscard]] color::RGB8 color() const override;
-
-        [[nodiscard]] std::string consistency_string() const override;
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions() const override;
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions_p() const override;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const override;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const override;
+        [[nodiscard]] std::string consistency_string(const std::string& name) const override;
 };
 }

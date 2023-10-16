@@ -240,7 +240,7 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, const T alpha, const std::string& name)
+std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha, const std::string& name)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
@@ -249,36 +249,42 @@ std::unique_ptr<direction::Direction<T>> create_direction(const unsigned i, cons
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return std::make_unique<direction::Direction10<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 250), Config<T>::DIRECTION_FILTER_RESET_DT,
-                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
-                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT);
+                return std::make_unique<TestFilter<T>>(
+                        std::make_unique<direction::Direction10<T>>(
+                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
+                                alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT),
+                        name, color::RGB8(0, 160 - 40 * i, 250));
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return std::make_unique<direction::Direction11<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 150), Config<T>::DIRECTION_FILTER_RESET_DT,
-                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
-                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT);
+                return std::make_unique<TestFilter<T>>(
+                        std::make_unique<direction::Direction11<T>>(
+                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
+                                alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT),
+                        name, color::RGB8(0, 160 - 40 * i, 150));
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return std::make_unique<direction::Direction21<T>>(
-                        name, color::RGB8(0, 160 - 40 * i, 50), Config<T>::DIRECTION_FILTER_RESET_DT,
-                        Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE, alpha,
-                        Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
-                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT);
+                return std::make_unique<TestFilter<T>>(
+                        std::make_unique<direction::Direction21<T>>(
+                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
+                                alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT),
+                        name, color::RGB8(0, 160 - 40 * i, 50));
         }
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::vector<std::unique_ptr<direction::Direction<T>>> create_directions()
+std::vector<std::unique_ptr<TestFilter<T>>> create_directions()
 {
-        std::vector<std::unique_ptr<direction::Direction<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<T>>> res;
 
         const int precision = compute_string_precision(Config<T>::DIRECTION_FILTER_UKF_ALPHAS);
 

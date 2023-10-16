@@ -22,16 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/type/name.h>
 
 namespace ns::filter::test::filter::direction
 {
 template <typename T>
 Direction10<T>::Direction10(
-        std::string name,
-        const color::RGB8 color,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
@@ -39,9 +35,7 @@ Direction10<T>::Direction10(
         const T position_variance,
         const T angle_variance,
         const Init<T>& init)
-        : name_(std::move(name)),
-          color_(color),
-          reset_dt_(reset_dt),
+        : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           filter_(create_filter_1_0(sigma_points_alpha, position_variance, angle_variance)),
@@ -52,13 +46,8 @@ Direction10<T>::Direction10(
 }
 
 template <typename T>
-void Direction10<T>::save(const T time, const TrueData<2, T>& true_data)
+void Direction10<T>::save(const TrueData<2, T>& true_data)
 {
-        positions_.push_back({.time = time, .point = filter_->position()});
-        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
-        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
-        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
-
         if (!nees_)
         {
                 nees_.emplace();
@@ -84,7 +73,7 @@ void Direction10<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Direction10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Direction10<T>::reset(const Measurements<2, T>& m)
 {
         if (!m.position || queue_.empty())
         {
@@ -92,8 +81,6 @@ void Direction10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& est
         }
 
         ASSERT(queue_.measurements().back().time == m.time);
-
-        LOG(name_ + "; " + estimation.description());
 
         update_filter(
                 queue_,
@@ -111,7 +98,7 @@ void Direction10<T>::reset(const Measurements<2, T>& m, const Estimation<T>& est
 }
 
 template <typename T>
-void Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+std::optional<UpdateInfo<T>> Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -119,18 +106,18 @@ void Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& es
 
         if (!m.position)
         {
-                return;
+                return {};
         }
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                reset(m, estimation);
-                return;
+                reset(m);
+                return {};
         }
 
         if (!m.position && last_position_time_ && !(m.time - *last_position_time_ < reset_dt_))
         {
-                return;
+                return {};
         }
 
         const T dt = m.time - *last_time_;
@@ -140,7 +127,7 @@ void Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& es
         {
                 if (!m.position->variance)
                 {
-                        return;
+                        return {};
                 }
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
@@ -151,52 +138,36 @@ void Direction10<T>::update(const Measurements<2, T>& m, const Estimation<T>& es
 
                 LOG(to_string(m.time) + "; true angle = "
                     + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r))) + "; "
-                    + angle_string());
+                    + "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle()))));
         }
         else
         {
                 const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
                 if (!update_non_position(filter_.get(), direction, m.speed, gate_, dt))
                 {
-                        return;
+                        return {};
                 }
         }
 
         last_time_ = m.time;
 
-        save(m.time, m.true_data);
+        save(m.true_data);
+
+        return {
+                {.position = filter_->position(),
+                 .position_p = filter_->position_p().diagonal(),
+                 .speed = filter_->speed(),
+                 .speed_p = filter_->speed_p()}
+        };
 }
 
 template <typename T>
-const std::string& Direction10<T>::name() const
-{
-        return name_;
-}
-
-template <typename T>
-color::RGB8 Direction10<T>::color() const
-{
-        return color_;
-}
-
-template <typename T>
-std::string Direction10<T>::angle_string() const
-{
-        std::string s;
-        s += name_;
-        s += "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())));
-        return s;
-}
-
-template <typename T>
-std::string Direction10<T>::consistency_string() const
+std::string Direction10<T>::consistency_string(const std::string& name) const
 {
         if (!nees_)
         {
                 return {};
         }
-
-        const std::string name = std::string("Direction<") + type_name<T>() + "> " + name_;
 
         std::string s;
 
@@ -219,30 +190,6 @@ std::string Direction10<T>::consistency_string() const
         s += "; NEES angle; " + nees_->angle.check_string();
 
         return s;
-}
-
-template <typename T>
-const std::vector<TimePoint<2, T>>& Direction10<T>::positions() const
-{
-        return positions_;
-}
-
-template <typename T>
-const std::vector<TimePoint<2, T>>& Direction10<T>::positions_p() const
-{
-        return positions_p_;
-}
-
-template <typename T>
-const std::vector<TimePoint<1, T>>& Direction10<T>::speeds() const
-{
-        return speeds_;
-}
-
-template <typename T>
-const std::vector<TimePoint<1, T>>& Direction10<T>::speeds_p() const
-{
-        return speeds_p_;
 }
 
 template class Direction10<float>;
