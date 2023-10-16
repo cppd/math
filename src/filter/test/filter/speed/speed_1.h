@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../measurement.h"
 #include "../measurement_queue.h"
 
-#include <src/numerical/vector.h>
-
 #include <memory>
 #include <optional>
 #include <string>
