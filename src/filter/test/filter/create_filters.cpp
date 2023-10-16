@@ -300,9 +300,9 @@ std::vector<std::unique_ptr<direction::Direction<T>>> create_directions()
 }
 
 template <typename T, std::size_t ORDER_P>
-std::vector<std::unique_ptr<speed::Speed<T>>> create_speeds()
+std::vector<std::unique_ptr<TestFilter<T>>> create_speeds()
 {
-        std::vector<std::unique_ptr<speed::Speed<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<T>>> res;
 
         const int precision = compute_string_precision(Config<T>::SPEED_FILTER_UKF_ALPHAS);
 
@@ -324,18 +324,22 @@ std::vector<std::unique_ptr<speed::Speed<T>>> create_speeds()
 
                 if (ORDER_P == 1)
                 {
-                        res.push_back(std::make_unique<speed::Speed1<T>>(
-                                name(alphas[i]), color::RGB8(0, 200 - 40 * i, 0), Config<T>::SPEED_FILTER_RESET_DT,
-                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_1));
+                        res.push_back(std::make_unique<TestFilter<T>>(
+                                std::make_unique<speed::Speed1<T>>(
+                                        Config<T>::SPEED_FILTER_RESET_DT,
+                                        Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
+                                        alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
+                                name(alphas[i]), color::RGB8(0, 200 - 40 * i, 0)));
                 }
 
                 if (ORDER_P == 2)
                 {
-                        res.push_back(std::make_unique<speed::Speed2<T>>(
-                                name(alphas[i]), color::RGB8(0, 150 - 40 * i, 0), Config<T>::SPEED_FILTER_RESET_DT,
-                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT));
+                        res.push_back(std::make_unique<TestFilter<T>>(
+                                std::make_unique<speed::Speed2<T>>(
+                                        Config<T>::SPEED_FILTER_RESET_DT,
+                                        Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
+                                        alphas[i], Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT),
+                                name(alphas[i]), color::RGB8(0, 150 - 40 * i, 0)));
                 }
         }
 

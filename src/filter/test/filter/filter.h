@@ -1,0 +1,51 @@
+/*
+Copyright (C) 2017-2023 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include "estimation.h"
+#include "measurement.h"
+
+#include <src/numerical/vector.h>
+
+#include <optional>
+#include <string>
+
+namespace ns::filter::test::filter
+{
+template <typename T>
+struct UpdateInfo final
+{
+        Vector<2, T> position;
+        Vector<2, T> position_p;
+        T speed;
+        T speed_p;
+};
+
+template <typename T>
+class Filter
+{
+public:
+        virtual ~Filter() = default;
+
+        [[nodiscard]] virtual std::optional<UpdateInfo<T>> update(
+                const Measurements<2, T>& m,
+                const Estimation<T>& estimation) = 0;
+
+        [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;
+};
+}

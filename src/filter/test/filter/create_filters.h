@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "test_filter.h"
+
 #include "acceleration/acceleration.h"
 #include "direction/direction.h"
 #include "position/position.h"
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
-#include "speed/speed.h"
 
 #include <memory>
 #include <vector>
@@ -44,8 +45,8 @@ struct Test final
         std::vector<std::unique_ptr<direction::Direction<T>>> directions_1_1;
         std::vector<std::unique_ptr<direction::Direction<T>>> directions_2_1;
 
-        std::vector<std::unique_ptr<speed::Speed<T>>> speeds_1;
-        std::vector<std::unique_ptr<speed::Speed<T>>> speeds_2;
+        std::vector<std::unique_ptr<TestFilter<T>>> speeds_1;
+        std::vector<std::unique_ptr<TestFilter<T>>> speeds_2;
 
         std::unique_ptr<position::PositionEstimation<T>> position_estimation;
 };

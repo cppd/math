@@ -20,24 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "update.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
-#include <src/com/log.h>
-#include <src/com/type/name.h>
 
 namespace ns::filter::test::filter::speed
 {
 template <typename T>
 Speed1<T>::Speed1(
-        std::string name,
-        const color::RGB8 color,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const T sigma_points_alpha,
         const T position_variance)
-        : name_(std::move(name)),
-          color_(color),
-          reset_dt_(reset_dt),
+        : reset_dt_(reset_dt),
           gate_(gate),
           filter_(create_filter_1<2, T>(sigma_points_alpha, position_variance)),
           queue_(reset_dt, angle_estimation_variance)
@@ -46,13 +39,8 @@ Speed1<T>::Speed1(
 }
 
 template <typename T>
-void Speed1<T>::save(const T time, const TrueData<2, T>& true_data)
+void Speed1<T>::save(const TrueData<2, T>& true_data)
 {
-        positions_.push_back({.time = time, .point = filter_->position()});
-        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
-        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
-        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
-
         if (!nees_)
         {
                 nees_.emplace();
@@ -77,7 +65,7 @@ void Speed1<T>::check_time(const T time) const
 }
 
 template <typename T>
-void Speed1<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimation)
+void Speed1<T>::reset(const Measurements<2, T>& m)
 {
         if (!m.position || queue_.empty())
         {
@@ -85,8 +73,6 @@ void Speed1<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimati
         }
 
         ASSERT(queue_.measurements().back().time == m.time);
-
-        LOG(name_ + "; " + estimation.description());
 
         update_filter(
                 queue_,
@@ -104,7 +90,7 @@ void Speed1<T>::reset(const Measurements<2, T>& m, const Estimation<T>& estimati
 }
 
 template <typename T>
-void Speed1<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+std::optional<UpdateInfo<T>> Speed1<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 
@@ -112,18 +98,18 @@ void Speed1<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
 
         if (!m.position)
         {
-                return;
+                return {};
         }
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                reset(m, estimation);
-                return;
+                reset(m);
+                return {};
         }
 
         if (!m.position && last_position_time_ && !(m.time - *last_position_time_ < reset_dt_))
         {
-                return;
+                return {};
         }
 
         const T dt = m.time - *last_time_;
@@ -132,7 +118,7 @@ void Speed1<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
         {
                 if (!m.position->variance)
                 {
-                        return;
+                        return {};
                 }
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
@@ -144,36 +130,29 @@ void Speed1<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimat
         {
                 if (!update_non_position(filter_.get(), m.speed, gate_, dt))
                 {
-                        return;
+                        return {};
                 }
         }
 
         last_time_ = m.time;
 
-        save(m.time, m.true_data);
+        save(m.true_data);
+
+        return {
+                {.position = filter_->position(),
+                 .position_p = filter_->position_p().diagonal(),
+                 .speed = filter_->speed(),
+                 .speed_p = filter_->speed_p()}
+        };
 }
 
 template <typename T>
-const std::string& Speed1<T>::name() const
-{
-        return name_;
-}
-
-template <typename T>
-color::RGB8 Speed1<T>::color() const
-{
-        return color_;
-}
-
-template <typename T>
-std::string Speed1<T>::consistency_string() const
+std::string Speed1<T>::consistency_string(const std::string& name) const
 {
         if (!nees_)
         {
                 return {};
         }
-
-        const std::string name = std::string("Speed<") + type_name<T>() + "> " + name_;
 
         std::string s;
 
@@ -193,30 +172,6 @@ std::string Speed1<T>::consistency_string() const
         s += "; NEES speed; " + nees_->speed.check_string();
 
         return s;
-}
-
-template <typename T>
-const std::vector<TimePoint<2, T>>& Speed1<T>::positions() const
-{
-        return positions_;
-}
-
-template <typename T>
-const std::vector<TimePoint<2, T>>& Speed1<T>::positions_p() const
-{
-        return positions_p_;
-}
-
-template <typename T>
-const std::vector<TimePoint<1, T>>& Speed1<T>::speeds() const
-{
-        return speeds_;
-}
-
-template <typename T>
-const std::vector<TimePoint<1, T>>& Speed1<T>::speeds_p() const
-{
-        return speeds_p_;
 }
 
 template class Speed1<float>;
