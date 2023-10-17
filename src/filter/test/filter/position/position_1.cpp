@@ -84,7 +84,7 @@ void Position1<N, T>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T>
-void Position1<N, T>::update_position(const Measurements<N, T>& m)
+void Position1<N, T>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
@@ -125,12 +125,11 @@ void Position1<N, T>::update_position(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
-void Position1<N, T>::predict_update(const Measurements<N, T>& m)
+void Position1<N, T>::predict(const Measurements<N, T>& m)
 {
         if (m.position)
         {
-                update_position(m);
-                return;
+                error("Predict with position");
         }
 
         check_time(m.time);

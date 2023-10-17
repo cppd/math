@@ -33,8 +33,8 @@ class Position
 public:
         virtual ~Position() = default;
 
-        virtual void update_position(const Measurements<N, T>& m) = 0;
-        virtual void predict_update(const Measurements<N, T>& m) = 0;
+        virtual void update(const Measurements<N, T>& m) = 0;
+        virtual void predict(const Measurements<N, T>& m) = 0;
 
         [[nodiscard]] virtual const std::string& name() const = 0;
         [[nodiscard]] virtual color::RGB8 color() const = 0;

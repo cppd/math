@@ -150,7 +150,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 }
 
 template <std::size_t N, typename T>
-void PositionVariance<N, T>::update_position(const Measurements<N, T>& m)
+void PositionVariance<N, T>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
@@ -174,9 +174,9 @@ void PositionVariance<N, T>::update_position(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
-void PositionVariance<N, T>::predict_update(const Measurements<N, T>& /*m*/)
+void PositionVariance<N, T>::predict(const Measurements<N, T>& /*m*/)
 {
-        error("predict_update is not supported");
+        error("predict is not supported");
 }
 
 template <std::size_t N, typename T>

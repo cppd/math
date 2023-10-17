@@ -71,8 +71,8 @@ public:
                 T theta,
                 T process_variance);
 
-        void update_position(const Measurements<N, T>& m) override;
-        void predict_update(const Measurements<N, T>& m) override;
+        void update(const Measurements<N, T>& m) override;
+        void predict(const Measurements<N, T>& m) override;
 
         [[nodiscard]] bool empty() const;
 

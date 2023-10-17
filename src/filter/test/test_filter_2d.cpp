@@ -158,7 +158,7 @@ void update(
 {
         measurements->push_back(measurement);
 
-        test->position_variance->update_position(measurement);
+        test->position_variance->update(measurement);
 
         if (measurement.position && !measurement.position->variance)
         {
@@ -167,12 +167,12 @@ void update(
 
         for (auto& p : test->positions_1)
         {
-                p->update_position(measurement);
+                p->update(measurement);
         }
 
         for (auto& p : test->positions_2)
         {
-                p->update_position(measurement);
+                p->update(measurement);
         }
 
         test->position_estimation->update(measurement);

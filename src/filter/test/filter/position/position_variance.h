@@ -62,8 +62,8 @@ class PositionVariance final : public Position<N, T>
 public:
         PositionVariance(std::string name, color::RGB8 color, T reset_dt, T process_variance, const Init<T>& init);
 
-        void update_position(const Measurements<N, T>& m) override;
-        void predict_update(const Measurements<N, T>& m) override;
+        void update(const Measurements<N, T>& m) override;
+        void predict(const Measurements<N, T>& m) override;
 
         [[nodiscard]] const std::string& name() const override;
         [[nodiscard]] color::RGB8 color() const override;
