@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::filter::speed
 {
 template <typename T>
-class Speed1 final : public Filter<T>
+class Speed1 final : public Filter<2, T>
 {
         T reset_dt_;
         std::optional<T> gate_;
@@ -64,8 +64,9 @@ public:
                T sigma_points_alpha,
                T position_variance);
 
-        [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<2, T>& m, const Estimation<T>& estimation)
-                override;
+        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
+                const Measurements<2, T>& m,
+                const Estimation<T>& estimation) override;
 
         [[nodiscard]] std::string consistency_string(const std::string& name) const override;
 };

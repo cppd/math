@@ -37,14 +37,14 @@ struct Test final
         std::vector<std::unique_ptr<position::Position<2, T>>> positions_1;
         std::vector<std::unique_ptr<position::Position<2, T>>> positions_2;
 
-        std::vector<std::unique_ptr<TestFilter<T>>> accelerations;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> accelerations;
 
-        std::vector<std::unique_ptr<TestFilter<T>>> directions_1_0;
-        std::vector<std::unique_ptr<TestFilter<T>>> directions_1_1;
-        std::vector<std::unique_ptr<TestFilter<T>>> directions_2_1;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> directions_1_0;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> directions_1_1;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> directions_2_1;
 
-        std::vector<std::unique_ptr<TestFilter<T>>> speeds_1;
-        std::vector<std::unique_ptr<TestFilter<T>>> speeds_2;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> speeds_1;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> speeds_2;
 
         std::unique_ptr<position::PositionEstimation<T>> position_estimation;
 };

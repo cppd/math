@@ -27,23 +27,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter
 {
-template <typename T>
+template <std::size_t N, typename T>
 struct UpdateInfo final
 {
-        Vector<2, T> position;
-        Vector<2, T> position_p;
+        Vector<N, T> position;
+        Vector<N, T> position_p;
         T speed;
         T speed_p;
 };
 
-template <typename T>
+template <std::size_t N, typename T>
 class Filter
 {
 public:
         virtual ~Filter() = default;
 
-        [[nodiscard]] virtual std::optional<UpdateInfo<T>> update(
-                const Measurements<2, T>& m,
+        [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> update(
+                const Measurements<N, T>& m,
                 const Estimation<T>& estimation) = 0;
 
         [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;

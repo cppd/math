@@ -203,11 +203,11 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 }
 
 template <typename T>
-std::vector<std::unique_ptr<TestFilter<T>>> create_accelerations()
+std::vector<std::unique_ptr<TestFilter<2, T>>> create_accelerations()
 {
-        std::vector<std::unique_ptr<TestFilter<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
 
-        res.push_back(std::make_unique<TestFilter<T>>(
+        res.push_back(std::make_unique<TestFilter<2, T>>(
                 std::make_unique<acceleration::AccelerationEkf<T>>(
                         Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
@@ -230,7 +230,7 @@ std::vector<std::unique_ptr<TestFilter<T>>> create_accelerations()
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.push_back(std::make_unique<TestFilter<T>>(
+                res.push_back(std::make_unique<TestFilter<2, T>>(
                         std::make_unique<acceleration::AccelerationUkf<T>>(
                                 Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
@@ -245,7 +245,7 @@ std::vector<std::unique_ptr<TestFilter<T>>> create_accelerations()
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha, const std::string& name)
+std::unique_ptr<TestFilter<2, T>> create_direction(const unsigned i, const T alpha, const std::string& name)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
@@ -254,7 +254,7 @@ std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha,
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return std::make_unique<TestFilter<T>>(
+                return std::make_unique<TestFilter<2, T>>(
                         std::make_unique<direction::Direction10<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
@@ -265,7 +265,7 @@ std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha,
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return std::make_unique<TestFilter<T>>(
+                return std::make_unique<TestFilter<2, T>>(
                         std::make_unique<direction::Direction11<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
@@ -276,7 +276,7 @@ std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha,
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return std::make_unique<TestFilter<T>>(
+                return std::make_unique<TestFilter<2, T>>(
                         std::make_unique<direction::Direction21<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
@@ -287,9 +287,9 @@ std::unique_ptr<TestFilter<T>> create_direction(const unsigned i, const T alpha,
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::vector<std::unique_ptr<TestFilter<T>>> create_directions()
+std::vector<std::unique_ptr<TestFilter<2, T>>> create_directions()
 {
-        std::vector<std::unique_ptr<TestFilter<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
 
         const int precision = compute_string_precision(Config<T>::DIRECTION_FILTER_UKF_ALPHAS);
 
@@ -311,9 +311,9 @@ std::vector<std::unique_ptr<TestFilter<T>>> create_directions()
 }
 
 template <typename T, std::size_t ORDER_P>
-std::vector<std::unique_ptr<TestFilter<T>>> create_speeds()
+std::vector<std::unique_ptr<TestFilter<2, T>>> create_speeds()
 {
-        std::vector<std::unique_ptr<TestFilter<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
 
         const int precision = compute_string_precision(Config<T>::SPEED_FILTER_UKF_ALPHAS);
 
@@ -335,7 +335,7 @@ std::vector<std::unique_ptr<TestFilter<T>>> create_speeds()
 
                 if (ORDER_P == 1)
                 {
-                        res.push_back(std::make_unique<TestFilter<T>>(
+                        res.push_back(std::make_unique<TestFilter<2, T>>(
                                 std::make_unique<speed::Speed1<T>>(
                                         Config<T>::SPEED_FILTER_RESET_DT,
                                         Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
@@ -345,7 +345,7 @@ std::vector<std::unique_ptr<TestFilter<T>>> create_speeds()
 
                 if (ORDER_P == 2)
                 {
-                        res.push_back(std::make_unique<TestFilter<T>>(
+                        res.push_back(std::make_unique<TestFilter<2, T>>(
                                 std::make_unique<speed::Speed2<T>>(
                                         Config<T>::SPEED_FILTER_RESET_DT,
                                         Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,

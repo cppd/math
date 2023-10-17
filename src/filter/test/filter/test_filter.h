@@ -30,26 +30,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter
 {
-template <typename T>
+template <std::size_t N, typename T>
 class TestFilter final
 {
-        std::unique_ptr<Filter<T>> filter_;
+        std::unique_ptr<Filter<N, T>> filter_;
         std::string name_;
         color::RGB8 color_;
-        std::vector<TimePoint<2, T>> positions_;
-        std::vector<TimePoint<2, T>> positions_p_;
+        std::vector<TimePoint<N, T>> positions_;
+        std::vector<TimePoint<N, T>> positions_p_;
         std::vector<TimePoint<1, T>> speeds_;
         std::vector<TimePoint<1, T>> speeds_p_;
 
 public:
-        TestFilter(std::unique_ptr<Filter<T>>&& filter, std::string name, color::RGB8 color)
+        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
                 : filter_(std::move(filter)),
                   name_(std::move(name)),
                   color_(color)
         {
         }
 
-        void update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+        void update(const Measurements<N, T>& m, const Estimation<T>& estimation)
         {
                 const auto update = filter_->update(m, estimation);
                 if (!update)
@@ -78,12 +78,12 @@ public:
                 return filter_->consistency_string(name_);
         }
 
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions() const
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions() const
         {
                 return positions_;
         }
 
-        [[nodiscard]] const std::vector<TimePoint<2, T>>& positions_p() const
+        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions_p() const
         {
                 return positions_p_;
         }

@@ -98,7 +98,7 @@ void Direction11<T>::reset(const Measurements<2, T>& m)
 }
 
 template <typename T>
-std::optional<UpdateInfo<T>> Direction11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
 {
         check_time(m.time);
 

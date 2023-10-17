@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::filter::acceleration
 {
 template <typename T>
-class AccelerationEkf final : public Filter<T>
+class AccelerationEkf final : public Filter<2, T>
 {
         T reset_dt_;
         T angle_estimation_variance_;
@@ -68,8 +68,9 @@ public:
                 T angle_r_variance,
                 const Init<T>& init);
 
-        [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<2, T>& m, const Estimation<T>& estimation)
-                override;
+        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
+                const Measurements<2, T>& m,
+                const Estimation<T>& estimation) override;
 
         [[nodiscard]] std::string consistency_string(const std::string& name) const override;
 };
