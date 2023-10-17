@@ -203,15 +203,17 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 }
 
 template <typename T>
-std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations()
+std::vector<std::unique_ptr<TestFilter<T>>> create_accelerations()
 {
-        std::vector<std::unique_ptr<acceleration::Acceleration<T>>> res;
+        std::vector<std::unique_ptr<TestFilter<T>>> res;
 
-        res.push_back(std::make_unique<acceleration::AccelerationEkf<T>>(
-                "Acceleration EKF", color::RGB8(0, 200, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
-                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
-                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
-                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT));
+        res.push_back(std::make_unique<TestFilter<T>>(
+                std::make_unique<acceleration::AccelerationEkf<T>>(
+                        Config<T>::ACCELERATION_FILTER_RESET_DT,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
+                        Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
+                "Acceleration EKF", color::RGB8(0, 200, 0)));
 
         const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
@@ -228,12 +230,15 @@ std::vector<std::unique_ptr<acceleration::Acceleration<T>>> create_accelerations
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.push_back(std::make_unique<acceleration::AccelerationUkf<T>>(
-                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0), Config<T>::ACCELERATION_FILTER_RESET_DT,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
-                        alphas[i], Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE,
-                        Config<T>::ACCELERATION_INIT));
+                res.push_back(std::make_unique<TestFilter<T>>(
+                        std::make_unique<acceleration::AccelerationUkf<T>>(
+                                Config<T>::ACCELERATION_FILTER_RESET_DT,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_GATE, alphas[i],
+                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
+                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0)));
         }
 
         return res;
