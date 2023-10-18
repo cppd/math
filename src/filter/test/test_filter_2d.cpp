@@ -45,13 +45,26 @@ void write_file(
         {
                 for (const auto& p : v)
                 {
-                        filters.push_back(
-                                {.name = p->name(),
-                                 .color = p->color(),
-                                 .speed = p->speeds(),
-                                 .speed_p = p->speeds_p(),
-                                 .position = p->positions(),
-                                 .position_p = p->positions_p()});
+                        if constexpr (requires { p->name(); })
+                        {
+                                filters.push_back(
+                                        {.name = p->name(),
+                                         .color = p->color(),
+                                         .speed = p->speeds(),
+                                         .speed_p = p->speeds_p(),
+                                         .position = p->positions(),
+                                         .position_p = p->positions_p()});
+                        }
+                        else
+                        {
+                                filters.push_back(
+                                        {.name = p->data.name,
+                                         .color = p->data.color,
+                                         .speed = p->data.speeds,
+                                         .speed_p = p->data.speeds_p,
+                                         .position = p->data.positions,
+                                         .position_p = p->data.positions_p});
+                        }
                 }
         };
 
@@ -71,10 +84,21 @@ void write_log(const filter::Test<T>& test)
 {
         const auto log_consistency_string = [](const auto& p)
         {
-                const std::string s = p.consistency_string();
-                if (!s.empty())
+                if constexpr (requires { p.consistency_string(); })
                 {
-                        LOG(s);
+                        const std::string s = p.consistency_string();
+                        if (!s.empty())
+                        {
+                                LOG(s);
+                        }
+                }
+                else
+                {
+                        const std::string s = p.filter->consistency_string(p.data.name);
+                        if (!s.empty())
+                        {
+                                LOG(s);
+                        }
                 }
         };
 
@@ -109,19 +133,22 @@ void update(const filter::Measurements<2, T>& measurement, filter::Test<T>* cons
 {
         const auto& position_estimation = *test->position_estimation;
 
-        for (auto& p : test->accelerations)
+        for (auto& m : test->accelerations)
         {
-                p->update(measurement, position_estimation);
+                const auto& update = m->filter->update(measurement, position_estimation);
+                m->data.update(measurement.time, update);
         }
 
         for (auto& m : test->directions)
         {
-                m->update(measurement, position_estimation);
+                const auto& update = m->filter->update(measurement, position_estimation);
+                m->data.update(measurement.time, update);
         }
 
         for (auto& m : test->speeds)
         {
-                m->update(measurement, position_estimation);
+                const auto& update = m->filter->update(measurement, position_estimation);
+                m->data.update(measurement.time, update);
         }
 }
 

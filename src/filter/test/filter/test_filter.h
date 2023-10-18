@@ -31,71 +31,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::filter
 {
 template <std::size_t N, typename T>
-class TestFilter final
+struct FilterData final
 {
-        std::unique_ptr<Filter<N, T>> filter_;
-        std::string name_;
-        color::RGB8 color_;
-        std::vector<TimePoint<N, T>> positions_;
-        std::vector<TimePoint<N, T>> positions_p_;
-        std::vector<TimePoint<1, T>> speeds_;
-        std::vector<TimePoint<1, T>> speeds_p_;
+        std::string name;
+        color::RGB8 color;
 
-public:
-        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
-                : filter_(std::move(filter)),
-                  name_(std::move(name)),
-                  color_(color)
+        std::vector<TimePoint<N, T>> positions;
+        std::vector<TimePoint<N, T>> positions_p;
+        std::vector<TimePoint<1, T>> speeds;
+        std::vector<TimePoint<1, T>> speeds_p;
+
+        FilterData(std::string name, color::RGB8 color)
+                : name(std::move(name)),
+                  color(color)
         {
         }
 
-        void update(const Measurements<N, T>& m, const Estimation<T>& estimation)
+        void update(const T time, const auto& update)
         {
-                const auto update = filter_->update(m, estimation);
                 if (!update)
                 {
                         return;
                 }
 
-                positions_.push_back({.time = m.time, .point = update->position});
-                positions_p_.push_back({.time = m.time, .point = update->position_p});
-                speeds_.push_back({.time = m.time, .point = Vector<1, T>(update->speed)});
-                speeds_p_.push_back({.time = m.time, .point = Vector<1, T>(update->speed_p)});
+                positions.push_back({.time = time, .point = update->position});
+                positions_p.push_back({.time = time, .point = update->position_p});
+                speeds.push_back({.time = time, .point = Vector<1, T>(update->speed)});
+                speeds_p.push_back({.time = time, .point = Vector<1, T>(update->speed_p)});
         }
+};
 
-        [[nodiscard]] const std::string& name() const
-        {
-                return name_;
-        }
+template <std::size_t N, typename T>
+struct TestFilter final
+{
+        std::unique_ptr<Filter<N, T>> filter;
+        FilterData<N, T> data;
 
-        [[nodiscard]] color::RGB8 color() const
+        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
+                : filter(std::move(filter)),
+                  data(std::move(name), color)
         {
-                return color_;
-        }
-
-        [[nodiscard]] std::string consistency_string() const
-        {
-                return filter_->consistency_string(name_);
-        }
-
-        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions() const
-        {
-                return positions_;
-        }
-
-        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions_p() const
-        {
-                return positions_p_;
-        }
-
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const
-        {
-                return speeds_;
-        }
-
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const
-        {
-                return speeds_p_;
         }
 };
 }
