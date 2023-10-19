@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_filter.h"
 
-#include "position/position.h"
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
 
@@ -33,9 +32,9 @@ struct Test final
 {
         std::unique_ptr<position::PositionVariance<2, T>> position_variance;
 
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_0;
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_1;
-        std::vector<std::unique_ptr<position::Position<2, T>>> positions_2;
+        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_0;
+        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_1;
+        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_2;
 
         std::vector<std::unique_ptr<TestFilter<2, T>>> accelerations;
         std::vector<std::unique_ptr<TestFilter<2, T>>> directions;

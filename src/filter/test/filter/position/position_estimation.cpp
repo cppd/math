@@ -74,8 +74,7 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
 
         angle_p_ = angle_p;
 
-        LOG(to_string(m.time) + "; " + position_->name()
-            + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*angle_p_))));
+        LOG(to_string(m.time) + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*angle_p_))));
 }
 
 template <typename T>
@@ -157,8 +156,7 @@ std::string PositionEstimation<T>::description() const
 
         std::string res;
 
-        res += "filter = " + position_->name();
-        res += "; angle = " + to_string(radians_to_degrees(angle));
+        res += "angle = " + to_string(radians_to_degrees(angle));
         res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
 
         if (measurement_angle_)

@@ -17,9 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "estimation.h"
 #include "filter.h"
-#include "measurement.h"
 #include "time_point.h"
 
 #include <src/color/rgb8.h>
@@ -68,6 +66,19 @@ struct TestFilter final
         FilterData<N, T> data;
 
         TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
+                : filter(std::move(filter)),
+                  data(std::move(name), color)
+        {
+        }
+};
+
+template <std::size_t N, typename T>
+struct TestFilterPosition final
+{
+        std::unique_ptr<FilterPosition<N, T>> filter;
+        FilterData<N, T> data;
+
+        TestFilterPosition(std::unique_ptr<FilterPosition<N, T>>&& filter, std::string name, color::RGB8 color)
                 : filter(std::move(filter)),
                   data(std::move(name), color)
         {

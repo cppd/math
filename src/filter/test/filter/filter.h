@@ -37,6 +37,18 @@ struct UpdateInfo final
 };
 
 template <std::size_t N, typename T>
+class FilterPosition
+{
+public:
+        virtual ~FilterPosition() = default;
+
+        [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) = 0;
+        [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) = 0;
+
+        [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;
+};
+
+template <std::size_t N, typename T>
 class Filter
 {
 public:

@@ -147,14 +147,14 @@ template <std::size_t N, typename T>
 std::unique_ptr<position::PositionVariance<N, T>> create_position_variance()
 {
         return std::make_unique<position::PositionVariance<N, T>>(
-                "Variance LKF", color::RGB8(0, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_VARIANCE_INIT);
+                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_VARIANCE_2,
+                Config<T>::POSITION_VARIANCE_INIT);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
+std::vector<std::unique_ptr<TestFilterPosition<N, T>>> create_positions()
 {
-        std::vector<std::unique_ptr<position::Position<N, T>>> res;
+        std::vector<std::unique_ptr<TestFilterPosition<N, T>>> res;
 
         const int precision = compute_string_precision(Config<T>::POSITION_FILTER_THETAS);
 
@@ -176,26 +176,32 @@ std::vector<std::unique_ptr<position::Position<N, T>>> create_positions()
 
                 if (ORDER == 0)
                 {
-                        res.emplace_back(std::make_unique<position::Position0<N, T>>(
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200),
-                                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                Config<T>::POSITION_FILTER_GATE_0, thetas[i], Config<T>::POSITION_FILTER_VARIANCE_0));
+                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                                std::make_unique<position::Position0<N, T>>(
+                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                        Config<T>::POSITION_FILTER_GATE_0, thetas[i],
+                                        Config<T>::POSITION_FILTER_VARIANCE_0),
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200)));
                 }
 
                 if (ORDER == 1)
                 {
-                        res.emplace_back(std::make_unique<position::Position1<N, T>>(
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200), Config<T>::POSITION_FILTER_RESET_DT,
-                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_1, thetas[i],
-                                Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT));
+                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                                std::make_unique<position::Position1<N, T>>(
+                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                        Config<T>::POSITION_FILTER_GATE_1, thetas[i],
+                                        Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT),
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200)));
                 }
 
                 if (ORDER == 2)
                 {
-                        res.emplace_back(std::make_unique<position::Position2<N, T>>(
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0), Config<T>::POSITION_FILTER_RESET_DT,
-                                Config<T>::POSITION_FILTER_LINEAR_DT, Config<T>::POSITION_FILTER_GATE_2, thetas[i],
-                                Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT));
+                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                                std::make_unique<position::Position2<N, T>>(
+                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                        Config<T>::POSITION_FILTER_GATE_2, thetas[i],
+                                        Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT),
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0)));
                 }
         }
 
@@ -397,7 +403,7 @@ Test<T> create_data()
 
         res.position_estimation = std::make_unique<position::PositionEstimation<T>>(
                 Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,
-                static_cast<const position::Position2<2, T>*>(res.positions_2.front().get()));
+                static_cast<const position::Position2<2, T>*>(res.positions_2.front()->filter.get()));
 
         return res;
 }

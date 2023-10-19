@@ -82,42 +82,22 @@ void write_file(
 template <typename T>
 void write_log(const filter::Test<T>& test)
 {
-        const auto log_consistency_string = [](const auto& p)
-        {
-                if constexpr (requires { p.consistency_string(); })
-                {
-                        const std::string s = p.consistency_string();
-                        if (!s.empty())
-                        {
-                                LOG(s);
-                        }
-                }
-                else
-                {
-                        const std::string s = p.filter->consistency_string(p.data.name);
-                        if (!s.empty())
-                        {
-                                LOG(s);
-                        }
-                }
-        };
-
         const auto log = [&](const auto& v)
         {
                 for (const auto& p : v)
                 {
-                        if constexpr (requires { log_consistency_string(*p); })
+                        const std::string s = p->filter->consistency_string(p->data.name);
+                        if (!s.empty())
                         {
-                                log_consistency_string(*p);
-                        }
-                        else
-                        {
-                                log_consistency_string(p);
+                                LOG(s);
                         }
                 }
         };
 
-        log_consistency_string(*test.position_variance);
+        if (const auto& s = test.position_variance->consistency_string("Variance"); !s.empty())
+        {
+                LOG(s);
+        }
 
         log(test.positions_0);
         log(test.positions_1);
@@ -169,12 +149,14 @@ void update(
 
         for (auto& p : test->positions_1)
         {
-                p->update(measurement);
+                const auto& update = p->filter->update(measurement);
+                p->data.update(measurement.time, update);
         }
 
         for (auto& p : test->positions_2)
         {
-                p->update(measurement);
+                const auto& update = p->filter->update(measurement);
+                p->data.update(measurement.time, update);
         }
 
         test->position_estimation->update(measurement);

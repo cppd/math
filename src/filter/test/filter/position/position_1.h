@@ -19,37 +19,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1.h"
 #include "init.h"
-#include "position.h"
 
 #include "../../../consistency.h"
+#include "../filter.h"
 #include "../measurement.h"
-#include "../time_point.h"
 
-#include <src/color/rgb8.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace ns::filter::test::filter::position
 {
 template <std::size_t N, typename T>
-class Position1 final : public Position<N, T>
+class Position1 final : public FilterPosition<N, T>
 {
-        std::string name_;
-        color::RGB8 color_;
         T reset_dt_;
         T linear_dt_;
         std::optional<T> gate_;
         std::unique_ptr<Filter1<N, T>> filter_;
         Init<T> init_;
-
-        std::vector<TimePoint<N, T>> positions_;
-        std::vector<TimePoint<N, T>> positions_p_;
-        std::vector<TimePoint<1, T>> speeds_;
-        std::vector<TimePoint<1, T>> speeds_p_;
 
         NormalizedSquared<N, T> nees_position_;
         NormalizedSquared<1, T> nees_speed_;
@@ -58,37 +49,19 @@ class Position1 final : public Position<N, T>
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
 
-        void save_results(T time);
         void add_nees_checks(const TrueData<N, T>& true_data);
 
         void check_time(T time) const;
 
 public:
-        Position1(
-                std::string name,
-                color::RGB8 color,
-                T reset_dt,
-                T linear_dt,
-                std::optional<T> gate,
-                T theta,
-                T process_variance,
-                const Init<T>& init);
+        Position1(T reset_dt, T linear_dt, std::optional<T> gate, T theta, T process_variance, const Init<T>& init);
 
-        void update(const Measurements<N, T>& m) override;
-        void predict(const Measurements<N, T>& m) override;
+        [[nodiscard]] std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) override;
+        [[nodiscard]] std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) override;
+        [[nodiscard]] std::string consistency_string(const std::string& name) const override;
 
         [[nodiscard]] bool empty() const;
-
-        [[nodiscard]] const std::string& name() const override;
-        [[nodiscard]] color::RGB8 color() const override;
-
         [[nodiscard]] Vector<N, T> velocity() const;
         [[nodiscard]] Matrix<N, N, T> velocity_p() const;
-
-        [[nodiscard]] std::string consistency_string() const override;
-        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions() const override;
-        [[nodiscard]] const std::vector<TimePoint<N, T>>& positions_p() const override;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds() const override;
-        [[nodiscard]] const std::vector<TimePoint<1, T>>& speeds_p() const override;
 };
 }

@@ -65,28 +65,12 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-PositionVariance<N, T>::PositionVariance(
-        std::string name,
-        const color::RGB8 color,
-        const T reset_dt,
-        const T process_variance,
-        const Init<T>& init)
-        : name_(std::move(name)),
-          color_(color),
-          reset_dt_(reset_dt),
+PositionVariance<N, T>::PositionVariance(const T reset_dt, const T process_variance, const Init<T>& init)
+        : reset_dt_(reset_dt),
           filter_(create_filter_2<N, T>(THETA<T>, process_variance)),
           init_(init)
 {
         ASSERT(filter_);
-}
-
-template <std::size_t N, typename T>
-void PositionVariance<N, T>::save_results(const T time)
-{
-        positions_.push_back({.time = time, .point = filter_->position()});
-        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
-        speeds_.push_back({.time = time, .point = Vector<1, T>(filter_->speed())});
-        speeds_p_.push_back({.time = time, .point = Vector<1, T>(filter_->speed_p())});
 }
 
 template <std::size_t N, typename T>
@@ -127,7 +111,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 
         if (!check_residual(residual, position_variance_.variance()))
         {
-                LOG(to_string(m.time) + "; " + name_ + "; Discarded Residual = " + to_string(update.residual));
+                LOG(to_string(m.time) + "; Discarded Residual = " + to_string(update.residual));
                 return;
         }
 
@@ -136,13 +120,13 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         if (!position_variance_.has_variance())
         {
                 ASSERT(!last_position_variance_);
-                LOG(to_string(m.time) + "; " + name_ + "; Residual = " + to_string(update.residual));
+                LOG(to_string(m.time) + "; Residual = " + to_string(update.residual));
                 return;
         }
 
         const auto standard_deviation = position_variance_.standard_deviation();
         ASSERT(standard_deviation);
-        LOG(to_string(m.time) + "; " + name_ + "; Standard Deviation = " + to_string(*standard_deviation));
+        LOG(to_string(m.time) + "; Standard Deviation = " + to_string(*standard_deviation));
 
         const auto new_variance = position_variance_.compute();
         ASSERT(new_variance);
@@ -150,13 +134,13 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 }
 
 template <std::size_t N, typename T>
-void PositionVariance<N, T>::update(const Measurements<N, T>& m)
+std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
         if (!m.position)
         {
-                return;
+                return {};
         }
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
@@ -170,25 +154,18 @@ void PositionVariance<N, T>::update(const Measurements<N, T>& m)
                 update_position_variance(m);
         }
 
-        save_results(m.time);
+        return {
+                {.position = filter_->position(),
+                 .position_p = filter_->position_p().diagonal(),
+                 .speed = filter_->speed(),
+                 .speed_p = filter_->speed_p()}
+        };
 }
 
 template <std::size_t N, typename T>
-void PositionVariance<N, T>::predict(const Measurements<N, T>& /*m*/)
+std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::predict(const Measurements<N, T>& /*m*/)
 {
         error("predict is not supported");
-}
-
-template <std::size_t N, typename T>
-const std::string& PositionVariance<N, T>::name() const
-{
-        return name_;
-}
-
-template <std::size_t N, typename T>
-color::RGB8 PositionVariance<N, T>::color() const
-{
-        return color_;
 }
 
 template <std::size_t N, typename T>
@@ -198,10 +175,8 @@ const std::optional<Vector<N, T>>& PositionVariance<N, T>::last_position_varianc
 }
 
 template <std::size_t N, typename T>
-std::string PositionVariance<N, T>::consistency_string() const
+std::string PositionVariance<N, T>::consistency_string(const std::string& name) const
 {
-        const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
-
         std::string s;
 
         const auto new_line = [&]()
@@ -226,30 +201,6 @@ std::string PositionVariance<N, T>::consistency_string() const
         }
 
         return s;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& PositionVariance<N, T>::positions() const
-{
-        return positions_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& PositionVariance<N, T>::positions_p() const
-{
-        return positions_p_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& PositionVariance<N, T>::speeds() const
-{
-        return speeds_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& PositionVariance<N, T>::speeds_p() const
-{
-        return speeds_p_;
 }
 
 #define TEMPLATE_N_T(N, T) template class PositionVariance<(N), T>;

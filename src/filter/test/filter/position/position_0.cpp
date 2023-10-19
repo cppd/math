@@ -17,38 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_0.h"
 
-#include "filter_0.h"
-
 #include <src/com/error.h>
-#include <src/com/log.h>
-#include <src/com/type/name.h>
 
 namespace ns::filter::test::filter::position
 {
 template <std::size_t N, typename T>
 Position0<N, T>::Position0(
-        std::string name,
-        const color::RGB8 color,
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
         const T theta,
         const T process_variance)
-        : name_(std::move(name)),
-          color_(color),
-          reset_dt_(reset_dt),
+        : reset_dt_(reset_dt),
           linear_dt_(linear_dt),
           gate_(gate),
           filter_(create_filter_0<N, T>(theta, process_variance))
 {
         ASSERT(filter_);
-}
-
-template <std::size_t N, typename T>
-void Position0<N, T>::save_results(const T time)
-{
-        positions_.push_back({.time = time, .point = filter_->position()});
-        positions_p_.push_back({.time = time, .point = filter_->position_p().diagonal()});
 }
 
 template <std::size_t N, typename T>
@@ -74,13 +59,13 @@ void Position0<N, T>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T>
-void Position0<N, T>::update(const Measurements<N, T>& m)
+std::optional<UpdateInfo<N, T>> Position0<N, T>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
         if (!m.position || !m.position->variance)
         {
-                return;
+                return {};
         }
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
@@ -88,9 +73,13 @@ void Position0<N, T>::update(const Measurements<N, T>& m)
                 filter_->reset(m.position->value, *m.position->variance);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
-                save_results(m.time);
                 add_nees_checks(m.true_data);
-                return;
+                return {
+                        {.position = filter_->position(),
+                         .position_p = filter_->position_p().diagonal(),
+                         .speed = 0,
+                         .speed_p = 0}
+                };
         }
 
         filter_->predict(m.time - *last_predict_time_);
@@ -99,23 +88,33 @@ void Position0<N, T>::update(const Measurements<N, T>& m)
         const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
         if (update.gate)
         {
-                save_results(m.time);
                 add_nees_checks(m.true_data);
-                return;
+                return {
+                        {.position = filter_->position(),
+                         .position_p = filter_->position_p().diagonal(),
+                         .speed = 0,
+                         .speed_p = 0}
+                };
         }
         const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
 
-        save_results(m.time);
         add_nees_checks(m.true_data);
         if (update_dt <= linear_dt_)
         {
                 nis_.add(update.normalized_innovation_squared);
         }
+
+        return {
+                {.position = filter_->position(),
+                 .position_p = filter_->position_p().diagonal(),
+                 .speed = 0,
+                 .speed_p = 0}
+        };
 }
 
 template <std::size_t N, typename T>
-void Position0<N, T>::predict(const Measurements<N, T>& m)
+std::optional<UpdateInfo<N, T>> Position0<N, T>::predict(const Measurements<N, T>& m)
 {
         if (m.position)
         {
@@ -126,14 +125,20 @@ void Position0<N, T>::predict(const Measurements<N, T>& m)
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
-                return;
+                return {};
         }
 
         filter_->predict(m.time - *last_predict_time_);
         last_predict_time_ = m.time;
 
-        save_results(m.time);
         add_nees_checks(m.true_data);
+
+        return {
+                {.position = filter_->position(),
+                 .position_p = filter_->position_p().diagonal(),
+                 .speed = 0,
+                 .speed_p = 0}
+        };
 }
 
 template <std::size_t N, typename T>
@@ -143,22 +148,8 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-const std::string& Position0<N, T>::name() const
+std::string Position0<N, T>::consistency_string(const std::string& name) const
 {
-        return name_;
-}
-
-template <std::size_t N, typename T>
-color::RGB8 Position0<N, T>::color() const
-{
-        return color_;
-}
-
-template <std::size_t N, typename T>
-std::string Position0<N, T>::consistency_string() const
-{
-        const std::string name = std::string("Position<") + type_name<T>() + "> " + name_;
-
         std::string s;
 
         const auto new_line = [&]()
@@ -189,30 +180,6 @@ std::string Position0<N, T>::consistency_string() const
         }
 
         return s;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& Position0<N, T>::positions() const
-{
-        return positions_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<N, T>>& Position0<N, T>::positions_p() const
-{
-        return positions_p_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& Position0<N, T>::speeds() const
-{
-        return speeds_;
-}
-
-template <std::size_t N, typename T>
-const std::vector<TimePoint<1, T>>& Position0<N, T>::speeds_p() const
-{
-        return speeds_p_;
 }
 
 #define TEMPLATE_N_T(N, T) template class Position0<(N), T>;
