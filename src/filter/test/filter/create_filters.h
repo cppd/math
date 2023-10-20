@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "test_filter.h"
+#include "filter_info.h"
 
 #include "position/position_estimation.h"
 #include "position/position_variance.h"
@@ -27,22 +27,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter
 {
-template <typename T>
-struct Test final
+template <std::size_t N, typename T>
+struct TestFilterPosition final
 {
+        std::unique_ptr<FilterPosition<N, T>> filter;
+        FilterInfo<N, T> data;
+
+        TestFilterPosition(std::unique_ptr<FilterPosition<N, T>>&& filter, std::string name, color::RGB8 color)
+                : filter(std::move(filter)),
+                  data(std::move(name), color)
+        {
+        }
+};
+
+template <std::size_t N, typename T>
+struct TestFilter final
+{
+        std::unique_ptr<Filter<N, T>> filter;
+        FilterInfo<N, T> data;
+
+        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
+                : filter(std::move(filter)),
+                  data(std::move(name), color)
+        {
+        }
+};
+
+template <typename T>
+struct Filters final
+{
+        std::vector<TestFilterPosition<2, T>> positions_0;
+        std::vector<TestFilterPosition<2, T>> positions_1;
+        std::vector<TestFilterPosition<2, T>> positions_2;
+
+        std::vector<TestFilter<2, T>> accelerations;
+        std::vector<TestFilter<2, T>> directions;
+        std::vector<TestFilter<2, T>> speeds;
+
         std::unique_ptr<position::PositionVariance<2, T>> position_variance;
-
-        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_0;
-        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_1;
-        std::vector<std::unique_ptr<TestFilterPosition<2, T>>> positions_2;
-
-        std::vector<std::unique_ptr<TestFilter<2, T>>> accelerations;
-        std::vector<std::unique_ptr<TestFilter<2, T>>> directions;
-        std::vector<std::unique_ptr<TestFilter<2, T>>> speeds;
-
         std::unique_ptr<position::PositionEstimation<T>> position_estimation;
 };
 
 template <typename T>
-Test<T> create_data();
+Filters<T> create_filters();
 }

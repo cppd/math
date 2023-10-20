@@ -152,9 +152,9 @@ std::unique_ptr<position::PositionVariance<N, T>> create_position_variance()
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<std::unique_ptr<TestFilterPosition<N, T>>> create_positions()
+std::vector<TestFilterPosition<N, T>> create_positions()
 {
-        std::vector<std::unique_ptr<TestFilterPosition<N, T>>> res;
+        std::vector<TestFilterPosition<N, T>> res;
 
         const int precision = compute_string_precision(Config<T>::POSITION_FILTER_THETAS);
 
@@ -176,32 +176,32 @@ std::vector<std::unique_ptr<TestFilterPosition<N, T>>> create_positions()
 
                 if (ORDER == 0)
                 {
-                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                        res.emplace_back(
                                 std::make_unique<position::Position0<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_0, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_0),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200)));
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200));
                 }
 
                 if (ORDER == 1)
                 {
-                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                        res.emplace_back(
                                 std::make_unique<position::Position1<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_1, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200)));
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200));
                 }
 
                 if (ORDER == 2)
                 {
-                        res.push_back(std::make_unique<TestFilterPosition<2, T>>(
+                        res.emplace_back(
                                 std::make_unique<position::Position2<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_2, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0)));
+                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0));
                 }
         }
 
@@ -209,17 +209,17 @@ std::vector<std::unique_ptr<TestFilterPosition<N, T>>> create_positions()
 }
 
 template <typename T>
-std::vector<std::unique_ptr<TestFilter<2, T>>> create_accelerations()
+std::vector<TestFilter<2, T>> create_accelerations()
 {
-        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
+        std::vector<TestFilter<2, T>> res;
 
-        res.push_back(std::make_unique<TestFilter<2, T>>(
+        res.emplace_back(
                 std::make_unique<acceleration::AccelerationEkf<T>>(
                         Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                         Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
-                "Acceleration EKF", color::RGB8(0, 200, 0)));
+                "Acceleration EKF", color::RGB8(0, 200, 0));
 
         const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
@@ -236,7 +236,7 @@ std::vector<std::unique_ptr<TestFilter<2, T>>> create_accelerations()
         {
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
-                res.push_back(std::make_unique<TestFilter<2, T>>(
+                res.emplace_back(
                         std::make_unique<acceleration::AccelerationUkf<T>>(
                                 Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
@@ -244,14 +244,14 @@ std::vector<std::unique_ptr<TestFilter<2, T>>> create_accelerations()
                                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
-                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0)));
+                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0));
         }
 
         return res;
 }
 
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
-std::unique_ptr<TestFilter<2, T>> create_direction(const unsigned i, const T alpha)
+TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
@@ -270,42 +270,39 @@ std::unique_ptr<TestFilter<2, T>> create_direction(const unsigned i, const T alp
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return std::make_unique<TestFilter<2, T>>(
-                        std::make_unique<direction::Direction10<T>>(
+                return {std::make_unique<direction::Direction10<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 250));
+                        name, color::RGB8(0, 160 - 40 * i, 250)};
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return std::make_unique<TestFilter<2, T>>(
-                        std::make_unique<direction::Direction11<T>>(
+                return {std::make_unique<direction::Direction11<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 150));
+                        name, color::RGB8(0, 160 - 40 * i, 150)};
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return std::make_unique<TestFilter<2, T>>(
-                        std::make_unique<direction::Direction21<T>>(
+                return {std::make_unique<direction::Direction21<T>>(
                                 Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 50));
+                        name, color::RGB8(0, 160 - 40 * i, 50)};
         }
 }
 
 template <typename T>
-std::vector<std::unique_ptr<TestFilter<2, T>>> create_directions()
+std::vector<TestFilter<2, T>> create_directions()
 {
-        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
+        std::vector<TestFilter<2, T>> res;
 
         const auto alphas = sort(std::array(Config<T>::DIRECTION_FILTER_UKF_ALPHAS));
 
@@ -328,7 +325,7 @@ std::vector<std::unique_ptr<TestFilter<2, T>>> create_directions()
 }
 
 template <typename T, std::size_t ORDER_P>
-std::unique_ptr<TestFilter<2, T>> create_speed(const unsigned i, const T alpha)
+TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 2);
@@ -347,28 +344,26 @@ std::unique_ptr<TestFilter<2, T>> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 1)
         {
-                return std::make_unique<TestFilter<2, T>>(
-                        std::make_unique<speed::Speed1<T>>(
+                return {std::make_unique<speed::Speed1<T>>(
                                 Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
-                        name, color::RGB8(0, 200 - 40 * i, 0));
+                        name, color::RGB8(0, 200 - 40 * i, 0)};
         }
 
         if (ORDER_P == 2)
         {
-                return std::make_unique<TestFilter<2, T>>(
-                        std::make_unique<speed::Speed2<T>>(
+                return {std::make_unique<speed::Speed2<T>>(
                                 Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2,
                                 Config<T>::SPEED_INIT),
-                        name, color::RGB8(0, 150 - 40 * i, 0));
+                        name, color::RGB8(0, 150 - 40 * i, 0)};
         }
 }
 
 template <typename T>
-std::vector<std::unique_ptr<TestFilter<2, T>>> create_speeds()
+std::vector<TestFilter<2, T>> create_speeds()
 {
-        std::vector<std::unique_ptr<TestFilter<2, T>>> res;
+        std::vector<TestFilter<2, T>> res;
 
         const auto alphas = sort(std::array(Config<T>::SPEED_FILTER_UKF_ALPHAS));
 
@@ -387,9 +382,9 @@ std::vector<std::unique_ptr<TestFilter<2, T>>> create_speeds()
 }
 
 template <typename T>
-Test<T> create_data()
+Filters<T> create_filters()
 {
-        Test<T> res;
+        Filters<T> res;
 
         res.position_variance = create_position_variance<2, T>();
 
@@ -403,12 +398,12 @@ Test<T> create_data()
 
         res.position_estimation = std::make_unique<position::PositionEstimation<T>>(
                 Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,
-                static_cast<const position::Position2<2, T>*>(res.positions_2.front()->filter.get()));
+                static_cast<const position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;
 }
 
-#define TEMPLATE_T(T) template Test<T> create_data();
+#define TEMPLATE_T(T) template Filters<T> create_filters();
 
 TEMPLATE_T(float)
 TEMPLATE_T(double)

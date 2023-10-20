@@ -37,56 +37,43 @@ template <typename T>
 void write_file(
         const std::string_view annotation,
         const std::vector<filter::Measurements<2, T>>& measurements,
-        const filter::Test<T>& test)
+        const filter::Filters<T>& filters)
 {
-        std::vector<view::Filter<2, T>> filters;
+        std::vector<view::Filter<2, T>> view_filters;
 
         const auto push = [&](const auto& v)
         {
                 for (const auto& p : v)
                 {
-                        if constexpr (requires { p->name(); })
-                        {
-                                filters.push_back(
-                                        {.name = p->name(),
-                                         .color = p->color(),
-                                         .speed = p->speeds(),
-                                         .speed_p = p->speeds_p(),
-                                         .position = p->positions(),
-                                         .position_p = p->positions_p()});
-                        }
-                        else
-                        {
-                                filters.push_back(
-                                        {.name = p->data.name,
-                                         .color = p->data.color,
-                                         .speed = p->data.speeds,
-                                         .speed_p = p->data.speeds_p,
-                                         .position = p->data.positions,
-                                         .position_p = p->data.positions_p});
-                        }
+                        view_filters.push_back(
+                                {.name = p.data.name,
+                                 .color = p.data.color,
+                                 .speed = p.data.speeds,
+                                 .speed_p = p.data.speeds_p,
+                                 .position = p.data.positions,
+                                 .position_p = p.data.positions_p});
                 }
         };
 
-        push(test.positions_0);
-        push(test.positions_1);
-        push(test.positions_2);
+        push(filters.positions_0);
+        push(filters.positions_1);
+        push(filters.positions_2);
 
-        push(test.accelerations);
-        push(test.directions);
-        push(test.speeds);
+        push(filters.accelerations);
+        push(filters.directions);
+        push(filters.speeds);
 
-        view::write_to_file(annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
+        view::write_to_file(annotation, measurements, DATA_CONNECT_INTERVAL<T>, view_filters);
 }
 
 template <typename T>
-void write_log(const filter::Test<T>& test)
+void write_log(const filter::Filters<T>& filters)
 {
         const auto log = [&](const auto& v)
         {
                 for (const auto& p : v)
                 {
-                        const std::string s = p->filter->consistency_string(p->data.name);
+                        const std::string s = p.filter->consistency_string(p.data.name);
                         if (!s.empty())
                         {
                                 LOG(s);
@@ -94,41 +81,41 @@ void write_log(const filter::Test<T>& test)
                 }
         };
 
-        if (const auto& s = test.position_variance->consistency_string("Variance"); !s.empty())
+        if (const auto& s = filters.position_variance->consistency_string("Variance"); !s.empty())
         {
                 LOG(s);
         }
 
-        log(test.positions_0);
-        log(test.positions_1);
-        log(test.positions_2);
+        log(filters.positions_0);
+        log(filters.positions_1);
+        log(filters.positions_2);
 
-        log(test.accelerations);
-        log(test.directions);
-        log(test.speeds);
+        log(filters.accelerations);
+        log(filters.directions);
+        log(filters.speeds);
 }
 
 template <typename T>
-void update(const filter::Measurements<2, T>& measurement, filter::Test<T>* const test)
+void update(const filter::Measurements<2, T>& measurement, filter::Filters<T>* const filters)
 {
-        const auto& position_estimation = *test->position_estimation;
+        const auto& position_estimation = *filters->position_estimation;
 
-        for (auto& m : test->accelerations)
+        for (auto& m : filters->accelerations)
         {
-                const auto& update = m->filter->update(measurement, position_estimation);
-                m->data.update(measurement.time, update);
+                const auto& update = m.filter->update(measurement, position_estimation);
+                m.data.update(measurement.time, update);
         }
 
-        for (auto& m : test->directions)
+        for (auto& m : filters->directions)
         {
-                const auto& update = m->filter->update(measurement, position_estimation);
-                m->data.update(measurement.time, update);
+                const auto& update = m.filter->update(measurement, position_estimation);
+                m.data.update(measurement.time, update);
         }
 
-        for (auto& m : test->speeds)
+        for (auto& m : filters->speeds)
         {
-                const auto& update = m->filter->update(measurement, position_estimation);
-                m->data.update(measurement.time, update);
+                const auto& update = m.filter->update(measurement, position_estimation);
+                m.data.update(measurement.time, update);
         }
 }
 
@@ -136,48 +123,48 @@ template <typename T>
 void update(
         filter::Measurements<2, T> measurement,
         std::vector<filter::Measurements<2, T>>* const measurements,
-        filter::Test<T>* const test)
+        filter::Filters<T>* const filters)
 {
         measurements->push_back(measurement);
 
-        test->position_variance->update(measurement);
+        filters->position_variance->update(measurement);
 
         if (measurement.position && !measurement.position->variance)
         {
-                measurement.position->variance = test->position_variance->last_position_variance();
+                measurement.position->variance = filters->position_variance->last_position_variance();
         }
 
-        for (auto& p : test->positions_1)
+        for (auto& p : filters->positions_1)
         {
-                const auto& update = p->filter->update(measurement);
-                p->data.update(measurement.time, update);
+                const auto& update = p.filter->update(measurement);
+                p.data.update(measurement.time, update);
         }
 
-        for (auto& p : test->positions_2)
+        for (auto& p : filters->positions_2)
         {
-                const auto& update = p->filter->update(measurement);
-                p->data.update(measurement.time, update);
+                const auto& update = p.filter->update(measurement);
+                p.data.update(measurement.time, update);
         }
 
-        test->position_estimation->update(measurement);
+        filters->position_estimation->update(measurement);
 
-        update(measurement, test);
+        update(measurement, filters);
 }
 
 template <typename T>
 void run(const filter::Track<2, T>& track)
 {
-        filter::Test<T> test = filter::create_data<T>();
+        filter::Filters<T> filters = filter::create_filters<T>();
         std::vector<filter::Measurements<2, T>> measurements;
 
         for (const filter::Measurements<2, T>& measurement : track)
         {
-                update(measurement, &measurements, &test);
+                update(measurement, &measurements, &filters);
         }
 
-        write_file(track.annotation(), measurements, test);
+        write_file(track.annotation(), measurements, filters);
 
-        write_log(test);
+        write_log(filters);
 }
 
 template <typename T>

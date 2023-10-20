@@ -17,19 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter.h"
 #include "time_point.h"
 
 #include <src/color/rgb8.h>
 
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace ns::filter::test::filter
 {
 template <std::size_t N, typename T>
-struct FilterData final
+struct FilterInfo final
 {
         std::string name;
         color::RGB8 color;
@@ -39,7 +37,7 @@ struct FilterData final
         std::vector<TimePoint<1, T>> speeds;
         std::vector<TimePoint<1, T>> speeds_p;
 
-        FilterData(std::string name, color::RGB8 color)
+        FilterInfo(std::string name, color::RGB8 color)
                 : name(std::move(name)),
                   color(color)
         {
@@ -56,32 +54,6 @@ struct FilterData final
                 positions_p.push_back({.time = time, .point = update->position_p});
                 speeds.push_back({.time = time, .point = Vector<1, T>(update->speed)});
                 speeds_p.push_back({.time = time, .point = Vector<1, T>(update->speed_p)});
-        }
-};
-
-template <std::size_t N, typename T>
-struct TestFilter final
-{
-        std::unique_ptr<Filter<N, T>> filter;
-        FilterData<N, T> data;
-
-        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
-                : filter(std::move(filter)),
-                  data(std::move(name), color)
-        {
-        }
-};
-
-template <std::size_t N, typename T>
-struct TestFilterPosition final
-{
-        std::unique_ptr<FilterPosition<N, T>> filter;
-        FilterData<N, T> data;
-
-        TestFilterPosition(std::unique_ptr<FilterPosition<N, T>>&& filter, std::string name, color::RGB8 color)
-                : filter(std::move(filter)),
-                  data(std::move(name), color)
-        {
         }
 };
 }
