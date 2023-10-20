@@ -34,6 +34,20 @@ namespace
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
 
+template <std::size_t N, typename T>
+void add_info(const T time, const auto& update_info, view::Filter<N, T>* const filter_info)
+{
+        if (!update_info)
+        {
+                return;
+        }
+
+        filter_info->position.push_back({.time = time, .point = update_info->position});
+        filter_info->position_p.push_back({.time = time, .point = update_info->position_p});
+        filter_info->speed.push_back({.time = time, .point = Vector<1, T>(update_info->speed)});
+        filter_info->speed_p.push_back({.time = time, .point = Vector<1, T>(update_info->speed_p)});
+}
+
 template <typename T>
 void write_file(
         const std::string_view annotation,
@@ -46,13 +60,7 @@ void write_file(
         {
                 for (const auto& p : v)
                 {
-                        view_filters.push_back(
-                                {.name = p.data.name,
-                                 .color = p.data.color,
-                                 .speed = p.data.speeds,
-                                 .speed_p = p.data.speeds_p,
-                                 .position = p.data.positions,
-                                 .position_p = p.data.positions_p});
+                        view_filters.push_back(p.data);
                 }
         };
 
@@ -101,22 +109,22 @@ void update(const filter::Measurements<2, T>& measurement, Filters<T>* const fil
 {
         const auto& position_estimation = *filters->position_estimation;
 
-        for (auto& m : filters->accelerations)
+        for (auto& f : filters->accelerations)
         {
-                const auto& update = m.filter->update(measurement, position_estimation);
-                m.data.update(measurement.time, update);
+                const auto& update_info = f.filter->update(measurement, position_estimation);
+                add_info(measurement.time, update_info, &f.data);
         }
 
-        for (auto& m : filters->directions)
+        for (auto& f : filters->directions)
         {
-                const auto& update = m.filter->update(measurement, position_estimation);
-                m.data.update(measurement.time, update);
+                const auto& update_info = f.filter->update(measurement, position_estimation);
+                add_info(measurement.time, update_info, &f.data);
         }
 
-        for (auto& m : filters->speeds)
+        for (auto& f : filters->speeds)
         {
-                const auto& update = m.filter->update(measurement, position_estimation);
-                m.data.update(measurement.time, update);
+                const auto& update_info = f.filter->update(measurement, position_estimation);
+                add_info(measurement.time, update_info, &f.data);
         }
 }
 
@@ -135,16 +143,16 @@ void update(
                 measurement.position->variance = filters->position_variance->last_position_variance();
         }
 
-        for (auto& p : filters->positions_1)
+        for (auto& f : filters->positions_1)
         {
-                const auto& update = p.filter->update(measurement);
-                p.data.update(measurement.time, update);
+                const auto& update_info = f.filter->update(measurement);
+                add_info(measurement.time, update_info, &f.data);
         }
 
-        for (auto& p : filters->positions_2)
+        for (auto& f : filters->positions_2)
         {
-                const auto& update = p.filter->update(measurement);
-                p.data.update(measurement.time, update);
+                const auto& update_info = f.filter->update(measurement);
+                add_info(measurement.time, update_info, &f.data);
         }
 
         filters->position_estimation->update(measurement);

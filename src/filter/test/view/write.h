@@ -39,6 +39,12 @@ struct Filter final
         std::vector<TimePoint<1, T>> speed_p;
         std::vector<TimePoint<N, T>> position;
         std::vector<TimePoint<N, T>> position_p;
+
+        Filter(std::string name, color::RGB8 color)
+                : name(std::move(name)),
+                  color(color)
+        {
+        }
 };
 
 template <std::size_t N, typename T>

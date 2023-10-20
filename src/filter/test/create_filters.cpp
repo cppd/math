@@ -181,7 +181,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_0, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_0),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200));
+                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200)));
                 }
 
                 if (ORDER == 1)
@@ -191,7 +191,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_1, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200));
+                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200)));
                 }
 
                 if (ORDER == 2)
@@ -201,7 +201,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_2, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT),
-                                name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0));
+                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0)));
                 }
         }
 
@@ -219,7 +219,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                         Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
-                "Acceleration EKF", color::RGB8(0, 200, 0));
+                view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
 
         const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
@@ -244,7 +244,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
-                        name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0));
+                        view::Filter<2, T>(name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0)));
         }
 
         return res;
@@ -275,7 +275,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 250)};
+                        view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
@@ -285,7 +285,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 150)};
+                        view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
@@ -295,7 +295,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT),
-                        name, color::RGB8(0, 160 - 40 * i, 50)};
+                        view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         }
 }
 
@@ -347,7 +347,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                 return {std::make_unique<filter::speed::Speed1<T>>(
                                 Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
-                        name, color::RGB8(0, 200 - 40 * i, 0)};
+                        view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         }
 
         if (ORDER_P == 2)
@@ -356,7 +356,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                                 Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2,
                                 Config<T>::SPEED_INIT),
-                        name, color::RGB8(0, 150 - 40 * i, 0)};
+                        view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         }
 }
 
