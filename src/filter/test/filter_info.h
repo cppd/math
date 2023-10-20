@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time_point.h"
+#include "view/time_point.h"
 
 #include <src/color/rgb8.h>
 
 #include <string>
 #include <vector>
 
-namespace ns::filter::test::filter
+namespace ns::filter::test
 {
 template <std::size_t N, typename T>
 struct FilterInfo final
@@ -32,10 +32,10 @@ struct FilterInfo final
         std::string name;
         color::RGB8 color;
 
-        std::vector<TimePoint<N, T>> positions;
-        std::vector<TimePoint<N, T>> positions_p;
-        std::vector<TimePoint<1, T>> speeds;
-        std::vector<TimePoint<1, T>> speeds_p;
+        std::vector<view::TimePoint<N, T>> positions;
+        std::vector<view::TimePoint<N, T>> positions_p;
+        std::vector<view::TimePoint<1, T>> speeds;
+        std::vector<view::TimePoint<1, T>> speeds_p;
 
         FilterInfo(std::string name, color::RGB8 color)
                 : name(std::move(name)),

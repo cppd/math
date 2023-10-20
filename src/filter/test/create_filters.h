@@ -19,21 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_info.h"
 
-#include "position/position_estimation.h"
-#include "position/position_variance.h"
+#include "filter/position/position_estimation.h"
+#include "filter/position/position_variance.h"
 
 #include <memory>
 #include <vector>
 
-namespace ns::filter::test::filter
+namespace ns::filter::test
 {
 template <std::size_t N, typename T>
 struct TestFilterPosition final
 {
-        std::unique_ptr<FilterPosition<N, T>> filter;
+        std::unique_ptr<filter::FilterPosition<N, T>> filter;
         FilterInfo<N, T> data;
 
-        TestFilterPosition(std::unique_ptr<FilterPosition<N, T>>&& filter, std::string name, color::RGB8 color)
+        TestFilterPosition(std::unique_ptr<filter::FilterPosition<N, T>>&& filter, std::string name, color::RGB8 color)
                 : filter(std::move(filter)),
                   data(std::move(name), color)
         {
@@ -43,10 +43,10 @@ struct TestFilterPosition final
 template <std::size_t N, typename T>
 struct TestFilter final
 {
-        std::unique_ptr<Filter<N, T>> filter;
+        std::unique_ptr<filter::Filter<N, T>> filter;
         FilterInfo<N, T> data;
 
-        TestFilter(std::unique_ptr<Filter<N, T>>&& filter, std::string name, color::RGB8 color)
+        TestFilter(std::unique_ptr<filter::Filter<N, T>>&& filter, std::string name, color::RGB8 color)
                 : filter(std::move(filter)),
                   data(std::move(name), color)
         {
@@ -64,8 +64,8 @@ struct Filters final
         std::vector<TestFilter<2, T>> directions;
         std::vector<TestFilter<2, T>> speeds;
 
-        std::unique_ptr<position::PositionVariance<2, T>> position_variance;
-        std::unique_ptr<position::PositionEstimation<T>> position_estimation;
+        std::unique_ptr<filter::position::PositionVariance<2, T>> position_variance;
+        std::unique_ptr<filter::position::PositionEstimation<T>> position_estimation;
 };
 
 template <typename T>

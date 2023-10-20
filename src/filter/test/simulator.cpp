@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
-#include "../utility/utility.h"
+#include "utility/utility.h"
 
 #include <src/com/angle.h>
 #include <src/com/constant.h>
@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::filter::test::filter
+namespace ns::filter::test
 {
 namespace
 {
@@ -67,14 +67,14 @@ struct Config final
 };
 
 template <std::size_t N, typename T>
-std::string make_annotation(const Config<T>& config, const std::vector<Measurements<N, T>>& measurements)
+std::string make_annotation(const Config<T>& config, const std::vector<filter::Measurements<N, T>>& measurements)
 {
         bool position = false;
         bool speed = false;
         bool direction = false;
         bool acceleration = false;
 
-        for (const Measurements<N, T>& m : measurements)
+        for (const filter::Measurements<N, T>& m : measurements)
         {
                 position = position || m.position.has_value();
                 speed = speed || m.speed.has_value();
@@ -309,18 +309,18 @@ public:
 };
 
 template <std::size_t N, typename T>
-std::vector<Measurements<N, T>> simulate(const Config<T>& config)
+std::vector<filter::Measurements<N, T>> simulate(const Config<T>& config)
 {
         Simulator<N, T> simulator(config);
 
-        std::vector<Measurements<N, T>> measurements;
+        std::vector<filter::Measurements<N, T>> measurements;
         measurements.reserve(config.count);
 
         for (std::size_t i = 0; i < config.count; ++i)
         {
                 simulator.move();
 
-                Measurements<N, T>& m = measurements.emplace_back();
+                filter::Measurements<N, T>& m = measurements.emplace_back();
 
                 m.true_data = {
                         .position = simulator.position(),
@@ -363,11 +363,11 @@ std::vector<Measurements<N, T>> simulate(const Config<T>& config)
 }
 
 template <std::size_t N, typename T>
-void correct_measurements(std::vector<Measurements<N, T>>* const measurements)
+void correct_measurements(std::vector<filter::Measurements<N, T>>* const measurements)
 {
         for (std::size_t i = 0; i < measurements->size(); ++i)
         {
-                Measurements<N, T>& m = (*measurements)[i];
+                filter::Measurements<N, T>& m = (*measurements)[i];
 
                 if (m.position)
                 {
@@ -398,7 +398,7 @@ Track<N, T> track()
         ASSERT(config.measurement_dt_count_acceleration > 0 && config.measurement_dt_count_direction > 0
                && config.measurement_dt_count_position > 0 && config.measurement_dt_count_speed > 0);
 
-        std::vector<Measurements<N, T>> measurements = simulate<N, T>(config);
+        std::vector<filter::Measurements<N, T>> measurements = simulate<N, T>(config);
 
         correct_measurements(&measurements);
 

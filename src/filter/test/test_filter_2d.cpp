@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "filter/create_filters.h"
+#include "create_filters.h"
+#include "simulator.h"
+
 #include "filter/measurement.h"
-#include "filter/simulator.h"
 #include "view/write.h"
 
 #include <src/com/log.h>
@@ -37,7 +38,7 @@ template <typename T>
 void write_file(
         const std::string_view annotation,
         const std::vector<filter::Measurements<2, T>>& measurements,
-        const filter::Filters<T>& filters)
+        const Filters<T>& filters)
 {
         std::vector<view::Filter<2, T>> view_filters;
 
@@ -67,7 +68,7 @@ void write_file(
 }
 
 template <typename T>
-void write_log(const filter::Filters<T>& filters)
+void write_log(const Filters<T>& filters)
 {
         const auto log = [&](const auto& v)
         {
@@ -96,7 +97,7 @@ void write_log(const filter::Filters<T>& filters)
 }
 
 template <typename T>
-void update(const filter::Measurements<2, T>& measurement, filter::Filters<T>* const filters)
+void update(const filter::Measurements<2, T>& measurement, Filters<T>* const filters)
 {
         const auto& position_estimation = *filters->position_estimation;
 
@@ -123,7 +124,7 @@ template <typename T>
 void update(
         filter::Measurements<2, T> measurement,
         std::vector<filter::Measurements<2, T>>* const measurements,
-        filter::Filters<T>* const filters)
+        Filters<T>* const filters)
 {
         measurements->push_back(measurement);
 
@@ -152,9 +153,9 @@ void update(
 }
 
 template <typename T>
-void run(const filter::Track<2, T>& track)
+void run(const Track<2, T>& track)
 {
-        filter::Filters<T> filters = filter::create_filters<T>();
+        Filters<T> filters = create_filters<T>();
         std::vector<filter::Measurements<2, T>> measurements;
 
         for (const filter::Measurements<2, T>& measurement : track)
@@ -170,7 +171,7 @@ void run(const filter::Track<2, T>& track)
 template <typename T>
 void test_impl()
 {
-        run(filter::track<2, T>());
+        run(track<2, T>());
 }
 
 void test()
