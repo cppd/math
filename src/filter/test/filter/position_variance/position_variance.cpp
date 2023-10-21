@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 
-namespace ns::filter::test::filter::position
+namespace ns::filter::test::filter::position_variance
 {
 namespace
 {
@@ -65,9 +65,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-PositionVariance<N, T>::PositionVariance(const T reset_dt, const T process_variance, const Init<T>& init)
+PositionVariance<N, T>::PositionVariance(const T reset_dt, const T process_variance, const position::Init<T>& init)
         : reset_dt_(reset_dt),
-          filter_(create_filter_2<N, T>(THETA<T>, process_variance)),
+          filter_(position::create_filter_2<N, T>(THETA<T>, process_variance)),
           init_(init)
 {
         ASSERT(filter_);

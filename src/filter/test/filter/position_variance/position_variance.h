@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter_2.h"
-#include "init.h"
+#include "moving_variance.h"
 
 #include "../filter.h"
 #include "../measurement.h"
-#include "../moving_variance.h"
+#include "../position/filter_2.h"
+#include "../position/init.h"
 
 #include <src/numerical/vector.h>
 
@@ -30,14 +30,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::filter::test::filter::position
+namespace ns::filter::test::filter::position_variance
 {
 template <std::size_t N, typename T>
-class PositionVariance final : public FilterPosition<N, T>
+class PositionVariance final
 {
         T reset_dt_;
-        std::unique_ptr<Filter2<N, T>> filter_;
-        Init<T> init_;
+        std::unique_ptr<position::Filter2<N, T>> filter_;
+        position::Init<T> init_;
 
         MovingVariance<N, T> position_variance_;
         std::optional<Vector<N, T>> last_position_variance_;
@@ -49,11 +49,11 @@ class PositionVariance final : public FilterPosition<N, T>
         void update_position_variance(const Measurements<N, T>& m);
 
 public:
-        PositionVariance(T reset_dt, T process_variance, const Init<T>& init);
+        PositionVariance(T reset_dt, T process_variance, const position::Init<T>& init);
 
-        std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) override;
-        std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) override;
-        [[nodiscard]] std::string consistency_string(const std::string& name) const override;
+        std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m);
+        std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m);
+        [[nodiscard]] std::string consistency_string(const std::string& name) const;
 
         [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
 };
