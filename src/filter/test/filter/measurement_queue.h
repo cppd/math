@@ -63,7 +63,8 @@ public:
                         return;
                 }
 
-                if (!estimation.has_angle() || !(estimation.angle_p() <= angle_estimation_variance_))
+                const auto angle_p = estimation.angle_p();
+                if (!(angle_p && *angle_p <= angle_estimation_variance_))
                 {
                         last_time_.reset();
                         measurements_.clear();

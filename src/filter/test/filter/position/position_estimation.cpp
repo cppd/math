@@ -57,20 +57,9 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
 }
 
 template <typename T>
-bool PositionEstimation<T>::has_angle() const
+std::optional<T> PositionEstimation<T>::angle_p() const
 {
-        return angle_p_.has_value();
-}
-
-template <typename T>
-T PositionEstimation<T>::angle_p() const
-{
-        if (!has_angle())
-        {
-                error("Estimation doesn't have angle");
-        }
-        ASSERT(angle_p_);
-        return *angle_p_;
+        return angle_p_;
 }
 
 template <typename T>

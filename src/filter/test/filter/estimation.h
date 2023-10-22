@@ -31,8 +31,7 @@ protected:
         ~Estimation() = default;
 
 public:
-        [[nodiscard]] virtual bool has_angle() const = 0;
-        [[nodiscard]] virtual T angle_p() const = 0;
+        [[nodiscard]] virtual std::optional<T> angle_p() const = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
