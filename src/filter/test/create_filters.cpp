@@ -58,7 +58,6 @@ struct Config final
         static constexpr T POSITION_FILTER_VARIANCE_2 = square(0.5);
         static constexpr std::optional<T> POSITION_FILTER_GATE_2{5};
 
-        static constexpr T POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE = 1;
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
         static constexpr T POSITION_FILTER_RESET_DT = 10;
         static constexpr T POSITION_FILTER_LINEAR_DT = 2;
@@ -397,7 +396,6 @@ Filters<T> create_filters()
         res.speeds = create_speeds<T>();
 
         res.position_estimation = std::make_unique<filter::position::PositionEstimation<T>>(
-                Config<T>::POSITION_FILTER_MEASUREMENT_ANGLE_TIME_DIFFERENCE,
                 static_cast<const filter::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;

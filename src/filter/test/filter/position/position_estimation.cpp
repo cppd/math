@@ -19,42 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../utility/utility.h"
 
-#include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/log.h>
 
 namespace ns::filter::test::filter::position
 {
 template <typename T>
-PositionEstimation<T>::PositionEstimation(
-        const T angle_estimation_time_difference,
-        const Position2<2, T>* const position)
-        : angle_estimation_time_difference_(angle_estimation_time_difference),
-          position_(position)
+PositionEstimation<T>::PositionEstimation(const Position2<2, T>* const position)
+        : position_(position)
 {
 }
 
 template <typename T>
 void PositionEstimation<T>::update(const Measurements<2, T>& m)
 {
-        if (m.direction)
-        {
-                last_direction_ = m.direction->value[0];
-                last_direction_time_ = m.time;
-        }
-        else
-        {
-                ASSERT(!last_direction_time_ || m.time >= *last_direction_time_);
-        }
-
         angle_p_.reset();
-        measurement_angle_.reset();
-
-        if (last_direction_time_ && (m.time - *last_direction_time_ <= angle_estimation_time_difference_))
-        {
-                ASSERT(last_direction_);
-                measurement_angle_ = *last_direction_;
-        }
 
         if (!m.position)
         {
@@ -78,25 +57,9 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
 }
 
 template <typename T>
-std::optional<T> PositionEstimation<T>::measurement_angle() const
-{
-        return measurement_angle_;
-}
-
-template <typename T>
 bool PositionEstimation<T>::has_angle() const
 {
         return angle_p_.has_value();
-}
-
-template <typename T>
-T PositionEstimation<T>::angle() const
-{
-        if (!has_angle())
-        {
-                error("Estimation doesn't have angle");
-        }
-        return utility::compute_angle(position_->velocity());
 }
 
 template <typename T>
@@ -123,6 +86,12 @@ Matrix<2, 2, T> PositionEstimation<T>::position_p() const
 }
 
 template <typename T>
+Vector<2, T> PositionEstimation<T>::velocity() const
+{
+        return position_->velocity();
+}
+
+template <typename T>
 Vector<4, T> PositionEstimation<T>::position_velocity() const
 {
         return position_->position_velocity();
@@ -144,29 +113,6 @@ template <typename T>
 Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
 {
         return position_->position_velocity_acceleration_p();
-}
-
-template <typename T>
-std::string PositionEstimation<T>::description() const
-{
-        const Vector<2, T> velocity = position_->velocity();
-        const Matrix<2, 2, T> velocity_p = position_->velocity_p();
-        const T angle = utility::compute_angle(velocity);
-        const T angle_p = utility::compute_angle_p(velocity, velocity_p);
-
-        std::string res;
-
-        res += "angle = " + to_string(radians_to_degrees(angle));
-        res += "; angle stddev = " + to_string(radians_to_degrees(std::sqrt(angle_p)));
-
-        if (measurement_angle_)
-        {
-                res += "; measurement angle = " + to_string(radians_to_degrees(*measurement_angle_));
-                res += "; angle difference = "
-                       + to_string(radians_to_degrees(normalize_angle(*measurement_angle_ - angle)));
-        }
-
-        return res;
 }
 
 template class PositionEstimation<float>;
