@@ -40,7 +40,7 @@ public:
 
         void update(const Measurements<2, T>& m);
 
-        [[nodiscard]] std::optional<T> angle_p() const override;
+        [[nodiscard]] bool angle_p_less_than(T p) const override;
 
         [[nodiscard]] Vector<2, T> position() const override;
         [[nodiscard]] Matrix<2, 2, T> position_p() const override;

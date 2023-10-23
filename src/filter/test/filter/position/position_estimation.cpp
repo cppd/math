@@ -57,9 +57,9 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
 }
 
 template <typename T>
-std::optional<T> PositionEstimation<T>::angle_p() const
+bool PositionEstimation<T>::angle_p_less_than(const T p) const
 {
-        return angle_p_;
+        return angle_p_ && (*angle_p_ < p);
 }
 
 template <typename T>
