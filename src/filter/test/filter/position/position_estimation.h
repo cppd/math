@@ -33,14 +33,14 @@ template <typename T>
 class PositionEstimation final : public Estimation<T>
 {
         const Position2<2, T>* const position_;
-        std::optional<T> angle_p_;
+        std::optional<Vector<2, T>> angle_variance_;
 
 public:
         explicit PositionEstimation(const Position2<2, T>* position);
 
         void update(const Measurements<2, T>& m);
 
-        [[nodiscard]] bool angle_p_less_than(T p) const override;
+        [[nodiscard]] bool angle_variance_less_than(T variance) const override;
 
         [[nodiscard]] Vector<2, T> position() const override;
         [[nodiscard]] Matrix<2, 2, T> position_p() const override;

@@ -65,7 +65,15 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T compute_angle_p(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+[[nodiscard]] Vector<1, T> compute_angle_variance(
+        const Vector<1, T>& /*velocity*/,
+        const Matrix<1, 1, T>& /*velocity_p*/)
+{
+        return Vector<1, T>(0);
+}
+
+template <typename T>
+[[nodiscard]] Vector<2, T> compute_angle_variance(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
         // Jacobian
@@ -77,12 +85,13 @@ template <typename T>
                 {-y / ns, x / ns}
         };
         const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-        return p(0, 0);
+        const T r = p(0, 0);
+        return Vector<2, T>(r, r);
 }
 
 template <std::size_t N, typename T>
-        requires (N >= 2)
-[[nodiscard]] Vector<N, T> compute_angles_p(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
+        requires (N >= 3)
+[[nodiscard]] Vector<N, T> compute_angle_variance(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
 {
         // angle0 = acos(x0/sqrt(x0*x0+x1*x1+x2*x2+...))
         // angle1 = acos(x1/sqrt(x0*x0+x1*x1+x2*x2+...))

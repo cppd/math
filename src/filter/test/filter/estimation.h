@@ -31,7 +31,7 @@ protected:
         ~Estimation() = default;
 
 public:
-        [[nodiscard]] virtual bool angle_p_less_than(T p) const = 0;
+        [[nodiscard]] virtual bool angle_variance_less_than(T variance) const = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
         [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;

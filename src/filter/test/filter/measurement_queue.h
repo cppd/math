@@ -63,7 +63,7 @@ public:
                         return;
                 }
 
-                if (!(estimation.angle_p_less_than(angle_estimation_variance_)))
+                if (!(estimation.angle_variance_less_than(angle_estimation_variance_)))
                 {
                         last_time_.reset();
                         measurements_.clear();

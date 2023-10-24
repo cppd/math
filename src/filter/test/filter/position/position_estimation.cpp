@@ -24,6 +24,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter::position
 {
+namespace
+{
+template <std::size_t N, typename T>
+Vector<N, T> stddev_degrees(const Vector<N, T>& v)
+{
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = radians_to_degrees(std::sqrt(v[i]));
+        }
+        return res;
+}
+}
+
 template <typename T>
 PositionEstimation<T>::PositionEstimation(const Position2<2, T>* const position)
         : position_(position)
@@ -33,7 +47,7 @@ PositionEstimation<T>::PositionEstimation(const Position2<2, T>* const position)
 template <typename T>
 void PositionEstimation<T>::update(const Measurements<2, T>& m)
 {
-        angle_p_.reset();
+        angle_variance_.reset();
 
         if (!m.position)
         {
@@ -45,21 +59,36 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
                 return;
         }
 
-        const T angle_p = utility::compute_angle_p(position_->velocity(), position_->velocity_p());
-        if (!is_finite(angle_p))
+        const Vector<2, T> angle_variance =
+                utility::compute_angle_variance(position_->velocity(), position_->velocity_p());
+        if (!is_finite(angle_variance))
         {
                 return;
         }
+        ASSERT(angle_variance[0] == angle_variance[1]);
 
-        angle_p_ = angle_p;
+        angle_variance_ = angle_variance;
 
-        LOG(to_string(m.time) + "; angle p = " + to_string(radians_to_degrees(std::sqrt(*angle_p_))));
+        LOG(to_string(m.time) + "; angle variance = " + to_string(stddev_degrees(*angle_variance_)));
 }
 
 template <typename T>
-bool PositionEstimation<T>::angle_p_less_than(const T p) const
+bool PositionEstimation<T>::angle_variance_less_than(const T variance) const
 {
-        return angle_p_ && (*angle_p_ < p);
+        if (!angle_variance_)
+        {
+                return false;
+        }
+
+        for (std::size_t i = 0; i < 2; ++i)
+        {
+                if (!((*angle_variance_)[i] < variance))
+                {
+                        return false;
+                }
+        }
+
+        return true;
 }
 
 template <typename T>

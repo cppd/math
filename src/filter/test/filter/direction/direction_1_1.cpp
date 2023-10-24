@@ -121,7 +121,7 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
         }
 
         const T dt = m.time - *last_time_;
-        const bool has_angle = estimation.angle_p_less_than(angle_estimation_variance_);
+        const bool has_angle = estimation.angle_variance_less_than(angle_estimation_variance_);
 
         if (m.position)
         {
