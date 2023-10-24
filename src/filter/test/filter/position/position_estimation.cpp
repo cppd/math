@@ -38,14 +38,14 @@ Vector<N, T> stddev_degrees(const Vector<N, T>& v)
 }
 }
 
-template <typename T>
-PositionEstimation<T>::PositionEstimation(const Position2<2, T>* const position)
+template <std::size_t N, typename T>
+PositionEstimation<N, T>::PositionEstimation(const Position2<N, T>* const position)
         : position_(position)
 {
 }
 
-template <typename T>
-void PositionEstimation<T>::update(const Measurements<2, T>& m)
+template <std::size_t N, typename T>
+void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
 {
         angle_variance_.reset();
 
@@ -59,28 +59,27 @@ void PositionEstimation<T>::update(const Measurements<2, T>& m)
                 return;
         }
 
-        const Vector<2, T> angle_variance =
+        const Vector<N, T> angle_variance =
                 utility::compute_angle_variance(position_->velocity(), position_->velocity_p());
         if (!is_finite(angle_variance))
         {
                 return;
         }
-        ASSERT(angle_variance[0] == angle_variance[1]);
 
         angle_variance_ = angle_variance;
 
         LOG(to_string(m.time) + "; angle variance = " + to_string(stddev_degrees(*angle_variance_)));
 }
 
-template <typename T>
-bool PositionEstimation<T>::angle_variance_less_than(const T variance) const
+template <std::size_t N, typename T>
+bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
 {
         if (!angle_variance_)
         {
                 return false;
         }
 
-        for (std::size_t i = 0; i < 2; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!((*angle_variance_)[i] < variance))
                 {
@@ -91,49 +90,53 @@ bool PositionEstimation<T>::angle_variance_less_than(const T variance) const
         return true;
 }
 
-template <typename T>
-Vector<2, T> PositionEstimation<T>::position() const
+template <std::size_t N, typename T>
+Vector<N, T> PositionEstimation<N, T>::position() const
 {
         return position_->position();
 }
 
-template <typename T>
-Matrix<2, 2, T> PositionEstimation<T>::position_p() const
+template <std::size_t N, typename T>
+Matrix<N, N, T> PositionEstimation<N, T>::position_p() const
 {
         return position_->position_p();
 }
 
-template <typename T>
-Vector<2, T> PositionEstimation<T>::velocity() const
+template <std::size_t N, typename T>
+Vector<N, T> PositionEstimation<N, T>::velocity() const
 {
         return position_->velocity();
 }
 
-template <typename T>
-Vector<4, T> PositionEstimation<T>::position_velocity() const
+template <std::size_t N, typename T>
+Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
 {
         return position_->position_velocity();
 }
 
-template <typename T>
-Matrix<4, 4, T> PositionEstimation<T>::position_velocity_p() const
+template <std::size_t N, typename T>
+Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
 {
         return position_->position_velocity_p();
 }
 
-template <typename T>
-Vector<6, T> PositionEstimation<T>::position_velocity_acceleration() const
+template <std::size_t N, typename T>
+Vector<3 * N, T> PositionEstimation<N, T>::position_velocity_acceleration() const
 {
         return position_->position_velocity_acceleration();
 }
 
-template <typename T>
-Matrix<6, 6, T> PositionEstimation<T>::position_velocity_acceleration_p() const
+template <std::size_t N, typename T>
+Matrix<3 * N, 3 * N, T> PositionEstimation<N, T>::position_velocity_acceleration_p() const
 {
         return position_->position_velocity_acceleration_p();
 }
 
-template class PositionEstimation<float>;
-template class PositionEstimation<double>;
-template class PositionEstimation<long double>;
+#define TEMPLATE_N_T(N, T) template class PositionEstimation<(N), T>;
+
+#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
+
+TEMPLATE_T(float)
+TEMPLATE_T(double)
+TEMPLATE_T(long double)
 }

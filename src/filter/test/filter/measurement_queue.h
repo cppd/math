@@ -49,7 +49,7 @@ public:
         {
         }
 
-        void update(const Measurements<N, T>& m, const Estimation<T>& estimation)
+        void update(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
         {
                 if (!m.position || !m.position->variance)
                 {

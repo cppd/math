@@ -29,25 +29,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test::filter::position
 {
-template <typename T>
-class PositionEstimation final : public Estimation<T>
+template <std::size_t N, typename T>
+class PositionEstimation final : public Estimation<N, T>
 {
-        const Position2<2, T>* const position_;
-        std::optional<Vector<2, T>> angle_variance_;
+        const Position2<N, T>* const position_;
+        std::optional<Vector<N, T>> angle_variance_;
 
 public:
-        explicit PositionEstimation(const Position2<2, T>* position);
+        explicit PositionEstimation(const Position2<N, T>* position);
 
-        void update(const Measurements<2, T>& m);
+        void update(const Measurements<N, T>& m);
 
         [[nodiscard]] bool angle_variance_less_than(T variance) const override;
 
-        [[nodiscard]] Vector<2, T> position() const override;
-        [[nodiscard]] Matrix<2, 2, T> position_p() const override;
-        [[nodiscard]] Vector<2, T> velocity() const override;
-        [[nodiscard]] Vector<4, T> position_velocity() const override;
-        [[nodiscard]] Matrix<4, 4, T> position_velocity_p() const override;
-        [[nodiscard]] Vector<6, T> position_velocity_acceleration() const override;
-        [[nodiscard]] Matrix<6, 6, T> position_velocity_acceleration_p() const override;
+        [[nodiscard]] Vector<N, T> position() const override;
+        [[nodiscard]] Matrix<N, N, T> position_p() const override;
+        [[nodiscard]] Vector<N, T> velocity() const override;
+        [[nodiscard]] Vector<2 * N, T> position_velocity() const override;
+        [[nodiscard]] Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
+        [[nodiscard]] Vector<3 * N, T> position_velocity_acceleration() const override;
+        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override;
 };
 }

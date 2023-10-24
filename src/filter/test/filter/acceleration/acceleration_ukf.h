@@ -71,7 +71,7 @@ public:
 
         [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
                 const Measurements<2, T>& m,
-                const Estimation<T>& estimation) override;
+                const Estimation<2, T>& estimation) override;
 
         [[nodiscard]] std::string consistency_string(const std::string& name) const override;
 };

@@ -69,7 +69,9 @@ void AccelerationUkf<T>::check_time(const T time) const
 }
 
 template <typename T>
-std::optional<UpdateInfo<2, T>> AccelerationUkf<T>::update(const Measurements<2, T>& m, const Estimation<T>& estimation)
+std::optional<UpdateInfo<2, T>> AccelerationUkf<T>::update(
+        const Measurements<2, T>& m,
+        const Estimation<2, T>& estimation)
 {
         check_time(m.time);
 

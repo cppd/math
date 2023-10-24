@@ -65,7 +65,7 @@ struct Filters final
         std::vector<TestFilter<2, T>> speeds;
 
         std::unique_ptr<filter::position_variance::PositionVariance<2, T>> position_variance;
-        std::unique_ptr<filter::position::PositionEstimation<T>> position_estimation;
+        std::unique_ptr<filter::position::PositionEstimation<2, T>> position_estimation;
 };
 
 template <typename T>

@@ -56,7 +56,7 @@ public:
 
         [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> update(
                 const Measurements<N, T>& m,
-                const Estimation<T>& estimation) = 0;
+                const Estimation<N, T>& estimation) = 0;
 
         [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;
 };

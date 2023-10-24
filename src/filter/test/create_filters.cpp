@@ -395,7 +395,7 @@ Filters<T> create_filters()
         res.directions = create_directions<T>();
         res.speeds = create_speeds<T>();
 
-        res.position_estimation = std::make_unique<filter::position::PositionEstimation<T>>(
+        res.position_estimation = std::make_unique<filter::position::PositionEstimation<2, T>>(
                 static_cast<const filter::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;
