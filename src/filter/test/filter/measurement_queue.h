@@ -32,8 +32,7 @@ namespace ns::filter::test::filter
 template <std::size_t N, typename T>
 class MeasurementQueue final
 {
-        static constexpr std::size_t SIZE = 20;
-
+        std::size_t size_;
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> last_time_;
@@ -43,8 +42,9 @@ class MeasurementQueue final
         std::vector<Measurements<N, T>> measurements_;
 
 public:
-        MeasurementQueue(const T reset_dt, const T angle_estimation_variance)
-                : reset_dt_(reset_dt),
+        MeasurementQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
+                : size_(size),
+                  reset_dt_(reset_dt),
                   angle_estimation_variance_(angle_estimation_variance)
         {
         }
@@ -88,7 +88,7 @@ public:
 
         [[nodiscard]] std::size_t empty() const
         {
-                return measurements_.size() < SIZE;
+                return measurements_.size() < size_;
         }
 
         [[nodiscard]] T init_time() const

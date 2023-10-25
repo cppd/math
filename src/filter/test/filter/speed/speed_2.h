@@ -60,7 +60,8 @@ class Speed2 final : public Filter<2, T>
         void reset(const Measurements<2, T>& m);
 
 public:
-        Speed2(T reset_dt,
+        Speed2(std::size_t measurement_queue_size,
+               T reset_dt,
                T angle_estimation_variance,
                std::optional<T> gate,
                T sigma_points_alpha,

@@ -88,6 +88,7 @@ struct Config final
                 .angle_speed_variance = square(degrees_to_radians(1.0)),
                 .angle_r = 0,
                 .angle_r_variance = square(degrees_to_radians(50.0))};
+        static constexpr std::size_t ACCELERATION_MEASUREMENT_QUEUE_SIZE = 20;
 
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
         static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
@@ -106,6 +107,7 @@ struct Config final
                 .acceleration_variance = square(10),
                 .angle_speed = 0,
                 .angle_speed_variance = square(degrees_to_radians(1.0))};
+        static constexpr std::size_t DIRECTION_MEASUREMENT_QUEUE_SIZE = 20;
 
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_1 = square(2.0);
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_2 = square(2.0);
@@ -114,6 +116,7 @@ struct Config final
         static constexpr T SPEED_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> SPEED_FILTER_GATE{};
         static constexpr filter::speed::Init<T> SPEED_INIT{.acceleration = 0, .acceleration_variance = square(10)};
+        static constexpr std::size_t SPEED_MEASUREMENT_QUEUE_SIZE = 20;
 };
 
 template <std::size_t N, typename T>
@@ -214,7 +217,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
 
         res.emplace_back(
                 std::make_unique<filter::acceleration::AccelerationEkf<T>>(
-                        Config<T>::ACCELERATION_FILTER_RESET_DT,
+                        Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
                         Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
@@ -237,7 +240,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 ASSERT(i <= 4);
                 res.emplace_back(
                         std::make_unique<filter::acceleration::AccelerationUkf<T>>(
-                                Config<T>::ACCELERATION_FILTER_RESET_DT,
+                                Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_GATE, alphas[i],
                                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
@@ -270,7 +273,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
         if (ORDER_P == 1 && ORDER_A == 0)
         {
                 return {std::make_unique<filter::direction::Direction10<T>>(
-                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0, Config<T>::DIRECTION_INIT),
@@ -280,7 +283,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
         if (ORDER_P == 1 && ORDER_A == 1)
         {
                 return {std::make_unique<filter::direction::Direction11<T>>(
-                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1, Config<T>::DIRECTION_INIT),
@@ -290,7 +293,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
         if (ORDER_P == 2 && ORDER_A == 1)
         {
                 return {std::make_unique<filter::direction::Direction21<T>>(
-                                Config<T>::DIRECTION_FILTER_RESET_DT,
+                                Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
                                 Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1, Config<T>::DIRECTION_INIT),
@@ -344,17 +347,18 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
         if (ORDER_P == 1)
         {
                 return {std::make_unique<filter::speed::Speed1<T>>(
-                                Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
-                                Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
+                                Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
+                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
+                                Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         }
 
         if (ORDER_P == 2)
         {
                 return {std::make_unique<filter::speed::Speed2<T>>(
-                                Config<T>::SPEED_FILTER_RESET_DT, Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE,
-                                Config<T>::SPEED_FILTER_GATE, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2,
-                                Config<T>::SPEED_INIT),
+                                Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
+                                Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
+                                Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         }
 }

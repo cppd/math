@@ -28,6 +28,7 @@ namespace ns::filter::test::filter::direction
 {
 template <typename T>
 Direction11<T>::Direction11(
+        const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
@@ -40,7 +41,7 @@ Direction11<T>::Direction11(
           gate_(gate),
           filter_(create_filter_1_1(sigma_points_alpha, position_variance, angle_variance)),
           init_(init),
-          queue_(reset_dt, angle_estimation_variance)
+          queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }

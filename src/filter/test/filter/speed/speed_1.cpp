@@ -25,6 +25,7 @@ namespace ns::filter::test::filter::speed
 {
 template <typename T>
 Speed1<T>::Speed1(
+        const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
@@ -33,7 +34,7 @@ Speed1<T>::Speed1(
         : reset_dt_(reset_dt),
           gate_(gate),
           filter_(create_filter_1<2, T>(sigma_points_alpha, position_variance)),
-          queue_(reset_dt, angle_estimation_variance)
+          queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }

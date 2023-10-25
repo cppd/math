@@ -28,6 +28,7 @@ namespace ns::filter::test::filter::acceleration
 {
 template <typename T>
 AccelerationEkf<T>::AccelerationEkf(
+        const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
@@ -40,7 +41,7 @@ AccelerationEkf<T>::AccelerationEkf(
           gate_(gate),
           filter_(create_filter_ekf(position_variance, angle_variance, angle_r_variance)),
           init_(init),
-          queue_(reset_dt, angle_estimation_variance)
+          queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }

@@ -60,6 +60,7 @@ class AccelerationEkf final : public Filter<2, T>
 
 public:
         AccelerationEkf(
+                std::size_t measurement_queue_size,
                 T reset_dt,
                 T angle_estimation_variance,
                 std::optional<T> gate,
