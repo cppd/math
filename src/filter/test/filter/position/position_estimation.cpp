@@ -91,24 +91,6 @@ bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> PositionEstimation<N, T>::position() const
-{
-        return position_->position();
-}
-
-template <std::size_t N, typename T>
-Matrix<N, N, T> PositionEstimation<N, T>::position_p() const
-{
-        return position_->position_p();
-}
-
-template <std::size_t N, typename T>
-Vector<N, T> PositionEstimation<N, T>::velocity() const
-{
-        return position_->velocity();
-}
-
-template <std::size_t N, typename T>
 Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
 {
         return position_->position_velocity();
@@ -118,18 +100,6 @@ template <std::size_t N, typename T>
 Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
 {
         return position_->position_velocity_p();
-}
-
-template <std::size_t N, typename T>
-Vector<3 * N, T> PositionEstimation<N, T>::position_velocity_acceleration() const
-{
-        return position_->position_velocity_acceleration();
-}
-
-template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> PositionEstimation<N, T>::position_velocity_acceleration_p() const
-{
-        return position_->position_velocity_acceleration_p();
 }
 
 #define TEMPLATE_N_T(N, T) template class PositionEstimation<(N), T>;
