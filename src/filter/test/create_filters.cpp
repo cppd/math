@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter/position/position_0.h"
 #include "filter/position/position_1.h"
 #include "filter/position/position_2.h"
-#include "filter/position/position_estimation.h"
 #include "filter/speed/speed_1.h"
 #include "filter/speed/speed_2.h"
 
@@ -399,7 +398,7 @@ Filters<T> create_filters()
         res.directions = create_directions<T>();
         res.speeds = create_speeds<T>();
 
-        res.position_estimation = std::make_unique<filter::position::PositionEstimation<2, T>>(
+        res.position_estimation = std::make_unique<filter::EstimationPosition2<2, T>>(
                 static_cast<const filter::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;

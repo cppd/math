@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "position_estimation.h"
+#include "estimation_position_2.h"
 
-#include "../../utility/utility.h"
+#include "../utility/utility.h"
 
 #include <src/com/conversion.h>
 #include <src/com/log.h>
 
-namespace ns::filter::test::filter::position
+namespace ns::filter::test::filter
 {
 namespace
 {
@@ -39,13 +39,13 @@ Vector<N, T> stddev_degrees(const Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-PositionEstimation<N, T>::PositionEstimation(const Position2<N, T>* const position)
+EstimationPosition2<N, T>::EstimationPosition2(const position::Position2<N, T>* const position)
         : position_(position)
 {
 }
 
 template <std::size_t N, typename T>
-void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
+void EstimationPosition2<N, T>::update(const Measurements<N, T>& m)
 {
         angle_variance_.reset();
 
@@ -72,7 +72,7 @@ void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T>
-bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
+bool EstimationPosition2<N, T>::angle_variance_less_than(const T variance) const
 {
         if (!angle_variance_)
         {
@@ -91,18 +91,18 @@ bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
 }
 
 template <std::size_t N, typename T>
-Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
+Vector<2 * N, T> EstimationPosition2<N, T>::position_velocity() const
 {
         return position_->position_velocity();
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
+Matrix<2 * N, 2 * N, T> EstimationPosition2<N, T>::position_velocity_p() const
 {
         return position_->position_velocity_p();
 }
 
-#define TEMPLATE_N_T(N, T) template class PositionEstimation<(N), T>;
+#define TEMPLATE_N_T(N, T) template class EstimationPosition2<(N), T>;
 
 #define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
 

@@ -17,26 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "position_2.h"
+#include "estimation.h"
+#include "measurement.h"
 
-#include "../estimation.h"
-#include "../measurement.h"
+#include "position/position_2.h"
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
 
-namespace ns::filter::test::filter::position
+namespace ns::filter::test::filter
 {
 template <std::size_t N, typename T>
-class PositionEstimation final : public Estimation<N, T>
+class EstimationPosition2 final : public Estimation<N, T>
 {
-        const Position2<N, T>* const position_;
+        const position::Position2<N, T>* const position_;
         std::optional<Vector<N, T>> angle_variance_;
 
 public:
-        explicit PositionEstimation(const Position2<N, T>* position);
+        explicit EstimationPosition2(const position::Position2<N, T>* position);
 
         void update(const Measurements<N, T>& m);
 
