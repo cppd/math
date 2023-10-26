@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../../consistency.h"
 #include "../estimation.h"
+#include "../estimation_queue.h"
 #include "../filter.h"
 #include "../measurement.h"
-#include "../measurement_queue.h"
 
 #include <memory>
 #include <optional>
@@ -41,7 +41,7 @@ class Direction21 final : public Filter<2, T>
         std::unique_ptr<Filter21<T>> filter_;
         Init<T> init_;
 
-        MeasurementQueue<2, T> queue_;
+        EstimationQueue<2, T> queue_;
 
         struct Nees final
         {
