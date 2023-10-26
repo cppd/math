@@ -75,24 +75,41 @@ void write_file(
         view::write_to_file(annotation, measurements, DATA_CONNECT_INTERVAL<T>, view_filters);
 }
 
+std::string add_line_beginning(const std::string& s, const std::string& text)
+{
+        std::string res;
+        res.reserve(s.size() + text.size());
+        res += text;
+        for (const char c : s)
+        {
+                res += c;
+                if (c == '\n')
+                {
+                        res += text;
+                }
+        }
+        return res;
+}
+
 template <typename T>
 void write_log(const Filters<T>& filters)
 {
+        const std::string separator = "; ";
+
         const auto log = [&](const auto& v)
         {
                 for (const auto& p : v)
                 {
-                        const std::string s = p.filter->consistency_string(p.data.name);
-                        if (!s.empty())
+                        if (const std::string& s = p.filter->consistency_string(); !s.empty())
                         {
-                                LOG(s);
+                                LOG(add_line_beginning(s, p.data.name + separator));
                         }
                 }
         };
 
-        if (const auto& s = filters.position_variance->consistency_string("Variance"); !s.empty())
+        if (const auto& s = filters.position_variance->consistency_string(); !s.empty())
         {
-                LOG(s);
+                LOG(add_line_beginning(s, "Variance" + separator));
         }
 
         log(filters.positions_0);

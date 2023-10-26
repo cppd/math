@@ -175,7 +175,7 @@ const std::optional<Vector<N, T>>& PositionVariance<N, T>::last_position_varianc
 }
 
 template <std::size_t N, typename T>
-std::string PositionVariance<N, T>::consistency_string(const std::string& name) const
+std::string PositionVariance<N, T>::consistency_string() const
 {
         std::string s;
 
@@ -185,19 +185,18 @@ std::string PositionVariance<N, T>::consistency_string(const std::string& name) 
                 {
                         s += '\n';
                 }
-                s += name;
         };
 
         if (const auto& mean = position_variance_.mean())
         {
                 new_line();
-                s += "; Mean " + to_string(*mean);
+                s += "Mean " + to_string(*mean);
         }
 
         if (const auto& standard_deviation = position_variance_.standard_deviation())
         {
                 new_line();
-                s += "; Standard Deviation " + to_string(*standard_deviation);
+                s += "Standard Deviation " + to_string(*standard_deviation);
         }
 
         return s;

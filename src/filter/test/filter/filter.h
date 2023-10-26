@@ -45,7 +45,7 @@ public:
         [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) = 0;
         [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) = 0;
 
-        [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;
+        [[nodiscard]] virtual std::string consistency_string() const = 0;
 };
 
 template <std::size_t N, typename T>
@@ -58,6 +58,6 @@ public:
                 const Measurements<N, T>& m,
                 const Estimation<N, T>& estimation) = 0;
 
-        [[nodiscard]] virtual std::string consistency_string(const std::string& name) const = 0;
+        [[nodiscard]] virtual std::string consistency_string() const = 0;
 };
 }

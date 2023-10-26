@@ -53,7 +53,7 @@ public:
 
         std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m);
         std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m);
-        [[nodiscard]] std::string consistency_string(const std::string& name) const;
+        [[nodiscard]] std::string consistency_string() const;
 
         [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
 };

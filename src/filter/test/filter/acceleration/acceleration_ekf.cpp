@@ -142,7 +142,7 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
 }
 
 template <typename T>
-std::string AccelerationEkf<T>::consistency_string(const std::string& name) const
+std::string AccelerationEkf<T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -150,13 +150,15 @@ std::string AccelerationEkf<T>::consistency_string(const std::string& name) cons
         }
 
         std::string s;
-        s += name + "; NEES position; " + nees_->position.check_string();
+
+        s += "NEES position; " + nees_->position.check_string();
         s += '\n';
-        s += name + "; NEES speed; " + nees_->speed.check_string();
+        s += "NEES speed; " + nees_->speed.check_string();
         s += '\n';
-        s += name + "; NEES angle; " + nees_->angle.check_string();
+        s += "NEES angle; " + nees_->angle.check_string();
         s += '\n';
-        s += name + "; NEES angle r; " + nees_->angle_r.check_string();
+        s += "NEES angle r; " + nees_->angle_r.check_string();
+
         return s;
 }
 

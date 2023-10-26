@@ -163,7 +163,7 @@ std::optional<UpdateInfo<2, T>> Direction10<T>::update(const Measurements<2, T>&
 }
 
 template <typename T>
-std::string Direction10<T>::consistency_string(const std::string& name) const
+std::string Direction10<T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -172,23 +172,11 @@ std::string Direction10<T>::consistency_string(const std::string& name) const
 
         std::string s;
 
-        const auto new_line = [&]()
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += name;
-        };
-
-        new_line();
-        s += "; NEES position; " + nees_->position.check_string();
-
-        new_line();
-        s += "; NEES speed; " + nees_->speed.check_string();
-
-        new_line();
-        s += "; NEES angle; " + nees_->angle.check_string();
+        s += "NEES position; " + nees_->position.check_string();
+        s += '\n';
+        s += "NEES speed; " + nees_->speed.check_string();
+        s += '\n';
+        s += "NEES angle; " + nees_->angle.check_string();
 
         return s;
 }

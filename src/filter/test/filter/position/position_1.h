@@ -58,7 +58,7 @@ public:
 
         [[nodiscard]] std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) override;
         [[nodiscard]] std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) override;
-        [[nodiscard]] std::string consistency_string(const std::string& name) const override;
+        [[nodiscard]] std::string consistency_string() const override;
 
         [[nodiscard]] bool empty() const;
         [[nodiscard]] Vector<N, T> velocity() const;

@@ -167,7 +167,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-std::string Position1<N, T>::consistency_string(const std::string& name) const
+std::string Position1<N, T>::consistency_string() const
 {
         std::string s;
 
@@ -177,25 +177,24 @@ std::string Position1<N, T>::consistency_string(const std::string& name) const
                 {
                         s += '\n';
                 }
-                s += name;
         };
 
         if (!nees_position_.empty())
         {
                 new_line();
-                s += "; NEES Position; " + nees_position_.check_string();
+                s += "NEES Position; " + nees_position_.check_string();
         }
 
         if (!nees_speed_.empty())
         {
                 new_line();
-                s += "; NEES Speed; " + nees_speed_.check_string();
+                s += "NEES Speed; " + nees_speed_.check_string();
         }
 
         if (!nis_.empty())
         {
                 new_line();
-                s += "; NIS Position; " + nis_.check_string();
+                s += "NIS Position; " + nis_.check_string();
         }
 
         return s;

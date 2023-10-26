@@ -74,6 +74,6 @@ public:
                 const Measurements<2, T>& m,
                 const Estimation<2, T>& estimation) override;
 
-        [[nodiscard]] std::string consistency_string(const std::string& name) const override;
+        [[nodiscard]] std::string consistency_string() const override;
 };
 }
