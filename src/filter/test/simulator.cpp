@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
-#include "utility/utility.h"
-
 #include <src/com/angle.h>
 #include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
+#include <src/numerical/matrix.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
@@ -34,6 +33,18 @@ namespace ns::filter::test
 {
 namespace
 {
+template <typename T>
+[[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const T angle)
+{
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        const Matrix<2, 2, T> m{
+                {cos, -sin},
+                {sin,  cos}
+        };
+        return m * v;
+}
+
 template <typename T>
 struct Config final
 {
@@ -289,7 +300,7 @@ public:
 
         [[nodiscard]] Vector<N, T> measurement_acceleration()
         {
-                return utility::rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
+                return rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
         }
 
         [[nodiscard]] Vector<N, T> measurement_position()

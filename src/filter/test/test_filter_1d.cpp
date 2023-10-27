@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "utility/file.h"
+#include "files.h"
 
 #include "../consistency.h"
 #include "../ekf.h"
@@ -118,7 +118,7 @@ void write_to_file(
 {
         ASSERT(process.size() == result.size());
 
-        std::ofstream file(utility::test_file_path(file_name));
+        std::ofstream file(test_file_path(file_name));
         for (std::size_t i = 0; i < process.size(); ++i)
         {
                 file << make_string(process[i], result[i]) << '\n';
@@ -404,8 +404,8 @@ void test_impl(
         }
 
         write_to_file(
-                "filter_" + to_lower(filter.name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
-                process_data, result_data);
+                "filter_" + to_lower(filter.name()) + "_1d_" + replace_space(type_name<T>()) + ".txt", process_data,
+                result_data);
 
         compare(result_data.back().standard_deviation, expected_deviation, precision);
         compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
