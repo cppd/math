@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "estimation_position_2.h"
 
-#include "../utility/utility.h"
+#include "utility/utility.h"
 
 #include <src/com/conversion.h>
 #include <src/com/log.h>

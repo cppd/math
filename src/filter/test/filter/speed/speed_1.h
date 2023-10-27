@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../../consistency.h"
 #include "../estimation.h"
-#include "../estimation_queue.h"
 #include "../filter.h"
 #include "../measurement.h"
+#include "../utility/measurement_queue.h"
 
 #include <memory>
 #include <optional>
@@ -38,7 +38,7 @@ class Speed1 final : public Filter<2, T>
         std::optional<T> gate_;
         std::unique_ptr<Filter1<2, T>> filter_;
 
-        EstimationQueue<2, T> queue_;
+        utility::MeasurementQueue<2, T> queue_;
 
         struct Nees final
         {

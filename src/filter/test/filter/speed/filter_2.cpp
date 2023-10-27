@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../../sigma_points.h"
 #include "../../../ukf.h"
-#include "../../utility/utility.h"
+#include "../utility/utility.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>

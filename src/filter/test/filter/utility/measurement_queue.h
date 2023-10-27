@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "estimation.h"
-#include "measurement.h"
+#include "../estimation.h"
+#include "../measurement.h"
 
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::test::filter
+namespace ns::filter::test::filter::utility
 {
 template <std::size_t N, typename T>
-class EstimationQueue final
+class MeasurementQueue final
 {
         std::size_t size_;
         T reset_dt_;
@@ -42,7 +42,7 @@ class EstimationQueue final
         std::vector<Measurements<N, T>> measurements_;
 
 public:
-        EstimationQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
+        MeasurementQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
                 : size_(size),
                   reset_dt_(reset_dt),
                   angle_estimation_variance_(angle_estimation_variance)
@@ -121,7 +121,7 @@ public:
 };
 
 template <std::size_t N, typename T, typename Init, typename Update>
-void update_filter(const EstimationQueue<N, T>& queue, const Init init, const Update update)
+void update_filter(const MeasurementQueue<N, T>& queue, const Init init, const Update update)
 {
         ASSERT(!queue.empty());
 
