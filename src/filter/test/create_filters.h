@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter/estimation_position_2.h"
 #include "filter/filter.h"
-#include "filter/position_variance/position_variance.h"
+#include "filter/utility/estimation_position_2.h"
+#include "filter/utility/position_variance.h"
 #include "view/write.h"
 
 #include <memory>
@@ -64,8 +64,8 @@ struct Filters final
         std::vector<TestFilter<2, T>> directions;
         std::vector<TestFilter<2, T>> speeds;
 
-        std::unique_ptr<filter::position_variance::PositionVariance<2, T>> position_variance;
-        std::unique_ptr<filter::EstimationPosition2<2, T>> position_estimation;
+        std::unique_ptr<filter::utility::PositionVariance<2, T>> position_variance;
+        std::unique_ptr<filter::utility::EstimationPosition2<2, T>> position_estimation;
 };
 
 template <typename T>

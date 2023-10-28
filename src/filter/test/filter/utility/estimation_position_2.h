@@ -17,17 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "estimation.h"
-#include "measurement.h"
-
-#include "position/position_2.h"
+#include "../estimation.h"
+#include "../measurement.h"
+#include "../position/position_2.h"
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
 
-namespace ns::filter::test::filter
+namespace ns::filter::test::filter::utility
 {
 template <std::size_t N, typename T>
 class EstimationPosition2 final : public Estimation<N, T>
