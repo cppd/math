@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
-#include "filter/acceleration/acceleration_ekf.h"
-#include "filter/acceleration/acceleration_ukf.h"
-#include "filter/direction/direction_1_0.h"
-#include "filter/direction/direction_1_1.h"
-#include "filter/direction/direction_2_1.h"
-#include "filter/position/position_0.h"
-#include "filter/position/position_1.h"
-#include "filter/position/position_2.h"
-#include "filter/speed/speed_1.h"
-#include "filter/speed/speed_2.h"
+#include "../filters/acceleration/acceleration_ekf.h"
+#include "../filters/acceleration/acceleration_ukf.h"
+#include "../filters/direction/direction_1_0.h"
+#include "../filters/direction/direction_1_1.h"
+#include "../filters/direction/direction_2_1.h"
+#include "../filters/position/position_0.h"
+#include "../filters/position/position_1.h"
+#include "../filters/position/position_2.h"
+#include "../filters/speed/speed_1.h"
+#include "../filters/speed/speed_2.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -60,12 +60,12 @@ struct Config final
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
         static constexpr T POSITION_FILTER_RESET_DT = 10;
         static constexpr T POSITION_FILTER_LINEAR_DT = 2;
-        static constexpr filter::position::Init<T> POSITION_INIT{
+        static constexpr filters::position::Init<T> POSITION_INIT{
                 .speed = 0,
                 .speed_variance = square<T>(30),
                 .acceleration = 0,
                 .acceleration_variance = square<T>(10)};
-        static constexpr filter::position::Init<T> POSITION_VARIANCE_INIT{
+        static constexpr filters::position::Init<T> POSITION_VARIANCE_INIT{
                 .speed = 0,
                 .speed_variance = square<T>(30),
                 .acceleration = 0,
@@ -78,7 +78,7 @@ struct Config final
         static constexpr std::array ACCELERATION_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
         static constexpr T ACCELERATION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> ACCELERATION_FILTER_GATE{};
-        static constexpr filter::acceleration::Init<T> ACCELERATION_INIT{
+        static constexpr filters::acceleration::Init<T> ACCELERATION_INIT{
                 .angle = 0,
                 .angle_variance = square(degrees_to_radians(100.0)),
                 .acceleration = 0,
@@ -99,7 +99,7 @@ struct Config final
         static constexpr std::array DIRECTION_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T DIRECTION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> DIRECTION_FILTER_GATE{};
-        static constexpr filter::direction::Init<T> DIRECTION_INIT{
+        static constexpr filters::direction::Init<T> DIRECTION_INIT{
                 .angle = 0,
                 .angle_variance = square(degrees_to_radians(100.0)),
                 .acceleration = 0,
@@ -114,7 +114,7 @@ struct Config final
         static constexpr std::array SPEED_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T SPEED_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> SPEED_FILTER_GATE{};
-        static constexpr filter::speed::Init<T> SPEED_INIT{.acceleration = 0, .acceleration_variance = square(10)};
+        static constexpr filters::speed::Init<T> SPEED_INIT{.acceleration = 0, .acceleration_variance = square(10)};
         static constexpr std::size_t SPEED_MEASUREMENT_QUEUE_SIZE = 20;
 };
 
@@ -145,9 +145,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<filter::utility::PositionVariance<N, T>> create_position_variance()
+std::unique_ptr<filters::utility::PositionVariance<N, T>> create_position_variance()
 {
-        return std::make_unique<filter::utility::PositionVariance<N, T>>(
+        return std::make_unique<filters::utility::PositionVariance<N, T>>(
                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_VARIANCE_2,
                 Config<T>::POSITION_VARIANCE_INIT);
 }
@@ -178,7 +178,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                 if (ORDER == 0)
                 {
                         res.emplace_back(
-                                std::make_unique<filter::position::Position0<N, T>>(
+                                std::make_unique<filters::position::Position0<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_0, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_0),
@@ -188,7 +188,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                 if (ORDER == 1)
                 {
                         res.emplace_back(
-                                std::make_unique<filter::position::Position1<N, T>>(
+                                std::make_unique<filters::position::Position1<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_1, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT),
@@ -198,7 +198,7 @@ std::vector<TestFilterPosition<N, T>> create_positions()
                 if (ORDER == 2)
                 {
                         res.emplace_back(
-                                std::make_unique<filter::position::Position2<N, T>>(
+                                std::make_unique<filters::position::Position2<N, T>>(
                                         Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                         Config<T>::POSITION_FILTER_GATE_2, thetas[i],
                                         Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT),
@@ -215,7 +215,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
         std::vector<TestFilter<2, T>> res;
 
         res.emplace_back(
-                std::make_unique<filter::acceleration::AccelerationEkf<T>>(
+                std::make_unique<filters::acceleration::AccelerationEkf<T>>(
                         Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
@@ -238,7 +238,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
                 res.emplace_back(
-                        std::make_unique<filter::acceleration::AccelerationUkf<T>>(
+                        std::make_unique<filters::acceleration::AccelerationUkf<T>>(
                                 Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_GATE, alphas[i],
@@ -271,7 +271,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return {std::make_unique<filter::direction::Direction10<T>>(
+                return {std::make_unique<filters::direction::Direction10<T>>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
@@ -281,7 +281,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return {std::make_unique<filter::direction::Direction11<T>>(
+                return {std::make_unique<filters::direction::Direction11<T>>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
@@ -291,7 +291,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return {std::make_unique<filter::direction::Direction21<T>>(
+                return {std::make_unique<filters::direction::Direction21<T>>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
@@ -345,7 +345,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 1)
         {
-                return {std::make_unique<filter::speed::Speed1<T>>(
+                return {std::make_unique<filters::speed::Speed1<T>>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
                                 Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
@@ -354,7 +354,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 2)
         {
-                return {std::make_unique<filter::speed::Speed2<T>>(
+                return {std::make_unique<filters::speed::Speed2<T>>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
                                 Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT),
@@ -398,8 +398,8 @@ Filters<T> create_filters()
         res.directions = create_directions<T>();
         res.speeds = create_speeds<T>();
 
-        res.position_estimation = std::make_unique<filter::utility::EstimationPosition2<2, T>>(
-                static_cast<const filter::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
+        res.position_estimation = std::make_unique<filters::utility::EstimationPosition2<2, T>>(
+                static_cast<const filters::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;
 }

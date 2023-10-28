@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter/measurement.h"
+#include "../filters/measurement.h"
 
 #include <string>
 #include <vector>
@@ -29,10 +29,10 @@ class Track final
 {
         class Iter final
         {
-                typename std::vector<filter::Measurements<N, T>>::const_iterator iter_;
+                typename std::vector<filters::Measurements<N, T>>::const_iterator iter_;
 
         public:
-                explicit Iter(typename std::vector<filter::Measurements<N, T>>::const_iterator iter)
+                explicit Iter(typename std::vector<filters::Measurements<N, T>>::const_iterator iter)
                         : iter_(std::move(iter))
                 {
                 }
@@ -48,17 +48,17 @@ class Track final
                         return iter_ == a.iter_;
                 }
 
-                [[nodiscard]] const filter::Measurements<N, T>& operator*() const
+                [[nodiscard]] const filters::Measurements<N, T>& operator*() const
                 {
                         return *iter_;
                 }
         };
 
-        std::vector<filter::Measurements<N, T>> measurements_;
+        std::vector<filters::Measurements<N, T>> measurements_;
         std::string annotation_;
 
 public:
-        Track(std::vector<filter::Measurements<N, T>> measurements, std::string annotation)
+        Track(std::vector<filters::Measurements<N, T>> measurements, std::string annotation)
                 : measurements_(std::move(measurements)),
                   annotation_(std::move(annotation))
         {

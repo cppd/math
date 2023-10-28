@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter/filter.h"
-#include "filter/utility/estimation_position_2.h"
-#include "filter/utility/position_variance.h"
 #include "view/write.h"
+
+#include "../filters/filter.h"
+#include "../filters/utility/estimation_position_2.h"
+#include "../filters/utility/position_variance.h"
 
 #include <memory>
 #include <vector>
@@ -30,10 +31,10 @@ namespace ns::filter::test
 template <std::size_t N, typename T>
 struct TestFilterPosition final
 {
-        std::unique_ptr<filter::FilterPosition<N, T>> filter;
+        std::unique_ptr<filters::FilterPosition<N, T>> filter;
         view::Filter<N, T> data;
 
-        TestFilterPosition(std::unique_ptr<filter::FilterPosition<N, T>>&& filter, view::Filter<N, T> data)
+        TestFilterPosition(std::unique_ptr<filters::FilterPosition<N, T>>&& filter, view::Filter<N, T> data)
                 : filter(std::move(filter)),
                   data(std::move(data))
         {
@@ -43,10 +44,10 @@ struct TestFilterPosition final
 template <std::size_t N, typename T>
 struct TestFilter final
 {
-        std::unique_ptr<filter::Filter<N, T>> filter;
+        std::unique_ptr<filters::Filter<N, T>> filter;
         view::Filter<N, T> data;
 
-        TestFilter(std::unique_ptr<filter::Filter<N, T>>&& filter, view::Filter<N, T> data)
+        TestFilter(std::unique_ptr<filters::Filter<N, T>>&& filter, view::Filter<N, T> data)
                 : filter(std::move(filter)),
                   data(std::move(data))
         {
@@ -64,8 +65,8 @@ struct Filters final
         std::vector<TestFilter<2, T>> directions;
         std::vector<TestFilter<2, T>> speeds;
 
-        std::unique_ptr<filter::utility::PositionVariance<2, T>> position_variance;
-        std::unique_ptr<filter::utility::EstimationPosition2<2, T>> position_estimation;
+        std::unique_ptr<filters::utility::PositionVariance<2, T>> position_variance;
+        std::unique_ptr<filters::utility::EstimationPosition2<2, T>> position_estimation;
 };
 
 template <typename T>

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "time_point.h"
 
-#include "../filter/measurement.h"
+#include "../../filters/measurement.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -74,11 +74,11 @@ std::vector<Vector<N, T>> add_offset(const std::vector<Vector<N, T>>& data, cons
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> track_position(const std::vector<filter::Measurements<N, T>>& measurements)
+std::vector<Vector<N, T>> track_position(const std::vector<filters::Measurements<N, T>>& measurements)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(measurements.size());
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 res.emplace_back(m.true_data.position);
         }
@@ -86,13 +86,13 @@ std::vector<Vector<N, T>> track_position(const std::vector<filter::Measurements<
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<2, T>> track_speed(const std::vector<filter::Measurements<N, T>>& measurements)
+std::vector<Vector<2, T>> track_speed(const std::vector<filters::Measurements<N, T>>& measurements)
 {
         namespace impl = converters_implementation;
 
         std::vector<Vector<2, T>> res;
         res.reserve(measurements.size());
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 res.emplace_back(impl::time_unit(m.time), mps_to_kph(m.true_data.speed));
         }
@@ -101,13 +101,13 @@ std::vector<Vector<2, T>> track_speed(const std::vector<filter::Measurements<N, 
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<N, T>>> position_measurements(
-        const std::vector<filter::Measurements<N, T>>& measurements,
+        const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         std::vector<std::optional<Vector<N, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.position)
@@ -126,7 +126,7 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> speed_measurements(
-        const std::vector<filter::Measurements<N, T>>& measurements,
+        const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
@@ -134,7 +134,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.speed)
@@ -155,7 +155,7 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
 
 template <std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> angle_measurements(
-        const std::vector<filter::Measurements<N, T>>& measurements,
+        const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
@@ -164,7 +164,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
         res.reserve(measurements.size());
         std::optional<T> previous_angle;
         std::optional<T> last_time;
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.direction)
@@ -187,7 +187,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
 
 template <std::size_t INDEX, std::size_t N, typename T>
 std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
-        const std::vector<filter::Measurements<N, T>>& measurements,
+        const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         static_assert(INDEX < N);
@@ -197,7 +197,7 @@ std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
         std::vector<std::optional<Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
-        for (const filter::Measurements<N, T>& m : measurements)
+        for (const filters::Measurements<N, T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
                 if (!m.acceleration)

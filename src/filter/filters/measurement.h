@@ -17,40 +17,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time_point.h"
-
-#include "../../filters/measurement.h"
-
-#include <src/color/rgb8.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
-#include <string>
-#include <vector>
 
-namespace ns::filter::test::view
+namespace ns::filter::filters
 {
 template <std::size_t N, typename T>
-struct Filter final
+struct TrueData final
 {
-        std::string name;
-        color::RGB8 color;
-        std::vector<TimePoint<1, T>> speed;
-        std::vector<TimePoint<1, T>> speed_p;
-        std::vector<TimePoint<N, T>> position;
-        std::vector<TimePoint<N, T>> position_p;
-
-        Filter(std::string name, color::RGB8 color)
-                : name(std::move(name)),
-                  color(color)
-        {
-        }
+        Vector<N, T> position;
+        T speed;
+        T angle;
+        T angle_r;
 };
 
 template <std::size_t N, typename T>
-void write_to_file(
-        std::string_view annotation,
-        const std::vector<filters::Measurements<N, T>>& measurements,
-        T interval,
-        const std::vector<Filter<N, T>>& filters);
+struct PositionMeasurement final
+{
+        Vector<N, T> value;
+        std::optional<Vector<N, T>> variance;
+};
+
+template <std::size_t N, typename T>
+struct Measurement final
+{
+        Vector<N, T> value;
+        Vector<N, T> variance;
+};
+
+template <std::size_t N, typename T>
+struct Measurements final
+{
+        TrueData<N, T> true_data;
+        T time;
+        std::optional<PositionMeasurement<N, T>> position;
+        std::optional<Measurement<N, T>> acceleration;
+        std::optional<Measurement<1, T>> direction;
+        std::optional<Measurement<1, T>> speed;
+};
 }
