@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::filters::utility
+namespace ns::filter::filters::estimation
 {
 template <std::size_t N, typename T>
 class MovingVariance final

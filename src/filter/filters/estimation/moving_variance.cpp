@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 
-namespace ns::filter::filters::utility
+namespace ns::filter::filters::estimation
 {
 namespace
 {

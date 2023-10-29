@@ -145,9 +145,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<filters::utility::PositionVariance<N, T>> create_position_variance()
+std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_variance()
 {
-        return std::make_unique<filters::utility::PositionVariance<N, T>>(
+        return std::make_unique<filters::estimation::PositionVariance<N, T>>(
                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_VARIANCE_2,
                 Config<T>::POSITION_VARIANCE_INIT);
 }
@@ -398,7 +398,7 @@ Filters<T> create_filters()
         res.directions = create_directions<T>();
         res.speeds = create_speeds<T>();
 
-        res.position_estimation = std::make_unique<filters::utility::EstimationPosition2<2, T>>(
+        res.position_estimation = std::make_unique<filters::estimation::PositionEstimation<2, T>>(
                 static_cast<const filters::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
 
         return res;
