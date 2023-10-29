@@ -31,18 +31,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
-template <typename T>
-class Speed1 final : public Filter<2, T>
+template <std::size_t N, typename T>
+class Speed1 final : public Filter<N, T>
 {
         T reset_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<Filter1<2, T>> filter_;
+        std::unique_ptr<Filter1<N, T>> filter_;
 
-        utility::MeasurementQueue<2, T> queue_;
+        utility::MeasurementQueue<N, T> queue_;
 
         struct Nees final
         {
-                NormalizedSquared<2, T> position;
+                NormalizedSquared<N, T> position;
                 NormalizedSquared<1, T> speed;
         };
 
@@ -51,11 +51,11 @@ class Speed1 final : public Filter<2, T>
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
 
-        void save(const TrueData<2, T>& true_data);
+        void save(const TrueData<N, T>& true_data);
 
         void check_time(T time) const;
 
-        void reset(const Measurements<2, T>& m);
+        void reset(const Measurements<N, T>& m);
 
 public:
         Speed1(std::size_t measurement_queue_size,
@@ -65,9 +65,9 @@ public:
                T sigma_points_alpha,
                T position_variance);
 
-        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
-                const Measurements<2, T>& m,
-                const Estimation<2, T>& estimation) override;
+        [[nodiscard]] std::optional<UpdateInfo<N, T>> update(
+                const Measurements<N, T>& m,
+                const Estimation<N, T>& estimation) override;
 
         [[nodiscard]] std::string consistency_string() const override;
 };

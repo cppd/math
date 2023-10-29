@@ -345,7 +345,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 1)
         {
-                return {std::make_unique<filters::speed::Speed1<T>>(
+                return {std::make_unique<filters::speed::Speed1<2, T>>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
                                 Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
@@ -354,7 +354,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 2)
         {
-                return {std::make_unique<filters::speed::Speed2<T>>(
+                return {std::make_unique<filters::speed::Speed2<2, T>>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
                                 Config<T>::SPEED_FILTER_POSITION_VARIANCE_2, Config<T>::SPEED_INIT),

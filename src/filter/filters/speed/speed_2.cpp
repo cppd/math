@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
-template <typename T>
-Speed2<T>::Speed2(
+template <std::size_t N, typename T>
+Speed2<N, T>::Speed2(
         const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
@@ -34,15 +34,15 @@ Speed2<T>::Speed2(
         const Init<T>& init)
         : reset_dt_(reset_dt),
           gate_(gate),
-          filter_(create_filter_2<2, T>(sigma_points_alpha, position_variance)),
+          filter_(create_filter_2<N, T>(sigma_points_alpha, position_variance)),
           init_(init),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
 
-template <typename T>
-void Speed2<T>::save(const TrueData<2, T>& true_data)
+template <std::size_t N, typename T>
+void Speed2<N, T>::save(const TrueData<N, T>& true_data)
 {
         if (!nees_)
         {
@@ -52,8 +52,8 @@ void Speed2<T>::save(const TrueData<2, T>& true_data)
         nees_->speed.add(true_data.speed - filter_->speed(), filter_->speed_p());
 }
 
-template <typename T>
-void Speed2<T>::check_time(const T time) const
+template <std::size_t N, typename T>
+void Speed2<N, T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -67,8 +67,8 @@ void Speed2<T>::check_time(const T time) const
         }
 }
 
-template <typename T>
-void Speed2<T>::reset(const Measurements<2, T>& m)
+template <std::size_t N, typename T>
+void Speed2<N, T>::reset(const Measurements<N, T>& m)
 {
         if (!m.position || queue_.empty())
         {
@@ -83,7 +83,7 @@ void Speed2<T>::reset(const Measurements<2, T>& m)
                 {
                         filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
                 },
-                [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
+                [&](const Measurement<N, T>& position, const Measurements<N, T>& measurements, const T dt)
                 {
                         update_position(filter_.get(), position, measurements.speed, gate_, dt);
                 });
@@ -92,8 +92,8 @@ void Speed2<T>::reset(const Measurements<2, T>& m)
         last_position_time_ = m.time;
 }
 
-template <typename T>
-std::optional<UpdateInfo<2, T>> Speed2<T>::update(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
+template <std::size_t N, typename T>
+std::optional<UpdateInfo<N, T>> Speed2<N, T>::update(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
 {
         check_time(m.time);
 
@@ -124,7 +124,7 @@ std::optional<UpdateInfo<2, T>> Speed2<T>::update(const Measurements<2, T>& m, c
                         return {};
                 }
 
-                const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
+                const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
                 update_position(filter_.get(), position, m.speed, gate_, dt);
 
                 last_position_time_ = m.time;
@@ -149,8 +149,8 @@ std::optional<UpdateInfo<2, T>> Speed2<T>::update(const Measurements<2, T>& m, c
         };
 }
 
-template <typename T>
-std::string Speed2<T>::consistency_string() const
+template <std::size_t N, typename T>
+std::string Speed2<N, T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -166,7 +166,11 @@ std::string Speed2<T>::consistency_string() const
         return s;
 }
 
-template class Speed2<float>;
-template class Speed2<double>;
-template class Speed2<long double>;
+#define TEMPLATE_N_T(N, T) template class Speed2<(N), T>;
+
+#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
+
+TEMPLATE_T(float)
+TEMPLATE_T(double)
+TEMPLATE_T(long double)
 }
