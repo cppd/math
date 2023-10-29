@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_estimation.h"
 
+#include "../../settings/instantiation.h"
 #include "../utility/utility.h"
 
 #include <src/com/conversion.h>
@@ -102,11 +103,7 @@ Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
         return position_->position_velocity_p();
 }
 
-#define TEMPLATE_N_T(N, T) template class PositionEstimation<(N), T>;
+#define TEMPLATE(N, T) template class PositionEstimation<(N), T>;
 
-#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
-
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

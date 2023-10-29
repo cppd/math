@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_2.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/error.h>
 
 namespace ns::filter::filters::position
@@ -236,11 +238,7 @@ std::string Position2<N, T>::consistency_string() const
         return s;
 }
 
-#define TEMPLATE_N_T(N, T) template class Position2<(N), T>;
+#define TEMPLATE(N, T) template class Position2<(N), T>;
 
-#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
-
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

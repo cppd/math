@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moving_variance.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/exponent.h>
 
 #include <algorithm>
@@ -117,11 +119,7 @@ std::optional<Vector<N, T>> MovingVariance<N, T>::compute() const
         return Vector<N, T>(std::clamp<T>(square(sum / N), VARIANCE_MIN<T>, VARIANCE_MAX<T>));
 }
 
-#define TEMPLATE_N_T(N, T) template class MovingVariance<(N), T>;
+#define TEMPLATE(N, T) template class MovingVariance<(N), T>;
 
-#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
-
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

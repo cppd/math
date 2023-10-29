@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_1.h"
 
 #include "../../ekf.h"
+#include "../../settings/instantiation.h"
 #include "../utility/utility.h"
 
 #include <src/com/error.h>
@@ -250,11 +251,7 @@ std::unique_ptr<Filter1<N, T>> create_filter_1(const T theta, const T process_va
         return std::make_unique<FilterImpl<N, T>>(theta, process_variance);
 }
 
-#define TEMPLATE_N_T(N, T) template std::unique_ptr<Filter1<(N), T>> create_filter_1<(N), T>(T, T);
+#define TEMPLATE(N, T) template std::unique_ptr<Filter1<(N), T>> create_filter_1<(N), T>(T, T);
 
-#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
-
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

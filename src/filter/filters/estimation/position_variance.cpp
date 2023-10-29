@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_variance.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -202,11 +204,7 @@ std::string PositionVariance<N, T>::consistency_string() const
         return s;
 }
 
-#define TEMPLATE_N_T(N, T) template class PositionVariance<(N), T>;
+#define TEMPLATE(N, T) template class PositionVariance<(N), T>;
 
-#define TEMPLATE_T(T) TEMPLATE_N_T(1, T) TEMPLATE_N_T(2, T) TEMPLATE_N_T(3, T)
-
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }
