@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::direction
 {
-template <typename Filter, typename T, std::size_t P, std::size_t D, std::size_t S>
+template <typename Filter, typename T>
 void update_position(
         Filter* const filter,
-        const Measurement<P, T>& position,
-        const std::optional<Measurement<D, T>>& direction,
-        const std::optional<Measurement<S, T>>& speed,
+        const Measurement<2, T>& position,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt)
 {
@@ -60,11 +60,11 @@ void update_position(
         }
 }
 
-template <typename Filter, typename T, std::size_t D, std::size_t S>
+template <typename Filter, typename T>
 [[nodiscard]] bool update_non_position(
         Filter* const filter,
-        const std::optional<Measurement<D, T>>& direction,
-        const std::optional<Measurement<S, T>>& speed,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt)
 {

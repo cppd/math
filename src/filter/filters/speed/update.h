@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
-template <typename Filter, typename T, std::size_t P, std::size_t S>
+template <typename Filter, std::size_t N, typename T>
 void update_position(
         Filter* const filter,
-        const Measurement<P, T>& position,
-        const std::optional<Measurement<S, T>>& speed,
+        const Measurement<N, T>& position,
+        const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt)
 {
@@ -43,10 +43,10 @@ void update_position(
         }
 }
 
-template <typename Filter, typename T, std::size_t S>
+template <typename Filter, std::size_t N, typename T>
 [[nodiscard]] bool update_non_position(
         Filter* const filter,
-        const std::optional<Measurement<S, T>>& speed,
+        const std::optional<Measurement<N, T>>& speed,
         const std::optional<T> gate,
         const T dt)
 {
