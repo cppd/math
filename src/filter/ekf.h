@@ -74,11 +74,15 @@ template <std::size_t N, std::size_t M, typename T>
 {
         static constexpr Matrix<N, N, T> I = IDENTITY_MATRIX<N, T>;
 
-        const Matrix<N, N, T> m = p.inversed() - theta * I + ht_ri * h;
-        if (!positive_definite(m))
         {
-                error(std::string(name) + ", H infinity condition is not hold\n" + to_string(m));
+                const Matrix<N, N, T> m = p.inversed() - theta * I + ht_ri * h;
+                if (!positive_definite(m))
+                {
+                        error(std::string(name) + ", H infinity condition is not hold\n"
+                              + "matrix is not positive_definite\n" + to_string(m));
+                }
         }
+
         return p * (I - theta * p + ht_ri * h * p).inversed() * ht_ri;
 }
 }
