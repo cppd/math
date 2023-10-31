@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_ukf.h"
 
+#include "../../settings/instantiation.h"
 #include "../../sigma_points.h"
 #include "../../ukf.h"
 #include "../utility/utility.h"
@@ -1115,7 +1116,5 @@ std::unique_ptr<FilterUkf<T>> create_filter_ukf(
 
 #define TEMPLATE(T) template std::unique_ptr<FilterUkf<T>> create_filter_ukf(T, T, T, T);
 
-TEMPLATE(float)
-TEMPLATE(double)
-TEMPLATE(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

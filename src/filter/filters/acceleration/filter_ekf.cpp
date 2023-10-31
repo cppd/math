@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_ekf.h"
 
 #include "../../ekf.h"
+#include "../../settings/instantiation.h"
 #include "../utility/utility.h"
 
 #include <src/com/angle.h>
@@ -1477,7 +1478,5 @@ std::unique_ptr<FilterEkf<T>> create_filter_ekf(
 
 #define TEMPLATE(T) template std::unique_ptr<FilterEkf<T>> create_filter_ekf(T, T, T);
 
-TEMPLATE(float)
-TEMPLATE(double)
-TEMPLATE(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

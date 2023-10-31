@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include "../settings/instantiation.h"
+
 #include <src/com/angle.h>
 #include <src/com/constant.h>
 #include <src/com/conversion.h>
@@ -420,7 +422,5 @@ Track<N, T> track()
 
 #define TEMPLATE(T) template Track<2, T> track();
 
-TEMPLATE(float)
-TEMPLATE(double)
-TEMPLATE(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

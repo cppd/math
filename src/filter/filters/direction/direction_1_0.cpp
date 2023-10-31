@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "update.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -181,7 +183,7 @@ std::string Direction10<T>::consistency_string() const
         return s;
 }
 
-template class Direction10<float>;
-template class Direction10<double>;
-template class Direction10<long double>;
+#define TEMPLATE(T) template class Direction10<T>;
+
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

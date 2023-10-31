@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "converters.h"
 
+#include "../../settings/instantiation.h"
 #include "../files.h"
 
 #include <src/com/print.h>
@@ -377,7 +378,5 @@ void write_to_file(
                 std::string_view, const std::vector<filters::Measurements<2, T>>&, T, \
                 const std::vector<Filter<2, T>>&);
 
-TEMPLATE(float)
-TEMPLATE(double)
-TEMPLATE(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

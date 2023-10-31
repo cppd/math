@@ -26,3 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         FILTER_TEMPLATE_INSTANTIATION_N_T_IMPL_N(1, TEMPLATE_N_T) \
         FILTER_TEMPLATE_INSTANTIATION_N_T_IMPL_N(2, TEMPLATE_N_T) \
         FILTER_TEMPLATE_INSTANTIATION_N_T_IMPL_N(3, TEMPLATE_N_T)
+
+#define FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE_T) \
+        TEMPLATE_T(float)                           \
+        TEMPLATE_T(double)                          \
+        TEMPLATE_T(long double)

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "low_pass.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/error.h>
 
 #include <array>
@@ -80,7 +82,5 @@ std::optional<T> LowPassFilter<T>::value() const
 
 #define TEMPLATE(T) template class LowPassFilter<T>;
 
-TEMPLATE(float)
-TEMPLATE(double)
-TEMPLATE(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

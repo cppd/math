@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../filters/position/position_2.h"
 #include "../filters/speed/speed_1.h"
 #include "../filters/speed/speed_2.h"
+#include "../settings/instantiation.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -404,9 +405,7 @@ Filters<T> create_filters()
         return res;
 }
 
-#define TEMPLATE_T(T) template Filters<T> create_filters();
+#define TEMPLATE(T) template Filters<T> create_filters();
 
-TEMPLATE_T(float)
-TEMPLATE_T(double)
-TEMPLATE_T(long double)
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

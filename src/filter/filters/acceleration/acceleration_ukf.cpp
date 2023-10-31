@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "update.h"
 
+#include "../../settings/instantiation.h"
+
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -163,7 +165,7 @@ std::string AccelerationUkf<T>::consistency_string() const
         return s;
 }
 
-template class AccelerationUkf<float>;
-template class AccelerationUkf<double>;
-template class AccelerationUkf<long double>;
+#define TEMPLATE(T) template class AccelerationUkf<T>;
+
+FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
