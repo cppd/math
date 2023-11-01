@@ -23,41 +23,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-namespace angle_implementation
-{
 template <typename T>
 [[nodiscard]] T normalize_angle(const T difference)
 {
         return std::remainder(difference, 2 * PI<T>);
 }
 
-template <typename T>
-[[nodiscard]] T unbound_angle(const T previous, const T next)
-{
-        return previous + normalize_angle(next - previous);
-}
-}
-
-template <typename T>
-[[nodiscard]] T normalize_angle(const T difference)
-{
-        return angle_implementation::normalize_angle(difference);
-}
-
 template <typename T, typename Previous>
 [[nodiscard]] T unbound_angle(const Previous previous, const T next)
 {
-        if constexpr (requires { angle_implementation::unbound_angle(*previous, next); })
+        const auto unbound = [&](const auto p)
+        {
+                static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(p)>>);
+                return p + normalize_angle(next - p);
+        };
+
+        if constexpr (requires { unbound(*previous); })
         {
                 if (previous)
                 {
-                        return angle_implementation::unbound_angle(*previous, next);
+                        return unbound(*previous);
                 }
                 return next;
         }
         else
         {
-                return angle_implementation::unbound_angle(previous, next);
+                return unbound(previous);
         }
 }
 }
