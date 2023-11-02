@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "filter_ukf.h"
+#include "filter_1.h"
 
 #include "../../settings/instantiation.h"
 #include "../../sigma_points.h"
@@ -763,7 +763,7 @@ Vector<3, T> speed_acceleration_residual(const Vector<3, T>& a, const Vector<3, 
 //
 
 template <typename T>
-class Filter final : public FilterUkf<T>
+class Filter final : public Filter1<T>
 {
         static constexpr bool NORMALIZED_INNOVATION{false};
         static constexpr bool LIKELIHOOD{false};
@@ -1105,7 +1105,7 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<FilterUkf<T>> create_filter_ukf(
+std::unique_ptr<Filter1<T>> create_filter_1(
         const T sigma_points_alpha,
         const T position_variance,
         const T angle_variance,
@@ -1114,7 +1114,7 @@ std::unique_ptr<FilterUkf<T>> create_filter_ukf(
         return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<FilterUkf<T>> create_filter_ukf(T, T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<Filter1<T>> create_filter_1(T, T, T, T);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

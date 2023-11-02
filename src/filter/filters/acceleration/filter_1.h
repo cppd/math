@@ -30,10 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::acceleration
 {
 template <typename T>
-class FilterUkf
+class Filter1
 {
 public:
-        virtual ~FilterUkf() = default;
+        virtual ~Filter1() = default;
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
@@ -129,7 +129,7 @@ public:
 };
 
 template <typename T>
-std::unique_ptr<FilterUkf<T>> create_filter_ukf(
+std::unique_ptr<Filter1<T>> create_filter_1(
         T sigma_points_alpha,
         T position_variance,
         T angle_variance,

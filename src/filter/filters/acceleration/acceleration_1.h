@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter_ukf.h"
+#include "filter_1.h"
 #include "init.h"
 
 #include "../../consistency.h"
@@ -33,12 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::acceleration
 {
 template <typename T>
-class AccelerationUkf final : public Filter<2, T>
+class Acceleration1 final : public Filter<2, T>
 {
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> gate_;
-        std::unique_ptr<FilterUkf<T>> filter_;
+        std::unique_ptr<Filter1<T>> filter_;
         Init<T> init_;
 
         utility::MeasurementQueue<2, T> queue_;
@@ -59,7 +59,7 @@ class AccelerationUkf final : public Filter<2, T>
         void check_time(T time) const;
 
 public:
-        AccelerationUkf(
+        Acceleration1(
                 std::size_t measurement_queue_size,
                 T reset_dt,
                 T angle_estimation_variance,

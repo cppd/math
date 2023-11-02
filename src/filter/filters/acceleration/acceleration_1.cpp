@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "acceleration_ukf.h"
+#include "acceleration_1.h"
 
 #include "update.h"
 
@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::acceleration
 {
 template <typename T>
-AccelerationUkf<T>::AccelerationUkf(
+Acceleration1<T>::Acceleration1(
         const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
@@ -42,7 +42,7 @@ AccelerationUkf<T>::AccelerationUkf(
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_ukf(sigma_points_alpha, position_variance, angle_variance, angle_r_variance)),
+          filter_(create_filter_1(sigma_points_alpha, position_variance, angle_variance, angle_r_variance)),
           init_(init),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
@@ -50,7 +50,7 @@ AccelerationUkf<T>::AccelerationUkf(
 }
 
 template <typename T>
-void AccelerationUkf<T>::save(const TrueData<2, T>& true_data)
+void Acceleration1<T>::save(const TrueData<2, T>& true_data)
 {
         if (!nees_)
         {
@@ -63,7 +63,7 @@ void AccelerationUkf<T>::save(const TrueData<2, T>& true_data)
 }
 
 template <typename T>
-void AccelerationUkf<T>::check_time(const T time) const
+void Acceleration1<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -72,7 +72,7 @@ void AccelerationUkf<T>::check_time(const T time) const
 }
 
 template <typename T>
-std::optional<UpdateInfo<2, T>> AccelerationUkf<T>::update(
+std::optional<UpdateInfo<2, T>> Acceleration1<T>::update(
         const Measurements<2, T>& m,
         const Estimation<2, T>& estimation)
 {
@@ -145,7 +145,7 @@ std::optional<UpdateInfo<2, T>> AccelerationUkf<T>::update(
 }
 
 template <typename T>
-std::string AccelerationUkf<T>::consistency_string() const
+std::string Acceleration1<T>::consistency_string() const
 {
         if (!nees_)
         {
@@ -165,7 +165,7 @@ std::string AccelerationUkf<T>::consistency_string() const
         return s;
 }
 
-#define TEMPLATE(T) template class AccelerationUkf<T>;
+#define TEMPLATE(T) template class Acceleration1<T>;
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

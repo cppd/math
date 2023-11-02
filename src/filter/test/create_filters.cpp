@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
+#include "../filters/acceleration/acceleration_1.h"
 #include "../filters/acceleration/acceleration_ekf.h"
-#include "../filters/acceleration/acceleration_ukf.h"
 #include "../filters/direction/direction_1_0.h"
 #include "../filters/direction/direction_1_1.h"
 #include "../filters/direction/direction_2_1.h"
@@ -229,7 +229,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Acceleration UKF (" << ALPHA << " " << alpha << ")";
+                oss << "Acceleration 1 (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         };
 
@@ -239,7 +239,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 ASSERT(alphas[i] > 0 && alphas[i] <= 1);
                 ASSERT(i <= 4);
                 res.emplace_back(
-                        std::make_unique<filters::acceleration::AccelerationUkf<T>>(
+                        std::make_unique<filters::acceleration::Acceleration1<T>>(
                                 Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_GATE, alphas[i],
