@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
+#include "../filters/acceleration/acceleration_0.h"
 #include "../filters/acceleration/acceleration_1.h"
 #include "../filters/acceleration/acceleration_ekf.h"
 #include "../filters/direction/direction_1_0.h"
@@ -73,8 +74,10 @@ struct Config final
                 .acceleration_variance = square<T>(10)};
 
         static constexpr T ACCELERATION_FILTER_POSITION_VARIANCE = square(1.0);
-        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE = square(degrees_to_radians(0.001));
-        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE = square(degrees_to_radians(0.001));
+        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE_0 = square(degrees_to_radians(1.0));
+        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE_0 = square(degrees_to_radians(1.0));
+        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE_1 = square(degrees_to_radians(0.001));
+        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE_1 = square(degrees_to_radians(0.001));
         static constexpr T ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
         static constexpr std::array ACCELERATION_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
         static constexpr T ACCELERATION_FILTER_RESET_DT = 10;
@@ -209,6 +212,48 @@ std::vector<TestFilterPosition<N, T>> create_positions()
 
         return res;
 }
+template <typename T, std::size_t ORDER>
+TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
+{
+        static_assert(ORDER == 0 || ORDER == 1);
+
+        ASSERT(alpha > 0 && alpha <= 1);
+        ASSERT(i <= 4);
+
+        const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
+
+        const auto name = [&]()
+        {
+                std::ostringstream oss;
+                oss << std::setprecision(precision) << std::fixed;
+                oss << "Acceleration " << ORDER << " (" << ALPHA << " " << alpha << ")";
+                return oss.str();
+        }();
+
+        if (ORDER == 0)
+        {
+                return {std::make_unique<filters::acceleration::Acceleration0<T>>(
+                                Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_GATE, alpha,
+                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_0,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_0, Config<T>::ACCELERATION_INIT),
+                        view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
+        }
+
+        if (ORDER == 1)
+        {
+                return {std::make_unique<filters::acceleration::Acceleration1<T>>(
+                                Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_GATE, alpha,
+                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1, Config<T>::ACCELERATION_INIT),
+                        view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
+        }
+}
 
 template <typename T>
 std::vector<TestFilter<2, T>> create_accelerations()
@@ -219,34 +264,21 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 std::make_unique<filters::acceleration::AccelerationEkf<T>>(
                         Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
-                        Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE, Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
+                        Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1, Config<T>::ACCELERATION_INIT),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
 
-        const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
+        const auto alphas = sort(std::array(Config<T>::DIRECTION_FILTER_UKF_ALPHAS));
 
-        const auto name = [&](const T alpha)
-        {
-                std::ostringstream oss;
-                oss << std::setprecision(precision) << std::fixed;
-                oss << "Acceleration 1 (" << ALPHA << " " << alpha << ")";
-                return oss.str();
-        };
-
-        const auto alphas = sort(std::array(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS));
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                ASSERT(alphas[i] > 0 && alphas[i] <= 1);
-                ASSERT(i <= 4);
-                res.emplace_back(
-                        std::make_unique<filters::acceleration::Acceleration1<T>>(
-                                Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
-                                Config<T>::ACCELERATION_FILTER_GATE, alphas[i],
-                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE, Config<T>::ACCELERATION_INIT),
-                        view::Filter<2, T>(name(alphas[i]), color::RGB8(0, 160 - 40 * i, 0)));
+                res.push_back(create_acceleration<T, 0>(i, alphas[i]));
+        }
+
+        for (std::size_t i = 0; i < alphas.size(); ++i)
+        {
+                res.push_back(create_acceleration<T, 1>(i, alphas[i]));
         }
 
         return res;
