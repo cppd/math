@@ -126,6 +126,7 @@ template <std::size_t N, typename T>
 [[nodiscard]] int compute_string_precision(const std::array<T, N>& data)
 {
         std::optional<T> min;
+
         for (const T v : data)
         {
                 ASSERT(v >= 0);
@@ -140,10 +141,12 @@ template <std::size_t N, typename T>
                 }
                 min = v;
         }
+
         if (!min)
         {
                 return 0;
         }
+
         ASSERT(*min >= 1e-6L);
         return std::abs(std::floor(std::log10(*min)));
 }
@@ -157,61 +160,65 @@ std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_var
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<TestFilterPosition<N, T>> create_positions()
+TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
 {
-        std::vector<TestFilterPosition<N, T>> res;
+        static_assert(ORDER >= 0 && ORDER <= 2);
+
+        ASSERT(theta >= 0 && theta <= 1);
+        ASSERT(i <= 4);
 
         const int precision = compute_string_precision(Config<T>::POSITION_FILTER_THETAS);
 
-        const auto name = [&](const T theta)
+        const auto name = [&]()
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
                 oss << "Position " << ORDER << " (" << THETA << " " << theta << ")";
                 return oss.str();
-        };
+        }();
+
+        if (ORDER == 0)
+        {
+                return {std::make_unique<filters::position::Position0<N, T>>(
+                                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                Config<T>::POSITION_FILTER_GATE_0, theta, Config<T>::POSITION_FILTER_VARIANCE_0),
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
+        }
+
+        if (ORDER == 1)
+        {
+                return {std::make_unique<filters::position::Position1<N, T>>(
+                                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                Config<T>::POSITION_FILTER_GATE_1, theta, Config<T>::POSITION_FILTER_VARIANCE_1,
+                                Config<T>::POSITION_INIT),
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
+        }
+
+        if (ORDER == 2)
+        {
+                return {std::make_unique<filters::position::Position2<N, T>>(
+                                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
+                                Config<T>::POSITION_FILTER_GATE_2, theta, Config<T>::POSITION_FILTER_VARIANCE_2,
+                                Config<T>::POSITION_INIT),
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
+        }
+}
+
+template <std::size_t N, typename T, std::size_t ORDER>
+std::vector<TestFilterPosition<N, T>> create_positions()
+{
+        std::vector<TestFilterPosition<N, T>> res;
 
         const auto thetas = sort(std::array(Config<T>::POSITION_FILTER_THETAS));
+
         for (std::size_t i = 0; i < thetas.size(); ++i)
         {
-                ASSERT(thetas[i] >= 0 && thetas[i] <= 1);
-                ASSERT(i <= 4);
-
-                static_assert(ORDER >= 0 && ORDER <= 2);
-
-                if (ORDER == 0)
-                {
-                        res.emplace_back(
-                                std::make_unique<filters::position::Position0<N, T>>(
-                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                        Config<T>::POSITION_FILTER_GATE_0, thetas[i],
-                                        Config<T>::POSITION_FILTER_VARIANCE_0),
-                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 100, 200)));
-                }
-
-                if (ORDER == 1)
-                {
-                        res.emplace_back(
-                                std::make_unique<filters::position::Position1<N, T>>(
-                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                        Config<T>::POSITION_FILTER_GATE_1, thetas[i],
-                                        Config<T>::POSITION_FILTER_VARIANCE_1, Config<T>::POSITION_INIT),
-                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 0, 200)));
-                }
-
-                if (ORDER == 2)
-                {
-                        res.emplace_back(
-                                std::make_unique<filters::position::Position2<N, T>>(
-                                        Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                        Config<T>::POSITION_FILTER_GATE_2, thetas[i],
-                                        Config<T>::POSITION_FILTER_VARIANCE_2, Config<T>::POSITION_INIT),
-                                view::Filter<N, T>(name(thetas[i]), color::RGB8(160 - 40 * i, 0, 0)));
-                }
+                res.push_back(create_position<N, T, ORDER>(i, thetas[i]));
         }
 
         return res;
 }
+
 template <typename T, std::size_t ORDER>
 TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
 {
@@ -287,10 +294,10 @@ std::vector<TestFilter<2, T>> create_accelerations()
 template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
 TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 {
+        static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
+
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
-
-        static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
 
         const int precision = compute_string_precision(Config<T>::DIRECTION_FILTER_UKF_ALPHAS);
 
@@ -361,10 +368,10 @@ std::vector<TestFilter<2, T>> create_directions()
 template <typename T, std::size_t ORDER_P>
 TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 {
+        static_assert(ORDER_P == 1 || ORDER_P == 2);
+
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 2);
-
-        static_assert(ORDER_P == 1 || ORDER_P == 2);
 
         const int precision = compute_string_precision(Config<T>::SPEED_FILTER_UKF_ALPHAS);
 
