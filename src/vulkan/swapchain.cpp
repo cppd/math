@@ -31,6 +31,8 @@ namespace ns::vulkan
 {
 namespace
 {
+const auto* const MULTIPLICATION_SIGN = reinterpret_cast<const char*>(u8"\u00d7");
+
 VkSurfaceFormatKHR choose_surface_format(
         const VkSurfaceFormatKHR required_surface_format,
         const std::vector<VkSurfaceFormatKHR>& surface_formats)
@@ -216,8 +218,7 @@ handle::ImageView create_image_view(
 
 std::string extent_to_string(const VkExtent2D extent)
 {
-        const auto* const multiplication_sign = reinterpret_cast<const char*>(u8"\U000000D7");
-        return to_string(extent.width) + multiplication_sign + to_string(extent.height);
+        return to_string(extent.width) + MULTIPLICATION_SIGN + to_string(extent.height);
 }
 
 std::string surface_formats_to_string(const std::vector<VkSurfaceFormatKHR>& surface_formats)
