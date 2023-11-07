@@ -122,17 +122,14 @@ Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& ini
         return res;
 }
 
-struct AddX final
+template <typename T>
+[[nodiscard]] Vector<8, T> add_x(const Vector<8, T>& a, const Vector<8, T>& b)
 {
-        template <typename T>
-        [[nodiscard]] Vector<8, T> operator()(const Vector<8, T>& a, const Vector<8, T>& b) const
-        {
-                Vector<8, T> res = a + b;
-                res[6] = normalize_angle(res[6]);
-                res[7] = normalize_angle(res[7]);
-                return res;
-        }
-};
+        Vector<8, T> res = a + b;
+        res[6] = normalize_angle(res[6]);
+        res[7] = normalize_angle(res[7]);
+        return res;
+}
 
 template <typename T>
 Vector<8, T> f(const T dt, const Vector<8, T>& x)
@@ -818,7 +815,7 @@ class Filter final : public Filter0<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_h<T>, position_r(position.variance), position.value, AddX(), position_residual<T>,
+                        position_h<T>, position_r(position.variance), position.value, add_x<T>, position_residual<T>,
                         gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -831,7 +828,7 @@ class Filter final : public Filter0<T>
 
                 filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
-                        Vector<3, T>(position.value[0], position.value[1], speed.value[0]), AddX(),
+                        Vector<3, T>(position.value[0], position.value[1], speed.value[0]), add_x<T>,
                         position_speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -851,7 +848,7 @@ class Filter final : public Filter0<T>
                         Vector<6, T>(
                                 position.value[0], position.value[1], speed.value[0], direction.value[0],
                                 acceleration.value[0], acceleration.value[1]),
-                        AddX(), position_speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION,
+                        add_x<T>, position_speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
@@ -866,8 +863,8 @@ class Filter final : public Filter0<T>
                 filter_->update(
                         position_speed_direction_h<T>,
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
-                        Vector<4, T>(position.value[0], position.value[1], speed.value[0], direction.value[0]), AddX(),
-                        position_speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        Vector<4, T>(position.value[0], position.value[1], speed.value[0], direction.value[0]),
+                        add_x<T>, position_speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_position_speed_acceleration(
@@ -884,7 +881,7 @@ class Filter final : public Filter0<T>
                         Vector<5, T>(
                                 position.value[0], position.value[1], speed.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        AddX(), position_speed_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, position_speed_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_position_direction_acceleration(
@@ -901,7 +898,7 @@ class Filter final : public Filter0<T>
                         Vector<5, T>(
                                 position.value[0], position.value[1], direction.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        AddX(), position_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, position_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_position_direction(
@@ -913,7 +910,7 @@ class Filter final : public Filter0<T>
 
                 filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
-                        Vector<3, T>(position.value[0], position.value[1], direction.value[0]), AddX(),
+                        Vector<3, T>(position.value[0], position.value[1], direction.value[0]), add_x<T>,
                         position_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -928,7 +925,7 @@ class Filter final : public Filter0<T>
                         position_acceleration_h<T>, position_acceleration_r(position.variance, acceleration.variance),
                         Vector<4, T>(
                                 position.value[0], position.value[1], acceleration.value[0], acceleration.value[1]),
-                        AddX(), position_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, position_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed_direction_acceleration(
@@ -943,7 +940,7 @@ class Filter final : public Filter0<T>
                         speed_direction_acceleration_h<T>,
                         speed_direction_acceleration_r(speed.variance, direction.variance, acceleration.variance),
                         Vector<4, T>(speed.value[0], direction.value[0], acceleration.value[0], acceleration.value[1]),
-                        AddX(), speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed_direction(
@@ -955,7 +952,7 @@ class Filter final : public Filter0<T>
 
                 filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
-                        Vector<2, T>(speed.value[0], direction.value[0]), AddX(), speed_direction_residual<T>, gate,
+                        Vector<2, T>(speed.value[0], direction.value[0]), add_x<T>, speed_direction_residual<T>, gate,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -969,7 +966,7 @@ class Filter final : public Filter0<T>
                 filter_->update(
                         direction_acceleration_h<T>,
                         direction_acceleration_r(direction.variance, acceleration.variance),
-                        Vector<3, T>(direction.value[0], acceleration.value[0], acceleration.value[1]), AddX(),
+                        Vector<3, T>(direction.value[0], acceleration.value[0], acceleration.value[1]), add_x<T>,
                         direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -978,7 +975,7 @@ class Filter final : public Filter0<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        acceleration_h<T>, acceleration_r(acceleration.variance), acceleration.value, AddX(),
+                        acceleration_h<T>, acceleration_r(acceleration.variance), acceleration.value, add_x<T>,
                         acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -987,7 +984,7 @@ class Filter final : public Filter0<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), AddX(),
+                        direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), add_x<T>,
                         direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -996,8 +993,8 @@ class Filter final : public Filter0<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), AddX(), speed_residual<T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), add_x<T>, speed_residual<T>,
+                        gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed_acceleration(
@@ -1009,7 +1006,7 @@ class Filter final : public Filter0<T>
 
                 filter_->update(
                         speed_acceleration_h<T>, speed_acceleration_r(speed.variance, acceleration.variance),
-                        Vector<3, T>(speed.value[0], acceleration.value[0], acceleration.value[1]), AddX(),
+                        Vector<3, T>(speed.value[0], acceleration.value[0], acceleration.value[1]), add_x<T>,
                         speed_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
