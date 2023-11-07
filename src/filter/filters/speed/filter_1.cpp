@@ -79,14 +79,11 @@ Matrix<N, N, T> p(const Matrix<N, N, T>& position_velocity_p)
         return position_velocity_p;
 }
 
-struct AddX final
+template <std::size_t N, typename T>
+[[nodiscard]] Vector<N, T> add_x(const Vector<N, T>& a, const Vector<N, T>& b)
 {
-        template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
-        {
-                return a + b;
-        }
-};
+        return a + b;
+}
 
 template <std::size_t N, typename T>
 Vector<2 * N, T> f(const T dt, const Vector<2 * N, T>& x)
@@ -286,7 +283,7 @@ class Filter final : public Filter1<N, T>
                 ASSERT(utility::check_variance(position.variance));
 
                 filter_->update(
-                        position_h<N, T>, position_r(position.variance), position_z(position.value), AddX(),
+                        position_h<N, T>, position_r(position.variance), position_z(position.value), add_x<2 * N, T>,
                         position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -301,8 +298,8 @@ class Filter final : public Filter1<N, T>
 
                 filter_->update(
                         position_speed_h<N, T>, position_speed_r(position.variance, speed.variance),
-                        position_speed_z(position.value, speed.value), AddX(), position_speed_residual<N + 1, T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_speed_z(position.value, speed.value), add_x<2 * N, T>,
+                        position_speed_residual<N + 1, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
@@ -311,8 +308,8 @@ class Filter final : public Filter1<N, T>
                 ASSERT(utility::check_variance(speed.variance));
 
                 filter_->update(
-                        speed_h<N, T>, speed_r(speed.variance), speed_z(speed.value), AddX(), speed_residual<T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        speed_h<N, T>, speed_r(speed.variance), speed_z(speed.value), add_x<2 * N, T>,
+                        speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] Vector<N, T> position() const override
