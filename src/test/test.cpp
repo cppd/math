@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/variant.h>
 
+#include <algorithm>
 #include <sstream>
 
 namespace ns::test
