@@ -134,11 +134,11 @@ class Impl final : public VolumeObject
                         volume_alpha_coefficient, isosurface_alpha, isosurface, isovalue, color.rgb32().clamp(0, 1));
         }
 
-        void buffer_set_lighting(float ambient, float metalness, float roughness) const
+        void buffer_set_lighting(const float ambient, const float metalness, const float roughness) const
         {
-                clean_shading_parameters(&ambient, &metalness, &roughness);
-
-                buffer_.set_lighting(*transfer_command_pool_, *transfer_queue_, ambient, metalness, roughness);
+                buffer_.set_lighting(
+                        *transfer_command_pool_, *transfer_queue_, clean_ambient(ambient), clean_metalness(metalness),
+                        clean_roughness(roughness));
         }
 
         void buffer_set_coordinates() const

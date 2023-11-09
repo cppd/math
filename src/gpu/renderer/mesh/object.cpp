@@ -92,11 +92,10 @@ class Impl final : public MeshObject
 
         std::optional<int> version_;
 
-        void buffer_set_lighting(float ambient, float metalness, float roughness) const
+        void buffer_set_lighting(const float ambient, const float metalness, const float roughness) const
         {
-                clean_shading_parameters(&ambient, &metalness, &roughness);
-
-                mesh_buffer_.set_lighting(ambient, metalness, roughness);
+                mesh_buffer_.set_lighting(
+                        clean_ambient(ambient), clean_metalness(metalness), clean_roughness(roughness));
         }
 
         void buffer_set_color(const color::Color& color)

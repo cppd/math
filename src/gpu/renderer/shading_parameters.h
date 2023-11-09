@@ -18,14 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <algorithm>
+#include <type_traits>
 
 namespace ns::gpu::renderer
 {
 template <typename T>
-void clean_shading_parameters(T* const ambient, T* const metalness, T* const roughness)
+[[nodiscard]] T clean_ambient(const T ambient)
 {
-        *ambient = std::clamp<T>(*ambient, 0, 1);
-        *metalness = std::clamp<T>(*metalness, 0, 1);
-        *roughness = std::clamp<T>(*roughness, 0, 1);
+        static_assert(std::is_floating_point_v<T>);
+        return std::clamp<T>(ambient, 0, 1);
+}
+
+template <typename T>
+[[nodiscard]] T clean_metalness(const T metalness)
+{
+        static_assert(std::is_floating_point_v<T>);
+        return std::clamp<T>(metalness, 0, 1);
+}
+
+template <typename T>
+[[nodiscard]] T clean_roughness(const T roughness)
+{
+        static_assert(std::is_floating_point_v<T>);
+        return std::clamp<T>(roughness, 0, 1);
 }
 }
