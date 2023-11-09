@@ -193,7 +193,7 @@ class Impl final : public View
 
                 //
 
-                const float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
+                const double brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
                 data_buffer_.set_brightness(brightness);
 
                 //
