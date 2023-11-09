@@ -225,7 +225,7 @@ void VolumeWidget::on_isovalue_changed()
                 return;
         }
 
-        const float isovalue = slider_position(ui_.slider_isovalue);
+        const double isovalue = slider_position(ui_.slider_isovalue);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<model::volume::VolumeObject<N>>& volume_object)
