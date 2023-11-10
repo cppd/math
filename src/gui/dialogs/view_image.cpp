@@ -120,8 +120,8 @@ ViewImageDialog::ViewImageDialog(
         const ViewImageParameters& input,
         const std::string& title,
         const std::string& info,
-        const std::string& file_name,
-        std::optional<ViewImageParameters>& parameters)
+        const std::string* const file_name,
+        std::optional<ViewImageParameters>* const parameters)
         : QDialog(parent_for_dialog()),
           file_name_(file_name),
           parameters_(parameters)
@@ -144,7 +144,7 @@ ViewImageDialog::ViewImageDialog(
         }
 
         ui_.line_edit_path->setReadOnly(true);
-        ui_.line_edit_path->setText(QString::fromStdString(initial_path_string(input, file_name)));
+        ui_.line_edit_path->setText(QString::fromStdString(initial_path_string(input, *file_name)));
 
         connect(ui_.tool_button_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
 
@@ -170,11 +170,10 @@ void ViewImageDialog::done(const int r)
                 return;
         }
 
-        parameters_.emplace();
-
-        parameters_->path_string = std::move(path_string);
-        parameters_->normalize = ui_.check_box_normalize->isChecked();
-        parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
+        auto& parameters = parameters_->emplace();
+        parameters.path_string = std::move(path_string);
+        parameters.normalize = ui_.check_box_normalize->isChecked();
+        parameters.convert_to_8_bit = ui_.check_box_8_bit->isChecked();
 
         QDialog::done(r);
 }
@@ -193,7 +192,7 @@ void ViewImageDialog::on_select_path_clicked()
                 generic_utf8_filename(path_from_utf8(ui_.line_edit_path->text().toStdString()).filename());
 
         std::optional<std::string> path =
-                dialog::save_file(caption, file_name.empty() ? file_name_ : file_name, {filter}, READ_ONLY);
+                dialog::save_file(caption, file_name.empty() ? *file_name_ : file_name, {filter}, READ_ONLY);
 
         if (path && !ptr.isNull())
         {
@@ -209,7 +208,7 @@ std::optional<ViewImageParameters> ViewImageDialog::show(
         std::optional<ViewImageParameters> parameters;
 
         const QtObjectInDynamicMemory w(
-                new ViewImageDialog(dialog_parameters().read(), title, info, file_name, parameters));
+                new ViewImageDialog(dialog_parameters().read(), title, info, &file_name, &parameters));
 
         if (!w->exec() || w.isNull())
         {

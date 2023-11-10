@@ -40,12 +40,12 @@ private:
 
         std::vector<std::optional<int>> slices_;
 
-        std::optional<ImageSliceParameters>& parameters_;
+        std::optional<ImageSliceParameters>* const parameters_;
 
         ImageSliceDialog(
                 const std::vector<int>& size,
                 int slice_dimension,
-                std::optional<ImageSliceParameters>& parameters);
+                std::optional<ImageSliceParameters>* parameters);
 
         void done(int r) override;
 

@@ -48,13 +48,13 @@ private:
 
         const PainterImagePathType path_type_;
 
-        std::optional<PainterImageParameters>& parameters_;
+        std::optional<PainterImageParameters>* const parameters_;
 
         PainterImageDialog(
                 const std::string& title,
                 PainterImagePathType path_type,
                 bool use_all,
-                std::optional<PainterImageParameters>& parameters);
+                std::optional<PainterImageParameters>* parameters);
 
         void set_path();
         void set_checkboxes(bool use_all);

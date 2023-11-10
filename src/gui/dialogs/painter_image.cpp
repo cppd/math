@@ -42,7 +42,7 @@ PainterImageDialog::PainterImageDialog(
         const std::string& title,
         const PainterImagePathType path_type,
         const bool use_all,
-        std::optional<PainterImageParameters>& parameters)
+        std::optional<PainterImageParameters>* const parameters)
         : QDialog(parent_for_dialog()),
           path_type_(path_type),
           parameters_(parameters)
@@ -129,21 +129,21 @@ void PainterImageDialog::done(const int r)
                 }
         }
 
-        parameters_.emplace();
+        auto& parameters = parameters_->emplace();
 
-        parameters_->path_string = path_string;
+        parameters.path_string = path_string;
 
         if (ui_.check_box_all->isVisible() && ui_.check_box_all->isChecked())
         {
-                parameters_->all = true;
-                parameters_->with_background = false;
-                parameters_->convert_to_8_bit = false;
+                parameters.all = true;
+                parameters.with_background = false;
+                parameters.convert_to_8_bit = false;
         }
         else
         {
-                parameters_->all = false;
-                parameters_->with_background = ui_.check_box_with_background->isChecked();
-                parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
+                parameters.all = false;
+                parameters.with_background = ui_.check_box_with_background->isChecked();
+                parameters.convert_to_8_bit = ui_.check_box_8_bit->isChecked();
         }
 
         QDialog::done(r);
@@ -207,7 +207,7 @@ std::optional<PainterImageParameters> PainterImageDialog::show(
 {
         std::optional<PainterImageParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, parameters));
+        const QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, &parameters));
 
         if (!w->exec() || w.isNull())
         {

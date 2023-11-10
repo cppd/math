@@ -71,7 +71,7 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         const int default_point_count,
         const int min_point_count,
         const int max_point_count,
-        std::optional<PointObjectParameters>& parameters)
+        std::optional<PointObjectParameters>* const parameters)
         : QDialog(parent_for_dialog()),
           min_point_count_(min_point_count),
           max_point_count_(max_point_count),
@@ -111,8 +111,8 @@ void PointObjectParametersDialog::done(const int r)
                 return;
         }
 
-        parameters_.emplace();
-        parameters_->point_count = point_count;
+        auto& parameters = parameters_->emplace();
+        parameters.point_count = point_count;
 
         QDialog::done(r);
 }
@@ -127,7 +127,7 @@ std::optional<PointObjectParameters> PointObjectParametersDialog::show(
         std::optional<PointObjectParameters> parameters;
 
         const QtObjectInDynamicMemory w(new PointObjectParametersDialog(
-                dimension, object_name, default_point_count, min_point_count, max_point_count, parameters));
+                dimension, object_name, default_point_count, min_point_count, max_point_count, &parameters));
 
         if (!w->exec() || w.isNull())
         {

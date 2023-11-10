@@ -41,13 +41,13 @@ private:
         double min_alpha_;
         double max_alpha_;
 
-        std::optional<BoundCoconeParameters>& parameters_;
+        std::optional<BoundCoconeParameters>* const parameters_;
 
         BoundCoconeParametersDialog(
                 int minimum_rho_exponent,
                 int minimum_alpha_exponent,
                 const BoundCoconeParameters& input,
-                std::optional<BoundCoconeParameters>& parameters);
+                std::optional<BoundCoconeParameters>* parameters);
 
         void done(int r) override;
 

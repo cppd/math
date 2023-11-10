@@ -39,7 +39,7 @@ private:
         const int min_point_count_;
         const int max_point_count_;
 
-        std::optional<PointObjectParameters>& parameters_;
+        std::optional<PointObjectParameters>* const parameters_;
 
         PointObjectParametersDialog(
                 int dimension,
@@ -47,7 +47,7 @@ private:
                 int default_point_count,
                 int min_point_count,
                 int max_point_count,
-                std::optional<PointObjectParameters>& parameters);
+                std::optional<PointObjectParameters>* parameters);
 
         void done(int r) override;
 

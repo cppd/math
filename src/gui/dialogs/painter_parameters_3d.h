@@ -48,7 +48,7 @@ private:
         int max_height_;
         int min_height_;
 
-        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters_;
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>>* const parameters_;
 
         PainterParameters3dDialog(
                 int max_thread_count,
@@ -63,7 +63,7 @@ private:
                 int color_index,
                 const std::array<const char*, 2>& integrators,
                 int integrator_index,
-                std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters);
+                std::optional<std::tuple<PainterParameters, PainterParameters3d>>* parameters);
 
         void on_width_value_changed(int);
         void on_height_value_changed(int);

@@ -69,7 +69,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         const int color_index,
         const std::array<const char*, 2>& integrators,
         const int integrator_index,
-        std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>>* const parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
@@ -123,10 +123,9 @@ void PainterParametersNdDialog::done(const int r)
                 return;
         }
 
-        parameters_.emplace();
-
-        std::get<0>(*parameters_) = parameters_widget_->parameters();
-        std::get<1>(*parameters_).max_size = max_size;
+        auto& parameters = parameters_->emplace();
+        std::get<0>(parameters) = parameters_widget_->parameters();
+        std::get<1>(parameters).max_size = max_size;
 
         QDialog::done(r);
 }
@@ -153,7 +152,7 @@ std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParamet
         const QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, screen_size, min_screen_size, max_screen_size, samples_per_pixel,
                 max_samples_per_pixel, precisions, precision_index, colors, color_index, integrators, integrator_index,
-                parameters));
+                &parameters));
 
         if (!w->exec() || w.isNull())
         {

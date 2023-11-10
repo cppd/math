@@ -38,16 +38,16 @@ class ViewImageDialog final : public QDialog
 private:
         Ui::ViewImageDialog ui_;
 
-        const std::string& file_name_;
+        const std::string* const file_name_;
 
-        std::optional<ViewImageParameters>& parameters_;
+        std::optional<ViewImageParameters>* const parameters_;
 
         ViewImageDialog(
                 const ViewImageParameters& input,
                 const std::string& title,
                 const std::string& info,
-                const std::string& file_name,
-                std::optional<ViewImageParameters>& parameters);
+                const std::string* file_name,
+                std::optional<ViewImageParameters>* parameters);
 
         void done(int r) override;
 

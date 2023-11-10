@@ -122,7 +122,7 @@ void create_slider(
 ImageSliceDialog::ImageSliceDialog(
         const std::vector<int>& size,
         const int slice_dimension,
-        std::optional<ImageSliceParameters>& parameters)
+        std::optional<ImageSliceParameters>* const parameters)
         : QDialog(parent_for_dialog()),
           slice_dimension_(slice_dimension),
           parameters_(parameters)
@@ -177,8 +177,8 @@ void ImageSliceDialog::done(const int r)
                 return;
         }
 
-        parameters_.emplace();
-        parameters_->slices = std::move(slices_);
+        auto& parameters = parameters_->emplace();
+        parameters.slices = std::move(slices_);
 
         QDialog::done(r);
 }
@@ -187,7 +187,7 @@ std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int
 {
         std::optional<ImageSliceParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, parameters));
+        const QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, &parameters));
 
         if (!w->exec() || w.isNull())
         {

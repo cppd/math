@@ -62,7 +62,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         const int color_index,
         const std::array<const char*, 2>& integrators,
         const int integrator_index,
-        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters)
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>>* const parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
@@ -154,11 +154,10 @@ void PainterParameters3dDialog::done(const int r)
                 return;
         }
 
-        parameters_.emplace();
-
-        std::get<0>(*parameters_) = parameters_widget_->parameters();
-        std::get<1>(*parameters_).width = width;
-        std::get<1>(*parameters_).height = height;
+        auto& parameters = parameters_->emplace();
+        std::get<0>(parameters) = parameters_widget_->parameters();
+        std::get<1>(parameters).width = width;
+        std::get<1>(parameters).height = height;
 
         QDialog::done(r);
 }
@@ -183,7 +182,7 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
 
         const QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, samples_per_pixel, max_samples_per_pixel, precisions,
-                precision_index, colors, color_index, integrators, integrator_index, parameters));
+                precision_index, colors, color_index, integrators, integrator_index, &parameters));
 
         if (!w->exec() || w.isNull())
         {
