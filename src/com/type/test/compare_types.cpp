@@ -142,8 +142,8 @@ void compare_types()
         write<int>(max_int<int>());
         write<long>(max_int<long>());
         write<long long>(max_int<long long>());
-        write<__int128>(1e16);
-        write<unsigned __int128>(1e16);
+        write<__int128>((1ULL << 63) / 10);
+        write<unsigned __int128>((1ULL << 63) / 10);
 }
 
 TEST_PERFORMANCE("Arithmetic Types", compare_types)
