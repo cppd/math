@@ -33,7 +33,7 @@ template <typename Parallelotope, typename Object>
 class SpatialSubdivisionTreeObjects final : public SpatialSubdivisionTree<Parallelotope>::Objects
 {
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
+        using T = Parallelotope::DataType;
 
         [[nodiscard]] static spatial::BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
         {

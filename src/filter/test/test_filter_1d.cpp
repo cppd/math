@@ -363,7 +363,7 @@ void test_impl(
         const typename Filter::Type deviation_count,
         const std::vector<unsigned>& expected_distribution)
 {
-        using T = typename Filter::Type;
+        using T = Filter::Type;
 
         constexpr T DT = 1;
         constexpr T VELOCITY_MEAN = 1;

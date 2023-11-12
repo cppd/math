@@ -39,7 +39,7 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
 
         for (std::size_t i = 0; i < mesh.materials.size(); ++i)
         {
-                const typename model::mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
+                const model::mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
 
                 ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 

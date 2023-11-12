@@ -44,7 +44,7 @@ namespace
 template <typename Color>
 bool terminate(const int depth, Color* const beta, PCG& engine)
 {
-        using T = typename Color::DataType;
+        using T = Color::DataType;
 
         if (depth < 4)
         {

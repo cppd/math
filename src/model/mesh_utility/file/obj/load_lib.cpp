@@ -98,7 +98,7 @@ void load_image(
 template <std::size_t N>
 class ReadLib final
 {
-        typename Mesh<N>::Material* material_ = nullptr;
+        Mesh<N>::Material* material_ = nullptr;
         const std::filesystem::path* lib_dir_;
         Mesh<N>* mesh_;
         std::map<std::string, int>* material_index_;

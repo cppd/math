@@ -221,7 +221,7 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 }
 
 template <std::size_t N, typename T>
-template <typename Parallelotope<N, T>::IntersectionType INTERSECTION_TYPE>
+template <Parallelotope<N, T>::IntersectionType INTERSECTION_TYPE>
 std::optional<T> Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_distance) const
 {
         T near = 0;

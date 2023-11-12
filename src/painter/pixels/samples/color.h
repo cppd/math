@@ -30,12 +30,12 @@ class ColorSamples final
         static_assert(COUNT >= 2);
         static_assert(COUNT % 2 == 0);
 
-        static constexpr typename Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
+        static constexpr Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
 
         Color color_sum_;
         std::array<Color, COUNT> colors_;
 
-        typename Color::DataType weight_sum_;
+        Color::DataType weight_sum_;
         std::array<typename Color::DataType, COUNT> weights_;
 
         std::array<typename Color::DataType, COUNT> contributions_;
@@ -64,7 +64,7 @@ public:
         ColorSamples(
                 const Color& color_sum,
                 const std::array<Color, COUNT>& colors,
-                const typename Color::DataType weight_sum,
+                const Color::DataType weight_sum,
                 const std::array<typename Color::DataType, COUNT>& weights,
                 const std::array<typename Color::DataType, COUNT>& contributions)
                 : color_sum_(color_sum),
@@ -104,19 +104,19 @@ public:
                 return colors_[index];
         }
 
-        [[nodiscard]] typename Color::DataType weight_sum() const
+        [[nodiscard]] Color::DataType weight_sum() const
         {
                 ASSERT(full());
                 return weight_sum_;
         }
 
-        [[nodiscard]] typename Color::DataType weight(const std::size_t index) const
+        [[nodiscard]] Color::DataType weight(const std::size_t index) const
         {
                 ASSERT(index < count());
                 return weights_[index];
         }
 
-        [[nodiscard]] typename Color::DataType contribution(const std::size_t index) const
+        [[nodiscard]] Color::DataType contribution(const std::size_t index) const
         {
                 ASSERT(index < count());
                 return contributions_[index];

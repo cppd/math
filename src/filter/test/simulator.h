@@ -29,10 +29,10 @@ class Track final
 {
         class Iter final
         {
-                typename std::vector<filters::Measurements<N, T>>::const_iterator iter_;
+                std::vector<filters::Measurements<N, T>>::const_iterator iter_;
 
         public:
-                explicit Iter(typename std::vector<filters::Measurements<N, T>>::const_iterator iter)
+                explicit Iter(std::vector<filters::Measurements<N, T>>::const_iterator iter)
                         : iter_(std::move(iter))
                 {
                 }

@@ -30,16 +30,16 @@ namespace ns::model::mesh
 namespace
 {
 template <std::size_t N>
-using MeshFacet = typename Mesh<N>::Facet;
+using MeshFacet = Mesh<N>::Facet;
 
 template <std::size_t N>
-using MeshPoint = typename Mesh<N>::Point;
+using MeshPoint = Mesh<N>::Point;
 
 template <std::size_t N>
-using MeshLine = typename Mesh<N>::Line;
+using MeshLine = Mesh<N>::Line;
 
 template <std::size_t N>
-using MeshMaterial = typename Mesh<N>::Material;
+using MeshMaterial = Mesh<N>::Material;
 
 //
 

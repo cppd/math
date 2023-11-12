@@ -52,7 +52,7 @@ class Storage final
 public:
         void delete_object(const model::ObjectId id)
         {
-                typename decltype(map_)::mapped_type tmp;
+                decltype(map_)::mapped_type tmp;
                 const std::unique_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())

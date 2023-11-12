@@ -30,9 +30,9 @@ class BackgroundSamples final
         static_assert(COUNT >= 2);
         static_assert(COUNT % 2 == 0);
 
-        static constexpr typename Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
+        static constexpr Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
 
-        typename Color::DataType weight_sum_;
+        Color::DataType weight_sum_;
         std::array<typename Color::DataType, COUNT> weights_;
 
 public:
@@ -50,9 +50,7 @@ public:
                 ASSERT(std::is_sorted(weights_.cbegin(), weights_.cbegin() + count));
         }
 
-        BackgroundSamples(
-                const typename Color::DataType weight_sum,
-                const std::array<typename Color::DataType, COUNT>& weights)
+        BackgroundSamples(const Color::DataType weight_sum, const std::array<typename Color::DataType, COUNT>& weights)
                 : weight_sum_(weight_sum),
                   weights_(weights)
         {
@@ -75,13 +73,13 @@ public:
                 return full() ? COUNT : (empty() ? 0 : -weight_sum_);
         }
 
-        [[nodiscard]] typename Color::DataType weight_sum() const
+        [[nodiscard]] Color::DataType weight_sum() const
         {
                 ASSERT(full());
                 return weight_sum_;
         }
 
-        [[nodiscard]] typename Color::DataType weight(const std::size_t index) const
+        [[nodiscard]] Color::DataType weight(const std::size_t index) const
         {
                 ASSERT(index < count());
                 return weights_[index];

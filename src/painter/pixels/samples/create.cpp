@@ -36,15 +36,15 @@ namespace
 template <typename Color>
 struct BackgroundSample final
 {
-        typename Color::DataType weight;
+        Color::DataType weight;
 };
 
 template <typename Color>
 struct ColorSample final
 {
         Color color;
-        typename Color::DataType weight;
-        typename Color::DataType contribution;
+        Color::DataType weight;
+        Color::DataType contribution;
 };
 
 template <std::size_t COUNT, typename Color>

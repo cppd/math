@@ -149,7 +149,7 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
         static_assert(sizeof...(Parallelotope) >= 2);
 
         constexpr std::size_t N = std::get<0>(std::make_tuple(Parallelotope::SPACE_DIMENSION...));
-        using T = typename std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
+        using T = std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
 
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));

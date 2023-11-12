@@ -71,12 +71,9 @@ void compare(const std::vector<T>& a, const std::vector<T>& b)
 }
 
 template <typename Container>
-typename Container::value_type f(
-        const typename Container::value_type wave,
-        const Container& waves,
-        const Container& samples)
+Container::value_type f(const typename Container::value_type wave, const Container& waves, const Container& samples)
 {
-        using T = typename Container::value_type;
+        using T = Container::value_type;
 
         if (wave < waves.front() || wave > waves.back())
         {
@@ -105,7 +102,7 @@ void check(
         const typename Container::value_type to,
         const unsigned count)
 {
-        using T = typename Container::value_type;
+        using T = Container::value_type;
 
         ASSERT(std::is_sorted(waves.begin(), waves.end()));
 

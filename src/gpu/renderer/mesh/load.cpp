@@ -495,7 +495,7 @@ std::vector<MaterialBuffer> load_materials(
         std::vector<MaterialBuffer> buffers;
         buffers.reserve(mesh.materials.size() + 1);
 
-        for (const typename model::mesh::Mesh<3>::Material& mesh_material : mesh.materials)
+        for (const model::mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
                 const Vector3f color = mesh_material.color.rgb32().clamp(0, 1);
                 const bool use_texture = (mesh_material.image >= 0);

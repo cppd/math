@@ -33,7 +33,7 @@ template <typename F>
 using FacetList = std::list<F>;
 
 template <typename F>
-using FacetListIter = typename FacetList<F>::const_iterator;
+using FacetListIter = FacetList<F>::const_iterator;
 
 template <std::size_t N, typename DataType, typename ComputeType>
 class Facet final

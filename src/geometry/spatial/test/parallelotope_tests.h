@@ -78,7 +78,7 @@ template <typename RandomEngine, typename Parallelotope>
 void test_constraints(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
         constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
+        using T = Parallelotope::DataType;
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
@@ -113,7 +113,7 @@ template <typename RandomEngine, typename Parallelotope>
 void test_overlap(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
         constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
+        using T = Parallelotope::DataType;
 
         const T length = p.length();
 

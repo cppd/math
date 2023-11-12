@@ -156,7 +156,7 @@ void test_background()
 template <typename C>
 void test_color()
 {
-        using T = typename C::DataType;
+        using T = C::DataType;
         using Colors = std::vector<std::optional<C>>;
         using Weights = std::vector<typename C::DataType>;
 

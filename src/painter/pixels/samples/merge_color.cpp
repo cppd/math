@@ -30,8 +30,8 @@ template <typename Color>
 struct Merge final
 {
         Color color;
-        typename Color::DataType color_weight;
-        typename Color::DataType background_weight;
+        Color::DataType color_weight;
+        Color::DataType background_weight;
 };
 
 template <std::size_t COUNT, typename Color>

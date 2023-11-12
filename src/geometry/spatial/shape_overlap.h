@@ -43,7 +43,7 @@ template <typename Shape1, typename Shape2>
 bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
-        using T = typename Shape1::DataType;
+        using T = Shape1::DataType;
 
         if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
         {
@@ -85,7 +85,7 @@ template <typename Shape1, typename Shape2>
 bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
-        using T = typename Shape1::DataType;
+        using T = Shape1::DataType;
 
         for (const std::array<Vector<N, T>, 2>& edge : shape_1.edges())
         {
@@ -246,7 +246,7 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 // bool shapes_overlap_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
 // {
 //         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
-//         using T = typename Shape1::DataType;
+//         using T = Shape1::DataType;
 //
 //         static_assert(size<decltype(shape_1.constraints().c)>() > 0);
 //         static_assert(size<decltype(shape_2.constraints().c)>() > 0);
@@ -348,7 +348,7 @@ class ShapeOverlap final
 
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
-        using T = typename Shape::DataType;
+        using T = Shape::DataType;
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Constraints = decltype(std::declval<Shape>().constraints());
 
@@ -409,7 +409,7 @@ class ShapeOverlap<Shape> final
 {
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
-        using T = typename Shape::DataType;
+        using T = Shape::DataType;
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Edges = decltype(std::declval<Shape>().edges());
 

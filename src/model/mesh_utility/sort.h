@@ -47,7 +47,7 @@ SortedFacets sort_facets_by_material(const Mesh<N>& mesh)
 {
         ASSERT(std::all_of(
                 std::cbegin(mesh.facets), std::cend(mesh.facets),
-                [&](const typename Mesh<N>::Facet& facet)
+                [&](const Mesh<N>::Facet& facet)
                 {
                         return facet.material < static_cast<int>(mesh.materials.size());
                 }));

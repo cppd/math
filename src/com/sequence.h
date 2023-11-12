@@ -36,7 +36,7 @@ struct Sequence final
         struct S final
         {
                 static_assert(N > 0);
-                using T = typename S<FIRST, N - 1, N - 1, I...>::T;
+                using T = S<FIRST, N - 1, N - 1, I...>::T;
         };
 
         template <int FIRST, std::size_t... I>
@@ -72,7 +72,7 @@ template <
         template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
-using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
+using SequenceRange = sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
         template S<FROM, TO - FROM + 1>::T;
 
 // Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>

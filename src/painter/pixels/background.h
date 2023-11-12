@@ -32,7 +32,7 @@ class Background final
 {
         Color color_;
         Vector<3, float> color_rgb32_ = color_.rgb32();
-        typename Color::DataType contribution_ = sample_color_contribution(color_);
+        Color::DataType contribution_ = sample_color_contribution(color_);
 
 public:
         explicit Background(const Color& color)
@@ -64,7 +64,7 @@ public:
                 return color_rgb32_;
         }
 
-        [[nodiscard]] typename Color::DataType contribution() const
+        [[nodiscard]] Color::DataType contribution() const
         {
                 return contribution_;
         }

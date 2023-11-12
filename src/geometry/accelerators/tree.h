@@ -55,7 +55,7 @@ class SpatialSubdivisionTree final
         };
 
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
+        using T = Parallelotope::DataType;
         static constexpr int ROOT_BOX = 0;
 
         std::vector<Box> boxes_;

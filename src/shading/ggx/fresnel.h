@@ -48,7 +48,7 @@ Color fresnel(const Color& f0, const T h_l)
 template <std::size_t N, typename Color>
 constexpr Color fresnel_cosine_weighted_average(const Color& f0)
 {
-        using T = typename Color::DataType;
+        using T = Color::DataType;
 
         static_assert(N >= 3 && N <= 9);
 

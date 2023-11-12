@@ -41,7 +41,7 @@ template <typename Objects>
 auto bvh_objects(const Objects& objects)
 {
         using BoundingBox = std::remove_cvref_t<decltype(to_ref(objects.front()).bounding_box())>;
-        using BvhObject = typename bvh_objects_implementation::Type<BoundingBox>::Value;
+        using BvhObject = bvh_objects_implementation::Type<BoundingBox>::Value;
 
         std::vector<BvhObject> res;
         res.reserve(objects.size());
