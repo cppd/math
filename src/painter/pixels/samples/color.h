@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <type_traits>
 
 namespace ns::painter::pixels::samples
 {
@@ -29,6 +30,7 @@ class ColorSamples final
 {
         static_assert(COUNT >= 2);
         static_assert(COUNT % 2 == 0);
+        static_assert(std::is_signed_v<typename Color::DataType>);
 
         static constexpr Color::DataType EMPTY = -static_cast<int>(COUNT) - 1;
 
