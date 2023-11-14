@@ -53,7 +53,7 @@ static_assert(power<15>(10LL) == 1'000'000'000'000'000);
 static_assert(power<16>(10LL) == 10'000'000'000'000'000);
 static_assert(power<17>(10LL) == 100'000'000'000'000'000);
 static_assert(power<18>(10LL) == 1'000'000'000'000'000'000);
-static_assert(power<19>(10ULL) == 10'000'000'000'000'000'000u);
+static_assert(power<19>(10ull) == 10'000'000'000'000'000'000u);
 
 using S128 = signed __int128;
 using F128 = __float128;
