@@ -55,7 +55,6 @@ modernize-*,
 performance-*,
 
 readability-*,
--readability-container-data-pointer,
 -readability-identifier-length,
 -readability-magic-numbers,
 -readability-named-parameter,
