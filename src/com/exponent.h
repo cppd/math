@@ -26,67 +26,71 @@ constexpr T square(const T& v)
 }
 
 template <unsigned EXPONENT, typename T>
-constexpr T power([[maybe_unused]] T base)
+constexpr T power(const T& base)
 {
-        if constexpr (EXPONENT == 0)
+        switch (EXPONENT)
+        {
+        case 0:
         {
                 return 1;
         }
-        if constexpr (EXPONENT == 1)
+        case 1:
         {
                 return base;
         }
-        if constexpr (EXPONENT == 2)
+        case 2:
         {
                 return base * base;
         }
-        if constexpr (EXPONENT == 3)
+        case 3:
         {
                 return base * base * base;
         }
-        if constexpr (EXPONENT == 4)
+        case 4:
         {
                 const T t = base * base;
                 return t * t;
         }
-        if constexpr (EXPONENT == 5)
+        case 5:
         {
                 const T t = base * base;
                 return t * t * base;
         }
-        if constexpr (EXPONENT == 6)
+        case 6:
         {
                 const T t = base * base;
                 return t * t * t;
         }
-        if constexpr (EXPONENT == 7)
+        case 7:
         {
                 const T t = base * base;
                 return t * t * t * base;
         }
-        if constexpr (EXPONENT == 8)
+        case 8:
         {
                 const T t = base * base;
                 const T t2 = t * t;
                 return t2 * t2;
         }
-        if constexpr (EXPONENT >= 9)
+        default:
         {
-                unsigned exp = EXPONENT;
+                T res = (EXPONENT & 1) ? base : 1;
 
-                T res = (exp & 1) ? base : 1;
-                exp >>= 1;
+                T b = base;
+                unsigned exp = EXPONENT >> 1;
+
                 while (exp)
                 {
-                        base *= base;
+                        b *= b;
                         if (exp & 1)
                         {
-                                res *= base;
+                                res *= b;
                         }
                         exp >>= 1;
                 }
 
                 return res;
+        }
         }
 }
 }
