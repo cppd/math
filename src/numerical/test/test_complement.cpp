@@ -95,6 +95,28 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
 }
 
 template <std::size_t N, typename T>
+void check_complement_orthogonality(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
+{
+        for (std::size_t i = 0; i < complement.size(); ++i)
+        {
+                if (!vectors_are_orthogonal(unit_vector, complement[i]))
+                {
+                        error("Complement vector " + to_string(complement[i])
+                              + " is not orthogonal to the input vector " + to_string(unit_vector));
+                }
+
+                for (std::size_t j = i + 1; j < complement.size(); ++j)
+                {
+                        if (!vectors_are_orthogonal(complement[i], complement[j]))
+                        {
+                                error("Complement vectors are not orthogonal (" + to_string(complement[i]) + ", "
+                                      + to_string(complement[j]) + ")");
+                        }
+                }
+        }
+}
+
+template <std::size_t N, typename T>
 void test_complement(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
 {
         if (!unit_vector.is_unit())
@@ -113,25 +135,9 @@ void test_complement(const Vector<N, T>& unit_vector, const std::array<Vector<N,
                 {
                         error("Not unit complement vector " + to_string(v));
                 }
-
-                if (!vectors_are_orthogonal(unit_vector, v))
-                {
-                        error("Complement vector " + to_string(v) + " is not orthogonal to the input vector "
-                              + to_string(unit_vector));
-                }
         }
 
-        for (std::size_t i = 0; i < complement.size(); ++i)
-        {
-                for (std::size_t j = i + 1; j < complement.size(); ++j)
-                {
-                        if (!vectors_are_orthogonal(complement[i], complement[j]))
-                        {
-                                error("Complement vectors are not orthogonal (" + to_string(complement[i]) + ", "
-                                      + to_string(complement[j]) + ")");
-                        }
-                }
-        }
+        check_complement_orthogonality(unit_vector, complement);
 
         const Vector<N, T> reconstructed = orthogonal_complement(complement);
 
