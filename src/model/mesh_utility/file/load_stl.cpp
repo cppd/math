@@ -156,6 +156,7 @@ void read_ascii_stl(
         iter = read(iter, last, ascii::is_not_new_line);
 
         std::array<Vector<N, float>, N> facet_vertices;
+        Vector<N, float> n;
         unsigned long long facet_count = 0;
         while (true)
         {
@@ -177,14 +178,11 @@ void read_ascii_stl(
                         break;
                 }
 
+                if (iter >= last)
                 {
-                        if (iter >= last)
-                        {
-                                error("Normal coordinates not found in STL file when expected");
-                        }
-                        Vector<N, float> n;
-                        iter = read(iter, &n);
+                        error("Normal coordinates not found in STL file when expected");
                 }
+                iter = read(iter, &n);
 
                 iter = read(iter, last, ascii::is_space);
                 iter = read_keyword(iter, last, OUTER_LOOP);
