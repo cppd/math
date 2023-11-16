@@ -120,10 +120,8 @@ void conv_floats_to_dst(
         switch (to_format)
         {
         case ColorFormat::R8_SRGB:
-        {
                 conv::r32_to_r8_srgb(pixels, to);
                 return;
-        }
         case ColorFormat::R8G8B8_SRGB:
                 switch (format_component_count(from_format))
                 {
@@ -133,9 +131,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r8g8b8_srgb(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 switch (format_component_count(from_format))
@@ -146,9 +143,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r8g8b8a8_srgb(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R16:
                 conv::r32_to_r16(pixels, to);
                 return;
@@ -161,9 +157,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r16g16b16(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R16G16B16_SRGB:
                 switch (format_component_count(from_format))
                 {
@@ -173,9 +168,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r16g16b16_srgb(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 switch (format_component_count(from_format))
@@ -186,9 +180,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r16g16b16a16(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R16G16B16A16_SRGB:
                 switch (format_component_count(from_format))
                 {
@@ -198,9 +191,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r16g16b16a16_srgb(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R32:
                 conv::copy(pixels, to);
                 return;
@@ -213,9 +205,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::copy(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         case ColorFormat::R32G32B32A32:
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 switch (format_component_count(from_format))
@@ -226,9 +217,8 @@ void conv_floats_to_dst(
                 case 3:
                         conv::r32g32b32_to_r32g32b32a32(pixels, to);
                         return;
-                default:
-                        conversion_error(from_format, to_format);
                 }
+                conversion_error(from_format, to_format);
         }
         unknown_color_format_error(to_format);
 }
