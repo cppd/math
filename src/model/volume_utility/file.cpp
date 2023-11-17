@@ -94,18 +94,10 @@ void save_to_images(
 }
 
 template <std::size_t N>
-void load_from_images(
-        const std::filesystem::path& directory,
-        const image::ColorFormat image_format,
-        const std::array<int, N>& image_size,
-        const std::span<std::byte> image_bytes,
-        progress::Ratio* const progress,
-        unsigned* const current,
-        const unsigned count)
+std::vector<std::string> read_sorted_names(const std::filesystem::path& directory, const std::array<int, N>& image_size)
 {
-        static_assert(N >= 3);
-
         std::vector<std::string> names;
+
         if (N >= 4)
         {
                 names = read_directories(directory);
@@ -120,6 +112,7 @@ void load_from_images(
                 const std::string s = N >= 4 ? "Directories" : "Files";
                 error(s + " not found in directory " + generic_utf8_filename(directory));
         }
+
         if (names.size() != static_cast<unsigned>(image_size[N - 1]))
         {
                 const std::string s = N >= 4 ? "directory" : "file";
@@ -128,6 +121,23 @@ void load_from_images(
         }
 
         std::sort(names.begin(), names.end());
+
+        return names;
+}
+
+template <std::size_t N>
+void load_from_images(
+        const std::filesystem::path& directory,
+        const image::ColorFormat image_format,
+        const std::array<int, N>& image_size,
+        const std::span<std::byte> image_bytes,
+        progress::Ratio* const progress,
+        unsigned* const current,
+        const unsigned count)
+{
+        static_assert(N >= 3);
+
+        const std::vector<std::string> names = read_sorted_names(directory, image_size);
 
         const std::size_t size_in_bytes = image_bytes.size() / names.size();
         std::byte* ptr = image_bytes.data();
