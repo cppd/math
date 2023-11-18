@@ -80,36 +80,11 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T, typename Color>
-void add_mesh(
+void write_vertices_and_normals(
         const model::mesh::Reading<N>& mesh_object,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const model::mesh::Mesh<N>& mesh,
         MeshData<N, T, Color>* const data)
 {
-        const T alpha = std::clamp<T>(mesh_object.alpha(), 0, 1);
-
-        if (alpha == 0)
-        {
-                return;
-        }
-
-        const model::mesh::Mesh<N> mesh = optimize_mesh(mesh_object, clip_plane_equation);
-
-        if (mesh.vertices.empty())
-        {
-                return;
-        }
-
-        if (mesh.facets.empty())
-        {
-                return;
-        }
-
-        const int vertices_offset = data->mesh.vertices.size();
-        const int normals_offset = data->mesh.normals.size();
-        const int texcoords_offset = data->mesh.texcoords.size();
-        const int materials_offset = data->mesh.materials.size();
-        const int images_offset = data->mesh.images.size();
-
         const Matrix<N + 1, N + 1, T> mesh_matrix = to_matrix<T>(mesh_object.matrix());
 
         {
@@ -127,12 +102,20 @@ void add_mesh(
                         data->mesh.normals.push_back(matrix * to_vector<T>(v));
                 }
         }
+}
 
-        for (const auto& v : mesh.texcoords)
-        {
-                data->mesh.texcoords.push_back(to_vector<T>(v));
-        }
-
+template <std::size_t N, typename T, typename Color>
+void write_facets_and_materials(
+        const model::mesh::Reading<N>& mesh_object,
+        const model::mesh::Mesh<N>& mesh,
+        const T alpha,
+        const int vertices_offset,
+        const int normals_offset,
+        const int texcoords_offset,
+        const int materials_offset,
+        const int images_offset,
+        MeshData<N, T, Color>* const data)
+{
         const int default_material_index = mesh.materials.size();
 
         bool facets_without_material = false;
@@ -169,8 +152,51 @@ void add_mesh(
                 data->mesh.materials.emplace_back(
                         mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1, alpha);
         }
+}
 
-        for (const image::Image<N - 1>& image : mesh.images)
+template <std::size_t N, typename T, typename Color>
+void add_mesh(
+        const model::mesh::Reading<N>& mesh_object,
+        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        MeshData<N, T, Color>* const data)
+{
+        const T alpha = std::clamp<T>(mesh_object.alpha(), 0, 1);
+
+        if (alpha == 0)
+        {
+                return;
+        }
+
+        const model::mesh::Mesh<N> mesh = optimize_mesh(mesh_object, clip_plane_equation);
+
+        if (mesh.vertices.empty())
+        {
+                return;
+        }
+
+        if (mesh.facets.empty())
+        {
+                return;
+        }
+
+        const int vertices_offset = data->mesh.vertices.size();
+        const int normals_offset = data->mesh.normals.size();
+        const int texcoords_offset = data->mesh.texcoords.size();
+        const int materials_offset = data->mesh.materials.size();
+        const int images_offset = data->mesh.images.size();
+
+        write_vertices_and_normals(mesh_object, mesh, data);
+
+        write_facets_and_materials(
+                mesh_object, mesh, alpha, vertices_offset, normals_offset, texcoords_offset, materials_offset,
+                images_offset, data);
+
+        for (const auto& v : mesh.texcoords)
+        {
+                data->mesh.texcoords.push_back(to_vector<T>(v));
+        }
+
+        for (const auto& image : mesh.images)
         {
                 data->mesh.images.emplace_back(image);
         }
