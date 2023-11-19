@@ -42,7 +42,7 @@ namespace ns::painter::integrators::pt
 namespace
 {
 template <typename Color>
-bool terminate(const int depth, Color* const beta, PCG& engine)
+[[nodiscard]] bool terminate(const int depth, Color* const beta, PCG& engine)
 {
         using T = Color::DataType;
 
@@ -68,37 +68,16 @@ bool terminate(const int depth, Color* const beta, PCG& engine)
         *beta /= 1 - p;
         return false;
 }
-}
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& engine)
+[[nodiscard]] Color pt(
+        PCG& engine,
+        const Scene<N, T, Color>& scene,
+        Ray<N, T> ray,
+        SurfaceIntersection<N, T, Color> surface,
+        Normals<N, T> normals,
+        Color color)
 {
-        SurfaceIntersection<N, T, Color> surface;
-        Normals<N, T> normals;
-
-        std::tie(surface, normals) = [&]
-        {
-                static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
-        }();
-
-        if (!surface)
-        {
-                return {};
-        }
-
-        Color color = [&]
-        {
-                if (const auto* const light = surface.light_source())
-                {
-                        if (const auto& radiance = light->leave_radiance(-ray.dir()))
-                        {
-                                return *radiance;
-                        }
-                }
-                return Color(0);
-        }();
-
         Color beta(1);
 
         for (int depth = 0;; ++depth)
@@ -139,10 +118,40 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, Ray<N, T> ray, PCG& eng
 
         return color;
 }
+}
 
-#define TEMPLATE(N, T, C)                                                                          \
-        template std::optional<C> pt<true, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&); \
-        template std::optional<C> pt<false, (N), T, C>(const Scene<(N), T, C>&, Ray<(N), T>, PCG&);
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+std::optional<Color> pt(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine)
+{
+        const auto [surface, normals] = [&]
+        {
+                static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
+        }();
+
+        if (!surface)
+        {
+                return {};
+        }
+
+        const Color color = [&]
+        {
+                if (const auto* const light = surface.light_source())
+                {
+                        if (const auto& radiance = light->leave_radiance(-ray.dir()))
+                        {
+                                return *radiance;
+                        }
+                }
+                return Color(0);
+        }();
+
+        return pt<FLAT_SHADING>(engine, scene, ray, surface, normals, color);
+}
+
+#define TEMPLATE(N, T, C)                                                                                 \
+        template std::optional<C> pt<true, (N), T, C>(const Scene<(N), T, C>&, const Ray<(N), T>&, PCG&); \
+        template std::optional<C> pt<false, (N), T, C>(const Scene<(N), T, C>&, const Ray<(N), T>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }
