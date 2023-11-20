@@ -111,116 +111,147 @@ void conv_src_to_floats(
         unknown_color_format_error(from_format);
 }
 
+void conv_floats_1_to_dst(
+        const ColorFormat from_format,
+        const std::vector<float>& pixels,
+        const ColorFormat to_format,
+        const std::span<std::byte>& to)
+{
+        ASSERT(format_component_count(from_format) == 1);
+        switch (to_format)
+        {
+        case ColorFormat::R8_SRGB:
+                conv::r32_to_r8_srgb(pixels, to);
+                return;
+        case ColorFormat::R16:
+                conv::r32_to_r16(pixels, to);
+                return;
+        case ColorFormat::R32:
+                conv::copy(pixels, to);
+                return;
+        case ColorFormat::R8G8B8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_SRGB:
+        case ColorFormat::R32G32B32:
+        case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                conversion_error(from_format, to_format);
+        }
+        unknown_color_format_error(to_format);
+}
+
+void conv_floats_3_to_dst(
+        const ColorFormat from_format,
+        const std::vector<float>& pixels,
+        const ColorFormat to_format,
+        const std::span<std::byte>& to)
+{
+        ASSERT(format_component_count(from_format) == 3);
+        switch (to_format)
+        {
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+                conversion_error(from_format, to_format);
+        case ColorFormat::R8G8B8_SRGB:
+                conv::r32g32b32_to_r8g8b8_srgb(pixels, to);
+                return;
+        case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                conv::r32g32b32_to_r8g8b8a8_srgb(pixels, to);
+                return;
+        case ColorFormat::R16G16B16:
+                conv::r32g32b32_to_r16g16b16(pixels, to);
+                return;
+        case ColorFormat::R16G16B16_SRGB:
+                conv::r32g32b32_to_r16g16b16_srgb(pixels, to);
+                return;
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                conv::r32g32b32_to_r16g16b16a16(pixels, to);
+                return;
+        case ColorFormat::R16G16B16A16_SRGB:
+                conv::r32g32b32_to_r16g16b16a16_srgb(pixels, to);
+                return;
+        case ColorFormat::R32G32B32:
+                conv::copy(pixels, to);
+                return;
+        case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                conv::r32g32b32_to_r32g32b32a32(pixels, to);
+                return;
+        }
+        unknown_color_format_error(to_format);
+}
+
+void conv_floats_4_to_dst(
+        const ColorFormat from_format,
+        const std::vector<float>& pixels,
+        const ColorFormat to_format,
+        const std::span<std::byte>& to)
+{
+        ASSERT(format_component_count(from_format) == 4);
+        switch (to_format)
+        {
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+                conversion_error(from_format, to_format);
+        case ColorFormat::R8G8B8_SRGB:
+                conv::r32g32b32a32_to_r8g8b8_srgb(pixels, to);
+                return;
+        case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                conv::r32g32b32a32_to_r8g8b8a8_srgb(pixels, to);
+                return;
+        case ColorFormat::R16G16B16:
+                conv::r32g32b32a32_to_r16g16b16(pixels, to);
+                return;
+        case ColorFormat::R16G16B16_SRGB:
+                conv::r32g32b32a32_to_r16g16b16_srgb(pixels, to);
+                return;
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                conv::r32g32b32a32_to_r16g16b16a16(pixels, to);
+                return;
+        case ColorFormat::R16G16B16A16_SRGB:
+                conv::r32g32b32a32_to_r16g16b16a16_srgb(pixels, to);
+                return;
+        case ColorFormat::R32G32B32:
+                conv::r32g32b32a32_to_r32g32b32(pixels, to);
+                return;
+        case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                conv::copy(pixels, to);
+                return;
+        }
+        unknown_color_format_error(to_format);
+}
+
 void conv_floats_to_dst(
         const ColorFormat from_format,
         const std::vector<float>& pixels,
         const ColorFormat to_format,
         const std::span<std::byte>& to)
 {
-        switch (to_format)
+        switch (format_component_count(from_format))
         {
-        case ColorFormat::R8_SRGB:
-                conv::r32_to_r8_srgb(pixels, to);
+        case 1:
+                conv_floats_1_to_dst(from_format, pixels, to_format, to);
                 return;
-        case ColorFormat::R8G8B8_SRGB:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r8g8b8_srgb(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r8g8b8_srgb(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R8G8B8A8_SRGB:
-        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r8g8b8a8_srgb(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r8g8b8a8_srgb(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R16:
-                conv::r32_to_r16(pixels, to);
+        case 3:
+                conv_floats_3_to_dst(from_format, pixels, to_format, to);
                 return;
-        case ColorFormat::R16G16B16:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r16g16b16(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r16g16b16(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R16G16B16_SRGB:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r16g16b16_srgb(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r16g16b16_srgb(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R16G16B16A16:
-        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r16g16b16a16(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r16g16b16a16(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R16G16B16A16_SRGB:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r16g16b16a16_srgb(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r16g16b16a16_srgb(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R32:
-                conv::copy(pixels, to);
+        case 4:
+                conv_floats_4_to_dst(from_format, pixels, to_format, to);
                 return;
-        case ColorFormat::R32G32B32:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::r32g32b32a32_to_r32g32b32(pixels, to);
-                        return;
-                case 3:
-                        conv::copy(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
-        case ColorFormat::R32G32B32A32:
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                switch (format_component_count(from_format))
-                {
-                case 4:
-                        conv::copy(pixels, to);
-                        return;
-                case 3:
-                        conv::r32g32b32_to_r32g32b32a32(pixels, to);
-                        return;
-                }
-                conversion_error(from_format, to_format);
         }
-        unknown_color_format_error(to_format);
+        conversion_error(from_format, to_format);
 }
 
 void undo_alpha_multiplication(std::vector<float>* const floats)
