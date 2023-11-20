@@ -42,6 +42,14 @@ namespace
 {
 using BinaryNumberOfTriangles = std::uint32_t;
 
+constexpr std::string_view SOLID = "solid";
+constexpr std::string_view FACET_NORMAL = "facet normal";
+constexpr std::string_view OUTER_LOOP = "outer loop";
+constexpr std::string_view VERTEX = "vertex";
+constexpr std::string_view END_LOOP = "endloop";
+constexpr std::string_view END_FACET = "endfacet";
+constexpr std::string_view END_SOLID = "endsolid";
+
 constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_OFFSET = 80 * sizeof(std::uint8_t);
 constexpr std::uintmax_t BINARY_DATA_OFFSET = BINARY_NUMBER_OF_TRIANGLES_OFFSET + sizeof(BinaryNumberOfTriangles);
 template <std::size_t N>
@@ -129,19 +137,59 @@ const char* read_keyword(const char* const first, const char* const last, const 
 }
 
 template <std::size_t N>
+[[nodiscard]] bool read_normal(const char* const last, const char** const iter)
+{
+        *iter = read(*iter, last, ascii::is_space);
+        try
+        {
+                *iter = read_keyword(*iter, last, FACET_NORMAL);
+        }
+        catch (...)
+        {
+                *iter = read_keyword(*iter, last, END_SOLID);
+                *iter = read(*iter, last, ascii::is_not_new_line);
+                *iter = read(*iter, last, ascii::is_space);
+                if (*iter < last)
+                {
+                        error("Nonspace found after solid end in STL file");
+                }
+                return false;
+        }
+        if (*iter >= last)
+        {
+                error("Normal coordinates not found in STL file when expected");
+        }
+        Vector<N, float> n;
+        *iter = read(*iter, &n);
+        return true;
+}
+
+template <std::size_t N>
+void read_facet(
+        const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet,
+        const char* const last,
+        const char** const iter)
+{
+        std::array<Vector<N, float>, N> facet_vertices;
+        for (std::size_t v = 0; v < N; ++v)
+        {
+                *iter = read(*iter, last, ascii::is_space);
+                *iter = read_keyword(*iter, last, VERTEX);
+                if (*iter >= last)
+                {
+                        error("Vertex coordinates not found in STL file when expected");
+                }
+                *iter = read(*iter, &facet_vertices[v]);
+        }
+        yield_facet(facet_vertices);
+}
+
+template <std::size_t N>
 void read_ascii_stl(
         const std::vector<char>& data,
         progress::Ratio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
-        static constexpr std::string_view SOLID = "solid";
-        static constexpr std::string_view FACET_NORMAL = "facet normal";
-        static constexpr std::string_view OUTER_LOOP = "outer loop";
-        static constexpr std::string_view VERTEX = "vertex";
-        static constexpr std::string_view END_LOOP = "endloop";
-        static constexpr std::string_view END_FACET = "endfacet";
-        static constexpr std::string_view END_SOLID = "endsolid";
-
         const double size_reciprocal = 1.0 / data.size();
 
         const char* const first = data.data();
@@ -155,49 +203,14 @@ void read_ascii_stl(
         iter = read_keyword(iter, last, SOLID);
         iter = read(iter, last, ascii::is_not_new_line);
 
-        std::array<Vector<N, float>, N> facet_vertices;
-        Vector<N, float> n;
         unsigned long long facet_count = 0;
-        while (true)
+
+        while (read_normal<N>(last, &iter))
         {
-                iter = read(iter, last, ascii::is_space);
-
-                try
-                {
-                        iter = read_keyword(iter, last, FACET_NORMAL);
-                }
-                catch (...)
-                {
-                        iter = read_keyword(iter, last, END_SOLID);
-                        iter = read(iter, last, ascii::is_not_new_line);
-                        iter = read(iter, last, ascii::is_space);
-                        if (iter < last)
-                        {
-                                error("Nonspace found after solid end in STL file");
-                        }
-                        break;
-                }
-
-                if (iter >= last)
-                {
-                        error("Normal coordinates not found in STL file when expected");
-                }
-                iter = read(iter, &n);
-
                 iter = read(iter, last, ascii::is_space);
                 iter = read_keyword(iter, last, OUTER_LOOP);
 
-                for (std::size_t v = 0; v < N; ++v)
-                {
-                        iter = read(iter, last, ascii::is_space);
-                        iter = read_keyword(iter, last, VERTEX);
-                        if (iter >= last)
-                        {
-                                error("Vertex coordinates not found in STL file when expected");
-                        }
-                        iter = read(iter, &facet_vertices[v]);
-                }
-                yield_facet(facet_vertices);
+                read_facet(yield_facet, last, &iter);
 
                 iter = read(iter, last, ascii::is_space);
                 iter = read_keyword(iter, last, END_LOOP);
