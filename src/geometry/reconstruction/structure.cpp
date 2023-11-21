@@ -57,6 +57,21 @@ struct VertexConnections final
         std::vector<Facet> facets;
 };
 
+template <std::size_t N>
+bool is_unbounded(
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
+        const VertexConnections& vertex_connections)
+{
+        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
+        {
+                if (delaunay_facets[vertex_facet.facet_index].one_sided())
+                {
+                        return true;
+                }
+        }
+        return false;
+}
+
 // Definition 4.1 (Poles).
 template <std::size_t N>
 Vector<N, double> voronoi_positive_norm(
@@ -65,15 +80,7 @@ Vector<N, double> voronoi_positive_norm(
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const VertexConnections& vertex_connections)
 {
-        bool unbounded = false;
-        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
-        {
-                if (delaunay_facets[vertex_facet.facet_index].one_sided())
-                {
-                        unbounded = true;
-                        break;
-                }
-        }
+        const bool unbounded = is_unbounded(delaunay_facets, vertex_connections);
 
         Vector<N, double> positive_norm;
 
