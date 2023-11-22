@@ -33,7 +33,9 @@ namespace ns::painter::integrators::bpt
 namespace
 {
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> connect_s_0(const Scene<N, T, Color>& scene, const vertex::Vertex<N, T, Color>& camera_path_vertex)
+[[nodiscard]] std::optional<Color> connect_s_0(
+        const Scene<N, T, Color>& scene,
+        const vertex::Vertex<N, T, Color>& camera_path_vertex)
 {
         return std::visit(
                 Visitors{
@@ -84,7 +86,7 @@ struct ConnectS1 final
 };
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> compute_color_s_1(
+[[nodiscard]] std::optional<Color> compute_color_s_1(
         const vertex::Surface<N, T, Color>& surface,
         const Ray<N, T>& ray_to_light,
         const LightDistributionSample<N, T, Color>& distribution,
@@ -104,7 +106,7 @@ std::optional<Color> compute_color_s_1(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<ConnectS1<N, T, Color>> connect_s_1(
+[[nodiscard]] std::optional<ConnectS1<N, T, Color>> connect_s_1(
         const Scene<N, T, Color>& scene,
         const vertex::Vertex<N, T, Color>& camera_vertex,
         LightDistribution<N, T, Color>& light_distribution,
@@ -155,7 +157,7 @@ std::optional<ConnectS1<N, T, Color>> connect_s_1(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> compute_color(
+[[nodiscard]] std::optional<Color> compute_color(
         const vertex::Surface<N, T, Color>& light,
         const vertex::Surface<N, T, Color>& camera)
 {
@@ -191,7 +193,7 @@ std::optional<Color> compute_color(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> connect(
+[[nodiscard]] std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
         const vertex::Vertex<N, T, Color>& light_vertex,
         const vertex::Vertex<N, T, Color>& camera_vertex)

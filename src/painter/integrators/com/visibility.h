@@ -33,7 +33,7 @@ namespace ns::painter::integrators
 namespace visibility_implementation
 {
 template <typename T>
-T visibility_distance(const T distance)
+[[nodiscard]] T visibility_distance(const T distance)
 {
         static constexpr T EPSILON = 1000 * Limits<T>::epsilon();
         static_assert(EPSILON > 0 && EPSILON < 1);
@@ -42,7 +42,7 @@ T visibility_distance(const T distance)
 }
 
 template <typename T>
-bool directed_outside(const T cosine)
+[[nodiscard]] bool directed_outside(const T cosine)
 {
         static constexpr T EPSILON = 100 * Limits<T>::epsilon();
         return cosine > EPSILON;
@@ -50,7 +50,7 @@ bool directed_outside(const T cosine)
 }
 
 template <std::size_t N, typename T, typename Color>
-bool occluded(
+[[nodiscard]] bool occluded(
         const Scene<N, T, Color>& scene,
         const Normals<N, T>& normals,
         const Ray<N, T>& ray,
@@ -85,7 +85,7 @@ bool occluded(
 }
 
 template <std::size_t N, typename T, typename Color>
-bool occluded(
+[[nodiscard]] bool occluded(
         const Scene<N, T, Color>& scene,
         const Vector<N, T>& point_1,
         const Normals<N, T>& normals_1,
@@ -156,7 +156,7 @@ bool occluded(
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::tuple<SurfaceIntersection<N, T, Color>, Normals<N, T>> scene_intersect(
+[[nodiscard]] std::tuple<SurfaceIntersection<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
         const std::optional<Vector<N, T>>& geometric_normal,
         const Ray<N, T>& ray)

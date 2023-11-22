@@ -59,7 +59,7 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T>
-T correct_normals(const Normals<N, T>& normals, const Vector<N, T>& v, const Vector<N, T>& l)
+[[nodiscard]] T correct_normals(const Normals<N, T>& normals, const Vector<N, T>& v, const Vector<N, T>& l)
 {
         const T denominator = dot(v, normals.geometric) * dot(l, normals.shading);
         if (denominator == 0)
@@ -68,6 +68,34 @@ T correct_normals(const Normals<N, T>& normals, const Vector<N, T>& v, const Vec
         }
         const T numerator = dot(v, normals.shading) * dot(l, normals.geometric);
         return std::abs(numerator / denominator);
+}
+
+template <std::size_t N, typename T, typename Color>
+void add_sample(
+        const std::optional<SurfaceSamplePdf<N, T, Color>>& sample,
+        const Color& beta,
+        const T pdf_forward,
+        const Ray<N, T>& ray,
+        const SurfaceIntersection<N, T, Color>& surface,
+        const Normals<N, T>& normals,
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
+{
+        if (!sample)
+        {
+                if (surface.light_source())
+                {
+                        vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                        set_forward_pdf(path->back(), &next, pdf_forward);
+                        path->push_back(std::move(next));
+                }
+                return;
+        }
+
+        vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+        vertex::Vertex<N, T, Color>& prev = path->back();
+        set_forward_pdf(prev, &next, pdf_forward);
+        set_reversed_pdf(&prev, std::as_const(next), sample->pdf_reversed);
+        path->push_back(std::move(next));
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -108,23 +136,12 @@ void walk(
                 }
 
                 const auto sample = surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
+
+                add_sample(sample, beta, pdf_forward, ray, surface, normals, path);
+
                 if (!sample)
                 {
-                        if (surface.light_source())
-                        {
-                                vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
-                                set_forward_pdf(path->back(), &next, pdf_forward);
-                                path->push_back(std::move(next));
-                        }
                         return;
-                }
-
-                {
-                        vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
-                        vertex::Vertex<N, T, Color>& prev = path->back();
-                        set_forward_pdf(prev, &next, pdf_forward);
-                        set_reversed_pdf(&prev, std::as_const(next), sample->pdf_reversed);
-                        path->push_back(std::move(next));
                 }
 
                 pdf_forward = sample->pdf_forward;

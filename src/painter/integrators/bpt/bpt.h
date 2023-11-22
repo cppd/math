@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::bpt
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> bpt(
+[[nodiscard]] std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
         const Ray<N, T>& ray,
         LightDistribution<N, T, Color>& light_distribution,

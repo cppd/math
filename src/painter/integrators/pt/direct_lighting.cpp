@@ -50,13 +50,13 @@ namespace ns::painter::integrators::pt
 namespace
 {
 template <typename T>
-T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
+[[nodiscard]] T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
 {
         return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> sample_light_with_mis(
+[[nodiscard]] std::optional<Color> sample_light_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
@@ -98,7 +98,7 @@ std::optional<Color> sample_light_with_mis(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> sample_surface_with_mis(
+[[nodiscard]] std::optional<Color> sample_surface_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,

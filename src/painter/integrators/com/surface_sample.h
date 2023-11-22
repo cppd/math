@@ -40,14 +40,14 @@ struct SurfaceSample final
 };
 
 template <std::size_t N, typename T, typename Color>
-std::optional<SurfaceSamplePdf<N, T, Color>> surface_sample_with_pdf(
+[[nodiscard]] std::optional<SurfaceSamplePdf<N, T, Color>> surface_sample_with_pdf(
         const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine);
 
 template <std::size_t N, typename T, typename Color>
-std::optional<SurfaceSample<N, T, Color>> surface_sample(
+[[nodiscard]] std::optional<SurfaceSample<N, T, Color>> surface_sample(
         const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,

@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::bpt
 {
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> connect(
+[[nodiscard]] std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
         const std::vector<vertex::Vertex<N, T, Color>>& light_path,
         const std::vector<vertex::Vertex<N, T, Color>>& camera_path,

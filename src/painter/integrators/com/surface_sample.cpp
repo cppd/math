@@ -29,7 +29,7 @@ template <bool WITH_PDF, std::size_t N, typename T, typename Color>
 using Sample = std::conditional_t<WITH_PDF, SurfaceSamplePdf<N, T, Color>, SurfaceSample<N, T, Color>>;
 
 template <bool WITH_PDF, std::size_t N, typename T, typename Color>
-std::optional<Sample<WITH_PDF, N, T, Color>> surface_sample(
+[[nodiscard]] std::optional<Sample<WITH_PDF, N, T, Color>> surface_sample(
         const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,

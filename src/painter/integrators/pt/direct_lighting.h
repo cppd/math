@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::pt
 {
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> direct_lighting(
+[[nodiscard]] std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
         const Vector<N, T>& v,

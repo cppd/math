@@ -140,14 +140,14 @@ void set_reversed(
 }
 
 template <typename T>
-T map(const T v)
+[[nodiscard]] T map(const T v)
 {
         ASSERT(v >= 0);
         return v != 0 ? v : 1;
 }
 
 template <typename T>
-T light_sum(const std::vector<Node<T>>& light)
+[[nodiscard]] T light_sum(const std::vector<Node<T>>& light)
 {
         if (light.empty())
         {
@@ -173,7 +173,7 @@ T light_sum(const std::vector<Node<T>>& light)
 }
 
 template <typename T>
-T camera_sum(const std::vector<Node<T>>& camera)
+[[nodiscard]] T camera_sum(const std::vector<Node<T>>& camera)
 {
         if (camera.size() <= 1)
         {
