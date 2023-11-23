@@ -29,22 +29,19 @@ namespace ns::image
 namespace
 {
 template <std::size_t N, std::size_t COMPONENT_COUNT>
-void normalize(std::vector<std::byte>* const bytes)
+[[nodiscard]] float find_max(const std::vector<std::byte>* const bytes)
 {
         static_assert(N > 0 && N <= COMPONENT_COUNT);
 
         static constexpr std::size_t COLOR_SIZE = N * sizeof(float);
         static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
 
-        if (bytes->size() % PIXEL_SIZE != 0)
-        {
-                error("Error size " + to_string(bytes->size()) + " for normalizing " + to_string(COMPONENT_COUNT)
-                      + "-component pixels");
-        }
+        ASSERT(bytes->size() % PIXEL_SIZE == 0);
 
         float max = Limits<float>::lowest();
-        std::byte* ptr = bytes->data();
+        const std::byte* ptr = bytes->data();
         const std::byte* const end = bytes->data() + bytes->size();
+
         while (ptr != end)
         {
                 std::array<float, N> pixel;
@@ -59,16 +56,26 @@ void normalize(std::vector<std::byte>* const bytes)
                 }
                 ptr += PIXEL_SIZE;
         }
-        ASSERT(ptr == bytes->data() + bytes->size());
 
+        ASSERT(ptr == bytes->data() + bytes->size());
         ASSERT(std::isfinite(max));
 
-        if (!(max > 0 && max != 1))
-        {
-                return;
-        }
+        return max;
+}
 
-        ptr = bytes->data();
+template <std::size_t N, std::size_t COMPONENT_COUNT>
+void normalize(const float max, std::vector<std::byte>* const bytes)
+{
+        static_assert(N > 0 && N <= COMPONENT_COUNT);
+
+        static constexpr std::size_t COLOR_SIZE = N * sizeof(float);
+        static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
+
+        ASSERT(bytes->size() % PIXEL_SIZE == 0);
+
+        std::byte* ptr = bytes->data();
+        const std::byte* const end = bytes->data() + bytes->size();
+
         while (ptr != end)
         {
                 std::array<float, N> pixel;
@@ -81,7 +88,31 @@ void normalize(std::vector<std::byte>* const bytes)
                 std::memcpy(ptr, pixel.data(), COLOR_SIZE);
                 ptr += PIXEL_SIZE;
         }
+
         ASSERT(ptr == bytes->data() + bytes->size());
+}
+
+template <std::size_t N, std::size_t COMPONENT_COUNT>
+void normalize(std::vector<std::byte>* const bytes)
+{
+        static_assert(N > 0 && N <= COMPONENT_COUNT);
+
+        static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
+
+        if (bytes->size() % PIXEL_SIZE != 0)
+        {
+                error("Error size " + to_string(bytes->size()) + " for normalizing " + to_string(COMPONENT_COUNT)
+                      + "-component pixels");
+        }
+
+        const float max = find_max<N, COMPONENT_COUNT>(bytes);
+
+        if (!(max > 0 && max != 1))
+        {
+                return;
+        }
+
+        normalize<N, COMPONENT_COUNT>(max, bytes);
 }
 }
 
