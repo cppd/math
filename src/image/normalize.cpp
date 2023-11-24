@@ -22,32 +22,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <cmath>
+#include <optional>
 #include <span>
 
 namespace ns::image
 {
 namespace
 {
-template <std::size_t N, std::size_t COMPONENT_COUNT>
-[[nodiscard]] float find_max(const std::vector<std::byte>* const bytes)
+template <std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
+[[nodiscard]] std::optional<float> find_max(const std::vector<std::byte>& bytes)
 {
-        static_assert(N > 0 && N <= COMPONENT_COUNT);
+        static_assert(COLOR_COUNT > 0 && COLOR_COUNT <= COMPONENT_COUNT);
 
-        static constexpr std::size_t COLOR_SIZE = N * sizeof(float);
+        static constexpr std::size_t COLOR_SIZE = COLOR_COUNT * sizeof(float);
         static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
 
-        ASSERT(bytes->size() % PIXEL_SIZE == 0);
+        ASSERT(bytes.size() % PIXEL_SIZE == 0);
 
-        float max = Limits<float>::lowest();
-        const std::byte* ptr = bytes->data();
-        const std::byte* const end = bytes->data() + bytes->size();
+        if (bytes.empty())
+        {
+                return std::nullopt;
+        }
+
+        static constexpr float MIN = Limits<float>::lowest();
+
+        float max = MIN;
+        const std::byte* ptr = bytes.data();
+        const std::byte* const end = bytes.data() + bytes.size();
 
         while (ptr != end)
         {
-                std::array<float, N> pixel;
+                std::array<float, COLOR_COUNT> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < COLOR_COUNT; ++i)
                 {
                         if (std::isfinite(pixel[i]))
                         {
@@ -57,18 +65,22 @@ template <std::size_t N, std::size_t COMPONENT_COUNT>
                 ptr += PIXEL_SIZE;
         }
 
-        ASSERT(ptr == bytes->data() + bytes->size());
+        ASSERT(ptr == bytes.data() + bytes.size());
         ASSERT(std::isfinite(max));
 
-        return max;
+        if (max != MIN)
+        {
+                return max;
+        }
+        return std::nullopt;
 }
 
-template <std::size_t N, std::size_t COMPONENT_COUNT>
+template <std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
 void normalize(const float max, std::vector<std::byte>* const bytes)
 {
-        static_assert(N > 0 && N <= COMPONENT_COUNT);
+        static_assert(COLOR_COUNT > 0 && COLOR_COUNT <= COMPONENT_COUNT);
 
-        static constexpr std::size_t COLOR_SIZE = N * sizeof(float);
+        static constexpr std::size_t COLOR_SIZE = COLOR_COUNT * sizeof(float);
         static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
 
         ASSERT(bytes->size() % PIXEL_SIZE == 0);
@@ -78,10 +90,10 @@ void normalize(const float max, std::vector<std::byte>* const bytes)
 
         while (ptr != end)
         {
-                std::array<float, N> pixel;
+                std::array<float, COLOR_COUNT> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < COLOR_COUNT; ++i)
                 {
                         pixel[i] /= max;
                 }
@@ -105,14 +117,14 @@ void normalize(std::vector<std::byte>* const bytes)
                       + "-component pixels");
         }
 
-        const float max = find_max<N, COMPONENT_COUNT>(bytes);
+        const auto max = find_max<N, COMPONENT_COUNT>(*bytes);
 
-        if (!(max > 0 && max != 1))
+        if (!(max && *max > 0 && *max != 1))
         {
                 return;
         }
 
-        normalize<N, COMPONENT_COUNT>(max, bytes);
+        normalize<N, COMPONENT_COUNT>(*max, bytes);
 }
 }
 
