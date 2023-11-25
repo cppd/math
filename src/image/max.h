@@ -24,5 +24,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-[[nodiscard]] std::optional<double> max(ColorFormat color_format, const std::span<const std::byte>& bytes);
+[[nodiscard]] std::optional<double> max(ColorFormat color_format, std::span<const std::byte> bytes);
 }

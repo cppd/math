@@ -22,13 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 
 namespace ns::image
 {
 namespace
 {
 template <typename T>
-bool finite(const T& v)
+[[nodiscard]] bool finite(const T v)
 {
         static_assert(std::is_arithmetic_v<T>);
         if constexpr (!std::is_floating_point_v<T>)
@@ -41,19 +42,18 @@ bool finite(const T& v)
         }
 }
 
-template <typename T, std::size_t COLOR_COUNT, std::size_t SKIP_COUNT>
-std::optional<T> max(const std::span<const std::byte> bytes)
+template <typename T, std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
+[[nodiscard]] std::optional<T> max(const std::span<const std::byte> bytes)
 {
-        static_assert(COLOR_COUNT > 0);
+        static_assert(COLOR_COUNT > 0 && COLOR_COUNT <= COMPONENT_COUNT);
 
         static constexpr std::size_t COLOR_SIZE = COLOR_COUNT * sizeof(T);
-        static constexpr std::size_t PIXEL_SIZE = (COLOR_COUNT + SKIP_COUNT) * sizeof(T);
+        static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(T);
 
         if (bytes.size() % PIXEL_SIZE != 0)
         {
-                error("Error size " + to_string(bytes.size()) + " for finding maximum in "
-                      + to_string(COLOR_COUNT + SKIP_COUNT) + "-component pixels with component size "
-                      + to_string(sizeof(T)));
+                error("Error size " + to_string(bytes.size()) + " for finding maximum in " + to_string(COMPONENT_COUNT)
+                      + "-component pixels with component size " + to_string(sizeof(T)));
         }
 
         if (bytes.empty())
@@ -61,12 +61,12 @@ std::optional<T> max(const std::span<const std::byte> bytes)
                 return std::nullopt;
         }
 
-        constexpr T MIN = Limits<T>::lowest();
+        static constexpr T MIN = Limits<T>::lowest();
 
         T max = MIN;
-
         const std::byte* ptr = bytes.data();
-        const std::byte* const end = ptr + bytes.size();
+        const std::byte* const end = bytes.data() + bytes.size();
+
         while (ptr != end)
         {
                 std::array<T, COLOR_COUNT> pixel;
@@ -81,8 +81,8 @@ std::optional<T> max(const std::span<const std::byte> bytes)
                 }
                 ptr += PIXEL_SIZE;
         }
-        ASSERT(ptr == bytes.data() + bytes.size());
 
+        ASSERT(ptr == bytes.data() + bytes.size());
         ASSERT(finite(max));
 
         if (!std::is_floating_point_v<T> || max != MIN)
@@ -93,33 +93,33 @@ std::optional<T> max(const std::span<const std::byte> bytes)
 }
 }
 
-std::optional<double> max(const ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::optional<double> max(const ColorFormat color_format, const std::span<const std::byte> bytes)
 {
         switch (color_format)
         {
         case ColorFormat::R8_SRGB:
-                return max<std::uint8_t, 1, 0>(bytes);
+                return max<std::uint8_t, 1, 1>(bytes);
         case ColorFormat::R8G8B8_SRGB:
-                return max<std::uint8_t, 3, 0>(bytes);
+                return max<std::uint8_t, 3, 3>(bytes);
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                return max<std::uint8_t, 3, 1>(bytes);
+                return max<std::uint8_t, 3, 4>(bytes);
         case ColorFormat::R16:
-                return max<std::uint16_t, 1, 0>(bytes);
+                return max<std::uint16_t, 1, 1>(bytes);
         case ColorFormat::R16G16B16:
         case ColorFormat::R16G16B16_SRGB:
-                return max<std::uint16_t, 3, 0>(bytes);
+                return max<std::uint16_t, 3, 3>(bytes);
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                return max<std::uint16_t, 3, 1>(bytes);
+                return max<std::uint16_t, 3, 4>(bytes);
         case ColorFormat::R32:
-                return max<float, 1, 0>(bytes);
+                return max<float, 1, 1>(bytes);
         case ColorFormat::R32G32B32:
-                return max<float, 3, 0>(bytes);
+                return max<float, 3, 3>(bytes);
         case ColorFormat::R32G32B32A32:
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                return max<float, 3, 1>(bytes);
+                return max<float, 3, 4>(bytes);
         }
         unknown_color_format_error(color_format);
 }
