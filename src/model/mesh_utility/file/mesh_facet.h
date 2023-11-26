@@ -48,12 +48,9 @@ void check_facet_indices(
                               + to_string(texcoord_count) + ")");
                 }
         }
-        else
+        else if (facet.texcoords[index] != -1)
         {
-                if (facet.texcoords[index] != -1)
-                {
-                        error("No texture but texture coordinate index is not set to -1");
-                }
+                error("No texture but texture coordinate index is not set to -1");
         }
 
         if (facet.has_normal)
@@ -64,12 +61,9 @@ void check_facet_indices(
                               + to_string(normal_count) + ")");
                 }
         }
-        else
+        else if (facet.normals[index] != -1)
         {
-                if (facet.normals[index] != -1)
-                {
-                        error("No normals but normal coordinate index is not set to -1");
-                }
+                error("No normals but normal coordinate index is not set to -1");
         }
 }
 
