@@ -38,6 +38,32 @@ class Facet final
 
         static constexpr T MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
+        [[nodiscard]] static std::array<T, N> compute_dots(
+                const std::vector<Vector<N, T>>& normals,
+                const std::array<int, N>& normal_indices,
+                const Vector<N, T>& simplex_normal)
+        {
+                std::array<T, N> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = dot(normals[normal_indices[i]], simplex_normal);
+                }
+                return res;
+        }
+
+        [[nodiscard]] static bool all_unidirectional(const std::array<T, N>& dots)
+        {
+                static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        if (!(std::isfinite(dots[i]) && std::abs(dots[i]) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
+                        {
+                                return false;
+                        }
+                }
+                return true;
+        }
+
         enum class NormalType : char
         {
                 NONE,
@@ -83,23 +109,9 @@ public:
 
                 n_ = normal_indices;
 
-                const std::array<T, N> dots = [&]
-                {
-                        std::array<T, N> res;
-                        for (std::size_t i = 0; i < N; ++i)
-                        {
-                                res[i] = dot(normals[n_[i]], simplex_.normal());
-                        }
-                        return res;
-                }();
+                const std::array<T, N> dots = compute_dots(normals, normal_indices, simplex_.normal());
 
-                if (!std::all_of(
-                            dots.cbegin(), dots.cend(),
-                            [](const T& d)
-                            {
-                                    static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                                    return std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
-                            }))
+                if (!all_unidirectional(dots))
                 {
                         normal_type_ = NormalType::NONE;
                         return;
