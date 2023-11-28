@@ -26,14 +26,29 @@ namespace ns::shading::ggx
 {
 namespace
 {
-template <std::size_t N, typename T>
-void test()
-{
-        constexpr int MAX = 10;
+constexpr int MAX = 10;
 
+template <std::size_t N, typename T>
+void test_cosine_weighted_average()
+{
+        for (int i = 0; i <= MAX; ++i)
+        {
+                const T roughness = static_cast<T>(i) / MAX;
+                const T average = f1_albedo_cosine_weighted_average<N, T>(roughness);
+                if (!(average > 0 && average <= 1))
+                {
+                        error("GGX F1 cosine-weighted average " + to_string(average)
+                              + " is not in the range (0, 1] for roughness " + to_string(roughness));
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void test_zero()
+{
         for (int i = 1; i <= MAX; ++i)
         {
-                constexpr T ROUGHNESS = 0;
+                static constexpr T ROUGHNESS = 0;
                 const T cosine = static_cast<T>(i) / MAX;
                 const T albedo = f1_albedo<N, T>(ROUGHNESS, cosine);
                 if (!(albedo == 1))
@@ -45,8 +60,8 @@ void test()
 
         for (int i = 1; i <= MAX; ++i)
         {
+                static constexpr T COSINE = 0;
                 const T roughness = static_cast<T>(i) / MAX;
-                constexpr T COSINE = 0;
                 const T albedo = f1_albedo<N, T>(roughness, COSINE);
                 if (!(albedo < 1))
                 {
@@ -54,24 +69,17 @@ void test()
                               + to_string(roughness) + " and cosine " + to_string(COSINE));
                 }
         }
+}
 
+template <std::size_t N, typename T>
+void test_all()
+{
         for (int i = 0; i <= MAX; ++i)
         {
                 const T roughness = static_cast<T>(i) / MAX;
-
-                {
-                        const T average = f1_albedo_cosine_weighted_average<N, T>(roughness);
-                        if (!(average > 0 && average <= 1))
-                        {
-                                error("GGX F1 cosine-weighted average " + to_string(average)
-                                      + " is not in the range (0, 1] for roughness " + to_string(roughness));
-                        }
-                }
-
                 for (int j = 0; j <= MAX; ++j)
                 {
                         const T cosine = static_cast<T>(j) / MAX;
-
                         const T albedo = f1_albedo<N, T>(roughness, cosine);
                         if (!(albedo >= 0 && albedo <= 1))
                         {
@@ -81,6 +89,14 @@ void test()
                         }
                 }
         }
+}
+
+template <std::size_t N, typename T>
+void test()
+{
+        test_cosine_weighted_average<N, T>();
+        test_zero<N, T>();
+        test_all<N, T>();
 }
 
 template <std::size_t N>
