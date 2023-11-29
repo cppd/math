@@ -26,6 +26,30 @@ namespace ns::process
 namespace dimension_implementation
 {
 [[noreturn]] void dimension_not_supported_error(unsigned dimension);
+
+template <template <std::size_t> typename Dimension, typename T, std::size_t... N>
+auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
+{
+        using ReturnType = std::common_type_t<decltype(f(Dimension<N>()))...>;
+
+        if constexpr (std::is_same_v<void, ReturnType>)
+        {
+                if (((N == dimension ? (static_cast<void>(f(Dimension<N>())), true) : false) || ...))
+                {
+                        return;
+                }
+        }
+        else
+        {
+                std::optional<ReturnType> r;
+                if (((N == dimension ? (static_cast<void>(r.emplace(f(Dimension<N>()))), true) : false) || ...))
+                {
+                        return std::move(*r);
+                }
+        }
+
+        dimension_not_supported_error(dimension);
+}
 }
 
 template <std::size_t N>
@@ -36,27 +60,8 @@ struct Dimension final
 template <typename T>
 auto apply_for_dimension(const std::size_t dimension, const T& f)
 {
-        return [&]<std::size_t... N>(std::index_sequence<N...>&&)
-        {
-                using ReturnType = std::common_type_t<decltype(f(Dimension<N>()))...>;
+        namespace impl = dimension_implementation;
 
-                if constexpr (std::is_same_v<void, ReturnType>)
-                {
-                        if (((N == dimension ? (static_cast<void>(f(Dimension<N>())), true) : false) || ...))
-                        {
-                                return;
-                        }
-                }
-                else
-                {
-                        std::optional<ReturnType> r;
-                        if (((N == dimension ? (static_cast<void>(r.emplace(f(Dimension<N>()))), true) : false) || ...))
-                        {
-                                return std::move(*r);
-                        }
-                }
-
-                dimension_implementation::dimension_not_supported_error(dimension);
-        }(settings::Dimensions());
+        return impl::apply<Dimension>(dimension, f, settings::Dimensions());
 }
 }
