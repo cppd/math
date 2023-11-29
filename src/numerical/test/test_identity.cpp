@@ -22,23 +22,19 @@ namespace ns::numerical
 template <std::size_t N, typename T>
 constexpr bool test()
 {
+        constexpr auto& A = IDENTITY_ARRAY<N, T>;
+
         for (std::size_t i = 0; i < N; ++i)
         {
+                if (!(A[i][i] == 1))
+                {
+                        return false;
+                }
                 for (std::size_t j = 0; j < N; ++j)
                 {
-                        if (i != j)
+                        if (i != j && !(A[i][j] == 0))
                         {
-                                if (!(IDENTITY_ARRAY<N, T>[i][j] == 0))
-                                {
-                                        return false;
-                                }
-                        }
-                        else
-                        {
-                                if (!(IDENTITY_ARRAY<N, T>[i][j] == 1))
-                                {
-                                        return false;
-                                }
+                                return false;
                         }
                 }
         }
