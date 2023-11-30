@@ -59,63 +59,57 @@ void test_utf32_replacement_character()
         }
 }
 
+void test_utf8_replacement_character_and_self_synchronizing(const std::string& s)
+{
+        ASSERT(s.size() == 5);
+
+        std::size_t i = 0;
+
+        if (REPLACEMENT_CHARACTER != utf8_to_utf32(s, &i))
+        {
+                error("Error UTF-32 replacement character");
+        }
+        if (i != 1)
+        {
+                error("Error UTF-8 string index " + to_string(i));
+        }
+
+        if (REPLACEMENT_CHARACTER != utf8_to_utf32(s, &i))
+        {
+                error("Error UTF-32 replacement character");
+        }
+        if (i != 2)
+        {
+                error("Error UTF-8 string index " + to_string(i));
+        }
+
+        if (0x2211 != utf8_to_utf32(s, &i))
+        {
+                error("Error reading UTF-32");
+        }
+        if (i != s.size())
+        {
+                error("Error UTF-8 string index " + to_string(i));
+        }
+}
+
 void test_utf8_replacement_character_and_self_synchronizing()
 {
         LOG("UTF-8 replacement character and self-synchronizing");
 
-        const auto test = [](const std::string& s)
-        {
-                ASSERT(s.size() == 5);
-
-                std::size_t i = 0;
-
-                if (REPLACEMENT_CHARACTER != utf8_to_utf32(s, &i))
-                {
-                        error("Error UTF-32 replacement character");
-                }
-                if (i != 1)
-                {
-                        error("Error UTF-8 string index " + to_string(i));
-                }
-
-                if (REPLACEMENT_CHARACTER != utf8_to_utf32(s, &i))
-                {
-                        error("Error UTF-32 replacement character");
-                }
-                if (i != 2)
-                {
-                        error("Error UTF-8 string index " + to_string(i));
-                }
-
-                if (0x2211 != utf8_to_utf32(s, &i))
-                {
-                        error("Error reading UTF-32");
-                }
-                if (i != s.size())
-                {
-                        error("Error UTF-8 string index " + to_string(i));
-                }
-        };
-
         const auto* const string = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
 
-        const std::array strings = std::to_array<std::string>(
-                {[&]
-                 {
-                         std::string res = string;
-                         res.erase(0, 1);
-                         return res;
-                 }(),
-                 [&]
-                 {
-                         std::string res = string;
-                         res.erase(2, 1);
-                         return res;
-                 }()});
+        std::vector<std::string> strings;
+
+        strings.push_back(string);
+        strings.back().erase(0, 1);
+
+        strings.push_back(string);
+        strings.back().erase(2, 1);
 
         for (const auto& s : strings)
         {
-                test(s);
+                test_utf8_replacement_character_and_self_synchronizing(s);
         }
 }
 
