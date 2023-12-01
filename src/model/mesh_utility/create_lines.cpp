@@ -31,6 +31,27 @@ namespace ns::model::mesh
 {
 namespace
 {
+std::unordered_map<int, int> vertex_index_map(const std::vector<std::array<int, 2>>& lines)
+{
+        std::unordered_map<int, int> res;
+
+        int idx = 0;
+        for (const std::array<int, 2>& line : lines)
+        {
+                for (const int vertex_index : line)
+                {
+                        const auto [iter, inserted] = res.try_emplace(vertex_index);
+                        if (inserted)
+                        {
+                                iter->second = idx++;
+                        }
+                }
+        }
+        ASSERT(idx == static_cast<int>(res.size()));
+
+        return res;
+}
+
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
@@ -41,26 +62,12 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 error("No lines for line object");
         }
 
-        std::unordered_map<int, int> vertices;
-
-        int idx = 0;
-        for (const std::array<int, 2>& line : lines)
-        {
-                for (const int vertex_index : line)
-                {
-                        const auto [iter, inserted] = vertices.try_emplace(vertex_index);
-                        if (inserted)
-                        {
-                                iter->second = idx++;
-                        }
-                }
-        }
-        ASSERT(idx == static_cast<int>(vertices.size()));
+        const std::unordered_map<int, int> vertex_map = vertex_index_map(lines);
 
         auto mesh = std::make_unique<Mesh<N>>();
 
-        mesh->vertices.resize(vertices.size());
-        for (const auto& [old_index, new_index] : vertices)
+        mesh->vertices.resize(vertex_map.size());
+        for (const auto& [old_index, new_index] : vertex_map)
         {
                 mesh->vertices[new_index] = points[old_index];
         }
@@ -72,8 +79,8 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (int i = 0; i < 2; ++i)
                 {
-                        const auto iter = vertices.find(line[i]);
-                        ASSERT(iter != vertices.cend());
+                        const auto iter = vertex_map.find(line[i]);
+                        ASSERT(iter != vertex_map.cend());
                         mesh_line.vertices[i] = iter->second;
                 }
 
