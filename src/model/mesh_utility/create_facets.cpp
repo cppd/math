@@ -33,6 +33,28 @@ namespace ns::model::mesh
 namespace
 {
 template <std::size_t N>
+std::unordered_map<int, int> vertex_index_map(const std::vector<std::array<int, N>>& facets)
+{
+        std::unordered_map<int, int> res;
+
+        int idx = 0;
+        for (const std::array<int, N>& facet : facets)
+        {
+                for (const int vertex_index : facet)
+                {
+                        const auto [iter, inserted] = res.try_emplace(vertex_index);
+                        if (inserted)
+                        {
+                                iter->second = idx++;
+                        }
+                }
+        }
+        ASSERT(idx == static_cast<int>(res.size()));
+
+        return res;
+}
+
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
@@ -42,26 +64,12 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 error("No facets for facet object");
         }
 
-        std::unordered_map<int, int> vertices;
-
-        int idx = 0;
-        for (const std::array<int, N>& facet : facets)
-        {
-                for (const int vertex_index : facet)
-                {
-                        const auto [iter, inserted] = vertices.try_emplace(vertex_index);
-                        if (inserted)
-                        {
-                                iter->second = idx++;
-                        }
-                }
-        }
-        ASSERT(idx == static_cast<int>(vertices.size()));
+        const std::unordered_map<int, int> vertex_map = vertex_index_map(facets);
 
         auto mesh = std::make_unique<Mesh<N>>();
 
-        mesh->vertices.resize(vertices.size());
-        for (const auto& [old_index, new_index] : vertices)
+        mesh->vertices.resize(vertex_map.size());
+        for (const auto& [old_index, new_index] : vertex_map)
         {
                 mesh->vertices[new_index] = points[old_index];
         }
@@ -77,8 +85,8 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        const auto iter = vertices.find(facet[i]);
-                        ASSERT(iter != vertices.cend());
+                        const auto iter = vertex_map.find(facet[i]);
+                        ASSERT(iter != vertex_map.cend());
                         mesh_facet.vertices[i] = iter->second;
                         mesh_facet.normals[i] = -1;
                         mesh_facet.texcoords[i] = -1;
