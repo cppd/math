@@ -39,6 +39,15 @@ namespace ns::geometry::core
 {
 namespace check_implementation
 {
+struct RidgeHash final
+{
+        template <std::size_t N>
+        [[nodiscard]] std::size_t operator()(const std::array<int, N>& v) const
+        {
+                return compute_hash(v);
+        }
+};
+
 template <std::size_t N, typename T>
 void check_facet_dimension(
         const std::string_view name,
@@ -73,15 +82,7 @@ void check_manifoldness(
         const std::vector<std::array<int, N>>& facets,
         const bool has_boundary)
 {
-        struct Hash final
-        {
-                std::size_t operator()(const std::array<int, N - 1>& v) const
-                {
-                        return compute_hash(v);
-                }
-        };
-
-        std::unordered_map<std::array<int, N - 1>, int, Hash> ridges;
+        std::unordered_map<std::array<int, N - 1>, int, RidgeHash> ridges;
         for (const std::array<int, N>& facet : facets)
         {
                 for (std::size_t r = 0; r < N; ++r)
@@ -101,16 +102,14 @@ void check_manifoldness(
                                       + " is not equal to 2");
                         }
                 }
+                return;
         }
-        else
+
+        for (const auto& [ridge, count] : ridges)
         {
-                for (const auto& [ridge, count] : ridges)
+                if (count > 2)
                 {
-                        if (count > 2)
-                        {
-                                error(std::string(name) + " ridge facet count " + to_string(count)
-                                      + " is greater than 2");
-                        }
+                        error(std::string(name) + " ridge facet count " + to_string(count) + " is greater than 2");
                 }
         }
 }
