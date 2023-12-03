@@ -149,6 +149,8 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
         return res;
 }
 
+//
+
 template <std::size_t N, typename T>
 void compare(
         const std::vector<std::array<Vector<N, T>, N>> matrices,
@@ -186,53 +188,57 @@ void compare(
 }
 
 template <std::size_t N, typename T>
-void test_determinant(const int count, const std::type_identity_t<T>& precision)
+std::vector<T> cofactor_expansion(const std::vector<std::array<Vector<N, T>, N>>& matrices)
 {
         namespace impl = determinant_implementation;
+        std::vector<T> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                res[i] = impl::determinant_cofactor_expansion(
+                        matrices[i], SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
+        return res;
+}
 
+template <std::size_t N, typename T>
+std::vector<T> row_reduction(const std::vector<std::array<Vector<N, T>, N>>& matrices)
+{
+        std::vector<T> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                res[i] = determinant_gauss(matrices[i]);
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::vector<T> determinants(const std::vector<std::array<Vector<N, T>, N>>& matrices)
+{
+        std::vector<T> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                res[i] = determinant(matrices[i]);
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
+        return res;
+}
+
+template <std::size_t N, typename T>
+void test_determinant(const int count, const std::type_identity_t<T>& precision)
+{
         LOG("Test determinant, " + to_string(N) + ", " + type_name<T>());
 
         const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
 
-        const std::vector<T> cofactor_expansion = [&]
-        {
-                std::vector<T> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        res[i] = impl::determinant_cofactor_expansion(
-                                matrices[i], SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
-                return res;
-        }();
-
-        const std::vector<T> row_reduction = [&]
-        {
-                std::vector<T> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        res[i] = determinant_gauss(matrices[i]);
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
-                return res;
-        }();
-
-        const std::vector<T> determinants = [&]
-        {
-                std::vector<T> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        res[i] = determinant(matrices[i]);
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
-                return res;
-        }();
-
-        compare(matrices, cofactor_expansion, row_reduction, determinants, precision);
+        compare(matrices, cofactor_expansion(matrices), row_reduction(matrices), determinants(matrices), precision);
 }
+
+//
 
 template <std::size_t N, typename T>
 void compare(
@@ -275,62 +281,66 @@ void compare(
 }
 
 template <std::size_t N, typename T>
-void test_determinant_column(const int count, const std::type_identity_t<T>& precision)
+std::vector<Vector<N, T>> cofactor_expansion(const std::vector<std::array<Vector<N, T>, N - 1>>& matrices)
 {
         namespace impl = determinant_implementation;
+        std::vector<Vector<N, T>> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                for (std::size_t c = 0; c < N; ++c)
+                {
+                        res[i][c] = impl::determinant_cofactor_expansion(
+                                matrices[i], SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, c));
+                }
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
+        return res;
+}
 
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> row_reduction(const std::vector<std::array<Vector<N, T>, N - 1>>& matrices)
+{
+        std::vector<Vector<N, T>> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                for (std::size_t c = 0; c < N; ++c)
+                {
+                        res[i][c] = determinant_gauss(matrices[i], c);
+                }
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> determinants(const std::vector<std::array<Vector<N, T>, N - 1>>& matrices)
+{
+        std::vector<Vector<N, T>> res(matrices.size());
+        const Clock::time_point start_time = Clock::now();
+        for (std::size_t i = 0; i < matrices.size(); ++i)
+        {
+                for (std::size_t c = 0; c < N; ++c)
+                {
+                        res[i][c] = determinant(matrices[i], c);
+                }
+        }
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
+        return res;
+}
+
+template <std::size_t N, typename T>
+void test_determinant_column(const int count, const std::type_identity_t<T>& precision)
+{
         LOG("Test determinant column, " + to_string(N) + ", " + type_name<T>());
 
         const std::vector<std::array<Vector<N, T>, N - 1>> matrices = random_matrices<N - 1, N, T>(count);
 
-        const std::vector<Vector<N, T>> cofactor_expansion = [&]
-        {
-                std::vector<Vector<N, T>> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                res[i][c] = impl::determinant_cofactor_expansion(
-                                        matrices[i], SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, c));
-                        }
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
-                return res;
-        }();
-
-        const std::vector<Vector<N, T>> row_reduction = [&]
-        {
-                std::vector<Vector<N, T>> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                res[i][c] = determinant_gauss(matrices[i], c);
-                        }
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
-                return res;
-        }();
-
-        const std::vector<Vector<N, T>> determinants = [&]
-        {
-                std::vector<Vector<N, T>> res(count);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < count; ++i)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                res[i][c] = determinant(matrices[i], c);
-                        }
-                }
-                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
-                return res;
-        }();
-
-        compare(matrices, cofactor_expansion, row_reduction, determinants, precision);
+        compare(matrices, cofactor_expansion(matrices), row_reduction(matrices), determinants(matrices), precision);
 }
+
+//
 
 template <typename T>
 void test_determinant(const int count, const std::type_identity_t<T>& precision)
