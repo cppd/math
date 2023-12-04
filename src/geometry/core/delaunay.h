@@ -100,7 +100,7 @@ public:
 };
 
 template <std::size_t N>
-std::vector<DelaunayObject<N>> create_delaunay_objects(
+[[nodiscard]] std::vector<DelaunayObject<N>> create_delaunay_objects(
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunaySimplex<N>>& simplices)
 {
@@ -115,7 +115,7 @@ std::vector<DelaunayObject<N>> create_delaunay_objects(
 }
 
 template <std::size_t N>
-std::vector<DelaunayFacet<N>> create_delaunay_facets(const std::vector<DelaunaySimplex<N>>& simplices)
+[[nodiscard]] std::vector<DelaunayFacet<N>> create_delaunay_facets(const std::vector<DelaunaySimplex<N>>& simplices)
 {
         const std::unordered_map<const DelaunaySimplex<N>*, int> simplex_to_delaunay_map = [&]
         {
@@ -158,15 +158,14 @@ std::vector<DelaunayFacet<N>> create_delaunay_facets(const std::vector<DelaunayS
                 if (!ridge_facets.f1().facet())
                 {
                         res.emplace_back(ridge.vertices(), ortho, delaunay_0);
+                        continue;
                 }
-                else
-                {
-                        const DelaunaySimplex<N>* const simplex_1 = ridge_facets.f1().facet();
-                        ASSERT(ortho == -simplex_1->ortho(ridge_facets.f1().vertex_index()));
 
-                        const int delaunay_1 = simplex_to_delaunay(simplex_1);
-                        res.emplace_back(ridge.vertices(), ortho, delaunay_0, delaunay_1);
-                }
+                const DelaunaySimplex<N>* const simplex_1 = ridge_facets.f1().facet();
+                ASSERT(ortho == -simplex_1->ortho(ridge_facets.f1().vertex_index()));
+
+                const int delaunay_1 = simplex_to_delaunay(simplex_1);
+                res.emplace_back(ridge.vertices(), ortho, delaunay_0, delaunay_1);
         }
 
         return res;
