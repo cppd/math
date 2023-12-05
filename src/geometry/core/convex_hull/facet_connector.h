@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../ridge.h"
 
+#include <src/com/error.h>
+
+#include <array>
 #include <tuple>
 #include <unordered_map>
 
