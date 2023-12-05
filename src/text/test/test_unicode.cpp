@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/test/test.h>
 
-#include <array>
+#include <string>
+#include <vector>
 
 namespace ns::text::unicode
 {
@@ -101,10 +102,10 @@ void test_utf8_replacement_character_and_self_synchronizing()
 
         std::vector<std::string> strings;
 
-        strings.push_back(string);
+        strings.emplace_back(string);
         strings.back().erase(0, 1);
 
-        strings.push_back(string);
+        strings.emplace_back(string);
         strings.back().erase(2, 1);
 
         for (const auto& s : strings)
