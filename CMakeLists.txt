@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.27)
 
 ##################################################
 
@@ -39,7 +39,7 @@ enable_language(C CXX)
 
 check_compiler_versions(
         GCC_MINIMAL_VERSION 13
-        CLANG_MINIMAL_VERSION 16)
+        CLANG_MINIMAL_VERSION 17)
 
 # after enable_language
 set(CMAKE_C_STANDARD 17)
