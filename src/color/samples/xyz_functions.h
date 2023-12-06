@@ -26,6 +26,7 @@ Journal of Computer Graphics Techniques, Vol. 2, No. 2, 2013.
 #include <src/com/error.h>
 
 #include <cmath>
+#include <type_traits>
 
 namespace ns::color
 {

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <cmath>
+#include <vector>
 
 namespace ns::color
 {

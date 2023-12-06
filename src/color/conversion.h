@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 
 namespace ns::color
 {

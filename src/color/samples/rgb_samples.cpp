@@ -35,6 +35,8 @@ Elsevier, 2017.
 
 #include <algorithm>
 #include <array>
+#include <type_traits>
+#include <vector>
 
 namespace ns::color
 {

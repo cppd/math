@@ -27,7 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/math.h>
 
+#include <algorithm>
 #include <string>
+#include <type_traits>
 
 namespace ns::color
 {

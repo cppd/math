@@ -17,10 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "illuminants.h"
 
+#include "color.h"
+
 #include "samples/blackbody_samples.h"
 #include "samples/daylight_samples.h"
 
 #include <src/com/error.h>
+
+#include <vector>
 
 namespace ns::color
 {

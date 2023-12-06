@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color.h"
+#include "rgb8.h"
 
 namespace ns::color::rgb
 {

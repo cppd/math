@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <cmath>
+#include <span>
+#include <type_traits>
+#include <vector>
 
 namespace ns::color
 {

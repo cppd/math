@@ -22,7 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/test/test.h>
 
+#include <algorithm>
+#include <cmath>
+#include <exception>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::color
 {
