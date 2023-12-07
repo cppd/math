@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ranges>
 #include <stack>
+#include <string>
 #include <tuple>
 
 namespace ns

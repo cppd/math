@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 
 #include <array>
+#include <cstdint>
 #include <random>
+#include <span>
 
 namespace ns
 {

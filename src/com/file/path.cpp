@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path.h"
 
+#include <filesystem>
+#include <string>
 #include <string_view>
 #include <type_traits>
 

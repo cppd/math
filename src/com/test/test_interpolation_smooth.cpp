@@ -27,6 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <array>
+#include <cmath>
+#include <random>
+#include <string>
 #include <vector>
 
 namespace ns

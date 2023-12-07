@@ -19,12 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../name.h"
 #include "../pcg.h"
 
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/test/test.h>
 
 #include <algorithm>
 #include <array>
 #include <random>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>

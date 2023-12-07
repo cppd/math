@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log/log.h"
 
+#include <string_view>
+
 namespace ns
 {
 void message_error(const std::string_view& msg) noexcept

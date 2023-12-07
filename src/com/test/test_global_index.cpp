@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../global_index.h"
 
+#include <array>
+
 namespace ns
 {
 // compute

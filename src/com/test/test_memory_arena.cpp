@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../memory_arena.h"
 
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -24,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <array>
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <vector>
 
 namespace ns

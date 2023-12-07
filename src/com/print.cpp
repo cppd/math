@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "print.h"
-
-#if !defined(__clang__)
+// #include "print.h"
+//
+// #if !defined(__clang__)
 // #include <array>
 // #include <quadmath.h>
 //
@@ -32,4 +32,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //         return buf.data();
 // }
 // }
-#endif
+// #endif

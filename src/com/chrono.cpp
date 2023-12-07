@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "chrono.h"
 
+#include <chrono>
+#include <ctime>
 #include <mutex>
 
 namespace ns

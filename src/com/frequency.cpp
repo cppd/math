@@ -26,10 +26,12 @@ Blackman window function
 
 #include "frequency.h"
 
+#include "chrono.h"
 #include "constant.h"
 #include "error.h"
 
 #include <cmath>
+#include <vector>
 
 namespace ns
 {

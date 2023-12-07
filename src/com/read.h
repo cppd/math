@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <tuple>
 
 namespace ns

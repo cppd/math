@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <bit>
+#include <cstdint>
 #include <random>
 
 namespace ns

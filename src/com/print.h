@@ -25,9 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <complex>
 #include <iomanip>
+#include <ios>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace ns
 {

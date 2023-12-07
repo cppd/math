@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "print.h"
 
+#include <string_view>
+
 namespace ns
 {
 std::string_view smooth_to_string(const Smooth smooth)

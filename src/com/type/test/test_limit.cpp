@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../limit.h"
 
+#include <limits>
+
 namespace ns
 {
 namespace type_limit_implementation
