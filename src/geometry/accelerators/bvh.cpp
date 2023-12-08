@@ -18,8 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "bvh.h"
 
 #include "bvh_build.h"
+#include "bvh_object.h"
 
+#include <src/com/error.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
+
+#include <span>
+#include <vector>
 
 namespace ns::geometry::accelerators
 {

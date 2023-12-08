@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/integrate.h>
 
 #include <cmath>
+#include <type_traits>
 
 namespace ns::geometry::shapes
 {

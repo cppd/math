@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/shuffle.h>
-#include <src/com/type/limit.h>
+#include <src/com/type/find.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>

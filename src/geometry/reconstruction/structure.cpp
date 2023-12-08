@@ -25,10 +25,17 @@ Cambridge University Press, 2007.
 
 #include "functions.h"
 
+#include "../core/delaunay.h"
+
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/settings/instantiation.h>
+
+#include <algorithm>
+#include <cmath>
+#include <optional>
+#include <vector>
 
 namespace ns::geometry::reconstruction
 {

@@ -25,14 +25,18 @@ Cambridge University Press, 2007.
 
 #include "prune_facets.h"
 
+#include "../core/delaunay.h"
 #include "../core/ridge.h"
 
 #include <src/com/error.h>
 #include <src/numerical/complement.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace ns::geometry::reconstruction
 {

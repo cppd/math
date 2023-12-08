@@ -17,11 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "extract_manifold.h"
 
+#include "../core/delaunay.h"
+
 #include <src/com/error.h>
 #include <src/settings/instantiation.h>
 
 #include <optional>
 #include <stack>
+#include <vector>
 
 namespace ns::geometry::reconstruction
 {

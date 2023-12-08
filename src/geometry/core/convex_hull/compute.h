@@ -57,7 +57,9 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/progress/progress.h>
 
 #include <algorithm>
+#include <array>
 #include <barrier>
+#include <vector>
 
 namespace ns::geometry::core::convex_hull
 {

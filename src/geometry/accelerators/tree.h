@@ -33,6 +33,7 @@ CRC Press, 2014.
 
 #include <array>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace ns::geometry::accelerators

@@ -42,6 +42,7 @@ x ⋅ (2 * (v(n) - v(0))) = v(n) ⋅ v(n) - v(0) ⋅ v(0)
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 

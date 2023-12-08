@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/find.h>
 #include <src/com/type/name_ext.h>
 
-#include <gmpxx.h>
 #include <sstream>
+#include <string>
 
 namespace ns::geometry::core::convex_hull
 {

@@ -28,18 +28,22 @@ Cambridge University Press, 2007.
 
 #include "extract_manifold.h"
 #include "interior.h"
-#include "print.h"
 #include "prune_facets.h"
 #include "structure.h"
 
-#include <src/com/alg.h>
+#include "../core/delaunay.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
-#include <unordered_set>
+#include <algorithm>
+#include <array>
+#include <memory>
+#include <vector>
 
 namespace ns::geometry::reconstruction
 {

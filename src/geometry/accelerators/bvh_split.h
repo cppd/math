@@ -28,6 +28,8 @@ Elsevier, 2017.
 #include "bvh_functions.h"
 #include "bvh_object.h"
 
+#include "../spatial/bounding_box.h"
+
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
@@ -36,6 +38,7 @@ Elsevier, 2017.
 #include <optional>
 #include <span>
 #include <tuple>
+#include <type_traits>
 
 namespace ns::geometry::accelerators
 {

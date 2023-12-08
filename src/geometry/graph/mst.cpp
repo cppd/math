@@ -30,12 +30,16 @@ Kruskal’s algorithm
 
 #include <src/com/alg.h>
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/union_find.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
+#include <array>
+#include <vector>
 
 namespace ns::geometry::graph
 {

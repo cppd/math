@@ -22,16 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../core/convex_hull.h"
 
-#include <src/com/arrays.h>
-#include <src/com/error.h>
-#include <src/com/log.h>
-#include <src/com/sort.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
-#include <map>
-#include <sstream>
+#include <array>
 #include <unordered_set>
+#include <vector>
 
 namespace ns::geometry::shapes
 {

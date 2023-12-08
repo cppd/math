@@ -31,10 +31,13 @@ Elsevier, 2017.
 #include "../spatial/bounding_box.h"
 
 #include <src/com/error.h>
+#include <src/numerical/ray.h>
 #include <src/progress/progress.h>
 
 #include <cstdint>
+#include <optional>
 #include <span>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

@@ -25,11 +25,17 @@ Cambridge University Press, 2007.
 
 #include "interior.h"
 
+#include "structure.h"
+
+#include "../core/delaunay.h"
+
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
 #include <cmath>
+#include <vector>
 
 namespace ns::geometry::reconstruction
 {

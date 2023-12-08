@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "convex_hull.h"
 
 #include "convex_hull/compute.h"
+#include "convex_hull/facet.h"
 #include "convex_hull/integer_types.h"
 #include "convex_hull/source_points.h"
 
@@ -25,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <array>

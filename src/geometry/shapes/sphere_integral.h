@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <numeric>
 #include <optional>
+#include <type_traits>
 
 namespace ns::geometry::shapes
 {

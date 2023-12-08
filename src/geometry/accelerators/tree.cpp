@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tree.h"
 
-#include "../spatial/parallelotope.h"
+#include "../spatial/bounding_box.h"
 #include "../spatial/parallelotope_aa.h"
 
 #include <src/com/error.h>
@@ -27,12 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/thread_tasks.h>
 #include <src/com/type/limit.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <deque>
 #include <mutex>
+#include <vector>
 
 namespace ns::geometry::accelerators
 {

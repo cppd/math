@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../convex_hull.h"
 
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
@@ -25,11 +26,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
+#include <src/progress/progress.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
+#include <array>
+#include <cmath>
 #include <random>
+#include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace ns::geometry::core
 {
