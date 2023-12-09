@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <gmp.h>
 #include <gmpxx.h>
 #include <type_traits>
 
 namespace ns
 {
-namespace mpz_implementation
+namespace set_mpz_implementation
 {
 template <typename T>
 void import_mpz(mpz_t mpz, const T v)
@@ -64,21 +65,21 @@ void set_mpz(mpz_class* const mpz, const T v)
 
 inline void set_mpz(mpz_class* const mpz, const long long v)
 {
-        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
+        set_mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
 inline void set_mpz(mpz_class* const mpz, const unsigned long long v)
 {
-        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
+        set_mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
 inline void set_mpz(mpz_class* const mpz, const __int128 v)
 {
-        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
+        set_mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 
 inline void set_mpz(mpz_class* const mpz, const unsigned __int128 v)
 {
-        mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
+        set_mpz_implementation::set_mpz(mpz->get_mpz_t(), v);
 }
 }

@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector.h"
 
-#include <src/com/mpz.h>
+#include <src/com/set_mpz.h>
+
+#include <gmp.h>
+#include <gmpxx.h>
 
 namespace ns::numerical
 {

@@ -18,12 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/mpz.h>
+#include <src/com/set_mpz.h>
 #include <src/com/type/concept.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <gmp.h>
+#include <gmpxx.h>
 #include <type_traits>
 #include <vector>
 
