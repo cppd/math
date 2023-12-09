@@ -30,13 +30,13 @@ Kalman and Bayesian Filters in Python.
 #include "checks.h"
 #include "update_info.h"
 
-#include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <optional>
 #include <tuple>
+#include <type_traits>
 
 namespace ns::filter
 {

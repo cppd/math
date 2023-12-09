@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../models.h"
 
+#include <src/numerical/matrix.h>
+
 namespace ns::filter
 {
 namespace

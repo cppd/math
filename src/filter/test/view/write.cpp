@@ -19,16 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "converters.h"
 
+#include "../../filters/measurement.h"
 #include "../../settings/instantiation.h"
 #include "../files.h"
 
+#include <src/color/rgb8.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/numerical/vector.h>
 
 #include <fstream>
 #include <iomanip>
+#include <ios>
+#include <optional>
+#include <ostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::filter::test::view
 {

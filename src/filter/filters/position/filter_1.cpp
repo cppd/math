@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1.h"
 
+#include "init.h"
+
 #include "../../ekf.h"
 #include "../../settings/instantiation.h"
+#include "../../update_info.h"
 #include "../utility/utility.h"
 
 #include <src/com/error.h>
@@ -26,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <memory>
 #include <optional>
 
 namespace ns::filter::filters::position

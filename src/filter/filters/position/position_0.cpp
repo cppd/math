@@ -17,9 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_0.h"
 
+#include "filter_0.h"
+
+#include "../../consistency.h"
 #include "../../settings/instantiation.h"
+#include "../filter.h"
+#include "../measurement.h"
 
 #include <src/com/error.h>
+
+#include <memory>
+#include <optional>
+#include <string>
 
 namespace ns::filter::filters::position
 {

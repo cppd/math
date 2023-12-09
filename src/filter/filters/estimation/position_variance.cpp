@@ -17,12 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position_variance.h"
 
+#include "moving_variance.h"
+
 #include "../../settings/instantiation.h"
+#include "../filter.h"
+#include "../measurement.h"
+#include "../position/filter_2.h"
+#include "../position/init.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/type/name.h>
+#include <src/numerical/vector.h>
+
+#include <memory>
+#include <optional>
+#include <string>
 
 namespace ns::filter::filters::estimation
 {

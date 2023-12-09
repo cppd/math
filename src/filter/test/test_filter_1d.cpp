@@ -32,10 +32,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <map>
+#include <optional>
 #include <random>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 

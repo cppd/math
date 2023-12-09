@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include "../filters/measurement.h"
 #include "../settings/instantiation.h"
 
 #include <src/com/angle.h>
@@ -26,10 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
 #include <random>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::filter::test
 {

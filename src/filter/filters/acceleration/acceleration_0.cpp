@@ -17,14 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration_0.h"
 
+#include "init.h"
 #include "update.h"
 
 #include "../../settings/instantiation.h"
+#include "../estimation.h"
+#include "../filter.h"
+#include "../measurement.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+
+#include <optional>
+#include <string>
 
 namespace ns::filter::filters::acceleration
 {

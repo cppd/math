@@ -18,9 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sigma_points.h"
 
 #include <src/com/log.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <functional>
 
