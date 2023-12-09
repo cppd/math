@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vector_object.h"
+#include "vector_object.h" // IWYU pragma: export
 
 #include <src/com/interpolation.h>
 #include <src/com/type/limit.h>
