@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/complement.h>
 #include <src/numerical/determinant.h>
 #include <src/numerical/gram.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <cmath>

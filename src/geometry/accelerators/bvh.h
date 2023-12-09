@@ -32,6 +32,7 @@ Elsevier, 2017.
 
 #include <src/com/error.h>
 #include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <cstdint>

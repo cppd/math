@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "parallelotope_volume.h"
 
 #include <src/com/combinatorics.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 

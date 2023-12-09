@@ -32,6 +32,7 @@ Elsevier, 2017.
 
 #include <array>
 #include <optional>
+#include <string>
 
 namespace ns::geometry::spatial
 {

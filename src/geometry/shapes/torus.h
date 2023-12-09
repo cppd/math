@@ -26,6 +26,7 @@ CRC Press, 2015.
 
 #pragma once
 
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
 namespace ns::geometry::shapes

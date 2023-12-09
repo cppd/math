@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../spatial/bounding_box.h"
 
+#include <src/numerical/vector.h>
+
 namespace ns::geometry::accelerators
 {
 template <std::size_t N, typename T>

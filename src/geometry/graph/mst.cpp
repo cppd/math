@@ -34,6 +34,7 @@ Kruskal’s algorithm
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/union_find.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 

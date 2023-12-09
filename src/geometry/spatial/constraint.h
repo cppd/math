@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
+#include <array>
+
 namespace ns::geometry::spatial
 {
 // a * x + b

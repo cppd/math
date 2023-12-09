@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <optional>
 #include <random>
+#include <string>
 #include <tuple>
 
 namespace ns::geometry::spatial::test

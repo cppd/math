@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_integral.h"
 
 #include <src/com/constant.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
@@ -29,8 +30,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <cmath>
+#include <iomanip>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace ns::geometry::shapes::test
 {

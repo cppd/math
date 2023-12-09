@@ -28,10 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
-#include <cmath>
+#include <vector>
 
 namespace ns::geometry::spatial::intersection::parallelotope
 {

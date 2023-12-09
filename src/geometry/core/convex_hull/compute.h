@@ -54,6 +54,7 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/thread.h>
 #include <src/com/thread_pool.h>
 #include <src/com/type/concept.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <algorithm>

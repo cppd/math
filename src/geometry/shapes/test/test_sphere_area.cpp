@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
+#include <string>
+
 namespace ns::geometry::shapes::test
 {
 namespace

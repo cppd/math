@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
