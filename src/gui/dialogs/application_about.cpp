@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QMessageBox>
 #include <sstream>
-#include <string>
 
 namespace ns::gui::dialog
 {

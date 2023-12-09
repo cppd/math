@@ -17,14 +17,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window.h"
 
+#include "actions.h"
+#include "image_widget.h"
+#include "pixels.h"
+#include "sliders_widget.h"
+#include "statistics_widget.h"
+
+#include "../com/support.h"
 #include "../dialogs/message.h"
+
+#include "ui_painter_window.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/painter/painter.h>
 #include <src/settings/name.h>
 
 #include <QCloseEvent>
 #include <QPointer>
+#include <algorithm>
+#include <chrono>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace ns::gui::painter_window
 {

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QGridLayout>
 #include <QSignalBlocker>
+#include <vector>
 
 namespace ns::gui::painter_window
 {

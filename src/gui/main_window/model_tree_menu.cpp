@@ -17,7 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree_menu.h"
 
+#include "model_tree_actions.h"
+
 #include "../dialogs/message.h"
+
+#include <src/model/object_id.h>
+
+#include <memory>
 
 namespace ns::gui::main_window
 {

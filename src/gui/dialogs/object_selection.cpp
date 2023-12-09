@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <mutex>
+#include <optional>
 
 namespace ns::gui::dialog
 {

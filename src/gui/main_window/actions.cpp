@@ -18,17 +18,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "actions.h"
 
 #include "actions_repository.h"
+#include "colors_widget.h"
+#include "lighting_widget.h"
+#include "model_tree.h"
 
-#include <src/com/error.h>
+#include "../com/command_line.h"
+#include "../com/connection.h"
+#include "../com/threads.h"
+
 #include <src/com/message.h>
-#include <src/com/names.h>
 #include <src/process/computing.h>
 #include <src/process/loading.h>
 #include <src/process/painting.h>
 #include <src/process/saving.h>
 #include <src/process/testing.h>
+#include <src/storage/repository.h>
+#include <src/storage/types.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
 
 #include <chrono>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::gui::main_window
 {

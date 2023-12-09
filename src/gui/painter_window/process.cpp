@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/painter_image.h"
 
-#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
@@ -27,11 +26,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/depth.h>
 #include <src/image/file_save.h>
 #include <src/image/flip.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/image/normalize.h>
-#include <src/model/volume_utility.h>
 #include <src/process/dimension.h>
 #include <src/process/load.h>
 #include <src/progress/progress.h>
+#include <src/progress/progress_list.h>
+
+#include <array>
+#include <cstddef>
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::gui::painter_window
 {

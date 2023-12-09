@@ -24,11 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exception.h>
 #include <src/com/type/limit.h>
+#include <src/progress/progress_interfaces.h>
+#include <src/progress/progress_list.h>
 
 #include <QMenu>
+#include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <deque>
+#include <functional>
+#include <list>
+#include <memory>
+#include <optional>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 namespace ns::gui
 {

@@ -28,6 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/image/file_save.h>
 
+#include <filesystem>
+#include <optional>
+#include <string>
+
 namespace ns::gui::dialog
 {
 namespace

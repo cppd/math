@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_colors_widget.h"
 
 #include <src/color/color.h>
+#include <src/view/event.h>
 #include <src/view/view.h>
+
+#include <vector>
 
 namespace ns::gui::main_window
 {

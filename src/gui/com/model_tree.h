@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/storage/storage.h>
+#include <src/model/object_id.h>
+#include <src/storage/types.h>
 
 #include <optional>
 

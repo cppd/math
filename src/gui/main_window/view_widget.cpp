@@ -21,8 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/message.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
 
 #include <cmath>
+#include <optional>
+#include <vector>
 
 namespace ns::gui::main_window
 {

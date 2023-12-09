@@ -17,10 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "actions_repository.h"
 
+#include "../com/connection.h"
+#include "../com/threads.h"
+
+#include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/process/loading.h>
+#include <src/storage/repository.h>
 
 #include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::gui::main_window
 {

@@ -18,12 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_parameters_3d.h"
 
 #include "message.h"
+#include "painter_parameters.h"
 
 #include "../com/support.h"
 
 #include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <optional>
+#include <string>
+#include <tuple>
 
 namespace ns::gui::dialog
 {

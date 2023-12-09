@@ -25,14 +25,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_model_tree.h"
 
+#include <src/model/mesh_object.h>
 #include <src/model/object_id.h>
+#include <src/model/volume_object.h>
 #include <src/storage/storage.h>
+#include <src/storage/types.h>
 
 #include <QPoint>
 #include <QTreeWidget>
+#include <memory>
 #include <optional>
+#include <string>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::gui::main_window
 {

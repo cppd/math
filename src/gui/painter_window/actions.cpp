@@ -17,10 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "actions.h"
 
+#include "pixels.h"
 #include "process.h"
+
+#include "../com/threads.h"
 
 #include <src/com/error.h>
 #include <src/com/message.h>
+#include <src/com/print.h>
+
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::gui::painter_window
 {

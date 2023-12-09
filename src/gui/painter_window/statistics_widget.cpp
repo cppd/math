@@ -17,12 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "statistics_widget.h"
 
+#include "difference.h"
+
 #include "../com/support.h"
 
 #include <src/com/print.h>
+#include <src/painter/painter.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
 namespace ns::gui::painter_window
 {

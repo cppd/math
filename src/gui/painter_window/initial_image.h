@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/image/format.h>
 
+#include <cstddef>
 #include <vector>
 
 namespace ns::gui::painter_window

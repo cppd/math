@@ -19,9 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/color/rgb8.h>
 #include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/log/log.h>
 #include <src/com/print.h>
+
+#include <atomic>
+#include <vector>
 
 namespace ns::gui::main_window
 {

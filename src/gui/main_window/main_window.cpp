@@ -17,24 +17,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "actions.h"
+#include "colors_widget.h"
+#include "graphics_widget.h"
+#include "lighting_widget.h"
+#include "log.h"
+#include "mesh_widget.h"
+#include "model_tree.h"
+#include "view_widget.h"
+#include "volume_widget.h"
+
 #include "../com/application.h"
 #include "../com/command_line.h"
+#include "../com/model_events.h"
 #include "../com/support.h"
 #include "../dialogs/application_about.h"
 #include "../dialogs/application_help.h"
 #include "../dialogs/message.h"
 
+#include "ui_main_window.h"
+
 #include <src/com/error.h>
-#include <src/com/log.h>
 #include <src/com/merge.h>
 #include <src/com/message.h>
-#include <src/com/type/limit.h>
 #include <src/settings/name.h>
+#include <src/storage/repository.h>
 #include <src/view/create.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
+#include <src/vulkan/instance/instance.h>
 
 #include <QCloseEvent>
 #include <QPointer>
 #include <QScreen>
+#include <chrono>
+#include <exception>
+#include <memory>
+#include <optional>
+#include <thread>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace ns::gui::main_window
 {

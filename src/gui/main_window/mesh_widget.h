@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_mesh_widget.h"
 
+#include <src/storage/types.h>
+
 #include <QPointer>
 #include <thread>
 #include <vector>

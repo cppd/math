@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <QColorDialog>
+#include <functional>
+#include <string>
 
 namespace ns::gui::dialog
 {

@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 
 namespace ns::gui::painter_window
 {

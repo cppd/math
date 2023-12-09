@@ -19,14 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/color/color.h>
 #include <src/color/illuminants.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
 
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <ios>
 #include <sstream>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 namespace ns::gui::main_window
 {

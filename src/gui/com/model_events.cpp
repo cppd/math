@@ -17,7 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_events.h"
 
+#include "model_tree.h"
+
 #include <src/com/error.h>
+#include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
+
+#include <thread>
+#include <tuple>
 
 namespace ns::gui
 {

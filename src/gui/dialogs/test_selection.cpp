@@ -24,9 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <regex>
 #include <sstream>
+#include <string>
+#include <string_view>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 namespace ns::gui::dialog
 {

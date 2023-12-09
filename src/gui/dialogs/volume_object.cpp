@@ -25,6 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
+#include <algorithm>
+#include <optional>
+#include <string>
+
 namespace ns::gui::dialog
 {
 namespace

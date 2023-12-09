@@ -20,10 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/image/conversion.h>
+#include <src/image/format.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <span>
+#include <vector>
 
 namespace ns::gui::painter_window
 {

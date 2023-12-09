@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 
 #include <QCommandLineParser>
+#include <string>
 
 namespace ns::gui
 {

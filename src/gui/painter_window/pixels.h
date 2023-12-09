@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "initial_image.h"
 
-#include <src/color/color.h>
+#include <src/color/rgb8.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -29,16 +29,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/spinlock.h>
 #include <src/com/type/limit.h>
 #include <src/image/format.h>
+#include <src/image/image.h>
+#include <src/numerical/vector.h>
 #include <src/painter/painter.h>
 #include <src/painter/scenes/storage.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
+#include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace ns::gui::painter_window

@@ -22,6 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <algorithm>
+#include <array>
+#include <string>
+#include <string_view>
+
 namespace ns::gui::dialog
 {
 namespace

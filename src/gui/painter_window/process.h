@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/image/format.h>
 #include <src/progress/progress_list.h>
 
+#include <cstddef>
 #include <functional>
 #include <vector>
 

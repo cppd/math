@@ -20,7 +20,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "model_tree_menu.h"
 #include "model_tree_style.h"
 
+#include "../com/model_tree.h"
+
 #include <src/com/error.h>
+#include <src/model/mesh_object.h>
+#include <src/model/object_id.h>
+#include <src/model/volume_object.h>
+#include <src/storage/types.h>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <thread>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace ns::gui::main_window
 {

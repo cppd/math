@@ -31,17 +31,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
-#include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
+#include <src/view/event.h>
 #include <src/view/view.h>
 #include <src/vulkan/instance/instance.h>
 
 #include <QTimer>
-#include <list>
 #include <memory>
-#include <string>
 #include <thread>
 #include <tuple>
+#include <vector>
 
 namespace ns::gui::main_window
 {

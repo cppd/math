@@ -17,11 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_widget.h"
 
+#include "model_tree.h"
+#include "range_slider.h"
+
 #include "../com/support.h"
 #include "../dialogs/color_dialog.h"
 
+#include <src/color/color.h>
+#include <src/com/error.h>
+#include <src/model/volume_object.h>
+#include <src/storage/types.h>
+
+#include <algorithm>
+#include <cmath>
 #include <iomanip>
+#include <ios>
+#include <memory>
+#include <optional>
 #include <sstream>
+#include <thread>
+#include <variant>
 
 namespace ns::gui::main_window
 {
