@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/settings/name.h>
 
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <exception>

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "samples/daylight_samples.h"
 
 #include <src/com/error.h>
+#include <src/numerical/vector.h>
 
 #include <vector>
 

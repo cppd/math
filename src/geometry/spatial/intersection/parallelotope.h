@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
-#include <src/test/test.h>
 
 #include <vector>
 

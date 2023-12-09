@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <optional>
+#include <string>
 
 namespace ns::geometry::spatial
 {
