@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fftw.h"
 
+#include "dft.h"
+
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -26,9 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 
 #include <algorithm>
+#include <complex>
 #include <fftw3.h>
+#include <memory>
 #include <mutex>
-#include <type_traits>
+#include <vector>
 
 namespace ns::dft
 {
