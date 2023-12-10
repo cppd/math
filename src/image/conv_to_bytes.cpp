@@ -21,7 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <span>
+#include <vector>
 
 namespace ns::image::conv
 {

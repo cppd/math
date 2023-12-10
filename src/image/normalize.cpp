@@ -17,14 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "normalize.h"
 
+#include "format.h"
 #include "max.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <array>
+#include <cstddef>
 #include <cstring>
 #include <optional>
 #include <span>
+#include <vector>
 
 namespace ns::image
 {

@@ -17,9 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "flip.h"
 
+#include "image.h"
+
 #include <src/com/error.h>
 #include <src/settings/instantiation.h>
 
+#include <cstddef>
 #include <cstring>
 #include <vector>
 

@@ -22,9 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/interpolation.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <span>
 
 namespace ns::image
 {

@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_save.h"
 
 #include "conversion.h"
+#include "format.h"
+#include "image.h"
 
 #include <src/com/error.h>
 #include <src/com/file/path.h>
@@ -26,9 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QImage>
 #include <QImageWriter>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <set>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::image
 {

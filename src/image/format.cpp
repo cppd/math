@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <string>
+
 namespace ns::image
 {
 [[noreturn]] void unknown_color_format_error(const ColorFormat format)

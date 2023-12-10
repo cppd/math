@@ -17,12 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "max.h"
 
+#include "format.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
+#include <span>
 
 namespace ns::image
 {

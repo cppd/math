@@ -17,10 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "grayscale.h"
 
+#include "format.h"
+#include "image.h"
+
 #include <src/color/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <span>
+#include <vector>
 
 namespace ns::image
 {

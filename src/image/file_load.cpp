@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file_load.h"
 
-#include "conversion.h"
+#include "format.h"
+#include "image.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
@@ -25,10 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <QImage>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
+#include <span>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace ns::image
 {

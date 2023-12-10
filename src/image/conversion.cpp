@@ -19,12 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conv_from_bytes.h"
 #include "conv_to_bytes.h"
+#include "format.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <span>
+#include <vector>
 
 namespace ns::image
 {

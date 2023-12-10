@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
+#include <cstddef>
+
 namespace ns::image
 {
 template <std::size_t N>

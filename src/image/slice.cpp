@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "slice.h"
 
+#include "format.h"
+#include "image.h"
+
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -24,7 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstring>
+#include <vector>
 
 namespace ns::image
 {

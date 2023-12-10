@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
+#include <array>
+#include <cstddef>
+
 namespace ns::image
 {
 struct Slice final

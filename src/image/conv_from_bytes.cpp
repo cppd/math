@@ -20,7 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/conversion.h>
 #include <src/com/error.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <span>
+#include <vector>
 
 namespace ns::image::conv
 {
