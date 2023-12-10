@@ -16,13 +16,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../cholesky.h"
+#include "../matrix.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <utility>
 
 namespace ns::numerical

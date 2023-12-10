@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../determinant.h"
 #include "../gauss.h"
+#include "../vector.h"
 
 #include <src/com/arrays.h>
 #include <src/com/chrono.h>
@@ -27,7 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
+#include <array>
+#include <cstddef>
 #include <random>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace ns::numerical
 {

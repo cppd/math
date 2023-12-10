@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/set_mpz.h>
 
+#include <cstddef>
 #include <gmp.h>
 #include <gmpxx.h>
+#include <type_traits>
 
 namespace ns::numerical
 {

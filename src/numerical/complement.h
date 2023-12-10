@@ -34,6 +34,8 @@ Wiley, 2014.
 
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <gmp.h>
 #include <gmpxx.h>
 #include <vector>
 

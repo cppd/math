@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../covariance.h"
+#include "../matrix.h"
+#include "../vector.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

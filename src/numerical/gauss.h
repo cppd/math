@@ -36,7 +36,7 @@ Replace Ax = b by LUx = b -> Ly = b, where Ux = y
 #include <src/com/type/concept.h>
 
 #include <array>
-#include <cmath>
+#include <cstddef>
 
 namespace ns::numerical
 {

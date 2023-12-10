@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix_object.h" // IWYU pragma: export
+#include "vector.h"
 
+#include <array>
+#include <cstddef>
 #include <string>
 #include <type_traits>
 #include <utility>

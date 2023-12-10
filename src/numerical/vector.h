@@ -20,11 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vector_object.h" // IWYU pragma: export
 
 #include <src/com/interpolation.h>
-#include <src/com/type/limit.h>
 
 #include <algorithm>
 #include <array>
-#include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace ns

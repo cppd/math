@@ -29,8 +29,8 @@ McGraw-Hill Education, 2015.
 
 #include <src/com/print.h>
 
-#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <exception>
 #include <string>
 

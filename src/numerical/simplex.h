@@ -35,8 +35,12 @@ The MIT Press, 2009.
 #include <src/com/type/limit.h>
 
 #include <array>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
 #include <optional>
 #include <sstream>
+#include <string_view>
 
 namespace ns::numerical
 {

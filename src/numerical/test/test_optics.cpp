@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../optics.h"
+#include "../vector.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
@@ -29,7 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
+#include <cstddef>
+#include <optional>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace ns::numerical

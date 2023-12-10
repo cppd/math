@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../identity.h"
 
+#include <cstddef>
+
 namespace ns::numerical
 {
 template <std::size_t N, typename T>

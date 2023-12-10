@@ -29,6 +29,7 @@ The OpenGL® Shading Language.
 
 #include <src/com/exponent.h>
 
+#include <cstddef>
 #include <optional>
 
 namespace ns::numerical

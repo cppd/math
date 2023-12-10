@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../complement.h"
+#include "../vector.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
@@ -25,10 +26,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name_ext.h>
+#include <src/progress/progress.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
+#include <array>
+#include <cstddef>
+#include <gmp.h>
+#include <gmpxx.h>
 #include <random>
+#include <string>
+#include <vector>
 
 namespace ns::numerical
 {

@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector.h"
 
+#include <cstddef>
+#include <string>
+
 namespace ns
 {
 template <typename T>

@@ -36,6 +36,7 @@ Springer-Verlag London, 2012.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 
+#include <cstddef>
 #include <vector>
 
 namespace ns::numerical

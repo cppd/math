@@ -32,6 +32,8 @@ Cambridge University Press, 2013.
 
 #include <src/com/type/limit.h>
 
+#include <array>
+#include <cstddef>
 #include <exception>
 
 namespace ns::numerical

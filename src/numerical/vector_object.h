@@ -33,9 +33,14 @@ Norms
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <functional>
+#include <limits>
 #include <sstream>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 
 namespace ns
 {

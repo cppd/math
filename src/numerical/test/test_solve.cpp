@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../identity.h"
 #include "../matrix.h"
 #include "../solve.h"
+#include "../vector.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
@@ -28,7 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
+#include <array>
+#include <cstddef>
 #include <random>
+#include <type_traits>
+#include <vector>
 
 namespace ns::numerical
 {

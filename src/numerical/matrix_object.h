@@ -26,7 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <initializer_list>
+#include <type_traits>
+#include <utility>
 
 namespace ns
 {

@@ -34,6 +34,7 @@ Cramer’s Rule
 #include <src/com/type/concept.h>
 
 #include <array>
+#include <cstddef>
 
 namespace ns::numerical
 {
