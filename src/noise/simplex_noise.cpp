@@ -22,9 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/sort.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
 #include <bit>
+#include <cstddef>
 
 namespace ns::noise
 {

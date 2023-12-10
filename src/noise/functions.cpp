@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "noise.h"
 
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
 
 namespace ns::noise
 {

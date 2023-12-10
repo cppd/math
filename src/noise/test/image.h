@@ -24,14 +24,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/image/file_save.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/numerical/vector.h>
 #include <src/settings/directory.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <numeric>
 #include <random>
+#include <span>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace ns::noise::test

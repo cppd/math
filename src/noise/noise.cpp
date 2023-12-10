@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "tables.h"
 
 #include <src/com/interpolation_smooth.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
 #include <array>
 #include <bit>
 #include <cmath>
-#include <vector>
+#include <cstddef>
 
 namespace ns::noise
 {
