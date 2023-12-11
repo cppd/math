@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
+#include <array>
+#include <cstddef>
 #include <random>
 
 namespace ns::shading::testing

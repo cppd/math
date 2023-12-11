@@ -31,6 +31,8 @@ CRC Press, 2018.
 
 #include <src/geometry/shapes/sphere_integral.h>
 
+#include <cstddef>
+
 namespace ns::shading::ggx
 {
 namespace multiple_bounce_implementation

@@ -18,20 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "f1_albedo.h"
 
 #include "../../compute/brdf.h"
+#include "../../objects.h"
 #include "../brdf.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/interpolation.h>
+#include <src/numerical/vector.h>
 #include <src/settings/dimensions.h>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <iomanip>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace ns::shading::ggx::table
 {

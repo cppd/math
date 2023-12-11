@@ -47,7 +47,10 @@ CRC Press, 2018.
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_uniform.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <tuple>
 
 namespace ns::shading::ggx
 {

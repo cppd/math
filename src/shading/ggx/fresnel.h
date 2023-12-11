@@ -30,6 +30,8 @@ CRC Press, 2018.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 
+#include <cstddef>
+
 namespace ns::shading::ggx
 {
 // (9.16)

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <string>
+
 namespace ns::shading::testing
 {
 template <typename Color>

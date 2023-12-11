@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 
+#include <cstddef>
+
 namespace ns::shading::ggx
 {
 namespace

@@ -42,6 +42,8 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_cosine.h>
 
+#include <cstddef>
+
 namespace ns::shading::lambertian
 {
 namespace implementation

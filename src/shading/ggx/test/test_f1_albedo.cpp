@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
+#include <cstddef>
+#include <utility>
+
 namespace ns::shading::ggx
 {
 namespace

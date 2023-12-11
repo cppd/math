@@ -18,9 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "f1_albedo.h"
 
 #include <src/numerical/interpolation.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <cstddef>
+#include <span>
+#include <tuple>
 
 namespace ns::shading::ggx
 {
