@@ -17,12 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress.h"
 
+#include "progress_interfaces.h"
+
 #include <src/com/exception.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 
 namespace ns::progress
 {

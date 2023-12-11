@@ -17,11 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress_list.h"
 
+#include "progress_interfaces.h"
+
 #include <src/com/error.h>
 #include <src/com/exception.h>
 
+#include <list>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 namespace ns::progress
 {
