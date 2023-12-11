@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_utility/bounding_box.h"
-#include "mesh_utility/create_facets.h"
-#include "mesh_utility/create_lines.h"
-#include "mesh_utility/create_points.h"
-#include "mesh_utility/file.h"
-#include "mesh_utility/file_info.h"
-#include "mesh_utility/matrix.h"
-#include "mesh_utility/normals.h"
-#include "mesh_utility/optimize.h"
-#include "mesh_utility/position.h"
-#include "mesh_utility/sort.h"
-#include "mesh_utility/unique.h"
-#include "mesh_utility/vertices.h"
+#include "mesh_utility/bounding_box.h" // IWYU pragma: export
+#include "mesh_utility/create_facets.h" // IWYU pragma: export
+#include "mesh_utility/create_lines.h" // IWYU pragma: export
+#include "mesh_utility/create_points.h" // IWYU pragma: export
+#include "mesh_utility/file.h" // IWYU pragma: export
+#include "mesh_utility/file_info.h" // IWYU pragma: export
+#include "mesh_utility/matrix.h" // IWYU pragma: export
+#include "mesh_utility/normals.h" // IWYU pragma: export
+#include "mesh_utility/optimize.h" // IWYU pragma: export
+#include "mesh_utility/position.h" // IWYU pragma: export
+#include "mesh_utility/sort.h" // IWYU pragma: export
+#include "mesh_utility/unique.h" // IWYU pragma: export
+#include "mesh_utility/vertices.h" // IWYU pragma: export
