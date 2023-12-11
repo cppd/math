@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dimensions.h"
 
+#include <cstddef>
 #include <tuple>
+#include <utility>
 
 namespace ns::settings
 {
