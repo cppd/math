@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
+#include <cstddef>
+
 namespace ns::process
 {
 inline constexpr double SCENE_SIZE = 2;

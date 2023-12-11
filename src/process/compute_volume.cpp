@@ -22,8 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/slice.h>
+#include <src/model/volume.h>
+#include <src/model/volume_object.h>
 #include <src/model/volume_utility.h>
+#include <src/progress/progress_list.h>
 #include <src/settings/instantiation.h>
+
+#include <array>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace ns::process
 {

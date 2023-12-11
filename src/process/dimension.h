@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/settings/dimensions.h>
 
+#include <cstddef>
 #include <optional>
+#include <type_traits>
+#include <utility>
 
 namespace ns::process
 {

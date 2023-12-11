@@ -24,6 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/gui/dialogs/bound_cocone.h>
 #include <src/gui/dialogs/image_slice.h>
+#include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
+#include <src/progress/progress_list.h>
+#include <src/storage/types.h>
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <variant>
+#include <vector>
 
 namespace ns::process
 {

@@ -19,22 +19,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dimension.h"
 
-#include <src/color/illuminants.h>
+#include <src/color/color.h>
 #include <src/com/arrays.h>
 #include <src/com/enum.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
-#include <src/com/log.h>
+#include <src/com/message.h>
+#include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/com/type/name.h>
+#include <src/gui/dialogs/painter_parameters.h>
 #include <src/gui/dialogs/painter_parameters_3d.h>
 #include <src/gui/dialogs/painter_parameters_nd.h>
 #include <src/gui/painter_window/painter_window.h>
+#include <src/model/mesh_object.h>
+#include <src/numerical/vector.h>
+#include <src/painter/objects.h>
+#include <src/painter/painter.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/simple.h>
+#include <src/painter/scenes/storage.h>
 #include <src/painter/shapes/mesh.h>
+#include <src/progress/progress.h>
+#include <src/progress/progress_list.h>
+#include <src/storage/types.h>
+#include <src/view/event.h>
 
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <set>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace ns::process
 {

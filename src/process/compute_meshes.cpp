@@ -18,20 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute_meshes.h"
 
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/geometry/reconstruction/cocone.h>
+#include <src/model/mesh.h>
 #include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/model/object_id.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/progress/progress_list.h>
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 

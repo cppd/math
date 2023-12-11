@@ -26,13 +26,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/view_image.h>
 #include <src/image/depth.h>
 #include <src/image/file_save.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/image/max.h>
 #include <src/image/normalize.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/progress/progress_list.h>
+#include <src/storage/types.h>
 
+#include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <ctime>
+#include <filesystem>
+#include <functional>
 #include <iomanip>
+#include <memory>
+#include <optional>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace ns::process
 {

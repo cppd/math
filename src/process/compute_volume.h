@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 #include <src/progress/progress_list.h>
 
+#include <cstddef>
 #include <optional>
 #include <vector>
 

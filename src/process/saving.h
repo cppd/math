@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/image/image.h>
 #include <src/progress/progress_list.h>
-#include <src/storage/storage.h>
+#include <src/storage/types.h>
 
 #include <chrono>
 #include <functional>

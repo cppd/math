@@ -21,7 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/gui/dialogs/test_selection.h>
+#include <src/progress/progress_list.h>
 #include <src/test/test.h>
+
+#include <functional>
+#include <optional>
 
 namespace ns::process
 {

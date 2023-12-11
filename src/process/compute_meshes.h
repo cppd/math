@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_object.h>
 #include <src/progress/progress_list.h>
 
+#include <cstddef>
+
 namespace ns::process
 {
 template <std::size_t N>
