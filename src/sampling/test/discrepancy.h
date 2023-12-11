@@ -26,12 +26,14 @@ Elsevier, 2017.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/vector.h>
 
+#include <array>
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <vector>
 
 namespace ns::sampling::test

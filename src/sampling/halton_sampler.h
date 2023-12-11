@@ -29,6 +29,7 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <utility>
 
 namespace ns::sampling

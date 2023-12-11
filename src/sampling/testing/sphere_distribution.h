@@ -29,13 +29,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_simplex.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>
+#include <cstddef>
 #include <future>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 namespace ns::sampling::testing

@@ -23,9 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/test/test.h>
 
 #include <cmath>
+#include <cstddef>
 #include <sstream>
 
 namespace ns::sampling::test

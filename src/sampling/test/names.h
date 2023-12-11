@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
+#include <cstddef>
 #include <string_view>
 
 namespace ns::sampling::test

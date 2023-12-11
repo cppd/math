@@ -32,8 +32,11 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <vector>
 
 namespace ns::sampling

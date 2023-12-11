@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "sphere_bucket.h"
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 
+#include <cmath>
+#include <cstddef>
 #include <sstream>
-#include <vector>
+#include <tuple>
 
 namespace ns::sampling::testing
 {

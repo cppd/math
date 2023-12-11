@@ -36,13 +36,14 @@ E. Other continuous distributions
 
 #pragma once
 
-#include <src/com/constant.h>
 #include <src/com/exponent.h>
 #include <src/geometry/shapes/ball_volume.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <random>
 #include <utility>
 

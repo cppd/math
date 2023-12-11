@@ -30,7 +30,9 @@ Elsevier, 2017.
 #include <src/com/shuffle.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <vector>
 
 namespace ns::sampling

@@ -26,12 +26,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/numerical/vector.h>
 #include <src/settings/directory.h>
 #include <src/test/test.h>
 
 #include <cctype>
+#include <cstddef>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::sampling::test
 {

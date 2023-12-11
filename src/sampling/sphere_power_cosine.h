@@ -27,8 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <random>
+#include <type_traits>
 #include <unordered_map>
 
 namespace ns::sampling

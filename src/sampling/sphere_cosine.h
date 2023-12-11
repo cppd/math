@@ -32,7 +32,9 @@ Elsevier, 2017.
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 
 namespace ns::sampling
 {

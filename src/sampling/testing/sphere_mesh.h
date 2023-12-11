@@ -20,12 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
+#include <src/geometry/accelerators/bvh_object.h>
 #include <src/geometry/shapes/sphere_create.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/geometry/spatial/ray_intersection.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <array>
+#include <cstddef>
+#include <optional>
+#include <tuple>
 #include <vector>
 
 namespace ns::sampling::testing

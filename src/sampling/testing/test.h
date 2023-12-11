@@ -29,11 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/com/thread.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <cmath>
+#include <cstddef>
 #include <future>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace ns::sampling::testing
