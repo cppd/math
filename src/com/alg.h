@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type/limit.h"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace ns
 {

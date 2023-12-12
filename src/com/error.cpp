@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log/write.h"
 
 #include <string>
+#include <utility>
 
 namespace ns
 {
