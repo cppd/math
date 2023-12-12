@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <type_traits>
 #include <vector>

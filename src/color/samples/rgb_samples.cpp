@@ -35,6 +35,7 @@ Elsevier, 2017.
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <type_traits>
 #include <vector>
 

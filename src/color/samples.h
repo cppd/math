@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <sstream>
 #include <string>
 #include <string_view>
