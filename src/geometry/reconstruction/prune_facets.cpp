@@ -34,6 +34,7 @@ Cambridge University Press, 2007.
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <cstddef>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>

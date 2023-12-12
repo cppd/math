@@ -45,7 +45,9 @@ Cambridge University Press, 2007.
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace ns::geometry::reconstruction

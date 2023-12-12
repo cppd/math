@@ -35,6 +35,7 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <span>

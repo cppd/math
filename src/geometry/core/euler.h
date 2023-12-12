@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/sort.h>
 
 #include <array>
+#include <cstddef>
 #include <unordered_set>
 #include <utility>
 #include <vector>

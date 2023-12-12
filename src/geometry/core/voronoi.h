@@ -47,6 +47,7 @@ x ⋅ (2 * (v(n) - v(0))) = v(n) ⋅ v(n) - v(0) ⋅ v(0)
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::core

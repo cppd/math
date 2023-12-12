@@ -35,6 +35,7 @@ Cambridge University Press, 2007.
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <optional>
 #include <vector>
 

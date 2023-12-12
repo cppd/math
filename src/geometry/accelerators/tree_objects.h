@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/reference.h>
 
+#include <cstddef>
 #include <type_traits>
 #include <vector>
 

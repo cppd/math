@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::core

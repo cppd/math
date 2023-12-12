@@ -34,6 +34,7 @@ Cambridge University Press, 2003.
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <optional>
 
 namespace ns::geometry::spatial

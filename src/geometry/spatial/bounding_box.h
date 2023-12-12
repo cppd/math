@@ -31,6 +31,7 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>

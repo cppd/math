@@ -35,6 +35,7 @@ Cambridge University Press, 2007.
 #include <src/settings/instantiation.h>
 
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::reconstruction

@@ -40,6 +40,7 @@ Kruskal’s algorithm
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::graph

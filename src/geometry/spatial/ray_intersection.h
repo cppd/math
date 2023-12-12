@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/reference.h>
 #include <src/numerical/ray.h>
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 

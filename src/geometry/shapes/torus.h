@@ -29,6 +29,8 @@ CRC Press, 2015.
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
+#include <cstddef>
+
 namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, typename RandomEngine>

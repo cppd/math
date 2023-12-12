@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <memory>
 #include <random>
 #include <string>

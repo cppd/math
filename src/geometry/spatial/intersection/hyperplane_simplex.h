@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::spatial::intersection::hyperplane_simplex

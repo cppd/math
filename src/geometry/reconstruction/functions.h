@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <cstddef>
 #include <optional>
 
 namespace ns::geometry::reconstruction

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/ray.h>
 
+#include <cstddef>
 #include <vector>
 
 namespace ns::geometry::spatial
