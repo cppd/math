@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../filters/measurement.h"
 
+#include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ns::filter::test

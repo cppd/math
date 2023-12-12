@@ -34,6 +34,7 @@ Kalman and Bayesian Filters in Python.
 #include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <tuple>
 #include <type_traits>

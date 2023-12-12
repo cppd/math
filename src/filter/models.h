@@ -36,6 +36,7 @@ Kalman and Bayesian Filters in Python.
 
 #include <src/numerical/matrix.h>
 
+#include <cstddef>
 #include <type_traits>
 
 namespace ns::filter

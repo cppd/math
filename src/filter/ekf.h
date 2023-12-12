@@ -52,6 +52,7 @@ Sequential filters
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
 #include <optional>
 #include <string>
 

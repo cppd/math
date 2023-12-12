@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
+
 namespace ns::filter::filters
 {
 template <std::size_t N, typename T>

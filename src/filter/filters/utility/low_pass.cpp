@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../settings/instantiation.h"
 
 #include <array>
+#include <cstddef>
 #include <optional>
 
 namespace ns::filter::filters::utility

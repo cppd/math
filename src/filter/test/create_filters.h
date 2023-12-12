@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../filters/estimation/position_variance.h"
 #include "../filters/filter.h"
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 

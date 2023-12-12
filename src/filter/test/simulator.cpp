@@ -31,10 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
+#include <cstddef>
 #include <random>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ns::filter::test

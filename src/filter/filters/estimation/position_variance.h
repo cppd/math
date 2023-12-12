@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>

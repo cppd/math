@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>

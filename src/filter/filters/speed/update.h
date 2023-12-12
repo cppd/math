@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../measurement.h"
 
+#include <cstddef>
 #include <optional>
 
 namespace ns::filter::filters::speed
