@@ -29,8 +29,10 @@ Key-indexed counting
 #include "../mesh.h"
 
 #include <src/com/alg.h>
+#include <src/com/error.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 namespace ns::model::mesh

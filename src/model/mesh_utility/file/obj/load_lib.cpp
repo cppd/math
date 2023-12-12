@@ -20,17 +20,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "data_read.h"
 #include "name.h"
 
+#include "../../../mesh.h"
 #include "../data_read.h"
 #include "../lines.h"
 
+#include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/file/read.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 #include <src/image/file_load.h>
 #include <src/image/flip.h>
+#include <src/image/image.h>
 #include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <exception>
+#include <filesystem>
+#include <map>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::model::mesh::file::obj
 {

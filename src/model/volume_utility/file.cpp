@@ -25,15 +25,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 #include <src/image/file_load.h>
 #include <src/image/file_save.h>
 #include <src/image/flip.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <filesystem>
+#include <iomanip>
+#include <span>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace ns::model::volume

@@ -19,13 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position.h"
 
+#include "../mesh.h"
+
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
+#include <cstddef>
+#include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::model::mesh
 {

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 namespace ns::model::mesh::file::obj

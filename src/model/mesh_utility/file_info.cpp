@@ -23,6 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/print.h>
 
+#include <cstddef>
+#include <filesystem>
+#include <set>
+#include <string>
+#include <string_view>
+#include <vector>
+
 namespace ns::model::mesh
 {
 int file_dimension(const std::filesystem::path& file_name)

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
+
 namespace ns::model::mesh
 {
 template <std::size_t N>

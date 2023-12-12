@@ -20,8 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 #include <src/numerical/matrix.h>
 
-#include <array>
-#include <vector>
+#include <cstddef>
 
 namespace ns::model::volume
 {

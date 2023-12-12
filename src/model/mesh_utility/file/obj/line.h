@@ -24,12 +24,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../../mesh.h"
 
 #include <src/com/error.h>
+#include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
+#include <filesystem>
 #include <map>
 #include <optional>
+#include <set>
+#include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace ns::model::mesh::file::obj
 {

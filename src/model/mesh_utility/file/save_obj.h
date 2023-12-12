@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../mesh.h"
 
+#include <cstddef>
 #include <filesystem>
 #include <string_view>
 

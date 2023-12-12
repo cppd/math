@@ -26,11 +26,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file/save_obj.h"
 #include "file/save_stl.h"
 
+#include "../mesh.h"
+
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <filesystem>
+#include <memory>
+#include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace ns::model::mesh
 {

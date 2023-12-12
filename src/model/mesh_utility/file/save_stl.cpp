@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stl/swap.h"
 
+#include "../../mesh.h"
 #include "../bounding_box.h"
 #include "../file_info.h"
 #include "../unique.h"
@@ -26,15 +27,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/chrono.h>
 #include <src/com/container.h>
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/complement.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <ios>
+#include <optional>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::model::mesh::file
 {

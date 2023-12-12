@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 
+#include <array>
+#include <cstddef>
+
 namespace ns::model::volume
 {
 template <std::size_t N>

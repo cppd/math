@@ -17,20 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
+#include "../../mesh.h"
 #include "../bounding_box.h"
 #include "../file_info.h"
 #include "../unique.h"
 #include "../vertices.h"
 
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/string/str.h>
 #include <src/com/type/limit.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
+#include <cstddef>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <ios>
+#include <optional>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace ns::model::mesh::file
 {

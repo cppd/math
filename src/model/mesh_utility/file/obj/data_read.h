@@ -22,11 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/string/ascii.h>
-#include <src/numerical/vector.h>
 
 #include <array>
 #include <filesystem>
 #include <set>
+#include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ns::model::mesh::file::obj

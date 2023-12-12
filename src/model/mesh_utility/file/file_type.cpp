@@ -20,13 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
-#include <src/com/string/ascii.h>
 
-#include <algorithm>
 #include <charconv>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <tuple>
 
 // 3 dimension: obj, obj3, stl, stl3, txt, txt3.
 // 4 and more dimensions: objN, stlN, txt, txtN.

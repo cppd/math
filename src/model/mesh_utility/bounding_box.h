@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../mesh.h"
 
 #include <src/com/error.h>
+#include <src/com/type/limit.h>
+#include <src/numerical/vector.h>
 
 #include <cmath>
+#include <cstddef>
 #include <optional>
 #include <vector>
 
