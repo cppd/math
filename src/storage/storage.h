@@ -21,13 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/model/mesh_object.h>
+#include <src/model/object_id.h>
 #include <src/model/volume_object.h>
 
+#include <cstddef>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <variant>
+#include <vector>
 
 namespace ns::storage
 {

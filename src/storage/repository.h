@@ -21,8 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "repository/volumes.h"
 
 #include <src/com/sequence.h>
+#include <src/model/mesh.h>
+#include <src/model/volume.h>
 #include <src/settings/dimensions.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <tuple>

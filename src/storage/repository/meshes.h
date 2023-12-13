@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/model/mesh.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>

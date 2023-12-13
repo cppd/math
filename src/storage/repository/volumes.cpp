@@ -20,14 +20,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/image/format.h>
+#include <src/model/volume.h>
 #include <src/model/volume_utility.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace ns::storage
 {

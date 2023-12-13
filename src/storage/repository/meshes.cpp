@@ -17,22 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "meshes.h"
 
-#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
 #include <src/geometry/shapes/mobius_strip.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/torus.h>
+#include <src/model/mesh.h>
 #include <src/model/mesh_utility.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
+#include <cstddef>
+#include <cstdlib>
 #include <functional>
 #include <map>
+#include <memory>
+#include <string>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace ns::storage
 {
