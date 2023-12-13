@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/painter/painter.h>
 #include <src/settings/name.h>
 
@@ -37,9 +38,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace ns::gui::painter_window

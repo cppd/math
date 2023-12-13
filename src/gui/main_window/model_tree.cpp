@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 #include <src/storage/types.h>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>

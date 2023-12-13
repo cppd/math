@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/name.h>
 
 #include <QMessageBox>
-#include <string>
 
 namespace ns::gui::dialog
 {
