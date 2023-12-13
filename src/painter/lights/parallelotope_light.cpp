@@ -20,14 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/geometry/shapes/parallelotope_volume.h>
 #include <src/geometry/shapes/sphere_integral.h>
+#include <src/geometry/spatial/hyperplane_parallelotope.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_cosine.h>
 #include <src/settings/instantiation.h>
 
-#include <algorithm>
+#include <cstddef>
+#include <optional>
+#include <type_traits>
 
 namespace ns::painter::lights
 {

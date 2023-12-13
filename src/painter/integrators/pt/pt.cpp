@@ -32,10 +32,14 @@ Elsevier, 2017.
 #include "../com/visibility.h"
 
 #include <src/color/color.h>
-#include <src/com/error.h>
+#include <src/com/random/pcg.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <cstddef>
 #include <optional>
+#include <random>
 
 namespace ns::painter::integrators::pt
 {

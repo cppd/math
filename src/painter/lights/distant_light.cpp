@@ -21,10 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/random/pcg.h>
 #include <src/geometry/shapes/ball_volume.h>
 #include <src/numerical/complement.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <optional>
 
 namespace ns::painter::lights
 {

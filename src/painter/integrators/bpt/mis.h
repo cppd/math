@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex/vertex.h"
 
+#include <cstddef>
 #include <vector>
 
 namespace ns::painter::integrators::bpt

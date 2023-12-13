@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "light.h"
 #include "surface.h"
 
+#include <cstddef>
 #include <variant>
 
 namespace ns::painter::integrators::bpt::vertex

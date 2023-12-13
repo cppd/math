@@ -23,8 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <mutex>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace ns::painter::painting

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/pdf.h>
 
 #include <cmath>
+#include <cstddef>
 
 namespace ns::painter::integrators::bpt::vertex
 {

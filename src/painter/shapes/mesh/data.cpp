@@ -23,12 +23,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <optional>
+#include <vector>
 
 namespace ns::painter::shapes::mesh
 {

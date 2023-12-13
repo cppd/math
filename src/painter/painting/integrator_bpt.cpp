@@ -22,9 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../integrators/bpt/bpt.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/memory_arena.h>
 #include <src/com/random/pcg.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
+
+#include <array>
+#include <atomic>
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace ns::painter::painting
 {

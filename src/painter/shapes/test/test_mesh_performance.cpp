@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "spherical_mesh.h"
 
+#include <src/color/color.h>
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/log.h>
@@ -28,8 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
+
+#include <cmath>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::painter::shapes::test
 {

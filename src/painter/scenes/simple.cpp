@@ -26,10 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <vector>
 
 namespace ns::painter::scenes
 {

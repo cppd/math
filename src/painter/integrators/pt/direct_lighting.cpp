@@ -42,8 +42,14 @@ Elsevier, 2017.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/random/pcg.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/mis.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <optional>
 
 namespace ns::painter::integrators::pt
 {

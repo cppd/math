@@ -19,8 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/merge.h"
 
+#include "../background.h"
+
 #include <src/color/color.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <optional>
+#include <tuple>
+#include <type_traits>
 
 namespace ns::painter::pixels::samples
 {

@@ -22,10 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/mesh.h"
 
 #include <src/color/color.h>
+#include <src/color/rgb8.h>
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/com/thread.h>
@@ -33,12 +36,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/painter_window/painter_window.h>
 #include <src/image/conversion.h>
 #include <src/image/flip.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
+#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/directory.h>
 
+#include <array>
+#include <atomic>
+#include <cmath>
+#include <cstddef>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <random>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace ns::painter
 {

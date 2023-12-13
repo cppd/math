@@ -29,8 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/settings/instantiation.h>
 
-#include <array>
+#include <atomic>
 #include <barrier>
+#include <cstddef>
+#include <exception>
+#include <optional>
+#include <string>
+#include <thread>
 #include <vector>
 
 namespace ns::painter::painting

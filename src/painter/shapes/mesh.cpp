@@ -28,13 +28,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/memory_arena.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/geometry/accelerators/bvh.h>
+#include <src/geometry/accelerators/bvh_object.h>
 #include <src/geometry/spatial/bounding_box.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/ray_intersection.h>
+#include <src/geometry/spatial/shape_overlap.h>
+#include <src/model/mesh_object.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 #include <src/shading/ggx/brdf.h>
 #include <src/shading/ggx/metalness.h>
+#include <src/shading/objects.h>
+
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace ns::painter::shapes
 {

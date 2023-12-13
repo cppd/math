@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
 #include <cmath>
+#include <cstddef>
 #include <memory>
 #include <random>
-#include <unordered_map>
 #include <vector>
 
 namespace ns::painter::integrators::bpt

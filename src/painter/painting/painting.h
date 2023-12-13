@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../painter.h"
 
 #include <atomic>
+#include <cstddef>
 #include <optional>
 
 namespace ns::painter::painting

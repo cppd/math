@@ -25,7 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../painter.h"
 #include "../pixels/pixels.h"
 
+#include <src/com/random/pcg.h>
+#include <src/numerical/vector.h>
+
 #include <atomic>
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace ns::painter::painting
 {

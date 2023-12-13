@@ -27,9 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/spinlock.h>
 #include <src/image/image.h>
+#include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace ns::painter::pixels

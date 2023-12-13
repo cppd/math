@@ -22,7 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lights/infinite_area_light.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace ns::painter::scenes
 {

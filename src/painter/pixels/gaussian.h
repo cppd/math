@@ -30,6 +30,8 @@ Elsevier, 2017.
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <cstddef>
+#include <type_traits>
 
 namespace ns::painter::pixels
 {

@@ -19,6 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
+#include <src/com/random/pcg.h>
+#include <src/numerical/vector.h>
+
+#include <array>
+#include <cstddef>
 #include <optional>
 #include <type_traits>
 

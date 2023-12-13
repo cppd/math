@@ -22,8 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "texture.h"
 
 #include <src/model/mesh_object.h>
+#include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
+#include <optional>
 #include <vector>
 
 namespace ns::painter::shapes::mesh

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "background.h"
 #include "color.h"
 
+#include <cstddef>
 #include <optional>
 #include <vector>
 

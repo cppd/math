@@ -19,9 +19,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/memory_arena.h>
+#include <src/com/random/pcg.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/geometry/spatial/parallelotope.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/shape_overlap.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 #include <src/shading/ggx/brdf.h>
 #include <src/shading/ggx/metalness.h>
+#include <src/shading/objects.h>
+
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <type_traits>
 
 namespace ns::painter::shapes
 {

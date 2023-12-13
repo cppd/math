@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <type_traits>
+#include <vector>
 
 namespace ns::painter::scenes
 {

@@ -22,7 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
+
+#include <array>
+#include <cstddef>
+#include <cstring>
+#include <mutex>
+#include <optional>
+#include <type_traits>
+#include <vector>
 
 namespace ns::painter::pixels
 {

@@ -22,12 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/shapes/simplex_volume.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <random>
+#include <vector>
 
 namespace ns::painter::shapes::test
 {

@@ -19,8 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/geometry/spatial/hyperplane.h>
 #include <src/geometry/spatial/point_offset.h>
+#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/transform.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace ns::painter::shapes::mesh
 {

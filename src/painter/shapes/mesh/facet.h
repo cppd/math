@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace ns::painter::shapes::mesh

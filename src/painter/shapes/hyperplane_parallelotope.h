@@ -19,8 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/hyperplane_parallelotope.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/shape_overlap.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/shading/objects.h>
+
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <type_traits>
 
 namespace ns::painter::shapes
 {

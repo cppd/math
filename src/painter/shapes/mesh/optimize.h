@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/model/mesh.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
 #include <optional>
 
 namespace ns::painter::shapes::mesh

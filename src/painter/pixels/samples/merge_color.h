@@ -22,7 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../background.h"
 
+#include <cstddef>
 #include <optional>
+#include <tuple>
 
 namespace ns::painter::pixels::samples
 {

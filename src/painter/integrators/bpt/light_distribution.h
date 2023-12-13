@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../objects.h"
 
+#include <src/com/error.h>
+
+#include <cstddef>
 #include <memory>
 #include <random>
 #include <unordered_map>

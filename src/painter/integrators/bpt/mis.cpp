@@ -33,6 +33,7 @@ Elsevier, 2017.
 #include <src/com/variant.h>
 #include <src/settings/instantiation.h>
 
+#include <cstddef>
 #include <vector>
 
 namespace ns::painter::integrators::bpt

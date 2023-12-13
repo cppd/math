@@ -20,8 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include <src/image/image.h>
+#include <src/numerical/vector.h>
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <optional>

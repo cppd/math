@@ -21,16 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
-#include <src/com/merge.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/spatial/clip_plane.h>
 #include <src/geometry/spatial/convex_polytope.h>
 #include <src/geometry/spatial/point_offset.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
+#include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <tuple>
+#include <vector>
 
 namespace ns::painter::scenes
 {

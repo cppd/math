@@ -25,8 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/random/pcg.h>
 #include <src/com/variant.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
+
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace ns::painter::integrators::bpt
 {

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
 #include <variant>
 
 namespace ns::painter::integrators::bpt
