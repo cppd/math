@@ -21,9 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exception.h>
 #include <src/com/random/pcg.h>
 #include <src/com/variant.h>
+#include <src/progress/progress.h>
+#include <src/progress/progress_interfaces.h>
 
 #include <algorithm>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ns::test
 {

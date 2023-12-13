@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/progress/progress.h>
+#include <src/progress/progress_interfaces.h>
 
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <variant>
 #include <vector>
