@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gui/application.h"
 
 #include <atomic>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <string>
 
 namespace
 {
