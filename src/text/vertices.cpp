@@ -17,9 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertices.h"
 
+#include "glyphs.h"
+#include "text_data.h"
 #include "unicode.h"
 
 #include <src/com/error.h>
+
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace ns::text
 {

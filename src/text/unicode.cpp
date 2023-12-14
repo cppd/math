@@ -19,9 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <iomanip>
+#include <ios>
 #include <sstream>
+#include <string>
 
 // UTF-8
 // U+0000  .. U+007F    0xxxxxxx

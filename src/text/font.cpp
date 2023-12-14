@@ -23,13 +23,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/image/file_save.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/settings/directory.h>
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <ft2build.h>
+#include <memory>
+#include <optional>
+#include <span>
 #include <sstream>
+#include <string>
 #include <thread>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include FT_FREETYPE_H
 

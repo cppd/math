@@ -18,18 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "glyphs.h"
 
 #include "code_points.h"
+#include "font.h"
 
 #include <src/com/alg.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
-#include <src/com/file/path.h>
-#include <src/image/file_save.h>
-#include <src/settings/directory.h>
+#include <src/image/format.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <optional>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ns::text
