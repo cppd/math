@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "object_handles.h"
+#include "object_handles.h" // IWYU pragma: export
 
 #include <src/com/error.h>
 

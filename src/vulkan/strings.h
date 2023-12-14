@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "strings/api_version.h"
-#include "strings/color_space.h"
-#include "strings/flags.h"
-#include "strings/format.h"
-#include "strings/image_layout.h"
-#include "strings/image_type.h"
-#include "strings/physical_device_type.h"
-#include "strings/point_clipping_behavior.h"
-#include "strings/present_mode.h"
-#include "strings/primitive_topology.h"
-#include "strings/result.h"
-#include "strings/shader_float_controls_independence.h"
-#include "strings/strings.h"
+#include "strings/api_version.h" // IWYU pragma: export
+#include "strings/color_space.h" // IWYU pragma: export
+#include "strings/flags.h" // IWYU pragma: export
+#include "strings/format.h" // IWYU pragma: export
+#include "strings/image_layout.h" // IWYU pragma: export
+#include "strings/image_type.h" // IWYU pragma: export
+#include "strings/physical_device_type.h" // IWYU pragma: export
+#include "strings/point_clipping_behavior.h" // IWYU pragma: export
+#include "strings/present_mode.h" // IWYU pragma: export
+#include "strings/primitive_topology.h" // IWYU pragma: export
+#include "strings/result.h" // IWYU pragma: export
+#include "strings/shader_float_controls_independence.h" // IWYU pragma: export
+#include "strings/strings.h" // IWYU pragma: export
