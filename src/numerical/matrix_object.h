@@ -259,9 +259,4 @@ public:
                 return true;
         }
 };
-
-using Matrix3d = Matrix<3, 3, double>;
-using Matrix3f = Matrix<3, 3, float>;
-using Matrix4d = Matrix<4, 4, double>;
-using Matrix4f = Matrix<4, 4, float>;
 }
