@@ -24,7 +24,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
+#include <type_traits>
 #include <vector>
+
+namespace std
+{
+template <size_t N, typename T>
+struct hash<::ns::Vector<N, T>> final
+{
+        size_t operator()(const ::ns::Vector<N, T>& v) const
+        {
+                return v.hash();
+        }
+};
+
+template <size_t N, typename T>
+struct tuple_size<::ns::Vector<N, T>> final : integral_constant<size_t, N>
+{
+};
+}
 
 namespace ns
 {
@@ -248,4 +267,14 @@ template <typename T>
         res[2] = v0[0] * v1[1] - v0[1] * v1[0];
         return res;
 }
+
+using Vector2d = Vector<2, double>;
+using Vector3d = Vector<3, double>;
+using Vector4d = Vector<4, double>;
+using Vector2f = Vector<2, float>;
+using Vector3f = Vector<3, float>;
+using Vector4f = Vector<4, float>;
+using Vector2i = Vector<2, int>;
+using Vector3i = Vector<3, int>;
+using Vector4i = Vector<4, int>;
 }
