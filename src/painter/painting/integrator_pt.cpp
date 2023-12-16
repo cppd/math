@@ -17,11 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "integrator_pt.h"
 
+#include "statistics.h"
 #include "thread_notifier.h"
 
 #include "../integrators/pt/pt.h"
+#include "../objects.h"
+#include "../painter.h"
+#include "../pixels/pixels.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/memory_arena.h>
 #include <src/com/random/pcg.h>

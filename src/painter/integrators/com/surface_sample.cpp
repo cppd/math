@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "surface_sample.h"
 
-#include <src/color/color.h>
+#include "normals.h"
+
+#include "../../objects.h"
+
 #include <src/com/error.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector.h>

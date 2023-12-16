@@ -18,10 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh.h"
 
 #include "mesh/data.h"
+#include "mesh/facet.h"
+#include "mesh/material.h"
 
 #include "../objects.h"
 
-#include <src/color/color.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>

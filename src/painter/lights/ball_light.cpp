@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ball_light.h"
 
-#include <src/color/color.h>
+#include "../objects.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>

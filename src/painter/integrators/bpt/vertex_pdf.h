@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "vertex/camera.h"
+#include "vertex/infinite_light.h"
+#include "vertex/light.h"
+#include "vertex/surface.h"
 #include "vertex/vertex.h"
 
 #include <src/com/error.h>

@@ -27,15 +27,20 @@ Elsevier, 2017.
 #include "bpt.h"
 
 #include "connect.h"
+#include "light_distribution.h"
 #include "vertex_pdf.h"
 
+#include "vertex/camera.h"
+#include "vertex/infinite_light.h"
+#include "vertex/light.h"
+#include "vertex/surface.h"
 #include "vertex/vertex.h"
 
+#include "../../objects.h"
 #include "../com/normals.h"
 #include "../com/surface_sample.h"
 #include "../com/visibility.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/ray.h>

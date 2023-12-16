@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lights/parallelotope_light.h"
 #include "../lights/point_light.h"
 #include "../lights/spot_light.h"
+#include "../objects.h"
 #include "../projectors/perspective_projector.h"
 #include "../projectors/spherical_projector.h"
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/parallelotope.h"
 
-#include <src/color/color.h>
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
 #include <src/com/enum.h>

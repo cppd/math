@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../objects.h"
 #include "../../scenes/storage.h"
 #include "../mesh.h"
 

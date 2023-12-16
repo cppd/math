@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
+#include "../objects.h"
 #include "../painter.h"
 #include "../scenes/simple.h"
+#include "../scenes/storage.h"
 #include "../shapes/mesh.h"
 
 #include <src/color/color.h>

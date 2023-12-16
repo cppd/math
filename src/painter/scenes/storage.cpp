@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "scene.h"
 
 #include "../lights/infinite_area_light.h"
+#include "../objects.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/numerical/vector.h>

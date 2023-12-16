@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/info.h"
 #include "com/merge.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/settings/instantiation.h>
 

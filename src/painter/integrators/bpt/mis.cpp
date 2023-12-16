@@ -28,7 +28,12 @@ Elsevier, 2017.
 
 #include "vertex_pdf.h"
 
-#include <src/color/color.h>
+#include "vertex/camera.h"
+#include "vertex/infinite_light.h"
+#include "vertex/light.h"
+#include "vertex/surface.h"
+#include "vertex/vertex.h"
+
 #include <src/com/error.h>
 #include <src/com/variant.h>
 #include <src/settings/instantiation.h>

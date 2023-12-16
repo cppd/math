@@ -17,11 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "merge_color.h"
 
+#include "background.h"
+#include "color.h"
+
 #include "com/merge.h"
 
 #include "../background.h"
 
-#include <src/color/color.h>
 #include <src/settings/instantiation.h>
 
 #include <cstddef>

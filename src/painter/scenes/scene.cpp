@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_intersection.h"
 
-#include <src/color/color.h>
+#include "../objects.h"
+
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>

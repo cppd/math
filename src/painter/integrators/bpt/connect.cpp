@@ -17,12 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "connect.h"
 
+#include "light_distribution.h"
 #include "mis.h"
 
+#include "vertex/camera.h"
+#include "vertex/infinite_light.h"
+#include "vertex/light.h"
+#include "vertex/surface.h"
+#include "vertex/vertex.h"
+
+#include "../../objects.h"
 #include "../com/functions.h"
 #include "../com/visibility.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>

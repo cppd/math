@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "spherical_mesh.h"
 
+#include "../../objects.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>

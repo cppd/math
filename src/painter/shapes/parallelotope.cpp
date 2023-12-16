@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallelotope.h"
 
-#include <src/color/color.h>
+#include "../objects.h"
+
 #include <src/com/memory_arena.h>
 #include <src/com/random/pcg.h>
 #include <src/geometry/spatial/bounding_box.h>

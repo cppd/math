@@ -17,9 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pixels.h"
 
+#include "pixel.h"
+
 #include "samples/create.h"
 
-#include <src/color/color.h>
+#include "../painter.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/image/format.h>

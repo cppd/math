@@ -17,13 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
+#include "background.h"
+#include "color.h"
+
 #include "com/create.h"
 #include "com/select.h"
 #include "com/sort.h"
 
 #include "../color_contribution.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/settings/instantiation.h>
 

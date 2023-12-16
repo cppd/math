@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/functions.h"
 
-#include <src/color/color.h>
+#include "../objects.h"
+
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
