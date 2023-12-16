@@ -31,25 +31,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/mouse.h"
 #include "../com/view_thread.h"
 #include "../com/window.h"
+#include "../event.h"
+#include "../view.h"
 
+#include <src/color/color.h>
+#include <src/color/rgb8.h>
 #include <src/com/error.h>
 #include <src/com/message.h>
 #include <src/com/print.h>
+#include <src/gpu/renderer/event.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
-#include <src/image/alpha.h>
 #include <src/numerical/region.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device/device_graphics.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance/instance.h>
 #include <src/vulkan/objects.h>
-#include <src/vulkan/queue.h>
+#include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/sample.h>
+#include <src/vulkan/swapchain.h>
+#include <src/window/handle.h>
 #include <src/window/surface.h>
 
+#include <array>
 #include <chrono>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <thread>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace ns::view
 {

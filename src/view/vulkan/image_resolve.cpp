@@ -17,9 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_resolve.h"
 
+#include "render_buffers.h"
+
+#include <src/com/error.h>
 #include <src/image/alpha.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
+#include <src/numerical/region.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/device/device.h>
 #include <src/vulkan/error.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/queue.h>
+
+#include <cstddef>
+#include <vector>
 
 namespace ns::view
 {

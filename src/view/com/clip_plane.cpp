@@ -17,9 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clip_plane.h"
 
+#include "camera.h"
+
+#include "../event.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/gpu/renderer/renderer.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
+
+#include <functional>
+#include <optional>
+#include <utility>
+#include <variant>
 
 namespace ns::view
 {

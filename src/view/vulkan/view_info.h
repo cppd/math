@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/swapchain.h>
 
 #include <array>
+#include <optional>
 #include <set>
 
 namespace ns::view

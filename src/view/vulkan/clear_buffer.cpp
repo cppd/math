@@ -17,8 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clear_buffer.h"
 
+#include "render_buffers.h"
+
+#include <src/com/error.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace ns::view
 {

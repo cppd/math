@@ -17,6 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mouse.h"
 
+#include "camera.h"
+
+#include "../event.h"
+
+#include <src/numerical/region.h>
+#include <src/numerical/vector.h>
+
+#include <cmath>
+#include <tuple>
+#include <variant>
+
 namespace ns::view
 {
 Mouse::Mouse(Camera* const camera)

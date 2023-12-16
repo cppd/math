@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window.h"
 
 #include <src/com/error.h>
+#include <src/numerical/region.h>
+
+#include <optional>
+#include <tuple>
 
 namespace ns::view
 {

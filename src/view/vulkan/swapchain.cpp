@@ -17,12 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "swapchain.h"
 
+#include "render_buffers.h"
 #include "render_pass.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
+#include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
+#include <src/vulkan/swapchain.h>
+
+#include <array>
+#include <cstddef>
+#include <vector>
 
 namespace ns::view
 {

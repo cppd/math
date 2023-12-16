@@ -20,9 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/vulkan/physical_device/info.h>
 #include <src/vulkan/sample.h>
+#include <src/vulkan/swapchain.h>
 
 #include <algorithm>
+#include <array>
+#include <iterator>
+#include <optional>
+#include <set>
 
 namespace ns::view
 {

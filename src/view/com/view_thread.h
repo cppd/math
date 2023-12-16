@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../event.h"
 #include "../view.h"
 
 #include <src/com/error.h>
@@ -24,9 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 #include <condition_variable>
+#include <exception>
 #include <mutex>
 #include <queue>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 namespace ns::view
 {

@@ -17,7 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
+#include "event.h"
+#include "view.h"
+
 #include "vulkan/view.h"
+
+#include <src/window/handle.h>
+
+#include <array>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace ns::view
 {

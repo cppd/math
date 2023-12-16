@@ -18,11 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffer_info.h"
 
 #include <src/com/error.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/sample.h>
 #include <src/vulkan/strings.h>
 
 #include <algorithm>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace ns::view
 {
