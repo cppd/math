@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "name.h"
-
 #include <gmpxx.h>
 #include <type_traits>
 

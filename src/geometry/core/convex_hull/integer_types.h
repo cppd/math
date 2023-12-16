@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/names.h>
 #include <src/com/type/find.h>
-#include <src/com/type/name_ext.h>
+#include <src/com/type/name.h>
+#include <src/com/type/name_gmp.h>
 
 #include <cstddef>
 #include <sstream>
