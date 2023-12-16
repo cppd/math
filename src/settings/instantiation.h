@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/color.h>
+
 #define TEMPLATE_INSTANTIATION_N(TEMPLATE_N) \
         TEMPLATE_N(3)                        \
         TEMPLATE_N(4)                        \
