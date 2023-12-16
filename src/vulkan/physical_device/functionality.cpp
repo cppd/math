@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "features.h"
 
+#include <string>
+
 namespace ns::vulkan
 {
 void DeviceFunctionality::merge(const DeviceFunctionality& functionality)

@@ -17,8 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "debug.h"
 
+#include "../objects.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
+
+#include <string>
 
 namespace ns::vulkan
 {

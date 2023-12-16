@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include <array>
+#include <cstddef>
+
 namespace ns::vulkan
 {
 template <std::size_t N>

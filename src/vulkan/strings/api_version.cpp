@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "api_version.h"
 
+#include <cstdint>
+#include <string>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan

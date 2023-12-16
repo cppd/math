@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../physical_device/functionality.h"
 #include "../physical_device/physical_device.h"
 
+#include <cstdint>
+#include <optional>
+#include <vector>
+
 namespace ns::vulkan
 {
 class DeviceCompute final

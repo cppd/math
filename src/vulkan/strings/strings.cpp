@@ -21,6 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/string/strings.h>
 
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 namespace ns::vulkan
 {
 std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view separator)

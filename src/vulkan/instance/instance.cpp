@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/surface.h>
 
 #include <atomic>
+#include <memory>
+#include <string>
+#include <unordered_set>
 
 namespace ns::vulkan
 {

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "info.h"
 
 #include "../api_version.h"
+#include "../objects.h"
 #include "../overview.h"
 #include "../strings.h"
 
@@ -28,7 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/strings.h>
 #include <src/settings/name.h>
 
+#include <cstdint>
 #include <sstream>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace ns::vulkan
 {

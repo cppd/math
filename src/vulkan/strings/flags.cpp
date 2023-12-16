@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <bit>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <string_view>
 
 namespace ns::vulkan
 {

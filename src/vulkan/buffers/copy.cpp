@@ -21,10 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "memory.h"
 
 #include "../commands.h"
+#include "../error.h"
+#include "../objects.h"
 
 #include <src/com/container.h>
+#include <src/com/error.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <span>
 
 namespace ns::vulkan
 {

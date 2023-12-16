@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "commands.h"
 
+#include "objects.h"
+
 #include <src/com/error.h>
+
+#include <cstdint>
 
 namespace ns::vulkan
 {

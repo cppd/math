@@ -19,12 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "copy.h"
 
+#include "../objects.h"
 #include "../strings.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/conversion.h>
+#include <src/image/format.h>
 #include <src/image/swap.h>
+
+#include <cstddef>
+#include <span>
+#include <vector>
 
 namespace ns::vulkan
 {

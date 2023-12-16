@@ -17,10 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "queues.h"
 
+#include "device.h"
+
+#include "../objects.h"
+#include "../physical_device/physical_device.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <map>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace ns::vulkan
 {

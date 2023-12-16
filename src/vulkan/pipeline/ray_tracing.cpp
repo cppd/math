@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_info.h"
 
+#include "../objects.h"
+
 #include <src/com/error.h>
+
+#include <vector>
 
 namespace ns::vulkan
 {

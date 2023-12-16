@@ -17,11 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration_structure.h"
 
+#include "buffers.h"
 #include "commands.h"
 #include "extensions.h"
+#include "objects.h"
+
+#include "device/device.h"
 
 #include <src/com/container.h>
+#include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/numerical/vector.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
 
 namespace ns::vulkan
 {

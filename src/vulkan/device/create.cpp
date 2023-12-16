@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
+#include "../objects.h"
 #include "../physical_device/features.h"
+#include "../physical_device/info.h"
+#include "../physical_device/physical_device.h"
 #include "../strings.h"
 
 #include <src/com/error.h>
@@ -25,6 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/strings.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace ns::vulkan
 {

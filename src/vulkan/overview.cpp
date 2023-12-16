@@ -29,7 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/surface.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <exception>
+#include <sstream>
+#include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace ns::vulkan

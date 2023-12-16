@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/math.h>
 
+#include <cstddef>
+
 namespace ns::vulkan
 {
 namespace

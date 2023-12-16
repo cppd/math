@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device.h"
 
 #include "features.h"
+#include "functionality.h"
+#include "info.h"
 
 #include "../api_version.h"
 #include "../error.h"
@@ -33,9 +35,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <random>
 #include <sstream>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace ns::vulkan
 {

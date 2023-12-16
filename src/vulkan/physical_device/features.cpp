@@ -18,10 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "features.h"
 
 #include "feature_properties.h"
+#include "info.h"
 
 #include <src/com/error.h>
 
+#include <cstddef>
 #include <cstring>
+#include <exception>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::vulkan
 {

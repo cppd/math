@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <mutex>
+#include <string>
+
 namespace ns::vulkan
 {
 PFN_vkVoidFunction instance_proc_addr(const VkInstance instance, const char* const name)

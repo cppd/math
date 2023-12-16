@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "feature_properties.h"
 
+#include <cstddef>
+#include <string>
+
 namespace ns::vulkan
 {
 namespace

@@ -17,11 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "properties.h"
 
+#include "info.h"
+
 #include "../strings.h"
 
 #include <src/com/print.h>
 
 #include <algorithm>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 namespace ns::vulkan
 {

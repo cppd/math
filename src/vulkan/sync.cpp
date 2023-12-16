@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include <cstdint>
+
 namespace ns::vulkan
 {
 void reset_fence(const VkDevice device, const VkFence fence)
