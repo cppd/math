@@ -17,8 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "surface.h"
 
+#include "handle.h"
+
 #include <src/vulkan/error.h>
 #include <src/vulkan/extensions.h>
+
+#include <string>
 
 #if defined(__linux__)
 
