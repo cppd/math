@@ -37,11 +37,19 @@ Packt Publishing, 2015.
 #include "compute/image_pyramid.h"
 #include "compute/sobel.h"
 
+#include <src/com/error.h>
+#include <src/numerical/region.h>
 #include <src/numerical/vector.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
 
 #include <array>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 

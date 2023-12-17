@@ -17,12 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "function.h"
 
+#include <src/numerical/vector.h>
+
 // #include <src/com/log.h>
 // #include <src/com/print.h>
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
-#include <src/com/group_count.h>
+
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace ns::gpu::optical_flow
 {

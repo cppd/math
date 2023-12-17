@@ -26,12 +26,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/container.h>
 #include <src/com/error.h>
+#include <src/gpu/render_buffers.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/region.h>
 #include <src/numerical/transform.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
-#include <src/vulkan/create.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/queue.h>
 
+#include <memory>
+#include <optional>
 #include <thread>
+#include <vector>
 
 namespace ns::gpu::optical_flow
 {

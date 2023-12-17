@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
+#include <cstdint>
 #include <vector>
 
 namespace ns::gpu::optical_flow
