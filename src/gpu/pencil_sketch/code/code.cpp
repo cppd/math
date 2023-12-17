@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
+#include <cstdint>
+#include <iterator>
+#include <vector>
+
 namespace ns::gpu::pencil_sketch
 {
 std::vector<std::uint32_t> code_compute_comp()

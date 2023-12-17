@@ -21,8 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/group_count.h>
+#include <src/numerical/region.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
 
-#include <optional>
+#include <memory>
 #include <thread>
 
 namespace ns::gpu::pencil_sketch
