@@ -22,17 +22,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shaders/view.h"
 
+#include <src/color/color.h>
 #include <src/com/container.h>
+#include <src/com/error.h>
+#include <src/gpu/render_buffers.h>
+#include <src/numerical/region.h>
 #include <src/numerical/transform.h>
+#include <src/text/text_data.h>
 #include <src/text/vertices.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/device/device.h>
 #include <src/vulkan/error.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/queue.h>
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
+#include <memory>
 #include <optional>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace ns::gpu::text_writer

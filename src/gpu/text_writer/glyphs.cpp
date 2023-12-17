@@ -18,7 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "glyphs.h"
 
 #include <src/com/error.h>
+#include <src/text/font.h>
 #include <src/text/fonts.h>
+#include <src/text/glyphs.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ns::gpu::text_writer
 {
