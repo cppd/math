@@ -33,8 +33,18 @@ CRC Press LLC, 2000.
 
 #include <src/com/error.h>
 #include <src/com/group_count.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
+#include <algorithm>
+#include <complex>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <vector>
 
 namespace ns::gpu::dft
 {

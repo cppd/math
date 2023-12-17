@@ -19,9 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffer.h"
 
-#include <src/vulkan/objects.h>
+#include <src/vulkan/device/device.h>
 
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace ns::gpu::dft
 {

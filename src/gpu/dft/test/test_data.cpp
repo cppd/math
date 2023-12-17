@@ -21,9 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/type/limit.h>
 
+#include <complex>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <ios>
 #include <random>
+#include <vector>
 
 namespace ns::gpu::dft::test
 {

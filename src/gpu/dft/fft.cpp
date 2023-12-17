@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "fft.h"
 
 #include "barriers.h"
+#include "buffer.h"
 #include "function.h"
 
 #include "shaders/bit_reverse.h"
@@ -25,11 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/fft_shared.h"
 
 #include <src/com/constant.h>
+#include <src/com/error.h>
 #include <src/com/group_count.h>
 #include <src/com/print.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <bit>
+#include <complex>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace ns::gpu::dft
 {

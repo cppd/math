@@ -15,6 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/dft/dft.h>
+#include <src/progress/progress.h>
+#include <src/vulkan/physical_device/physical_device.h>
+
+#include <cstddef>
+#include <exception>
+#include <memory>
+#include <string_view>
 #if defined(CUDA_FOUND)
 #include <src/dft/cufft.h>
 #endif

@@ -46,21 +46,32 @@ There are errors in chapter 13 when calculating H2
 
 #include "barriers.h"
 #include "dft.h"
-#include "function.h"
 
 #include "shaders/copy_input.h"
 #include "shaders/copy_output.h"
 
 #include <src/com/error.h>
 #include <src/com/group_count.h>
+#include <src/numerical/region.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
+#include <src/vulkan/device/device.h>
 #include <src/vulkan/device/device_compute.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance/instance.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/functionality.h>
+#include <src/vulkan/physical_device/physical_device.h>
 #include <src/vulkan/queue.h>
 
+#include <complex>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <vector>
 
 namespace ns::gpu::dft
 {
