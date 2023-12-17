@@ -34,9 +34,16 @@ Princeton University Press, 2011.
 #include "shaders/prepare.h"
 
 #include <src/com/error.h>
+#include <src/numerical/region.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <thread>
+#include <vector>
 
 namespace ns::gpu::convex_hull
 {
