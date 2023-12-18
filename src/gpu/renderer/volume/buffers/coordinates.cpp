@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "coordinates.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 VolumeCoordinatesBuffer::VolumeCoordinatesBuffer(

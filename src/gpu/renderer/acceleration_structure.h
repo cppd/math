@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/acceleration_structure.h>
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 

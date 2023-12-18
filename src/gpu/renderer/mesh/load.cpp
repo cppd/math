@@ -29,8 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

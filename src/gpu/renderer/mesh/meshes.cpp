@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "meshes.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 #include <src/vulkan/device/device.h>
 
+#include <string_view>
+
 namespace ns::gpu::renderer::test
 {
 image::Image<2> ray_tracing(

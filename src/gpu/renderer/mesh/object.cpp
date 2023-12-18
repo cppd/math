@@ -36,6 +36,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ns::gpu::renderer

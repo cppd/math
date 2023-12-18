@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/objects.h>
 
+#include <cstdint>
+
 namespace ns::gpu::renderer
 {
 class RendererDraw final

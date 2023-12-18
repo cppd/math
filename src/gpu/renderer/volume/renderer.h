@@ -29,9 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/gpu/render_buffers.h>
 
+#include <cstdint>
+#include <functional>
 #include <optional>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

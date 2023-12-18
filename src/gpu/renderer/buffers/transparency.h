@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/buffers.h>
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 

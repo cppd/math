@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)

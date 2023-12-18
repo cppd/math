@@ -27,7 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

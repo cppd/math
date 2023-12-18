@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "commands.h"
 
+#include <cstdint>
+
 namespace ns::gpu::renderer
 {
 void commands_init_uint32_storage_image(

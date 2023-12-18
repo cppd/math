@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
+#include <cstdint>
+#include <span>
+
 namespace ns::gpu::renderer
 {
 std::span<const std::uint32_t> Code::mesh_normals_frag() const

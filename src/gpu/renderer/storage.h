@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/object_id.h>
 
+#include <cstddef>
 #include <memory>
 #include <unordered_map>
 #include <vector>

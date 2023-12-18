@@ -19,6 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cstddef>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 namespace

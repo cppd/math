@@ -26,6 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/pipeline/compute.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 namespace ns::gpu::renderer::test
 {

@@ -27,6 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 
+#include <optional>
+#include <variant>
+
 namespace ns::gpu::renderer
 {
 class RendererViewEvents

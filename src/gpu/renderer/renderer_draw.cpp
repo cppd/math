@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
+#include <array>
+#include <cstdint>
+
 namespace ns::gpu::renderer
 {
 RendererDraw::RendererDraw(

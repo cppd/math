@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline/graphics.h>
 
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_shared_bindings()

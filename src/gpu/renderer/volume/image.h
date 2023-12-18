@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/image/image.h>
 
+#include <cstddef>
 #include <functional>
 #include <vector>
 #include <vulkan/vulkan.h>

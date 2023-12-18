@@ -20,6 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/merge.h>
 #include <src/shading/ggx/f1_albedo.h>
 
+#include <cstdint>
+#include <span>
+#include <type_traits>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 namespace

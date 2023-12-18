@@ -22,7 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/image/conversion.h>
 
+#include <cstddef>
 #include <cstring>
+#include <functional>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

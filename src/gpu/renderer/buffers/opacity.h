@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
 
+#include <cstdint>
 #include <vector>
 
 namespace ns::gpu::renderer

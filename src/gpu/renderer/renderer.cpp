@@ -46,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 #include <thread>
+#include <vector>
 
 namespace ns::gpu::renderer
 {

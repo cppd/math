@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cstdint>
+#include <utility>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 AccelerationStructure::AccelerationStructure(

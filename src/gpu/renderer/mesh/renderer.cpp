@@ -24,6 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/vulkan/commands.h>
 
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <thread>
+#include <vector>
+
 namespace ns::gpu::renderer
 {
 MeshRenderer::MeshRenderer(

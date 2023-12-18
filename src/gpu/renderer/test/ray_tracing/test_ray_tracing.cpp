@@ -28,6 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/create.h>
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
 namespace ns::gpu::renderer::test
 {
 namespace

@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/directory.h>
 #include <src/vulkan/commands.h>
 
+#include <string_view>
+
 namespace ns::gpu::renderer::test
 {
 namespace

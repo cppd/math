@@ -26,6 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/extensions.h>
 #include <src/vulkan/pipeline/ray_tracing.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 namespace ns::gpu::renderer::test
 {
 std::vector<VkDescriptorSetLayoutBinding> RayTracingProgram::descriptor_set_layout_bindings()
