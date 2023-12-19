@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/geometry/spatial/clip_plane.h>
+#include <src/geometry/spatial/hyperplane.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/objects.h>
 
 #include <algorithm>
 

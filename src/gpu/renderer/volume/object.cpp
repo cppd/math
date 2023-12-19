@@ -25,10 +25,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../shading_parameters.h"
 
+#include <src/color/color.h>
 #include <src/com/alg.h>
+#include <src/com/error.h>
 #include <src/com/merge.h>
+#include <src/com/type/limit.h>
+#include <src/geometry/spatial/hyperplane.h>
+#include <src/image/format.h>
 #include <src/image/image.h>
+#include <src/model/volume_object.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/descriptor.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <algorithm>
 #include <cstddef>

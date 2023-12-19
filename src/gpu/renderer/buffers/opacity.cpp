@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "opacity.h"
 
 #include <src/com/error.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
 
 #include <array>
 #include <cstddef>

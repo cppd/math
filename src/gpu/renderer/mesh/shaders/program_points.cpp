@@ -21,8 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex_points.h"
 
 #include <src/com/error.h>
+#include <src/numerical/region.h>
 #include <src/vulkan/create.h>
+#include <src/vulkan/descriptor.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 #include <src/vulkan/pipeline/graphics.h>
+#include <src/vulkan/shader.h>
 #include <src/vulkan/strings.h>
 
 #include <vector>

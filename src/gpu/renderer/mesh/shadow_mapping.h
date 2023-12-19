@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/descriptors.h"
 #include "shaders/program_shadow.h"
 
+#include <src/numerical/matrix.h>
 #include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <cstdint>
 #include <memory>

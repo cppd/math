@@ -25,8 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/group_count.h>
 #include <src/image/file_save.h>
+#include <src/image/image.h>
 #include <src/settings/directory.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <string_view>
 

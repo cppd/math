@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/image/format.h>
 #include <src/image/image.h>
 
 #include <cstddef>

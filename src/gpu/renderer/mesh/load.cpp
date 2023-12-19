@@ -22,10 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/chrono.h>
 #include <src/com/container.h>
+#include <src/com/error.h>
 #include <src/com/hash.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/image/image.h>
+#include <src/model/mesh.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/acceleration_structure.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <algorithm>
 #include <array>
@@ -36,7 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ns::gpu::renderer

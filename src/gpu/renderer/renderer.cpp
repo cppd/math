@@ -37,15 +37,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume/object.h"
 #include "volume/renderer.h"
 
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/numerical/region.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/descriptor.h>
+#include <src/vulkan/device/device.h>
 #include <src/vulkan/error.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/queue.h>
 
 #include <memory>
 #include <optional>
 #include <thread>
+#include <variant>
 #include <vector>
 
 namespace ns::gpu::renderer

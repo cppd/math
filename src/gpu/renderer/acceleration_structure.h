@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh/object.h"
 
 #include <src/vulkan/acceleration_structure.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <cstdint>
 #include <optional>

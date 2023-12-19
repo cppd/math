@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume/object.h"
 
 #include <src/com/log.h>
+#include <src/model/object_id.h>
+#include <src/model/volume_object.h>
 
 #include <exception>
 #include <memory>

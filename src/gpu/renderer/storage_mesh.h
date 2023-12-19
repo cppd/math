@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh/object.h"
 
 #include <src/com/log.h>
+#include <src/model/mesh_object.h>
+#include <src/model/object_id.h>
 
 #include <exception>
 #include <memory>

@@ -26,13 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../shading_parameters.h"
 
+#include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/merge.h>
+#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
+#include <src/numerical/matrix.h>
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 #include <algorithm>
 #include <array>

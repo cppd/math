@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/image/conversion.h>
+#include <src/image/format.h>
+#include <src/image/image.h>
 
 #include <cstddef>
 #include <cstring>

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/image/image.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/device/device.h>
+#include <src/vulkan/objects.h>
 
 namespace ns::gpu::renderer::test
 {
