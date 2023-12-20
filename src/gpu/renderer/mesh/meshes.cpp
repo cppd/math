@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "meshes.h"
 
+#include "object.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <vector>

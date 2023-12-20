@@ -17,9 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "object.h"
 #include "sampler.h"
 
+#include "buffers/coordinates.h"
+#include "shaders/descriptors.h"
+#include "shaders/program_volume.h"
+
+#include "../buffers/ggx_f1_albedo.h"
+#include "../buffers/opacity.h"
+#include "../code/code.h"
+
 #include <src/com/error.h>
+#include <src/gpu/render_buffers.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>

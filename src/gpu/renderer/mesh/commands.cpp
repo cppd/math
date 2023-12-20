@@ -17,6 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "commands.h"
 
+#include "object.h"
+
+#include "shaders/descriptors.h"
+#include "shaders/program_normals.h"
+#include "shaders/program_points.h"
+#include "shaders/program_shadow.h"
+#include "shaders/program_triangle_lines.h"
+#include "shaders/program_triangles.h"
+
 #include <vector>
 
 namespace ns::gpu::renderer

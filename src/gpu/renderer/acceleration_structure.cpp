@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration_structure.h"
 
+#include "mesh/object.h"
+
 #include <src/com/error.h>
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/device/device.h>

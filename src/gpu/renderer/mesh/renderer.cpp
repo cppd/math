@@ -19,9 +19,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "commands.h"
 #include "meshes.h"
+#include "object.h"
+#include "render_buffers.h"
 #include "sampler.h"
+#include "shadow_mapping.h"
+
+#include "shaders/descriptors.h"
+#include "shaders/program_normals.h"
+#include "shaders/program_points.h"
+#include "shaders/program_triangle_lines.h"
+#include "shaders/program_triangles.h"
+
+#include "../buffers/ggx_f1_albedo.h"
+#include "../buffers/opacity.h"
+#include "../code/code.h"
 
 #include <src/com/error.h>
+#include <src/gpu/render_buffers.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>

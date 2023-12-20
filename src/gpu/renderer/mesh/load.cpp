@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load.h"
 
+#include "buffers/material.h"
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"
 
@@ -35,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/device/device.h>
 #include <src/vulkan/objects.h>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>

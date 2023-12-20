@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "event.h"
 
 #include <src/gpu/render_buffers.h>
-#include <src/model/mesh_object.h>
-#include <src/model/volume_object.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device.h>

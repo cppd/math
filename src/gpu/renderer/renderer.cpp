@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "acceleration_structure.h"
+#include "event.h"
 #include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_object.h"
@@ -40,12 +41,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/commands.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device/device.h>
-#include <src/vulkan/error.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/queue.h>

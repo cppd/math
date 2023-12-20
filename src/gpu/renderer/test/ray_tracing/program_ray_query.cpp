@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/descriptor.h>
-#include <src/vulkan/error.h>
 #include <src/vulkan/pipeline/compute.h>
 #include <src/vulkan/shader.h>
 

@@ -18,7 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shadow_mapping.h"
 
 #include "commands.h"
+#include "depth_buffers.h"
+#include "object.h"
 #include "sampler.h"
+
+#include "buffers/shadow_matrices.h"
+#include "shaders/descriptors.h"
+#include "shaders/program_shadow.h"
+
+#include "../code/code.h"
 
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute.h"
 
 #include "descriptors.h"
+#include "image.h"
 #include "program_ray_query.h"
 #include "program_ray_tracing.h"
 
