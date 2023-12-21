@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <mutex>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 namespace ns
 {

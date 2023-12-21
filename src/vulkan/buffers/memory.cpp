@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <cstdint>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

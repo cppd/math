@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {
