@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <span>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::view
 {

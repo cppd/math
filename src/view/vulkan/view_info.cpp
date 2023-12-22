@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 #include <optional>
 #include <set>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::view
 {
