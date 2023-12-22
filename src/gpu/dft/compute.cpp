@@ -72,6 +72,7 @@ There are errors in chapter 13 when calculating H2
 #include <memory>
 #include <optional>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::dft
 {
