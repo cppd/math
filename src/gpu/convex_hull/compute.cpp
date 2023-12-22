@@ -44,6 +44,7 @@ Princeton University Press, 2011.
 #include <optional>
 #include <thread>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::convex_hull
 {
