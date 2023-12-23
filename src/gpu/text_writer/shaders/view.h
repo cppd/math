@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::text_writer
 {
