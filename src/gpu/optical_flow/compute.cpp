@@ -52,6 +52,7 @@ Packt Publishing, 2015.
 #include <optional>
 #include <thread>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::optical_flow
 {
