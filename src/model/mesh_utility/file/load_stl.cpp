@@ -342,8 +342,15 @@ std::unique_ptr<Mesh<N>> load_from_stl_file(
 {
         const Clock::time_point start_time = Clock::now();
 
-        std::unique_ptr<Mesh<N>> mesh =
-                byte_swap ? read_stl<N, true>(file_name, progress) : read_stl<N, false>(file_name, progress);
+        std::unique_ptr<Mesh<N>> mesh;
+        if (byte_swap)
+        {
+                mesh = read_stl<N, true>(file_name, progress);
+        }
+        else
+        {
+                mesh = read_stl<N, false>(file_name, progress);
+        }
 
         LOG("STL loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 

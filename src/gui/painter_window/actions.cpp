@@ -80,7 +80,7 @@ Actions::Actions(
                 action = menu->addAction("Save all...");
                 connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=, this]()
+                        [action, this]()
                         {
                                 save_image(action_name(*action));
                         }));
@@ -90,7 +90,7 @@ Actions::Actions(
                 action = menu->addAction("Add volume...");
                 connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=, this]()
+                        [action, this]()
                         {
                                 add_volume(action_name(*action));
                         }));

@@ -243,17 +243,17 @@ class ViewThread final : public View
 
 public:
         template <typename... Args>
-        explicit ViewThread(std::vector<Command>&& initial_commands, Args&&... args)
+        explicit ViewThread(std::vector<Command>&& initial_commands, const Args&... args)
                 : event_queues_(std::move(initial_commands))
         {
                 try
                 {
                         thread_ = std::thread(
-                                [=, this]()
+                                [args..., this]()
                                 {
                                         try
                                         {
-                                                thread_function(std::forward<Args>(args)...);
+                                                thread_function(args...);
                                         }
                                         catch (...)
                                         {
