@@ -71,8 +71,12 @@ CheckOptions:
   value: '1'
 - key:   cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
   value: '0'
+- key:   cppcoreguidelines-rvalue-reference-param-not-moved.IgnoreUnnamedParams
+  value: '1'
 - key:   misc-const-correctness.WarnPointersAsValues
   value: '1'
+- key:   misc-include-cleaner.IgnoreHeaders
+  value: 'q[a-z].*\.h$;Qt?[A-Z].*[^h]$'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-use-auto.MinTypeNameLength
