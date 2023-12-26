@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <QApplication>
+#include <QEvent>
+#include <QObject>
+#include <Qt>
 #include <atomic>
 #include <exception>
 #include <functional>

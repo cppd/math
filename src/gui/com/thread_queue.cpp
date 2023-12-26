@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "thread_queue.h"
 
+#include <QObject>
+#include <Qt>
 #include <functional>
 
 namespace ns::gui

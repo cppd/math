@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 
+#include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QCoreApplication>
+#include <QStringList>
 #include <string>
 
 namespace ns::gui

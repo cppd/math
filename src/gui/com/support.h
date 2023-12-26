@@ -21,15 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/rgb8.h>
 #include <src/window/handle.h>
 
+#include <QColor>
 #include <QDialog>
 #include <QLabel>
 #include <QLayout>
 #include <QMainWindow>
+#include <QObject>
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QRadioButton>
+#include <QSize>
 #include <QSlider>
 #include <QSplitter>
+#include <QWidget>
 #include <array>
 #include <string_view>
 

@@ -27,7 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_interfaces.h>
 #include <src/progress/progress_list.h>
 
+#include <QCursor>
 #include <QMenu>
+#include <QPointer>
+#include <QProgressBar>
+#include <QStatusBar>
+#include <QString>
+#include <Qt>
 #include <algorithm>
 #include <atomic>
 #include <cmath>

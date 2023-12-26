@@ -27,8 +27,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/handle.h>
 
 #include <QApplication>
+#include <QColor>
+#include <QDialog>
+#include <QLabel>
+#include <QMainWindow>
+#include <QObject>
+#include <QPalette>
+#include <QPlainTextEdit>
 #include <QScreen>
 #include <QScrollBar>
+#include <QSizePolicy>
+#include <QSlider>
+#include <QSplitter>
+#include <QString>
+#include <QWidget>
 #include <algorithm>
 #include <array>
 #include <bit>
