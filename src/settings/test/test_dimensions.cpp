@@ -39,7 +39,7 @@ constexpr bool compare_two_elements(const std::tuple<T...>& t)
 }
 
 template <unsigned MIN, typename... T, std::size_t... I>
-constexpr bool compare(std::tuple<T...>&& t, std::index_sequence<I...>&&)
+constexpr bool compare(const std::tuple<T...>& t, const std::index_sequence<I...>&)
 {
         static_assert(sizeof...(T) > 0 && sizeof...(T) == sizeof...(I));
 
