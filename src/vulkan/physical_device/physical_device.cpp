@@ -130,8 +130,8 @@ int device_priority(const PhysicalDevice& physical_device)
         return 0;
 }
 
-PhysicalDevice find_best_physical_device(
-        std::vector<PhysicalDevice>&& physical_devices,
+std::size_t find_best_physical_device(
+        const std::vector<PhysicalDevice>& physical_devices,
         const std::vector<std::size_t>& suitable_devices)
 {
         ASSERT(!physical_devices.empty() && !suitable_devices.empty());
@@ -149,11 +149,11 @@ PhysicalDevice find_best_physical_device(
                 }
         }
 
-        return std::move(physical_devices[suitable_devices[best_i]]);
+        return suitable_devices[best_i];
 }
 
-PhysicalDevice find_random_physical_device(
-        std::vector<PhysicalDevice>&& physical_devices,
+std::size_t find_random_physical_device(
+        const std::vector<PhysicalDevice>& physical_devices,
         const std::vector<std::size_t>& suitable_devices)
 {
         ASSERT(!physical_devices.empty() && !suitable_devices.empty());
@@ -161,12 +161,12 @@ PhysicalDevice find_random_physical_device(
         PCG engine;
         std::uniform_int_distribution<std::size_t> uid(0, suitable_devices.size() - 1);
 
-        return std::move(physical_devices[suitable_devices[uid(engine)]]);
+        return suitable_devices[uid(engine)];
 }
 
-PhysicalDevice find_physical_device(
+std::size_t find_physical_device(
         const PhysicalDeviceSearchType search_type,
-        std::vector<PhysicalDevice>&& physical_devices,
+        const std::vector<PhysicalDevice>& physical_devices,
         const std::vector<std::size_t>& suitable_devices)
 {
         if (suitable_devices.empty())
@@ -177,9 +177,9 @@ PhysicalDevice find_physical_device(
         switch (search_type)
         {
         case PhysicalDeviceSearchType::BEST:
-                return find_best_physical_device(std::move(physical_devices), suitable_devices);
+                return find_best_physical_device(physical_devices, suitable_devices);
         case PhysicalDeviceSearchType::RANDOM:
-                return find_random_physical_device(std::move(physical_devices), suitable_devices);
+                return find_random_physical_device(physical_devices, suitable_devices);
         }
 
         error("Unknown physical device search type " + to_string(enum_to_int(search_type)));
@@ -417,6 +417,9 @@ PhysicalDevice find_physical_device(
                         std::as_const(devices), surface, device_functionality, false /*optional_as_required*/);
         }
 
-        return find_physical_device(search_type, std::move(devices), suitable_devices);
+        const std::size_t device = find_physical_device(search_type, devices, suitable_devices);
+        ASSERT(device < devices.size());
+
+        return std::move(devices[device]);
 }
 }
