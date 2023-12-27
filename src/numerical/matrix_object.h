@@ -64,15 +64,15 @@ public:
                 }
         }
 
-        constexpr Matrix(std::initializer_list<std::initializer_list<T>>&& data)
+        constexpr Matrix(const std::initializer_list<std::initializer_list<T>>& data)
         {
                 ASSERT(data.size() == ROWS);
                 std::size_t r = 0;
-                for (auto&& row : data)
+                for (const auto& row : data)
                 {
                         ASSERT(row.size() == COLUMNS);
                         std::size_t c = 0;
-                        for (auto&& column : row)
+                        for (const auto& column : row)
                         {
                                 rows_[r][c] = column;
                                 ++c;
