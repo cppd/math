@@ -89,7 +89,7 @@ std::vector<ProcessData<T>> generate_random_data(
         const T velocity_mean,
         const T velocity_variance,
         const T measurement_variance,
-        Engine&& engine)
+        Engine engine)
 {
         std::normal_distribution<T> nd_v(velocity_mean, std::sqrt(velocity_variance));
         std::normal_distribution<T> nd_m(0, std::sqrt(measurement_variance));
