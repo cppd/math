@@ -67,7 +67,7 @@ std::string to_string(const std::unordered_map<int, int>& map)
 }
 
 template <typename T>
-std::unordered_map<int, int> test_distribution(T&& engine)
+std::unordered_map<int, int> test_distribution(T engine)
 {
         constexpr int KEY_COUNT = 10;
         constexpr int VALUE_COUNT = 10'000;
@@ -95,7 +95,7 @@ std::unordered_map<int, int> test_distribution(T&& engine)
 }
 
 template <typename T>
-std::unordered_set<typename T::result_type> test_values(T&& engine)
+std::unordered_set<typename T::result_type> test_values(T engine)
 {
         constexpr std::size_t COUNT = 100'000;
         constexpr std::size_t MIN = COUNT - COUNT / 10'000;
@@ -117,7 +117,7 @@ std::unordered_set<typename T::result_type> test_values(T&& engine)
 }
 
 template <typename T>
-void test_value(T&& engine, const int count, const typename T::result_type expected_value)
+void test_value(T engine, const int count, const typename T::result_type expected_value)
 {
         if (count < 1)
         {
