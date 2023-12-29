@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_point_object.h"
 
+#include <QDialog>
+#include <QObject>
 #include <optional>
 #include <string>
 

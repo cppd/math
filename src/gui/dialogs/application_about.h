@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <QWidget>
-
 namespace ns::gui::dialog
 {
 void application_about(bool ray_tracing);

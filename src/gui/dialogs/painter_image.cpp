@@ -28,6 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/image/file_save.h>
 
+#include <QCheckBox>
+#include <QDialog>
+#include <QLineEdit>
+#include <QPointer>
+#include <QString>
+#include <QToolButton>
 #include <filesystem>
 #include <optional>
 #include <string>

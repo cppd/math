@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_parameters.h"
 
+#include <QObject>
+#include <QWidget>
 #include <array>
 
 namespace ns::gui::dialog

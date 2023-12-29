@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/api_version.h>
 
 #include <QMessageBox>
+#include <QString>
 #include <sstream>
 
 namespace ns::gui::dialog

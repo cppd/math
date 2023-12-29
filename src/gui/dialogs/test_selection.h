@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_test_selection.h"
 
+#include <QDialog>
+#include <QObject>
+#include <QString>
 #include <memory>
 #include <optional>
 #include <string>

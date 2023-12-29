@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_object_selection.h"
 
+#include <QDialog>
+#include <QObject>
 #include <optional>
 
 namespace ns::gui::dialog

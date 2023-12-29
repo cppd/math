@@ -27,6 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/ascii.h>
 #include <src/image/file_save.h>
 
+#include <QDialog>
+#include <QLineEdit>
+#include <QPointer>
+#include <QString>
+#include <QToolButton>
 #include <algorithm>
 #include <filesystem>
 #include <optional>

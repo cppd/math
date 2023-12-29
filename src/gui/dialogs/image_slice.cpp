@@ -26,9 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <QCheckBox>
+#include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
 #include <QSlider>
+#include <QString>
+#include <QVBoxLayout>
+#include <Qt>
 #include <algorithm>
 #include <cstddef>
 #include <optional>

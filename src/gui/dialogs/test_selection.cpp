@@ -23,6 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <QCheckBox>
+#include <QDialog>
+#include <QLineEdit>
+#include <QListWidgetItem>
+#include <QPushButton>
+#include <QSize>
+#include <QString>
+#include <Qt>
 #include <algorithm>
 #include <cstddef>
 #include <memory>

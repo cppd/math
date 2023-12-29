@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <QFileDialog>
+#include <QObject>
+#include <QString>
+#include <QStringList>
 #include <algorithm>
 #include <map>
 #include <optional>
