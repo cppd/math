@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <QString>
 #include <QStringList>
+
 #include <algorithm>
 #include <map>
 #include <optional>

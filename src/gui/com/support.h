@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSlider>
 #include <QSplitter>
 #include <QWidget>
+
 #include <array>
 #include <string_view>
 

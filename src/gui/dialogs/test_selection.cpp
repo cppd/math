@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSize>
 #include <QString>
 #include <Qt>
+
 #include <algorithm>
 #include <cstddef>
 #include <memory>

@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/scenes/storage.h>
 
 #include <QTimer>
+
 #include <cstddef>
 #include <memory>
 #include <string>

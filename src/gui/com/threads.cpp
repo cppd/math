@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStatusBar>
 #include <QString>
 #include <Qt>
+
 #include <algorithm>
 #include <atomic>
 #include <cmath>

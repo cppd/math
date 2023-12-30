@@ -50,6 +50,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCloseEvent>
 #include <QPointer>
 #include <QScreen>
+
 #include <chrono>
 #include <exception>
 #include <memory>

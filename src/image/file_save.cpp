@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QImage>
 #include <QImageWriter>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>

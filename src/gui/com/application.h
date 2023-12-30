@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QEvent>
 #include <QObject>
+
 #include <functional>
 
 namespace ns::gui

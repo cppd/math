@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QObject>
 #include <QWidget>
+
 #include <array>
 
 namespace ns::gui::dialog

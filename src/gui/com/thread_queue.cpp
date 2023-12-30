@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QObject>
 #include <Qt>
+
 #include <functional>
 
 namespace ns::gui

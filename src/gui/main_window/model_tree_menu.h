@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/object_id.h>
 
 #include <QMenu>
+
 #include <memory>
 
 namespace ns::gui::main_window

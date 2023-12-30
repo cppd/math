@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSpinBox>
 #include <QString>
 #include <QtGlobal>
+
 #include <algorithm>
 #include <array>
 #include <cmath>

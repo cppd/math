@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+
 #include <array>
 #include <atomic>
 #include <cstdlib>

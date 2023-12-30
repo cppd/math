@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLabel>
 #include <QSlider>
 #include <QWidget>
+
 #include <unordered_map>
 #include <vector>
 

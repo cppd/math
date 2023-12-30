@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QString>
 #include <QToolButton>
+
 #include <algorithm>
 #include <filesystem>
 #include <optional>

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QProgressBar>
 #include <QStatusBar>
+
 #include <functional>
 #include <list>
 #include <memory>

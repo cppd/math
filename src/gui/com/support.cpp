@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSplitter>
 #include <QString>
 #include <QWidget>
+
 #include <algorithm>
 #include <array>
 #include <bit>

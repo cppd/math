@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QStringList>
+
 #include <string>
 
 namespace ns::gui

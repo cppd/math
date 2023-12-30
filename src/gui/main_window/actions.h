@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAction>
 #include <QMenu>
 #include <QStatusBar>
+
 #include <memory>
 #include <vector>
 

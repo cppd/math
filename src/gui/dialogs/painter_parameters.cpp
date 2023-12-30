@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QRadioButton>
 #include <QWidget>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
