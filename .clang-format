@@ -73,8 +73,11 @@ IncludeCategories:
     Priority:        30
   - Regex:           '^<src\/.*>$'
     Priority:        50
-  - Regex:           '^<.*>$'
+  - Regex:           '^<[A-Z].*>$'
+    CaseSensitive:   true
     Priority:        60
+  - Regex:           '^<.*>$'
+    Priority:        70
 IndentAccessModifiers: false
 IndentCaseBlocks: false
 IndentCaseLabels: false
