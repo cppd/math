@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <type_traits>
 #include <vulkan/vulkan_core.h>
+
+#include <type_traits>
 
 namespace ns::vulkan::error_implementation
 {

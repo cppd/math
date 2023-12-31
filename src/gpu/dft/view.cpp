@@ -34,12 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/queue.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <array>
 #include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::dft
 {

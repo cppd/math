@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/physical_device/info.h>
 #include <src/vulkan/swapchain.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <array>
 #include <optional>
 #include <set>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::view
 {

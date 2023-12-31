@@ -22,12 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 #include "../physical_device/physical_device.h"
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/strings.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -34,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer
 {

@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/program_triangle_lines.h"
 #include "shaders/program_triangles.h"
 
-#include <vector>
 #include <vulkan/vulkan_core.h>
+
+#include <vector>
 
 namespace ns::gpu::renderer
 {

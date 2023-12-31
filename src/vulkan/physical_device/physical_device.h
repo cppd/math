@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "functionality.h"
 #include "info.h"
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

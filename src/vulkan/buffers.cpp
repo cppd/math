@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/image/format.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -41,7 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

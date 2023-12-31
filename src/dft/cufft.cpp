@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cufft.h>
+
 #include <type_traits>
 
 namespace ns::dft

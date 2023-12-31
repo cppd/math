@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_points.h"
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstddef>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer
 {

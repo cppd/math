@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/vulkan/device/device.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstdint>
 #include <memory>
 #include <span>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::view
 {

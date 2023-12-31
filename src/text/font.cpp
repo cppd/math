@@ -27,10 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 #include <src/settings/directory.h>
 
+#include <ft2build.h>
+
 #include <cmath>
 #include <filesystem>
 #include <fstream>
-#include <ft2build.h>
 #include <memory>
 #include <optional>
 #include <span>

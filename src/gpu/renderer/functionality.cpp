@@ -24,9 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/physical_device/info.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <array>
 #include <string>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer
 {

@@ -24,11 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

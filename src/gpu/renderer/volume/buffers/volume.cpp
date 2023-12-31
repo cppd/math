@@ -28,10 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/layout.h>
 #include <src/vulkan/objects.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer
 {

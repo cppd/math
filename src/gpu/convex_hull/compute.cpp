@@ -39,12 +39,13 @@ Princeton University Press, 2011.
 #include <src/vulkan/device/device.h>
 #include <src/vulkan/objects.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::convex_hull
 {

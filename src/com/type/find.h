@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cstdint>
 #include <gmpxx.h>
+
+#include <cstdint>
 #include <type_traits>
 
 namespace ns

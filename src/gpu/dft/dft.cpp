@@ -38,6 +38,8 @@ CRC Press LLC, 2000.
 #include <src/vulkan/device/device.h>
 #include <src/vulkan/objects.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <complex>
 #include <cstdint>
@@ -45,7 +47,6 @@ CRC Press LLC, 2000.
 #include <optional>
 #include <thread>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::dft
 {

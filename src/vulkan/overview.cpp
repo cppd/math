@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string_tree.h>
 #include <src/window/surface.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <exception>
@@ -36,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/event.h"
 #include "window/handle.h"
 
+#include <vulkan/vulkan.h>
+
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace ns::window
 {

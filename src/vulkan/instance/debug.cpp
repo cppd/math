@@ -22,9 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 
-#include <string>
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
+
+#include <string>
 
 namespace ns::vulkan
 {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gmp.h>
 #include <gmpxx.h>
+
 #include <type_traits>
 
 namespace ns

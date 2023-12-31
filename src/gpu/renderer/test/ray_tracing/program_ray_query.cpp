@@ -26,11 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/pipeline/compute.h>
 #include <src/vulkan/shader.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer::test
 {

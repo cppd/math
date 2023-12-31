@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device.h>
 
-#include <memory>
 #include <vulkan/vulkan_core.h>
+
+#include <memory>
 
 namespace ns::gpu::pencil_sketch
 {

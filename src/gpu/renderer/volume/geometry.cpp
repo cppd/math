@@ -24,8 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/vulkan/objects.h>
 
-#include <algorithm>
 #include <vulkan/vulkan_core.h>
+
+#include <algorithm>
 
 namespace ns::gpu::renderer
 {

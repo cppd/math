@@ -31,10 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
-#include <array>
-#include <cstddef>
 #include <gmp.h>
 #include <gmpxx.h>
+
+#include <array>
+#include <cstddef>
 #include <random>
 #include <string>
 #include <vector>

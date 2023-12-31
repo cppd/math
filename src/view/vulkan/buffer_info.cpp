@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/sample.h>
 #include <src/vulkan/strings.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::view
 {

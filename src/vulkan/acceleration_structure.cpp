@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/vector.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -36,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <utility>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::vulkan
 {

@@ -24,11 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/format.h>
 #include <src/image/image.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstddef>
 #include <cstring>
 #include <functional>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::renderer
 {

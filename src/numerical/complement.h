@@ -32,11 +32,12 @@ Wiley, 2014.
 
 #include <src/com/error.h>
 
+#include <gmp.h>
+#include <gmpxx.h>
+
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <gmp.h>
-#include <gmpxx.h>
 #include <vector>
 
 namespace ns::numerical

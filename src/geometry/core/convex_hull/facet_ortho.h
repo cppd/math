@@ -23,10 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
 
-#include <array>
-#include <cstddef>
 #include <gmp.h>
 #include <gmpxx.h>
+
+#include <array>
+#include <cstddef>
 #include <type_traits>
 #include <vector>
 

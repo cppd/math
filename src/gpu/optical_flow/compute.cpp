@@ -46,13 +46,14 @@ Packt Publishing, 2015.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
 
+#include <vulkan/vulkan_core.h>
+
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ns::gpu::optical_flow
 {

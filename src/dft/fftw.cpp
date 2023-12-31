@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/thread.h>
 
+#include <fftw3.h>
+
 #include <algorithm>
 #include <complex>
-#include <fftw3.h>
 #include <memory>
 #include <mutex>
 #include <vector>
