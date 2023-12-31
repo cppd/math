@@ -76,6 +76,9 @@ IncludeCategories:
   - Regex:           '^<[A-Z].*>$'
     CaseSensitive:   true
     Priority:        60
+  - Regex:           '^<[a-z_]+>$'
+    CaseSensitive:   true
+    Priority:        80
   - Regex:           '^<.*>$'
     Priority:        70
 IndentAccessModifiers: false
