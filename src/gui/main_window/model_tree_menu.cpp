@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/model/object_id.h>
 
+#include <QAction>
+#include <QMenu>
+#include <QObject>
+
 #include <memory>
 
 namespace ns::gui::main_window

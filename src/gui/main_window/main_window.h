@@ -36,7 +36,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/view.h>
 #include <src/vulkan/instance/instance.h>
 
+#include <QCloseEvent>
+#include <QMainWindow>
+#include <QMouseEvent>
+#include <QObject>
+#include <QResizeEvent>
+#include <QShowEvent>
+#include <QSinglePointEvent>
 #include <QTimer>
+#include <QWheelEvent>
 
 #include <memory>
 #include <thread>

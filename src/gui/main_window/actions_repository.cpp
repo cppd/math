@@ -25,6 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/loading.h>
 #include <src/storage/repository.h>
 
+#include <QAction>
+#include <QMenu>
+#include <QObject>
+#include <QString>
+
 #include <algorithm>
 #include <string>
 #include <utility>

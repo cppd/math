@@ -37,6 +37,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/event.h>
 #include <src/view/view.h>
 
+#include <QAction>
+#include <QMenu>
+#include <QObject>
+#include <QStatusBar>
+
 #include <chrono>
 #include <filesystem>
 #include <optional>

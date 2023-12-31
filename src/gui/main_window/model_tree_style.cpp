@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree_style.h"
 
+#include <QColor>
+#include <QFont>
+#include <QTreeWidgetItem>
+
 namespace ns::gui::main_window
 {
 namespace

@@ -28,6 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 #include <src/storage/types.h>
 
+#include <QMenu>
+#include <QObject>
+#include <QPoint>
+#include <QString>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QWidget>
+#include <Qt>
+
 #include <cstddef>
 #include <memory>
 #include <optional>

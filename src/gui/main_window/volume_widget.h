@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/storage/types.h>
 
+#include <QObject>
 #include <QPointer>
+#include <QWidget>
 
 #include <memory>
 #include <thread>

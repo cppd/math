@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
+#include <QObject>
+#include <QSignalBlocker>
+#include <QSlider>
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>

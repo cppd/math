@@ -26,6 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/event.h>
 #include <src/view/view.h>
 
+#include <QRadioButton>
+#include <QSlider>
+#include <QString>
+#include <QWidget>
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>

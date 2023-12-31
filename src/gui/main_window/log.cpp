@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log/log.h>
 #include <src/com/print.h>
 
+#include <QPlainTextEdit>
+
 #include <atomic>
 #include <vector>
 

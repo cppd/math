@@ -24,6 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/event.h>
 #include <src/view/view.h>
 
+#include <QCheckBox>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSignalBlocker>
+#include <QSlider>
+#include <QString>
+#include <QWidget>
+
 #include <cmath>
 #include <optional>
 #include <vector>

@@ -28,6 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/object_id.h>
 #include <src/storage/types.h>
 
+#include <QColor>
+#include <QLabel>
+#include <QPointer>
+#include <QSignalBlocker>
+#include <QSlider>
+#include <QString>
+#include <QToolButton>
+#include <QWidget>
+
 #include <cstddef>
 #include <iomanip>
 #include <ios>
