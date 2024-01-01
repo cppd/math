@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2023 Topological Manifold
+Copyright (C) 2017-2024 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
