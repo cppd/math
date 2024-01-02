@@ -23,7 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <QGridLayout>
+#include <QLabel>
+#include <QObject>
 #include <QSignalBlocker>
+#include <QSlider>
+#include <QString>
+#include <Qt>
 
 #include <vector>
 

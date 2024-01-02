@@ -26,6 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/com/print.h>
 
+#include <QAction>
+#include <QMenu>
+#include <QObject>
+#include <QStatusBar>
+
 #include <functional>
 #include <memory>
 #include <optional>

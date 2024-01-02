@@ -32,6 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/painter.h>
 #include <src/painter/scenes/storage.h>
 
+#include <QCloseEvent>
+#include <QMainWindow>
+#include <QObject>
+#include <QShowEvent>
+#include <QSlider>
 #include <QTimer>
 
 #include <cstddef>

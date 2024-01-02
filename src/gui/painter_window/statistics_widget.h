@@ -23,6 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/painter/painter.h>
 
+#include <QObject>
+#include <QWidget>
+
 #include <chrono>
 #include <memory>
 #include <optional>

@@ -19,6 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <QImage>
+#include <QMenu>
+#include <QPixmap>
+#include <QSize>
+#include <QWidget>
+#include <Qt>
+
 #include <cstddef>
 #include <cstring>
 #include <span>

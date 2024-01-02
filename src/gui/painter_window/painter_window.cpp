@@ -34,8 +34,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/painter.h>
 #include <src/settings/name.h>
 
+#include <QAction>
 #include <QCloseEvent>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QMenu>
+#include <QObject>
 #include <QPointer>
+#include <QShowEvent>
+#include <QSize>
+#include <QSlider>
+#include <QString>
+#include <QTimer>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <Qt>
 
 #include <algorithm>
 #include <chrono>

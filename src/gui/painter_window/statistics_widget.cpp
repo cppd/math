@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/painter/painter.h>
 
+#include <QWidget>
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>

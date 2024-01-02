@@ -19,8 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_image_widget.h"
 
+#include <QAction>
 #include <QImage>
 #include <QMenu>
+#include <QObject>
+#include <QSize>
+#include <QWidget>
 
 #include <cstddef>
 #include <span>
