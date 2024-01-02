@@ -26,8 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 
+#include <QByteArray>
 #include <QImage>
 #include <QImageWriter>
+#include <QString>
 
 #include <cstddef>
 #include <cstdint>
