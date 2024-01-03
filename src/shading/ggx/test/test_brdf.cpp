@@ -15,10 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../../compute/brdf.h"
-#include "../../objects.h"
-#include "../../testing/color.h"
-#include "../../testing/random.h"
 #include "../brdf.h"
 #include "../metalness.h"
 
@@ -32,6 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/sampling/testing/test.h>
+#include <src/shading/compute/brdf.h>
+#include <src/shading/objects.h>
+#include <src/shading/testing/color.h>
+#include <src/shading/testing/random.h>
 #include <src/test/test.h>
 
 #include <cstddef>

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "f1_albedo.h"
 
-#include "../../compute/brdf.h"
-#include "../../objects.h"
 #include "../brdf.h"
 
 #include <src/color/color.h>
@@ -32,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/interpolation.h>
 #include <src/numerical/vector.h>
 #include <src/settings/dimensions.h>
+#include <src/shading/compute/brdf.h>
+#include <src/shading/objects.h>
 
 #include <algorithm>
 #include <array>
