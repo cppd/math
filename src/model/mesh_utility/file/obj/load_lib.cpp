@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "data_read.h"
 #include "name.h"
 
-#include "../../../mesh.h"
 #include "../data_read.h"
 #include "../lines.h"
 
@@ -33,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file_load.h>
 #include <src/image/flip.h>
 #include <src/image/image.h>
+#include <src/model/mesh.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>

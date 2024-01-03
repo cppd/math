@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/load_lib.h"
 #include "obj/name.h"
 
-#include "../../mesh.h"
 #include "../position.h"
 
 #include <src/com/chrono.h>
@@ -35,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/model/mesh.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 

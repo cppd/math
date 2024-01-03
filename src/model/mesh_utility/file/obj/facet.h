@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../../mesh.h"
 #include "../data_read.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/read.h>
 #include <src/com/string/ascii.h>
+#include <src/model/mesh.h>
 
 #include <array>
 #include <cstddef>
