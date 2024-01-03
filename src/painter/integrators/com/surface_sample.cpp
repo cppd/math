@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "normals.h"
 
-#include "../../objects.h"
-
 #include <src/com/error.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/settings/instantiation.h>
 
 #include <cstddef>

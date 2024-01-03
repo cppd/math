@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../objects.h"
-
 #include <src/com/error.h>
+#include <src/painter/objects.h>
 
 #include <cstddef>
 #include <memory>

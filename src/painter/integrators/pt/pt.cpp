@@ -27,7 +27,6 @@ Elsevier, 2017.
 
 #include "direct_lighting.h"
 
-#include "../../objects.h"
 #include "../com/normals.h"
 #include "../com/surface_sample.h"
 #include "../com/visibility.h"
@@ -35,6 +34,7 @@ Elsevier, 2017.
 #include <src/com/random/pcg.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/settings/instantiation.h>
 
 #include <cstddef>

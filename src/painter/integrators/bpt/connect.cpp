@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertex/surface.h"
 #include "vertex/vertex.h"
 
-#include "../../objects.h"
 #include "../com/functions.h"
 #include "../com/visibility.h"
 
@@ -36,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/settings/instantiation.h>
 
 #include <cstddef>

@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "area_pdf.h"
 
-#include "../../../objects.h"
-#include "../../com/normals.h"
-
 #include <src/com/error.h>
 #include <src/numerical/vector.h>
+#include <src/painter/integrators/com/normals.h>
+#include <src/painter/objects.h>
 
 #include <cstddef>
 

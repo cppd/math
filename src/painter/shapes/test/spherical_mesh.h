@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../objects.h"
-#include "../../scenes/storage.h"
 #include "../mesh.h"
 
 #include <src/geometry/core/convex_hull.h>
@@ -29,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_utility.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
+#include <src/painter/scenes/storage.h>
 #include <src/progress/progress.h>
 #include <src/sampling/sphere_uniform.h>
 

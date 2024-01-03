@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "light_distribution.h"
 
-#include "../../objects.h"
-
 #include <src/com/random/pcg.h>
 #include <src/numerical/ray.h>
+#include <src/painter/objects.h>
 
 #include <cstddef>
 #include <optional>

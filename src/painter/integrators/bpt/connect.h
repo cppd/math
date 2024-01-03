@@ -21,9 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex/vertex.h"
 
-#include "../../objects.h"
-
 #include <src/com/random/pcg.h>
+#include <src/painter/objects.h>
 
 #include <cstddef>
 #include <optional>
