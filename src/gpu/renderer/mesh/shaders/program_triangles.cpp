@@ -20,8 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "descriptors.h"
 #include "vertex_triangles.h"
 
-#include "../../code/code.h"
-
+#include <src/gpu/renderer/code/code.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/descriptor.h>

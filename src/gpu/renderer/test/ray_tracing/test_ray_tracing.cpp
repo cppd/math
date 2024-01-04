@@ -20,11 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute.h"
 #include "image.h"
 
-#include "../../functionality.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/gpu/renderer/functionality.h>
 #include <src/image/format.h>
 #include <src/image/image.h>
 #include <src/numerical/vector.h>

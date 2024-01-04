@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../code/code.h"
-
+#include <src/gpu/renderer/code/code.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/device/device.h>
 #include <src/vulkan/objects.h>
