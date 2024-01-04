@@ -19,13 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#include "../../ekf.h"
-#include "../../settings/instantiation.h"
-#include "../../update_info.h"
 #include "../utility/utility.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/filter/ekf.h>
+#include <src/filter/settings/instantiation.h>
+#include <src/filter/update_info.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 

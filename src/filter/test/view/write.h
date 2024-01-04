@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "time_point.h"
 
-#include "../../filters/measurement.h"
-
 #include <src/color/rgb8.h>
+#include <src/filter/filters/measurement.h>
 
 #include <cstddef>
 #include <string>

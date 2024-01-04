@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1.h"
 
-#include "../../settings/instantiation.h"
-#include "../../sigma_points.h"
-#include "../../ukf.h"
 #include "../measurement.h"
 #include "../utility/utility.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/filter/settings/instantiation.h>
+#include <src/filter/sigma_points.h>
+#include <src/filter/ukf.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "low_pass.h"
 
-#include "../../settings/instantiation.h"
+#include <src/filter/settings/instantiation.h>
 
 #include <array>
 #include <cstddef>

@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moving_variance.h"
 
-#include "../../settings/instantiation.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/filter/settings/instantiation.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>
