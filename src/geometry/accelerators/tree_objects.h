@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tree.h"
 
-#include "../spatial/bounding_box.h"
-#include "../spatial/shape_overlap.h"
-
 #include <src/com/error.h>
 #include <src/com/reference.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/geometry/spatial/shape_overlap.h>
 
 #include <cstddef>
 #include <type_traits>

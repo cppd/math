@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../core/delaunay.h"
-
 #include <src/com/arrays.h>
+#include <src/geometry/core/delaunay.h>
 #include <src/numerical/vector.h>
 
 #include <array>

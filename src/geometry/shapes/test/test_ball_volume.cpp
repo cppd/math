@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
-#include "../ball_volume.h"
-
 #include <src/com/constant.h>
 #include <src/com/exponent.h>
+#include <src/geometry/shapes/ball_volume.h>
 
 namespace ns::geometry::shapes::test
 {

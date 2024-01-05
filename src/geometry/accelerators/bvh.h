@@ -28,9 +28,8 @@ Elsevier, 2017.
 #include "bvh_object.h"
 #include "bvh_stack.h"
 
-#include "../spatial/bounding_box.h"
-
 #include <src/com/error.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>

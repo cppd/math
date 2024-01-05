@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../hyperplane.h"
-#include "../random/vectors.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/geometry/spatial/hyperplane.h>
+#include <src/geometry/spatial/random/vectors.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>

@@ -19,15 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare_parallelotopes.h"
 
-#include "../constraint.h"
-#include "../parallelotope.h"
-#include "../parallelotope_aa.h"
-#include "../random/parallelotope_points.h"
-#include "../random/vectors.h"
-
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/pcg.h>
+#include <src/geometry/spatial/constraint.h>
+#include <src/geometry/spatial/parallelotope.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/random/parallelotope_points.h>
+#include <src/geometry/spatial/random/vectors.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>

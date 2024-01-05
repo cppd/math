@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../sphere_create.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -24,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
+#include <src/geometry/shapes/sphere_create.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 

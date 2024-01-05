@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../spatial/bounding_box.h"
-
 #include <src/com/error.h>
+#include <src/geometry/spatial/bounding_box.h>
 
 namespace ns::geometry::accelerators
 {

@@ -31,13 +31,12 @@ Cambridge University Press, 2007.
 #include "prune_facets.h"
 #include "structure.h"
 
-#include "../core/convex_hull.h"
-#include "../core/delaunay.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/geometry/core/convex_hull.h>
+#include <src/geometry/core/delaunay.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>

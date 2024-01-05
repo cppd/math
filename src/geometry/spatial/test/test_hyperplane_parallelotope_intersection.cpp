@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../intersection/hyperplane_parallelotope.h"
-
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/geometry/spatial/intersection/hyperplane_parallelotope.h>
 #include <src/progress/progress.h>
 #include <src/test/test.h>
 

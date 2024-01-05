@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../mesh.h"
-#include "../regular_polytopes.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -26,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
+#include <src/geometry/shapes/mesh.h>
+#include <src/geometry/shapes/regular_polytopes.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 

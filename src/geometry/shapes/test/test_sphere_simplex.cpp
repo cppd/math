@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
-#include "../sphere_area.h"
-#include "../sphere_simplex.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/geometry/shapes/sphere_area.h>
+#include <src/geometry/shapes/sphere_simplex.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>

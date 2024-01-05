@@ -27,11 +27,10 @@ Cambridge University Press, 2007.
 
 #include "structure.h"
 
-#include "../core/delaunay.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/geometry/core/delaunay.h>
 #include <src/settings/instantiation.h>
 
 #include <cmath>

@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../random/parallelotope_points.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/geometry/spatial/random/parallelotope_points.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "structure.h"
 
-#include "../core/delaunay.h"
+#include <src/geometry/core/delaunay.h>
 
 #include <cstddef>
 #include <vector>

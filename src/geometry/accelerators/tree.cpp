@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tree.h"
 
-#include "../spatial/bounding_box.h"
-#include "../spatial/parallelotope_aa.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
@@ -27,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/thread_tasks.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/spatial/bounding_box.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>

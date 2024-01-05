@@ -19,15 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "average.h"
 
-#include "../hyperplane_simplex.h"
-#include "../random/vectors.h"
-
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/spatial/hyperplane_simplex.h>
+#include <src/geometry/spatial/random/vectors.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/simplex_uniform.h>

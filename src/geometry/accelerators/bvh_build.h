@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "bvh_object.h"
 #include "bvh_split.h"
 
-#include "../spatial/bounding_box.h"
-
 #include <src/com/error.h>
 #include <src/com/thread.h>
 #include <src/com/thread_tasks.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/progress/progress.h>
 
 #include <array>

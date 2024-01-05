@@ -17,15 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallelotope_tests.h"
 
-#include "../hyperplane_parallelotope.h"
-#include "../parallelotope.h"
-#include "../parallelotope_aa.h"
-#include "../shape_overlap.h"
-
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/geometry/spatial/hyperplane_parallelotope.h>
+#include <src/geometry/spatial/parallelotope.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/shape_overlap.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 

@@ -25,10 +25,9 @@ Cambridge University Press, 2007.
 
 #include "prune_facets.h"
 
-#include "../core/delaunay.h"
-#include "../core/ridge.h"
-
 #include <src/com/error.h>
+#include <src/geometry/core/delaunay.h>
+#include <src/geometry/core/ridge.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>

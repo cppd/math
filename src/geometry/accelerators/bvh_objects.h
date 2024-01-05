@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bvh_object.h"
 
-#include "../spatial/bounding_box.h"
-
 #include <src/com/reference.h>
+#include <src/geometry/spatial/bounding_box.h>
 
 #include <cstddef>
 #include <type_traits>

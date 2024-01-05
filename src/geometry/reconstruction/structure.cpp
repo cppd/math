@@ -25,11 +25,10 @@ Cambridge University Press, 2007.
 
 #include "functions.h"
 
-#include "../core/delaunay.h"
-
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/core/delaunay.h>
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 

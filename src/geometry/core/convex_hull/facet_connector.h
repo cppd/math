@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../ridge.h"
-
 #include <src/com/error.h>
+#include <src/geometry/core/ridge.h>
 
 #include <array>
 #include <cstddef>

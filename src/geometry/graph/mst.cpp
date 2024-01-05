@@ -26,14 +26,13 @@ Kruskal’s algorithm
 
 #include "mst.h"
 
-#include "../core/ridge.h"
-
 #include <src/com/alg.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/union_find.h>
+#include <src/geometry/core/ridge.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
