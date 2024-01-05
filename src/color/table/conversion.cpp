@@ -15,10 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../conversion.h"
-
 #include "conversion.h"
 
+#include <src/color/conversion.h>
 #include <src/com/type/limit.h>
 
 #include <cmath>

@@ -15,8 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../daylight_samples.h"
-
+#include <src/color/samples/daylight_samples.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
