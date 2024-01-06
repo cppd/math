@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include "../simplex_noise.h"
-
 #include <src/com/log.h>
+#include <src/noise/simplex_noise.h>
 #include <src/settings/dimensions.h>
 #include <src/test/test.h>
 
