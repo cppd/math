@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../alg.h"
+#include <src/com/alg.h>
 
 #include <string>
 #include <string_view>

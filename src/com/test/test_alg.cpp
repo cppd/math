@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../alg.h"
+#include <src/com/alg.h>
 
 #include <array>
 #include <cstdint>

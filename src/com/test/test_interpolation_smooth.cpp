@@ -15,10 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../interpolation_smooth.h"
-
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
+#include <src/com/interpolation_smooth.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>

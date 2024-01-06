@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "reverse.h"
 
-#include "../reverse.h"
+#include <src/com/bit/reverse.h>
 
 #include <iomanip>
 #include <ios>

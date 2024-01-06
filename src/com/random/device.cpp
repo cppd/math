@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(__linux__)
 
-#include "../error.h"
+#include <src/com/error.h>
 
 #include <cstddef>
 #include <fstream>
@@ -49,7 +49,7 @@ void read_system_random(const std::span<std::byte> bytes)
 
 #elif defined(_WIN32)
 
-#include "../error.h"
+#include <src/com/error.h>
 
 // first windows.h
 #include <windows.h>

@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../union_find.h"
-
 #include <src/com/error.h>
+#include <src/com/union_find.h>
 #include <src/test/test.h>
 
 namespace ns
