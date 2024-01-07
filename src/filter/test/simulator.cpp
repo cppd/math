@@ -17,15 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
-#include "../filters/measurement.h"
-#include "../settings/instantiation.h"
-
 #include <src/com/angle.h>
 #include <src/com/constant.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
+#include <src/filter/filters/measurement.h>
+#include <src/filter/settings/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>

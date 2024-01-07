@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "converters.h"
 
-#include "../files.h"
-
 #include <src/color/rgb8.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/settings/instantiation.h>
+#include <src/filter/test/files.h>
 #include <src/numerical/vector.h>
 
 #include <cstddef>

@@ -19,30 +19,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
-#include "../filters/acceleration/acceleration_0.h"
-#include "../filters/acceleration/acceleration_1.h"
-#include "../filters/acceleration/acceleration_ekf.h"
-#include "../filters/acceleration/init.h"
-#include "../filters/direction/direction_1_0.h"
-#include "../filters/direction/direction_1_1.h"
-#include "../filters/direction/direction_2_1.h"
-#include "../filters/direction/init.h"
-#include "../filters/estimation/position_estimation.h"
-#include "../filters/estimation/position_variance.h"
-#include "../filters/position/init.h"
-#include "../filters/position/position_0.h"
-#include "../filters/position/position_1.h"
-#include "../filters/position/position_2.h"
-#include "../filters/speed/init.h"
-#include "../filters/speed/speed_1.h"
-#include "../filters/speed/speed_2.h"
-#include "../settings/instantiation.h"
-
 #include <src/color/rgb8.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/sort.h>
+#include <src/filter/filters/acceleration/acceleration_0.h>
+#include <src/filter/filters/acceleration/acceleration_1.h>
+#include <src/filter/filters/acceleration/acceleration_ekf.h>
+#include <src/filter/filters/acceleration/init.h>
+#include <src/filter/filters/direction/direction_1_0.h>
+#include <src/filter/filters/direction/direction_1_1.h>
+#include <src/filter/filters/direction/direction_2_1.h>
+#include <src/filter/filters/direction/init.h>
+#include <src/filter/filters/estimation/position_estimation.h>
+#include <src/filter/filters/estimation/position_variance.h>
+#include <src/filter/filters/position/init.h>
+#include <src/filter/filters/position/position_0.h>
+#include <src/filter/filters/position/position_1.h>
+#include <src/filter/filters/position/position_2.h>
+#include <src/filter/filters/speed/init.h>
+#include <src/filter/filters/speed/speed_1.h>
+#include <src/filter/filters/speed/speed_2.h>
+#include <src/filter/settings/instantiation.h>
 
 #include <array>
 #include <cmath>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../measurement.h"
+#include <src/filter/filters/measurement.h>
 
 #include <optional>
 

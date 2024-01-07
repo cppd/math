@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
-#include "../filters/estimation/position_estimation.h"
-#include "../filters/estimation/position_variance.h"
-#include "../filters/filter.h"
+#include <src/filter/filters/estimation/position_estimation.h>
+#include <src/filter/filters/estimation/position_variance.h>
+#include <src/filter/filters/filter.h>
 
 #include <cstddef>
 #include <memory>

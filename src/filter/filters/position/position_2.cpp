@@ -20,11 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_2.h"
 #include "init.h"
 
-#include "../filter.h"
-#include "../measurement.h"
-
 #include <src/com/error.h>
 #include <src/filter/consistency.h>
+#include <src/filter/filters/filter.h>
+#include <src/filter/filters/measurement.h>
 #include <src/filter/settings/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>

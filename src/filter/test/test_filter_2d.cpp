@@ -20,9 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
-#include "../filters/measurement.h"
-
 #include <src/com/log.h>
+#include <src/filter/filters/measurement.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 

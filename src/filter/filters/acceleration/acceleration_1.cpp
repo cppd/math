@@ -20,14 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 #include "update.h"
 
-#include "../estimation.h"
-#include "../filter.h"
-#include "../measurement.h"
-
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/filter/filters/estimation.h>
+#include <src/filter/filters/filter.h>
+#include <src/filter/filters/measurement.h>
 #include <src/filter/settings/instantiation.h>
 
 #include <cstddef>

@@ -17,12 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "files.h"
 
-#include "../consistency.h"
-#include "../ekf.h"
-#include "../models.h"
-#include "../sigma_points.h"
-#include "../ukf.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
@@ -30,6 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/com/type/name.h>
+#include <src/filter/consistency.h>
+#include <src/filter/ekf.h>
+#include <src/filter/models.h>
+#include <src/filter/sigma_points.h>
+#include <src/filter/ukf.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>

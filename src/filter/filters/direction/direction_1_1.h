@@ -20,12 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_1_1.h"
 #include "init.h"
 
-#include "../estimation.h"
-#include "../filter.h"
-#include "../measurement.h"
-#include "../utility/measurement_queue.h"
-
 #include <src/filter/consistency.h>
+#include <src/filter/filters/estimation.h>
+#include <src/filter/filters/filter.h>
+#include <src/filter/filters/measurement.h>
+#include <src/filter/filters/utility/measurement_queue.h>
 
 #include <cstddef>
 #include <memory>
