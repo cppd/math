@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../buffers/opacity.h"
-
 #include <src/gpu/render_buffers.h>
+#include <src/gpu/renderer/buffers/opacity.h>
 #include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>

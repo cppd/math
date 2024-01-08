@@ -26,9 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/descriptors.h"
 #include "shaders/program_shadow.h"
 
-#include "../code/code.h"
-
 #include <src/com/error.h>
+#include <src/gpu/renderer/code/code.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/commands.h>

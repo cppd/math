@@ -24,12 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/mesh.h"
 #include "shaders/descriptors.h"
 
-#include "../shading_parameters.h"
-
 #include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/merge.h>
+#include <src/gpu/renderer/shading_parameters.h>
 #include <src/model/mesh.h>
 #include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
