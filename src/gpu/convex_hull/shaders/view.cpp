@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
-#include "../code/code.h"
-
 #include <src/com/error.h>
+#include <src/gpu/convex_hull/code/code.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>

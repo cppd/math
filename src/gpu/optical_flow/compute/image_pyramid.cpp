@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_pyramid.h"
 
-#include "../barriers.h"
-#include "../option.h"
-#include "../shaders/downsample.h"
-#include "../shaders/grayscale.h"
-
 #include <src/com/error.h>
 #include <src/com/group_count.h>
+#include <src/gpu/optical_flow/barriers.h>
+#include <src/gpu/optical_flow/option.h>
+#include <src/gpu/optical_flow/shaders/downsample.h>
+#include <src/gpu/optical_flow/shaders/grayscale.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>

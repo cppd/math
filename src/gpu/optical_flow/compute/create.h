@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../shaders/flow.h"
-
+#include <src/gpu/optical_flow/shaders/flow.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device.h>

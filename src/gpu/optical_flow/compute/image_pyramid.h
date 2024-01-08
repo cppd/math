@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../shaders/downsample.h"
-#include "../shaders/grayscale.h"
-
+#include <src/gpu/optical_flow/shaders/downsample.h>
+#include <src/gpu/optical_flow/shaders/grayscale.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>

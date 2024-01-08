@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "../shaders/flow.h"
-
 #include <src/com/error.h>
+#include <src/gpu/optical_flow/shaders/flow.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device.h>

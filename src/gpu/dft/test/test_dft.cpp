@@ -15,14 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <src/dft/dft.h>
-#include <src/progress/progress.h>
-#include <src/vulkan/physical_device/physical_device.h>
+#include "test_data.h"
 
-#include <cstddef>
-#include <exception>
-#include <memory>
-#include <string_view>
 #if defined(CUDA_FOUND)
 #include <src/dft/cufft.h>
 #endif
@@ -31,25 +25,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/dft/fftw.h>
 #endif
 
-#include "test_data.h"
-
-#include "../compute.h"
-
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/dft/dft.h>
+#include <src/gpu/dft/compute.h>
+#include <src/progress/progress.h>
 #include <src/settings/directory.h>
 #include <src/test/test.h>
+#include <src/vulkan/physical_device/physical_device.h>
 
 #include <array>
 #include <cmath>
 #include <complex>
+#include <cstddef>
+#include <exception>
 #include <filesystem>
+#include <memory>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using Complex = std::complex<float>;
