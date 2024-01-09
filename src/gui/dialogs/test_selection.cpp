@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message.h"
 
-#include "../com/support.h"
-
 #include <src/com/error.h>
+#include <src/gui/com/support.h>
 
 #include <QCheckBox>
 #include <QDialog>

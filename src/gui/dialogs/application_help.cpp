@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application_help.h"
 
-#include "../com/support.h"
-
+#include <src/gui/com/support.h>
 #include <src/settings/name.h>
 
 #include <QMessageBox>

@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object_selection.h"
 
-#include "../com/support.h"
-
 #include <src/com/error.h>
+#include <src/gui/com/support.h>
 
 #include <QDialog>
 #include <QPushButton>
