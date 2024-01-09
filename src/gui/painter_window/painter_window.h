@@ -23,12 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sliders_widget.h"
 #include "statistics_widget.h"
 
-#include "../com/application.h"
-#include "../com/support.h"
-
 #include "ui_painter_window.h"
 
 #include <src/com/type/name.h>
+#include <src/gui/com/application.h>
+#include <src/gui/com/support.h>
 #include <src/painter/painter.h>
 #include <src/painter/scenes/storage.h>
 

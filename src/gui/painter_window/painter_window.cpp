@@ -23,14 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sliders_widget.h"
 #include "statistics_widget.h"
 
-#include "../com/support.h"
-#include "../dialogs/message.h"
-
 #include "ui_painter_window.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/gui/com/support.h>
+#include <src/gui/dialogs/message.h>
 #include <src/painter/painter.h>
 #include <src/settings/name.h>
 

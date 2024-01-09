@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pixels.h"
 
-#include "../com/connection.h"
-#include "../com/threads.h"
+#include <src/gui/com/connection.h>
+#include <src/gui/com/threads.h>
 
 #include <QMenu>
 #include <QStatusBar>

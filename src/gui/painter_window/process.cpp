@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process.h"
 
-#include "../dialogs/painter_image.h"
-
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
+#include <src/gui/dialogs/painter_image.h>
 #include <src/image/conversion.h>
 #include <src/image/depth.h>
 #include <src/image/file_save.h>

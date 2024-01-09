@@ -20,11 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pixels.h"
 #include "process.h"
 
-#include "../com/threads.h"
-
 #include <src/com/error.h>
 #include <src/com/message.h>
 #include <src/com/print.h>
+#include <src/gui/com/threads.h>
 
 #include <QAction>
 #include <QMenu>

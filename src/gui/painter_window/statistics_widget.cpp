@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "difference.h"
 
-#include "../com/support.h"
-
 #include <src/com/print.h>
+#include <src/gui/com/support.h>
 #include <src/painter/painter.h>
 
 #include <QWidget>
