@@ -27,19 +27,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
-#include "../com/application.h"
-#include "../com/command_line.h"
-#include "../com/model_events.h"
-#include "../com/support.h"
-#include "../dialogs/application_about.h"
-#include "../dialogs/application_help.h"
-#include "../dialogs/message.h"
-
 #include "ui_main_window.h"
 
 #include <src/com/error.h>
 #include <src/com/merge.h>
 #include <src/com/message.h>
+#include <src/gui/com/application.h>
+#include <src/gui/com/command_line.h>
+#include <src/gui/com/model_events.h>
+#include <src/gui/com/support.h>
+#include <src/gui/dialogs/application_about.h>
+#include <src/gui/dialogs/application_help.h>
+#include <src/gui/dialogs/message.h>
 #include <src/settings/name.h>
 #include <src/storage/repository.h>
 #include <src/view/create.h>

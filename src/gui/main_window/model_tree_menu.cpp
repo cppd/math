@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree_actions.h"
 
-#include "../dialogs/message.h"
-
+#include <src/gui/dialogs/message.h>
 #include <src/model/object_id.h>
 
 #include <QAction>

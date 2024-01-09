@@ -20,9 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "model_tree_menu.h"
 #include "model_tree_style.h"
 
-#include "../com/model_tree.h"
-
 #include <src/com/error.h>
+#include <src/gui/com/model_tree.h>
 #include <src/model/mesh_object.h>
 #include <src/model/object_id.h>
 #include <src/model/volume_object.h>

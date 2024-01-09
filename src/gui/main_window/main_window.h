@@ -27,10 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
-#include "../com/model_events.h"
-
 #include "ui_main_window.h"
 
+#include <src/gui/com/model_events.h>
 #include <src/storage/repository.h>
 #include <src/view/event.h>
 #include <src/view/view.h>

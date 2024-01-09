@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view_widget.h"
 
-#include "../com/support.h"
-
 #include <src/com/error.h>
 #include <src/com/message.h>
+#include <src/gui/com/support.h>
 #include <src/view/event.h>
 #include <src/view/view.h>
 

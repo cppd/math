@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "lighting_widget.h"
 
-#include "../com/support.h"
-
 #include <src/color/color.h>
 #include <src/color/illuminants.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/gui/com/support.h>
 #include <src/view/event.h>
 #include <src/view/view.h>
 

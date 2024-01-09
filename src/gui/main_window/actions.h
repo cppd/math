@@ -21,10 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "lighting_widget.h"
 #include "model_tree.h"
 
-#include "../com/command_line.h"
-#include "../com/connection.h"
-#include "../com/threads.h"
-
+#include <src/gui/com/command_line.h>
+#include <src/gui/com/connection.h>
+#include <src/gui/com/threads.h>
 #include <src/storage/repository.h>
 #include <src/view/view.h>
 

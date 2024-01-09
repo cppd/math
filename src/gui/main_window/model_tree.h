@@ -19,12 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree_actions.h"
 
-#include "../com/connection.h"
-#include "../com/model_tree.h"
-#include "../com/thread_queue.h"
-
 #include "ui_model_tree.h"
 
+#include <src/gui/com/connection.h>
+#include <src/gui/com/model_tree.h>
+#include <src/gui/com/thread_queue.h>
 #include <src/model/mesh_object.h>
 #include <src/model/object_id.h>
 #include <src/model/volume_object.h>

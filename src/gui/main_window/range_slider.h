@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../com/connection.h"
+#include <src/gui/com/connection.h>
 
 #include <QObject>
 #include <QSlider>

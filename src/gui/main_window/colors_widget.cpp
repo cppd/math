@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "colors_widget.h"
 
-#include "../com/support.h"
-#include "../dialogs/color_dialog.h"
-
 #include <src/color/color.h>
+#include <src/gui/com/support.h>
+#include <src/gui/dialogs/color_dialog.h>
 #include <src/view/event.h>
 #include <src/view/view.h>
 
