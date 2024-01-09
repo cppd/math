@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
-#include "../dialogs/message.h"
-
 #include <src/com/error.h>
+#include <src/gui/dialogs/message.h>
 
 #include <QApplication>
 #include <QEvent>

@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "support.h"
 
-#include "../dialogs/message.h"
-
 #include <src/com/error.h>
 #include <src/com/exception.h>
 #include <src/com/type/limit.h>
+#include <src/gui/dialogs/message.h>
 #include <src/progress/progress_interfaces.h>
 #include <src/progress/progress_list.h>
 
