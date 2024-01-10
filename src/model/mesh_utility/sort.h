@@ -26,10 +26,9 @@ Key-indexed counting
 
 #pragma once
 
-#include "../mesh.h"
-
 #include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/model/mesh.h>
 
 #include <algorithm>
 #include <cstddef>

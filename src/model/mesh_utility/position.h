@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bounding_box.h"
 
-#include "../com/functions.h"
-#include "../mesh.h"
-
 #include <src/com/error.h>
+#include <src/model/com/functions.h>
+#include <src/model/mesh.h>
 
 #include <cstddef>
 #include <optional>

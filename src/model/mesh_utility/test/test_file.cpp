@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../file/load_stl.h"
-#include "../file/save_stl.h"
-
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
@@ -28,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/model/mesh.h>
 #include <src/model/mesh_utility.h>
+#include <src/model/mesh_utility/file/load_stl.h>
+#include <src/model/mesh_utility/file/save_stl.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/dimensions.h>

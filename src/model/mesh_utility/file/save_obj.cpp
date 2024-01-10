@@ -17,11 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
-#include "../bounding_box.h"
-#include "../file_info.h"
-#include "../unique.h"
-#include "../vertices.h"
-
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
@@ -29,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/model/mesh.h>
+#include <src/model/mesh_utility/bounding_box.h>
+#include <src/model/mesh_utility/file_info.h>
+#include <src/model/mesh_utility/unique.h>
+#include <src/model/mesh_utility/vertices.h>
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
