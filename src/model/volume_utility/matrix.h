@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position.h"
 
-#include "../volume.h"
-
+#include <src/model/volume.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>

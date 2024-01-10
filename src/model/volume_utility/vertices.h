@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../volume.h"
-
 #include <src/com/error.h>
+#include <src/model/volume.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 

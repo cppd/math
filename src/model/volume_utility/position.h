@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bounding_box.h"
 
-#include "../com/functions.h"
-#include "../volume.h"
-
 #include <src/com/error.h>
+#include <src/model/com/functions.h>
+#include <src/model/volume.h>
 #include <src/numerical/vector.h>
 
 #include <cstddef>
