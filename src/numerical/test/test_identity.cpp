@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../identity.h"
+#include <src/numerical/identity.h>
 
 #include <cstddef>
 

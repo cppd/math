@@ -15,17 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../complement.h"
-#include "../determinant.h"
-#include "../gram.h"
-#include "../vector.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/numerical/complement.h>
+#include <src/numerical/determinant.h>
+#include <src/numerical/gram.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <array>
