@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../sphere_uniform.h"
-#include "../testing/test.h"
-
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
@@ -25,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
+#include <src/sampling/sphere_uniform.h>
+#include <src/sampling/testing/test.h>
 #include <src/test/test.h>
 
 #include <cstddef>

@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../halton_sampler.h"
-#include "../lh_sampler.h"
-#include "../sj_sampler.h"
+#include <src/sampling/halton_sampler.h>
+#include <src/sampling/lh_sampler.h>
+#include <src/sampling/sj_sampler.h>
 
 #include <cstddef>
 #include <string_view>

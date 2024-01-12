@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_intersection.h"
 #include "sphere_mesh.h"
 
-#include "../sphere_uniform.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -31,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/sphere_simplex.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <algorithm>
 #include <array>

@@ -15,10 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../halton_sampler.h"
-#include "../lh_sampler.h"
-#include "../sj_sampler.h"
-
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/exponent.h>
@@ -30,6 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
+#include <src/sampling/halton_sampler.h>
+#include <src/sampling/lh_sampler.h>
+#include <src/sampling/sj_sampler.h>
 #include <src/test/test.h>
 
 #include <cmath>
