@@ -27,7 +27,7 @@ Parameterizing Fresnel Values
 
 #pragma once
 
-#include "../objects.h"
+#include <src/shading/objects.h>
 
 namespace ns::shading::ggx
 {

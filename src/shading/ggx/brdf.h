@@ -30,12 +30,11 @@ Elsevier, 2017.
 #include "multiple_bounce.h"
 #include "subsurface.h"
 
-#include "../objects.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_cosine.h>
+#include <src/shading/objects.h>
 
 #include <cstddef>
 #include <random>

@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../fresnel.h"
-
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/log.h>
@@ -25,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/shading/specular/fresnel.h>
 #include <src/test/test.h>
 
 #include <cmath>

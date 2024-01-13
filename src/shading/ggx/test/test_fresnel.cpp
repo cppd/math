@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../fresnel.h"
-
 #include <src/color/color.h>
+#include <src/shading/ggx/fresnel.h>
 
 #include <cstddef>
 

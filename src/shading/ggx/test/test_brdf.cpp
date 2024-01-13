@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../brdf.h"
-#include "../metalness.h"
-
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -29,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 #include <src/sampling/testing/test.h>
 #include <src/shading/compute/brdf.h>
+#include <src/shading/ggx/brdf.h>
+#include <src/shading/ggx/metalness.h>
 #include <src/shading/objects.h>
 #include <src/shading/testing/color.h>
 #include <src/shading/testing/random.h>
