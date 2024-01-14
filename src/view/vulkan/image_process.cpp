@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_resolve.h"
 
-#include "../event.h"
-
 #include <src/com/error.h>
 #include <src/gpu/convex_hull/view.h>
 #include <src/gpu/dft/view.h>
@@ -28,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/pencil_sketch/view.h>
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
+#include <src/view/event.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device.h>
 #include <src/vulkan/objects.h>

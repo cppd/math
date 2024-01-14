@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../event.h"
-
 #include <src/gpu/renderer/event.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
+#include <src/view/event.h>
 
 #include <functional>
 

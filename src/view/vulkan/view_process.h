@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clear_buffer.h"
 
-#include "../com/camera.h"
-#include "../event.h"
-
 #include <src/color/color.h>
 #include <src/gpu/renderer/event.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/numerical/vector.h>
+#include <src/view/com/camera.h>
+#include <src/view/event.h>
 
 #include <functional>
 #include <utility>

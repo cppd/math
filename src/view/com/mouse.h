@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include "../event.h"
-
 #include <src/com/type/limit.h>
 #include <src/numerical/region.h>
+#include <src/view/event.h>
 
 #include <tuple>
 #include <unordered_map>

@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../event.h"
-#include "../view.h"
-
+#include <src/view/event.h>
+#include <src/view/view.h>
 #include <src/window/handle.h>
 
 #include <array>

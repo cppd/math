@@ -25,15 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_info.h"
 #include "view_process.h"
 
-#include "../com/camera.h"
-#include "../com/clip_plane.h"
-#include "../com/frame_rate.h"
-#include "../com/mouse.h"
-#include "../com/view_thread.h"
-#include "../com/window.h"
-#include "../event.h"
-#include "../view.h"
-
 #include <src/color/color.h>
 #include <src/color/rgb8.h>
 #include <src/com/error.h>
@@ -43,6 +34,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/numerical/region.h>
+#include <src/view/com/camera.h>
+#include <src/view/com/clip_plane.h>
+#include <src/view/com/frame_rate.h>
+#include <src/view/com/mouse.h>
+#include <src/view/com/view_thread.h>
+#include <src/view/com/window.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device/device_graphics.h>

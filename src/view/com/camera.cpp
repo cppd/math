@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include "../event.h"
-
 #include <src/com/conversion.h>
 #include <src/gpu/renderer/event.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
+#include <src/view/event.h>
 
 #include <algorithm>
 #include <cmath>
