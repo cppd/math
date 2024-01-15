@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage.h"
 
-#include "../objects.h"
-
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/progress/progress.h>
 
 #include <cstddef>

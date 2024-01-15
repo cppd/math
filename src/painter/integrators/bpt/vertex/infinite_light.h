@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "area_pdf.h"
 
-#include "../light_distribution.h"
-
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/integrators/bpt/light_distribution.h>
 #include <src/painter/objects.h>
 
 #include <cstddef>

@@ -19,15 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage.h"
 
-#include "../lights/parallelotope_light.h"
-#include "../lights/point_light.h"
-#include "../lights/spot_light.h"
-#include "../objects.h"
-#include "../projectors/perspective_projector.h"
-#include "../projectors/spherical_projector.h"
-#include "../shapes/hyperplane_parallelotope.h"
-#include "../shapes/parallelotope.h"
-
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
 #include <src/com/enum.h>
@@ -35,6 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/numerical/vector.h>
+#include <src/painter/lights/parallelotope_light.h>
+#include <src/painter/lights/point_light.h>
+#include <src/painter/lights/spot_light.h>
+#include <src/painter/objects.h>
+#include <src/painter/projectors/perspective_projector.h>
+#include <src/painter/projectors/spherical_projector.h>
+#include <src/painter/shapes/hyperplane_parallelotope.h>
+#include <src/painter/shapes/parallelotope.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 

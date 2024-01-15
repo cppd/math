@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh.h"
-
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/shapes/simplex_volume.h>
 #include <src/geometry/spatial/bounding_box.h>
@@ -29,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/painter/objects.h>
 #include <src/painter/scenes/storage.h>
+#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress.h>
 #include <src/sampling/sphere_uniform.h>
 

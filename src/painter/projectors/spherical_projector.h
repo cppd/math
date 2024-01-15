@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
-
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 
 #include <array>
 #include <cstddef>

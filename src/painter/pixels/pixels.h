@@ -22,12 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pixel_filter.h"
 #include "pixel_region.h"
 
-#include "../painter.h"
-
 #include <src/com/global_index.h>
 #include <src/com/spinlock.h>
 #include <src/image/image.h>
 #include <src/numerical/vector.h>
+#include <src/painter/painter.h>
 
 #include <array>
 #include <cstddef>

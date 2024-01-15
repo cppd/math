@@ -21,14 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "integrator_pt.h"
 #include "statistics.h"
 
-#include "../objects.h"
-#include "../painter.h"
-#include "../pixels/pixels.h"
-
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/painter/objects.h>
+#include <src/painter/painter.h>
+#include <src/painter/pixels/pixels.h>
 #include <src/settings/instantiation.h>
 
 #include <atomic>

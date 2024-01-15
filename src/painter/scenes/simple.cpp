@@ -19,15 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage.h"
 
-#include "../lights/ball_light.h"
-#include "../objects.h"
-#include "../pixels/pixel_filter.h"
-#include "../projectors/parallel_projector.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/numerical/vector.h>
+#include <src/painter/lights/ball_light.h>
+#include <src/painter/objects.h>
+#include <src/painter/pixels/pixel_filter.h>
+#include <src/painter/projectors/parallel_projector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 

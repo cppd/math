@@ -22,8 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/merge.h"
 
-#include "../background.h"
-
+#include <src/painter/pixels/background.h>
 #include <src/settings/instantiation.h>
 
 #include <cstddef>

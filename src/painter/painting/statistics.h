@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../painter.h"
-
 #include <src/com/chrono.h>
+#include <src/painter/painter.h>
 
 #include <atomic>
 #include <mutex>

@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "statistics.h"
 
-#include "../objects.h"
-#include "../painter.h"
+#include <src/painter/objects.h>
+#include <src/painter/painter.h>
 
 #include <atomic>
 #include <cstddef>

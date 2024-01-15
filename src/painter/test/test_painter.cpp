@@ -17,12 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
-#include "../objects.h"
-#include "../painter.h"
-#include "../scenes/simple.h"
-#include "../scenes/storage.h"
-#include "../shapes/mesh.h"
-
 #include <src/color/color.h>
 #include <src/color/rgb8.h>
 #include <src/com/chrono.h>
@@ -45,6 +39,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
+#include <src/painter/painter.h>
+#include <src/painter/scenes/simple.h>
+#include <src/painter/scenes/storage.h>
+#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress.h>
 #include <src/settings/directory.h>
 

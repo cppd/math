@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh/facet.h"
 #include "mesh/material.h"
 
-#include "../objects.h"
-
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -40,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_object.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 #include <src/shading/ggx/brdf.h>

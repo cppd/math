@@ -21,12 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sampler.h"
 #include "statistics.h"
 
-#include "../objects.h"
-#include "../painter.h"
-#include "../pixels/pixels.h"
-
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
+#include <src/painter/painter.h>
+#include <src/painter/pixels/pixels.h>
 
 #include <atomic>
 #include <cstddef>

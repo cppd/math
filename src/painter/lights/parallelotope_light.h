@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/spotlight.h"
 
-#include "../objects.h"
-
 #include <src/com/random/pcg.h>
 #include <src/geometry/spatial/hyperplane_parallelotope.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 
 #include <cstddef>
 #include <optional>

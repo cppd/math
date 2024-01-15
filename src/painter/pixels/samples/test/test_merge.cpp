@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
-#include "../background.h"
-#include "../color.h"
-#include "../merge.h"
-
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/painter/pixels/samples/background.h>
+#include <src/painter/pixels/samples/color.h>
+#include <src/painter/pixels/samples/merge.h>
 #include <src/test/test.h>
 
 namespace ns::painter::pixels::samples::test

@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_intersection.h"
 
-#include "../objects.h"
-
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
@@ -30,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/point_offset.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
 

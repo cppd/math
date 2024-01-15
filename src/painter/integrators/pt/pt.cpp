@@ -27,13 +27,12 @@ Elsevier, 2017.
 
 #include "direct_lighting.h"
 
-#include "../com/normals.h"
-#include "../com/surface_sample.h"
-#include "../com/visibility.h"
-
 #include <src/com/random/pcg.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/integrators/com/normals.h>
+#include <src/painter/integrators/com/surface_sample.h>
+#include <src/painter/integrators/com/visibility.h>
 #include <src/painter/objects.h>
 #include <src/settings/instantiation.h>
 

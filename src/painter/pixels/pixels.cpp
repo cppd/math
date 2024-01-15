@@ -21,13 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "samples/create.h"
 
-#include "../painter.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/image/format.h>
 #include <src/image/image.h>
 #include <src/numerical/vector.h>
+#include <src/painter/painter.h>
 #include <src/settings/instantiation.h>
 
 #include <array>

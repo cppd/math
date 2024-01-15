@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../gaussian.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/numerical/vector.h>
+#include <src/painter/pixels/gaussian.h>
 #include <src/test/test.h>
 
 #include <cstddef>

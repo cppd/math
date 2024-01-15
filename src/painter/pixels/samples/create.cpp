@@ -24,9 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/select.h"
 #include "com/sort.h"
 
-#include "../color_contribution.h"
-
 #include <src/com/error.h>
+#include <src/painter/pixels/color_contribution.h>
 #include <src/settings/instantiation.h>
 
 #include <array>

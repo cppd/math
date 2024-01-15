@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/functions.h"
 
-#include "../objects.h"
-
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
@@ -28,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
+#include <src/painter/objects.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/settings/instantiation.h>
 
