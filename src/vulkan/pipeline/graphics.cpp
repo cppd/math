@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_info.h"
 
-#include "../objects.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>
 
