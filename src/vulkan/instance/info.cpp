@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "info.h"
 
-#include "../error.h"
+#include <src/vulkan/error.h>
 
 #include <vulkan/vulkan_core.h>
 

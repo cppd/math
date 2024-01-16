@@ -21,10 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "info.h"
 
-#include "../extensions.h"
-#include "../objects.h"
-
 #include <src/com/error.h>
+#include <src/vulkan/extensions.h>
+#include <src/vulkan/objects.h>
 #include <src/window/surface.h>
 
 #include <vulkan/vulkan_core.h>
