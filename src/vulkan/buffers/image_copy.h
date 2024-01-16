@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
-
 #include <src/image/format.h>
+#include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>
 

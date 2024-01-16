@@ -20,12 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "create.h"
 #include "memory.h"
 
-#include "../commands.h"
-#include "../error.h"
-#include "../objects.h"
-
 #include <src/com/container.h>
 #include <src/com/error.h>
+#include <src/vulkan/commands.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>
 
