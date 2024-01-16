@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "features.h"
 
-#include "../api_version.h"
-#include "../error.h"
-#include "../strings.h"
-
 #include <src/com/error.h>
+#include <src/vulkan/api_version.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/strings.h>
 
 #include <vulkan/vulkan_core.h>
 

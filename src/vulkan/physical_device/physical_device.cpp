@@ -21,18 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "functionality.h"
 #include "info.h"
 
-#include "../api_version.h"
-#include "../error.h"
-#include "../extensions.h"
-#include "../overview.h"
-#include "../strings.h"
-#include "../surface.h"
-
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/vulkan/api_version.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/extensions.h>
+#include <src/vulkan/overview.h>
+#include <src/vulkan/strings.h>
+#include <src/vulkan/surface.h>
 
 #include <vulkan/vulkan_core.h>
 

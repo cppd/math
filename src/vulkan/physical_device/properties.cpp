@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "info.h"
 
-#include "../strings.h"
-
 #include <src/com/print.h>
+#include <src/vulkan/strings.h>
 
 #include <vulkan/vulkan_core.h>
 
