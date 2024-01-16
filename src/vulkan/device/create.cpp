@@ -17,15 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "../objects.h"
-#include "../physical_device/features.h"
-#include "../physical_device/info.h"
-#include "../physical_device/physical_device.h"
-#include "../strings.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/string/strings.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/features.h>
+#include <src/vulkan/physical_device/info.h>
+#include <src/vulkan/physical_device/physical_device.h>
+#include <src/vulkan/strings.h>
 
 #include <vulkan/vulkan_core.h>
 
