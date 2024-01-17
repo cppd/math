@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -37,13 +38,6 @@ constexpr std::string_view COMMAND_CAT = "cat";
 // SPIR-V Specification
 // 3.1 Magic Number
 constexpr std::uint32_t SPR_MAGIC_NUMBER = 0x07230203;
-
-constexpr std::uint32_t bswap32(const std::uint32_t n)
-{
-        return __builtin_bswap32(n);
-}
-
-static_assert(bswap32(0x12345678) == 0x78563412);
 
 namespace
 {
@@ -167,7 +161,7 @@ void spr(const char* const input_name, const char* const output_name)
 
         const auto write = [](std::ofstream& ofs, const bool reverse_byte_order, const std::uint32_t n)
         {
-                ofs << "0x" << std::setw(8) << (!reverse_byte_order ? n : bswap32(n));
+                ofs << "0x" << std::setw(8) << (!reverse_byte_order ? n : std::byteswap(n));
         };
 
         std::ifstream ifs = create_ifstream(input_name, std::ios_base::binary);
@@ -187,7 +181,7 @@ void spr(const char* const input_name, const char* const output_name)
                 {
                         return false;
                 }
-                if (bswap32(n) == SPR_MAGIC_NUMBER)
+                if (std::byteswap(n) == SPR_MAGIC_NUMBER)
                 {
                         return true;
                 }
