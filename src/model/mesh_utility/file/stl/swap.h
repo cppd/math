@@ -26,15 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::model::mesh::file::stl
 {
-template <typename T>
-        requires std::is_same_v<std::uint32_t, T>
-[[nodiscard]] constexpr T byte_swap(const T n)
-{
-        static_assert(__builtin_bswap32(0x12345678) == 0x78563412);
-        static_assert(__builtin_bswap32(0x78563412) == 0x12345678);
-        return __builtin_bswap32(n);
-}
-
 template <std::size_t N>
 [[nodiscard]] std::array<Vector<N, float>, N> byte_swap(const std::array<Vector<N, std::uint32_t>, N>& facet_vertices)
 {
@@ -43,7 +34,7 @@ template <std::size_t N>
         {
                 for (std::size_t j = 0; j < N; ++j)
                 {
-                        res[i][j] = std::bit_cast<float>(byte_swap(facet_vertices[i][j]));
+                        res[i][j] = std::bit_cast<float>(std::byteswap(facet_vertices[i][j]));
                 }
         }
         return res;
@@ -55,7 +46,7 @@ template <std::size_t N>
         Vector<N, std::uint32_t> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = byte_swap(std::bit_cast<std::uint32_t>(v[i]));
+                res[i] = std::byteswap(std::bit_cast<std::uint32_t>(v[i]));
         }
         return res;
 }

@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -106,7 +107,7 @@ void write_begin_binary(std::ostream& file, const std::uint32_t facet_count)
         }
         else
         {
-                begin.number_of_triangles = stl::byte_swap(facet_count);
+                begin.number_of_triangles = std::byteswap(facet_count);
         }
 
         write(file, begin);

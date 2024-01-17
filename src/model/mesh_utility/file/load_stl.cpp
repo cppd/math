@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/instantiation.h>
 
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -81,7 +82,7 @@ std::uint32_t binary_number_of_triangles(const std::vector<char>& data)
         }
         else
         {
-                return stl::byte_swap(v);
+                return std::byteswap(v);
         }
 }
 
