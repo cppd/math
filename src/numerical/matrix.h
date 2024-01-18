@@ -102,7 +102,7 @@ template <std::size_t COUNT, std::size_t R, std::size_t C, typename T>
         {
                 for (std::size_t c = 0; c < RESULT_C; ++c)
                 {
-                        res(r, c) = 0;
+                        res[r, c] = 0;
                 }
         }
 
@@ -114,7 +114,7 @@ template <std::size_t COUNT, std::size_t R, std::size_t C, typename T>
                 {
                         for (std::size_t c = 0; c < C; ++c)
                         {
-                                res(base_r + r, base_c + c) = matrix(r, c);
+                                res[base_r + r, base_c + c] = matrix[r, c];
                         }
                 }
         }
@@ -151,7 +151,7 @@ template <std::size_t START, std::size_t STEP, std::size_t N, typename T>
         {
                 for (std::size_t c = 0; c < R_SIZE; ++c)
                 {
-                        res(r, c) = v(START + STEP * r, START + STEP * c);
+                        res[r, c] = v[START + STEP * r, START + STEP * c];
                 }
         }
         return res;
@@ -206,13 +206,13 @@ template <std::size_t ROWS, std::size_t INNER, std::size_t COLUMNS, typename T>
                 Vector<COLUMNS, T>& row = res.row(r);
                 for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
-                        row[c] = m1(r, 0) * m2(0, c);
+                        row[c] = m1[r, 0] * m2[0, c];
                 }
                 for (std::size_t i = 1; i < INNER; ++i)
                 {
                         for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                row[c] += m1(r, i) * m2(i, c);
+                                row[c] += m1[r, i] * m2[i, c];
                         }
                 }
         }
@@ -225,13 +225,13 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         Vector<COLUMNS, T> res;
         for (std::size_t c = 0; c < COLUMNS; ++c)
         {
-                res[c] = v[0] * m(0, c);
+                res[c] = v[0] * m[0, c];
         }
         for (std::size_t r = 1; r < ROWS; ++r)
         {
                 for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
-                        res[c] += v[r] * m(r, c);
+                        res[c] += v[r] * m[r, c];
                 }
         }
         return res;
@@ -243,10 +243,10 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         Vector<ROWS, T> res;
         for (std::size_t r = 0; r < ROWS; ++r)
         {
-                res[r] = m(r, 0) * v[0];
+                res[r] = m[r, 0] * v[0];
                 for (std::size_t c = 1; c < COLUMNS; ++c)
                 {
-                        res[r] += m(r, c) * v[c];
+                        res[r] += m[r, c] * v[c];
                 }
         }
         return res;
@@ -289,7 +289,7 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         {
                 for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
-                        res(r, c) = m(r, c);
+                        res[r, c] = m[r, c];
                 }
         }
         return res;

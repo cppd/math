@@ -78,14 +78,14 @@ Matrix<8, 8, T> p(
 
         Matrix<8, 8, T> res(0);
 
-        res(0, 0) = position_variance[0];
-        res(1, 1) = velocity_variance[0];
-        res(2, 2) = acceleration_variance[0];
-        res(3, 3) = position_variance[1];
-        res(4, 4) = velocity_variance[1];
-        res(5, 5) = acceleration_variance[1];
-        res(6, 6) = init.angle_variance;
-        res(7, 7) = init.angle_speed_variance;
+        res[0, 0] = position_variance[0];
+        res[1, 1] = velocity_variance[0];
+        res[2, 2] = acceleration_variance[0];
+        res[3, 3] = position_variance[1];
+        res[4, 4] = velocity_variance[1];
+        res[5, 5] = acceleration_variance[1];
+        res[6, 6] = init.angle_variance;
+        res[7, 7] = init.angle_speed_variance;
 
         return res;
 }
@@ -119,12 +119,12 @@ Matrix<8, 8, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const
         {
                 for (std::size_t c = 0; c < 6; ++c)
                 {
-                        res(r, c) = position_velocity_acceleration_p(r, c);
+                        res[r, c] = position_velocity_acceleration_p[r, c];
                 }
         }
 
-        res(6, 6) = init.angle_variance;
-        res(7, 7) = init.angle_speed_variance;
+        res[6, 6] = init.angle_variance;
+        res[7, 7] = init.angle_speed_variance;
 
         return res;
 }
@@ -166,16 +166,16 @@ Matrix<8, 8, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& ini
                         {
                                 for (std::size_t j = 0; j < 2; ++j)
                                 {
-                                        res(3 * r + i, 3 * c + j) = p(2 * r + i, 2 * c + j);
+                                        res[3 * r + i, 3 * c + j] = p[2 * r + i, 2 * c + j];
                                 }
                         }
                 }
         }
 
-        res(2, 2) = init.acceleration_variance;
-        res(5, 5) = init.acceleration_variance;
-        res(6, 6) = init.angle_variance;
-        res(7, 7) = init.angle_speed_variance;
+        res[2, 2] = init.acceleration_variance;
+        res[5, 5] = init.acceleration_variance;
+        res[6, 6] = init.angle_variance;
+        res[7, 7] = init.angle_speed_variance;
 
         return res;
 }
@@ -486,8 +486,8 @@ class Filter final : public Filter21<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(1, 1), filter_->p()(1, 4)},
-                        {filter_->p()(4, 1), filter_->p()(4, 4)}
+                        {filter_->p()[1, 1], filter_->p()[1, 4]},
+                        {filter_->p()[4, 1], filter_->p()[4, 4]}
                 };
         }
 
@@ -643,8 +643,8 @@ class Filter final : public Filter21<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(0, 0), filter_->p()(0, 3)},
-                        {filter_->p()(3, 0), filter_->p()(3, 3)}
+                        {filter_->p()[0, 0], filter_->p()[0, 3]},
+                        {filter_->p()[3, 0], filter_->p()[3, 3]}
                 };
         }
 
@@ -669,7 +669,7 @@ class Filter final : public Filter21<T>
         {
                 ASSERT(filter_);
 
-                return filter_->p()(6, 6);
+                return filter_->p()[6, 6];
         }
 
         [[nodiscard]] T angle_speed() const override
@@ -683,7 +683,7 @@ class Filter final : public Filter21<T>
         {
                 ASSERT(filter_);
 
-                return filter_->p()(7, 7);
+                return filter_->p()[7, 7];
         }
 
 public:

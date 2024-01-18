@@ -40,7 +40,7 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world)
         Vector3d size;
         for (unsigned i = 0; i < 3; ++i)
         {
-                const Vector3d v(texture_to_world(0, i), texture_to_world(1, i), texture_to_world(2, i));
+                const Vector3d v(texture_to_world[0, i], texture_to_world[1, i], texture_to_world[2, i]);
                 size[i] = v.norm();
         }
         return size;

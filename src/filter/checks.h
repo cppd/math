@@ -32,7 +32,7 @@ template <std::size_t N, typename T>
         // this is insufficient check based on diagonal only
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (!(p(i, i) > 0))
+                if (!(p[i, i] > 0))
                 {
                         return false;
                 }

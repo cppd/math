@@ -282,7 +282,7 @@ public:
 
         [[nodiscard]] T variance() const
         {
-                return filter_.p()(0, 0);
+                return filter_.p()[0, 0];
         }
 
         static std::string name()
@@ -353,7 +353,7 @@ public:
 
         [[nodiscard]] T variance() const
         {
-                return filter_.p()(0, 0);
+                return filter_.p()[0, 0];
         }
 
         static std::string name()

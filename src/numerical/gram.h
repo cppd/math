@@ -34,11 +34,11 @@ Matrix<M, M, T> gram_matrix(const std::array<Vector<N, T>, M>& vectors)
 
         for (std::size_t r = 0; r < M; ++r)
         {
-                res(r, r) = dot(vectors[r], vectors[r]);
+                res[r, r] = dot(vectors[r], vectors[r]);
                 for (std::size_t c = r + 1; c < M; ++c)
                 {
-                        res(r, c) = dot(vectors[r], vectors[c]);
-                        res(c, r) = res(r, c);
+                        res[r, c] = dot(vectors[r], vectors[c]);
+                        res[c, r] = res[r, c];
                 }
         }
 

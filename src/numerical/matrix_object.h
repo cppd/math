@@ -125,17 +125,17 @@ public:
                 }(std::make_integer_sequence<std::size_t, ROWS>());
         }
 
-        [[nodiscard]] constexpr const T& operator()(const std::size_t r, const std::size_t c) const
+        [[nodiscard]] constexpr const T& operator[](const std::size_t r, const std::size_t c) const
         {
                 return rows_[r][c];
         }
 
-        [[nodiscard]] constexpr T& operator()(const std::size_t r, const std::size_t c)
+        [[nodiscard]] constexpr T& operator[](const std::size_t r, const std::size_t c)
         {
                 return rows_[r][c];
         }
 
-        [[nodiscard]] constexpr const T& operator()(const std::size_t index) const
+        [[nodiscard]] constexpr const T& operator[](const std::size_t index) const
                 requires (ROWS == 1 || COLUMNS == 1)
         {
                 if constexpr (ROWS == 1)
@@ -148,7 +148,7 @@ public:
                 }
         }
 
-        [[nodiscard]] constexpr T& operator()(const std::size_t index)
+        [[nodiscard]] constexpr T& operator[](const std::size_t index)
                 requires (ROWS == 1 || COLUMNS == 1)
         {
                 if constexpr (ROWS == 1)
@@ -181,7 +181,7 @@ public:
                 {
                         for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                res(c, r) = rows_[r][c];
+                                res[c, r] = rows_[r][c];
                         }
                 }
                 return res;
@@ -215,7 +215,7 @@ public:
                 {
                         for (std::size_t c = 0; c < C; ++c)
                         {
-                                res(r, c) = rows_[r][c];
+                                res[r, c] = rows_[r][c];
                         }
                 }
                 return res;

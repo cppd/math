@@ -77,12 +77,12 @@ void set_matrix(MatrixWithDeterminant<N, T>* const m, std::uniform_real_distribu
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m->matrix(i, i) = urd(engine);
+                        m->matrix[i, i] = urd(engine);
                         for (std::size_t j = i + 1; j < N; ++j)
                         {
                                 const T v = urd(engine);
-                                m->matrix(i, j) = v;
-                                m->matrix(j, i) = v;
+                                m->matrix[i, j] = v;
+                                m->matrix[j, i] = v;
                         }
                 }
                 m->determinant = m->matrix.determinant();

@@ -49,7 +49,7 @@ T threshold(const Matrix<N, N, T>& a)
         {
                 for (std::size_t j = i + 1; j < N; ++j)
                 {
-                        sum += std::abs(a(i, j));
+                        sum += std::abs(a[i, j]);
                 }
         }
         return T{0.5} * sum / (N * (N - 1));
@@ -66,8 +66,8 @@ void rotate(
 
         T t;
         {
-                const T diff = a(l, l) - a(k, k);
-                const T phi = diff / (2 * a(k, l));
+                const T diff = a[l, l] - a[k, k];
+                const T phi = diff / (2 * a[k, l]);
                 const T phi_s = phi * phi + 1;
                 if (phi_s <= Limits<T>::max())
                 {
@@ -84,33 +84,33 @@ void rotate(
         const T s = t * c;
         const T tau = s / (1 + c);
 
-        const T a_kl = a(k, l);
-        a(k, l) = 0;
-        a(k, k) = a(k, k) - t * a_kl;
-        a(l, l) = a(l, l) + t * a_kl;
+        const T a_kl = a[k, l];
+        a[k, l] = 0;
+        a[k, k] = a[k, k] - t * a_kl;
+        a[l, l] = a[l, l] + t * a_kl;
 
         for (unsigned i = 0; i < k; ++i)
         {
-                const T a_ik = a(i, k);
-                const T a_il = a(i, l);
-                a(i, k) = a_ik - s * (a_il + tau * a_ik);
-                a(i, l) = a_il + s * (a_ik - tau * a_il);
+                const T a_ik = a[i, k];
+                const T a_il = a[i, l];
+                a[i, k] = a_ik - s * (a_il + tau * a_ik);
+                a[i, l] = a_il + s * (a_ik - tau * a_il);
         }
 
         for (unsigned i = k + 1; i < l; ++i)
         {
-                const T a_ki = a(k, i);
-                const T a_il = a(i, l);
-                a(k, i) = a_ki - s * (a_il + tau * a_ki);
-                a(i, l) = a_il + s * (a_ki - tau * a_il);
+                const T a_ki = a[k, i];
+                const T a_il = a[i, l];
+                a[k, i] = a_ki - s * (a_il + tau * a_ki);
+                a[i, l] = a_il + s * (a_ki - tau * a_il);
         }
 
         for (unsigned i = l + 1; i < N; ++i)
         {
-                const T a_ki = a(k, i);
-                const T a_li = a(l, i);
-                a(k, i) = a_ki - s * (a_li + tau * a_ki);
-                a(l, i) = a_li + s * (a_ki - tau * a_li);
+                const T a_ki = a[k, i];
+                const T a_li = a[l, i];
+                a[k, i] = a_ki - s * (a_li + tau * a_ki);
+                a[l, i] = a_li + s * (a_ki - tau * a_li);
         }
 
         for (unsigned i = 0; i < N; ++i)
@@ -157,7 +157,7 @@ Eigen<N, T> eigen_symmetric_upper_triangular(Matrix<N, N, T> a, const T& toleran
                 {
                         for (unsigned l = k + 1; l < N; ++l)
                         {
-                                if (std::abs(a(k, l)) >= mu)
+                                if (std::abs(a[k, l]) >= mu)
                                 {
                                         impl::rotate(k, l, &a, &vectors);
                                 }

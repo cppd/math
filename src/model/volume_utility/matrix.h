@@ -36,7 +36,7 @@ Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& siz
         Matrix<N + 1, N + 1, double> matrix = IDENTITY_MATRIX<N + 1, double>;
         for (std::size_t i = 0; i < N; ++i)
         {
-                matrix(i, i) = size[i] / max_size;
+                matrix[i, i] = size[i] / max_size;
         }
         return matrix;
 }

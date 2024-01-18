@@ -56,7 +56,7 @@ template <std::size_t N, typename T>
         {
                 for (std::size_t c = 0; c < N; ++c)
                 {
-                        if (!equal(a(r, c), b(r, c), precision))
+                        if (!equal(a[r, c], b[r, c], precision))
                         {
                                 return false;
                         }
@@ -72,7 +72,7 @@ template <std::size_t N, typename T>
         {
                 for (std::size_t c = r + 1; c < N; ++c)
                 {
-                        if (!(a(r, c) == 0))
+                        if (!(a[r, c] == 0))
                         {
                                 return false;
                         }
@@ -109,7 +109,7 @@ template <std::size_t N, typename T>
         {
                 for (std::size_t c = 0; c < N; ++c)
                 {
-                        res(r, c) = urd(pcg);
+                        res[r, c] = urd(pcg);
                 }
         }
         return res;
@@ -122,7 +122,7 @@ template <std::size_t N, typename T>
         Matrix<N, N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, i) = urd(pcg);
+                res[i, i] = urd(pcg);
         }
         return res;
 }

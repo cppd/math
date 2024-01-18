@@ -60,7 +60,7 @@ Matrix<N, N, T> covariance_matrix_simple(const std::vector<Vector<N, T>>& data)
                 {
                         for (std::size_t j = i; j < N; ++j)
                         {
-                                res(i, j) += v[i] * v[j];
+                                res[i, j] += v[i] * v[j];
                         }
                 }
         }
@@ -79,7 +79,7 @@ Matrix<N, N, T> covariance_matrix_full(const std::vector<Vector<N, T>>& data)
         {
                 for (std::size_t j = i; j < N; ++j)
                 {
-                        res(i, j) /= size;
+                        res[i, j] /= size;
                 }
         }
 
@@ -87,7 +87,7 @@ Matrix<N, N, T> covariance_matrix_full(const std::vector<Vector<N, T>>& data)
         {
                 for (std::size_t j = 0; j < i; ++j)
                 {
-                        res(i, j) = res(j, i);
+                        res[i, j] = res[j, i];
                 }
         }
 

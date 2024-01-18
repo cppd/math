@@ -60,8 +60,8 @@ Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance, const Init
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 2 * i;
-                res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = init.speed_variance;
+                res[b + 0, b + 0] = position_variance[i];
+                res[b + 1, b + 1] = init.speed_variance;
         }
         return res;
 }
@@ -130,7 +130,7 @@ struct PositionHJ final
                 Matrix<N / 2, N, T> res(0);
                 for (std::size_t i = 0; i < N / 2; ++i)
                 {
-                        res(i, 2 * i) = 1;
+                        res[i, 2 * i] = 1;
                 }
                 return res;
         }

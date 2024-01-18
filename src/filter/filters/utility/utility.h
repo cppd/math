@@ -71,7 +71,7 @@ template <typename T>
                 {-y / ns, x / ns}
         };
         const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-        const T r = p(0, 0);
+        const T r = p[0, 0];
         return Vector<2, T>(r, r);
 }
 
@@ -117,16 +117,16 @@ template <std::size_t N, typename T>
                 const T denominator = norm_i * norm_squared;
 
                 Matrix<1, N, T> error_propagation;
-                error_propagation(0, i) = -norm_i / norm_squared;
+                error_propagation[0, i] = -norm_i / norm_squared;
                 for (std::size_t j = 0; j < N; ++j)
                 {
                         if (i != j)
                         {
-                                error_propagation(0, j) = velocity[i] * velocity[j] / denominator;
+                                error_propagation[0, j] = velocity[i] * velocity[j] / denominator;
                         }
                 }
                 const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-                res[i] = p(0, 0);
+                res[i] = p[0, 0];
         }
 
         return res;
@@ -140,6 +140,6 @@ template <std::size_t N, typename T>
         //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
         const Matrix<1, N, T> error_propagation(velocity.normalized());
         const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
-        return p(0, 0);
+        return p[0, 0];
 }
 }

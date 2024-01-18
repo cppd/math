@@ -136,7 +136,7 @@ class Impl final : public MeshObject
                         {
                                 for (std::size_t j = 0; j < 4; ++j)
                                 {
-                                        transform_matrix_.matrix[i][j] = model_matrix(i, j);
+                                        transform_matrix_.matrix[i][j] = model_matrix[i, j];
                                 }
                         }
                 }

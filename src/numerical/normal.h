@@ -55,7 +55,7 @@ Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& 
                 {
                         for (std::size_t j = i + 1; j < N; ++j)
                         {
-                                max = std::max(max, std::abs(covariance_matrix(i, j)));
+                                max = std::max(max, std::abs(covariance_matrix[i, j]));
                         }
                 }
                 return max * (100 * Limits<T>::epsilon());

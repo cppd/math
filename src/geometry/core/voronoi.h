@@ -68,7 +68,7 @@ template <std::size_t N, typename T>
                 const Vector<N, T>& p = points[vertices[row + 1]];
                 for (std::size_t col = 0; col < N; ++col)
                 {
-                        a(row, col) = 2 * (p[col] - p0[col]);
+                        a[row, col] = 2 * (p[col] - p0[col]);
                 }
                 b[row] = dot(p, p) - dot0;
         }

@@ -51,10 +51,10 @@ void test_simple()
 
         const Matrix<2, 2, T> m = covariance_matrix_simple(data);
 
-        test_equal(m(0, 0), T{10});
-        test_equal(m(0, 1), T{12});
-        test_equal(m(1, 0), T{0});
-        test_equal(m(1, 1), T{16});
+        test_equal(m[0, 0], T{10});
+        test_equal(m[0, 1], T{12});
+        test_equal(m[1, 0], T{0});
+        test_equal(m[1, 1], T{16});
 }
 
 template <typename T>
@@ -70,10 +70,10 @@ void test_full()
 
         const Matrix<2, 2, T> m = covariance_matrix_full(data);
 
-        test_equal(m(0, 0), T{2.0L});
-        test_equal(m(0, 1), T{2.4L});
-        test_equal(m(1, 0), T{2.4L});
-        test_equal(m(1, 1), T{3.2L});
+        test_equal(m[0, 0], T{2.0L});
+        test_equal(m[0, 1], T{2.4L});
+        test_equal(m[1, 0], T{2.4L});
+        test_equal(m[1, 1], T{3.2L});
 }
 
 template <typename T>

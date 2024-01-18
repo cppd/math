@@ -74,7 +74,7 @@ template <typename Dst, std::size_t N, typename Src>
         {
                 for (unsigned c = 0; c < N; ++c)
                 {
-                        res.columns[c].data[r] = m(r, c);
+                        res.columns[c].data[r] = m[r, c];
                 }
         }
         return res;

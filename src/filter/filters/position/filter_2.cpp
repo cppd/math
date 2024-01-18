@@ -61,9 +61,9 @@ Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance, const Init
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
-                res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = init.speed_variance;
-                res(b + 2, b + 2) = init.acceleration_variance;
+                res[b + 0, b + 0] = position_variance[i];
+                res[b + 1, b + 1] = init.speed_variance;
+                res[b + 2, b + 2] = init.acceleration_variance;
         }
         return res;
 }
@@ -136,7 +136,7 @@ struct PositionHJ final
                 Matrix<N / 3, N, T> res(0);
                 for (std::size_t i = 0; i < N / 3; ++i)
                 {
-                        res(i, 3 * i) = 1;
+                        res[i, 3 * i] = 1;
                 }
                 return res;
         }
@@ -274,7 +274,7 @@ class FilterImpl final : public Filter2<N, T>
                                 {
                                         for (std::size_t j = 0; j < 2; ++j)
                                         {
-                                                res(2 * r + i, 2 * c + j) = p(3 * r + i, 3 * c + j);
+                                                res[2 * r + i, 2 * c + j] = p[3 * r + i, 3 * c + j];
                                         }
                                 }
                         }

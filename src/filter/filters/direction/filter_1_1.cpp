@@ -66,12 +66,12 @@ Matrix<6, 6, T> p(const Vector<2, T>& position_variance, const Vector<2, T>& vel
 
         Matrix<6, 6, T> res(0);
 
-        res(0, 0) = position_variance[0];
-        res(1, 1) = velocity_variance[0];
-        res(2, 2) = position_variance[1];
-        res(3, 3) = velocity_variance[1];
-        res(4, 4) = init.angle_variance;
-        res(5, 5) = init.angle_speed_variance;
+        res[0, 0] = position_variance[0];
+        res[1, 1] = velocity_variance[0];
+        res[2, 2] = position_variance[1];
+        res[3, 3] = velocity_variance[1];
+        res[4, 4] = init.angle_variance;
+        res[5, 5] = init.angle_speed_variance;
 
         return res;
 }
@@ -104,12 +104,12 @@ Matrix<6, 6, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& ini
         {
                 for (std::size_t c = 0; c < 4; ++c)
                 {
-                        res(r, c) = position_velocity_p(r, c);
+                        res[r, c] = position_velocity_p[r, c];
                 }
         }
 
-        res(4, 4) = init.angle_variance;
-        res(5, 5) = init.angle_speed_variance;
+        res[4, 4] = init.angle_variance;
+        res[5, 5] = init.angle_speed_variance;
 
         return res;
 }
@@ -411,8 +411,8 @@ class Filter final : public Filter11<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(1, 1), filter_->p()(1, 3)},
-                        {filter_->p()(3, 1), filter_->p()(3, 3)}
+                        {filter_->p()[1, 1], filter_->p()[1, 3]},
+                        {filter_->p()[3, 1], filter_->p()[3, 3]}
                 };
         }
 
@@ -556,8 +556,8 @@ class Filter final : public Filter11<T>
                 ASSERT(filter_);
 
                 return {
-                        {filter_->p()(0, 0), filter_->p()(0, 2)},
-                        {filter_->p()(2, 0), filter_->p()(2, 2)}
+                        {filter_->p()[0, 0], filter_->p()[0, 2]},
+                        {filter_->p()[2, 0], filter_->p()[2, 2]}
                 };
         }
 
@@ -582,7 +582,7 @@ class Filter final : public Filter11<T>
         {
                 ASSERT(filter_);
 
-                return filter_->p()(4, 4);
+                return filter_->p()[4, 4];
         }
 
         [[nodiscard]] T angle_speed() const override
@@ -596,7 +596,7 @@ class Filter final : public Filter11<T>
         {
                 ASSERT(filter_);
 
-                return filter_->p()(5, 5);
+                return filter_->p()[5, 5];
         }
 
 public:

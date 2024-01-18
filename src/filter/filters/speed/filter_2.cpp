@@ -69,9 +69,9 @@ Matrix<3 * N, 3 * N, T> p(
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
-                res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = velocity_variance[i];
-                res(b + 2, b + 2) = acceleration_variance[i];
+                res[b + 0, b + 0] = position_variance[i];
+                res[b + 1, b + 1] = velocity_variance[i];
+                res[b + 2, b + 2] = acceleration_variance[i];
         }
         return res;
 }
@@ -126,12 +126,12 @@ Matrix<3 * N, 3 * N, T> p(const Matrix<2 * N, 2 * N, T>& position_velocity_p, co
                 {
                         const std::size_t ac = 3 * c;
                         const std::size_t bc = 2 * c;
-                        res(ar + 0, ac + 0) = p(br + 0, bc + 0);
-                        res(ar + 0, ac + 1) = p(br + 0, bc + 1);
-                        res(ar + 1, ac + 0) = p(br + 1, bc + 0);
-                        res(ar + 1, ac + 1) = p(br + 1, bc + 1);
+                        res[ar + 0, ac + 0] = p[br + 0, bc + 0];
+                        res[ar + 0, ac + 1] = p[br + 0, bc + 1];
+                        res[ar + 1, ac + 0] = p[br + 1, bc + 0];
+                        res[ar + 1, ac + 1] = p[br + 1, bc + 1];
                 }
-                res(ar + 2, ar + 2) = init.acceleration_variance;
+                res[ar + 2, ar + 2] = init.acceleration_variance;
         }
 
         return res;
@@ -225,9 +225,9 @@ Matrix<N + 1, N + 1, T> position_speed_r(const Vector<N, T>& position_variance, 
         Matrix<N + 1, N + 1, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, i) = position_variance[i];
+                res[i, i] = position_variance[i];
         }
-        res(N, N) = speed_variance[0];
+        res[N, N] = speed_variance[0];
         return res;
 }
 

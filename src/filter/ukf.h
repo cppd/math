@@ -62,7 +62,7 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
                 {
                         for (std::size_t c = 0; c < N; ++c)
                         {
-                                p(r, c) += wc[i] * v[r] * v[c];
+                                p[r, c] += wc[i] * v[r] * v[c];
                         }
                 }
         }
@@ -89,7 +89,7 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
                 {
                         for (std::size_t c = 0; c < M; ++c)
                         {
-                                res(r, c) += wc[i] * s[r] * m[c];
+                                res[r, c] += wc[i] * s[r] * m[c];
                         }
                 }
         }

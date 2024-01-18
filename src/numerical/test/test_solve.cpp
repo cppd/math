@@ -133,7 +133,7 @@ bool are_equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T& abs_
         {
                 for (std::size_t c = 0; c < C; ++c)
                 {
-                        if (!are_equal(a(r, c), b(r, c), abs_precision, rel_precision))
+                        if (!are_equal(a[r, c], b[r, c], abs_precision, rel_precision))
                         {
                                 return false;
                         }

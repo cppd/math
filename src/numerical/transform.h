@@ -68,7 +68,7 @@ constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
         Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, i) = v[i];
+                res[i, i] = v[i];
         }
         return res;
 }
@@ -85,7 +85,7 @@ constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
         Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, N) = v[i];
+                res[i, N] = v[i];
         }
         return res;
 }
@@ -107,13 +107,13 @@ public:
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        if (matrix_(N - 1, i) != 0)
+                        if (matrix_[N - 1, i] != 0)
                         {
                                 error("Wrong matrix for matrix-vector multiplier");
                         }
                 }
 
-                if (matrix_(N - 1, N - 1) != 1)
+                if (matrix_[N - 1, N - 1] != 1)
                 {
                         error("Wrong matrix for matrix-vector multiplier");
                 }
@@ -124,12 +124,12 @@ public:
                 Vector<N - 1, T> res;
                 for (std::size_t r = 0; r < N - 1; ++r)
                 {
-                        res[r] = matrix_(r, 0) * v[0];
+                        res[r] = matrix_[r, 0] * v[0];
                         for (std::size_t c = 1; c < N - 1; ++c)
                         {
-                                res[r] += matrix_(r, c) * v[c];
+                                res[r] += matrix_[r, c] * v[c];
                         }
-                        res[r] += matrix_(r, N - 1);
+                        res[r] += matrix_[r, N - 1];
                 }
                 return res;
         }

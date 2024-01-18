@@ -31,7 +31,7 @@ template <std::size_t N, typename T>
         {
                 for (std::size_t c = 0; c < N; ++c)
                 {
-                        if (a(r, c) == b(r, c))
+                        if (a[r, c] == b[r, c])
                         {
                                 continue;
                         }

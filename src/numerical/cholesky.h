@@ -64,26 +64,26 @@ template <std::size_t N, typename T>
                         T sum = 0;
                         for (std::size_t j = 0; j < i; ++j)
                         {
-                                sum += l(i, j) * l(k, j);
+                                sum += l[i, j] * l[k, j];
                         }
-                        l(k, i) = (a(k, i) - sum) / l(i, i);
+                        l[k, i] = (a[k, i] - sum) / l[i, i];
                 }
 
                 T sum = 0;
                 for (std::size_t j = 0; j < k; ++j)
                 {
-                        const T v = l(k, j);
+                        const T v = l[k, j];
                         sum += v * v;
                 }
 
-                const T v = a(k, k) - sum;
+                const T v = a[k, k] - sum;
 
                 if (!(v >= 0))
                 {
                         throw CholeskyException("sqrt(" + to_string(v) + ")\n" + to_string(a) + "\n" + to_string(l));
                 }
 
-                l(k, k) = std::sqrt(v);
+                l[k, k] = std::sqrt(v);
         }
 
         return l;

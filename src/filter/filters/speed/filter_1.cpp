@@ -61,8 +61,8 @@ Matrix<2 * N, 2 * N, T> p(const Vector<N, T>& position_variance, const Vector<N,
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 2 * i;
-                res(b + 0, b + 0) = position_variance[i];
-                res(b + 1, b + 1) = velocity_variance[i];
+                res[b + 0, b + 0] = position_variance[i];
+                res[b + 1, b + 1] = velocity_variance[i];
         }
         return res;
 }
@@ -166,9 +166,9 @@ Matrix<N + 1, N + 1, T> position_speed_r(const Vector<N, T>& position_variance, 
         Matrix<N + 1, N + 1, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, i) = position_variance[i];
+                res[i, i] = position_variance[i];
         }
-        res(N, N) = speed_variance[0];
+        res[N, N] = speed_variance[0];
         return res;
 }
 

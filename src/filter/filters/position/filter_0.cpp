@@ -49,7 +49,7 @@ Matrix<N, N, T> init_p(const Vector<N, T>& position_variance)
         Matrix<N, N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
-                res(i, i) = position_variance[i];
+                res[i, i] = position_variance[i];
         }
         return res;
 }
@@ -107,7 +107,7 @@ struct PositionHJ final
                 Matrix<N, N, T> res(0);
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        res(i, i) = 1;
+                        res[i, i] = 1;
                 }
                 return res;
         }
