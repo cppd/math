@@ -152,11 +152,9 @@ std::size_t find_best_physical_device(
         return suitable_devices[best_i];
 }
 
-std::size_t find_random_physical_device(
-        const std::vector<PhysicalDevice>& physical_devices,
-        const std::vector<std::size_t>& suitable_devices)
+std::size_t find_random_physical_device(const std::vector<std::size_t>& suitable_devices)
 {
-        ASSERT(!physical_devices.empty() && !suitable_devices.empty());
+        ASSERT(!suitable_devices.empty());
 
         PCG engine;
         std::uniform_int_distribution<std::size_t> uid(0, suitable_devices.size() - 1);
@@ -179,7 +177,7 @@ std::size_t find_physical_device(
         case PhysicalDeviceSearchType::BEST:
                 return find_best_physical_device(physical_devices, suitable_devices);
         case PhysicalDeviceSearchType::RANDOM:
-                return find_random_physical_device(physical_devices, suitable_devices);
+                return find_random_physical_device(suitable_devices);
         }
 
         error("Unknown physical device search type " + to_string(enum_to_int(search_type)));
