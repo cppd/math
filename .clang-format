@@ -1,10 +1,16 @@
 AccessModifierOffset: -8
 AlignAfterOpenBracket: AlwaysBreak
 AlignArrayOfStructures: Right
-AlignConsecutiveAssignments: None
-AlignConsecutiveBitFields: None
-AlignConsecutiveDeclarations: None
-AlignConsecutiveMacros: None
+AlignConsecutiveAssignments:
+        Enabled: false
+AlignConsecutiveBitFields:
+        Enabled: false
+AlignConsecutiveDeclarations:
+        Enabled: false
+AlignConsecutiveMacros:
+        Enabled: false
+AlignConsecutiveShortCaseStatements:
+        Enabled: false
 AlignEscapedNewlines: Left
 AlignOperands: Align
 AlignTrailingComments:
@@ -42,6 +48,7 @@ BraceWrapping:
         SplitEmptyFunction: true
         SplitEmptyRecord: true
         SplitEmptyNamespace: true
+BracedInitializerIndentWidth: 8
 BreakAfterAttributes: Never
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
@@ -96,6 +103,7 @@ IntegerLiteralSeparator:
         Binary: 0
         Decimal: 0
         Hex: 0
+KeepEmptyLinesAtEOF: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: Signature
 LineEnding: LF
@@ -118,6 +126,7 @@ QualifierAlignment: Custom
 QualifierOrder: ['inline', 'static', 'friend', 'constexpr', 'const', 'volatile', 'type', 'restrict']
 ReferenceAlignment: Left
 ReflowComments: true
+RemoveParentheses: Leave
 RemoveSemicolon: false
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: Keyword
@@ -157,7 +166,12 @@ SpacesInContainerLiterals: false
 SpacesInLineCommentPrefix:
         Minimum: 1
         Maximum: 1
-SpacesInParentheses: false
+SpacesInParens: Custom
+SpacesInParensOptions:
+        InConditionalStatements: false
+        InCStyleCasts: false
+        InEmptyParentheses: false
+        Other: false
 SpacesInSquareBrackets: false
 Standard: Latest
 TabWidth: 8
