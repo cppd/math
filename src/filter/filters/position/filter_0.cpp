@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_0.h"
 
 #include <src/com/error.h>
-#include <src/filter/ekf.h>
+#include <src/filter/core/ekf.h>
+#include <src/filter/core/update_info.h>
 #include <src/filter/filters/utility/utility.h>
 #include <src/filter/settings/instantiation.h>
-#include <src/filter/update_info.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 

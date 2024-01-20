@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_1.h"
 #include "init.h"
 
-#include <src/filter/consistency.h>
+#include <src/filter/core/consistency.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 #include <src/numerical/matrix.h>

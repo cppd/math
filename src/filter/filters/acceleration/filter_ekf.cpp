@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
-#include <src/filter/ekf.h>
+#include <src/filter/core/ekf.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/utility/utility.h>
 #include <src/filter/settings/instantiation.h>

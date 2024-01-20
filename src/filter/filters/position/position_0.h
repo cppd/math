@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_0.h"
 
-#include <src/filter/consistency.h>
+#include <src/filter/core/consistency.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 
