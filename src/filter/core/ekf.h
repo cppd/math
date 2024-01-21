@@ -56,7 +56,7 @@ Sequential filters
 #include <optional>
 #include <string>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 namespace ekf_implementation
 {

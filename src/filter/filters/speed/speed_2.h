@@ -45,8 +45,8 @@ class Speed2 final : public Filter<N, T>
 
         struct Nees final
         {
-                NormalizedSquared<N, T> position;
-                NormalizedSquared<1, T> speed;
+                core::NormalizedSquared<N, T> position;
+                core::NormalizedSquared<1, T> speed;
         };
 
         std::optional<Nees> nees_;

@@ -160,7 +160,7 @@ class FilterImpl final : public Filter2<N, T>
 
         const std::optional<T> theta_;
         const T process_variance_;
-        std::optional<Ekf<3 * N, T>> filter_;
+        std::optional<core::Ekf<3 * N, T>> filter_;
 
         void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) override
         {
@@ -196,7 +196,7 @@ class FilterImpl final : public Filter2<N, T>
 
                 const Matrix<N, N, T> r = position_r(variance);
 
-                const UpdateInfo update = filter_->update(
+                const core::UpdateInfo update = filter_->update(
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
                         /*normalized_innovation=*/true, LIKELIHOOD);
 

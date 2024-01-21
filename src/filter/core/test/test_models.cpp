@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::filter
+namespace ns::filter::core::test
 {
 namespace
 {

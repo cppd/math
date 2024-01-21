@@ -38,9 +38,9 @@ class Position0 final : public FilterPosition<N, T>
         std::optional<T> gate_;
         std::unique_ptr<Filter0<N, T>> filter_;
 
-        NormalizedSquared<N, T> nees_position_;
-        NormalizedSquared<1, T> nees_speed_;
-        NormalizedSquared<1, T> nis_;
+        core::NormalizedSquared<N, T> nees_position_;
+        core::NormalizedSquared<1, T> nees_speed_;
+        core::NormalizedSquared<1, T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;

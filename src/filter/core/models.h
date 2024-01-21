@@ -39,7 +39,7 @@ Kalman and Bayesian Filters in Python.
 #include <cstddef>
 #include <type_traits>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 // 6.2.2 Continuous White Noise Acceleration Model
 // The changes in the velocity over a sampling period T are

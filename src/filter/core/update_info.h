@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <optional>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 template <std::size_t N, typename T>
 struct UpdateInfo final

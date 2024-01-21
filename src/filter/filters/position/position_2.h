@@ -42,9 +42,9 @@ class Position2 final : public FilterPosition<N, T>
         std::unique_ptr<Filter2<N, T>> filter_;
         Init<T> init_;
 
-        NormalizedSquared<N, T> nees_position_;
-        NormalizedSquared<1, T> nees_speed_;
-        NormalizedSquared<1, T> nis_;
+        core::NormalizedSquared<N, T> nees_position_;
+        core::NormalizedSquared<1, T> nees_speed_;
+        core::NormalizedSquared<1, T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;

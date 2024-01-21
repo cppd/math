@@ -472,7 +472,7 @@ class Filter final : public Filter21<T>
         const T sigma_points_alpha_;
         const T position_variance_;
         const T angle_variance_;
-        std::optional<Ukf<8, T, SigmaPoints<8, T>>> filter_;
+        std::optional<core::Ukf<8, T, core::SigmaPoints<8, T>>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
         {
@@ -501,7 +501,7 @@ class Filter final : public Filter21<T>
                 const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position, velocity, acceleration, init),
+                        core::create_sigma_points<8, T>(sigma_points_alpha_), x(position, velocity, acceleration, init),
                         p(position_variance, velocity_variance, acceleration_variance, init));
         }
 
@@ -511,7 +511,7 @@ class Filter final : public Filter21<T>
                 const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity_acceleration, init),
+                        core::create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity_acceleration, init),
                         p(position_velocity_acceleration_p, init));
         }
 
@@ -521,7 +521,7 @@ class Filter final : public Filter21<T>
                 const Init<T>& init) override
         {
                 filter_.emplace(
-                        create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity, init),
+                        core::create_sigma_points<8, T>(sigma_points_alpha_), x(position_velocity, init),
                         p(position_velocity_p, init));
         }
 

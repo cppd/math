@@ -34,7 +34,7 @@ Kalman and Bayesian Filters in Python.
 #include <cstddef>
 #include <type_traits>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 template <std::size_t N, typename T>
 class SigmaPoints final

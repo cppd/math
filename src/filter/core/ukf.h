@@ -39,7 +39,7 @@ Kalman and Bayesian Filters in Python.
 #include <tuple>
 #include <type_traits>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 namespace ukf_implementation
 {

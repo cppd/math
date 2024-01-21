@@ -1130,7 +1130,7 @@ class Filter final : public FilterEkf<T>
         const T position_variance_;
         const T angle_variance_;
         const T angle_r_variance_;
-        std::optional<Ekf<9, T>> filter_;
+        std::optional<core::Ekf<9, T>> filter_;
 
         [[nodiscard]] Vector<2, T> velocity() const
         {

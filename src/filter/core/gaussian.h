@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 template <std::size_t N, typename T>
 [[nodiscard]] T compute_mahalanobis_distance_squared(const Vector<N, T>& residual, const Matrix<N, N, T>& s_inversed)

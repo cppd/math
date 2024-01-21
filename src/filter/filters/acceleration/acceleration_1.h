@@ -46,10 +46,10 @@ class Acceleration1 final : public Filter<2, T>
 
         struct Nees final
         {
-                NormalizedSquared<2, T> position;
-                NormalizedSquared<1, T> speed;
-                NormalizedSquared<1, T> angle;
-                NormalizedSquared<1, T> angle_r;
+                core::NormalizedSquared<2, T> position;
+                core::NormalizedSquared<1, T> speed;
+                core::NormalizedSquared<1, T> angle;
+                core::NormalizedSquared<1, T> angle_r;
         };
 
         std::optional<Nees> nees_;

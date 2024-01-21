@@ -40,7 +40,7 @@ Kalman and Bayesian Filters in Python.
 #include <cstddef>
 #include <string>
 
-namespace ns::filter
+namespace ns::filter::core
 {
 // Average of normalized (state) estimation error squared (NEES).
 // Average of normalized innovation squared (NIS).
