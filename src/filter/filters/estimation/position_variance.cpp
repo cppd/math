@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/position/filter_2.h>
 #include <src/filter/filters/position/init.h>
-#include <src/filter/settings/instantiation.h>
+#include <src/filter/utility/instantiation.h>
 #include <src/numerical/vector.h>
 
 #include <cstddef>

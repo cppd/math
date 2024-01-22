@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/settings/instantiation.h>
+#include <src/filter/utility/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>

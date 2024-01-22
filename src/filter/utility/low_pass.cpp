@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "low_pass.h"
 
-#include <src/filter/settings/instantiation.h>
+#include "instantiation.h"
 
 #include <array>
 #include <cstddef>
 #include <optional>
 
-namespace ns::filter::filters::utility
+namespace ns::filter::utility
 {
 namespace
 {

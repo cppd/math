@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/settings/instantiation.h>
+#include <src/filter/utility/instantiation.h>
 
 #include <cstddef>
 #include <optional>
