@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <string_view>
 
-namespace ns::filter::testing
+namespace ns::filter::utility
 {
 [[nodiscard]] std::string replace_space(std::string_view s);
 
