@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/filter/core/consistency.h>
+#include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/filters/utility/measurement_queue.h>
 
 #include <cstddef>
 #include <memory>
@@ -42,7 +42,7 @@ class Direction11 final : public Filter<2, T>
         std::unique_ptr<Filter11<T>> filter_;
         Init<T> init_;
 
-        utility::MeasurementQueue<2, T> queue_;
+        com::MeasurementQueue<2, T> queue_;
 
         struct Nees final
         {

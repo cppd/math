@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/filter/core/ekf.h>
 #include <src/filter/core/update_info.h>
+#include <src/filter/filters/com/utility.h>
 #include <src/filter/utility/instantiation.h>
-#include <src/filter/utility/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -170,7 +170,7 @@ class FilterImpl final : public Filter2<N, T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_dt(dt));
+                ASSERT(com::check_dt(dt));
 
                 const Matrix<3 * N, 3 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
@@ -192,7 +192,7 @@ class FilterImpl final : public Filter2<N, T>
         {
                 ASSERT(filter_);
                 ASSERT(is_finite(position));
-                ASSERT(utility::check_variance(variance));
+                ASSERT(com::check_variance(variance));
 
                 const Matrix<N, N, T> r = position_r(variance);
 
@@ -227,7 +227,7 @@ class FilterImpl final : public Filter2<N, T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return utility::compute_speed_p(velocity(), velocity_p());
+                return com::compute_speed_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] Vector<N, T> velocity() const override

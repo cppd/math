@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_1.h"
 
 #include <src/filter/core/consistency.h>
+#include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/filters/utility/measurement_queue.h>
 
 #include <cstddef>
 #include <memory>
@@ -39,7 +39,7 @@ class Speed1 final : public Filter<N, T>
         std::optional<T> gate_;
         std::unique_ptr<Filter1<N, T>> filter_;
 
-        utility::MeasurementQueue<N, T> queue_;
+        com::MeasurementQueue<N, T> queue_;
 
         struct Nees final
         {

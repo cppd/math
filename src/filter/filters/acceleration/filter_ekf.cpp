@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/filter/core/ekf.h>
+#include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
-#include <src/filter/utility/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -1168,7 +1168,7 @@ class Filter final : public FilterEkf<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_dt(dt));
+                ASSERT(com::check_dt(dt));
 
                 const Matrix<9, 9, T> f_matrix = f(dt);
                 filter_->predict(
@@ -1415,7 +1415,7 @@ class Filter final : public FilterEkf<T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return utility::compute_speed_p(velocity(), velocity_p());
+                return com::compute_speed_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] T angle() const override

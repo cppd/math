@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
+#include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
-#include <src/filter/utility/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -806,7 +806,7 @@ class Filter final : public Filter0<T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_dt(dt));
+                ASSERT(com::check_dt(dt));
 
                 filter_->predict(
                         [dt](const Vector<8, T>& x)
@@ -1040,7 +1040,7 @@ class Filter final : public Filter0<T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return utility::compute_speed_p(velocity(), velocity_p());
+                return com::compute_speed_p(velocity(), velocity_p());
         }
 
         [[nodiscard]] T angle() const override

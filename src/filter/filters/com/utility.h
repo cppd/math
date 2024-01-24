@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::filter::utility
+namespace ns::filter::filters::com
 {
 template <typename T>
 [[nodiscard]] bool check_dt(const T v)

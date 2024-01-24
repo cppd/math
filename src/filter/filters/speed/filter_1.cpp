@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
+#include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
-#include <src/filter/utility/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -271,7 +271,7 @@ class Filter final : public Filter1<N, T>
         void predict(const T dt) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_dt(dt));
+                ASSERT(com::check_dt(dt));
 
                 filter_->predict(
                         [dt](const Vector<2 * N, T>& x)
@@ -284,7 +284,7 @@ class Filter final : public Filter1<N, T>
         void update_position(const Measurement<N, T>& position, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_variance(position.variance));
+                ASSERT(com::check_variance(position.variance));
 
                 filter_->update(
                         position_h<N, T>, position_r(position.variance), position_z(position.value), add_x<2 * N, T>,
@@ -297,8 +297,8 @@ class Filter final : public Filter1<N, T>
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_variance(position.variance));
-                ASSERT(utility::check_variance(speed.variance));
+                ASSERT(com::check_variance(position.variance));
+                ASSERT(com::check_variance(speed.variance));
 
                 filter_->update(
                         position_speed_h<N, T>, position_speed_r(position.variance, speed.variance),
@@ -309,7 +309,7 @@ class Filter final : public Filter1<N, T>
         void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
-                ASSERT(utility::check_variance(speed.variance));
+                ASSERT(com::check_variance(speed.variance));
 
                 filter_->update(
                         speed_h<N, T>, speed_r(speed.variance), speed_z(speed.value), add_x<2 * N, T>,
@@ -337,7 +337,7 @@ class Filter final : public Filter1<N, T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return utility::compute_speed_p(velocity(), velocity_p());
+                return com::compute_speed_p(velocity(), velocity_p());
         }
 
 public:

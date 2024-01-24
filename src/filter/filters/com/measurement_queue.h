@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::filter::filters::utility
+namespace ns::filter::filters::com
 {
 template <std::size_t N, typename T>
 class MeasurementQueue final

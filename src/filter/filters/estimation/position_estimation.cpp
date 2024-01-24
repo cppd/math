@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/conversion.h>
 #include <src/com/log.h>
+#include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/position/position_2.h>
 #include <src/filter/utility/instantiation.h>
-#include <src/filter/utility/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -66,8 +66,7 @@ void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
                 return;
         }
 
-        const Vector<N, T> angle_variance =
-                utility::compute_angle_variance(position_->velocity(), position_->velocity_p());
+        const Vector<N, T> angle_variance = com::compute_angle_variance(position_->velocity(), position_->velocity_p());
         if (!is_finite(angle_variance))
         {
                 return;
