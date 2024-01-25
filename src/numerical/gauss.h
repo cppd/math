@@ -45,11 +45,11 @@ namespace gauss_implementation
 template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 constexpr int find_pivot(const Matrix<N, N, T>& a, const int column, const int from_row)
 {
-        T max = absolute(a(from_row, column));
+        T max = absolute(a[from_row, column]);
         int pivot = from_row;
         for (int r = from_row + 1, max_r = N; r < max_r; ++r)
         {
-                const T v = absolute(a(r, column));
+                const T v = absolute(a[r, column]);
                 if (v > max)
                 {
                         max = v;
@@ -73,12 +73,12 @@ public:
                 }
         }
 
-        [[nodiscard]] constexpr const T& operator()(const int r, const int c) const&
+        [[nodiscard]] constexpr const T& operator[](const int r, const int c) const&
         {
                 return (*rows_[r])[c];
         }
 
-        [[nodiscard]] constexpr T& operator()(const int r, const int c) &
+        [[nodiscard]] constexpr T& operator[](const int r, const int c) &
         {
                 return (*rows_[r])[c];
         }
@@ -112,10 +112,10 @@ constexpr bool solve_u(RowMatrix<UN, UN, T>& m)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = m(i, k) / m(k, k);
+                        const T l_ik = m[i, k] / m[k, k];
                         for (int j = k + 1; j < N; ++j)
                         {
-                                m(i, j) -= l_ik * m(k, j);
+                                m[i, j] -= l_ik * m[k, j];
                         }
                 }
         }
@@ -139,10 +139,10 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, Vector<UN, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = a(i, k) / a(k, k);
+                        const T l_ik = a[i, k] / a[k, k];
                         for (int j = k; j < N; ++j)
                         {
-                                a(i, j) -= l_ik * a(k, j);
+                                a[i, j] -= l_ik * a[k, j];
                         }
                         b[i] -= l_ik * b[k];
                 }
@@ -166,14 +166,14 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = a(i, k) / a(k, k);
+                        const T l_ik = a[i, k] / a[k, k];
                         for (int j = k; j < N; ++j)
                         {
-                                a(i, j) -= l_ik * a(k, j);
+                                a[i, j] -= l_ik * a[k, j];
                         }
                         for (int m = 0; m < M; ++m)
                         {
-                                b(i, m) -= l_ik * b(k, m);
+                                b[i, m] -= l_ik * b[k, m];
                         }
                 }
         }
@@ -184,14 +184,14 @@ constexpr void solve_x(RowMatrix<UN, UN, T>& u, Vector<UN, T>& y)
 {
         constexpr int N = UN;
 
-        y[N - 1] = y[N - 1] / u(N - 1, N - 1);
+        y[N - 1] = y[N - 1] / u[N - 1, N - 1];
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
-                        y[k] -= u(k, j) * y[j];
+                        y[k] -= u[k, j] * y[j];
                 }
-                y[k] = y[k] / u(k, k);
+                y[k] = y[k] / u[k, k];
         }
 }
 
@@ -203,7 +203,7 @@ constexpr void solve_x(RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
 
         for (int m = 0; m < M; ++m)
         {
-                y(N - 1, m) = y(N - 1, m) / u(N - 1, N - 1);
+                y[N - 1, m] = y[N - 1, m] / u[N - 1, N - 1];
         }
         for (int k = N - 2; k >= 0; --k)
         {
@@ -211,12 +211,12 @@ constexpr void solve_x(RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
                 {
                         for (int m = 0; m < M; ++m)
                         {
-                                y(k, m) -= u(k, j) * y(j, m);
+                                y[k, m] -= u[k, j] * y[j, m];
                         }
                 }
                 for (int m = 0; m < M; ++m)
                 {
-                        y(k, m) = y(k, m) / u(k, k);
+                        y[k, m] = y[k, m] / u[k, k];
                 }
         }
 }
@@ -229,10 +229,10 @@ constexpr T determinant(RowMatrix<N, N, T>&& m)
 
         const bool sign = solve_u(m);
 
-        T d = m(0, 0);
+        T d = m[0, 0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                d *= m(i, i);
+                d *= m[i, i];
         }
 
         return sign ? -d : d;
