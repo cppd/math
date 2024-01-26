@@ -87,7 +87,7 @@ VkPipelineLayout ShadowProgram::pipeline_layout() const
 vulkan::handle::Pipeline ShadowProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
-        const Region<2, int>& viewport) const
+        const numerical::Region<2, int>& viewport) const
 {
         ASSERT(sample_count == VK_SAMPLE_COUNT_1_BIT);
         ASSERT(viewport.is_positive());

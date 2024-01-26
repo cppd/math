@@ -43,7 +43,7 @@ ImageResolve::ImageResolve(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const RenderBuffers& render_buffers,
-        const Region<2, int>& rectangle,
+        const numerical::Region<2, int>& rectangle,
         const VkImageLayout image_layout,
         const VkImageUsageFlags usage)
         : family_index_(command_pool.family_index())
@@ -119,8 +119,8 @@ image::Image<2> resolve_to_image(
         const unsigned height = render_buffers.height();
 
         const ImageResolve image(
-                device, command_pool, queue, render_buffers, Region<2, int>({0, 0}, {width, height}), IMAGE_LAYOUT,
-                VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+                device, command_pool, queue, render_buffers, numerical::Region<2, int>({0, 0}, {width, height}),
+                IMAGE_LAYOUT, VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
         image.resolve(queue, wait_semaphore, image_index);
         VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));

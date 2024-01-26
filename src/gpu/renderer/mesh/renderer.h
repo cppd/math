@@ -120,7 +120,7 @@ public:
                 const vulkan::Buffer& transparency_counter,
                 const vulkan::Buffer& transparency_nodes,
                 const Opacity& opacity,
-                const Region<2, int>& viewport);
+                const numerical::Region<2, int>& viewport);
 
         void delete_render_buffers();
 

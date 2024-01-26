@@ -141,14 +141,14 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 VkCommandBuffer command_buffer,
                 VkImage image,
                 VkImageLayout image_layout,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 unsigned index) const override;
 
         void commands_depth_copy(
                 VkCommandBuffer command_buffer,
                 VkImage image,
                 VkImageLayout image_layout,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 unsigned index) const override;
 
         //
@@ -365,7 +365,7 @@ void Impl::commands_color_resolve(
         const VkCommandBuffer command_buffer,
         const VkImage image,
         const VkImageLayout image_layout,
-        const Region<2, int>& rectangle,
+        const numerical::Region<2, int>& rectangle,
         const unsigned index) const
 {
         ASSERT(index < color_attachments_.size());
@@ -382,7 +382,7 @@ void Impl::commands_depth_copy(
         const VkCommandBuffer command_buffer,
         const VkImage image,
         const VkImageLayout image_layout,
-        const Region<2, int>& rectangle,
+        const numerical::Region<2, int>& rectangle,
         const unsigned index) const
 {
         ASSERT(image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

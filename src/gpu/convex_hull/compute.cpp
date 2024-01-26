@@ -126,7 +126,7 @@ class Impl final : public Compute
 
         void create_buffers(
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 const vulkan::Buffer& points_buffer,
                 const vulkan::Buffer& point_count_buffer,
                 const std::uint32_t family_index) override

@@ -132,7 +132,7 @@ void MeshRenderer::create_render_buffers(
         const vulkan::Buffer& transparency_counter,
         const vulkan::Buffer& transparency_nodes,
         const Opacity& opacity,
-        const Region<2, int>& viewport)
+        const numerical::Region<2, int>& viewport)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 

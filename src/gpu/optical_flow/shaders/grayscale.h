@@ -69,7 +69,10 @@ public:
         GrayscaleProgram(GrayscaleProgram&&) = default;
         ~GrayscaleProgram() = default;
 
-        void create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y, const Region<2, int>& rectangle);
+        void create_pipeline(
+                std::uint32_t local_size_x,
+                std::uint32_t local_size_y,
+                const numerical::Region<2, int>& rectangle);
         void delete_pipeline();
 
         [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;

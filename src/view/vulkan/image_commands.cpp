@@ -38,7 +38,7 @@ void commands_image_resolve(
         const VkImageLayout src_layout,
         const VkImage dst_image,
         const VkImageLayout dst_layout,
-        const Region<2, int>& rectangle)
+        const numerical::Region<2, int>& rectangle)
 {
         ASSERT(rectangle.width() > 0 && rectangle.height() > 0);
 
@@ -137,7 +137,7 @@ void commands_image_copy(
         const VkImageLayout src_layout,
         const VkImage dst_image,
         const VkImageLayout dst_layout,
-        const Region<2, int>& rectangle)
+        const numerical::Region<2, int>& rectangle)
 {
         ASSERT(rectangle.width() > 0 && rectangle.height() > 0);
 

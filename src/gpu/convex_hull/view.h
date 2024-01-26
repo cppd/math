@@ -40,7 +40,7 @@ public:
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& rectangle) = 0;
+                const numerical::Region<2, int>& rectangle) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) const = 0;

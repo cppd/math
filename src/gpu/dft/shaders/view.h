@@ -105,7 +105,7 @@ public:
         [[nodiscard]] vulkan::handle::Pipeline create_pipeline(
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
-                const Region<2, int>& viewport) const;
+                const numerical::Region<2, int>& viewport) const;
 
         [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;
         [[nodiscard]] VkPipelineLayout pipeline_layout() const;

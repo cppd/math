@@ -87,8 +87,8 @@ public:
                 gpu::RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& window_1,
-                const std::optional<Region<2, int>>& window_2);
+                const numerical::Region<2, int>& window_1,
+                const std::optional<numerical::Region<2, int>>& window_2);
 
         [[nodiscard]] VkSemaphore draw(
                 const ImageResolve& image_resolve,

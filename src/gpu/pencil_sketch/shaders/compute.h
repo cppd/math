@@ -70,7 +70,7 @@ public:
         ComputeProgram(ComputeProgram&&) = default;
         ~ComputeProgram() = default;
 
-        void create_pipeline(unsigned group_size, const Region<2, int>& rectangle);
+        void create_pipeline(unsigned group_size, const numerical::Region<2, int>& rectangle);
         void delete_pipeline();
 
         [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;

@@ -117,7 +117,7 @@ class Impl final : public View
                 RenderBuffers2D* const render_buffers,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& rectangle) override
+                const numerical::Region<2, int>& rectangle) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

@@ -290,7 +290,7 @@ class Impl final
 
                 text_->create_buffers(
                         &render_buffers_->buffers_2d(),
-                        Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
+                        numerical::Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
                 image_process_.create_buffers(
                         pixel_sizes_->ppi, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_,

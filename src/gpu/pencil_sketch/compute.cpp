@@ -133,7 +133,7 @@ class Impl final : public Compute
                 const VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());

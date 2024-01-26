@@ -77,7 +77,7 @@ void ShadowMapping::create_buffers(
 
         render_triangles_pipeline_ = triangles_program_.create_pipeline(
                 buffers_->render_pass(), buffers_->sample_count(),
-                Region<2, int>({0, 0}, {buffers_->width(), buffers_->height()}));
+                numerical::Region<2, int>({0, 0}, {buffers_->width(), buffers_->height()}));
 }
 
 void ShadowMapping::delete_buffers()

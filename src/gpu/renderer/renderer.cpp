@@ -70,7 +70,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        Region<2, int> viewport_;
+        numerical::Region<2, int> viewport_;
 
         const vulkan::Device* const device_;
         const bool ray_tracing_;
@@ -181,7 +181,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_buffers(
                 RenderBuffers3D* const render_buffers,
                 const vulkan::ImageWithMemory* const objects,
-                const Region<2, int>& viewport) override
+                const numerical::Region<2, int>& viewport) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

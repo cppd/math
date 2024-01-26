@@ -64,7 +64,7 @@ class SpecializationConstants final
                 .pData = &data_};
 
 public:
-        SpecializationConstants(const std::int32_t local_size, const Region<2, int>& rectangle)
+        SpecializationConstants(const std::int32_t local_size, const numerical::Region<2, int>& rectangle)
                 : data_{.local_size = local_size,
                         .x = rectangle.x0(),
                         .y = rectangle.y0(),
@@ -194,7 +194,7 @@ VkPipeline ComputeProgram::pipeline() const
         return pipeline_;
 }
 
-void ComputeProgram::create_pipeline(const unsigned group_size, const Region<2, int>& rectangle)
+void ComputeProgram::create_pipeline(const unsigned group_size, const numerical::Region<2, int>& rectangle)
 {
         const SpecializationConstants constants(group_size, rectangle);
 

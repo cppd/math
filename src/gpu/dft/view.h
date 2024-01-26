@@ -41,8 +41,8 @@ public:
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
-                const Region<2, int>& source_rectangle,
-                const Region<2, int>& draw_rectangle) = 0;
+                const numerical::Region<2, int>& source_rectangle,
+                const numerical::Region<2, int>& draw_rectangle) = 0;
 
         virtual void delete_buffers() = 0;
 

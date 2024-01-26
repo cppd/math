@@ -75,7 +75,7 @@ public:
                 const vulkan::RenderPass& render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
-                const Region<2, int>& viewport,
+                const numerical::Region<2, int>& viewport,
                 VolumeProgramPipelineType type) const;
 
         [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout_shared() const;

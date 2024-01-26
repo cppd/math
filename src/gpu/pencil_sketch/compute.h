@@ -38,7 +38,7 @@ public:
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) = 0;
 
         virtual void delete_buffers() = 0;

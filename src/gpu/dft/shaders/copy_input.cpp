@@ -69,7 +69,7 @@ public:
         SpecializationConstants(
                 const std::int32_t local_size_x,
                 const std::int32_t local_size_y,
-                const Region<2, int>& rectangle)
+                const numerical::Region<2, int>& rectangle)
                 : data_{.local_size_x = local_size_x,
                         .local_size_y = local_size_y,
                         .x = rectangle.x0(),
@@ -181,7 +181,7 @@ VkPipeline CopyInputProgram::pipeline() const
 void CopyInputProgram::create_pipeline(
         const std::int32_t local_size_x,
         const std::int32_t local_size_y,
-        const Region<2, int>& rectangle)
+        const numerical::Region<2, int>& rectangle)
 {
         const SpecializationConstants constants(local_size_x, local_size_y, rectangle);
 

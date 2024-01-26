@@ -29,7 +29,7 @@ struct ViewportTransform final
         Vector2d factor;
 };
 
-inline ViewportTransform viewport_transform(const Region<2, int>& viewport)
+inline ViewportTransform viewport_transform(const numerical::Region<2, int>& viewport)
 {
         const Vector2d offset = to_vector<double>(viewport.from());
         const Vector2d extent = to_vector<double>(viewport.extent());

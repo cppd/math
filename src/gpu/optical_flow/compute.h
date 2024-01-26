@@ -38,7 +38,7 @@ public:
         virtual void create_buffers(
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
                 const vulkan::Buffer& top_points,

@@ -88,7 +88,7 @@ ImagePyramid::ImagePyramid(const VkDevice device)
 void ImagePyramid::create_buffers(
         const VkSampler sampler,
         const vulkan::ImageWithMemory& input,
-        const Region<2, int>& rectangle,
+        const numerical::Region<2, int>& rectangle,
         const std::vector<Vector2i>& sizes,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
 {

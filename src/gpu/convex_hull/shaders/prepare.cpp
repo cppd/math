@@ -69,7 +69,7 @@ public:
         SpecializationConstants(
                 const std::int32_t local_size_x,
                 const std::int32_t buffer_size,
-                const Region<2, int>& rectangle)
+                const numerical::Region<2, int>& rectangle)
                 : data_{.local_size_x = local_size_x,
                         .buffer_size = buffer_size,
                         .x = rectangle.x0(),
@@ -161,7 +161,7 @@ PrepareProgram::PrepareProgram(const VkDevice device)
 {
 }
 
-void PrepareProgram::create_pipeline(const unsigned buffer_and_group_size, const Region<2, int>& rectangle)
+void PrepareProgram::create_pipeline(const unsigned buffer_and_group_size, const numerical::Region<2, int>& rectangle)
 {
         const SpecializationConstants constants(buffer_and_group_size, buffer_and_group_size, rectangle);
 

@@ -37,7 +37,7 @@ void commands_image_resolve(
         VkImageLayout src_layout,
         VkImage dst_image,
         VkImageLayout dst_layout,
-        const Region<2, int>& rectangle);
+        const numerical::Region<2, int>& rectangle);
 
 void commands_image_copy(
         VkCommandBuffer command_buffer,
@@ -54,5 +54,5 @@ void commands_image_copy(
         VkImageLayout src_layout,
         VkImage dst_image,
         VkImageLayout dst_layout,
-        const Region<2, int>& rectangle);
+        const numerical::Region<2, int>& rectangle);
 }

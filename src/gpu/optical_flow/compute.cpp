@@ -204,7 +204,7 @@ class Impl final : public Compute
         void create_buffers(
                 const VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 const unsigned top_point_count_x,
                 const unsigned top_point_count_y,
                 const vulkan::Buffer& top_points,

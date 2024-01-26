@@ -158,8 +158,8 @@ void ImageProcess::create_buffers(
         gpu::RenderBuffers2D* const render_buffers,
         const vulkan::ImageWithMemory& input,
         const vulkan::ImageWithMemory& objects,
-        const Region<2, int>& window_1,
-        const std::optional<Region<2, int>>& window_2)
+        const numerical::Region<2, int>& window_1,
+        const std::optional<numerical::Region<2, int>>& window_2)
 {
         convex_hull_->create_buffers(render_buffers, objects, window_1);
 

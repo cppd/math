@@ -134,7 +134,7 @@ VolumeRenderer::VolumeRenderer(
 
 void VolumeRenderer::create_buffers(
         const RenderBuffers3D* const render_buffers,
-        const Region<2, int>& viewport,
+        const numerical::Region<2, int>& viewport,
         const VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
         const vulkan::Buffer& transparency_nodes,

@@ -69,7 +69,7 @@ public:
         SpecializationConstants(
                 const std::uint32_t local_size_x,
                 const std::uint32_t local_size_y,
-                const Region<2, int>& rectangle)
+                const numerical::Region<2, int>& rectangle)
                 : data_{.local_size_x = local_size_x,
                         .local_size_y = local_size_y,
                         .x = rectangle.x0(),
@@ -207,7 +207,7 @@ VkPipeline GrayscaleProgram::pipeline() const
 void GrayscaleProgram::create_pipeline(
         const std::uint32_t local_size_x,
         const std::uint32_t local_size_y,
-        const Region<2, int>& rectangle)
+        const numerical::Region<2, int>& rectangle)
 {
         const SpecializationConstants constants(local_size_x, local_size_y, rectangle);
 

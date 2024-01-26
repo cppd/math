@@ -34,7 +34,7 @@ Mouse::Mouse(Camera* const camera)
 {
 }
 
-void Mouse::set_rectangle(const Region<2, int>& rectangle, const int width, const int height)
+void Mouse::set_rectangle(const numerical::Region<2, int>& rectangle, const int width, const int height)
 {
         rectangle_ = rectangle;
         width_ = width;

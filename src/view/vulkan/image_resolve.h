@@ -44,7 +44,7 @@ public:
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 const RenderBuffers& render_buffers,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 VkImageLayout image_layout,
                 VkImageUsageFlags usage);
 

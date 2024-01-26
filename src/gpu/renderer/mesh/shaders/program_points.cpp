@@ -107,7 +107,7 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
         const VkPrimitiveTopology primitive_topology,
-        const Region<2, int>& viewport,
+        const numerical::Region<2, int>& viewport,
         const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;

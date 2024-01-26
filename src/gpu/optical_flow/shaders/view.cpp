@@ -156,7 +156,7 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
         const VkPrimitiveTopology primitive_topology,
-        const Region<2, int>& viewport) const
+        const numerical::Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

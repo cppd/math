@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_size(
+std::tuple<numerical::Region<2, int>, std::optional<numerical::Region<2, int>>> window_position_and_size(
         bool two_windows,
         int width,
         int height,

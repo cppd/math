@@ -68,7 +68,10 @@ public:
         CopyInputProgram(CopyInputProgram&&) = default;
         ~CopyInputProgram() = default;
 
-        void create_pipeline(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle);
+        void create_pipeline(
+                std::int32_t local_size_x,
+                std::int32_t local_size_y,
+                const numerical::Region<2, int>& rectangle);
         void delete_pipeline();
 
         [[nodiscard]] VkDescriptorSetLayout descriptor_set_layout() const;

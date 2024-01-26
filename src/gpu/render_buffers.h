@@ -46,7 +46,7 @@ public:
                 VkCommandBuffer command_buffer,
                 VkImage image,
                 VkImageLayout image_layout,
-                const Region<2, int>& rectangle,
+                const numerical::Region<2, int>& rectangle,
                 unsigned index) const = 0;
 };
 

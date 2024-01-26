@@ -39,7 +39,7 @@ struct GraphicsPipelineCreateInfo final
         std::optional<VkSampleCountFlagBits> sample_count;
         std::optional<bool> sample_shading;
         std::optional<VkPipelineLayout> pipeline_layout;
-        std::optional<Region<2, int>> viewport;
+        std::optional<numerical::Region<2, int>> viewport;
         std::optional<VkPrimitiveTopology> primitive_topology;
         std::vector<const Shader*> shaders;
 

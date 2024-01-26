@@ -95,7 +95,7 @@ class Impl final : public View
                 vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
         }
 
-        void set_matrix(const Region<2, int>& rectangle) const
+        void set_matrix(const numerical::Region<2, int>& rectangle) const
         {
                 // (0, 0) is top left
                 const double left = 0;
@@ -115,7 +115,7 @@ class Impl final : public View
                 RenderBuffers2D* const render_buffers,
                 const vulkan::ImageWithMemory& input,
                 const double window_ppi,
-                const Region<2, int>& rectangle) override
+                const numerical::Region<2, int>& rectangle) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

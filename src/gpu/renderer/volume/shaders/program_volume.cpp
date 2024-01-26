@@ -156,7 +156,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
         const bool sample_shading,
-        const Region<2, int>& viewport,
+        const numerical::Region<2, int>& viewport,
         const VolumeProgramPipelineType type) const
 {
         vulkan::GraphicsPipelineCreateInfo info;

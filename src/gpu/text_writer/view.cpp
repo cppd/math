@@ -138,7 +138,7 @@ class Impl final : public View
                 return vulkan::create_command_buffers(info);
         }
 
-        void create_buffers(RenderBuffers2D* const render_buffers, const Region<2, int>& viewport) override
+        void create_buffers(RenderBuffers2D* const render_buffers, const numerical::Region<2, int>& viewport) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

@@ -45,7 +45,7 @@ class Mouse final
         int y_ = Limits<int>::lowest();
 
         Camera* camera_;
-        Region<2, int> rectangle_{
+        numerical::Region<2, int> rectangle_{
                 {Limits<int>::lowest(), Limits<int>::lowest()},
                 {                    0,                     0}
         };
@@ -65,7 +65,7 @@ class Mouse final
 public:
         explicit Mouse(Camera* camera);
 
-        void set_rectangle(const Region<2, int>& rectangle, int width, int height);
+        void set_rectangle(const numerical::Region<2, int>& rectangle, int width, int height);
         void exec(const MouseCommand& command);
 };
 }

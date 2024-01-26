@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
 
-namespace ns
+namespace ns::numerical
 {
 namespace
 {

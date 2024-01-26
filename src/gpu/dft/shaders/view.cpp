@@ -187,7 +187,7 @@ VkPipelineLayout ViewProgram::pipeline_layout() const
 vulkan::handle::Pipeline ViewProgram::create_pipeline(
         const vulkan::RenderPass& render_pass,
         const VkSampleCountFlagBits sample_count,
-        const Region<2, int>& viewport) const
+        const numerical::Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
