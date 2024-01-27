@@ -106,33 +106,33 @@ template <typename T>
 }
 
 template <typename T>
-Quaternion<T> conjugate(const Quaternion<T>& a)
+[[nodiscard]] Quaternion<T> conjugate(const Quaternion<T>& a)
 {
         return Quaternion<T>(a[0], -a[1], -a[2], -a[3]);
 }
 
 template <typename T>
-Quaternion<T> inverse(const Quaternion<T>& a)
+[[nodiscard]] Quaternion<T> inverse(const Quaternion<T>& a)
 {
         return conjugate(a) / dot(a.data(), a.data());
 }
 
 template <typename T>
-std::string to_string(const Quaternion<T>& a)
+[[nodiscard]] std::string to_string(const Quaternion<T>& a)
 {
         return to_string(a.data());
 }
 
 template <typename T>
-Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
+[[nodiscard]] Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
 {
         return Quaternion<T>(std::cos(angle / 2), std::sin(angle / 2) * axis.normalized());
 }
 
 template <typename T>
-Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
+[[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
         const Quaternion q = quaternion_for_rotation(axis, angle);
-        return (q * Quaternion<T>(static_cast<T>(0), v) * conjugate(q)).imag();
+        return (q * Quaternion<T>(0, v) * conjugate(q)).imag();
 }
 }
