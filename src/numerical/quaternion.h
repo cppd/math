@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <string>
 
-namespace ns
+namespace ns::numerical
 {
 template <typename T>
 class Quaternion final

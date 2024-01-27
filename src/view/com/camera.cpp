@@ -43,7 +43,7 @@ constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME =
 
 Vector3d rotate_vector_degree(const Vector3d& axis, const double angle_degrees, const Vector3d& v)
 {
-        return rotate_vector(axis, degrees_to_radians(angle_degrees), v);
+        return numerical::rotate_vector(axis, degrees_to_radians(angle_degrees), v);
 }
 
 double default_scale(const int width, const int height)
