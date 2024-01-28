@@ -53,13 +53,15 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Vector<1, T> compute_angle_variance(
         const Vector<1, T>& /*velocity*/,
-        const Matrix<1, 1, T>& /*velocity_p*/)
+        const numerical::Matrix<1, 1, T>& /*velocity_p*/)
 {
         return Vector<1, T>(0);
 }
 
 template <typename T>
-[[nodiscard]] Vector<2, T> compute_angle_variance(const Vector<2, T>& velocity, const Matrix<2, 2, T>& velocity_p)
+[[nodiscard]] Vector<2, T> compute_angle_variance(
+        const Vector<2, T>& velocity,
+        const numerical::Matrix<2, 2, T>& velocity_p)
 {
         // angle = atan(y/x)
         // Jacobian
@@ -67,17 +69,19 @@ template <typename T>
         const T ns = velocity.norm_squared();
         const T x = velocity[0];
         const T y = velocity[1];
-        const Matrix<1, 2, T> error_propagation{
+        const numerical::Matrix<1, 2, T> error_propagation{
                 {-y / ns, x / ns}
         };
-        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        const numerical::Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
         const T r = p[0, 0];
         return Vector<2, T>(r, r);
 }
 
 template <std::size_t N, typename T>
         requires (N >= 3)
-[[nodiscard]] Vector<N, T> compute_angle_variance(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
+[[nodiscard]] Vector<N, T> compute_angle_variance(
+        const Vector<N, T>& velocity,
+        const numerical::Matrix<N, N, T>& velocity_p)
 {
         // angle0 = acos(x0/sqrt(x0*x0+x1*x1+x2*x2+...))
         // angle1 = acos(x1/sqrt(x0*x0+x1*x1+x2*x2+...))
@@ -116,7 +120,7 @@ template <std::size_t N, typename T>
                 const T norm_i = norm_exclude_i(i);
                 const T denominator = norm_i * norm_squared;
 
-                Matrix<1, N, T> error_propagation;
+                numerical::Matrix<1, N, T> error_propagation;
                 error_propagation[0, i] = -norm_i / norm_squared;
                 for (std::size_t j = 0; j < N; ++j)
                 {
@@ -125,7 +129,7 @@ template <std::size_t N, typename T>
                                 error_propagation[0, j] = velocity[i] * velocity[j] / denominator;
                         }
                 }
-                const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+                const numerical::Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
                 res[i] = p[0, 0];
         }
 
@@ -133,13 +137,13 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T compute_speed_p(const Vector<N, T>& velocity, const Matrix<N, N, T>& velocity_p)
+[[nodiscard]] T compute_speed_p(const Vector<N, T>& velocity, const numerical::Matrix<N, N, T>& velocity_p)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // Jacobian
         //  x/sqrt(x*x+y*y) y/sqrt(x*x+y*y)
-        const Matrix<1, N, T> error_propagation(velocity.normalized());
-        const Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
+        const numerical::Matrix<1, N, T> error_propagation(velocity.normalized());
+        const numerical::Matrix<1, 1, T> p = error_propagation * velocity_p * error_propagation.transposed();
         return p[0, 0];
 }
 }

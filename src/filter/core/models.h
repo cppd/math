@@ -46,7 +46,7 @@ namespace ns::filter::core
 // of the order of sqrt(Q(2, 2)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr Matrix<N, N, T> continuous_white_noise(
+constexpr numerical::Matrix<N, N, T> continuous_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> spectral_density)
 {
@@ -56,7 +56,7 @@ constexpr Matrix<N, N, T> continuous_white_noise(
         const T dt_2 = dt_1 * dt;
         const T dt_3 = dt_2 * dt;
 
-        return Matrix<N, N, T>{
+        return numerical::Matrix<N, N, T>{
                 {dt_3 / 3, dt_2 / 2},
                 {dt_2 / 2,     dt_1}
         };
@@ -67,7 +67,7 @@ constexpr Matrix<N, N, T> continuous_white_noise(
 // of the order of sqrt(Q(3, 3)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr Matrix<N, N, T> continuous_white_noise(
+constexpr numerical::Matrix<N, N, T> continuous_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> spectral_density)
 {
@@ -79,7 +79,7 @@ constexpr Matrix<N, N, T> continuous_white_noise(
         const T dt_4 = dt_3 * dt;
         const T dt_5 = dt_4 * dt;
 
-        return Matrix<N, N, T>{
+        return numerical::Matrix<N, N, T>{
                 {dt_5 / 20, dt_4 / 8, dt_3 / 6},
                 { dt_4 / 8, dt_3 / 3, dt_2 / 2},
                 { dt_3 / 6, dt_2 / 2,     dt_1}
@@ -92,7 +92,9 @@ constexpr Matrix<N, N, T> continuous_white_noise(
 // A practical range is a/2 <= sigma <= a.
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt, const std::type_identity_t<T> variance)
+constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> variance)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -100,7 +102,7 @@ constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt,
         const T dt_3 = dt_2 * dt;
         const T dt_4 = dt_3 * dt;
 
-        return Matrix<N, N, T>{
+        return numerical::Matrix<N, N, T>{
                 {dt_4 / 4, dt_3 / 2},
                 {dt_3 / 2,     dt_2}
         };
@@ -113,7 +115,9 @@ constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt,
 // A practical range is d/2 <= sigma <= d.
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt, const std::type_identity_t<T> variance)
+constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> variance)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -123,7 +127,7 @@ constexpr Matrix<N, N, T> discrete_white_noise(const std::type_identity_t<T> dt,
         const T dt_3 = dt_2 * dt;
         const T dt_4 = dt_3 * dt;
 
-        return Matrix<N, N, T>{
+        return numerical::Matrix<N, N, T>{
                 {dt_4 / 4, dt_3 / 2, dt_2 / 2},
                 {dt_3 / 2,     dt_2,     dt_1},
                 {dt_2 / 2,     dt_1,     dt_0}

@@ -123,12 +123,12 @@ class Impl final : public MeshObject
                 mesh_buffer_.set_alpha(alpha);
         }
 
-        void buffer_set_coordinates(const Matrix4d& model_matrix)
+        void buffer_set_coordinates(const numerical::Matrix4d& model_matrix)
         {
                 mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inversed().transposed());
         }
 
-        void set_transform_matrix(const Matrix4d& model_matrix)
+        void set_transform_matrix(const numerical::Matrix4d& model_matrix)
         {
                 if (ray_tracing_)
                 {

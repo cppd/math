@@ -27,14 +27,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model::mesh
 {
 template <std::size_t N>
-Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
+numerical::Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Mesh<N>& mesh,
         const double size,
         const Vector<N, double>& position)
 {
-        const Matrix<N + 1, N + 1, double> t1 = numerical::transform::translate(to_vector<double>(-mesh.center));
-        const Matrix<N + 1, N + 1, double> t2 = numerical::transform::scale(Vector<N, double>(size / mesh.length));
-        const Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
+        const numerical::Matrix<N + 1, N + 1, double> t1 =
+                numerical::transform::translate(to_vector<double>(-mesh.center));
+        const numerical::Matrix<N + 1, N + 1, double> t2 =
+                numerical::transform::scale(Vector<N, double>(size / mesh.length));
+        const numerical::Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
         return t3 * t2 * t1;
 }
 }

@@ -43,8 +43,8 @@ struct CameraInfo final
 
         Volume main_volume;
         Volume shadow_volume;
-        Matrix4d main_view_matrix;
-        Matrix4d shadow_view_matrix;
+        numerical::Matrix4d main_view_matrix;
+        numerical::Matrix4d shadow_view_matrix;
         Vector3d light_direction;
         Vector3d camera_direction;
 };

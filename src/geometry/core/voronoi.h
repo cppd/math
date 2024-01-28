@@ -60,7 +60,7 @@ template <std::size_t N, typename T>
         const Vector<N, T>& p0 = points[vertices[0]];
         const T dot0 = dot(p0, p0);
 
-        Matrix<N, N, T> a;
+        numerical::Matrix<N, N, T> a;
         Vector<N, T> b;
 
         for (std::size_t row = 0; row < N; ++row)

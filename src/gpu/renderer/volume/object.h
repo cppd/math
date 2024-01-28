@@ -42,13 +42,13 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout) const = 0;
 
         virtual void set_matrix_and_clip_plane(
-                const Matrix4d& vp_matrix,
+                const numerical::Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation) = 0;
 
         virtual void set_matrix_and_clip_plane(
-                const Matrix4d& vp_matrix,
+                const numerical::Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation,
-                const Matrix4d& world_to_shadow_matrix) = 0;
+                const numerical::Matrix4d& world_to_shadow_matrix) = 0;
 
         virtual void set_clip_plane(const Vector4d& world_clip_plane_equation) = 0;
 

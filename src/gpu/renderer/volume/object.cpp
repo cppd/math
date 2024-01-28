@@ -103,13 +103,13 @@ class Impl final : public VolumeObject
 
         const std::vector<std::uint32_t> family_indices_;
 
-        Matrix4d vp_matrix_ = IDENTITY_MATRIX<4, double>;
+        numerical::Matrix4d vp_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
         std::optional<Vector4d> world_clip_plane_equation_;
 
-        Matrix3d gradient_to_world_matrix_;
-        Matrix4d world_to_texture_matrix_;
-        Matrix4d texture_to_world_matrix_;
-        Matrix4d world_to_shadow_matrix_ = IDENTITY_MATRIX<4, double>;
+        numerical::Matrix3d gradient_to_world_matrix_;
+        numerical::Matrix4d world_to_texture_matrix_;
+        numerical::Matrix4d texture_to_world_matrix_;
+        numerical::Matrix4d world_to_shadow_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
 
         Vector3d gradient_h_;
 
@@ -162,7 +162,7 @@ class Impl final : public VolumeObject
 
         void buffer_set_coordinates() const
         {
-                const Matrix4d& texture_to_device = vp_matrix_ * texture_to_world_matrix_;
+                const numerical::Matrix4d& texture_to_device = vp_matrix_ * texture_to_world_matrix_;
                 const geometry::spatial::Hyperplane<3, double>& clip_plane =
                         world_clip_plane_equation_
                                 ? volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
@@ -257,13 +257,13 @@ class Impl final : public VolumeObject
                 return false;
         }
 
-        void set_texture_to_world_matrix(const Matrix4d& texture_to_world_matrix)
+        void set_texture_to_world_matrix(const numerical::Matrix4d& texture_to_world_matrix)
         {
                 texture_to_world_matrix_ = texture_to_world_matrix;
                 gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
 
                 gradient_to_world_matrix_ =
-                        texture_to_world_matrix_.top_left<3, 3>() * make_diagonal_matrix(gradient_h_);
+                        texture_to_world_matrix_.top_left<3, 3>() * numerical::make_diagonal_matrix(gradient_h_);
                 world_to_texture_matrix_ = texture_to_world_matrix_.inversed();
 
                 buffer_set_coordinates();
@@ -280,7 +280,7 @@ class Impl final : public VolumeObject
         }
 
         void set_matrix_and_clip_plane(
-                const Matrix4d& vp_matrix,
+                const numerical::Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation) override
         {
                 vp_matrix_ = vp_matrix;
@@ -289,9 +289,9 @@ class Impl final : public VolumeObject
         }
 
         void set_matrix_and_clip_plane(
-                const Matrix4d& vp_matrix,
+                const numerical::Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation,
-                const Matrix4d& world_to_shadow_matrix) override
+                const numerical::Matrix4d& world_to_shadow_matrix) override
         {
                 ASSERT(!ray_tracing_);
                 world_to_shadow_matrix_ = world_to_shadow_matrix;

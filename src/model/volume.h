@@ -28,7 +28,7 @@ template <std::size_t N>
 struct Volume final
 {
         image::Image<N> image;
-        Matrix<N + 1, N + 1, double> matrix;
+        numerical::Matrix<N + 1, N + 1, double> matrix;
 
         Volume() = default;
 

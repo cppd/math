@@ -67,7 +67,7 @@ typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, double>))) Ve
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] constexpr std140::Matrix<N, Dst> to_std140(const Matrix<N, N, Src>& m)
+[[nodiscard]] constexpr std140::Matrix<N, Dst> to_std140(const numerical::Matrix<N, N, Src>& m)
 {
         std140::Matrix<N, Dst> res;
         for (unsigned r = 0; r < N; ++r)

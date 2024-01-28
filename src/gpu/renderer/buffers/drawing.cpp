@@ -53,7 +53,7 @@ void DrawingBuffer::copy_to_buffer(const VkDeviceSize offset, const T& data) con
         vulkan::map_and_write_to_buffer(buffer_, offset, data);
 }
 
-void DrawingBuffer::set_matrix(const Matrix4d& vp_matrix) const
+void DrawingBuffer::set_matrix(const numerical::Matrix4d& vp_matrix) const
 {
         const decltype(Drawing().vp_matrix) m = vulkan::to_std140<float>(vp_matrix);
         copy_to_buffer(offsetof(Drawing, vp_matrix), m);

@@ -89,7 +89,7 @@ void test_impl(const T precision)
 
         {
                 const Vector<2, T> x(-1, 2);
-                const Matrix<2, 2, T> p{
+                const numerical::Matrix<2, 2, T> p{
                         {   1, 0.1L},
                         {0.1L,    1}
                 };
@@ -103,7 +103,7 @@ void test_impl(const T precision)
 
         {
                 const Vector<2, T> x(1.1L, -2.2L);
-                const Matrix<2, 2, T> p{
+                const numerical::Matrix<2, 2, T> p{
                         {    1, -0.2L},
                         {-0.2L,     1}
                 };

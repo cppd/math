@@ -38,7 +38,7 @@ class MeasurementQueue final
         std::optional<T> last_time_;
         T init_time_;
         Vector<2 * N, T> init_position_velocity_;
-        Matrix<2 * N, 2 * N, T> init_position_velocity_p_;
+        numerical::Matrix<2 * N, 2 * N, T> init_position_velocity_p_;
         std::vector<Measurements<N, T>> measurements_;
 
 public:
@@ -105,7 +105,7 @@ public:
                 return init_position_velocity_;
         }
 
-        [[nodiscard]] const Matrix<2 * N, 2 * N, T>& init_position_velocity_p() const
+        [[nodiscard]] const numerical::Matrix<2 * N, 2 * N, T>& init_position_velocity_p() const
         {
                 ASSERT(!empty());
 

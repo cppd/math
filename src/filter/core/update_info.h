@@ -48,8 +48,8 @@ UpdateInfo<N, T> make_update_info(const Vector<N, T>& residual)
 template <std::size_t N, typename T>
 UpdateInfo<N, T> make_update_info(
         const Vector<N, T>& residual,
-        const Matrix<N, N, T>& s,
-        const Matrix<N, N, T>& s_inversed,
+        const numerical::Matrix<N, N, T>& s,
+        const numerical::Matrix<N, N, T>& s_inversed,
         const std::optional<T> gate,
         const bool likelihood,
         const bool normalized_innovation)

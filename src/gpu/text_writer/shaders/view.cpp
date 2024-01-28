@@ -53,7 +53,7 @@ const vulkan::Buffer& Buffer::buffer() const
         return buffer_.buffer();
 }
 
-void Buffer::set_matrix(const Matrix4d& matrix) const
+void Buffer::set_matrix(const numerical::Matrix4d& matrix) const
 {
         const decltype(Data().matrix) m = vulkan::to_std140<float>(matrix);
         vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);

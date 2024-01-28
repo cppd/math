@@ -59,7 +59,7 @@ class NormalizedSquared final
         std::size_t count_ = 0;
 
 public:
-        void add(const Vector<N, T>& difference, const Matrix<N, N, T>& covariance)
+        void add(const Vector<N, T>& difference, const numerical::Matrix<N, N, T>& covariance)
         {
                 sum_ += dot(difference * covariance.inversed(), difference);
                 ++count_;
@@ -68,7 +68,7 @@ public:
         void add(const T difference, const T variance)
                 requires (N == 1)
         {
-                add(Vector<1, T>(difference), Matrix<1, 1, T>{{variance}});
+                add(Vector<1, T>(difference), numerical::Matrix<1, 1, T>{{variance}});
         }
 
         void add(const T normalized_squared)

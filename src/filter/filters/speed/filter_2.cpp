@@ -56,7 +56,7 @@ Vector<3 * N, T> x(const Vector<N, T>& position, const Vector<N, T>& velocity, c
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> p(
+numerical::Matrix<3 * N, 3 * N, T> p(
         const Vector<N, T>& position_variance,
         const Vector<N, T>& velocity_variance,
         const Vector<N, T>& acceleration_variance)
@@ -65,7 +65,7 @@ Matrix<3 * N, 3 * N, T> p(
         ASSERT(is_finite(velocity_variance));
         ASSERT(is_finite(acceleration_variance));
 
-        Matrix<3 * N, 3 * N, T> res(0);
+        numerical::Matrix<3 * N, 3 * N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
@@ -85,7 +85,7 @@ Vector<N, T> x(const Vector<N, T>& position_velocity_acceleration)
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> p(const Matrix<N, N, T>& position_velocity_acceleration_p)
+numerical::Matrix<N, N, T> p(const numerical::Matrix<N, N, T>& position_velocity_acceleration_p)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
@@ -110,13 +110,13 @@ Vector<3 * N, T> x(const Vector<2 * N, T>& position_velocity, const Init<T>& ini
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> p(const Matrix<2 * N, 2 * N, T>& position_velocity_p, const Init<T>& init)
+numerical::Matrix<3 * N, 3 * N, T> p(const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_p));
 
-        const Matrix<2 * N, 2 * N, T>& p = position_velocity_p;
+        const numerical::Matrix<2 * N, 2 * N, T>& p = position_velocity_p;
 
-        Matrix<3 * N, 3 * N, T> res(0);
+        numerical::Matrix<3 * N, 3 * N, T> res(0);
 
         for (std::size_t r = 0; r < N; ++r)
         {
@@ -163,13 +163,15 @@ Vector<3 * N, T> f(const T dt, const Vector<3 * N, T>& x)
 }
 
 template <std::size_t N, typename T>
-constexpr Matrix<3 * N, 3 * N, T> q(const T dt, const T position_variance)
+constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T position_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
         const T dt_3 = power<3>(dt) / 6;
 
-        const Matrix<3 * N, N, T> noise_transition = block_diagonal<N>(Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
-        const Matrix<N, N, T> process_covariance = make_diagonal_matrix(Vector<N, T>(position_variance));
+        const numerical::Matrix<3 * N, N, T> noise_transition =
+                block_diagonal<N>(numerical::Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
+        const numerical::Matrix<N, N, T> process_covariance =
+                numerical::make_diagonal_matrix(Vector<N, T>(position_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
@@ -183,9 +185,9 @@ Vector<N, T> position_z(const Vector<N, T>& position)
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> position_r(const Vector<N, T>& position_variance)
+numerical::Matrix<N, N, T> position_r(const Vector<N, T>& position_variance)
 {
-        return make_diagonal_matrix(position_variance);
+        return numerical::make_diagonal_matrix(position_variance);
 }
 
 template <std::size_t N, typename T>
@@ -220,9 +222,11 @@ Vector<N + 1, T> position_speed_z(const Vector<N, T>& position, const Vector<1, 
 }
 
 template <std::size_t N, typename T>
-Matrix<N + 1, N + 1, T> position_speed_r(const Vector<N, T>& position_variance, const Vector<1, T>& speed_variance)
+numerical::Matrix<N + 1, N + 1, T> position_speed_r(
+        const Vector<N, T>& position_variance,
+        const Vector<1, T>& speed_variance)
 {
-        Matrix<N + 1, N + 1, T> res(0);
+        numerical::Matrix<N + 1, N + 1, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] = position_variance[i];
@@ -260,7 +264,7 @@ Vector<1, T> speed_z(const Vector<1, T>& speed)
 }
 
 template <typename T>
-Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
+numerical::Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
 {
         return {{speed_variance[0]}};
 }
@@ -298,14 +302,14 @@ class Filter final : public Filter2<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<1, 3>(filter_->x());
+                return numerical::slice<1, 3>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const
+        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const
         {
                 ASSERT(filter_);
 
-                return slice<1, 3>(filter_->p());
+                return numerical::slice<1, 3>(filter_->p());
         }
 
         void reset(
@@ -323,7 +327,7 @@ class Filter final : public Filter2<N, T>
 
         void reset(
                 const Vector<3 * N, T>& position_velocity_acceleration,
-                const Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) override
+                const numerical::Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) override
         {
                 filter_.emplace(
                         core::create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position_velocity_acceleration),
@@ -332,7 +336,7 @@ class Filter final : public Filter2<N, T>
 
         void reset(
                 const Vector<2 * N, T>& position_velocity,
-                const Matrix<2 * N, 2 * N, T>& position_velocity_p,
+                const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
                 const Init<T>& init) override
         {
                 filter_.emplace(
@@ -392,14 +396,14 @@ class Filter final : public Filter2<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<0, 3>(filter_->x());
+                return numerical::slice<0, 3>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> position_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<0, 3>(filter_->p());
+                return numerical::slice<0, 3>(filter_->p());
         }
 
         [[nodiscard]] T speed() const override

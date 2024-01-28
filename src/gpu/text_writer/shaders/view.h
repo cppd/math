@@ -49,7 +49,7 @@ public:
 
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
-        void set_matrix(const Matrix4d& matrix) const;
+        void set_matrix(const numerical::Matrix4d& matrix) const;
         void set_color(const Vector3f& color) const;
 };
 

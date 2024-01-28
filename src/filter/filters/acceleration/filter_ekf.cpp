@@ -57,11 +57,11 @@ Vector<9, T> x(const Vector<6, T>& position_velocity_acceleration, const Init<T>
 }
 
 template <typename T>
-Matrix<9, 9, T> p(const Matrix<6, 6, T>& position_velocity_acceleration_p, const Init<T>& init)
+numerical::Matrix<9, 9, T> p(const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_acceleration_p));
 
-        Matrix<9, 9, T> res(0);
+        numerical::Matrix<9, 9, T> res(0);
 
         for (std::size_t r = 0; r < 6; ++r)
         {
@@ -99,14 +99,14 @@ Vector<9, T> x(const Vector<4, T>& position_velocity, const Init<T>& init)
 }
 
 template <typename T>
-Matrix<9, 9, T> p(const Matrix<4, 4, T>& position_velocity_p, const Init<T>& init)
+numerical::Matrix<9, 9, T> p(const numerical::Matrix<4, 4, T>& position_velocity_p, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_p));
 
-        const Matrix<4, 4, T>& p = position_velocity_p;
+        const numerical::Matrix<4, 4, T>& p = position_velocity_p;
         static constexpr std::size_t N = 2;
 
-        Matrix<9, 9, T> res(0);
+        numerical::Matrix<9, 9, T> res(0);
 
         for (std::size_t r = 0; r < N; ++r)
         {
@@ -141,7 +141,7 @@ template <typename T>
 }
 
 template <typename T>
-Matrix<9, 9, T> f(const T dt)
+numerical::Matrix<9, 9, T> f(const T dt)
 {
         const T dt_2 = square(dt) / 2;
         return {
@@ -158,11 +158,15 @@ Matrix<9, 9, T> f(const T dt)
 }
 
 template <typename T>
-constexpr Matrix<9, 9, T> q(const T dt, const T position_variance, const T angle_variance, const T angle_r_variance)
+constexpr numerical::Matrix<9, 9, T> q(
+        const T dt,
+        const T position_variance,
+        const T angle_variance,
+        const T angle_r_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
         const T dt_3 = power<3>(dt) / 6;
-        const Matrix<9, 4, T> noise_transition{
+        const numerical::Matrix<9, 4, T> noise_transition{
                 {dt_3,    0,    0,  0},
                 {dt_2,    0,    0,  0},
                 {  dt,    0,    0,  0},
@@ -177,7 +181,7 @@ constexpr Matrix<9, 9, T> q(const T dt, const T position_variance, const T angle
         const T p = position_variance;
         const T a = angle_variance;
         const T a_r = angle_r_variance;
-        const Matrix<4, 4, T> covariance{
+        const numerical::Matrix<4, 4, T> covariance{
                 {p, 0, 0,   0},
                 {0, p, 0,   0},
                 {0, 0, a,   0},
@@ -190,9 +194,9 @@ constexpr Matrix<9, 9, T> q(const T dt, const T position_variance, const T angle
 //
 
 template <typename T>
-Matrix<2, 2, T> position_r(const Vector<2, T>& position_variance)
+numerical::Matrix<2, 2, T> position_r(const Vector<2, T>& position_variance)
 {
-        return make_diagonal_matrix(position_variance);
+        return numerical::make_diagonal_matrix(position_variance);
 }
 
 template <typename T>
@@ -204,7 +208,7 @@ Vector<2, T> position_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<2, 9, T> position_hj(const Vector<9, T>& /*x*/)
+numerical::Matrix<2, 9, T> position_hj(const Vector<9, T>& /*x*/)
 {
         // px = px
         // py = py
@@ -224,11 +228,11 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
-Matrix<3, 3, T> position_speed_r(const Vector<2, T>& position_variance, const Vector<1, T>& speed_variance)
+numerical::Matrix<3, 3, T> position_speed_r(const Vector<2, T>& position_variance, const Vector<1, T>& speed_variance)
 {
         const Vector<2, T>& pv = position_variance;
         const Vector<1, T>& sv = speed_variance;
-        return make_diagonal_matrix<3, T>({pv[0], pv[1], sv[0]});
+        return numerical::make_diagonal_matrix<3, T>({pv[0], pv[1], sv[0]});
 }
 
 template <typename T>
@@ -249,7 +253,7 @@ Vector<3, T> position_speed_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<3, 9, T> position_speed_hj(const Vector<9, T>& x)
+numerical::Matrix<3, 9, T> position_speed_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -278,7 +282,7 @@ Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& 
 //
 
 template <typename T>
-Matrix<6, 6, T> position_speed_direction_acceleration_r(
+numerical::Matrix<6, 6, T> position_speed_direction_acceleration_r(
         const Vector<2, T>& position_variance,
         const Vector<1, T>& speed_variance,
         const Vector<1, T>& direction_variance,
@@ -288,7 +292,7 @@ Matrix<6, 6, T> position_speed_direction_acceleration_r(
         const Vector<1, T>& sv = speed_variance;
         const Vector<1, T>& dv = direction_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<6, T>({pv[0], pv[1], sv[0], dv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<6, T>({pv[0], pv[1], sv[0], dv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -321,7 +325,7 @@ Vector<6, T> position_speed_direction_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<6, 9, T> position_speed_direction_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<6, 9, T> position_speed_direction_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -369,7 +373,7 @@ Vector<6, T> position_speed_direction_acceleration_residual(const Vector<6, T>& 
 //
 
 template <typename T>
-Matrix<4, 4, T> position_speed_direction_r(
+numerical::Matrix<4, 4, T> position_speed_direction_r(
         const Vector<2, T>& position_variance,
         const Vector<1, T>& speed_variance,
         const Vector<1, T>& direction_variance)
@@ -377,7 +381,7 @@ Matrix<4, 4, T> position_speed_direction_r(
         const Vector<2, T>& pv = position_variance;
         const Vector<1, T>& sv = speed_variance;
         const Vector<1, T>& dv = direction_variance;
-        return make_diagonal_matrix<4, T>({pv[0], pv[1], sv[0], dv[0]});
+        return numerical::make_diagonal_matrix<4, T>({pv[0], pv[1], sv[0], dv[0]});
 }
 
 template <typename T>
@@ -402,7 +406,7 @@ Vector<4, T> position_speed_direction_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<4, 9, T> position_speed_direction_hj(const Vector<9, T>& x)
+numerical::Matrix<4, 9, T> position_speed_direction_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -437,7 +441,7 @@ Vector<4, T> position_speed_direction_residual(const Vector<4, T>& a, const Vect
 //
 
 template <typename T>
-Matrix<5, 5, T> position_speed_acceleration_r(
+numerical::Matrix<5, 5, T> position_speed_acceleration_r(
         const Vector<2, T>& position_variance,
         const Vector<1, T>& speed_variance,
         const Vector<2, T>& acceleration_variance)
@@ -445,7 +449,7 @@ Matrix<5, 5, T> position_speed_acceleration_r(
         const Vector<2, T>& pv = position_variance;
         const Vector<1, T>& sv = speed_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<5, T>({pv[0], pv[1], sv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<5, T>({pv[0], pv[1], sv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -475,7 +479,7 @@ Vector<5, T> position_speed_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<5, 9, T> position_speed_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<5, 9, T> position_speed_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -517,7 +521,7 @@ Vector<5, T> position_speed_acceleration_residual(const Vector<5, T>& a, const V
 //
 
 template <typename T>
-Matrix<5, 5, T> position_direction_acceleration_r(
+numerical::Matrix<5, 5, T> position_direction_acceleration_r(
         const Vector<2, T>& position_variance,
         const Vector<1, T>& direction_variance,
         const Vector<2, T>& acceleration_variance)
@@ -525,7 +529,7 @@ Matrix<5, 5, T> position_direction_acceleration_r(
         const Vector<2, T>& pv = position_variance;
         const Vector<1, T>& dv = direction_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<5, T>({pv[0], pv[1], dv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<5, T>({pv[0], pv[1], dv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -556,7 +560,7 @@ Vector<5, T> position_direction_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<5, 9, T> position_direction_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<5, 9, T> position_direction_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -600,11 +604,13 @@ Vector<5, T> position_direction_acceleration_residual(const Vector<5, T>& a, con
 //
 
 template <typename T>
-Matrix<3, 3, T> position_direction_r(const Vector<2, T>& position_variance, const Vector<1, T>& direction_variance)
+numerical::Matrix<3, 3, T> position_direction_r(
+        const Vector<2, T>& position_variance,
+        const Vector<1, T>& direction_variance)
 {
         const Vector<2, T>& pv = position_variance;
         const Vector<1, T>& dv = direction_variance;
-        return make_diagonal_matrix<3, T>({pv[0], pv[1], dv[0]});
+        return numerical::make_diagonal_matrix<3, T>({pv[0], pv[1], dv[0]});
 }
 
 template <typename T>
@@ -627,7 +633,7 @@ Vector<3, T> position_direction_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<3, 9, T> position_direction_hj(const Vector<9, T>& x)
+numerical::Matrix<3, 9, T> position_direction_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -658,13 +664,13 @@ Vector<3, T> position_direction_residual(const Vector<3, T>& a, const Vector<3, 
 //
 
 template <typename T>
-Matrix<4, 4, T> position_acceleration_r(
+numerical::Matrix<4, 4, T> position_acceleration_r(
         const Vector<2, T>& position_variance,
         const Vector<2, T>& acceleration_variance)
 {
         const Vector<2, T>& pv = position_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<4, T>({pv[0], pv[1], av[0], av[1]});
+        return numerical::make_diagonal_matrix<4, T>({pv[0], pv[1], av[0], av[1]});
 }
 
 template <typename T>
@@ -690,7 +696,7 @@ Vector<4, T> position_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<4, 9, T> position_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<4, 9, T> position_acceleration_hj(const Vector<9, T>& x)
 {
         // px = px
         // py = py
@@ -726,7 +732,7 @@ Vector<4, T> position_acceleration_residual(const Vector<4, T>& a, const Vector<
 //
 
 template <typename T>
-Matrix<4, 4, T> speed_direction_acceleration_r(
+numerical::Matrix<4, 4, T> speed_direction_acceleration_r(
         const Vector<1, T>& speed_variance,
         const Vector<1, T>& direction_variance,
         const Vector<2, T>& acceleration_variance)
@@ -734,7 +740,7 @@ Matrix<4, 4, T> speed_direction_acceleration_r(
         const Vector<1, T>& sv = speed_variance;
         const Vector<1, T>& dv = direction_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<4, T>({sv[0], dv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<4, T>({sv[0], dv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -761,7 +767,7 @@ Vector<4, T> speed_direction_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<4, 9, T> speed_direction_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<4, 9, T> speed_direction_acceleration_hj(const Vector<9, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle + angle_r
@@ -803,11 +809,11 @@ Vector<4, T> speed_direction_acceleration_residual(const Vector<4, T>& a, const 
 //
 
 template <typename T>
-Matrix<2, 2, T> speed_direction_r(const Vector<1, T>& speed_variance, const Vector<1, T>& direction_variance)
+numerical::Matrix<2, 2, T> speed_direction_r(const Vector<1, T>& speed_variance, const Vector<1, T>& direction_variance)
 {
         const Vector<1, T>& sv = speed_variance;
         const Vector<1, T>& dv = direction_variance;
-        return make_diagonal_matrix<2, T>({sv[0], dv[0]});
+        return numerical::make_diagonal_matrix<2, T>({sv[0], dv[0]});
 }
 
 template <typename T>
@@ -826,7 +832,7 @@ Vector<2, T> speed_direction_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<2, 9, T> speed_direction_hj(const Vector<9, T>& x)
+numerical::Matrix<2, 9, T> speed_direction_hj(const Vector<9, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle + angle_r
@@ -855,13 +861,13 @@ Vector<2, T> speed_direction_residual(const Vector<2, T>& a, const Vector<2, T>&
 //
 
 template <typename T>
-Matrix<3, 3, T> direction_acceleration_r(
+numerical::Matrix<3, 3, T> direction_acceleration_r(
         const Vector<1, T>& direction_variance,
         const Vector<2, T>& acceleration_variance)
 {
         const Vector<1, T>& dv = direction_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<3, T>({dv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<3, T>({dv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -886,7 +892,7 @@ Vector<3, T> direction_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<3, 9, T> direction_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<3, 9, T> direction_acceleration_hj(const Vector<9, T>& x)
 {
         // angle = atan(vy, vx) + angle + angle_r
         // ax = ax*cos(angle) - ay*sin(angle)
@@ -924,9 +930,9 @@ Vector<3, T> direction_acceleration_residual(const Vector<3, T>& a, const Vector
 //
 
 template <typename T>
-Matrix<2, 2, T> acceleration_r(const Vector<2, T>& acceleration_variance)
+numerical::Matrix<2, 2, T> acceleration_r(const Vector<2, T>& acceleration_variance)
 {
-        return make_diagonal_matrix(acceleration_variance);
+        return numerical::make_diagonal_matrix(acceleration_variance);
 }
 
 template <typename T>
@@ -943,7 +949,7 @@ Vector<2, T> acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<2, 9, T> acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<2, 9, T> acceleration_hj(const Vector<9, T>& x)
 {
         // ax = ax*cos(angle) - ay*sin(angle)
         // ay = ax*sin(angle) + ay*cos(angle)
@@ -971,7 +977,7 @@ Vector<2, T> acceleration_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
-Matrix<1, 1, T> direction_r(const Vector<1, T>& direction_variance)
+numerical::Matrix<1, 1, T> direction_r(const Vector<1, T>& direction_variance)
 {
         const Vector<1, T>& dv = direction_variance;
         return {{dv[0]}};
@@ -991,7 +997,7 @@ Vector<1, T> direction_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<1, 9, T> direction_hj(const Vector<9, T>& x)
+numerical::Matrix<1, 9, T> direction_hj(const Vector<9, T>& x)
 {
         // angle = atan(vy, vx) + angle + angle_r
         // Jacobian
@@ -1016,7 +1022,7 @@ Vector<1, T> direction_residual(const Vector<1, T>& a, const Vector<1, T>& b)
 //
 
 template <typename T>
-Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
+numerical::Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
 {
         const Vector<1, T>& sv = speed_variance;
         return {{sv[0]}};
@@ -1034,7 +1040,7 @@ Vector<1, T> speed_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<1, 9, T> speed_hj(const Vector<9, T>& x)
+numerical::Matrix<1, 9, T> speed_hj(const Vector<9, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // Jacobian
@@ -1057,11 +1063,13 @@ Vector<1, T> speed_residual(const Vector<1, T>& a, const Vector<1, T>& b)
 //
 
 template <typename T>
-Matrix<3, 3, T> speed_acceleration_r(const Vector<1, T>& speed_variance, const Vector<2, T>& acceleration_variance)
+numerical::Matrix<3, 3, T> speed_acceleration_r(
+        const Vector<1, T>& speed_variance,
+        const Vector<2, T>& acceleration_variance)
 {
         const Vector<1, T>& sv = speed_variance;
         const Vector<2, T>& av = acceleration_variance;
-        return make_diagonal_matrix<3, T>({sv[0], av[0], av[1]});
+        return numerical::make_diagonal_matrix<3, T>({sv[0], av[0], av[1]});
 }
 
 template <typename T>
@@ -1085,7 +1093,7 @@ Vector<3, T> speed_acceleration_h(const Vector<9, T>& x)
 }
 
 template <typename T>
-Matrix<3, 9, T> speed_acceleration_hj(const Vector<9, T>& x)
+numerical::Matrix<3, 9, T> speed_acceleration_hj(const Vector<9, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // ax = ax*cos(angle) - ay*sin(angle)
@@ -1139,7 +1147,7 @@ class Filter final : public FilterEkf<T>
                 return {filter_->x()[1], filter_->x()[4]};
         }
 
-        [[nodiscard]] Matrix<2, 2, T> velocity_p() const
+        [[nodiscard]] numerical::Matrix<2, 2, T> velocity_p() const
         {
                 ASSERT(filter_);
 
@@ -1151,7 +1159,7 @@ class Filter final : public FilterEkf<T>
 
         void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
                 const Init<T>& init) override
         {
                 filter_.emplace(x(position_velocity_acceleration, init), p(position_velocity_acceleration_p, init));
@@ -1159,7 +1167,7 @@ class Filter final : public FilterEkf<T>
 
         void reset(
                 const Vector<4, T>& position_velocity,
-                const Matrix<4, 4, T>& position_velocity_p,
+                const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) override
         {
                 filter_.emplace(x(position_velocity, init), p(position_velocity_p, init));
@@ -1170,7 +1178,7 @@ class Filter final : public FilterEkf<T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const Matrix<9, 9, T> f_matrix = f(dt);
+                const numerical::Matrix<9, 9, T> f_matrix = f(dt);
                 filter_->predict(
                         [&](const Vector<9, T>& x)
                         {
@@ -1398,7 +1406,7 @@ class Filter final : public FilterEkf<T>
                 return {filter_->x()[0], filter_->x()[3]};
         }
 
-        [[nodiscard]] Matrix<2, 2, T> position_p() const override
+        [[nodiscard]] numerical::Matrix<2, 2, T> position_p() const override
         {
                 ASSERT(filter_);
 

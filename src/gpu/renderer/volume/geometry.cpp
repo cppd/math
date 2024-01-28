@@ -34,7 +34,7 @@ namespace
 {
 constexpr double GRADIENT_H_IN_PIXELS = 0.5;
 
-Vector3d world_volume_size(const Matrix4d& texture_to_world)
+Vector3d world_volume_size(const numerical::Matrix4d& texture_to_world)
 {
         // Example for x: texture_to_world * (1, 0, 0, 1) -> (x, y, z) -> length
         Vector3d size;
@@ -49,13 +49,13 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world)
 
 geometry::spatial::Hyperplane<3, double> volume_clip_plane(
         const Vector4d& world_clip_plane_equation,
-        const Matrix4d& model)
+        const numerical::Matrix4d& model)
 {
         return geometry::spatial::clip_plane_equation_to_clip_plane(world_clip_plane_equation * model);
 }
 
 // in texture coordinates
-Vector3d volume_gradient_h(const Matrix4d& texture_to_world, const vulkan::Image& image)
+Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vulkan::Image& image)
 {
         ASSERT(image.type() == VK_IMAGE_TYPE_3D);
 

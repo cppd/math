@@ -43,6 +43,6 @@ public:
 
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
-        void set(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
+        void set(const numerical::Matrix4d& vp_matrix, const numerical::Matrix4d& world_to_shadow) const;
 };
 }

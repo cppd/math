@@ -48,8 +48,8 @@ class Camera final
         void set_vectors(const Vector3d& right, const Vector3d& up);
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
-        [[nodiscard]] Matrix4d main_view_matrix() const;
-        [[nodiscard]] Matrix4d shadow_view_matrix() const;
+        [[nodiscard]] numerical::Matrix4d main_view_matrix() const;
+        [[nodiscard]] numerical::Matrix4d shadow_view_matrix() const;
 
         [[nodiscard]] gpu::renderer::CameraInfo renderer_camera_info() const;
 
@@ -63,6 +63,6 @@ public:
         void resize(int width, int height);
 
         [[nodiscard]] info::Camera camera() const;
-        [[nodiscard]] Matrix4d view_matrix() const;
+        [[nodiscard]] numerical::Matrix4d view_matrix() const;
 };
 }

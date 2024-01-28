@@ -175,7 +175,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Matrix<N, N, T> Position1<N, T>::velocity_p() const
+[[nodiscard]] numerical::Matrix<N, N, T> Position1<N, T>::velocity_p() const
 {
         return filter_->velocity_p();
 }

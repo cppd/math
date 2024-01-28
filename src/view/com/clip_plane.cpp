@@ -34,7 +34,7 @@ namespace ns::view
 {
 namespace
 {
-Vector4d clip_plane_equation(const Matrix4d& view_matrix, const double position)
+Vector4d clip_plane_equation(const numerical::Matrix4d& view_matrix, const double position)
 {
         ASSERT(position >= 0 && position <= 1);
 

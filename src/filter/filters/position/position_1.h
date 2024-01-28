@@ -62,6 +62,6 @@ public:
 
         [[nodiscard]] bool empty() const;
         [[nodiscard]] Vector<N, T> velocity() const;
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const;
+        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const;
 };
 }

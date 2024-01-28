@@ -137,7 +137,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         bool inserted_ = false;
 
-        Matrix<N + 1, N + 1, double> matrix_;
+        numerical::Matrix<N + 1, N + 1, double> matrix_;
         float alpha_ = 1;
         color::Color color_{color::RGB8(220, 255, 220)};
         float ambient_ = 0.1;
@@ -177,7 +177,10 @@ public:
                 events_ = &DEFAULT_EVENTS;
         }
 
-        MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)
+        MeshObject(
+                std::unique_ptr<const Mesh<N>>&& mesh,
+                const numerical::Matrix<N + 1, N + 1, double>& matrix,
+                std::string name)
                 : mesh_(std::move(mesh)),
                   name_(std::move(name)),
                   matrix_(matrix)
@@ -288,12 +291,12 @@ public:
                 return *object_->mesh_;
         }
 
-        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const numerical::Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }
 
-        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
+        void set_matrix(const numerical::Matrix<N + 1, N + 1, double>& matrix)
         {
                 updates_.set(UPDATE_MATRIX);
                 object_->matrix_ = matrix;
@@ -399,7 +402,7 @@ public:
                 return *object_->mesh_;
         }
 
-        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const numerical::Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }

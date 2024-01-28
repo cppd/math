@@ -125,7 +125,7 @@ void cocone(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::reconstruction::ManifoldConstructor<N>& constructor,
-        const Matrix<N + 1, N + 1, double>& model_matrix)
+        const numerical::Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::unique_ptr<const model::mesh::Mesh<N>> mesh;
 
@@ -155,7 +155,7 @@ void bound_cocone(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::reconstruction::ManifoldConstructor<N>& constructor,
-        const Matrix<N + 1, N + 1, double>& model_matrix,
+        const numerical::Matrix<N + 1, N + 1, double>& model_matrix,
         const double rho,
         const double alpha)
 {
@@ -188,7 +188,7 @@ void mst(
         progress::RatioList* const progress_list,
         const model::ObjectId parent_id,
         const geometry::reconstruction::ManifoldConstructor<N>& constructor,
-        const Matrix<N + 1, N + 1, double>& model_matrix)
+        const numerical::Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::vector<std::array<int, 2>> mst_lines;
         {
@@ -231,7 +231,7 @@ void manifold_constructor(
         const bool build_cocone,
         const bool build_bound_cocone,
         const bool build_mst,
-        const Matrix<N + 1, N + 1, double>& matrix,
+        const numerical::Matrix<N + 1, N + 1, double>& matrix,
         const model::ObjectId id,
         const std::vector<Vector<N, float>>& points,
         const double rho,
@@ -313,7 +313,7 @@ void compute_meshes(
                         threads.add(
                                 [&]()
                                 {
-                                        std::optional<Matrix<N + 1, N + 1, double>> matrix;
+                                        std::optional<numerical::Matrix<N + 1, N + 1, double>> matrix;
                                         std::optional<model::ObjectId> id;
                                         std::vector<Vector<N, float>> points;
                                         {

@@ -64,7 +64,7 @@ template <std::size_t N, typename T, typename MeshType>
 [[nodiscard]] std::vector<typename model::mesh::Mesh<N>::Facet> find_facets_inside_clip_plane(
         const std::vector<Vector<N, MeshType>>& vertices,
         const std::vector<typename model::mesh::Mesh<N>::Facet>& facets,
-        const Matrix<N + 1, N + 1, T>& mesh_matrix,
+        const numerical::Matrix<N + 1, N + 1, T>& mesh_matrix,
         const geometry::spatial::Hyperplane<N, T>& clip_plane)
 {
         const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
@@ -93,7 +93,7 @@ std::vector<typename model::mesh::Mesh<N>::Facet> find_facets(
         }
 
         return find_facets_inside_clip_plane(
-                mesh.vertices, mesh.facets, to_matrix<T>(mesh_object.matrix()),
+                mesh.vertices, mesh.facets, numerical::to_matrix<T>(mesh_object.matrix()),
                 geometry::spatial::Hyperplane<N, T>(*clip_plane_equation));
 }
 }

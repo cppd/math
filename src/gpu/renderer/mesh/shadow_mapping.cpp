@@ -130,7 +130,9 @@ void ShadowMapping::delete_command_buffers()
         render_command_buffers_.reset();
 }
 
-void ShadowMapping::set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const
+void ShadowMapping::set_shadow_matrices(
+        const numerical::Matrix4d& vp_matrix,
+        const numerical::Matrix4d& world_to_shadow) const
 {
         shadow_matrices_buffer_.set(vp_matrix, world_to_shadow);
 }

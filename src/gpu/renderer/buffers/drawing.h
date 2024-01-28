@@ -69,7 +69,7 @@ public:
 
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
-        void set_matrix(const Matrix4d& vp_matrix) const;
+        void set_matrix(const numerical::Matrix4d& vp_matrix) const;
         void set_transparency_max_node_count(std::uint32_t count) const;
         void set_lighting_color(const Vector3f& color) const;
         void set_background_color(const Vector3f& color) const;

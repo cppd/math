@@ -42,6 +42,6 @@ public:
         [[nodiscard]] bool angle_variance_less_than(T variance) const override;
 
         [[nodiscard]] Vector<2 * N, T> position_velocity() const override;
-        [[nodiscard]] Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
+        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
 };
 }

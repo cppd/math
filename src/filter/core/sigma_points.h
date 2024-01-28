@@ -98,13 +98,14 @@ public:
         template <typename Add, typename Subtract>
         [[nodiscard]] std::array<Vector<N, T>, 2 * N + 1> points(
                 const Vector<N, T>& x,
-                const Matrix<N, N, T>& p,
+                const numerical::Matrix<N, N, T>& p,
                 // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
                 const Add add,
                 // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
                 const Subtract subtract) const
         {
-                const Matrix<N, N, T> l = numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
+                const numerical::Matrix<N, N, T> l =
+                        numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
 
                 std::array<Vector<N, T>, 2 * N + 1> res;
                 res[0] = x;

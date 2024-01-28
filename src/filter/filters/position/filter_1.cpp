@@ -52,11 +52,11 @@ Vector<2 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
+numerical::Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
 
-        Matrix<2 * N, 2 * N, T> res(0);
+        numerical::Matrix<2 * N, 2 * N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 2 * i;
@@ -76,29 +76,31 @@ struct AddX final
 };
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> f_matrix(const T dt)
+numerical::Matrix<2 * N, 2 * N, T> f_matrix(const T dt)
 {
-        return block_diagonal<N>(Matrix<2, 2, T>{
+        return block_diagonal<N>(numerical::Matrix<2, 2, T>{
                 {1, dt},
                 {0,  1}
         });
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> q(const T dt, const T process_variance)
+numerical::Matrix<2 * N, 2 * N, T> q(const T dt, const T process_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
 
-        const Matrix<2 * N, N, T> noise_transition = block_diagonal<N>(Matrix<2, 1, T>{{dt_2}, {dt}});
-        const Matrix<N, N, T> process_covariance = make_diagonal_matrix(Vector<N, T>(process_variance));
+        const numerical::Matrix<2 * N, N, T> noise_transition =
+                block_diagonal<N>(numerical::Matrix<2, 1, T>{{dt_2}, {dt}});
+        const numerical::Matrix<N, N, T> process_covariance =
+                numerical::make_diagonal_matrix(Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
+numerical::Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
 {
-        return make_diagonal_matrix(measurement_variance);
+        return numerical::make_diagonal_matrix(measurement_variance);
 }
 
 struct PositionH final
@@ -121,13 +123,13 @@ struct PositionH final
 struct PositionHJ final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Matrix<N / 2, N, T> operator()(const Vector<N, T>& /*x*/) const
+        [[nodiscard]] numerical::Matrix<N / 2, N, T> operator()(const Vector<N, T>& /*x*/) const
         {
                 static_assert(N % 2 == 0);
                 // px = px
                 // py = py
                 // Jacobian
-                Matrix<N / 2, N, T> res(0);
+                numerical::Matrix<N / 2, N, T> res(0);
                 for (std::size_t i = 0; i < N / 2; ++i)
                 {
                         res[i, 2 * i] = 1;
@@ -166,7 +168,7 @@ class FilterImpl final : public Filter1<N, T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const Matrix<2 * N, 2 * N, T> f = f_matrix<N, T>(dt);
+                const numerical::Matrix<2 * N, 2 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
                         [&](const Vector<2 * N, T>& x)
                         {
@@ -188,7 +190,7 @@ class FilterImpl final : public Filter1<N, T>
                 ASSERT(is_finite(position));
                 ASSERT(com::check_variance(variance));
 
-                const Matrix<N, N, T> r = position_r(variance);
+                const numerical::Matrix<N, N, T> r = position_r(variance);
 
                 const core::UpdateInfo update = filter_->update(
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
@@ -204,14 +206,14 @@ class FilterImpl final : public Filter1<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<0, 2>(filter_->x());
+                return numerical::slice<0, 2>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> position_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<0, 2>(filter_->p());
+                return numerical::slice<0, 2>(filter_->p());
         }
 
         [[nodiscard]] T speed() const override
@@ -228,14 +230,14 @@ class FilterImpl final : public Filter1<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<1, 2>(filter_->x());
+                return numerical::slice<1, 2>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<1, 2>(filter_->p());
+                return numerical::slice<1, 2>(filter_->p());
         }
 
 public:

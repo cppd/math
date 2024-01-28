@@ -154,8 +154,9 @@ class Impl final : public View
                 const double top = 0;
                 const double near = 1;
                 const double far = -1;
-                const Matrix4d p = numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                const Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
+                const numerical::Matrix4d p =
+                        numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                const numerical::Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
                 data_buffer_.set_matrix(p * t);
 
                 pipeline_ = program_.create_pipeline(

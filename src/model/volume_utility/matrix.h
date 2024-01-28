@@ -30,10 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model::volume
 {
 template <std::size_t N>
-Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& size)
+numerical::Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& size)
 {
         const double max_size = *std::max_element(size.cbegin(), size.cend());
-        Matrix<N + 1, N + 1, double> matrix = IDENTITY_MATRIX<N + 1, double>;
+        numerical::Matrix<N + 1, N + 1, double> matrix = numerical::IDENTITY_MATRIX<N + 1, double>;
         for (std::size_t i = 0; i < N; ++i)
         {
                 matrix[i, i] = size[i] / max_size;
@@ -42,15 +42,16 @@ Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& siz
 }
 
 template <std::size_t N>
-Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
+numerical::Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Volume<N>& volume,
         const double size,
         const Vector<N, double>& position)
 {
         const auto [center, length] = center_and_length(volume);
-        const Matrix<N + 1, N + 1, double> t1 = numerical::transform::translate(-center);
-        const Matrix<N + 1, N + 1, double> t2 = numerical::transform::scale(Vector<N, double>(size / length));
-        const Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
+        const numerical::Matrix<N + 1, N + 1, double> t1 = numerical::transform::translate(-center);
+        const numerical::Matrix<N + 1, N + 1, double> t2 =
+                numerical::transform::scale(Vector<N, double>(size / length));
+        const numerical::Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
         return t3 * t2 * t1;
 }
 }

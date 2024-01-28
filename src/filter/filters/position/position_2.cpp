@@ -175,7 +175,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Matrix<N, N, T> Position2<N, T>::position_p() const
+[[nodiscard]] numerical::Matrix<N, N, T> Position2<N, T>::position_p() const
 {
         return filter_->position_p();
 }
@@ -187,7 +187,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Matrix<N, N, T> Position2<N, T>::velocity_p() const
+[[nodiscard]] numerical::Matrix<N, N, T> Position2<N, T>::velocity_p() const
 {
         return filter_->velocity_p();
 }
@@ -199,7 +199,7 @@ Vector<2 * N, T> Position2<N, T>::position_velocity() const
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> Position2<N, T>::position_velocity_p() const
+numerical::Matrix<2 * N, 2 * N, T> Position2<N, T>::position_velocity_p() const
 {
         return filter_->position_velocity_p();
 }
@@ -211,7 +211,7 @@ Vector<3 * N, T> Position2<N, T>::position_velocity_acceleration() const
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> Position2<N, T>::position_velocity_acceleration_p() const
+numerical::Matrix<3 * N, 3 * N, T> Position2<N, T>::position_velocity_acceleration_p() const
 {
         return filter_->position_velocity_acceleration_p();
 }

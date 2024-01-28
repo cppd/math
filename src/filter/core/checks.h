@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core
 {
 template <std::size_t N, typename T>
-[[nodiscard]] bool positive_definite(const Matrix<N, N, T>& p)
+[[nodiscard]] bool positive_definite(const numerical::Matrix<N, N, T>& p)
 {
         // this is insufficient check based on diagonal only
         for (std::size_t i = 0; i < N; ++i)
@@ -41,7 +41,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-void check_x_p(const char* const name, const Vector<N, T>& x, const Matrix<N, N, T>& p)
+void check_x_p(const char* const name, const Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
 {
         if (!positive_definite(p))
         {

@@ -103,7 +103,7 @@ Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
 }
 
 template <std::size_t N, typename T>
-Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
+numerical::Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p() const
 {
         return position_->position_velocity_p();
 }

@@ -215,8 +215,8 @@ class TestEkf
 
         const T dt_;
 
-        const Matrix<2, 2, T> q_;
-        const Matrix<1, 1, T> r_;
+        const numerical::Matrix<2, 2, T> q_;
+        const numerical::Matrix<1, 1, T> r_;
 
         Ekf<2, T> filter_;
 
@@ -227,7 +227,7 @@ public:
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
                 const Vector<2, T>& x,
-                const Matrix<2, 2, T>& p)
+                const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
@@ -248,7 +248,7 @@ public:
                 };
                 const auto f_jacobian = [&](const Vector<2, T>& /*x*/)
                 {
-                        return Matrix<2, 2, T>{
+                        return numerical::Matrix<2, 2, T>{
                                 {1, dt_},
                                 {0,   1}
                         };
@@ -263,7 +263,7 @@ public:
                 };
                 const auto h_jacobian = [](const Vector<2, T>& /*x*/)
                 {
-                        return Matrix<1, 2, T>{
+                        return numerical::Matrix<1, 2, T>{
                                 {1, 0}
                         };
                 };
@@ -305,8 +305,8 @@ class TestUkf
 
         const T dt_;
 
-        const Matrix<2, 2, T> q_;
-        const Matrix<1, 1, T> r_;
+        const numerical::Matrix<2, 2, T> q_;
+        const numerical::Matrix<1, 1, T> r_;
 
         Ukf<2, T, SigmaPoints<2, T>> filter_;
 
@@ -317,7 +317,7 @@ public:
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
                 const Vector<2, T>& x,
-                const Matrix<2, 2, T>& p)
+                const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
                   r_({{measurement_variance}}),
@@ -381,7 +381,7 @@ void test_impl(
                 generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
 
         constexpr Vector<2, T> X(10, 5);
-        constexpr Matrix<2, 2, T> P{
+        constexpr numerical::Matrix<2, 2, T> P{
                 {500,  0},
                 {  0, 50}
         };

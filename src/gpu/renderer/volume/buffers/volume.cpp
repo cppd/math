@@ -75,13 +75,13 @@ const vulkan::Buffer& VolumeBuffer::buffer_volume() const
 }
 
 void VolumeBuffer::set_coordinates(
-        const Matrix4d& device_to_texture_matrix,
-        const Matrix4d& texture_to_world_matrix,
+        const numerical::Matrix4d& device_to_texture_matrix,
+        const numerical::Matrix4d& texture_to_world_matrix,
         const Vector4d& third_row_of_texture_to_device,
         const geometry::spatial::Hyperplane<3, double>& clip_plane,
         const Vector3d& gradient_h,
-        const Matrix3d& gradient_to_world_matrix,
-        const Matrix4d& world_to_texture_matrix) const
+        const numerical::Matrix3d& gradient_to_world_matrix,
+        const numerical::Matrix4d& world_to_texture_matrix) const
 {
         VolumeCoordinates coordinates;
         coordinates.device_to_texture_matrix = vulkan::to_std140<float>(device_to_texture_matrix);
@@ -94,7 +94,7 @@ void VolumeBuffer::set_coordinates(
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
-void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const
+void VolumeBuffer::set_texture_to_shadow_matrix(const numerical::Matrix4d& texture_to_shadow_matrix) const
 {
         const decltype(VolumeCoordinates().texture_to_shadow_matrix) m =
                 vulkan::to_std140<float>(texture_to_shadow_matrix);

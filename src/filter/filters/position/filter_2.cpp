@@ -53,11 +53,11 @@ Vector<3 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
+numerical::Matrix<3 * N, 3 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
 
-        Matrix<3 * N, 3 * N, T> res(0);
+        numerical::Matrix<3 * N, 3 * N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
@@ -78,11 +78,11 @@ struct AddX final
 };
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> f_matrix(const T dt)
+numerical::Matrix<3 * N, 3 * N, T> f_matrix(const T dt)
 {
         const T dt_2 = power<2>(dt) / 2;
 
-        return block_diagonal<N>(Matrix<3, 3, T>{
+        return block_diagonal<N>(numerical::Matrix<3, 3, T>{
                 {1, dt, dt_2},
                 {0,  1,   dt},
                 {0,  0,    1}
@@ -90,21 +90,23 @@ Matrix<3 * N, 3 * N, T> f_matrix(const T dt)
 }
 
 template <std::size_t N, typename T>
-Matrix<3 * N, 3 * N, T> q(const T dt, const T process_variance)
+numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T process_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
         const T dt_3 = power<3>(dt) / 6;
 
-        const Matrix<3 * N, N, T> noise_transition = block_diagonal<N>(Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
-        const Matrix<N, N, T> process_covariance = make_diagonal_matrix(Vector<N, T>(process_variance));
+        const numerical::Matrix<3 * N, N, T> noise_transition =
+                block_diagonal<N>(numerical::Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
+        const numerical::Matrix<N, N, T> process_covariance =
+                numerical::make_diagonal_matrix(Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
+numerical::Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
 {
-        return make_diagonal_matrix(measurement_variance);
+        return numerical::make_diagonal_matrix(measurement_variance);
 }
 
 struct PositionH final
@@ -127,13 +129,13 @@ struct PositionH final
 struct PositionHJ final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Matrix<N / 3, N, T> operator()(const Vector<N, T>& /*x*/) const
+        [[nodiscard]] numerical::Matrix<N / 3, N, T> operator()(const Vector<N, T>& /*x*/) const
         {
                 static_assert(N % 3 == 0);
                 // px = px
                 // py = py
                 // Jacobian
-                Matrix<N / 3, N, T> res(0);
+                numerical::Matrix<N / 3, N, T> res(0);
                 for (std::size_t i = 0; i < N / 3; ++i)
                 {
                         res[i, 3 * i] = 1;
@@ -172,7 +174,7 @@ class FilterImpl final : public Filter2<N, T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const Matrix<3 * N, 3 * N, T> f = f_matrix<N, T>(dt);
+                const numerical::Matrix<3 * N, 3 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
                         [&](const Vector<3 * N, T>& x)
                         {
@@ -194,7 +196,7 @@ class FilterImpl final : public Filter2<N, T>
                 ASSERT(is_finite(position));
                 ASSERT(com::check_variance(variance));
 
-                const Matrix<N, N, T> r = position_r(variance);
+                const numerical::Matrix<N, N, T> r = position_r(variance);
 
                 const core::UpdateInfo update = filter_->update(
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
@@ -210,14 +212,14 @@ class FilterImpl final : public Filter2<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<0, 3>(filter_->x());
+                return numerical::slice<0, 3>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> position_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<0, 3>(filter_->p());
+                return numerical::slice<0, 3>(filter_->p());
         }
 
         [[nodiscard]] T speed() const override
@@ -234,14 +236,14 @@ class FilterImpl final : public Filter2<N, T>
         {
                 ASSERT(filter_);
 
-                return slice<1, 3>(filter_->x());
+                return numerical::slice<1, 3>(filter_->x());
         }
 
-        [[nodiscard]] Matrix<N, N, T> velocity_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const override
         {
                 ASSERT(filter_);
 
-                return slice<1, 3>(filter_->p());
+                return numerical::slice<1, 3>(filter_->p());
         }
 
         [[nodiscard]] Vector<2 * N, T> position_velocity() const override
@@ -260,12 +262,12 @@ class FilterImpl final : public Filter2<N, T>
                 return res;
         }
 
-        [[nodiscard]] Matrix<2 * N, 2 * N, T> position_velocity_p() const override
+        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override
         {
                 ASSERT(filter_);
 
-                const Matrix<3 * N, 3 * N, T>& p = filter_->p();
-                Matrix<2 * N, 2 * N, T> res;
+                const numerical::Matrix<3 * N, 3 * N, T>& p = filter_->p();
+                numerical::Matrix<2 * N, 2 * N, T> res;
                 for (std::size_t r = 0; r < N; ++r)
                 {
                         for (std::size_t i = 0; i < 2; ++i)
@@ -289,7 +291,7 @@ class FilterImpl final : public Filter2<N, T>
                 return filter_->x();
         }
 
-        [[nodiscard]] Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
+        [[nodiscard]] numerical::Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const override
         {
                 ASSERT(filter_);
 

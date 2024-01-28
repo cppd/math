@@ -47,7 +47,8 @@ const vulkan::Buffer& MeshBuffer::buffer() const
         return uniform_buffer_.buffer();
 }
 
-void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& normal_matrix) const
+void MeshBuffer::set_coordinates(const numerical::Matrix4d& model_matrix, const numerical::Matrix3d& normal_matrix)
+        const
 {
         static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
 

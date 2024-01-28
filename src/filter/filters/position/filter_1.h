@@ -51,13 +51,13 @@ public:
                 std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual Vector<N, T> position() const = 0;
-        [[nodiscard]] virtual Matrix<N, N, T> position_p() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 
         [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
-        [[nodiscard]] virtual Matrix<N, N, T> velocity_p() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<N, N, T> velocity_p() const = 0;
 };
 
 template <std::size_t N, typename T>

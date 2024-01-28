@@ -47,7 +47,7 @@ template <typename T>
 {
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
-        const Matrix<2, 2, T> m{
+        const numerical::Matrix<2, 2, T> m{
                 {cos, -sin},
                 {sin,  cos}
         };

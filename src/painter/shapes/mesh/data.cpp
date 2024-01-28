@@ -91,7 +91,7 @@ void write_vertices_and_normals(
         const model::mesh::Mesh<N>& mesh,
         MeshData<N, T, Color>* const data)
 {
-        const Matrix<N + 1, N + 1, T> mesh_matrix = to_matrix<T>(mesh_object.matrix());
+        const numerical::Matrix<N + 1, N + 1, T> mesh_matrix = numerical::to_matrix<T>(mesh_object.matrix());
 
         {
                 const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
@@ -102,7 +102,7 @@ void write_vertices_and_normals(
         }
 
         {
-                const Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inversed().transposed();
+                const numerical::Matrix<N, N, T> matrix = mesh_matrix.template top_left<N, N>().inversed().transposed();
                 for (const auto& v : mesh.normals)
                 {
                         data->mesh.normals.push_back(matrix * to_vector<T>(v));

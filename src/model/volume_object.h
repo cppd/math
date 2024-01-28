@@ -141,7 +141,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         bool inserted_ = false;
 
-        Matrix<N + 1, N + 1, double> matrix_;
+        numerical::Matrix<N + 1, N + 1, double> matrix_;
         float level_min_ = 0;
         float level_max_ = 1;
         float volume_alpha_coefficient_ = 1;
@@ -188,7 +188,7 @@ public:
 
         VolumeObject(
                 std::unique_ptr<const Volume<N>>&& volume,
-                const Matrix<N + 1, N + 1, double>& matrix,
+                const numerical::Matrix<N + 1, N + 1, double>& matrix,
                 std::string name)
                 : volume_(std::move(volume)),
                   name_(std::move(name)),
@@ -300,12 +300,12 @@ public:
                 return *object_->volume_;
         }
 
-        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const numerical::Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }
 
-        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
+        void set_matrix(const numerical::Matrix<N + 1, N + 1, double>& matrix)
         {
                 updates_.set(UPDATE_MATRICES);
                 object_->matrix_ = matrix;
@@ -461,7 +461,7 @@ public:
                 return *object_->volume_;
         }
 
-        [[nodiscard]] const Matrix<N + 1, N + 1, double>& matrix() const
+        [[nodiscard]] const numerical::Matrix<N + 1, N + 1, double>& matrix() const
         {
                 return object_->matrix_;
         }

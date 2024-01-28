@@ -45,12 +45,12 @@ public:
 
         virtual void reset(
                 const Vector<6, T>& position_velocity_acceleration,
-                const Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
                 const Init<T>& init) = 0;
 
         virtual void reset(
                 const Vector<4, T>& position_velocity,
-                const Matrix<4, 4, T>& position_velocity_p,
+                const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
         virtual void predict(T dt) = 0;
@@ -83,7 +83,7 @@ public:
         virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual Vector<2, T> position() const = 0;
-        [[nodiscard]] virtual Matrix<2, 2, T> position_p() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;

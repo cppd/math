@@ -152,7 +152,8 @@ public:
 
         void delete_shadow_mapping_command_buffers();
 
-        void set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
+        void set_shadow_matrices(const numerical::Matrix4d& vp_matrix, const numerical::Matrix4d& world_to_shadow)
+                const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         [[nodiscard]] bool has_meshes() const;

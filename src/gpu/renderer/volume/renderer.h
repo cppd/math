@@ -148,7 +148,7 @@ public:
         [[nodiscard]] std::optional<VkCommandBuffer> command_buffer(unsigned index, bool opacity, bool transparency)
                 const;
 
-        void set_matrix(const Matrix4d& vp_matrix);
-        void set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix);
+        void set_matrix(const numerical::Matrix4d& vp_matrix);
+        void set_matrix(const numerical::Matrix4d& vp_matrix, const numerical::Matrix4d& world_to_shadow_matrix);
 };
 }

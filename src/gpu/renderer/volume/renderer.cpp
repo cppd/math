@@ -376,16 +376,16 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(
         return commands(*commands_fragments_, index, opacity, transparency);
 }
 
-void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix)
+void VolumeRenderer::set_matrix(const numerical::Matrix4d& vp_matrix)
 {
-        const Matrix4d device_to_world = vp_matrix.inversed();
+        const numerical::Matrix4d device_to_world = vp_matrix.inversed();
         coordinates_buffer_.set(device_to_world);
 }
 
-void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix)
+void VolumeRenderer::set_matrix(const numerical::Matrix4d& vp_matrix, const numerical::Matrix4d& world_to_shadow_matrix)
 {
-        const Matrix4d device_to_world = vp_matrix.inversed();
-        const Matrix4d device_to_shadow = world_to_shadow_matrix * device_to_world;
+        const numerical::Matrix4d device_to_world = vp_matrix.inversed();
+        const numerical::Matrix4d device_to_shadow = world_to_shadow_matrix * device_to_world;
         coordinates_buffer_.set(device_to_world, device_to_shadow, world_to_shadow_matrix);
 }
 }

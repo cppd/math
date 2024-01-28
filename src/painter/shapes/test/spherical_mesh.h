@@ -168,7 +168,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
                 res.surface += geometry::shapes::simplex_volume(vertices);
         }
 
-        const model::mesh::MeshObject<N> mesh_object(std::move(mesh), IDENTITY_MATRIX<N + 1, double>, "");
+        const model::mesh::MeshObject<N> mesh_object(std::move(mesh), numerical::IDENTITY_MATRIX<N + 1, double>, "");
 
         std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);

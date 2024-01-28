@@ -28,13 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core
 {
 template <std::size_t N, typename T>
-[[nodiscard]] T compute_mahalanobis_distance_squared(const Vector<N, T>& residual, const Matrix<N, N, T>& s_inversed)
+[[nodiscard]] T compute_mahalanobis_distance_squared(
+        const Vector<N, T>& residual,
+        const numerical::Matrix<N, N, T>& s_inversed)
 {
         return dot(residual * s_inversed, residual);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T compute_likelihood(const T mahalanobis_distance_squared, const Matrix<N, N, T>& s)
+[[nodiscard]] T compute_likelihood(const T mahalanobis_distance_squared, const numerical::Matrix<N, N, T>& s)
 {
         const T numerator = std::exp(-mahalanobis_distance_squared / 2);
         const T denominator = std::sqrt(power<N>(2 * PI<T>) * std::abs(s.determinant()));

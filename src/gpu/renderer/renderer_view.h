@@ -50,9 +50,9 @@ class RendererView final
         DrawingBuffer* const drawing_buffer_;
         RendererViewEvents* const events_;
 
-        Matrix4d vp_matrix_ = IDENTITY_MATRIX<4, double>;
-        Matrix4d shadow_vp_matrix_ = IDENTITY_MATRIX<4, double>;
-        Matrix4d world_to_shadow_matrix_ = IDENTITY_MATRIX<4, double>;
+        numerical::Matrix4d vp_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
+        numerical::Matrix4d shadow_vp_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
+        numerical::Matrix4d world_to_shadow_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
 
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
@@ -60,7 +60,7 @@ class RendererView final
         bool show_clip_plane_lines_ = true;
         bool show_normals_ = false;
 
-        [[nodiscard]] static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
+        [[nodiscard]] static numerical::Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
         {
                 return numerical::transform::ortho_vulkan<double>(
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
@@ -166,7 +166,7 @@ class RendererView final
                 {
                         // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
                         // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
-                        static constexpr Matrix4d TEXTURE_MATRIX =
+                        static constexpr numerical::Matrix4d TEXTURE_MATRIX =
                                 numerical::transform::scale<double>(0.5, 0.5, 1)
                                 * numerical::transform::translate<double>(1, 1, 0);
 
@@ -247,17 +247,17 @@ public:
                 return show_normals_;
         }
 
-        [[nodiscard]] const Matrix4d& vp_matrix() const
+        [[nodiscard]] const numerical::Matrix4d& vp_matrix() const
         {
                 return vp_matrix_;
         }
 
-        [[nodiscard]] const Matrix4d& shadow_vp_matrix() const
+        [[nodiscard]] const numerical::Matrix4d& shadow_vp_matrix() const
         {
                 return shadow_vp_matrix_;
         }
 
-        [[nodiscard]] const Matrix4d& world_to_shadow_matrix() const
+        [[nodiscard]] const numerical::Matrix4d& world_to_shadow_matrix() const
         {
                 return world_to_shadow_matrix_;
         }

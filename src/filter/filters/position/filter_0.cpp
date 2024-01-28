@@ -42,11 +42,11 @@ Vector<N, T> init_x(const Vector<N, T>& position)
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> init_p(const Vector<N, T>& position_variance)
+numerical::Matrix<N, N, T> init_p(const Vector<N, T>& position_variance)
 {
         ASSERT(is_finite(position_variance));
 
-        Matrix<N, N, T> res(0);
+        numerical::Matrix<N, N, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] = position_variance[i];
@@ -64,26 +64,27 @@ struct AddX final
 };
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> f_matrix(const T /*dt*/)
+numerical::Matrix<N, N, T> f_matrix(const T /*dt*/)
 {
-        return block_diagonal<N>(Matrix<1, 1, T>{
+        return block_diagonal<N>(numerical::Matrix<1, 1, T>{
                 {1},
         });
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> q(const T dt, const T process_variance)
+numerical::Matrix<N, N, T> q(const T dt, const T process_variance)
 {
-        const Matrix<N, N, T> noise_transition = block_diagonal<N>(Matrix<1, 1, T>{{dt}});
-        const Matrix<N, N, T> process_covariance = make_diagonal_matrix(Vector<N, T>(process_variance));
+        const numerical::Matrix<N, N, T> noise_transition = block_diagonal<N>(numerical::Matrix<1, 1, T>{{dt}});
+        const numerical::Matrix<N, N, T> process_covariance =
+                numerical::make_diagonal_matrix(Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
+numerical::Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
 {
-        return make_diagonal_matrix(measurement_variance);
+        return numerical::make_diagonal_matrix(measurement_variance);
 }
 
 struct PositionH final
@@ -99,12 +100,12 @@ struct PositionH final
 struct PositionHJ final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Matrix<N, N, T> operator()(const Vector<N, T>& /*x*/) const
+        [[nodiscard]] numerical::Matrix<N, N, T> operator()(const Vector<N, T>& /*x*/) const
         {
                 // px = px
                 // py = py
                 // Jacobian
-                Matrix<N, N, T> res(0);
+                numerical::Matrix<N, N, T> res(0);
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i, i] = 1;
@@ -143,7 +144,7 @@ class FilterImpl final : public Filter0<N, T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const Matrix<N, N, T> f = f_matrix<N, T>(dt);
+                const numerical::Matrix<N, N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
                         [&](const Vector<N, T>& x)
                         {
@@ -165,7 +166,7 @@ class FilterImpl final : public Filter0<N, T>
                 ASSERT(is_finite(position));
                 ASSERT(com::check_variance(variance));
 
-                const Matrix<N, N, T> r = position_r(variance);
+                const numerical::Matrix<N, N, T> r = position_r(variance);
 
                 const core::UpdateInfo update = filter_->update(
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
@@ -184,7 +185,7 @@ class FilterImpl final : public Filter0<N, T>
                 return filter_->x();
         }
 
-        [[nodiscard]] Matrix<N, N, T> position_p() const override
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
         {
                 ASSERT(filter_);
 

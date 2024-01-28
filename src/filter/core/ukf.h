@@ -44,17 +44,17 @@ namespace ns::filter::core
 namespace ukf_implementation
 {
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
-[[nodiscard]] std::tuple<Vector<N, T>, Matrix<N, N, T>> unscented_transform(
+[[nodiscard]] std::tuple<Vector<N, T>, numerical::Matrix<N, N, T>> unscented_transform(
         const std::array<Vector<N, T>, POINT_COUNT>& points,
         const Vector<POINT_COUNT, T>& wm,
         const Vector<POINT_COUNT, T>& wc,
-        const Matrix<N, N, T>& noise_covariance,
+        const numerical::Matrix<N, N, T>& noise_covariance,
         const Mean mean,
         const Residual residual)
 {
         const Vector<N, T> x = mean(points, wm);
 
-        Matrix<N, N, T> p = noise_covariance;
+        numerical::Matrix<N, N, T> p = noise_covariance;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
                 const Vector<N, T> v = residual(points[i], x);
@@ -71,7 +71,7 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
 }
 
 template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typename ResidualX, typename ResidualZ>
-[[nodiscard]] Matrix<N, M, T> state_measurement_cross_covariance(
+[[nodiscard]] numerical::Matrix<N, M, T> state_measurement_cross_covariance(
         const Vector<POINT_COUNT, T>& wc,
         const std::array<Vector<N, T>, POINT_COUNT>& sigmas_f,
         const Vector<N, T>& x,
@@ -80,7 +80,7 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
         const ResidualX residual_x,
         const ResidualZ residual_z)
 {
-        Matrix<N, M, T> res(0);
+        numerical::Matrix<N, M, T> res(0);
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
                 const Vector<N, T> s = residual_x(sigmas_f[i], x);
@@ -157,10 +157,10 @@ class Ukf final
         Vector<N, T> x_;
 
         // State covariance
-        Matrix<N, N, T> p_;
+        numerical::Matrix<N, N, T> p_;
 
 public:
-        Ukf(SigmaPoints sigma_points, const Vector<N, T>& x, const Matrix<N, N, T>& p)
+        Ukf(SigmaPoints sigma_points, const Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
                 : sigma_points_(std::move(sigma_points)),
                   x_(x),
                   p_(p)
@@ -173,7 +173,7 @@ public:
                 return x_;
         }
 
-        [[nodiscard]] const Matrix<N, N, T>& p() const
+        [[nodiscard]] const numerical::Matrix<N, N, T>& p() const
         {
                 return p_;
         }
@@ -184,7 +184,7 @@ public:
                 // Vector<N, T> f(const Vector<N, T>& x)
                 const F f,
                 // Process covariance
-                const Matrix<N, N, T>& q)
+                const numerical::Matrix<N, N, T>& q)
         {
                 namespace impl = ukf_implementation;
 
@@ -202,7 +202,7 @@ public:
                 // Vector<M, T> f(const Vector<N, T>& x)
                 const H h,
                 // Measurement covariance
-                const Matrix<M, M, T>& r,
+                const numerical::Matrix<M, M, T>& r,
                 // Measurement
                 const Vector<M, T>& z,
                 // The sum of the two state vectors
@@ -227,10 +227,10 @@ public:
 
                 check_x_p("UKF update measurement", x_z, p_z);
 
-                const Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
+                const numerical::Matrix<N, M, T> p_xz = impl::state_measurement_cross_covariance(
                         sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, impl::Subtract(), impl::Subtract());
 
-                const Matrix<M, M, T> p_z_inversed = p_z.inversed();
+                const numerical::Matrix<M, M, T> p_z_inversed = p_z.inversed();
                 const Vector<M, T> residual = residual_z(z, x_z);
 
                 const UpdateInfo<M, T> res =
@@ -241,7 +241,7 @@ public:
                         return res;
                 }
 
-                const Matrix<N, M, T> k = p_xz * p_z_inversed;
+                const numerical::Matrix<N, M, T> k = p_xz * p_z_inversed;
 
                 x_ = add_x(x_, k * residual);
                 p_ = p_ - p_xz * k.transposed();

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <utility>
 
-namespace ns
+namespace ns::numerical
 {
 namespace matrix_object_implementation
 {

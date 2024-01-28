@@ -257,7 +257,8 @@ void test_painter(
 {
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
-                const model::mesh::MeshObject<N> mesh_object(std::move(mesh), IDENTITY_MATRIX<N + 1, double>, "");
+                const model::mesh::MeshObject<N> mesh_object(
+                        std::move(mesh), numerical::IDENTITY_MATRIX<N + 1, double>, "");
                 std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
 
