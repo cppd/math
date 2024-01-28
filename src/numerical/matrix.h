@@ -309,19 +309,6 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         return std::move(m);
 }
 
-template <std::size_t ROWS, std::size_t COLUMNS, typename T>
-[[nodiscard]] std::string to_string(const Matrix<ROWS, COLUMNS, T>& m)
-{
-        std::string s;
-        s += to_string(m.row(0));
-        for (std::size_t r = 1; r < ROWS; ++r)
-        {
-                s += '\n';
-                s += to_string(m.row(r));
-        }
-        return s;
-}
-
 template <std::size_t N, typename T>
 inline constexpr Matrix<N, N, T> IDENTITY_MATRIX = make_diagonal_matrix(Vector<N, T>(1));
 

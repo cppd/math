@@ -258,5 +258,17 @@ public:
                 }
                 return true;
         }
+
+        [[nodiscard]] friend std::string to_string(const Matrix<ROWS, COLUMNS, T>& m)
+        {
+                std::string s;
+                s += to_string(m.row(0));
+                for (std::size_t r = 1; r < ROWS; ++r)
+                {
+                        s += '\n';
+                        s += to_string(m.row(r));
+                }
+                return s;
+        }
 };
 }
