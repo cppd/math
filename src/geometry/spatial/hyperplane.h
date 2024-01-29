@@ -57,7 +57,7 @@ struct Hyperplane final
                 d = -d;
         }
 
-        [[nodiscard]] T intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] T intersect(const numerical::Ray<N, T>& ray) const
         {
                 return (d - dot(n, ray.org())) / dot(n, ray.dir());
         }

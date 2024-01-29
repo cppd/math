@@ -85,9 +85,9 @@ LightSourceArriveInfo<T, Color> SpotLight<N, T, Color>::arrive_info(
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        const Ray<N, T> ray = [&]
+        const numerical::Ray<N, T> ray = [&]
         {
-                const Ray<N, T> r(location_, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> r(location_, sampling::uniform_on_sphere<N, T>(engine));
                 return (dot(r.dir(), direction_) >= 0) ? r : r.reversed();
         }();
         const T cos = dot(direction_, ray.dir());

@@ -44,7 +44,7 @@ class SphericalProjector final : public Projector<N, T>
 
         [[nodiscard]] const std::array<int, N - 1>& screen_size() const override;
 
-        [[nodiscard]] Ray<N, T> ray(const Vector<N - 1, T>& point) const override;
+        [[nodiscard]] numerical::Ray<N, T> ray(const Vector<N - 1, T>& point) const override;
 
 public:
         SphericalProjector(

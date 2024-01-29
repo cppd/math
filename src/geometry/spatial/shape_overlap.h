@@ -75,7 +75,7 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
         static_assert(N == Shape::SPACE_DIMENSION);
         static_assert(std::is_same_v<T, typename Shape::DataType>);
 
-        const Ray<N, T> r(org, direction);
+        const numerical::Ray<N, T> r(org, direction);
         const std::optional<T> alpha = shape.intersect(r);
         return alpha && (square(*alpha) < dot(direction, direction));
 }
@@ -433,7 +433,7 @@ public:
                 return shape_->inside(p);
         }
 
-        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r) const
+        [[nodiscard]] std::optional<T> intersect(const numerical::Ray<N, T>& r) const
         {
                 return shape_->intersect(r);
         }

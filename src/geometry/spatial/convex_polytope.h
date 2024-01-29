@@ -41,7 +41,7 @@ public:
         {
         }
 
-        [[nodiscard]] bool intersect(const Ray<N, T>& ray, T* const near, T* const far) const
+        [[nodiscard]] bool intersect(const numerical::Ray<N, T>& ray, T* const near, T* const far) const
         {
                 T l_near = *near;
                 T l_far = *far;

@@ -31,7 +31,7 @@ namespace ns::painter::integrators::bpt
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine);
 }

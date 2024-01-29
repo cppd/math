@@ -53,7 +53,7 @@ template <std::size_t N, typename T, typename Color>
 [[nodiscard]] bool occluded(
         const Scene<N, T, Color>& scene,
         const Normals<N, T>& normals,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
         namespace impl = visibility_implementation;
@@ -79,7 +79,8 @@ template <std::size_t N, typename T, typename Color>
         const T d_2 = d - surface.distance();
         if (d_2 > 0)
         {
-                return scene.intersect_any(surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()), d_2);
+                return scene.intersect_any(
+                        surface.geometric_normal(), numerical::Ray(ray).set_org(surface.point()), d_2);
         }
         return false;
 }
@@ -95,7 +96,7 @@ template <std::size_t N, typename T, typename Color>
         namespace impl = visibility_implementation;
 
         const Vector<N, T> direction_1 = point_2 - point_1;
-        const Ray<N, T> ray_1(point_1, direction_1);
+        const numerical::Ray<N, T> ray_1(point_1, direction_1);
 
         if (!impl::directed_outside(dot(ray_1.dir(), normals_1.shading)))
         {
@@ -132,7 +133,7 @@ template <std::size_t N, typename T, typename Color>
                 }
         }
 
-        const Ray<N, T> ray_2 = ray_1.reversed().set_org(point_2);
+        const numerical::Ray<N, T> ray_2 = ray_1.reversed().set_org(point_2);
 
         if (!visible_2)
         {
@@ -149,7 +150,7 @@ template <std::size_t N, typename T, typename Color>
                 }
 
                 return scene.intersect_any(
-                        surface.geometric_normal(), Ray<N, T>(ray_2).set_org(surface.point()), distance);
+                        surface.geometric_normal(), numerical::Ray(ray_2).set_org(surface.point()), distance);
         }
 
         return scene.intersect_any(normals_2.geometric, ray_2, distance);
@@ -159,7 +160,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] std::tuple<SurfaceIntersection<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
         const std::optional<Vector<N, T>>& geometric_normal,
-        const Ray<N, T>& ray)
+        const numerical::Ray<N, T>& ray)
 {
         SurfaceIntersection<N, T, Color> surface = scene.intersect(geometric_normal, ray);
         if (!surface)
@@ -177,7 +178,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 
         for (int i = 0; i < 2; ++i)
         {
-                surface = scene.intersect(surface.geometric_normal(), Ray<N, T>(ray).set_org(surface.point()));
+                surface = scene.intersect(surface.geometric_normal(), numerical::Ray(ray).set_org(surface.point()));
                 if (!surface)
                 {
                         return {};

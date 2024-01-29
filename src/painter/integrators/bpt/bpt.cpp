@@ -59,7 +59,7 @@ constexpr int MAX_DEPTH = 5;
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] bool surface_found(
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const SurfaceIntersection<N, T, Color>& surface,
         const Normals<N, T>& normals)
 {
@@ -83,7 +83,7 @@ void add_sample(
         const std::optional<SurfaceSamplePdf<N, T, Color>>& sample,
         const Color& beta,
         const T pdf_forward,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const SurfaceIntersection<N, T, Color>& surface,
         const Normals<N, T>& normals,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
@@ -113,7 +113,7 @@ void walk(
         const LightDistribution<N, T, Color>& light_distribution,
         Color beta,
         const T pdf,
-        Ray<N, T> ray,
+        numerical::Ray<N, T> ray,
         PCG& engine,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
@@ -165,7 +165,7 @@ void walk(
                         return;
                 }
 
-                ray = Ray<N, T>(surface.point(), sample->l);
+                ray = {surface.point(), sample->l};
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
         }
 }
@@ -174,7 +174,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void generate_camera_path(
         const Scene<N, T, Color>& scene,
         const LightDistribution<N, T, Color>& light_distribution,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         PCG& engine,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
@@ -220,7 +220,7 @@ void generate_light_path(
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 std::optional<Color> bpt(
         const Scene<N, T, Color>& scene,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         LightDistribution<N, T, Color>& light_distribution,
         PCG& engine)
 {
@@ -270,11 +270,11 @@ std::optional<Color> bpt(
         return color;
 }
 
-#define TEMPLATE(N, T, C)                                                                        \
-        template std::optional<C> bpt<true, (N), T, C>(                                          \
-                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&); \
-        template std::optional<C> bpt<false, (N), T, C>(                                         \
-                const Scene<(N), T, C>&, const Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&);
+#define TEMPLATE(N, T, C)                                                                                   \
+        template std::optional<C> bpt<true, (N), T, C>(                                                     \
+                const Scene<(N), T, C>&, const numerical::Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&); \
+        template std::optional<C> bpt<false, (N), T, C>(                                                    \
+                const Scene<(N), T, C>&, const numerical::Ray<(N), T>&, LightDistribution<N, T, C>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

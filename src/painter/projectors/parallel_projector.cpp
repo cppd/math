@@ -59,11 +59,11 @@ const std::array<int, N - 1>& ParallelProjector<N, T>::screen_size() const
 }
 
 template <std::size_t N, typename T>
-Ray<N, T> ParallelProjector<N, T>::ray(const Vector<N - 1, T>& point) const
+numerical::Ray<N, T> ParallelProjector<N, T>::ray(const Vector<N - 1, T>& point) const
 {
         const Vector<N - 1, T> screen_point = screen_org_ + point;
         const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
-        return Ray<N, T>(camera_org_ + screen_dir, camera_dir_);
+        return numerical::Ray<N, T>(camera_org_ + screen_dir, camera_dir_);
 }
 
 template <std::size_t N, typename T>

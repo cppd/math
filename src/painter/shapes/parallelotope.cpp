@@ -46,7 +46,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 {
         const Parallelotope<N, T, Color>* obj_;
 
-        [[nodiscard]] Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
+        [[nodiscard]] Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
         {
                 return obj_->parallelotope().project(ray.point(distance));
         }
@@ -126,7 +126,8 @@ T Parallelotope<N, T, Color>::intersection_cost() const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& ray, const T max_distance) const
+std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const numerical::Ray<N, T>& ray, const T max_distance)
+        const
 {
         if (alpha_nonzero_)
         {
@@ -141,7 +142,7 @@ std::optional<T> Parallelotope<N, T, Color>::intersect_bounds(const Ray<N, T>& r
 
 template <std::size_t N, typename T, typename Color>
 ShapeIntersection<N, T, Color> Parallelotope<N, T, Color>::intersect(
-        const Ray<N, T>& /*ray*/,
+        const numerical::Ray<N, T>& /*ray*/,
         const T /*max_distance*/,
         const T bounding_distance) const
 {
@@ -150,7 +151,7 @@ ShapeIntersection<N, T, Color> Parallelotope<N, T, Color>::intersect(
 
 template <std::size_t N, typename T, typename Color>
 bool Parallelotope<N, T, Color>::intersect_any(
-        const Ray<N, T>& /*ray*/,
+        const numerical::Ray<N, T>& /*ray*/,
         const T /*max_distance*/,
         const T /*bounding_distance*/) const
 {

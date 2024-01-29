@@ -50,7 +50,7 @@ constexpr std::optional<Vector<N, T>> EMPTY_GEOMETRIC_NORMAL;
 constexpr std::size_t GROUP_SIZE = 0x1000;
 
 template <std::size_t N, typename T, typename Color>
-bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
+bool intersections(const Scene<N, T, Color>& scene, numerical::Ray<N, T> ray)
 {
         std::optional<Vector<N, T>> geometric_normal;
 
@@ -104,7 +104,7 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 template <std::size_t N, typename T, typename Color>
 void test_intersections(
         const test::SphericalMesh<N, T, Color>& mesh,
-        const std::vector<Ray<N, T>>& rays,
+        const std::vector<numerical::Ray<N, T>>& rays,
         progress::Ratio* const progress)
 {
         const double rays_size_reciprocal = 1.0 / rays.size();
@@ -144,7 +144,7 @@ void test_intersections(
 template <std::size_t N, typename T, typename Color>
 void test_surface_ratio(
         const test::SphericalMesh<N, T, Color>& mesh,
-        const std::vector<Ray<N, T>>& rays,
+        const std::vector<numerical::Ray<N, T>>& rays,
         progress::Ratio* const progress)
 {
         const double rays_size_reciprocal = 1.0 / rays.size();

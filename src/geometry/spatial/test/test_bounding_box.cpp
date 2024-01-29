@@ -152,7 +152,7 @@ bool test_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const 
 template <std::size_t N, typename T>
 void test_intersection_1(
         const BoundingBox<N, T>& box,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const std::optional<T>& t,
         const T& length,
         const T& precision)
@@ -191,7 +191,7 @@ void test_intersection_1(
 template <std::size_t N, typename T>
 void test_intersection_1_volume(
         const BoundingBox<N, T>& box,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const std::optional<T>& t,
         const T& length)
 {
@@ -216,7 +216,7 @@ void test_intersection_1_volume(
 }
 
 template <std::size_t N, typename T>
-void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const bool t)
+void test_intersection_1(const BoundingBox<N, T>& box, const numerical::Ray<N, T>& ray, const bool t)
 {
         if (t)
         {
@@ -233,7 +233,7 @@ void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, con
 template <std::size_t N, typename T>
 void test_intersection_2(
         const BoundingBox<N, T>& box,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const std::optional<T>& t,
         const T& move_min,
         const T& move_max,
@@ -272,7 +272,7 @@ void test_intersection_2(
 }
 
 template <std::size_t N, typename T>
-void test_intersection_2(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const bool t)
+void test_intersection_2(const BoundingBox<N, T>& box, const numerical::Ray<N, T>& ray, const bool t)
 {
         if (t)
         {
@@ -287,7 +287,7 @@ void test_intersection_2(const BoundingBox<N, T>& box, const Ray<N, T>& ray, con
 }
 
 template <std::size_t N, typename T, typename P>
-void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const P& t)
+void test_no_intersection(const BoundingBox<N, T>& box, const numerical::Ray<N, T>& ray, const P& t)
 {
         if (!t)
         {
@@ -305,11 +305,11 @@ template <std::size_t N, typename T>
 void test_inside(
         const BoundingBox<N, T>& box,
         const T precision,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T length,
         const T move_distance)
 {
-        const Ray<N, T> r = ray;
+        const numerical::Ray<N, T> r = ray;
 
         test_intersection_1(box, r, box.intersect(r), length, precision);
         test_intersection_1(box, r, box.intersect(r, move_distance), length, precision);
@@ -326,13 +326,13 @@ template <std::size_t N, typename T>
 void test_outside(
         const BoundingBox<N, T>& box,
         const T precision,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T length,
         const T move_distance,
         const T move_min,
         const T move_max)
 {
-        const Ray<N, T> r = ray.moved(-move_distance);
+        const numerical::Ray<N, T> r = ray.moved(-move_distance);
 
         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
         test_intersection_2(box, r, box.intersect(r, move_distance), move_min, move_max, precision);
@@ -351,11 +351,11 @@ void test_outside(
 template <std::size_t N, typename T>
 void test_outside_no_intersection(
         const BoundingBox<N, T>& box,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T length,
         const T move_distance)
 {
-        const Ray<N, T> r = ray.moved(move_distance);
+        const numerical::Ray<N, T> r = ray.moved(move_distance);
 
         test_no_intersection(box, r, box.intersect(r));
         test_no_intersection(box, r, box.intersect(r, length));
@@ -379,7 +379,8 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
-                const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
+                const numerical::Ray<N, T> ray(
+                        point, create_random_direction<N, T>(random_direction_probability, engine));
 
                 test_inside(box, precision, ray, length, move_distance);
 
@@ -395,7 +396,7 @@ void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEn
         for (const Vector<N, T>& point :
              random::parallelotope_external_points(box.min(), box.diagonal(), point_count, engine))
         {
-                const Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));
 
                 test_no_intersection(box, ray, box.intersect(ray));
 

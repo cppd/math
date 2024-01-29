@@ -30,7 +30,7 @@ template <std::size_t N, typename T, typename Objects, typename Indices>
 [[nodiscard]] auto ray_intersection(
         const Objects& objects,
         const Indices& indices,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T& max_distance) -> std::tuple<T, const std::remove_reference_t<decltype(to_ref(objects.front()))>*>
 {
         using Object = std::remove_reference_t<decltype(to_ref(objects.front()))>;
@@ -56,7 +56,7 @@ template <std::size_t N, typename T, typename Objects, typename Indices>
 [[nodiscard]] bool ray_intersection_any(
         const Objects& objects,
         const Indices& indices,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T& max_distance)
 {
         for (const auto index : indices)

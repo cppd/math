@@ -106,7 +106,7 @@ bool IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(
 
         for (std::size_t i = 0; i < sample_points.size(); ++i)
         {
-                const Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
+                const numerical::Ray<N, T> ray = projector_->ray(pixel_org + sample_points[i]);
                 sample_colors[i] = integrators::pt::pt<FLAT_SHADING>(*scene_, ray, engine);
         }
 

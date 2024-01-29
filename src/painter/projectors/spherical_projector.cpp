@@ -69,7 +69,7 @@ const std::array<int, N - 1>& SphericalProjector<N, T>::screen_size() const
 }
 
 template <std::size_t N, typename T>
-Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point) const
+numerical::Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point) const
 {
         const Vector<N - 1, T> screen_point = screen_org_ + point;
 
@@ -82,7 +82,7 @@ Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point) const
         const T z = std::sqrt(radicand);
         const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
 
-        return Ray<N, T>(camera_org_, camera_dir_ * z + screen_dir);
+        return numerical::Ray<N, T>(camera_org_, camera_dir_ * z + screen_dir);
 }
 
 template <std::size_t N, typename T>

@@ -81,7 +81,7 @@ class ParallelotopeAA final
         };
 
         template <IntersectionType INTERSECTION_TYPE>
-        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, T max_distance) const;
+        [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, T max_distance) const;
 
         template <int INDEX, typename F>
         void binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f) const;
@@ -101,12 +101,16 @@ public:
 
         [[nodiscard]] bool inside(const Vector<N, T>& point) const;
 
-        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray, T max_distance = Limits<T>::max()) const;
-
-        [[nodiscard]] std::optional<T> intersect_farthest(const Ray<N, T>& ray, T max_distance = Limits<T>::max())
+        [[nodiscard]] std::optional<T> intersect(const numerical::Ray<N, T>& ray, T max_distance = Limits<T>::max())
                 const;
 
-        [[nodiscard]] std::optional<T> intersect_volume(const Ray<N, T>& ray, T max_distance = Limits<T>::max()) const;
+        [[nodiscard]] std::optional<T> intersect_farthest(
+                const numerical::Ray<N, T>& ray,
+                T max_distance = Limits<T>::max()) const;
+
+        [[nodiscard]] std::optional<T> intersect_volume(
+                const numerical::Ray<N, T>& ray,
+                T max_distance = Limits<T>::max()) const;
 
         [[nodiscard]] Vector<N, T> normal(const Vector<N, T>& point) const;
 
@@ -200,7 +204,7 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 
 template <std::size_t N, typename T>
 template <ParallelotopeAA<N, T>::IntersectionType INTERSECTION_TYPE>
-std::optional<T> ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         T near = 0;
         T far = max_distance;
@@ -244,19 +248,19 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& ray, con
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& ray, const T max_distance) const
+std::optional<T> ParallelotopeAA<N, T>::intersect(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         return intersect_impl<IntersectionType::NEAREST>(ray, max_distance);
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& ray, const T max_distance) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         return intersect_impl<IntersectionType::FARTHEST>(ray, max_distance);
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& ray, const T max_distance) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         return intersect_impl<IntersectionType::VOLUME>(ray, max_distance);
 }

@@ -83,7 +83,9 @@ std::string str(const T near, const T far)
 }
 
 template <std::size_t N, typename T>
-Ray<N, T> test_ray_internal_and_move_ray(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+numerical::Ray<N, T> test_ray_internal_and_move_ray(
+        const ConvexPolytope<N, T>& polytope,
+        const numerical::Ray<N, T>& ray)
 {
         T near = Limits<T>::max();
         T far = 0;
@@ -110,7 +112,7 @@ Ray<N, T> test_ray_internal_and_move_ray(const ConvexPolytope<N, T>& polytope, c
 }
 
 template <std::size_t N, typename T>
-void test_ray_external(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+void test_ray_external(const ConvexPolytope<N, T>& polytope, const numerical::Ray<N, T>& ray)
 {
         T near = 0;
         T far = Limits<T>::max();
@@ -122,7 +124,9 @@ void test_ray_external(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ra
 }
 
 template <std::size_t N, typename T>
-std::array<T, 2> test_reversed_ray_external_intersection(const ConvexPolytope<N, T>& polytope, const Ray<N, T>& ray)
+std::array<T, 2> test_reversed_ray_external_intersection(
+        const ConvexPolytope<N, T>& polytope,
+        const numerical::Ray<N, T>& ray)
 {
         T near = 0;
         T far = Limits<T>::max();
@@ -143,7 +147,7 @@ std::array<T, 2> test_reversed_ray_external_intersection(const ConvexPolytope<N,
 template <std::size_t N, typename T>
 void test_reversed_ray_external_no_intersection(
         const ConvexPolytope<N, T>& polytope,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T intersection_near,
         const T intersection_far)
 {
@@ -171,7 +175,7 @@ void test(const int point_count, RandomEngine& engine)
 
         for (const Vector<N, T>& point : internal_points<N, T>(point_count, engine))
         {
-                Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
 
                 ray = test_ray_internal_and_move_ray(polytope, ray);
 

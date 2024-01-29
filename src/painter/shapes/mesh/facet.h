@@ -203,7 +203,7 @@ public:
                 return decltype(simplex_)::intersection_cost();
         }
 
-        [[nodiscard]] decltype(auto) intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] decltype(auto) intersect(const numerical::Ray<N, T>& ray) const
         {
                 return simplex_.intersect(ray);
         }

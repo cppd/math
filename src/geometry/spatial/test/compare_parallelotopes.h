@@ -84,7 +84,7 @@ Vector<N, T> random_direction(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename... Parallelotope>
-void compare_intersections(const Ray<N, T>& ray, const Parallelotope&... p)
+void compare_intersections(const numerical::Ray<N, T>& ray, const Parallelotope&... p)
 {
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
@@ -186,7 +186,7 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
                         }
                 }
 
-                const Ray<N, T> ray(point, random_direction<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, random_direction<N, T>(engine));
 
                 compare_intersections(ray, p...);
                 compare_intersections(ray.moved(-10 * lengths[0]), p...);

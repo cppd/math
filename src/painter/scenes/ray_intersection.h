@@ -59,7 +59,7 @@ public:
         void make(
                 const std::vector<const Shape<N, T, Color>*>& shapes,
                 const Indices& indices,
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T max_distance)
         {
                 intersections_.clear();
@@ -100,7 +100,7 @@ template <std::size_t N, typename T, typename Color, typename Indices>
 ShapeIntersection<N, T, Color> ray_intersection(
         const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T max_distance)
 {
         thread_local BoundingIntersectionHeap<N, T, Color> heap;
@@ -134,7 +134,7 @@ template <std::size_t N, typename T, typename Color, typename Indices>
 [[nodiscard]] ShapeIntersection<N, T, Color> ray_intersection(
         const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T max_distance)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -157,7 +157,7 @@ template <std::size_t N, typename T, typename Color, typename Indices>
 [[nodiscard]] bool ray_intersection_any(
         const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
-        const Ray<N, T>& ray,
+        const numerical::Ray<N, T>& ray,
         const T max_distance)
 {
         static_assert(std::is_floating_point_v<T>);

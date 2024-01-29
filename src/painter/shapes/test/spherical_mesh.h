@@ -189,7 +189,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
+std::vector<numerical::Ray<N, T>> create_spherical_mesh_center_rays(
         const geometry::spatial::BoundingBox<N, T>& bb,
         const int ray_count,
         RandomEngine& engine)
@@ -197,18 +197,18 @@ std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         const Vector<N, T> center = bb.center();
         const T radius = bb.diagonal().norm() / 2;
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.resize(ray_count);
-        for (Ray<N, T>& ray : rays)
+        for (numerical::Ray<N, T>& ray : rays)
         {
                 const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
-                ray = Ray<N, T>(radius * v + center, -v);
+                ray = {radius * v + center, -v};
         }
         return rays;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_random_intersections_rays(
+std::vector<numerical::Ray<N, T>> create_random_intersections_rays(
         const geometry::spatial::BoundingBox<N, T>& bb,
         const int ray_count,
         RandomEngine& engine)
@@ -226,14 +226,14 @@ std::vector<Ray<N, T>> create_random_intersections_rays(
                 return v;
         };
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (int i = 0; i < ray_count; ++i)
         {
-                Ray<N, T> ray;
+                numerical::Ray<N, T> ray;
                 do
                 {
-                        ray = Ray<N, T>(random_cover_point(), sampling::uniform_on_sphere<N, T>(engine));
+                        ray = {random_cover_point(), sampling::uniform_on_sphere<N, T>(engine)};
                 } while (!bb.intersect(ray));
                 rays.push_back(ray);
         }

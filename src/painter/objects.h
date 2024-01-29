@@ -63,7 +63,7 @@ protected:
         ~Surface() = default;
 
 public:
-        [[nodiscard]] virtual Vector<N, T> point(const Ray<N, T>& ray, T distance) const = 0;
+        [[nodiscard]] virtual Vector<N, T> point(const numerical::Ray<N, T>& ray, T distance) const = 0;
 
         [[nodiscard]] virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
 
@@ -108,7 +108,10 @@ public:
         {
         }
 
-        SurfaceIntersection(const Surface<N, T, Color>* const surface, const Ray<N, T>& ray, const T distance)
+        SurfaceIntersection(
+                const Surface<N, T, Color>* const surface,
+                const numerical::Ray<N, T>& ray,
+                const T distance)
                 : surface_(surface),
                   point_(surface->point(ray, distance)),
                   distance_(distance)
@@ -215,7 +218,7 @@ struct LightSourceLeaveSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Ray<N, T> ray;
+        numerical::Ray<N, T> ray;
         std::optional<Vector<N, T>> n;
         T pdf_pos;
         T pdf_dir;
@@ -270,7 +273,7 @@ public:
 
         [[nodiscard]] virtual const std::array<int, N - 1>& screen_size() const = 0;
 
-        [[nodiscard]] virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
+        [[nodiscard]] virtual numerical::Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -298,14 +301,16 @@ public:
 
         [[nodiscard]] virtual T intersection_cost() const = 0;
 
-        [[nodiscard]] virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
+        [[nodiscard]] virtual std::optional<T> intersect_bounds(const numerical::Ray<N, T>& ray, T max_distance)
+                const = 0;
 
         [[nodiscard]] virtual ShapeIntersection<N, T, Color> intersect(
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 T max_distance,
                 T bounding_distance) const = 0;
 
-        [[nodiscard]] virtual bool intersect_any(const Ray<N, T>& ray, T max_distance, T bounding_distance) const = 0;
+        [[nodiscard]] virtual bool intersect_any(const numerical::Ray<N, T>& ray, T max_distance, T bounding_distance)
+                const = 0;
 
         [[nodiscard]] virtual geometry::spatial::BoundingBox<N, T> bounding_box() const = 0;
 
@@ -324,16 +329,16 @@ public:
 
         [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray) const = 0;
+                const numerical::Ray<N, T>& ray) const = 0;
 
         [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 T max_distance) const = 0;
 
         [[nodiscard]] virtual bool intersect_any(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 T max_distance) const = 0;
 
         [[nodiscard]] virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;

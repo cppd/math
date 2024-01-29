@@ -103,7 +103,7 @@ LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
                 return res;
         }
 
-        const Ray<N, T> ray(point, l);
+        const numerical::Ray<N, T> ray(point, l);
         const auto intersection = parallelotope_.intersect(ray);
         if (!intersection)
         {
@@ -124,7 +124,8 @@ LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> ParallelotopeLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
+        const numerical::Ray<N, T> ray(
+                sample_location(engine), sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
         const T cos = dot(parallelotope_.normal(), ray.dir());
 
         LightSourceLeaveSample<N, T, Color> res;

@@ -27,5 +27,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::integrators::pt
 {
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-[[nodiscard]] std::optional<Color> pt(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine);
+[[nodiscard]] std::optional<Color> pt(const Scene<N, T, Color>& scene, const numerical::Ray<N, T>& ray, PCG& engine);
 }

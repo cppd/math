@@ -61,19 +61,22 @@ BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, const int point_count, RandomEngine& engine)
+std::vector<numerical::Ray<N, T>> rays_for_intersections(
+        const BoundingBox<N, T>& box,
+        const int point_count,
+        RandomEngine& engine)
 {
         const T length = box.diagonal().norm();
         const T move_distance = length;
         const int ray_count = 3 * point_count;
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
 
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray);
                 rays.push_back(ray.moved(-move_distance));
                 rays.push_back(ray.moved(move_distance));
@@ -84,10 +87,10 @@ std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, cons
 }
 
 template <bool VOLUME, std::size_t N, typename T>
-std::size_t intersection_count(const BoundingBox<N, T>& box, const std::vector<Ray<N, T>>& rays)
+std::size_t intersection_count(const BoundingBox<N, T>& box, const std::vector<numerical::Ray<N, T>>& rays)
 {
         std::size_t res = 0;
-        for (const Ray<N, T>& ray : rays)
+        for (const numerical::Ray<N, T>& ray : rays)
         {
                 if constexpr (!VOLUME)
                 {
@@ -108,7 +111,7 @@ std::size_t intersection_count(const BoundingBox<N, T>& box, const std::vector<R
 }
 
 template <bool VOLUME, std::size_t N, typename T>
-void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<numerical::Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -171,11 +174,11 @@ void check_intersection_count(
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> ray_orgs(const std::vector<Ray<N, T>>& rays)
+std::vector<Vector<N, T>> ray_orgs(const std::vector<numerical::Ray<N, T>>& rays)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(rays.size());
-        for (const Ray<N, T>& ray : rays)
+        for (const numerical::Ray<N, T>& ray : rays)
         {
                 res.push_back(ray.org());
         }
@@ -183,11 +186,11 @@ std::vector<Vector<N, T>> ray_orgs(const std::vector<Ray<N, T>>& rays)
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<Ray<N, T>>& rays)
+std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<numerical::Ray<N, T>>& rays)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(rays.size());
-        for (const Ray<N, T>& ray : rays)
+        for (const numerical::Ray<N, T>& ray : rays)
         {
                 res.push_back(ray.dir().reciprocal());
         }
@@ -195,11 +198,11 @@ std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<Ray<N, T>>
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>>& rays)
+std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<numerical::Ray<N, T>>& rays)
 {
         std::vector<Vector<N, bool>> res;
         res.reserve(rays.size());
-        for (const Ray<N, T>& ray : rays)
+        for (const numerical::Ray<N, T>& ray : rays)
         {
                 res.push_back(ray.dir().negative_bool());
         }
@@ -210,14 +213,14 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
 
         check_intersection_count</*volume*/ false>(box, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(box.intersect(ray));
                 }
@@ -229,14 +232,14 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_volume_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
 
         check_intersection_count</*volume*/ true>(box, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(box.intersect_volume(ray));
                 }
@@ -248,7 +251,7 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_r_per_second(const int point_count, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
 
         const std::vector<Vector<N, T>> orgs = ray_orgs(rays);
         const std::vector<Vector<N, T>> dirs_reciprocal = ray_reciprocal_directions(rays);
@@ -277,7 +280,7 @@ void test_intersection()
         PCG engine;
 
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, POINT_COUNT, engine);
+        const std::vector<numerical::Ray<N, T>> rays = rays_for_intersections(box, POINT_COUNT, engine);
 
         check_intersection_count</*volume*/ false>(box, rays);
         check_intersection_count</*volume*/ true>(box, rays);

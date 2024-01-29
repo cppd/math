@@ -33,7 +33,7 @@ inline constexpr T OFFSET = 64 * Limits<T>::epsilon();
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> offset_ray_org(const Vector<N, T>& normal, const Ray<N, T>& ray)
+[[nodiscard]] Vector<N, T> offset_ray_org(const Vector<N, T>& normal, const numerical::Ray<N, T>& ray)
 {
         namespace impl = point_offset_implementation;
 

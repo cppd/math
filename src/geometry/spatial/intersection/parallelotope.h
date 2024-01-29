@@ -54,18 +54,18 @@ Parallelotope<N, T> create_random_parallelotope(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, RandomEngine& engine)
+std::vector<numerical::Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, RandomEngine& engine)
 {
         const T move_distance = p.length();
         const int ray_count = 3 * point_count;
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
 
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray);
                 rays.push_back(ray.moved(-move_distance));
                 rays.push_back(ray.moved(move_distance));
@@ -76,7 +76,7 @@ std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<numerical::Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -86,7 +86,7 @@ void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ra
         const std::size_t count = [&]
         {
                 std::size_t res = 0;
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         if (p.intersect(ray))
                         {
@@ -108,14 +108,14 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const Parallelotope<N, T> parallelotope = create_random_parallelotope<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);
 
         check_intersection_count(parallelotope, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(parallelotope.intersect(ray));
                 }
@@ -131,7 +131,7 @@ void test_intersection()
         PCG engine;
 
         const Parallelotope<N, T> p = create_random_parallelotope<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
 
         check_intersection_count(p, rays);
 }

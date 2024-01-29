@@ -87,7 +87,10 @@ class SpatialSubdivisionTree final
                 return find_box_for_point(boxes_[ROOT_BOX], p);
         }
 
-        [[nodiscard]] bool find_next_box(const Ray<N, T>& ray, const Box** const box, Vector<N, T>* const point) const
+        [[nodiscard]] bool find_next_box(
+                const numerical::Ray<N, T>& ray,
+                const Box** const box,
+                Vector<N, T>* const point) const
         {
                 T offset = ray_offset_;
                 T k = 1;
@@ -142,7 +145,7 @@ public:
                 return boxes_[ROOT_BOX].parallelotope;
         }
 
-        [[nodiscard]] std::optional<T> intersect_root(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<T> intersect_root(const numerical::Ray<N, T>& ray) const
         {
                 return boxes_[ROOT_BOX].parallelotope.intersect_volume(ray);
         }
@@ -154,11 +157,11 @@ public:
         // std::optional<std::tuple<T, ...> f(const auto& indices);
         template <typename ObjectIntersect>
         [[nodiscard]] std::invoke_result_t<ObjectIntersect, const std::vector<int>&> intersect(
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T& root_t,
                 const ObjectIntersect& object_intersect) const
         {
-                Ray<N, T> local_ray = ray;
+                numerical::Ray<N, T> local_ray = ray;
                 Vector<N, T> point = local_ray.point(root_t);
                 local_ray.set_org(point);
 

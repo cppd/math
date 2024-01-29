@@ -51,7 +51,7 @@ public:
                 plane_.d = dot(plane_.n, center_);
         }
 
-        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<T> intersect(const numerical::Ray<N, T>& ray) const
         {
                 const T t = plane_.intersect(ray);
                 if (!(t > 0))

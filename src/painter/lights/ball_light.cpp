@@ -102,7 +102,7 @@ LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(const Vector
                 return res;
         }
 
-        const Ray<N, T> ray(point, l);
+        const numerical::Ray<N, T> ray(point, l);
         const auto intersection = ball_.intersect(ray);
         if (!intersection)
         {
@@ -123,7 +123,7 @@ LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(const Vector
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        const Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
+        const numerical::Ray<N, T> ray(sample_location(engine), sampling::cosine_on_hemisphere(engine, ball_.normal()));
         const T cos = dot(ball_.normal(), ray.dir());
 
         LightSourceLeaveSample<N, T, Color> res;

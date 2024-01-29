@@ -52,7 +52,7 @@ constexpr std::size_t GROUP_SIZE = 0x1000;
 
 template <bool ANY, std::size_t N, typename T, typename Color>
         requires (!ANY)
-[[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, Ray<N, T> ray)
+[[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, numerical::Ray<N, T> ray)
 {
         const SurfaceIntersection surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
         if (!surface_1)
@@ -65,13 +65,13 @@ template <bool ANY, std::size_t N, typename T, typename Color>
 
 template <bool ANY, std::size_t N, typename T, typename Color>
         requires (ANY)
-[[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, const Ray<N, T>& ray)
+[[nodiscard]] bool scene_intersect(const Scene<N, T, Color>& scene, const numerical::Ray<N, T>& ray)
 {
         return scene.intersect_any(EMPTY_GEOMETRIC_NORMAL<N, T>, ray, Limits<T>::infinity());
 }
 
 template <bool ANY, std::size_t N, typename T, typename Color>
-void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<Ray<N, T>>& rays)
+void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<numerical::Ray<N, T>>& rays)
 {
         const auto f = [&]
         {

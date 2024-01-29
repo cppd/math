@@ -80,7 +80,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         //
 
-        [[nodiscard]] Vector<N, T> point(const Ray<N, T>& ray, const T distance) const override
+        [[nodiscard]] Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
         {
                 return facet_->project(ray.point(distance));
         }
@@ -221,13 +221,14 @@ class Impl final : public Shape<N, T, Color>
                 return intersection_cost_;
         }
 
-        [[nodiscard]] std::optional<T> intersect_bounds(const Ray<N, T>& ray, const T max_distance) const override
+        [[nodiscard]] std::optional<T> intersect_bounds(const numerical::Ray<N, T>& ray, const T max_distance)
+                const override
         {
                 return bvh_.intersect_root(ray, max_distance);
         }
 
         [[nodiscard]] ShapeIntersection<N, T, Color> intersect(
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T max_distance,
                 const T /*bounding_distance*/) const override
         {
@@ -252,8 +253,10 @@ class Impl final : public Shape<N, T, Color>
                 return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_, facet)};
         }
 
-        [[nodiscard]] bool intersect_any(const Ray<N, T>& ray, const T max_distance, const T /*bounding_distance*/)
-                const override
+        [[nodiscard]] bool intersect_any(
+                const numerical::Ray<N, T>& ray,
+                const T max_distance,
+                const T /*bounding_distance*/) const override
         {
                 return bvh_.intersect(
                         ray, max_distance,

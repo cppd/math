@@ -91,7 +91,7 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
                 {
                         progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
-                const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
                 if (simplex.intersect(ray))
                 {
                         ++intersect_count;

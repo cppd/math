@@ -76,7 +76,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] Color pt(
         PCG& engine,
         const Scene<N, T, Color>& scene,
-        Ray<N, T> ray,
+        numerical::Ray<N, T> ray,
         SurfaceIntersection<N, T, Color> surface,
         Normals<N, T> normals,
         Color color)
@@ -110,7 +110,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
                         break;
                 }
 
-                ray = Ray<N, T>(surface.point(), sample->l);
+                ray = {surface.point(), sample->l};
                 std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
 
                 if (!surface)
@@ -124,7 +124,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
-std::optional<Color> pt(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, PCG& engine)
+std::optional<Color> pt(const Scene<N, T, Color>& scene, const numerical::Ray<N, T>& ray, PCG& engine)
 {
         const auto [surface, normals] = [&]
         {
@@ -152,9 +152,9 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, const Ray<N, T>& ray, P
         return pt<FLAT_SHADING>(engine, scene, ray, surface, normals, color);
 }
 
-#define TEMPLATE(N, T, C)                                                                                 \
-        template std::optional<C> pt<true, (N), T, C>(const Scene<(N), T, C>&, const Ray<(N), T>&, PCG&); \
-        template std::optional<C> pt<false, (N), T, C>(const Scene<(N), T, C>&, const Ray<(N), T>&, PCG&);
+#define TEMPLATE(N, T, C)                                                                                            \
+        template std::optional<C> pt<true, (N), T, C>(const Scene<(N), T, C>&, const numerical::Ray<(N), T>&, PCG&); \
+        template std::optional<C> pt<false, (N), T, C>(const Scene<(N), T, C>&, const numerical::Ray<(N), T>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

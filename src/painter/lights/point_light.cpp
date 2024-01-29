@@ -79,7 +79,7 @@ LightSourceArriveInfo<T, Color> PointLight<N, T, Color>::arrive_info(
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> PointLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        const Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
+        const numerical::Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
 
         LightSourceLeaveSample<N, T, Color> res;
         res.ray = ray;

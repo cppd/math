@@ -34,7 +34,7 @@ template <std::size_t N, typename T, typename Color>
 [[nodiscard]] T angle_pdf_origin(
         const Scene<N, T, Color>& scene,
         const LightDistribution<N, T, Color>& light_distribution,
-        const Ray<N, T>& ray_to_light)
+        const numerical::Ray<N, T>& ray_to_light)
 {
         T sum = 0;
         T weight_sum = 0;
@@ -104,7 +104,7 @@ public:
         InfiniteLight(
                 const Scene<N, T, Color>* const scene,
                 const LightDistribution<N, T, Color>* const light_distribution,
-                const Ray<N, T>& ray_to_light,
+                const numerical::Ray<N, T>& ray_to_light,
                 const Color& beta,
                 const T angle_pdf_forward)
                 : scene_(scene),

@@ -61,11 +61,11 @@ const std::array<int, N - 1>& PerspectiveProjector<N, T>::screen_size() const
 }
 
 template <std::size_t N, typename T>
-Ray<N, T> PerspectiveProjector<N, T>::ray(const Vector<N - 1, T>& point) const
+numerical::Ray<N, T> PerspectiveProjector<N, T>::ray(const Vector<N - 1, T>& point) const
 {
         const Vector<N - 1, T> screen_point = screen_org_ + point;
         const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
-        return Ray<N, T>(camera_org_, camera_dir_ + screen_dir);
+        return numerical::Ray<N, T>(camera_org_, camera_dir_ + screen_dir);
 }
 
 template <std::size_t N, typename T>

@@ -69,7 +69,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] bool move_ray(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                Ray<N, T>* const ray,
+                numerical::Ray<N, T>* const ray,
                 T* const max_distance) const
         {
                 if (geometric_normal)
@@ -92,7 +92,9 @@ class Impl final : public Scene<N, T, Color>
                 return false;
         }
 
-        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+        [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(
+                const numerical::Ray<N, T>& ray,
+                const T max_distance) const
         {
                 const auto intersection = bvh_.intersect(
                         ray, max_distance,
@@ -118,7 +120,7 @@ class Impl final : public Scene<N, T, Color>
                 return {};
         }
 
-        [[nodiscard]] bool intersect_any_impl(const Ray<N, T>& ray, const T max_distance) const
+        [[nodiscard]] bool intersect_any_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
         {
                 return bvh_.intersect(
                         ray, max_distance,
@@ -130,7 +132,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                Ray<N, T> ray,
+                numerical::Ray<N, T> ray,
                 T max_distance) const
         {
                 if (move_ray(geometric_normal, &ray, &max_distance))
@@ -142,7 +144,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] bool intersect_any_impl(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                Ray<N, T> ray,
+                numerical::Ray<N, T> ray,
                 T max_distance) const
         {
                 if (move_ray(geometric_normal, &ray, &max_distance))
@@ -156,7 +158,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray) const override
+                const numerical::Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
                 return intersect_impl(geometric_normal, ray, Limits<T>::infinity());
@@ -164,7 +166,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T max_distance) const override
         {
                 ASSERT(max_distance > 0);
@@ -175,7 +177,7 @@ class Impl final : public Scene<N, T, Color>
 
         [[nodiscard]] bool intersect_any(
                 const std::optional<Vector<N, T>>& geometric_normal,
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T max_distance) const override
         {
                 ASSERT(max_distance > 0);

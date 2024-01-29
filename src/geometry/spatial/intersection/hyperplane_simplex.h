@@ -97,7 +97,7 @@ T max_vertex_distance(const Simplex<N, T>& simplex)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, RandomEngine& engine)
+std::vector<numerical::Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, RandomEngine& engine)
 {
         const Vector<N, T>& normal = simplex.simplex.normal();
 
@@ -105,18 +105,18 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
 
         const int ray_count = 3 * point_count;
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
 
         for (int i = 0; i < point_count; ++i)
         {
                 const Vector<N, T> point = sampling::uniform_in_simplex(engine, simplex.vertices);
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
                 const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, normal, engine);
-                rays.push_back(Ray(ray.org() + distance * normal, -direction));
+                rays.push_back({ray.org() + distance * normal, -direction});
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
 
@@ -124,7 +124,7 @@ std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<numerical::Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -134,7 +134,7 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
         const std::size_t count = [&]
         {
                 std::size_t res = 0;
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         if (simplex.simplex.intersect(ray))
                         {
@@ -157,14 +157,14 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(simplex, point_count, engine);
 
         check_intersection_count(simplex, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(simplex.simplex.intersect(ray));
                 }
@@ -180,7 +180,7 @@ void test_intersection()
         PCG engine;
 
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex, POINT_COUNT, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(simplex, POINT_COUNT, engine);
 
         check_intersection_count(simplex, rays);
 }

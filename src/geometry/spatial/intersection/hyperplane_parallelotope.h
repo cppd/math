@@ -61,7 +61,10 @@ HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(RandomEngin
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const int point_count, RandomEngine& engine)
+std::vector<numerical::Ray<N, T>> create_rays(
+        const HyperplaneParallelotope<N, T>& p,
+        const int point_count,
+        RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(0, 1);
 
@@ -69,18 +72,18 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const
 
         const int ray_count = 3 * point_count;
 
-        std::vector<Ray<N, T>> rays;
+        std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
 
         for (int i = 0; i < point_count; ++i)
         {
                 const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(engine, p.vectors());
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
                 const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, p.normal(), engine);
-                rays.push_back(Ray(ray.org() + distance * p.normal(), -direction));
+                rays.push_back({ray.org() + distance * p.normal(), -direction});
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
 
@@ -88,7 +91,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std::vector<numerical::Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
@@ -98,7 +101,7 @@ void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std:
         const std::size_t count = [&]
         {
                 std::size_t res = 0;
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         if (p.intersect(ray))
                         {
@@ -121,14 +124,14 @@ template <std::size_t N, typename T, int COUNT, typename RandomEngine>
 double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const HyperplaneParallelotope<N, T> p = create_random_hyperplane_parallelotope<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(p, point_count, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(p, point_count, engine);
 
         check_intersection_count(p, rays);
 
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Ray<N, T>& ray : rays)
+                for (const numerical::Ray<N, T>& ray : rays)
                 {
                         do_not_optimize(p.intersect(ray));
                 }
@@ -144,7 +147,7 @@ void test_intersection()
         PCG engine;
 
         const HyperplaneParallelotope<N, T> p = create_random_hyperplane_parallelotope<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
+        const std::vector<numerical::Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
 
         check_intersection_count(p, rays);
 }

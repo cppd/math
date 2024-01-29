@@ -101,7 +101,7 @@ struct ConnectS1 final
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<Color> compute_color_s_1(
         const vertex::Surface<N, T, Color>& surface,
-        const Ray<N, T>& ray_to_light,
+        const numerical::Ray<N, T>& ray_to_light,
         const LightDistributionSample<N, T, Color>& distribution,
         const LightSourceArriveSample<N, T, Color>& sample)
 {
@@ -151,7 +151,7 @@ template <std::size_t N, typename T, typename Color>
                         distribution.light, distribution.pdf, sample.pdf, position, -sample.l, std::nullopt, surface);
         }();
 
-        const Ray<N, T> ray_to_light(surface.pos(), sample.l);
+        const numerical::Ray<N, T> ray_to_light(surface.pos(), sample.l);
 
         const auto color = compute_color_s_1(surface, ray_to_light, distribution, sample);
         if (!color || color->is_black())

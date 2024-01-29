@@ -71,7 +71,7 @@ class Intersect final
         const std::vector<unsigned>* const object_indices_;
         const std::vector<Node<N, T>>* const nodes_;
         const ObjectIntersect* const object_intersect_;
-        const Ray<N, T>* const ray_;
+        const numerical::Ray<N, T>* const ray_;
 
         const Vector<N, T> dir_reciprocal_;
         const Vector<N, bool> dir_negative_;
@@ -152,7 +152,7 @@ public:
         Intersect(
                 const std::vector<unsigned>* const object_indices,
                 const std::vector<Node<N, T>>* const nodes,
-                const Ray<N, T>* const ray,
+                const numerical::Ray<N, T>* const ray,
                 const T& max_distance,
                 const ObjectIntersect* const object_intersect)
                 : object_indices_(object_indices),
@@ -193,7 +193,7 @@ public:
                 return nodes_[0].bounds;
         }
 
-        [[nodiscard]] std::optional<T> intersect_root(const Ray<N, T>& ray, const T& max_distance) const
+        [[nodiscard]] std::optional<T> intersect_root(const numerical::Ray<N, T>& ray, const T& max_distance) const
         {
                 return nodes_[0].bounds.intersect_volume(ray, max_distance);
         }
@@ -203,7 +203,7 @@ public:
         // bool f(const auto& indices, const auto& max_distance);
         template <typename ObjectIntersect>
         [[nodiscard]] std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
-                const Ray<N, T>& ray,
+                const numerical::Ray<N, T>& ray,
                 const T& max_distance,
                 const ObjectIntersect& object_intersect) const
         {

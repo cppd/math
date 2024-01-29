@@ -121,7 +121,7 @@ public:
                 return sphere_.facet_vertices(index);
         }
 
-        [[nodiscard]] std::optional<unsigned> intersect(const Ray<N, T>& ray) const
+        [[nodiscard]] std::optional<unsigned> intersect(const numerical::Ray<N, T>& ray) const
         {
                 const auto intersection = bvh_.intersect(
                         ray, Limits<T>::max(),

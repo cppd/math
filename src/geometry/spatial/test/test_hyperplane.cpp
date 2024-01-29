@@ -142,7 +142,7 @@ void test_intersect(const T precision, RandomEngine& engine)
 
         for (int i = 0; i < TEST_COUNT; ++i)
         {
-                const Ray<N, T> random_ray(
+                const numerical::Ray<N, T> random_ray(
                         random::point<N, T>(INTERVAL<T>, engine), sampling::uniform_on_sphere<N, T>(engine));
 
                 const T t = plane.intersect(random_ray);

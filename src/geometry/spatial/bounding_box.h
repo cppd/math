@@ -111,7 +111,7 @@ class BoundingBox final
         };
 
         template <IntersectionType INTERSECTION_TYPE>
-        [[nodiscard]] std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
+        [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
         {
                 T near = 0;
                 T far = max_distance;
@@ -272,13 +272,16 @@ public:
                 return bounding_box_implementation::surface(diagonal());
         }
 
-        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& ray, const T max_distance = Limits<T>::max()) const
+        [[nodiscard]] std::optional<T> intersect(
+                const numerical::Ray<N, T>& ray,
+                const T max_distance = Limits<T>::max()) const
         {
                 return intersect_impl<IntersectionType::NEAREST>(ray, max_distance);
         }
 
-        [[nodiscard]] std::optional<T> intersect_volume(const Ray<N, T>& ray, const T max_distance = Limits<T>::max())
-                const
+        [[nodiscard]] std::optional<T> intersect_volume(
+                const numerical::Ray<N, T>& ray,
+                const T max_distance = Limits<T>::max()) const
         {
                 return intersect_impl<IntersectionType::VOLUME>(ray, max_distance);
         }

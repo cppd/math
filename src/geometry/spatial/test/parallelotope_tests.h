@@ -125,10 +125,10 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
         for (const Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
 
                 {
-                        const Ray<N, T> r = ray;
+                        const numerical::Ray<N, T> r = ray;
                         const auto t = p.intersect(r);
                         if (!t)
                         {
@@ -141,7 +141,7 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
                         }
                 }
                 {
-                        const Ray<N, T> r = ray.moved(-10 * length);
+                        const numerical::Ray<N, T> r = ray.moved(-10 * length);
                         const auto t = p.intersect(r);
                         if (!t)
                         {
@@ -149,7 +149,7 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
                         }
                 }
                 {
-                        const Ray<N, T> r = ray.moved(10 * length);
+                        const numerical::Ray<N, T> r = ray.moved(10 * length);
                         const auto t = p.intersect(r);
                         if (t)
                         {
