@@ -96,11 +96,10 @@ public:
                 res.dir_ = dir_;
                 return res;
         }
-};
 
-template <std::size_t N, typename T>
-[[nodiscard]] std::string to_string(const Ray<N, T>& ray)
-{
-        return "(org " + to_string(ray.org()) + ", dir " + to_string(ray.dir()) + ")";
-}
+        [[nodiscard]] friend std::string to_string(const Ray<N, T>& ray)
+        {
+                return "(org " + to_string(ray.org()) + ", dir " + to_string(ray.dir()) + ")";
+        }
+};
 }
