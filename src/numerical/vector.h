@@ -176,12 +176,6 @@ template <std::size_t N, typename T>
         return res;
 }
 
-template <std::size_t N, typename T>
-[[nodiscard]] decltype(auto) is_finite(const Vector<N, T>& v)
-{
-        return v.is_finite();
-}
-
 template <typename Dst, std::size_t N, typename Src>
         requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] constexpr Vector<N, Dst> to_vector(const Vector<N, Src>& v)
@@ -244,12 +238,6 @@ template <typename Dst, std::size_t N, typename Src>
 [[nodiscard]] decltype(auto) to_vector(std::vector<Vector<N, Src>>&& v)
 {
         return std::move(v);
-}
-
-template <std::size_t N, typename T>
-[[nodiscard]] decltype(auto) to_string(const Vector<N, T>& v)
-{
-        return v.to_string();
 }
 
 template <typename T>

@@ -304,12 +304,12 @@ public:
                 return res;
         }
 
-        [[nodiscard]] bool is_finite() const
+        [[nodiscard]] friend bool is_finite(const Vector<N, T>& v)
                 requires (std::is_floating_point_v<T>)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (std::isfinite(data_[i]))
+                        if (std::isfinite(v[i]))
                         {
                                 continue;
                         }
@@ -318,15 +318,15 @@ public:
                 return true;
         }
 
-        [[nodiscard]] std::string to_string() const
+        [[nodiscard]] friend std::string to_string(const Vector<N, T>& v)
         {
                 std::ostringstream oss;
                 oss.precision(Limits<T>::max_digits10());
                 oss << '(';
-                oss << data_[0];
+                oss << v[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        oss << ", " << data_[i];
+                        oss << ", " << v[i];
                 }
                 oss << ')';
                 return oss.str();
