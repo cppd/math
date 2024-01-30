@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cstddef>
 #include <initializer_list>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -245,12 +246,12 @@ public:
                 return res;
         }
 
-        [[nodiscard]] bool is_finite() const
+        [[nodiscard]] friend bool is_finite(const Matrix<ROWS, COLUMNS, T>& m)
                 requires (std::is_floating_point_v<T>)
         {
                 for (std::size_t i = 0; i < ROWS; ++i)
                 {
-                        if (rows_[i].is_finite())
+                        if (is_finite(m.row(i)))
                         {
                                 continue;
                         }
@@ -263,10 +264,10 @@ public:
         {
                 std::string s;
                 s += to_string(m.row(0));
-                for (std::size_t r = 1; r < ROWS; ++r)
+                for (std::size_t i = 1; i < ROWS; ++i)
                 {
                         s += '\n';
-                        s += to_string(m.row(r));
+                        s += to_string(m.row(i));
                 }
                 return s;
         }
