@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
-void DistantLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T scene_radius)
+void DistantLight<N, T, Color>::init(const numerical::Vector<N, T>& scene_center, const T scene_radius)
 {
         if (!(scene_radius > 0))
         {
@@ -53,16 +53,16 @@ void DistantLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T s
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> DistantLight<N, T, Color>::arrive_sample(
         PCG& /*engine*/,
-        const Vector<N, T>& /*point*/,
-        const Vector<N, T>& /*n*/) const
+        const numerical::Vector<N, T>& /*point*/,
+        const numerical::Vector<N, T>& /*n*/) const
 {
         return arrive_sample_;
 }
 
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveInfo<T, Color> DistantLight<N, T, Color>::arrive_info(
-        const Vector<N, T>& /*point*/,
-        const Vector<N, T>& /*l*/) const
+        const numerical::Vector<N, T>& /*point*/,
+        const numerical::Vector<N, T>& /*l*/) const
 {
         LightSourceArriveInfo<T, Color> res;
         res.pdf = 0;
@@ -78,19 +78,19 @@ LightSourceLeaveSample<N, T, Color> DistantLight<N, T, Color>::leave_sample(PCG&
 }
 
 template <std::size_t N, typename T, typename Color>
-T DistantLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
+T DistantLight<N, T, Color>::leave_pdf_pos(const numerical::Vector<N, T>& /*dir*/) const
 {
         return leave_sample_.pdf_pos;
 }
 
 template <std::size_t N, typename T, typename Color>
-T DistantLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*dir*/) const
+T DistantLight<N, T, Color>::leave_pdf_dir(const numerical::Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> DistantLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*dir*/) const
+std::optional<Color> DistantLight<N, T, Color>::leave_radiance(const numerical::Vector<N, T>& /*dir*/) const
 {
         return {};
 }
@@ -116,7 +116,7 @@ bool DistantLight<N, T, Color>::is_infinite_area() const
 }
 
 template <std::size_t N, typename T, typename Color>
-DistantLight<N, T, Color>::DistantLight(const Vector<N, T>& direction, const Color& radiance)
+DistantLight<N, T, Color>::DistantLight(const numerical::Vector<N, T>& direction, const Color& radiance)
 {
         leave_sample_.ray.set_dir(direction);
         leave_sample_.radiance = radiance;

@@ -23,13 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size);
+std::vector<numerical::Vector2i> pyramid_sizes(int width, int height, int min_size);
 
 struct TopLevelPoints final
 {
         int count_x;
         int count_y;
-        std::vector<Vector2i> points;
+        std::vector<numerical::Vector2i> points;
 };
 
 TopLevelPoints create_top_level_points(int width, int height, double distance_between_points_in_mm, double ppi);

@@ -31,8 +31,8 @@ namespace ns::filter::filters
 template <std::size_t N, typename T>
 struct UpdateInfo final
 {
-        Vector<N, T> position;
-        Vector<N, T> position_p;
+        numerical::Vector<N, T> position;
+        numerical::Vector<N, T> position_p;
         T speed;
         T speed_p;
 };

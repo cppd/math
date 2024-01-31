@@ -27,6 +27,6 @@ template <std::size_t N, typename T>
 struct TimePoint final
 {
         T time;
-        Vector<N, T> point;
+        numerical::Vector<N, T> point;
 };
 }

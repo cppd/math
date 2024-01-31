@@ -108,7 +108,7 @@ void write_nl(std::ostream& file)
 }
 
 template <std::size_t N>
-void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
+void write_vertex(std::ostream& file, const numerical::Vector<N, float>& vertex)
 {
         write_vertex(file);
         for (unsigned i = 0; i < N; ++i)
@@ -119,7 +119,7 @@ void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
 }
 
 template <std::size_t N>
-void write_normal(std::ostream& file, const Vector<N, float>& normal)
+void write_normal(std::ostream& file, const numerical::Vector<N, float>& normal)
 {
         write_normal(file);
         for (unsigned i = 0; i < N; ++i)
@@ -162,9 +162,9 @@ void write_line(std::ostream& file, const std::array<int, 2>& vertices)
 }
 
 template <std::size_t N>
-void write_vertices(std::ostream& file, const std::vector<Vector<N, float>>& vertices)
+void write_vertices(std::ostream& file, const std::vector<numerical::Vector<N, float>>& vertices)
 {
-        for (const Vector<N, float>& v : vertices)
+        for (const numerical::Vector<N, float>& v : vertices)
         {
                 write_vertex(file, v);
         }
@@ -191,12 +191,12 @@ void write_vertices(std::ostream& file, const Mesh<N>& mesh)
 template <std::size_t N>
 void write_normals(std::ostream& file, const Mesh<N>& mesh)
 {
-        for (const Vector<N, float>& vn : mesh.normals)
+        for (const numerical::Vector<N, float>& vn : mesh.normals)
         {
-                Vector<N, float> normal = to_vector<float>(to_vector<double>(vn).normalized());
+                numerical::Vector<N, float> normal = to_vector<float>(to_vector<double>(vn).normalized());
                 if (!is_finite(normal))
                 {
-                        normal = Vector<N, float>(0);
+                        normal = numerical::Vector<N, float>(0);
                 }
                 write_normal(file, normal);
         }
@@ -220,11 +220,11 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
                         std::array<int, 3> v = f.vertices;
                         std::array<int, 3> n = f.normals;
 
-                        const Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        const Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        const Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+                        const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                        const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                        const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
-                        const Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+                        const numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 
                         if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0

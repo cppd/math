@@ -28,7 +28,7 @@ namespace ns::geometry::spatial
 template <std::size_t N, typename T>
 struct Constraint final
 {
-        Vector<N, T> a;
+        numerical::Vector<N, T> a;
         T b;
 };
 

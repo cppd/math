@@ -28,14 +28,14 @@ namespace ns::painter::integrators
 template <std::size_t N, typename T>
 struct Normals final
 {
-        Vector<N, T> geometric;
-        Vector<N, T> shading;
+        numerical::Vector<N, T> geometric;
+        numerical::Vector<N, T> shading;
 
         Normals()
         {
         }
 
-        Normals(const Vector<N, T>& geometric, const Vector<N, T>& shading)
+        Normals(const numerical::Vector<N, T>& geometric, const numerical::Vector<N, T>& shading)
                 : geometric(geometric),
                   shading(shading)
         {
@@ -45,12 +45,12 @@ struct Normals final
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] Normals<N, T> compute_normals(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& ray_dir)
+        const numerical::Vector<N, T>& ray_dir)
 {
-        const Vector<N, T> g_normal = surface.geometric_normal();
+        const numerical::Vector<N, T> g_normal = surface.geometric_normal();
         ASSERT(g_normal.is_unit());
         const bool flip = dot(ray_dir, g_normal) >= 0;
-        const Vector<N, T> geometric = flip ? -g_normal : g_normal;
+        const numerical::Vector<N, T> geometric = flip ? -g_normal : g_normal;
         if (!FLAT_SHADING)
         {
                 const auto shading = surface.shading_normal();

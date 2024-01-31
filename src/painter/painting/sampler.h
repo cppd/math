@@ -32,7 +32,7 @@ template <std::size_t N, typename T>
 class SamplerHalton final
 {
         sampling::HaltonSampler<N, T> sampler_;
-        std::vector<Vector<N, T>> samples_;
+        std::vector<numerical::Vector<N, T>> samples_;
         int samples_per_pixel_;
 
         void generate_samples()
@@ -57,7 +57,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine&, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine&, std::vector<numerical::Vector<N, T>>* const samples) const
         {
                 *samples = samples_;
         }
@@ -84,7 +84,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& engine, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine& engine, std::vector<numerical::Vector<N, T>>* const samples) const
         {
                 sampler_.generate(engine, samples);
         }

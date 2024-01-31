@@ -43,7 +43,7 @@ namespace ns::filter::test
 namespace
 {
 template <typename T>
-[[nodiscard]] Vector<2, T> rotate(const Vector<2, T>& v, const T angle)
+[[nodiscard]] numerical::Vector<2, T> rotate(const numerical::Vector<2, T>& v, const T angle)
 {
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
@@ -199,10 +199,10 @@ class Simulator final
         std::normal_distribution<T> measurements_speed_nd_;
 
         T time_{0};
-        Vector<N, T> position_{0};
+        numerical::Vector<N, T> position_{0};
         Velocity velocity_;
         Velocity next_velocity_;
-        Vector<N, T> acceleration_;
+        numerical::Vector<N, T> acceleration_;
         T angle_;
 
         [[nodiscard]] T angle(const T time) const
@@ -228,14 +228,14 @@ class Simulator final
                 return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle(time)};
         }
 
-        [[nodiscard]] Vector<2, T> to_vector(const Velocity& v) const
+        [[nodiscard]] numerical::Vector<2, T> to_vector(const Velocity& v) const
         {
                 return {v.magnitude * std::cos(v.angle), v.magnitude * std::sin(v.angle)};
         }
 
-        [[nodiscard]] Vector<N, T> vector(std::normal_distribution<T>& distribution)
+        [[nodiscard]] numerical::Vector<N, T> vector(std::normal_distribution<T>& distribution)
         {
-                Vector<N, T> res;
+                numerical::Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] = distribution(engine_);
@@ -282,7 +282,7 @@ public:
                 angle_ = normalize_angle(angle_ + angle_drift_);
         }
 
-        [[nodiscard]] const Vector<N, T>& position() const
+        [[nodiscard]] const numerical::Vector<N, T>& position() const
         {
                 return position_;
         }
@@ -307,14 +307,14 @@ public:
                 return normalize_angle(velocity_.angle + angle_r_ + angle_ + measurements_direction_nd_(engine_));
         }
 
-        [[nodiscard]] Vector<N, T> measurement_acceleration()
+        [[nodiscard]] numerical::Vector<N, T> measurement_acceleration()
         {
                 return rotate(acceleration_, angle_) + vector(measurements_acceleration_nd_);
         }
 
-        [[nodiscard]] Vector<N, T> measurement_position()
+        [[nodiscard]] numerical::Vector<N, T> measurement_position()
         {
-                const Vector<N, T> m = position_ + vector(measurements_position_nd_);
+                const numerical::Vector<N, T> m = position_ + vector(measurements_position_nd_);
                 if (std::bernoulli_distribution(bad_measurement_position_probability_)(engine_))
                 {
                         return m + bad_measurement_position_ * sampling::uniform_on_sphere<N, T>(engine_);
@@ -354,28 +354,28 @@ std::vector<filters::Measurements<N, T>> simulate(const Config<T>& config)
                 {
                         m.acceleration = {
                                 .value = simulator.measurement_acceleration(),
-                                .variance = Vector<N, T>(config.measurement_variance_acceleration)};
+                                .variance = numerical::Vector<N, T>(config.measurement_variance_acceleration)};
                 }
 
                 if (i % config.measurement_dt_count_direction == 0)
                 {
                         m.direction = {
-                                .value = Vector<1, T>(simulator.measurement_direction()),
-                                .variance = Vector<1, T>(config.measurement_variance_direction)};
+                                .value = numerical::Vector<1, T>(simulator.measurement_direction()),
+                                .variance = numerical::Vector<1, T>(config.measurement_variance_direction)};
                 }
 
                 if (i % config.measurement_dt_count_position == 0)
                 {
                         m.position = {
                                 .value = simulator.measurement_position(),
-                                .variance = Vector<N, T>(config.measurement_variance_position)};
+                                .variance = numerical::Vector<N, T>(config.measurement_variance_position)};
                 }
 
                 if (i % config.measurement_dt_count_speed == 0)
                 {
                         m.speed = {
-                                .value = Vector<1, T>(simulator.measurement_speed()),
-                                .variance = Vector<1, T>(config.measurement_variance_speed)};
+                                .value = numerical::Vector<1, T>(simulator.measurement_speed()),
+                                .variance = numerical::Vector<1, T>(config.measurement_variance_speed)};
                 }
         }
 

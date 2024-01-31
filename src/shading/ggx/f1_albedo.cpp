@@ -625,13 +625,13 @@ constexpr numerical::Interpolation<1, T, T> INTERPOLATION_COSINE(
 template <std::size_t N, typename T>
 T f1_albedo(const T roughness, const T cosine)
 {
-        return INTERPOLATION_ALBEDO_COSINE_ROUGHNESS<N, T>.compute(Vector<2, T>(cosine, roughness));
+        return INTERPOLATION_ALBEDO_COSINE_ROUGHNESS<N, T>.compute(numerical::Vector<2, T>(cosine, roughness));
 }
 
 template <std::size_t N, typename T>
 T f1_albedo_cosine_weighted_average(const T roughness)
 {
-        return INTERPOLATION_COSINE<N, T>.compute(Vector<1, T>(roughness));
+        return INTERPOLATION_COSINE<N, T>.compute(numerical::Vector<1, T>(roughness));
 }
 
 template <std::size_t N, typename T>

@@ -65,7 +65,7 @@ std::vector<vulkan::ImageWithMemory> create_images(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const VkFormat format,
         const std::uint32_t family_index,
         const VkImageUsageFlags usage)
@@ -75,7 +75,7 @@ std::vector<vulkan::ImageWithMemory> create_images(
 
         std::vector<vulkan::ImageWithMemory> res;
         res.reserve(sizes.size());
-        for (const Vector2i& s : sizes)
+        for (const numerical::Vector2i& s : sizes)
         {
                 res.emplace_back(
                         device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
@@ -222,7 +222,7 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(input.image().extent().width));
                 ASSERT(rectangle.y1() <= static_cast<int>(input.image().extent().height));
 
-                const std::vector<Vector2i> sizes = pyramid_sizes(
+                const std::vector<numerical::Vector2i> sizes = pyramid_sizes(
                         input.image().extent().width, input.image().extent().height, BOTTOM_IMAGE_MINIMUM_SIZE);
 
                 const std::uint32_t family_index = compute_command_pool_->family_index();

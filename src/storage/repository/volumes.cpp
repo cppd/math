@@ -63,7 +63,7 @@ void check_volume_size(const unsigned size)
 }
 
 template <std::size_t N, std::size_t LEVEL, typename F>
-void image_coordinates(const std::array<int, N>& size, Vector<N, float>* const coordinates, const F& f)
+void image_coordinates(const std::array<int, N>& size, numerical::Vector<N, float>* const coordinates, const F& f)
 {
         static_assert(LEVEL < N);
 
@@ -92,7 +92,7 @@ void image_coordinates(const std::array<int, N>& size, Vector<N, float>* const c
 template <std::size_t N, typename F>
 void image_coordinates(const std::array<int, N>& size, const F& f)
 {
-        Vector<N, float> coordinates;
+        numerical::Vector<N, float> coordinates;
         image_coordinates<N, 0>(size, &coordinates, f);
 }
 
@@ -141,12 +141,12 @@ std::unique_ptr<model::volume::Volume<N>> scalar_cube(const unsigned size)
 
         std::byte* ptr = volume.image.pixels.data();
 
-        const Vector<N, float> center(0.5f);
+        const numerical::Vector<N, float> center(0.5f);
         image_coordinates<N>(
                 volume.image.size,
-                [&](const Vector<N, float>& coordinates)
+                [&](const numerical::Vector<N, float>& coordinates)
                 {
-                        Vector<N, float> p = coordinates - center;
+                        numerical::Vector<N, float> p = coordinates - center;
                         bool cube = true;
                         for (unsigned i = 0; i < N; ++i)
                         {
@@ -194,12 +194,12 @@ std::unique_ptr<model::volume::Volume<N>> scalar_ellipsoid(const unsigned size)
 
         std::byte* ptr = volume.image.pixels.data();
 
-        const Vector<N, float> center(0.5f);
+        const numerical::Vector<N, float> center(0.5f);
         image_coordinates<N>(
                 volume.image.size,
-                [&](const Vector<N, float>& coordinates)
+                [&](const numerical::Vector<N, float>& coordinates)
                 {
-                        const Vector<N, float> p = coordinates - center;
+                        const numerical::Vector<N, float> p = coordinates - center;
                         const float distance = 2 * p.norm();
                         Type value = std::max(MIN, float_to_uint<Type>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
                         std::memcpy(ptr, &value, sizeof(value));
@@ -236,7 +236,7 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
 
         image_coordinates<N>(
                 volume.image.size,
-                [&](const Vector<N, float>& coordinates)
+                [&](const numerical::Vector<N, float>& coordinates)
                 {
                         for (std::size_t i = 0; i < N; ++i)
                         {

@@ -55,7 +55,7 @@ class WeightedEdge final
 
 public:
         template <std::size_t N>
-        WeightedEdge(const std::vector<Vector<N, float>>& points, const Edge2& edge)
+        WeightedEdge(const std::vector<numerical::Vector<N, float>>& points, const Edge2& edge)
                 : weight_(to_vector<double>(points[edge.vertices()[1]] - points[edge.vertices()[0]]).norm_squared()),
                   edge_(edge)
         {
@@ -105,7 +105,9 @@ std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<
 }
 
 template <std::size_t N>
-std::vector<WeightedEdge> weight_edges(const std::vector<Vector<N, float>>& points, const std::vector<Edge2>& edges)
+std::vector<WeightedEdge> weight_edges(
+        const std::vector<numerical::Vector<N, float>>& points,
+        const std::vector<Edge2>& edges)
 {
         std::vector<WeightedEdge> res;
         res.reserve(edges.size());
@@ -173,7 +175,7 @@ unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_obj
 
 template <std::size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, N + 1>>& delaunay_objects,
         progress::Ratio* const progress)
 {
@@ -216,9 +218,9 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
         return mst;
 }
 
-#define TEMPLATE(N)                                                                                   \
-        template std::vector<std::array<int, 2>> minimum_spanning_tree(                               \
-                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N) + 1>>&, \
+#define TEMPLATE(N)                                                                                              \
+        template std::vector<std::array<int, 2>> minimum_spanning_tree(                                          \
+                const std::vector<numerical::Vector<(N), float>>&, const std::vector<std::array<int, (N) + 1>>&, \
                 progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

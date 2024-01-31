@@ -107,7 +107,7 @@ void write_samples_to_files()
                 "in sphere rejection", COUNT,
                 [&]()
                 {
-                        Vector<N, T> v;
+                        numerical::Vector<N, T> v;
                         T v_length_square;
                         impl::uniform_in_sphere_by_rejection(engine, v, v_length_square);
                         return v;
@@ -117,7 +117,7 @@ void write_samples_to_files()
                 "in sphere normal distribution", COUNT,
                 [&]()
                 {
-                        Vector<N, T> v;
+                        numerical::Vector<N, T> v;
                         T v_length_square;
                         impl::uniform_in_sphere_by_normal_distribution(engine, v, v_length_square);
                         return v;
@@ -127,26 +127,26 @@ void write_samples_to_files()
                 "in simplex", COUNT,
                 [&]()
                 {
-                        static const std::array<Vector<N, T>, N + 1> vertices = []
+                        static const std::array<numerical::Vector<N, T>, N + 1> vertices = []
                         {
-                                std::array<Vector<N, T>, N + 1> res;
+                                std::array<numerical::Vector<N, T>, N + 1> res;
                                 for (std::size_t i = 0; i < N; ++i)
                                 {
-                                        res[i] = Vector<N, T>(0);
+                                        res[i] = numerical::Vector<N, T>(0);
                                         res[i][i] = 1;
                                 }
-                                res[N] = Vector<N, T>(1 / std::sqrt(T{N}));
+                                res[N] = numerical::Vector<N, T>(1 / std::sqrt(T{N}));
                                 return res;
                         }();
                         return uniform_in_simplex(engine, vertices);
                 });
 
-        constexpr std::array<Vector<N, T>, N> VECTORS = []
+        constexpr std::array<numerical::Vector<N, T>, N> VECTORS = []
         {
-                std::array<Vector<N, T>, N> res;
+                std::array<numerical::Vector<N, T>, N> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        res[i] = Vector<N, T>(0);
+                        res[i] = numerical::Vector<N, T>(0);
                         res[i][i] = 2;
                 }
                 return res;
@@ -159,7 +159,7 @@ void write_samples_to_files()
                         return uniform_in_parallelotope(engine, VECTORS);
                 });
 
-        std::vector<Vector<N, T>> samples;
+        std::vector<numerical::Vector<N, T>> samples;
         StratifiedJitteredSampler<N, T>(0, 1, COUNT, false).generate(engine, &samples);
         std::size_t sample = 0;
         write_samples_to_file<N, T>(

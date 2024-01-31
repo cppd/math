@@ -57,7 +57,7 @@ namespace
 {
 constexpr float MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
-constexpr Vector2f NULL_TEXTURE_COORDINATES = Vector2f(-1e10);
+constexpr numerical::Vector2f NULL_TEXTURE_COORDINATES = numerical::Vector2f(-1e10);
 
 // clang-format off
 constexpr std::array COLOR_IMAGE_FORMATS
@@ -75,13 +75,13 @@ std::string time_string(const double time)
 
 class Vertex final
 {
-        Vector3f p_;
-        Vector3f n_;
-        Vector2f t_;
+        numerical::Vector3f p_;
+        numerical::Vector3f n_;
+        numerical::Vector2f t_;
         std::size_t hash_;
 
 public:
-        void set(const Vector3f& p, const Vector3f& n, const Vector2f& t)
+        void set(const numerical::Vector3f& p, const numerical::Vector3f& n, const numerical::Vector2f& t)
         {
                 p_ = p;
                 n_ = n;
@@ -89,17 +89,17 @@ public:
                 hash_ = compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
 
-        [[nodiscard]] const Vector3f& p() const
+        [[nodiscard]] const numerical::Vector3f& p() const
         {
                 return p_;
         }
 
-        [[nodiscard]] const Vector3f& n() const
+        [[nodiscard]] const numerical::Vector3f& n() const
         {
                 return n_;
         }
 
-        [[nodiscard]] const Vector2f& t() const
+        [[nodiscard]] const numerical::Vector2f& t() const
         {
                 return t_;
         }
@@ -139,9 +139,11 @@ public:
         };
 };
 
-std::array<Vector3f, 3> face_vertices(const model::mesh::Mesh<3>& mesh, const model::mesh::Mesh<3>::Facet& mesh_facet)
+std::array<numerical::Vector3f, 3> face_vertices(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
 {
-        std::array<Vector3f, 3> res;
+        std::array<numerical::Vector3f, 3> res;
         for (int i = 0; i < 3; ++i)
         {
                 res[i] = mesh.vertices[mesh_facet.vertices[i]];
@@ -149,9 +151,9 @@ std::array<Vector3f, 3> face_vertices(const model::mesh::Mesh<3>& mesh, const mo
         return res;
 }
 
-std::array<Vector3f, 3> face_normals(const Vector3f& geometric_normal)
+std::array<numerical::Vector3f, 3> face_normals(const numerical::Vector3f& geometric_normal)
 {
-        std::array<Vector3f, 3> res;
+        std::array<numerical::Vector3f, 3> res;
         for (int i = 0; i < 3; ++i)
         {
                 res[i] = geometric_normal;
@@ -159,12 +161,13 @@ std::array<Vector3f, 3> face_normals(const Vector3f& geometric_normal)
         return res;
 }
 
-std::array<Vector3f, 3> face_normals(
+std::array<numerical::Vector3f, 3> face_normals(
         const model::mesh::Mesh<3>& mesh,
         const model::mesh::Mesh<3>::Facet& mesh_facet,
-        const std::array<Vector3f, 3>& vertices)
+        const std::array<numerical::Vector3f, 3>& vertices)
 {
-        const Vector3f geometric_normal = cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized();
+        const numerical::Vector3f geometric_normal =
+                cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized();
         if (!is_finite(geometric_normal))
         {
                 error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(vertices[0])
@@ -195,7 +198,7 @@ std::array<Vector3f, 3> face_normals(
                 return face_normals(geometric_normal);
         }
 
-        std::array<Vector3f, 3> res;
+        std::array<numerical::Vector3f, 3> res;
         for (int i = 0; i < 3; ++i)
         {
                 res[i] = mesh.normals[mesh_facet.normals[i]];
@@ -203,11 +206,13 @@ std::array<Vector3f, 3> face_normals(
         return res;
 }
 
-std::array<Vector2f, 3> face_texcoords(const model::mesh::Mesh<3>& mesh, const model::mesh::Mesh<3>::Facet& mesh_facet)
+std::array<numerical::Vector2f, 3> face_texcoords(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
 {
         if (mesh_facet.has_texcoord)
         {
-                std::array<Vector2f, 3> res;
+                std::array<numerical::Vector2f, 3> res;
                 for (int i = 0; i < 3; ++i)
                 {
                         res[i] = mesh.texcoords[mesh_facet.texcoords[i]];
@@ -215,7 +220,7 @@ std::array<Vector2f, 3> face_texcoords(const model::mesh::Mesh<3>& mesh, const m
                 return res;
         }
 
-        std::array<Vector2f, 3> res;
+        std::array<numerical::Vector2f, 3> res;
         for (int i = 0; i < 3; ++i)
         {
                 res[i] = NULL_TEXTURE_COORDINATES;
@@ -228,9 +233,9 @@ void set_face_vertices(
         const model::mesh::Mesh<3>::Facet& mesh_facet,
         std::array<Vertex, 3>* const face)
 {
-        const std::array<Vector3f, 3> v = face_vertices(mesh, mesh_facet);
-        const std::array<Vector3f, 3> n = face_normals(mesh, mesh_facet, v);
-        const std::array<Vector2f, 3> t = face_texcoords(mesh, mesh_facet);
+        const std::array<numerical::Vector3f, 3> v = face_vertices(mesh, mesh_facet);
+        const std::array<numerical::Vector3f, 3> n = face_normals(mesh, mesh_facet, v);
+        const std::array<numerical::Vector2f, 3> t = face_texcoords(mesh, mesh_facet);
 
         for (int i = 0; i < 3; ++i)
         {
@@ -393,7 +398,7 @@ std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_stru
 
         const Clock::time_point start_time = Clock::now();
 
-        std::vector<Vector3f> vertices;
+        std::vector<numerical::Vector3f> vertices;
         vertices.reserve(buffer_mesh.vertices.size());
         for (const TrianglesVertex& v : buffer_mesh.vertices)
         {
@@ -516,14 +521,14 @@ std::vector<MaterialBuffer> load_materials(
 
         for (const model::mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
-                const Vector3f color = mesh_material.color.rgb32().clamp(0, 1);
+                const numerical::Vector3f color = mesh_material.color.rgb32().clamp(0, 1);
                 const bool use_texture = (mesh_material.image >= 0);
                 const bool use_material = true;
                 buffers.emplace_back(device, command_pool, queue, family_indices, color, use_texture, use_material);
         }
 
         // material for vertices without material
-        constexpr Vector3f COLOR(0);
+        constexpr numerical::Vector3f COLOR(0);
         constexpr bool USE_TEXTURE = false;
         constexpr bool USE_MATERIAL = false;
         buffers.emplace_back(device, command_pool, queue, family_indices, COLOR, USE_TEXTURE, USE_MATERIAL);

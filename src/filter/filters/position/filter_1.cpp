@@ -37,11 +37,11 @@ namespace ns::filter::filters::position
 namespace
 {
 template <std::size_t N, typename T>
-Vector<2 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
+numerical::Vector<2 * N, T> init_x(const numerical::Vector<N, T>& position, const Init<T>& init)
 {
         ASSERT(is_finite(position));
 
-        Vector<2 * N, T> res;
+        numerical::Vector<2 * N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 2 * i;
@@ -52,7 +52,7 @@ Vector<2 * N, T> init_x(const Vector<N, T>& position, const Init<T>& init)
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance, const Init<T>& init)
+numerical::Matrix<2 * N, 2 * N, T> init_p(const numerical::Vector<N, T>& position_variance, const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
 
@@ -69,7 +69,9 @@ numerical::Matrix<2 * N, 2 * N, T> init_p(const Vector<N, T>& position_variance,
 struct AddX final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const numerical::Vector<N, T>& a,
+                const numerical::Vector<N, T>& b) const
         {
                 return a + b;
         }
@@ -92,13 +94,13 @@ numerical::Matrix<2 * N, 2 * N, T> q(const T dt, const T process_variance)
         const numerical::Matrix<2 * N, N, T> noise_transition =
                 block_diagonal<N>(numerical::Matrix<2, 1, T>{{dt_2}, {dt}});
         const numerical::Matrix<N, N, T> process_covariance =
-                numerical::make_diagonal_matrix(Vector<N, T>(process_variance));
+                numerical::make_diagonal_matrix(numerical::Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
+numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& measurement_variance)
 {
         return numerical::make_diagonal_matrix(measurement_variance);
 }
@@ -106,12 +108,12 @@ numerical::Matrix<N, N, T> position_r(const Vector<N, T>& measurement_variance)
 struct PositionH final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N / 2, T> operator()(const Vector<N, T>& x) const
+        [[nodiscard]] numerical::Vector<N / 2, T> operator()(const numerical::Vector<N, T>& x) const
         {
                 static_assert(N % 2 == 0);
                 // px = px
                 // py = py
-                Vector<N / 2, T> res;
+                numerical::Vector<N / 2, T> res;
                 for (std::size_t i = 0; i < N / 2; ++i)
                 {
                         res[i] = x[2 * i];
@@ -123,7 +125,7 @@ struct PositionH final
 struct PositionHJ final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Matrix<N / 2, N, T> operator()(const Vector<N, T>& /*x*/) const
+        [[nodiscard]] numerical::Matrix<N / 2, N, T> operator()(const numerical::Vector<N, T>& /*x*/) const
         {
                 static_assert(N % 2 == 0);
                 // px = px
@@ -141,7 +143,7 @@ struct PositionHJ final
 struct PositionResidual final
 {
         template <std::size_t N, typename T>
-        Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        numerical::Vector<N, T> operator()(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b) const
         {
                 return a - b;
         }
@@ -158,7 +160,10 @@ class FilterImpl final : public Filter1<N, T>
         const T process_variance_;
         std::optional<core::Ekf<2 * N, T>> filter_;
 
-        void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) override
+        void reset(
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& variance,
+                const Init<T>& init) override
         {
                 filter_.emplace(init_x(position, init), init_p(variance, init));
         }
@@ -170,11 +175,11 @@ class FilterImpl final : public Filter1<N, T>
 
                 const numerical::Matrix<2 * N, 2 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
-                        [&](const Vector<2 * N, T>& x)
+                        [&](const numerical::Vector<2 * N, T>& x)
                         {
                                 return f * x;
                         },
-                        [&](const Vector<2 * N, T>& /*x*/)
+                        [&](const numerical::Vector<2 * N, T>& /*x*/)
                         {
                                 return f;
                         },
@@ -182,8 +187,8 @@ class FilterImpl final : public Filter1<N, T>
         }
 
         [[nodiscard]] Filter1<N, T>::Update update(
-                const Vector<N, T>& position,
-                const Vector<N, T>& variance,
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& variance,
                 const std::optional<T> gate) override
         {
                 ASSERT(filter_);
@@ -202,7 +207,7 @@ class FilterImpl final : public Filter1<N, T>
                         .normalized_innovation_squared = *update.normalized_innovation_squared};
         }
 
-        [[nodiscard]] Vector<N, T> position() const override
+        [[nodiscard]] numerical::Vector<N, T> position() const override
         {
                 ASSERT(filter_);
 
@@ -226,7 +231,7 @@ class FilterImpl final : public Filter1<N, T>
                 return com::compute_speed_p(velocity(), velocity_p());
         }
 
-        [[nodiscard]] Vector<N, T> velocity() const override
+        [[nodiscard]] numerical::Vector<N, T> velocity() const override
         {
                 ASSERT(filter_);
 

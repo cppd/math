@@ -63,12 +63,12 @@ HyperplaneBall<N, T> create_random_hyperplane_ball(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& ball)
+std::array<numerical::Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& ball)
 {
         const T radius = std::sqrt(ball.radius_squared());
 
-        std::array<Vector<N, T>, N - 1> res = numerical::orthogonal_complement_of_unit_vector(ball.normal());
-        for (Vector<N, T>& v : res)
+        std::array<numerical::Vector<N, T>, N - 1> res = numerical::orthogonal_complement_of_unit_vector(ball.normal());
+        for (numerical::Vector<N, T>& v : res)
         {
                 v *= radius;
         }
@@ -84,7 +84,7 @@ std::vector<numerical::Ray<N, T>> create_rays(
         ASSERT(ball.normal().is_unit());
 
         const T distance = 2 * std::sqrt(ball.radius_squared());
-        const std::array<Vector<N, T>, N - 1> vectors = ball_plane_vectors(ball);
+        const std::array<numerical::Vector<N, T>, N - 1> vectors = ball_plane_vectors(ball);
 
         const int ray_count = 3 * point_count;
 
@@ -93,12 +93,13 @@ std::vector<numerical::Ray<N, T>> create_rays(
 
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = ball.center() + sampling::uniform_in_sphere(engine, vectors);
+                const numerical::Vector<N, T> point = ball.center() + sampling::uniform_in_sphere(engine, vectors);
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, ball.normal(), engine);
+                const numerical::Vector<N, T> direction =
+                        random::direction_for_normal(T{0}, T{0.5}, ball.normal(), engine);
                 rays.push_back({ray.org() + distance * ball.normal(), -direction});
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));

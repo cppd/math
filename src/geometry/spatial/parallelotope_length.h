@@ -33,7 +33,7 @@ template <std::size_t N>
 inline constexpr int DIAGONAL_COUNT = 1 << (N - 1);
 
 template <int INDEX, std::size_t N, std::size_t M, typename T, typename F>
-void length(const Vector<N, T>& sum, const std::array<Vector<N, T>, M>& vectors, const F& f)
+void length(const numerical::Vector<N, T>& sum, const std::array<numerical::Vector<N, T>, M>& vectors, const F& f)
 {
         if constexpr (INDEX >= 0)
         {
@@ -48,7 +48,7 @@ void length(const Vector<N, T>& sum, const std::array<Vector<N, T>, M>& vectors,
 }
 
 template <std::size_t N, typename T, std::size_t M>
-T parallelotope_length(const std::array<Vector<N, T>, M>& vectors)
+T parallelotope_length(const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0);
         static_assert(M > 0 && M <= N);
@@ -59,7 +59,7 @@ T parallelotope_length(const std::array<Vector<N, T>, M>& vectors)
 
         unsigned count = 0;
 
-        const auto f = [&max_squared, &count](const Vector<N, T>& d)
+        const auto f = [&max_squared, &count](const numerical::Vector<N, T>& d)
         {
                 ++count;
                 max_squared = std::max(max_squared, d.norm_squared());

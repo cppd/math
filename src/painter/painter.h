@@ -110,7 +110,7 @@ protected:
 public:
         virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
         virtual void thread_free(unsigned thread_number) = 0;
-        virtual void pixel_set(const std::array<int, N>& pixel, const Vector<3, float>& rgb) = 0;
+        virtual void pixel_set(const std::array<int, N>& pixel, const numerical::Vector<3, float>& rgb) = 0;
         [[nodiscard]] virtual Images<N>* images(long long pass_number) = 0;
         virtual void pass_done(long long pass_number) = 0;
 

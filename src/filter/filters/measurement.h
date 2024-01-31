@@ -27,7 +27,7 @@ namespace ns::filter::filters
 template <std::size_t N, typename T>
 struct TrueData final
 {
-        Vector<N, T> position;
+        numerical::Vector<N, T> position;
         T speed;
         T angle;
         T angle_r;
@@ -36,15 +36,15 @@ struct TrueData final
 template <std::size_t N, typename T>
 struct PositionMeasurement final
 {
-        Vector<N, T> value;
-        std::optional<Vector<N, T>> variance;
+        numerical::Vector<N, T> value;
+        std::optional<numerical::Vector<N, T>> variance;
 };
 
 template <std::size_t N, typename T>
 struct Measurement final
 {
-        Vector<N, T> value;
-        Vector<N, T> variance;
+        numerical::Vector<N, T> value;
+        numerical::Vector<N, T> variance;
 };
 
 template <std::size_t N, typename T>

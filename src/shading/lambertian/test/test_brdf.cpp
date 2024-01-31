@@ -51,7 +51,10 @@ public:
         {
         }
 
-        [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] Color f(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
                 {
@@ -60,7 +63,10 @@ public:
                 return lambertian::f(color_, n, l);
         }
 
-        [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
                 {
@@ -69,12 +75,14 @@ public:
                 return lambertian::pdf(n, l);
         }
 
-        [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
+        [[nodiscard]] Sample<N, T, Color> sample_f(
+                PCG& engine,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const override
         {
                 if (dot(n, v) <= 0)
                 {
-                        return {Vector<N, T>(0), 0, Color(0)};
+                        return {numerical::Vector<N, T>(0), 0, Color(0)};
                 }
                 return lambertian::sample_f(engine, color_, n);
         }
@@ -166,8 +174,8 @@ void test(progress::Ratio* const progress)
 template <std::size_t N, typename T, typename Color>
 void test_distribution(
         const TestBRDF<N, T, Color>& brdf,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
         progress::Ratio* const progress)
 {
         constexpr int COUNT_PER_BUCKET = 10'000;
@@ -190,7 +198,7 @@ void test_distribution(
                         }
                         error("No positive PDF found");
                 },
-                [&](const Vector<N, T>& l)
+                [&](const numerical::Vector<N, T>& l)
                 {
                         return brdf.pdf(n, v, l);
                 },

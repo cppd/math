@@ -40,11 +40,11 @@ namespace ns::sampling::testing
 namespace sphere_mesh_implementation
 {
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> vertices_to_array(
-        const std::vector<Vector<N, T>>& vertices,
+std::array<numerical::Vector<N, T>, N> vertices_to_array(
+        const std::vector<numerical::Vector<N, T>>& vertices,
         const std::array<int, N>& indices)
 {
-        std::array<Vector<N, T>, N> res;
+        std::array<numerical::Vector<N, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = vertices[indices[i]];
@@ -55,7 +55,7 @@ std::array<Vector<N, T>, N> vertices_to_array(
 template <std::size_t N, typename T>
 class Sphere final
 {
-        std::vector<Vector<N, T>> vertices_;
+        std::vector<numerical::Vector<N, T>> vertices_;
         std::vector<std::array<int, N>> facets_;
         std::vector<geometry::spatial::HyperplaneSimplex<N, T>> simplices_;
 
@@ -77,7 +77,7 @@ public:
                 return simplices_;
         }
 
-        [[nodiscard]] std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
+        [[nodiscard]] std::array<numerical::Vector<N, T>, N> facet_vertices(const std::size_t index) const
         {
                 ASSERT(index < facets_.size());
                 return vertices_to_array(vertices_, facets_[index]);

@@ -79,7 +79,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 bool IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(
         const unsigned thread_number,
         PCG& engine,
-        std::vector<Vector<N - 1, T>>& sample_points,
+        std::vector<numerical::Vector<N - 1, T>>& sample_points,
         std::vector<std::optional<Color>>& sample_colors)
 {
         MemoryArena::thread_local_instance().clear();
@@ -97,7 +97,7 @@ bool IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(
 
         const ThreadNotifier thread_busy(notifier_, thread_number, *pixel);
 
-        const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
+        const numerical::Vector<N - 1, T> pixel_org = numerical::to_vector<T>(*pixel);
 
         sampler_.generate(engine, &sample_points);
         sample_colors.resize(sample_points.size());
@@ -120,7 +120,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void IntegratorPT<FLAT_SHADING, N, T, Color>::integrate(const unsigned thread_number)
 {
         thread_local PCG engine;
-        thread_local std::vector<Vector<N - 1, T>> sample_points;
+        thread_local std::vector<numerical::Vector<N - 1, T>> sample_points;
         thread_local std::vector<std::optional<Color>> sample_colors;
 
         while (integrate(thread_number, engine, sample_points, sample_colors))

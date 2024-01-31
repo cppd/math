@@ -64,7 +64,8 @@ class SphereDistribution final
 
                 if constexpr (FUNCTION)
                 {
-                        const std::array<Vector<N, T>, N> vertices = sphere_mesh_.facet_vertices(facet_index);
+                        const std::array<numerical::Vector<N, T>, N> vertices =
+                                sphere_mesh_.facet_vertices(facet_index);
                         const double geometry_area = geometry::shapes::sphere_simplex_area(vertices);
                         const double relative_error = std::abs(area - geometry_area) / std::max(geometry_area, area);
 

@@ -39,7 +39,7 @@ namespace ns::gpu::renderer
 namespace
 {
 template <typename T>
-Vector<4, T> clip_plane_to_buffer_vector(const geometry::spatial::Hyperplane<3, double>& clip_plane)
+numerical::Vector<4, T> clip_plane_to_buffer_vector(const geometry::spatial::Hyperplane<3, double>& clip_plane)
 {
         return {clip_plane.n[0], clip_plane.n[1], clip_plane.n[2], clip_plane.d};
 }
@@ -77,9 +77,9 @@ const vulkan::Buffer& VolumeBuffer::buffer_volume() const
 void VolumeBuffer::set_coordinates(
         const numerical::Matrix4d& device_to_texture_matrix,
         const numerical::Matrix4d& texture_to_world_matrix,
-        const Vector4d& third_row_of_texture_to_device,
+        const numerical::Vector4d& third_row_of_texture_to_device,
         const geometry::spatial::Hyperplane<3, double>& clip_plane,
-        const Vector3d& gradient_h,
+        const numerical::Vector3d& gradient_h,
         const numerical::Matrix3d& gradient_to_world_matrix,
         const numerical::Matrix4d& world_to_texture_matrix) const
 {
@@ -117,7 +117,7 @@ void VolumeBuffer::set_parameters(
         const float isosurface_alpha,
         const bool isosurface,
         const float isovalue,
-        const Vector3f& color) const
+        const numerical::Vector3f& color) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);

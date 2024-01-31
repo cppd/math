@@ -34,15 +34,15 @@ namespace ns::view
 {
 namespace
 {
-Vector4d clip_plane_equation(const numerical::Matrix4d& view_matrix, const double position)
+numerical::Vector4d clip_plane_equation(const numerical::Matrix4d& view_matrix, const double position)
 {
         ASSERT(position >= 0 && position <= 1);
 
         // -z = 0 or (0, 0, -1, 0).
         // (0, 0, -1, 0) * view matrix.
-        Vector4d plane = -view_matrix.row(2);
+        numerical::Vector4d plane = -view_matrix.row(2);
 
-        const Vector3d n(plane[0], plane[1], plane[2]);
+        const numerical::Vector3d n(plane[0], plane[1], plane[2]);
         const double d = n.norm_1();
 
         // -z = d * (1 - 2 * position)
@@ -55,7 +55,9 @@ Vector4d clip_plane_equation(const numerical::Matrix4d& view_matrix, const doubl
 }
 }
 
-ClipPlane::ClipPlane(const Camera* const camera, std::function<void(const std::optional<Vector4d>&)> set_clip_plane)
+ClipPlane::ClipPlane(
+        const Camera* const camera,
+        std::function<void(const std::optional<numerical::Vector4d>&)> set_clip_plane)
         : camera_(camera),
           set_clip_plane_(std::move(set_clip_plane))
 {
@@ -104,7 +106,7 @@ void ClipPlane::cmd(const command::ClipPlaneShow& v)
         set_position(v.position);
 }
 
-std::optional<Vector4d> ClipPlane::equation() const
+std::optional<numerical::Vector4d> ClipPlane::equation() const
 {
         if (!view_matrix_)
         {

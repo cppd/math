@@ -46,14 +46,14 @@ public:
         {
         }
 
-        Vector<N, T> generate()
+        numerical::Vector<N, T> generate()
         {
                 return []<std::size_t... I>(const unsigned sample, std::integer_sequence<std::size_t, I...>&&)
                 {
                         static_assert(sizeof...(I) == N);
                         static_assert(N <= std::size(PRIMES));
 
-                        return Vector<N, T>{radical_inverse<PRIMES[I], T>(sample)...};
+                        return numerical::Vector<N, T>{radical_inverse<PRIMES[I], T>(sample)...};
                 }(sample_++, std::make_integer_sequence<std::size_t, N>());
         }
 };

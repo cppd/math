@@ -37,7 +37,7 @@ class DelaunayFacet final
         std::array<int, N> vertices_;
 
         // the vector is directed outside if there is only one Delaunay object
-        Vector<N, double> ortho_;
+        numerical::Vector<N, double> ortho_;
 
         // the second element is negative if there is only one Delaunay object
         std::array<int, 2> delaunay_;
@@ -45,7 +45,7 @@ class DelaunayFacet final
 public:
         DelaunayFacet(
                 const std::array<int, N>& vertices,
-                const Vector<N, double>& ortho,
+                const numerical::Vector<N, double>& ortho,
                 const int delaunay_0,
                 const int delaunay_1 = -1)
                 : vertices_(vertices),
@@ -64,7 +64,7 @@ public:
                 return vertices_;
         }
 
-        [[nodiscard]] const Vector<N, double>& ortho() const
+        [[nodiscard]] const numerical::Vector<N, double>& ortho() const
         {
                 return ortho_;
         }
@@ -80,10 +80,10 @@ template <std::size_t N>
 class DelaunayObject final
 {
         std::array<int, N + 1> vertices_;
-        Vector<N, double> voronoi_vertex_;
+        numerical::Vector<N, double> voronoi_vertex_;
 
 public:
-        DelaunayObject(const std::array<int, N + 1>& vertices, const Vector<N, double>& voronoi_vertex)
+        DelaunayObject(const std::array<int, N + 1>& vertices, const numerical::Vector<N, double>& voronoi_vertex)
                 : vertices_(vertices),
                   voronoi_vertex_(voronoi_vertex)
         {
@@ -94,7 +94,7 @@ public:
                 return vertices_;
         }
 
-        [[nodiscard]] const Vector<N, double>& voronoi_vertex() const
+        [[nodiscard]] const numerical::Vector<N, double>& voronoi_vertex() const
         {
                 return voronoi_vertex_;
         }
@@ -102,7 +102,7 @@ public:
 
 template <std::size_t N>
 [[nodiscard]] std::vector<DelaunayObject<N>> create_delaunay_objects(
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<DelaunaySimplex<N>>& simplices)
 {
         std::vector<DelaunayObject<N>> res;
@@ -153,7 +153,7 @@ template <std::size_t N>
                 ASSERT(ridge_facets.f0().facet());
 
                 const DelaunaySimplex<N>* const simplex_0 = ridge_facets.f0().facet();
-                const Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
+                const numerical::Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
                 const int delaunay_0 = simplex_to_delaunay(simplex_0);
 
                 if (!ridge_facets.f1().facet())

@@ -46,7 +46,7 @@ bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 
         if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
         {
-                for (const Vector<N, T>& v : shape_1.vertices())
+                for (const numerical::Vector<N, T>& v : shape_1.vertices())
                 {
                         if (shape_2.inside(v))
                         {
@@ -57,7 +57,7 @@ bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 
         if constexpr (Shape1::SPACE_DIMENSION == Shape1::SHAPE_DIMENSION)
         {
-                for (const Vector<N, T>& v : shape_2.vertices())
+                for (const numerical::Vector<N, T>& v : shape_2.vertices())
                 {
                         if (shape_1.inside(v))
                         {
@@ -70,7 +70,10 @@ bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 }
 
 template <std::size_t N, typename T, typename Shape>
-bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& direction, const Shape& shape)
+bool line_segment_intersects_shape(
+        const numerical::Vector<N, T>& org,
+        const numerical::Vector<N, T>& direction,
+        const Shape& shape)
 {
         static_assert(N == Shape::SPACE_DIMENSION);
         static_assert(std::is_same_v<T, typename Shape::DataType>);
@@ -86,7 +89,7 @@ bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = Shape1::DataType;
 
-        for (const std::array<Vector<N, T>, 2>& edge : shape_1.edges())
+        for (const std::array<numerical::Vector<N, T>, 2>& edge : shape_1.edges())
         {
                 if (line_segment_intersects_shape(edge[0], edge[1], shape_2))
                 {
@@ -94,7 +97,7 @@ bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
                 }
         }
 
-        for (const std::array<Vector<N, T>, 2>& edge : shape_2.edges())
+        for (const std::array<numerical::Vector<N, T>, 2>& edge : shape_2.edges())
         {
                 if (line_segment_intersects_shape(edge[0], edge[1], shape_1))
                 {
@@ -106,9 +109,11 @@ bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
 }
 
 template <std::size_t N, std::size_t V, typename T>
-bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
+bool all_vertices_are_on_negative_side(
+        const std::array<numerical::Vector<N, T>, V>& vertices,
+        const Constraint<N, T>& c)
 {
-        for (const Vector<N, T>& v : vertices)
+        for (const numerical::Vector<N, T>& v : vertices)
         {
                 if (dot(v, c.a) + c.b >= 0)
                 {
@@ -119,11 +124,13 @@ bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertic
 }
 
 template <std::size_t N, std::size_t V, typename T>
-bool all_vertices_are_only_on_one_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
+bool all_vertices_are_only_on_one_side(
+        const std::array<numerical::Vector<N, T>, V>& vertices,
+        const Constraint<N, T>& c)
 {
         bool non_positive = false;
         bool non_negative = false;
-        for (const Vector<N, T>& v : vertices)
+        for (const numerical::Vector<N, T>& v : vertices)
         {
                 const T p = dot(v, c.a) + c.b;
                 non_positive = non_positive || p <= 0;
@@ -252,9 +259,9 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 //
 //         constexpr std::size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
 //
-//         const Vector<N, T> min = ::ns::min(shape_1.min(), shape_2.min());
+//         const numerical::Vector<N, T> min = ::ns::min(shape_1.min(), shape_2.min());
 //
-//         std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
+//         std::array<numerical::Vector<N, T>, CONSTRAINT_COUNT> a;
 //         std::array<T, CONSTRAINT_COUNT> b;
 //
 //         // make non-negative numbers
@@ -298,7 +305,7 @@ bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 //
 //                 const Constraint<N, T>& c = constraint_eq(shape_1, shape_2);
 //
-//                 const Vector<N, T> a_v = c.a;
+//                 const numerical::Vector<N, T> a_v = c.a;
 //                 const T b_v = dot(c.a, min) + c.b;
 //
 //                 a[i] = a_v;
@@ -354,13 +361,13 @@ class ShapeOverlap final
         const Shape* shape_;
         Vertices vertices_;
         Constraints constraints_;
-        // Vector<N, T> min_;
+        // numerical::Vector<N, T> min_;
 
         // template <std::size_t ArraySize, typename T, std::size_t N>
-        // static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
+        // static numerical::Vector<N, T> find_min_vector(const std::array<numerical::Vector<N, T>, ArraySize>& vectors)
         // {
         //         static_assert(ArraySize > 0);
-        //         Vector<N, T> min = vectors[0];
+        //         numerical::Vector<N, T> min = vectors[0];
         //         for (std::size_t i = 1; i < ArraySize; ++i)
         //         {
         //                 min = ::ns::min(vectors[i], min);
@@ -381,7 +388,7 @@ public:
                 // min_ = find_min_vector(vertices_);
         }
 
-        [[nodiscard]] bool inside(const Vector<N, T>& p) const
+        [[nodiscard]] bool inside(const numerical::Vector<N, T>& p) const
         {
                 return shape_->inside(p);
         }
@@ -396,7 +403,7 @@ public:
                 return constraints_;
         }
 
-        // [[nodiscard]] const Vector<N, T>& min() const
+        // [[nodiscard]] const numerical::Vector<N, T>& min() const
         // {
         //         return min_;
         // }
@@ -428,7 +435,7 @@ public:
         {
         }
 
-        [[nodiscard]] bool inside(const Vector<N, T>& p) const
+        [[nodiscard]] bool inside(const numerical::Vector<N, T>& p) const
         {
                 return shape_->inside(p);
         }

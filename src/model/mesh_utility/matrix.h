@@ -30,12 +30,12 @@ template <std::size_t N>
 numerical::Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Mesh<N>& mesh,
         const double size,
-        const Vector<N, double>& position)
+        const numerical::Vector<N, double>& position)
 {
         const numerical::Matrix<N + 1, N + 1, double> t1 =
                 numerical::transform::translate(to_vector<double>(-mesh.center));
         const numerical::Matrix<N + 1, N + 1, double> t2 =
-                numerical::transform::scale(Vector<N, double>(size / mesh.length));
+                numerical::transform::scale(numerical::Vector<N, double>(size / mesh.length));
         const numerical::Matrix<N + 1, N + 1, double> t3 = numerical::transform::translate(position);
         return t3 * t2 * t1;
 }

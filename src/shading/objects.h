@@ -43,7 +43,7 @@ struct Colors final
 template <std::size_t N, typename T, typename Color>
 struct Sample final
 {
-        Vector<N, T> l;
+        numerical::Vector<N, T> l;
         T pdf;
         Color brdf;
 
@@ -51,7 +51,7 @@ struct Sample final
         {
         }
 
-        constexpr Sample(const Vector<N, T>& l, const T pdf, const Color& brdf)
+        constexpr Sample(const numerical::Vector<N, T>& l, const T pdf, const Color& brdf)
                 : l(l),
                   pdf(pdf),
                   brdf(brdf)

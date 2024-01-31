@@ -34,13 +34,13 @@ namespace
 {
 constexpr double GRADIENT_H_IN_PIXELS = 0.5;
 
-Vector3d world_volume_size(const numerical::Matrix4d& texture_to_world)
+numerical::Vector3d world_volume_size(const numerical::Matrix4d& texture_to_world)
 {
         // Example for x: texture_to_world * (1, 0, 0, 1) -> (x, y, z) -> length
-        Vector3d size;
+        numerical::Vector3d size;
         for (unsigned i = 0; i < 3; ++i)
         {
-                const Vector3d v(texture_to_world[0, i], texture_to_world[1, i], texture_to_world[2, i]);
+                const numerical::Vector3d v(texture_to_world[0, i], texture_to_world[1, i], texture_to_world[2, i]);
                 size[i] = v.norm();
         }
         return size;
@@ -48,21 +48,21 @@ Vector3d world_volume_size(const numerical::Matrix4d& texture_to_world)
 }
 
 geometry::spatial::Hyperplane<3, double> volume_clip_plane(
-        const Vector4d& world_clip_plane_equation,
+        const numerical::Vector4d& world_clip_plane_equation,
         const numerical::Matrix4d& model)
 {
         return geometry::spatial::clip_plane_equation_to_clip_plane(world_clip_plane_equation * model);
 }
 
 // in texture coordinates
-Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vulkan::Image& image)
+numerical::Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vulkan::Image& image)
 {
         ASSERT(image.type() == VK_IMAGE_TYPE_3D);
 
-        const Vector3d texture_pixel_size(
+        const numerical::Vector3d texture_pixel_size(
                 1.0 / image.extent().width, 1.0 / image.extent().height, 1.0 / image.extent().depth);
 
-        const Vector3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world));
+        const numerical::Vector3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world));
 
         double min_world_pixel_size = world_pixel_size[0];
         for (unsigned i = 1; i < 3; ++i)
@@ -72,7 +72,7 @@ Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vu
 
         min_world_pixel_size *= GRADIENT_H_IN_PIXELS;
 
-        Vector3d h;
+        numerical::Vector3d h;
         for (unsigned i = 0; i < 3; ++i)
         {
                 h[i] = (min_world_pixel_size / world_pixel_size[i]) * texture_pixel_size[i];

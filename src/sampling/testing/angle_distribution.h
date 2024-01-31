@@ -78,9 +78,9 @@ class AngleDistribution final
                 }
         }
 
-        static int sample_bucket(const Vector<N, T>& normal, const Vector<N, T>& random_vector)
+        static int sample_bucket(const numerical::Vector<N, T>& normal, const numerical::Vector<N, T>& random_vector)
         {
-                const Vector<N, T> v = random_vector.normalized();
+                const numerical::Vector<N, T> v = random_vector.normalized();
                 const T cosine = std::clamp<T>(dot(v, normal), -1, 1);
                 const T angle = std::acos(cosine);
                 const int bucket = angle * BUCKETS_PER_RADIAN;
@@ -130,7 +130,7 @@ class AngleDistribution final
         template <typename RandomVector>
         static std::vector<long long> compute_buckets(
                 const long long count,
-                const Vector<N, T>& normal,
+                const numerical::Vector<N, T>& normal,
                 const RandomVector& random_vector,
                 progress::Ratio* const progress)
         {
@@ -192,7 +192,7 @@ public:
         template <typename RandomVector>
         void compute_distribution(
                 const long long count,
-                const Vector<N, T>& normal,
+                const numerical::Vector<N, T>& normal,
                 const RandomVector& random_vector,
                 progress::Ratio* const progress)
         {

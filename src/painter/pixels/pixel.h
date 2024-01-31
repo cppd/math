@@ -48,7 +48,7 @@ public:
                 background_samples_ = samples::merge_samples(background_samples_, samples);
         }
 
-        [[nodiscard]] Vector<3, float> color_rgb(const Background<Color>& background) const
+        [[nodiscard]] numerical::Vector<3, float> color_rgb(const Background<Color>& background) const
         {
                 const auto color = samples::merge_color(color_samples_, background_samples_, background);
                 if (!color)
@@ -56,7 +56,7 @@ public:
                         return background.color_rgb32();
                 }
 
-                const Vector<3, float> rgb = color->rgb32();
+                const numerical::Vector<3, float> rgb = color->rgb32();
                 if (!is_finite(rgb))
                 {
                         LOG("Not finite RGB color " + to_string(rgb));
@@ -64,16 +64,16 @@ public:
                 return rgb;
         }
 
-        [[nodiscard]] Vector<4, float> color_rgba(const Background<Color>& background) const
+        [[nodiscard]] numerical::Vector<4, float> color_rgba(const Background<Color>& background) const
         {
                 const auto color_alpha = samples::merge_color_alpha(color_samples_, background_samples_, background);
                 if (!color_alpha)
                 {
-                        return Vector<4, float>(0);
+                        return numerical::Vector<4, float>(0);
                 }
 
-                const Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
-                Vector<4, float> rgba;
+                const numerical::Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                numerical::Vector<4, float> rgba;
                 rgba[0] = rgb[0];
                 rgba[1] = rgb[1];
                 rgba[2] = rgb[2];

@@ -60,7 +60,7 @@ std::unordered_map<int, int> vertex_index_map(const std::vector<std::array<int, 
 
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
         if (lines.empty())
@@ -101,7 +101,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_lines(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
         const Clock::time_point start_time = Clock::now();
@@ -115,7 +115,7 @@ std::unique_ptr<Mesh<N>> create_mesh_for_lines(
 
 #define TEMPLATE(N)                                                \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_lines( \
-                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, 2>>&);
+                const std::vector<numerical::Vector<(N), float>>&, const std::vector<std::array<int, 2>>&);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

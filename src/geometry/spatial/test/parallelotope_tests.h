@@ -59,7 +59,7 @@ inline void print_message(const std::string& msg)
 }
 
 template <std::size_t N, std::size_t COUNT, typename T>
-bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, COUNT>& c)
+bool point_is_in_feasible_region(const numerical::Vector<N, T>& point, const std::array<Constraint<N, T>, COUNT>& c)
 {
         for (std::size_t i = 0; i < COUNT; ++i)
         {
@@ -87,7 +87,7 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_external_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (p.inside(point))
@@ -100,7 +100,7 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
                 }
         }
 
-        for (const Vector<N, T>& origin :
+        for (const numerical::Vector<N, T>& origin :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (!p.inside(origin))
@@ -122,7 +122,7 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
 
         const T length = p.length();
 
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
@@ -177,7 +177,7 @@ void test_points(const int point_count)
         LOG("ParallelotopeAA");
 
         {
-                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const numerical::Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
                 const std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 const ParallelotopeAA<N, T> p(org, edges);
 
@@ -191,8 +191,9 @@ void test_points(const int point_count)
         LOG("Parallelotope");
 
         {
-                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
-                const std::array<Vector<N, T>, N> edges = random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                const numerical::Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const std::array<numerical::Vector<N, T>, N> edges =
+                        random::vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 const Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -205,7 +206,7 @@ void test_points(const int point_count)
         LOG("Parallelotope comparison");
 
         {
-                const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+                const numerical::Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
                 const std::array<T, N> edges = random::aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
                 const ParallelotopeAA<N, T> p_aa(org, edges);
@@ -251,7 +252,7 @@ void test_algorithms()
         const std::string name = "Test parallelotope algorithms in " + space_name(N);
 
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
-        constexpr Vector<N, T> ORG(0);
+        constexpr numerical::Vector<N, T> ORG(0);
 
         LOG("------------------------------");
         LOG(name);

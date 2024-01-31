@@ -53,9 +53,9 @@ template <std::size_t N, typename T>
 struct Simplex final
 {
         HyperplaneSimplex<N, T> simplex;
-        std::array<Vector<N, T>, N> vertices;
+        std::array<numerical::Vector<N, T>, N> vertices;
 
-        explicit Simplex(const std::array<Vector<N, T>, N>& vertices)
+        explicit Simplex(const std::array<numerical::Vector<N, T>, N>& vertices)
                 : simplex(vertices),
                   vertices(vertices)
         {
@@ -69,10 +69,11 @@ Simplex<N, T> create_random_simplex(RandomEngine& engine)
         constexpr T MIN_LENGTH = 0.1;
         constexpr T MAX_LENGTH = 10;
 
-        const std::array<Vector<N, T>, N - 1> vectors = random::vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-        const Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
+        const std::array<numerical::Vector<N, T>, N - 1> vectors =
+                random::vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+        const numerical::Vector<N, T> org = random::point<N, T>(ORG_INTERVAL, engine);
 
-        std::array<Vector<N, T>, N> vertices;
+        std::array<numerical::Vector<N, T>, N> vertices;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 vertices[i] = org + vectors[i];
@@ -99,7 +100,7 @@ T max_vertex_distance(const Simplex<N, T>& simplex)
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<numerical::Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, RandomEngine& engine)
 {
-        const Vector<N, T>& normal = simplex.simplex.normal();
+        const numerical::Vector<N, T>& normal = simplex.simplex.normal();
 
         const T distance = max_vertex_distance(simplex);
 
@@ -110,12 +111,12 @@ std::vector<numerical::Ray<N, T>> create_rays(const Simplex<N, T>& simplex, cons
 
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = sampling::uniform_in_simplex(engine, simplex.vertices);
+                const numerical::Vector<N, T> point = sampling::uniform_in_simplex(engine, simplex.vertices);
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, normal, engine);
+                const numerical::Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, normal, engine);
                 rays.push_back({ray.org() + distance * normal, -direction});
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));

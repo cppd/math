@@ -48,11 +48,11 @@ template <bool GGX_ONLY, std::size_t N, typename T, typename Color>
 Color f(const T roughness,
         const Color& f0,
         const Color& rho_ss,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
-        const Vector<N, T>& l)
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& l)
 {
-        const Vector<N, T> h = (l + v).normalized();
+        const numerical::Vector<N, T> h = (l + v).normalized();
 
         const T n_l = dot(n, l);
         const T h_l = dot(h, l);
@@ -74,13 +74,13 @@ Color f(const T roughness,
 }
 
 // template <std::size_t N, typename T, typename RandomEngine>
-// std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& engine, const Vector<N, T>& n)
+// std::tuple<numerical::Vector<N, T>, T> sample_cosine(RandomEngine& engine, const numerical::Vector<N, T>& n)
 // {
-//         const Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
+//         const numerical::Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
 //         ASSERT(l.is_unit());
 //         if (dot(n, l) <= 0)
 //         {
-//                 return {Vector<N, T>(0), 0};
+//                 return {numerical::Vector<N, T>(0), 0};
 //         }
 //         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
 //         return {l, pdf};
@@ -89,10 +89,10 @@ Color f(const T roughness,
 template <bool GGX_ONLY, std::size_t N, typename T>
 T pdf_ggx_cosine(
         const T alpha,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
-        const Vector<N, T>& l,
-        const Vector<N, T>& h)
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& l,
+        const numerical::Vector<N, T>& h)
 {
         const T pdf_ggx = ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
@@ -107,11 +107,11 @@ T pdf_ggx_cosine(
 }
 
 template <bool GGX_ONLY, std::size_t N, typename T, typename RandomEngine>
-std::tuple<Vector<N, T>, T> sample_ggx_cosine(
+std::tuple<numerical::Vector<N, T>, T> sample_ggx_cosine(
         RandomEngine& engine,
         const T roughness,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v)
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v)
 {
         // 14.1.2 FresnelBlend
         // Sample from both a cosine-weighted distribution
@@ -120,8 +120,8 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 
         const T alpha = square(roughness);
 
-        Vector<N, T> l;
-        Vector<N, T> h;
+        numerical::Vector<N, T> l;
+        numerical::Vector<N, T> h;
         if (GGX_ONLY || std::bernoulli_distribution(0.5)(engine))
         {
                 std::tie(h, l) = ggx_visible_normals_h_l(engine, n, v, alpha);
@@ -146,9 +146,9 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color>
 Color f(const T roughness,
         const Colors<Color>& colors,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
-        const Vector<N, T>& l)
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& l)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
@@ -171,7 +171,10 @@ Color f(const T roughness,
 }
 
 template <bool GGX_ONLY = false, std::size_t N, typename T>
-T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
+T pdf(const T roughness,
+      const numerical::Vector<N, T>& n,
+      const numerical::Vector<N, T>& v,
+      const numerical::Vector<N, T>& l)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
@@ -195,8 +198,8 @@ Sample<N, T, Color> sample_f(
         RandomEngine& engine,
         const T roughness,
         const Colors<Color>& colors,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v)
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
@@ -206,14 +209,14 @@ Sample<N, T, Color> sample_f(
 
         if (dot(n, v) <= 0)
         {
-                return {Vector<N, T>(0), 0, Color(0)};
+                return {numerical::Vector<N, T>(0), 0, Color(0)};
         }
 
         const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(engine, roughness, n, v);
 
         if (pdf <= 0)
         {
-                return {Vector<N, T>(0), 0, Color(0)};
+                return {numerical::Vector<N, T>(0), 0, Color(0)};
         }
 
         ASSERT(l.is_unit());

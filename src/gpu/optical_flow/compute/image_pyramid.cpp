@@ -37,19 +37,23 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-Vector2i grayscale_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
+numerical::Vector2i grayscale_groups(
+        const numerical::Vector2i group_size,
+        const std::vector<numerical::Vector2i>& sizes)
 {
         return group_count(sizes[0], group_size);
 }
 
-std::vector<Vector2i> downsample_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
+std::vector<numerical::Vector2i> downsample_groups(
+        const numerical::Vector2i group_size,
+        const std::vector<numerical::Vector2i>& sizes)
 {
         if (sizes.size() <= 1)
         {
                 return {};
         }
 
-        std::vector<Vector2i> res;
+        std::vector<numerical::Vector2i> res;
         res.reserve(sizes.size() - 1);
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
@@ -89,7 +93,7 @@ void ImagePyramid::create_buffers(
         const VkSampler sampler,
         const vulkan::ImageWithMemory& input,
         const numerical::Region<2, int>& rectangle,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
 {
         grayscale_groups_ = grayscale_groups(GROUP_SIZE, sizes);

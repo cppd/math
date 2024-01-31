@@ -27,7 +27,7 @@ namespace ns::geometry::reconstruction
 {
 template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& interior_vertices,
         std::vector<bool>* cocone_facets);

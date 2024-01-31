@@ -104,7 +104,7 @@ ClearBuffer::ClearBuffer(const VkDevice device, const VkCommandPool graphics_com
 void ClearBuffer::create_buffers(
         const RenderBuffers* const render_buffers,
         const vulkan::ImageWithMemory* const image,
-        const Vector3f& clear_color)
+        const numerical::Vector3f& clear_color)
 {
         render_buffers_ = render_buffers;
         image_ = image;
@@ -125,7 +125,7 @@ VkSemaphore ClearBuffer::clear(const vulkan::Queue& graphics_queue, const unsign
         return clear_semaphore_;
 }
 
-void ClearBuffer::set_color(const Vector3f& clear_color)
+void ClearBuffer::set_color(const numerical::Vector3f& clear_color)
 {
         if (!render_buffers_)
         {

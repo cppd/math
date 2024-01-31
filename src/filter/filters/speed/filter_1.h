@@ -34,13 +34,13 @@ public:
         virtual ~Filter1() = default;
 
         virtual void reset(
-                const Vector<N, T>& position,
-                const Vector<N, T>& position_variance,
-                const Vector<N, T>& velocity,
-                const Vector<N, T>& velocity_variance) = 0;
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& position_variance,
+                const numerical::Vector<N, T>& velocity,
+                const numerical::Vector<N, T>& velocity_variance) = 0;
 
         virtual void reset(
-                const Vector<2 * N, T>& position_velocity,
+                const numerical::Vector<2 * N, T>& position_velocity,
                 const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p) = 0;
 
         virtual void predict(T dt) = 0;
@@ -54,7 +54,7 @@ public:
 
         virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;

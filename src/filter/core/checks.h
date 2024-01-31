@@ -41,7 +41,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-void check_x_p(const char* const name, const Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
+void check_x_p(const char* const name, const numerical::Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
 {
         if (!positive_definite(p))
         {

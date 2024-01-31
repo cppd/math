@@ -25,18 +25,18 @@ namespace ns::gpu::renderer
 struct ViewportTransform final
 {
         // device_coordinates = (framebuffer_coordinates - center) * factor
-        Vector2d center;
-        Vector2d factor;
+        numerical::Vector2d center;
+        numerical::Vector2d factor;
 };
 
 inline ViewportTransform viewport_transform(const numerical::Region<2, int>& viewport)
 {
-        const Vector2d offset = to_vector<double>(viewport.from());
-        const Vector2d extent = to_vector<double>(viewport.extent());
+        const numerical::Vector2d offset = to_vector<double>(viewport.from());
+        const numerical::Vector2d extent = to_vector<double>(viewport.extent());
 
         ViewportTransform res;
         res.center = offset + 0.5 * extent;
-        res.factor = Vector2d(2.0 / extent[0], 2.0 / extent[1]);
+        res.factor = numerical::Vector2d(2.0 / extent[0], 2.0 / extent[1]);
         return res;
 }
 }

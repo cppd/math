@@ -66,11 +66,11 @@ template <std::size_t N, typename T, typename Color>
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
-        const Vector<N, T>& n = normals.shading;
+        const numerical::Vector<N, T>& n = normals.shading;
 
         const LightSourceArriveSample sample = light.arrive_sample(engine, surface.point(), n);
         if (!sample.usable())
@@ -78,7 +78,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const Vector<N, T>& l = sample.l;
+        const numerical::Vector<N, T>& l = sample.l;
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
@@ -108,7 +108,7 @@ template <std::size_t N, typename T, typename Color>
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
@@ -117,7 +117,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const Vector<N, T>& n = normals.shading;
+        const numerical::Vector<N, T>& n = normals.shading;
 
         const SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
         if (!sample.usable())
@@ -125,7 +125,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const Vector<N, T>& l = sample.l;
+        const numerical::Vector<N, T>& l = sample.l;
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
@@ -159,7 +159,7 @@ template <std::size_t N, typename T, typename Color>
 std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
@@ -172,9 +172,9 @@ std::optional<Color> direct_lighting(
         return res;
 }
 
-#define TEMPLATE(N, T, C)                                                                              \
-        template std::optional<C> direct_lighting(                                                     \
-                const Scene<(N), T, C>&, const SurfaceIntersection<(N), T, C>&, const Vector<(N), T>&, \
+#define TEMPLATE(N, T, C)                                                                                         \
+        template std::optional<C> direct_lighting(                                                                \
+                const Scene<(N), T, C>&, const SurfaceIntersection<(N), T, C>&, const numerical::Vector<(N), T>&, \
                 const Normals<(N), T>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

@@ -46,14 +46,14 @@ namespace spherical_mesh_implementation
 inline constexpr bool WRITE_LOG = false;
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_center(const T radius, RandomEngine& engine)
+numerical::Vector<N, T> random_center(const T radius, RandomEngine& engine)
 {
         static_assert(N >= 3);
 
         const T v = radius / std::sqrt(static_cast<T>(N));
 
         std::bernoulli_distribution bd(0.5);
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = bd(engine) ? v : -v;
@@ -68,12 +68,12 @@ std::unique_ptr<const model::mesh::Mesh<N>> create_spherical_mesh(
         RandomEngine& engine,
         progress::Ratio* const progress)
 {
-        const Vector<N, float> center = random_center<N>(radius, engine);
+        const numerical::Vector<N, float> center = random_center<N>(radius, engine);
 
-        const std::vector<Vector<N, float>> points = [&]
+        const std::vector<numerical::Vector<N, float>> points = [&]
         {
-                std::vector<Vector<N, float>> res(point_count);
-                for (Vector<N, float>& p : res)
+                std::vector<numerical::Vector<N, float>> res(point_count);
+                for (numerical::Vector<N, float>& p : res)
                 {
                         p = radius * sampling::uniform_on_sphere<N, float>(engine) + center;
                 }
@@ -160,7 +160,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         res.surface = 0;
         for (const typename model::mesh::Mesh<N>::Facet& facet : mesh->facets)
         {
-                std::array<Vector<N, T>, N> vertices;
+                std::array<numerical::Vector<N, T>, N> vertices;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         vertices[i] = to_vector<T>(mesh->vertices[facet.vertices[i]]);
@@ -173,7 +173,7 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
 
-        static constexpr std::optional<Vector<N + 1, T>> CLIP_PLANE_EQUATION;
+        static constexpr std::optional<numerical::Vector<N + 1, T>> CLIP_PLANE_EQUATION;
 
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh =
                 create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, impl::WRITE_LOG, progress);
@@ -194,14 +194,14 @@ std::vector<numerical::Ray<N, T>> create_spherical_mesh_center_rays(
         const int ray_count,
         RandomEngine& engine)
 {
-        const Vector<N, T> center = bb.center();
+        const numerical::Vector<N, T> center = bb.center();
         const T radius = bb.diagonal().norm() / 2;
 
         std::vector<numerical::Ray<N, T>> rays;
         rays.resize(ray_count);
         for (numerical::Ray<N, T>& ray : rays)
         {
-                const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
+                const numerical::Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                 ray = {radius * v + center, -v};
         }
         return rays;
@@ -213,12 +213,12 @@ std::vector<numerical::Ray<N, T>> create_random_intersections_rays(
         const int ray_count,
         RandomEngine& engine)
 {
-        const Vector<N, T> diagonal = bb.diagonal();
+        const numerical::Vector<N, T> diagonal = bb.diagonal();
 
         std::uniform_real_distribution<T> urd(-1, 2);
         const auto random_cover_point = [&]()
         {
-                Vector<N, T> v = bb.min();
+                numerical::Vector<N, T> v = bb.min();
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         v[i] += diagonal[i] * urd(engine);

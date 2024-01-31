@@ -65,12 +65,12 @@ class SurfaceImpl final : public Surface<N, T, Color>
         const mesh::Facet<N, T>* facet_;
 
         [[nodiscard]] shading::Colors<Color> surface_color(
-                const Vector<N, T>& point,
+                const numerical::Vector<N, T>& point,
                 const mesh::Material<T, Color>& material) const
         {
                 if (facet_->has_texcoord() && material.image() >= 0)
                 {
-                        const Vector<3, float> rgb =
+                        const numerical::Vector<3, float> rgb =
                                 mesh_->images[material.image()].color(facet_->texcoord(mesh_->texcoords, point));
                         const Color color = Color(rgb[0], rgb[1], rgb[2]);
                         return shading::ggx::compute_metalness(color, material.metalness());
@@ -80,17 +80,18 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         //
 
-        [[nodiscard]] Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
+        [[nodiscard]] numerical::Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
         {
                 return facet_->project(ray.point(distance));
         }
 
-        [[nodiscard]] Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] numerical::Vector<N, T> geometric_normal(const numerical::Vector<N, T>& /*point*/) const override
         {
                 return facet_->geometric_normal();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> shading_normal(
+                const numerical::Vector<N, T>& point) const override
         {
                 return facet_->shading_normal(mesh_->normals, point);
         }
@@ -101,10 +102,10 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
         [[nodiscard]] Color brdf(
-                const Vector<N, T>& point,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -114,10 +115,10 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
         [[nodiscard]] T pdf(
-                const Vector<N, T>& /*point*/,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override
+                const numerical::Vector<N, T>& /*point*/,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -128,9 +129,9 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         [[nodiscard]] SurfaceSample<N, T, Color> sample(
                 PCG& engine,
-                const Vector<N, T>& point,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -146,12 +147,12 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return s;
         }
 
-        [[nodiscard]] bool is_specular(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] bool is_specular(const numerical::Vector<N, T>& /*point*/) const override
         {
                 return false;
         }
 
-        [[nodiscard]] T alpha(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] T alpha(const numerical::Vector<N, T>& /*point*/) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -296,7 +297,7 @@ class Impl final : public Shape<N, T, Color>
 
 public:
         Impl(const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-             const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+             const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
              const bool write_log,
              progress::Ratio* const progress)
                 : Impl(mesh::create_mesh_data<N, T, Color>(mesh_objects, clip_plane_equation, write_log),
@@ -310,17 +311,17 @@ public:
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const bool write_log,
         progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N, T, Color>>(mesh_objects, clip_plane_equation, write_log, progress);
 }
 
-#define TEMPLATE(N, T, C)                                                                                          \
-        template std::unique_ptr<Shape<(N), T, C>> create_mesh(                                                    \
-                const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<(N) + 1, T>>&, \
-                bool, progress::Ratio*);
+#define TEMPLATE(N, T, C)                                                \
+        template std::unique_ptr<Shape<(N), T, C>> create_mesh(          \
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, \
+                const std::optional<numerical::Vector<(N) + 1, T>>&, bool, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

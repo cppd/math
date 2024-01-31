@@ -118,7 +118,7 @@ void Mouse::cmd(const command::MouseMove& v)
         if (left.pressed && rectangle_.is_inside(left.pressed_x, left.pressed_y)
             && (left.delta_x != 0 || left.delta_y != 0))
         {
-                camera_->move(Vector2d(-left.delta_x, left.delta_y));
+                camera_->move(numerical::Vector2d(-left.delta_x, left.delta_y));
         }
 }
 

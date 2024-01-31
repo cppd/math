@@ -31,10 +31,10 @@ template <std::size_t N>
 class ConvexHullSimplex final
 {
         std::array<int, N> indices_;
-        Vector<N, double> ortho_;
+        numerical::Vector<N, double> ortho_;
 
 public:
-        ConvexHullSimplex(const std::array<int, N>& indices, const Vector<N, double>& ortho)
+        ConvexHullSimplex(const std::array<int, N>& indices, const numerical::Vector<N, double>& ortho)
                 : indices_(indices),
                   ortho_(ortho)
         {
@@ -45,7 +45,7 @@ public:
                 return indices_;
         }
 
-        [[nodiscard]] const Vector<N, double>& ortho() const
+        [[nodiscard]] const numerical::Vector<N, double>& ortho() const
         {
                 return ortho_;
         }
@@ -55,10 +55,12 @@ template <std::size_t N>
 class DelaunaySimplex final
 {
         std::array<int, N + 1> indices_;
-        std::array<Vector<N, double>, N + 1> orthos_;
+        std::array<numerical::Vector<N, double>, N + 1> orthos_;
 
 public:
-        DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<Vector<N, double>, N + 1>& orthos)
+        DelaunaySimplex(
+                const std::array<int, N + 1>& indices,
+                const std::array<numerical::Vector<N, double>, N + 1>& orthos)
                 : indices_(indices),
                   orthos_(orthos)
         {
@@ -69,7 +71,7 @@ public:
                 return indices_;
         }
 
-        [[nodiscard]] const Vector<N, double>& ortho(const unsigned index) const
+        [[nodiscard]] const numerical::Vector<N, double>& ortho(const unsigned index) const
         {
                 ASSERT(index < orthos_.size());
                 return orthos_[index];
@@ -79,19 +81,19 @@ public:
 template <std::size_t N>
 struct DelaunayData final
 {
-        std::vector<Vector<N, double>> points;
+        std::vector<numerical::Vector<N, double>> points;
         std::vector<DelaunaySimplex<N>> simplices;
 };
 
 template <std::size_t N>
 DelaunayData<N> compute_delaunay(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* progress,
         bool write_log);
 
 template <std::size_t N>
 std::vector<ConvexHullSimplex<N>> compute_convex_hull(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* progress,
         bool write_log);
 }

@@ -67,8 +67,8 @@ public:
                 std::type_identity_t<T> roughness,
                 const Color& color,
                 std::type_identity_t<T> alpha,
-                const Vector<N, T>& org,
-                const std::array<Vector<N, T>, N>& vectors);
+                const numerical::Vector<N, T>& org,
+                const std::array<numerical::Vector<N, T>, N>& vectors);
 
         [[nodiscard]] const geometry::spatial::Parallelotope<N, T>& parallelotope() const;
 

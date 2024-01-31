@@ -51,7 +51,7 @@ constexpr double LAST_AXIS_VALUE = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
 
 template <std::size_t N, typename T>
-constexpr T last_axis(const Vector<N, T>& v)
+constexpr T last_axis(const numerical::Vector<N, T>& v)
 {
         return v[N - 1];
 }
@@ -59,15 +59,15 @@ constexpr T last_axis(const Vector<N, T>& v)
 template <std::size_t N>
 class DiscretePoints final
 {
-        std::vector<Vector<N, float>> points_;
-        std::unordered_set<Vector<N, int>> integer_points_;
+        std::vector<numerical::Vector<N, float>> points_;
+        std::unordered_set<numerical::Vector<N, int>> integer_points_;
 
         template <typename T>
-        static Vector<N, int> to_integer(const Vector<N, T>& v, const int factor)
+        static numerical::Vector<N, int> to_integer(const numerical::Vector<N, T>& v, const int factor)
         {
                 static_assert(std::is_floating_point_v<T>);
 
-                Vector<N, int> res;
+                numerical::Vector<N, int> res;
                 for (unsigned i = 0; i < N; ++i)
                 {
                         res[i] = std::lround(v[i] * factor);
@@ -89,9 +89,9 @@ public:
         }
 
         template <typename T>
-        void add(const Vector<N, T>& p)
+        void add(const numerical::Vector<N, T>& p)
         {
-                const Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
+                const numerical::Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
                 if (!integer_points_.contains(integer_point))
                 {
                         integer_points_.insert(integer_point);
@@ -104,7 +104,7 @@ public:
                 return points_.size();
         }
 
-        std::vector<Vector<N, float>> release()
+        std::vector<numerical::Vector<N, float>> release()
         {
                 ASSERT(integer_points_.size() == points_.size());
                 ASSERT(points_are_unique(points_));
@@ -116,13 +116,13 @@ public:
 };
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+numerical::Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {
                 return sampling::uniform_on_sphere<N, T>(engine);
         }
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         do
         {
                 v = sampling::uniform_on_sphere<N, T>(engine);
@@ -130,7 +130,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
         return v;
 }
 
-// std::vector<Vector<2, float>> generate_points_semicircle(const unsigned point_count)
+// std::vector<numerical::Vector<2, float>> generate_points_semicircle(const unsigned point_count)
 // {
 //         if (point_count < 3)
 //         {
@@ -141,7 +141,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 //
 //         for (unsigned i = 0; i < point_count; ++i)
 //         {
-//                 points.add(Vector<2, double>(
+//                 points.add(numerical::Vector<2, double>(
 //                         -std::cos(PI<double> * i / (point_count - 1)), std::sin(PI<double> * i / (point_count -
 //                         1))));
 //         }
@@ -156,7 +156,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 // }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_count, const bool bound)
+std::vector<numerical::Vector<N, float>> generate_points_ellipsoid(const unsigned point_count, const bool bound)
 {
         PCG engine(point_count);
 
@@ -164,7 +164,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_cou
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 v[0] *= 2;
                 points.add(v);
         }
@@ -173,7 +173,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_cou
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned point_count, const bool bound)
+std::vector<numerical::Vector<N, float>> generate_points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
         PCG engine(point_count);
 
@@ -181,7 +181,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned p
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 const double cos = last_axis(v);
                 if (cos > 0)
                 {
@@ -193,7 +193,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned p
         return points.release();
 }
 
-std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_count)
+std::vector<numerical::Vector<3, float>> generate_points_mobius_strip(const unsigned point_count)
 {
         PCG engine(point_count);
 
@@ -201,7 +201,8 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_
 
         while (points.size() < point_count)
         {
-                const Vector<3, double> v = geometry::shapes::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
+                const numerical::Vector<3, double> v =
+                        geometry::shapes::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
                 points.add(v);
         }
 
@@ -209,7 +210,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, const bool bound)
+std::vector<numerical::Vector<N, float>> generate_points_torus(const unsigned point_count, const bool bound)
 {
         static_assert(N >= 3);
 
@@ -219,7 +220,7 @@ std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, 
 
         while (points.size() < point_count)
         {
-                const Vector<N, double> v = geometry::shapes::torus_point<N, double>(engine);
+                const numerical::Vector<N, double> v = geometry::shapes::torus_point<N, double>(engine);
                 if (bound && last_axis(v) < LAST_AXIS_VALUE)
                 {
                         continue;
@@ -276,7 +277,7 @@ std::unique_ptr<model::mesh::Mesh<N>> torus_bound(const unsigned point_count)
 template <std::size_t N>
 std::unique_ptr<model::mesh::Mesh<N>> sphere(const unsigned facet_count)
 {
-        std::vector<Vector<N, float>> points;
+        std::vector<numerical::Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
         geometry::shapes::create_sphere(facet_count, &points, &facets);
 

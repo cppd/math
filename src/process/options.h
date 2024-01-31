@@ -26,5 +26,5 @@ namespace ns::process
 inline constexpr double SCENE_SIZE = 2;
 
 template <std::size_t N, typename T>
-inline constexpr Vector<N, T> SCENE_CENTER = Vector<N, T>(0);
+inline constexpr numerical::Vector<N, T> SCENE_CENTER = numerical::Vector<N, T>(0);
 }

@@ -40,7 +40,7 @@ class PositionVariance final
         position::Init<T> init_;
 
         MovingVariance<N, T> position_variance_;
-        std::optional<Vector<N, T>> last_position_variance_;
+        std::optional<numerical::Vector<N, T>> last_position_variance_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
@@ -55,6 +55,6 @@ public:
         std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m);
         [[nodiscard]] std::string consistency_string() const;
 
-        [[nodiscard]] const std::optional<Vector<N, T>>& last_position_variance() const;
+        [[nodiscard]] const std::optional<numerical::Vector<N, T>>& last_position_variance() const;
 };
 }

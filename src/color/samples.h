@@ -35,7 +35,7 @@ class Samples
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> data_;
+        numerical::Vector<N, T> data_;
 
 protected:
         template <typename... Args>
@@ -56,7 +56,7 @@ protected:
 
         ~Samples() = default;
 
-        [[nodiscard]] constexpr const Vector<N, T>& data() const
+        [[nodiscard]] constexpr const numerical::Vector<N, T>& data() const
         {
                 return data_;
         }

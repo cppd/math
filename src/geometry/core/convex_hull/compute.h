@@ -78,7 +78,7 @@ int thread_count_for_horizon()
 
 template <std::size_t N, typename S, typename C>
 void create_initial_convex_hull(
-        const std::vector<Vector<N, S>>& points,
+        const std::vector<numerical::Vector<N, S>>& points,
         std::array<int, N + 1>* const vertices,
         FacetList<Facet<N, S, C>>* const facets)
 {
@@ -260,7 +260,7 @@ template <std::size_t N, typename S, typename C>
 void create_horizon_facets(
         const unsigned thread_id,
         const unsigned thread_count,
-        const std::vector<Vector<N, S>>& points,
+        const std::vector<numerical::Vector<N, S>>& points,
         const int point,
         std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
         std::vector<std::vector<signed char>>* const unique_points_work,
@@ -299,7 +299,7 @@ std::size_t calculate_facet_count(const std::vector<T>& facets)
 
 template <std::size_t N, typename S, typename C>
 void add_point_to_convex_hull(
-        const std::vector<Vector<N, S>>& points,
+        const std::vector<numerical::Vector<N, S>>& points,
         const int point,
         FacetList<Facet<N, S, C>>* const facets,
         std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
@@ -375,7 +375,9 @@ void add_point_to_convex_hull(
 }
 
 template <typename C, std::size_t N, typename S>
-FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, progress::Ratio* const progress)
+FacetList<Facet<N, S, C>> compute_convex_hull(
+        const std::vector<numerical::Vector<N, S>>& points,
+        progress::Ratio* const progress)
 {
         static_assert(N > 1);
 
@@ -438,7 +440,9 @@ FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& p
 }
 
 template <typename C, std::size_t N, typename S>
-FacetList<Facet<N, S, C>> compute_convex_hull(const std::vector<Vector<N, S>>& points, progress::Ratio* const progress)
+FacetList<Facet<N, S, C>> compute_convex_hull(
+        const std::vector<numerical::Vector<N, S>>& points,
+        progress::Ratio* const progress)
 {
         return compute_implementation::compute_convex_hull<C>(points, progress);
 }

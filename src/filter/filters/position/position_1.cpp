@@ -169,7 +169,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> Position1<N, T>::velocity() const
+[[nodiscard]] numerical::Vector<N, T> Position1<N, T>::velocity() const
 {
         return filter_->velocity();
 }

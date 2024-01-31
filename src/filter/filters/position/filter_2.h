@@ -34,35 +34,38 @@ class Filter2
 public:
         virtual ~Filter2() = default;
 
-        virtual void reset(const Vector<N, T>& position, const Vector<N, T>& variance, const Init<T>& init) = 0;
+        virtual void reset(
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& variance,
+                const Init<T>& init) = 0;
 
         virtual void predict(T dt) = 0;
 
         struct Update final
         {
-                Vector<N, T> residual;
+                numerical::Vector<N, T> residual;
                 bool gate;
                 T normalized_innovation_squared;
         };
 
         [[nodiscard]] virtual Update update(
-                const Vector<N, T>& position,
-                const Vector<N, T>& variance,
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& variance,
                 std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 
-        [[nodiscard]] virtual Vector<N, T> velocity() const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> velocity() const = 0;
         [[nodiscard]] virtual numerical::Matrix<N, N, T> velocity_p() const = 0;
 
-        [[nodiscard]] virtual Vector<2 * N, T> position_velocity() const = 0;
+        [[nodiscard]] virtual numerical::Vector<2 * N, T> position_velocity() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
 
-        [[nodiscard]] virtual Vector<3 * N, T> position_velocity_acceleration() const = 0;
+        [[nodiscard]] virtual numerical::Vector<3 * N, T> position_velocity_acceleration() const = 0;
         [[nodiscard]] virtual numerical::Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const = 0;
 };
 

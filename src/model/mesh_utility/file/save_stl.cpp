@@ -128,9 +128,9 @@ void write_end_binary(std::ostream& file)
 template <std::size_t N>
 void write_ascii_facet(
         std::ostream& file,
-        const Vector<N, float>& n,
+        const numerical::Vector<N, float>& n,
         const std::array<int, N>& indices,
-        const std::vector<Vector<N, float>>& vertices)
+        const std::vector<numerical::Vector<N, float>>& vertices)
 {
         // clang-format off
         static constexpr std::string_view FACET_NORMAL = "facet normal";
@@ -164,9 +164,9 @@ void write_ascii_facet(
 template <bool BYTE_SWAP, std::size_t N>
 void write_binary_facet(
         std::ostream& file,
-        const Vector<N, float>& n,
+        const numerical::Vector<N, float>& n,
         const std::array<int, N>& indices,
-        const std::vector<Vector<N, float>>& vertices)
+        const std::vector<numerical::Vector<N, float>>& vertices)
 {
         if constexpr (!BYTE_SWAP)
         {
@@ -189,20 +189,20 @@ void write_binary_facet(
 template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facet(
         std::ostream& file,
-        const Vector<N, double>& normal,
+        const numerical::Vector<N, double>& normal,
         const std::array<int, N>& indices,
-        const std::vector<Vector<N, float>>& vertices)
+        const std::vector<numerical::Vector<N, float>>& vertices)
 {
         static_assert(!(ASCII && BYTE_SWAP));
 
-        const Vector<N, float> n = [&]
+        const numerical::Vector<N, float> n = [&]
         {
-                const Vector<N, float> v = to_vector<float>(normal.normalized());
+                const numerical::Vector<N, float> v = to_vector<float>(normal.normalized());
                 if (is_finite(v))
                 {
                         return v;
                 }
-                return Vector<N, float>(0);
+                return numerical::Vector<N, float>(0);
         }();
 
         if constexpr (ASCII)
@@ -216,7 +216,7 @@ void write_facet(
 }
 
 template <bool ASCII, bool BYTE_SWAP, std::size_t N>
-void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
+void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<numerical::Vector<N, float>>& vertices)
 {
         static_assert(!(ASCII && BYTE_SWAP));
 
@@ -224,23 +224,25 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
         {
                 if (!f.has_normal)
                 {
-                        const Vector<N, double> normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
+                        const numerical::Vector<N, double> normal =
+                                numerical::orthogonal_complement<double>(vertices, f.vertices);
                         write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
-                        const Vector<N, double> normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
+                        const numerical::Vector<N, double> normal =
+                                numerical::orthogonal_complement<double>(vertices, f.vertices);
                         write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
                 }
                 else
                 {
                         std::array<int, 3> v = f.vertices;
 
-                        const Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        const Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        const Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+                        const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                        const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                        const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
-                        Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+                        numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 
                         if (dot(to_vector<double>(mesh.normals[f.normals[0]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[f.normals[1]]), normal) < 0

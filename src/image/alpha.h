@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb);
+void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, numerical::Vector<3, float> rgb);
 
 void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha);
 

@@ -36,11 +36,11 @@ class ImagePyramid final
 
         GrayscaleProgram grayscale_program_;
         GrayscaleMemory grayscale_memory_;
-        Vector2i grayscale_groups_;
+        numerical::Vector2i grayscale_groups_;
 
         DownsampleProgram downsample_program_;
         std::vector<DownsampleMemory> downsample_memory_;
-        std::vector<Vector2i> downsample_groups_;
+        std::vector<numerical::Vector2i> downsample_groups_;
 
 public:
         explicit ImagePyramid(VkDevice device);
@@ -49,7 +49,7 @@ public:
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const numerical::Region<2, int>& rectangle,
-                const std::vector<Vector2i>& sizes,
+                const std::vector<numerical::Vector2i>& sizes,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images);
 
         void delete_buffers();

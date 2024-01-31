@@ -92,20 +92,20 @@ template <std::size_t N, typename T>
 class Ekf final
 {
         // State mean
-        Vector<N, T> x_;
+        numerical::Vector<N, T> x_;
 
         // State covariance
         numerical::Matrix<N, N, T> p_;
 
 public:
-        Ekf(const Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
+        Ekf(const numerical::Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
                 : x_(x),
                   p_(p)
         {
                 check_x_p("EKF constructor", x_, p_);
         }
 
-        [[nodiscard]] const Vector<N, T>& x() const
+        [[nodiscard]] const numerical::Vector<N, T>& x() const
         {
                 return x_;
         }
@@ -118,10 +118,10 @@ public:
         template <typename F, typename FJ>
         void predict(
                 // State transition function
-                // Vector<N, T> f(const Vector<N, T>& x)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& x)
                 const F f,
                 // State transition function Jacobian
-                // numerical::Matrix<N, N, T> f(const Vector<N, T>& x)
+                // numerical::Matrix<N, N, T> f(const numerical::Vector<N, T>& x)
                 const FJ fj,
                 // Process covariance
                 const numerical::Matrix<N, N, T>& q)
@@ -137,20 +137,20 @@ public:
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
         UpdateInfo<M, T> update(
                 // Measurement function
-                // Vector<M, T> f(const Vector<N, T>& x)
+                // numerical::Vector<M, T> f(const numerical::Vector<N, T>& x)
                 const H h,
                 // Measurement function Jacobian
-                // numerical::Matrix<M, N, T> f(const Vector<N, T>& x)
+                // numerical::Matrix<M, N, T> f(const numerical::Vector<N, T>& x)
                 const HJ hj,
                 // Measurement covariance
                 const numerical::Matrix<M, M, T>& r,
                 // Measurement
-                const Vector<M, T>& z,
+                const numerical::Vector<M, T>& z,
                 // The sum of the two state vectors
-                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
                 const AddX add_x,
                 // The residual between the two measurement vectors
-                // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
+                // numerical::Vector<M, T> f(const numerical::Vector<M, T>& a, const numerical::Vector<M, T>& b)
                 const ResidualZ residual_z,
                 // H infinity parameter
                 const std::optional<T> theta,
@@ -184,7 +184,7 @@ public:
                         return {};
                 }();
 
-                const Vector<M, T> residual = residual_z(z, h(x_));
+                const numerical::Vector<M, T> residual = residual_z(z, h(x_));
 
                 const UpdateInfo<M, T> res = [&]()
                 {

@@ -51,7 +51,7 @@ class NoiseImage final
         int center_;
         T ratio_;
 
-        Vector<N, T> vector_;
+        numerical::Vector<N, T> vector_;
         std::array<int, 2> indices_;
 
         [[nodiscard]] T noise_coordinate(const int x) const
@@ -82,7 +82,7 @@ public:
         template <typename F>
         [[nodiscard]] T compute(const int i, const int j, const F& noise) const
         {
-                Vector<N, T> p = vector_;
+                numerical::Vector<N, T> p = vector_;
                 p[indices_[0]] = noise_coordinate(i);
                 p[indices_[1]] = noise_coordinate(j);
                 return noise(p);
@@ -95,7 +95,7 @@ void make_noise_image(
         const std::string_view file_name,
         const int image_size,
         const std::type_identity_t<T> noise_size,
-        T (*noise)(const Vector<N, T>&))
+        T (*noise)(const numerical::Vector<N, T>&))
 {
         const image_implementation::NoiseImage<N, T> noise_image(image_size, noise_size);
 

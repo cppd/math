@@ -64,7 +64,7 @@ void MeshBuffer::set_coordinates(const numerical::Matrix4d& model_matrix, const 
         map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);
 }
 
-void MeshBuffer::set_color(const Vector3f& color) const
+void MeshBuffer::set_color(const numerical::Vector3f& color) const
 {
         const decltype(Mesh().color) c = color;
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, color), c);

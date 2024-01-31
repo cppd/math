@@ -28,7 +28,7 @@ template <std::size_t N, typename T>
 class BvhObject final
 {
         spatial::BoundingBox<N, T> bounds_;
-        Vector<N, T> center_;
+        numerical::Vector<N, T> center_;
         T intersection_cost_;
         unsigned index_;
 
@@ -46,7 +46,7 @@ public:
                 return bounds_;
         }
 
-        [[nodiscard]] const Vector<N, T>& center() const
+        [[nodiscard]] const numerical::Vector<N, T>& center() const
         {
                 return center_;
         }

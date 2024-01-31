@@ -44,20 +44,20 @@ namespace ns::filter::core
 namespace ukf_implementation
 {
 template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typename Residual>
-[[nodiscard]] std::tuple<Vector<N, T>, numerical::Matrix<N, N, T>> unscented_transform(
-        const std::array<Vector<N, T>, POINT_COUNT>& points,
-        const Vector<POINT_COUNT, T>& wm,
-        const Vector<POINT_COUNT, T>& wc,
+[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> unscented_transform(
+        const std::array<numerical::Vector<N, T>, POINT_COUNT>& points,
+        const numerical::Vector<POINT_COUNT, T>& wm,
+        const numerical::Vector<POINT_COUNT, T>& wc,
         const numerical::Matrix<N, N, T>& noise_covariance,
         const Mean mean,
         const Residual residual)
 {
-        const Vector<N, T> x = mean(points, wm);
+        const numerical::Vector<N, T> x = mean(points, wm);
 
         numerical::Matrix<N, N, T> p = noise_covariance;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
-                const Vector<N, T> v = residual(points[i], x);
+                const numerical::Vector<N, T> v = residual(points[i], x);
                 for (std::size_t r = 0; r < N; ++r)
                 {
                         for (std::size_t c = 0; c < N; ++c)
@@ -72,19 +72,19 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
 
 template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typename ResidualX, typename ResidualZ>
 [[nodiscard]] numerical::Matrix<N, M, T> state_measurement_cross_covariance(
-        const Vector<POINT_COUNT, T>& wc,
-        const std::array<Vector<N, T>, POINT_COUNT>& sigmas_f,
-        const Vector<N, T>& x,
-        const std::array<Vector<M, T>, POINT_COUNT>& sigmas_h,
-        const Vector<M, T>& z,
+        const numerical::Vector<POINT_COUNT, T>& wc,
+        const std::array<numerical::Vector<N, T>, POINT_COUNT>& sigmas_f,
+        const numerical::Vector<N, T>& x,
+        const std::array<numerical::Vector<M, T>, POINT_COUNT>& sigmas_h,
+        const numerical::Vector<M, T>& z,
         const ResidualX residual_x,
         const ResidualZ residual_z)
 {
         numerical::Matrix<N, M, T> res(0);
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
-                const Vector<N, T> s = residual_x(sigmas_f[i], x);
-                const Vector<M, T> m = residual_z(sigmas_h[i], z);
+                const numerical::Vector<N, T> s = residual_x(sigmas_f[i], x);
+                const numerical::Vector<M, T> m = residual_z(sigmas_h[i], z);
                 for (std::size_t r = 0; r < N; ++r)
                 {
                         for (std::size_t c = 0; c < M; ++c)
@@ -97,7 +97,7 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
 }
 
 template <std::size_t N, typename T, typename F, std::size_t COUNT>
-[[nodiscard]] auto apply(const F f, const std::array<Vector<N, T>, COUNT>& points)
+[[nodiscard]] auto apply(const F f, const std::array<numerical::Vector<N, T>, COUNT>& points)
 {
         std::array<std::remove_cvref_t<decltype(f(points[0]))>, COUNT> res;
         for (std::size_t i = 0; i < COUNT; ++i)
@@ -110,7 +110,9 @@ template <std::size_t N, typename T, typename F, std::size_t COUNT>
 struct Add final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const numerical::Vector<N, T>& a,
+                const numerical::Vector<N, T>& b) const
         {
                 return a + b;
         }
@@ -119,7 +121,9 @@ struct Add final
 struct Subtract final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const numerical::Vector<N, T>& a,
+                const numerical::Vector<N, T>& b) const
         {
                 return a - b;
         }
@@ -128,10 +132,12 @@ struct Subtract final
 struct Mean final
 {
         template <std::size_t N, typename T, std::size_t COUNT>
-        [[nodiscard]] Vector<N, T> operator()(const std::array<Vector<N, T>, COUNT>& p, const Vector<COUNT, T>& w) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const std::array<numerical::Vector<N, T>, COUNT>& p,
+                const numerical::Vector<COUNT, T>& w) const
         {
                 static_assert(COUNT > 0);
-                Vector<N, T> x = p[0] * w[0];
+                numerical::Vector<N, T> x = p[0] * w[0];
                 for (std::size_t i = 1; i < COUNT; ++i)
                 {
                         x.multiply_add(p[i], w[i]);
@@ -151,16 +157,16 @@ class Ukf final
 
         SigmaPoints sigma_points_;
 
-        std::array<Vector<N, T>, POINT_COUNT> sigmas_f_;
+        std::array<numerical::Vector<N, T>, POINT_COUNT> sigmas_f_;
 
         // State mean
-        Vector<N, T> x_;
+        numerical::Vector<N, T> x_;
 
         // State covariance
         numerical::Matrix<N, N, T> p_;
 
 public:
-        Ukf(SigmaPoints sigma_points, const Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
+        Ukf(SigmaPoints sigma_points, const numerical::Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
                 : sigma_points_(std::move(sigma_points)),
                   x_(x),
                   p_(p)
@@ -168,7 +174,7 @@ public:
                 check_x_p("UKF constructor", x_, p_);
         }
 
-        [[nodiscard]] const Vector<N, T>& x() const
+        [[nodiscard]] const numerical::Vector<N, T>& x() const
         {
                 return x_;
         }
@@ -181,7 +187,7 @@ public:
         template <typename F>
         void predict(
                 // State transition function
-                // Vector<N, T> f(const Vector<N, T>& x)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& x)
                 const F f,
                 // Process covariance
                 const numerical::Matrix<N, N, T>& q)
@@ -199,17 +205,17 @@ public:
         template <std::size_t M, typename H, typename AddX, typename ResidualZ>
         UpdateInfo<M, T> update(
                 // Measurement function
-                // Vector<M, T> f(const Vector<N, T>& x)
+                // numerical::Vector<M, T> f(const numerical::Vector<N, T>& x)
                 const H h,
                 // Measurement covariance
                 const numerical::Matrix<M, M, T>& r,
                 // Measurement
-                const Vector<M, T>& z,
+                const numerical::Vector<M, T>& z,
                 // The sum of the two state vectors
-                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
                 const AddX add_x,
                 // The residual between the two measurement vectors
-                // Vector<M, T> f(const Vector<M, T>& a, const Vector<M, T>& b)
+                // numerical::Vector<M, T> f(const numerical::Vector<M, T>& a, const numerical::Vector<M, T>& b)
                 const ResidualZ residual_z,
                 // Mahalanobis distance gate
                 const std::optional<T> gate,
@@ -220,7 +226,7 @@ public:
         {
                 namespace impl = ukf_implementation;
 
-                const std::array<Vector<M, T>, POINT_COUNT> sigmas_h = impl::apply(h, sigmas_f_);
+                const std::array<numerical::Vector<M, T>, POINT_COUNT> sigmas_h = impl::apply(h, sigmas_f_);
 
                 const auto [x_z, p_z] = impl::unscented_transform(
                         sigmas_h, sigma_points_.wm(), sigma_points_.wc(), r, impl::Mean(), impl::Subtract());
@@ -231,7 +237,7 @@ public:
                         sigma_points_.wc(), sigmas_f_, x_, sigmas_h, x_z, impl::Subtract(), impl::Subtract());
 
                 const numerical::Matrix<M, M, T> p_z_inversed = p_z.inversed();
-                const Vector<M, T> residual = residual_z(z, x_z);
+                const numerical::Vector<M, T> residual = residual_z(z, x_z);
 
                 const UpdateInfo<M, T> res =
                         make_update_info(residual, p_z, p_z_inversed, gate, likelihood, normalized_innovation);

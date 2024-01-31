@@ -62,7 +62,7 @@ std::unordered_map<int, int> vertex_index_map(const std::vector<std::array<int, 
 
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
 {
         if (facets.empty())
@@ -109,7 +109,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_facets(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets,
         const bool write_log)
 {
@@ -139,7 +139,7 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
 
 #define TEMPLATE(N)                                                 \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_facets( \
-                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N)>>&, bool);
+                const std::vector<numerical::Vector<(N), float>>&, const std::vector<std::array<int, (N)>>&, bool);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

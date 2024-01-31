@@ -71,7 +71,7 @@ T test_discrepancy(
         const std::string& name,
         const T& min,
         const T& max,
-        const std::vector<Vector<N, T>>& data,
+        const std::vector<numerical::Vector<N, T>>& data,
         const T& discrepancy_limit,
         RandomEngine& engine)
 {
@@ -103,7 +103,7 @@ T test_stratified_jittered(const unsigned sample_count, const std::type_identity
 
         const StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
 
-        std::vector<Vector<N, T>> data;
+        std::vector<numerical::Vector<N, T>> data;
         sampler.generate(engine, &data);
         if (data.size() != sample_count)
         {
@@ -128,7 +128,7 @@ T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T
 
         const LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
 
-        std::vector<Vector<N, T>> data;
+        std::vector<numerical::Vector<N, T>> data;
         sampler.generate(engine, &data);
         if (data.size() != sample_count)
         {
@@ -151,8 +151,8 @@ T test_halton(const int sample_count, const std::type_identity_t<T> max_discrepa
 
         HaltonSampler<N, T> sampler;
 
-        std::vector<Vector<N, T>> data(sample_count);
-        for (Vector<N, T>& v : data)
+        std::vector<numerical::Vector<N, T>> data(sample_count);
+        for (numerical::Vector<N, T>& v : data)
         {
                 v = sampler.generate();
         }

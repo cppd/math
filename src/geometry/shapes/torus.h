@@ -34,24 +34,24 @@ CRC Press, 2015.
 namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> torus_point(RandomEngine& engine)
+numerical::Vector<N, T> torus_point(RandomEngine& engine)
 {
         static_assert(N >= 3);
 
-        Vector<N, T> v(0);
+        numerical::Vector<N, T> v(0);
         T v_length;
-        Vector<N, T> sum(0);
+        numerical::Vector<N, T> sum(0);
 
         v[0] = 2;
         v_length = 2;
 
         for (std::size_t i = 1; i < N; ++i)
         {
-                Vector<N, T> ortho(0);
+                numerical::Vector<N, T> ortho(0);
                 ortho[i] = v_length;
 
-                const Vector<2, T> s = sampling::uniform_on_sphere<2, T>(engine);
-                const Vector<N, T> vn = T{0.5} * (s[0] * v + s[1] * ortho);
+                const numerical::Vector<2, T> s = sampling::uniform_on_sphere<2, T>(engine);
+                const numerical::Vector<N, T> vn = T{0.5} * (s[0] * v + s[1] * ortho);
                 sum += vn;
 
                 v = vn;

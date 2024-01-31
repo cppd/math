@@ -56,7 +56,7 @@ class RendererView final
 
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
-        std::optional<Vector4d> clip_plane_;
+        std::optional<numerical::Vector4d> clip_plane_;
         bool show_clip_plane_lines_ = true;
         bool show_normals_ = false;
 
@@ -194,7 +194,7 @@ class RendererView final
                 }
                 else
                 {
-                        drawing_buffer_->set_clip_plane(Vector4d(0), false);
+                        drawing_buffer_->set_clip_plane(numerical::Vector4d(0), false);
                 }
                 events_->view_clip_plane_changed(visibility_changed);
         }
@@ -232,7 +232,7 @@ public:
                 return show_shadow_;
         }
 
-        [[nodiscard]] const std::optional<Vector4d>& clip_plane() const
+        [[nodiscard]] const std::optional<numerical::Vector4d>& clip_plane() const
         {
                 return clip_plane_;
         }

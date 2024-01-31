@@ -38,13 +38,16 @@ namespace ns::filter::filters::speed
 namespace
 {
 template <std::size_t N, typename T>
-Vector<3 * N, T> x(const Vector<N, T>& position, const Vector<N, T>& velocity, const Vector<N, T>& acceleration)
+numerical::Vector<3 * N, T> x(
+        const numerical::Vector<N, T>& position,
+        const numerical::Vector<N, T>& velocity,
+        const numerical::Vector<N, T>& acceleration)
 {
         ASSERT(is_finite(position));
         ASSERT(is_finite(velocity));
         ASSERT(is_finite(acceleration));
 
-        Vector<3 * N, T> res;
+        numerical::Vector<3 * N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
@@ -57,9 +60,9 @@ Vector<3 * N, T> x(const Vector<N, T>& position, const Vector<N, T>& velocity, c
 
 template <std::size_t N, typename T>
 numerical::Matrix<3 * N, 3 * N, T> p(
-        const Vector<N, T>& position_variance,
-        const Vector<N, T>& velocity_variance,
-        const Vector<N, T>& acceleration_variance)
+        const numerical::Vector<N, T>& position_variance,
+        const numerical::Vector<N, T>& velocity_variance,
+        const numerical::Vector<N, T>& acceleration_variance)
 {
         ASSERT(is_finite(position_variance));
         ASSERT(is_finite(velocity_variance));
@@ -77,7 +80,7 @@ numerical::Matrix<3 * N, 3 * N, T> p(
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> x(const Vector<N, T>& position_velocity_acceleration)
+numerical::Vector<N, T> x(const numerical::Vector<N, T>& position_velocity_acceleration)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
@@ -93,11 +96,11 @@ numerical::Matrix<N, N, T> p(const numerical::Matrix<N, N, T>& position_velocity
 }
 
 template <std::size_t N, typename T>
-Vector<3 * N, T> x(const Vector<2 * N, T>& position_velocity, const Init<T>& init)
+numerical::Vector<3 * N, T> x(const numerical::Vector<2 * N, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
 
-        Vector<3 * N, T> res;
+        numerical::Vector<3 * N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t a = 3 * i;
@@ -138,17 +141,17 @@ numerical::Matrix<3 * N, 3 * N, T> p(const numerical::Matrix<2 * N, 2 * N, T>& p
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> add_x(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] numerical::Vector<N, T> add_x(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
 {
         return a + b;
 }
 
 template <std::size_t N, typename T>
-Vector<3 * N, T> f(const T dt, const Vector<3 * N, T>& x)
+numerical::Vector<3 * N, T> f(const T dt, const numerical::Vector<3 * N, T>& x)
 {
         const T dt_2 = square(dt) / 2;
 
-        Vector<3 * N, T> res;
+        numerical::Vector<3 * N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
@@ -171,7 +174,7 @@ constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T position_vari
         const numerical::Matrix<3 * N, N, T> noise_transition =
                 block_diagonal<N>(numerical::Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
         const numerical::Matrix<N, N, T> process_covariance =
-                numerical::make_diagonal_matrix(Vector<N, T>(position_variance));
+                numerical::make_diagonal_matrix(numerical::Vector<N, T>(position_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
@@ -179,21 +182,21 @@ constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T position_vari
 //
 
 template <std::size_t N, typename T>
-Vector<N, T> position_z(const Vector<N, T>& position)
+numerical::Vector<N, T> position_z(const numerical::Vector<N, T>& position)
 {
         return position;
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> position_r(const Vector<N, T>& position_variance)
+numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& position_variance)
 {
         return numerical::make_diagonal_matrix(position_variance);
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> position_h(const Vector<3 * N, T>& x)
+numerical::Vector<N, T> position_h(const numerical::Vector<3 * N, T>& x)
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = x[3 * i];
@@ -202,7 +205,7 @@ Vector<N, T> position_h(const Vector<3 * N, T>& x)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> position_residual(const Vector<N, T>& a, const Vector<N, T>& b)
+numerical::Vector<N, T> position_residual(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
 {
         return a - b;
 }
@@ -210,9 +213,11 @@ Vector<N, T> position_residual(const Vector<N, T>& a, const Vector<N, T>& b)
 //
 
 template <std::size_t N, typename T>
-Vector<N + 1, T> position_speed_z(const Vector<N, T>& position, const Vector<1, T>& speed)
+numerical::Vector<N + 1, T> position_speed_z(
+        const numerical::Vector<N, T>& position,
+        const numerical::Vector<1, T>& speed)
 {
-        Vector<N + 1, T> res;
+        numerical::Vector<N + 1, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = position[i];
@@ -223,8 +228,8 @@ Vector<N + 1, T> position_speed_z(const Vector<N, T>& position, const Vector<1, 
 
 template <std::size_t N, typename T>
 numerical::Matrix<N + 1, N + 1, T> position_speed_r(
-        const Vector<N, T>& position_variance,
-        const Vector<1, T>& speed_variance)
+        const numerical::Vector<N, T>& position_variance,
+        const numerical::Vector<1, T>& speed_variance)
 {
         numerical::Matrix<N + 1, N + 1, T> res(0);
         for (std::size_t i = 0; i < N; ++i)
@@ -236,10 +241,10 @@ numerical::Matrix<N + 1, N + 1, T> position_speed_r(
 }
 
 template <std::size_t N, typename T>
-Vector<N + 1, T> position_speed_h(const Vector<3 * N, T>& x)
+numerical::Vector<N + 1, T> position_speed_h(const numerical::Vector<3 * N, T>& x)
 {
-        Vector<N + 1, T> res;
-        Vector<N, T> velocity;
+        numerical::Vector<N + 1, T> res;
+        numerical::Vector<N, T> velocity;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = x[3 * i];
@@ -250,7 +255,7 @@ Vector<N + 1, T> position_speed_h(const Vector<3 * N, T>& x)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> position_speed_residual(const Vector<N, T>& a, const Vector<N, T>& b)
+numerical::Vector<N, T> position_speed_residual(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
 {
         return a - b;
 }
@@ -258,30 +263,30 @@ Vector<N, T> position_speed_residual(const Vector<N, T>& a, const Vector<N, T>& 
 //
 
 template <typename T>
-Vector<1, T> speed_z(const Vector<1, T>& speed)
+numerical::Vector<1, T> speed_z(const numerical::Vector<1, T>& speed)
 {
         return speed;
 }
 
 template <typename T>
-numerical::Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
+numerical::Matrix<1, 1, T> speed_r(const numerical::Vector<1, T>& speed_variance)
 {
         return {{speed_variance[0]}};
 }
 
 template <std::size_t N, typename T>
-Vector<1, T> speed_h(const Vector<3 * N, T>& x)
+numerical::Vector<1, T> speed_h(const numerical::Vector<3 * N, T>& x)
 {
-        Vector<N, T> velocity;
+        numerical::Vector<N, T> velocity;
         for (std::size_t i = 0; i < N; ++i)
         {
                 velocity[i] = x[3 * i + 1];
         }
-        return Vector<1, T>{velocity.norm()};
+        return numerical::Vector<1, T>{velocity.norm()};
 }
 
 template <typename T>
-Vector<1, T> speed_residual(const Vector<1, T>& a, const Vector<1, T>& b)
+numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         return a - b;
 }
@@ -298,7 +303,7 @@ class Filter final : public Filter2<N, T>
         const T position_variance_;
         std::optional<core::Ukf<3 * N, T, core::SigmaPoints<3 * N, T>>> filter_;
 
-        [[nodiscard]] Vector<N, T> velocity() const
+        [[nodiscard]] numerical::Vector<N, T> velocity() const
         {
                 ASSERT(filter_);
 
@@ -313,12 +318,12 @@ class Filter final : public Filter2<N, T>
         }
 
         void reset(
-                const Vector<N, T>& position,
-                const Vector<N, T>& position_variance,
-                const Vector<N, T>& velocity,
-                const Vector<N, T>& velocity_variance,
-                const Vector<N, T>& acceleration,
-                const Vector<N, T>& acceleration_variance) override
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& position_variance,
+                const numerical::Vector<N, T>& velocity,
+                const numerical::Vector<N, T>& velocity_variance,
+                const numerical::Vector<N, T>& acceleration,
+                const numerical::Vector<N, T>& acceleration_variance) override
         {
                 filter_.emplace(
                         core::create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position, velocity, acceleration),
@@ -326,7 +331,7 @@ class Filter final : public Filter2<N, T>
         }
 
         void reset(
-                const Vector<3 * N, T>& position_velocity_acceleration,
+                const numerical::Vector<3 * N, T>& position_velocity_acceleration,
                 const numerical::Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) override
         {
                 filter_.emplace(
@@ -335,7 +340,7 @@ class Filter final : public Filter2<N, T>
         }
 
         void reset(
-                const Vector<2 * N, T>& position_velocity,
+                const numerical::Vector<2 * N, T>& position_velocity,
                 const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
                 const Init<T>& init) override
         {
@@ -350,7 +355,7 @@ class Filter final : public Filter2<N, T>
                 ASSERT(com::check_dt(dt));
 
                 filter_->predict(
-                        [dt](const Vector<3 * N, T>& x)
+                        [dt](const numerical::Vector<3 * N, T>& x)
                         {
                                 return f<N, T>(dt, x);
                         },
@@ -392,7 +397,7 @@ class Filter final : public Filter2<N, T>
                         speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] Vector<N, T> position() const override
+        [[nodiscard]] numerical::Vector<N, T> position() const override
         {
                 ASSERT(filter_);
 

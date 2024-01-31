@@ -46,17 +46,18 @@ class SurfaceImpl final : public Surface<N, T, Color>
 {
         const HyperplaneParallelotope<N, T, Color>* obj_;
 
-        [[nodiscard]] Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
+        [[nodiscard]] numerical::Vector<N, T> point(const numerical::Ray<N, T>& ray, const T distance) const override
         {
                 return obj_->hyperplane_parallelotope().project(ray.point(distance));
         }
 
-        [[nodiscard]] Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] numerical::Vector<N, T> geometric_normal(const numerical::Vector<N, T>& /*point*/) const override
         {
                 return obj_->hyperplane_parallelotope().normal();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> shading_normal(
+                const numerical::Vector<N, T>& /*point*/) const override
         {
                 return std::nullopt;
         }
@@ -67,28 +68,28 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
         [[nodiscard]] Color brdf(
-                const Vector<N, T>& /*point*/,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override
+                const numerical::Vector<N, T>& /*point*/,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 return shading::ggx::brdf::f(obj_->roughness(), obj_->colors(), n, v, l);
         }
 
         [[nodiscard]] T pdf(
-                const Vector<N, T>& /*point*/,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override
+                const numerical::Vector<N, T>& /*point*/,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 return shading::ggx::brdf::pdf(obj_->roughness(), n, v, l);
         }
 
         [[nodiscard]] SurfaceSample<N, T, Color> sample(
                 PCG& engine,
-                const Vector<N, T>& /*point*/,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override
+                const numerical::Vector<N, T>& /*point*/,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const override
         {
                 const shading::Sample<N, T, Color>& sample =
                         shading::ggx::brdf::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
@@ -100,12 +101,12 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return s;
         }
 
-        [[nodiscard]] bool is_specular(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] bool is_specular(const numerical::Vector<N, T>& /*point*/) const override
         {
                 return false;
         }
 
-        [[nodiscard]] T alpha(const Vector<N, T>& /*point*/) const override
+        [[nodiscard]] T alpha(const numerical::Vector<N, T>& /*point*/) const override
         {
                 return obj_->alpha();
         }
@@ -177,8 +178,8 @@ HyperplaneParallelotope<N, T, Color>::HyperplaneParallelotope(
         const std::type_identity_t<T> roughness,
         const Color& color,
         const std::type_identity_t<T> alpha,
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N - 1>& vectors)
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N - 1>& vectors)
         : hyperplane_parallelotope_(org, vectors),
           roughness_(std::clamp(roughness, T{0}, T{1})),
           colors_(shading::ggx::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T{0}, T{1}))),

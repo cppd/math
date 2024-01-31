@@ -39,10 +39,10 @@ namespace ns::filter::filters::direction
 namespace
 {
 template <typename T>
-Vector<8, T> x(
-        const Vector<2, T>& position,
-        const Vector<2, T>& velocity,
-        const Vector<2, T>& acceleration,
+numerical::Vector<8, T> x(
+        const numerical::Vector<2, T>& position,
+        const numerical::Vector<2, T>& velocity,
+        const numerical::Vector<2, T>& acceleration,
         const Init<T>& init)
 {
         ASSERT(is_finite(position));
@@ -50,7 +50,7 @@ Vector<8, T> x(
         ASSERT(is_finite(acceleration));
         ASSERT(is_finite(init.angle));
 
-        Vector<8, T> res;
+        numerical::Vector<8, T> res;
 
         res[0] = position[0];
         res[1] = velocity[0];
@@ -66,9 +66,9 @@ Vector<8, T> x(
 
 template <typename T>
 numerical::Matrix<8, 8, T> p(
-        const Vector<2, T>& position_variance,
-        const Vector<2, T>& velocity_variance,
-        const Vector<2, T>& acceleration_variance,
+        const numerical::Vector<2, T>& position_variance,
+        const numerical::Vector<2, T>& velocity_variance,
+        const numerical::Vector<2, T>& acceleration_variance,
         const Init<T>& init)
 {
         ASSERT(is_finite(position_variance));
@@ -91,11 +91,11 @@ numerical::Matrix<8, 8, T> p(
 }
 
 template <typename T>
-Vector<8, T> x(const Vector<6, T>& position_velocity_acceleration, const Init<T>& init)
+numerical::Vector<8, T> x(const numerical::Vector<6, T>& position_velocity_acceleration, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity_acceleration));
 
-        Vector<8, T> res;
+        numerical::Vector<8, T> res;
 
         for (std::size_t i = 0; i < 6; ++i)
         {
@@ -130,11 +130,11 @@ numerical::Matrix<8, 8, T> p(const numerical::Matrix<6, 6, T>& position_velocity
 }
 
 template <typename T>
-Vector<8, T> x(const Vector<4, T>& position_velocity, const Init<T>& init)
+numerical::Vector<8, T> x(const numerical::Vector<4, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
 
-        Vector<8, T> res;
+        numerical::Vector<8, T> res;
 
         res[0] = position_velocity[0];
         res[1] = position_velocity[1];
@@ -181,15 +181,15 @@ numerical::Matrix<8, 8, T> p(const numerical::Matrix<4, 4, T>& position_velocity
 }
 
 template <typename T>
-[[nodiscard]] Vector<8, T> add_x(const Vector<8, T>& a, const Vector<8, T>& b)
+[[nodiscard]] numerical::Vector<8, T> add_x(const numerical::Vector<8, T>& a, const numerical::Vector<8, T>& b)
 {
-        Vector<8, T> res = a + b;
+        numerical::Vector<8, T> res = a + b;
         res[6] = normalize_angle(res[6]);
         return res;
 }
 
 template <typename T>
-Vector<8, T> f(const T dt, const Vector<8, T>& x)
+numerical::Vector<8, T> f(const T dt, const numerical::Vector<8, T>& x)
 {
         const T dt_2 = square(dt) / 2;
 
@@ -244,13 +244,13 @@ constexpr numerical::Matrix<8, 8, T> q(const T dt, const T position_variance, co
 //
 
 template <typename T>
-numerical::Matrix<2, 2, T> position_r(const Vector<2, T>& position_variance)
+numerical::Matrix<2, 2, T> position_r(const numerical::Vector<2, T>& position_variance)
 {
         return numerical::make_diagonal_matrix(position_variance);
 }
 
 template <typename T>
-Vector<2, T> position_h(const Vector<8, T>& x)
+numerical::Vector<2, T> position_h(const numerical::Vector<8, T>& x)
 {
         // px = px
         // py = py
@@ -258,7 +258,7 @@ Vector<2, T> position_h(const Vector<8, T>& x)
 }
 
 template <typename T>
-Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+numerical::Vector<2, T> position_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
         return a - b;
 }
@@ -266,15 +266,17 @@ Vector<2, T> position_residual(const Vector<2, T>& a, const Vector<2, T>& b)
 //
 
 template <typename T>
-numerical::Matrix<3, 3, T> position_speed_r(const Vector<2, T>& position_variance, const Vector<1, T>& speed_variance)
+numerical::Matrix<3, 3, T> position_speed_r(
+        const numerical::Vector<2, T>& position_variance,
+        const numerical::Vector<1, T>& speed_variance)
 {
-        const Vector<2, T>& pv = position_variance;
-        const Vector<1, T>& sv = speed_variance;
+        const numerical::Vector<2, T>& pv = position_variance;
+        const numerical::Vector<1, T>& sv = speed_variance;
         return numerical::make_diagonal_matrix<3, T>({pv[0], pv[1], sv[0]});
 }
 
 template <typename T>
-Vector<3, T> position_speed_h(const Vector<8, T>& x)
+numerical::Vector<3, T> position_speed_h(const numerical::Vector<8, T>& x)
 {
         // px = px
         // py = py
@@ -291,7 +293,7 @@ Vector<3, T> position_speed_h(const Vector<8, T>& x)
 }
 
 template <typename T>
-Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+numerical::Vector<3, T> position_speed_residual(const numerical::Vector<3, T>& a, const numerical::Vector<3, T>& b)
 {
         return a - b;
 }
@@ -300,18 +302,18 @@ Vector<3, T> position_speed_residual(const Vector<3, T>& a, const Vector<3, T>& 
 
 template <typename T>
 numerical::Matrix<4, 4, T> position_speed_direction_r(
-        const Vector<2, T>& position_variance,
-        const Vector<1, T>& speed_variance,
-        const Vector<1, T>& direction_variance)
+        const numerical::Vector<2, T>& position_variance,
+        const numerical::Vector<1, T>& speed_variance,
+        const numerical::Vector<1, T>& direction_variance)
 {
-        const Vector<2, T>& pv = position_variance;
-        const Vector<1, T>& sv = speed_variance;
-        const Vector<1, T>& dv = direction_variance;
+        const numerical::Vector<2, T>& pv = position_variance;
+        const numerical::Vector<1, T>& sv = speed_variance;
+        const numerical::Vector<1, T>& dv = direction_variance;
         return numerical::make_diagonal_matrix<4, T>({pv[0], pv[1], sv[0], dv[0]});
 }
 
 template <typename T>
-Vector<4, T> position_speed_direction_h(const Vector<8, T>& x)
+numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>& x)
 {
         // px = px
         // py = py
@@ -331,9 +333,11 @@ Vector<4, T> position_speed_direction_h(const Vector<8, T>& x)
 }
 
 template <typename T>
-Vector<4, T> position_speed_direction_residual(const Vector<4, T>& a, const Vector<4, T>& b)
+numerical::Vector<4, T> position_speed_direction_residual(
+        const numerical::Vector<4, T>& a,
+        const numerical::Vector<4, T>& b)
 {
-        Vector<4, T> res = a - b;
+        numerical::Vector<4, T> res = a - b;
         res[3] = normalize_angle(res[3]);
         return res;
 }
@@ -342,16 +346,16 @@ Vector<4, T> position_speed_direction_residual(const Vector<4, T>& a, const Vect
 
 template <typename T>
 numerical::Matrix<3, 3, T> position_direction_r(
-        const Vector<2, T>& position_variance,
-        const Vector<1, T>& direction_variance)
+        const numerical::Vector<2, T>& position_variance,
+        const numerical::Vector<1, T>& direction_variance)
 {
-        const Vector<2, T>& pv = position_variance;
-        const Vector<1, T>& dv = direction_variance;
+        const numerical::Vector<2, T>& pv = position_variance;
+        const numerical::Vector<1, T>& dv = direction_variance;
         return numerical::make_diagonal_matrix<3, T>({pv[0], pv[1], dv[0]});
 }
 
 template <typename T>
-Vector<3, T> position_direction_h(const Vector<8, T>& x)
+numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x)
 {
         // px = px
         // py = py
@@ -369,9 +373,9 @@ Vector<3, T> position_direction_h(const Vector<8, T>& x)
 }
 
 template <typename T>
-Vector<3, T> position_direction_residual(const Vector<3, T>& a, const Vector<3, T>& b)
+numerical::Vector<3, T> position_direction_residual(const numerical::Vector<3, T>& a, const numerical::Vector<3, T>& b)
 {
-        Vector<3, T> res = a - b;
+        numerical::Vector<3, T> res = a - b;
         res[2] = normalize_angle(res[2]);
         return res;
 }
@@ -379,15 +383,17 @@ Vector<3, T> position_direction_residual(const Vector<3, T>& a, const Vector<3, 
 //
 
 template <typename T>
-numerical::Matrix<2, 2, T> speed_direction_r(const Vector<1, T>& speed_variance, const Vector<1, T>& direction_variance)
+numerical::Matrix<2, 2, T> speed_direction_r(
+        const numerical::Vector<1, T>& speed_variance,
+        const numerical::Vector<1, T>& direction_variance)
 {
-        const Vector<1, T>& sv = speed_variance;
-        const Vector<1, T>& dv = direction_variance;
+        const numerical::Vector<1, T>& sv = speed_variance;
+        const numerical::Vector<1, T>& dv = direction_variance;
         return numerical::make_diagonal_matrix<2, T>({sv[0], dv[0]});
 }
 
 template <typename T>
-Vector<2, T> speed_direction_h(const Vector<8, T>& x)
+numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle
@@ -401,9 +407,9 @@ Vector<2, T> speed_direction_h(const Vector<8, T>& x)
 }
 
 template <typename T>
-Vector<2, T> speed_direction_residual(const Vector<2, T>& a, const Vector<2, T>& b)
+numerical::Vector<2, T> speed_direction_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
-        Vector<2, T> res = a - b;
+        numerical::Vector<2, T> res = a - b;
         res[1] = normalize_angle(res[1]);
         return res;
 }
@@ -411,28 +417,28 @@ Vector<2, T> speed_direction_residual(const Vector<2, T>& a, const Vector<2, T>&
 //
 
 template <typename T>
-numerical::Matrix<1, 1, T> direction_r(const Vector<1, T>& direction_variance)
+numerical::Matrix<1, 1, T> direction_r(const numerical::Vector<1, T>& direction_variance)
 {
-        const Vector<1, T>& dv = direction_variance;
+        const numerical::Vector<1, T>& dv = direction_variance;
         return {{dv[0]}};
 }
 
 template <typename T>
-Vector<1, T> direction_h(const Vector<8, T>& x)
+numerical::Vector<1, T> direction_h(const numerical::Vector<8, T>& x)
 {
         // angle = atan(vy, vx) + angle
         const T vx = x[1];
         const T vy = x[4];
         const T angle = x[6];
-        return Vector<1, T>{
+        return numerical::Vector<1, T>{
                 std::atan2(vy, vx) + angle // angle
         };
 }
 
 template <typename T>
-Vector<1, T> direction_residual(const Vector<1, T>& a, const Vector<1, T>& b)
+numerical::Vector<1, T> direction_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
-        Vector<1, T> res = a - b;
+        numerical::Vector<1, T> res = a - b;
         res[0] = normalize_angle(res[0]);
         return res;
 }
@@ -440,25 +446,25 @@ Vector<1, T> direction_residual(const Vector<1, T>& a, const Vector<1, T>& b)
 //
 
 template <typename T>
-numerical::Matrix<1, 1, T> speed_r(const Vector<1, T>& speed_variance)
+numerical::Matrix<1, 1, T> speed_r(const numerical::Vector<1, T>& speed_variance)
 {
-        const Vector<1, T>& sv = speed_variance;
+        const numerical::Vector<1, T>& sv = speed_variance;
         return {{sv[0]}};
 }
 
 template <typename T>
-Vector<1, T> speed_h(const Vector<8, T>& x)
+numerical::Vector<1, T> speed_h(const numerical::Vector<8, T>& x)
 {
         // speed = sqrt(vx*vx + vy*vy)
         const T vx = x[1];
         const T vy = x[4];
-        return Vector<1, T>{
+        return numerical::Vector<1, T>{
                 std::sqrt(vx * vx + vy * vy) // speed
         };
 }
 
 template <typename T>
-Vector<1, T> speed_residual(const Vector<1, T>& a, const Vector<1, T>& b)
+numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         return a - b;
 }
@@ -476,7 +482,7 @@ class Filter final : public Filter21<T>
         const T angle_variance_;
         std::optional<core::Ukf<8, T, core::SigmaPoints<8, T>>> filter_;
 
-        [[nodiscard]] Vector<2, T> velocity() const
+        [[nodiscard]] numerical::Vector<2, T> velocity() const
         {
                 ASSERT(filter_);
 
@@ -494,12 +500,12 @@ class Filter final : public Filter21<T>
         }
 
         void reset(
-                const Vector<2, T>& position,
-                const Vector<2, T>& position_variance,
-                const Vector<2, T>& velocity,
-                const Vector<2, T>& velocity_variance,
-                const Vector<2, T>& acceleration,
-                const Vector<2, T>& acceleration_variance,
+                const numerical::Vector<2, T>& position,
+                const numerical::Vector<2, T>& position_variance,
+                const numerical::Vector<2, T>& velocity,
+                const numerical::Vector<2, T>& velocity_variance,
+                const numerical::Vector<2, T>& acceleration,
+                const numerical::Vector<2, T>& acceleration_variance,
                 const Init<T>& init) override
         {
                 filter_.emplace(
@@ -508,7 +514,7 @@ class Filter final : public Filter21<T>
         }
 
         void reset(
-                const Vector<6, T>& position_velocity_acceleration,
+                const numerical::Vector<6, T>& position_velocity_acceleration,
                 const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
                 const Init<T>& init) override
         {
@@ -518,7 +524,7 @@ class Filter final : public Filter21<T>
         }
 
         void reset(
-                const Vector<4, T>& position_velocity,
+                const numerical::Vector<4, T>& position_velocity,
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) override
         {
@@ -533,7 +539,7 @@ class Filter final : public Filter21<T>
                 ASSERT(com::check_dt(dt));
 
                 filter_->predict(
-                        [dt](const Vector<8, T>& x)
+                        [dt](const numerical::Vector<8, T>& x)
                         {
                                 return f(dt, x);
                         },
@@ -561,7 +567,7 @@ class Filter final : public Filter21<T>
 
                 filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
-                        Vector<3, T>(position.value[0], position.value[1], speed.value[0]), add_x<T>,
+                        numerical::Vector<3, T>(position.value[0], position.value[1], speed.value[0]), add_x<T>,
                         position_speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -579,7 +585,8 @@ class Filter final : public Filter21<T>
                 filter_->update(
                         position_speed_direction_h<T>,
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
-                        Vector<4, T>(position.value[0], position.value[1], speed.value[0], direction.value[0]),
+                        numerical::Vector<4, T>(
+                                position.value[0], position.value[1], speed.value[0], direction.value[0]),
                         add_x<T>, position_speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -594,7 +601,7 @@ class Filter final : public Filter21<T>
 
                 filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
-                        Vector<3, T>(position.value[0], position.value[1], direction.value[0]), add_x<T>,
+                        numerical::Vector<3, T>(position.value[0], position.value[1], direction.value[0]), add_x<T>,
                         position_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -609,8 +616,8 @@ class Filter final : public Filter21<T>
 
                 filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
-                        Vector<2, T>(speed.value[0], direction.value[0]), add_x<T>, speed_direction_residual<T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        numerical::Vector<2, T>(speed.value[0], direction.value[0]), add_x<T>,
+                        speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_direction(const Measurement<1, T>& direction, const std::optional<T> gate) override
@@ -619,8 +626,8 @@ class Filter final : public Filter21<T>
                 ASSERT(com::check_variance(direction.variance));
 
                 filter_->update(
-                        direction_h<T>, direction_r(direction.variance), Vector<1, T>(direction.value), add_x<T>,
-                        direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        direction_h<T>, direction_r(direction.variance), numerical::Vector<1, T>(direction.value),
+                        add_x<T>, direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
@@ -629,11 +636,11 @@ class Filter final : public Filter21<T>
                 ASSERT(com::check_variance(speed.variance));
 
                 filter_->update(
-                        speed_h<T>, speed_r(speed.variance), Vector<1, T>(speed.value), add_x<T>, speed_residual<T>,
-                        gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        speed_h<T>, speed_r(speed.variance), numerical::Vector<1, T>(speed.value), add_x<T>,
+                        speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] Vector<2, T> position() const override
+        [[nodiscard]] numerical::Vector<2, T> position() const override
         {
                 ASSERT(filter_);
 

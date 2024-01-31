@@ -147,21 +147,21 @@ template <std::size_t N, typename T, typename Color>
         ASSERT((std::holds_alternative<vertex::Surface<N, T, Color>>(vertex)));
         const auto& surface = std::get<vertex::Surface<N, T, Color>>(vertex);
 
-        const Vector<N, T> to_prev = std::visit(
+        const numerical::Vector<N, T> to_prev = std::visit(
                 Visitors{
-                        [&](const vertex::Surface<N, T, Color>& prev) -> Vector<N, T>
+                        [&](const vertex::Surface<N, T, Color>& prev) -> numerical::Vector<N, T>
                         {
                                 return (prev.pos() - surface.pos()).normalized();
                         },
-                        [&](const vertex::Camera<N, T, Color>& prev) -> Vector<N, T>
+                        [&](const vertex::Camera<N, T, Color>& prev) -> numerical::Vector<N, T>
                         {
                                 return prev.dir_to_camera();
                         },
-                        [&](const vertex::Light<N, T, Color>& prev) -> Vector<N, T>
+                        [&](const vertex::Light<N, T, Color>& prev) -> numerical::Vector<N, T>
                         {
                                 return prev.dir_to_light(surface.pos());
                         },
-                        [](const vertex::InfiniteLight<N, T, Color>&) -> Vector<N, T>
+                        [](const vertex::InfiniteLight<N, T, Color>&) -> numerical::Vector<N, T>
                         {
                                 error("Previous vertex is an infinite light");
                         }},
@@ -179,7 +179,7 @@ template <std::size_t N, typename T, typename Color>
                         },
                         [&](const vertex::Light<N, T, Color>& next) -> T
                         {
-                                const Vector<N, T> to_next = next.dir_to_light(surface.pos());
+                                const numerical::Vector<N, T> to_next = next.dir_to_light(surface.pos());
                                 return next.reversed_pdf(surface, surface.angle_pdf(to_prev, to_next));
                         },
                         [](const vertex::InfiniteLight<N, T, Color>&) -> T

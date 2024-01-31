@@ -30,7 +30,10 @@ namespace ns::model::volume
 namespace vertices_implementation
 {
 template <int I, typename F, std::size_t N, typename T>
-void vertices_impl(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
+void vertices_impl(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
+        const F& f)
 {
         if constexpr (I >= 0)
         {
@@ -44,35 +47,35 @@ void vertices_impl(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& v
 }
 
 template <typename F, std::size_t N, typename T>
-void vertices(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
+void vertices(const numerical::Vector<N, T>& org, const std::array<numerical::Vector<N, T>, N>& vectors, const F& f)
 {
         vertices_impl<N - 1>(org, vectors, f);
 }
 }
 
 template <std::size_t N>
-std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
+std::array<numerical::Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
 {
         namespace impl = vertices_implementation;
 
         const numerical::transform::MatrixVectorMultiplier transform(volume.matrix);
 
-        const Vector<N, double> org = transform(Vector<N, double>(0));
+        const numerical::Vector<N, double> org = transform(numerical::Vector<N, double>(0));
 
-        std::array<Vector<N, double>, N> vectors;
+        std::array<numerical::Vector<N, double>, N> vectors;
         for (unsigned i = 0; i < N; ++i)
         {
-                vectors[i] = Vector<N, double>(0);
+                vectors[i] = numerical::Vector<N, double>(0);
                 vectors[i][i] = 1;
                 vectors[i] = transform(vectors[i]);
         }
 
-        std::array<Vector<N, double>, (1 << N)> res;
+        std::array<numerical::Vector<N, double>, (1 << N)> res;
         unsigned vertex_count = 0;
 
         impl::vertices(
                 org, vectors,
-                [&vertex_count, &res](const Vector<N, double>& p)
+                [&vertex_count, &res](const numerical::Vector<N, double>& p)
                 {
                         ASSERT(vertex_count < res.size());
                         res[vertex_count++] = p;

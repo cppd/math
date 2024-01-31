@@ -42,11 +42,11 @@ namespace ns::painter::pixels
 namespace
 {
 template <typename T, std::size_t N>
-[[nodiscard]] Vector<N, T> region_pixel_center(
+[[nodiscard]] numerical::Vector<N, T> region_pixel_center(
         const std::array<int, N>& region_pixel,
         const std::array<int, N>& sample_pixel)
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = (region_pixel[i] - sample_pixel[i]) + T{0.5};
@@ -70,7 +70,7 @@ template <std::size_t N, typename T, typename Color>
 void Pixels<N, T, Color>::add_samples(
         const std::array<int, N>& region_pixel,
         const std::array<int, N>& sample_pixel,
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const std::vector<std::optional<Color>>& colors)
 {
         thread_local std::vector<T> weights;
@@ -98,7 +98,7 @@ void Pixels<N, T, Color>::add_samples(
 template <std::size_t N, typename T, typename Color>
 void Pixels<N, T, Color>::add_samples(
         const std::array<int, N>& pixel,
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const std::vector<std::optional<Color>>& colors)
 {
         ASSERT(points.size() == colors.size());
@@ -134,8 +134,8 @@ void Pixels<N, T, Color>::images(image::Image<N>* const image_rgb, image::Image<
         image_rgba->size = screen_size_;
         image_rgba->pixels.resize(RGBA_PIXEL_SIZE * pixels_.size());
 
-        Vector<3, float> rgb;
-        Vector<4, float> rgba;
+        numerical::Vector<3, float> rgb;
+        numerical::Vector<4, float> rgba;
 
         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
         static_assert(sizeof(rgba) == RGBA_PIXEL_SIZE);

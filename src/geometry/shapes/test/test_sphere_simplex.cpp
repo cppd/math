@@ -55,10 +55,10 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
 
         PCG engine;
 
-        const std::array<Vector<N, T>, N> simplex_vertices = [&]()
+        const std::array<numerical::Vector<N, T>, N> simplex_vertices = [&]()
         {
-                std::array<Vector<N, T>, N> res;
-                for (Vector<N, T>& v : res)
+                std::array<numerical::Vector<N, T>, N> res;
+                for (numerical::Vector<N, T>& v : res)
                 {
                         v = sampling::uniform_on_sphere<N, T>(engine);
                 }
@@ -91,7 +91,7 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
                 {
                         progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
-                const numerical::Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
+                const numerical::Ray<N, T> ray(numerical::Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
                 if (simplex.intersect(ray))
                 {
                         ++intersect_count;
@@ -121,10 +121,12 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& engine)
+std::array<numerical::Vector<N + 1, T>, N> add_dimension(
+        const std::array<numerical::Vector<N, T>, N>& a,
+        RandomEngine& engine)
 {
         std::uniform_int_distribution<unsigned> uid(0, N);
-        std::array<Vector<N + 1, T>, N> res;
+        std::array<numerical::Vector<N + 1, T>, N> res;
         const std::size_t k = uid(engine);
         for (std::size_t n = 0; n < N; ++n)
         {
@@ -174,7 +176,7 @@ void test_sphere_1_simplex(const T precision)
         //   Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
         //     [N[arcLength[a, b], 50]]]]]
 
-        std::array<Vector<2, T>, 2> v;
+        std::array<numerical::Vector<2, T>, 2> v;
 
         v[0] = {-4, -9};
         v[1] = {2, 1};
@@ -250,7 +252,7 @@ void test_sphere_2_simplex(const T precision)
         //   Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
         //     [N[triangleArea[a, b, c], 50]]]]]
 
-        std::array<Vector<3, T>, 3> v;
+        std::array<numerical::Vector<3, T>, 3> v;
 
         v[0] = {-4, -9, 2};
         v[1] = {1, -8, 1};

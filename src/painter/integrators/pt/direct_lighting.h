@@ -31,7 +31,7 @@ template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine);
 }

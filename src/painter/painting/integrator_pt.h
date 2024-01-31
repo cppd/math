@@ -50,7 +50,7 @@ class IntegratorPT final
         [[nodiscard]] bool integrate(
                 unsigned thread_number,
                 PCG& engine,
-                std::vector<Vector<N - 1, T>>& sample_points,
+                std::vector<numerical::Vector<N - 1, T>>& sample_points,
                 std::vector<std::optional<Color>>& sample_colors);
 
 public:

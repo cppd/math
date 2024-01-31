@@ -52,19 +52,19 @@ namespace ns::sampling
 namespace sphere_implementation
 {
 template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
-Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
+numerical::Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 {
         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
-                return Vector<N, T>((static_cast<void>(I), distribution(engine))...);
+                return numerical::Vector<N, T>((static_cast<void>(I), distribution(engine))...);
         }(std::make_integer_sequence<std::size_t, N>());
 }
 
 //
 
 template <typename RandomEngine, std::size_t N, typename T>
-void uniform_in_sphere_by_rejection(RandomEngine& engine, Vector<N, T>& v, T& v_length_square)
+void uniform_in_sphere_by_rejection(RandomEngine& engine, numerical::Vector<N, T>& v, T& v_length_square)
 {
         static_assert(N >= 1);
 
@@ -82,7 +82,7 @@ void uniform_in_sphere_by_rejection(RandomEngine& engine, Vector<N, T>& v, T& v_
 }
 
 template <typename RandomEngine, std::size_t N, typename T>
-void uniform_in_sphere_by_normal_distribution(RandomEngine& engine, Vector<N, T>& v, T& v_length_square)
+void uniform_in_sphere_by_normal_distribution(RandomEngine& engine, numerical::Vector<N, T>& v, T& v_length_square)
 {
         static_assert(N >= 1);
 
@@ -112,13 +112,13 @@ void uniform_in_sphere_by_normal_distribution(RandomEngine& engine, Vector<N, T>
 //
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_on_sphere_by_rejection(RandomEngine& engine)
+numerical::Vector<N, T> uniform_on_sphere_by_rejection(RandomEngine& engine)
 {
         static_assert(N >= 2);
 
         thread_local std::uniform_real_distribution<T> urd(-1, 1);
 
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         while (true)
         {
                 v = random_vector<N, T>(engine, urd);
@@ -136,7 +136,7 @@ Vector<N, T> uniform_on_sphere_by_rejection(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_on_sphere_by_normal_distribution(RandomEngine& engine)
+numerical::Vector<N, T> uniform_on_sphere_by_normal_distribution(RandomEngine& engine)
 {
         static_assert(N >= 2);
 
@@ -147,7 +147,7 @@ Vector<N, T> uniform_on_sphere_by_normal_distribution(RandomEngine& engine)
 }
 
 template <typename RandomEngine, std::size_t N, typename T>
-void uniform_in_sphere(RandomEngine& engine, Vector<N, T>& v, T& v_length_square)
+void uniform_in_sphere(RandomEngine& engine, numerical::Vector<N, T>& v, T& v_length_square)
 {
         namespace impl = sphere_implementation;
 
@@ -162,7 +162,7 @@ void uniform_in_sphere(RandomEngine& engine, Vector<N, T>& v, T& v_length_square
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_on_sphere(RandomEngine& engine)
+numerical::Vector<N, T> uniform_on_sphere(RandomEngine& engine)
 {
         namespace impl = sphere_implementation;
 
@@ -177,15 +177,17 @@ Vector<N, T> uniform_on_sphere(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_sphere(RandomEngine& engine, const std::array<Vector<N, T>, M>& orthogonal_vectors)
+numerical::Vector<N, T> uniform_in_sphere(
+        RandomEngine& engine,
+        const std::array<numerical::Vector<N, T>, M>& orthogonal_vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
-        Vector<M, T> v;
+        numerical::Vector<M, T> v;
         T v_length_square;
         uniform_in_sphere(engine, v, v_length_square);
 
-        Vector<N, T> res = orthogonal_vectors[0] * v[0];
+        numerical::Vector<N, T> res = orthogonal_vectors[0] * v[0];
         for (std::size_t i = 1; i < M; ++i)
         {
                 res.multiply_add(orthogonal_vectors[i], v[i]);

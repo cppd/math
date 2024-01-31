@@ -77,7 +77,7 @@ void test_unit(
                         {
                                 progress->set(i * count_per_thread_reciprocal);
                         }
-                        const Vector<N, T> v = random_vector(engine);
+                        const numerical::Vector<N, T> v = random_vector(engine);
                         if (!(v.is_unit()))
                         {
                                 error("Vector " + to_string(v) + " is not unit " + to_string(v.norm()));
@@ -107,7 +107,7 @@ template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_angle(
         const std::string_view description,
         const long long count_per_bucket,
-        const Vector<N, T>& normal,
+        const numerical::Vector<N, T>& normal,
         const RandomVector& random_vector,
         const PDF& pdf,
         progress::Ratio* const progress)

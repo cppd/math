@@ -61,7 +61,7 @@ public:
         [[nodiscard]] std::string consistency_string() const override;
 
         [[nodiscard]] bool empty() const;
-        [[nodiscard]] Vector<N, T> velocity() const;
+        [[nodiscard]] numerical::Vector<N, T> velocity() const;
         [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const;
 };
 }

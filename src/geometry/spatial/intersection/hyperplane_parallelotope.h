@@ -77,12 +77,13 @@ std::vector<numerical::Ray<N, T>> create_rays(
 
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(engine, p.vectors());
+                const numerical::Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(engine, p.vectors());
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random::direction_for_normal(T{0}, T{0.5}, p.normal(), engine);
+                const numerical::Vector<N, T> direction =
+                        random::direction_for_normal(T{0}, T{0.5}, p.normal(), engine);
                 rays.push_back({ray.org() + distance * p.normal(), -direction});
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));

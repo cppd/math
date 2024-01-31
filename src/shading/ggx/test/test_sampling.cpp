@@ -49,15 +49,15 @@ T random_alpha(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_normal(RandomEngine& engine)
+numerical::Vector<N, T> random_normal(RandomEngine& engine)
 {
         return sampling::uniform_on_sphere<N, T>(engine).normalized();
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_v(const Vector<N, T>& normal, RandomEngine& engine)
+numerical::Vector<N, T> random_v(const numerical::Vector<N, T>& normal, RandomEngine& engine)
 {
-        Vector<N, T> res = sampling::uniform_on_sphere<N, T>(engine).normalized();
+        numerical::Vector<N, T> res = sampling::uniform_on_sphere<N, T>(engine).normalized();
         if (dot(res, normal) < 0)
         {
                 return -res;
@@ -68,13 +68,13 @@ Vector<N, T> random_v(const Vector<N, T>& normal, RandomEngine& engine)
 //
 
 template <std::size_t N, typename T>
-void test_unit(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n)
+void test_unit(progress::Ratio* const progress, const T alpha, const numerical::Vector<N, T>& n)
 {
         st::test_unit<N, T>(
                 "Visible Normals", UNIT_COUNT,
                 [&](auto& engine)
                 {
-                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
+                        numerical::Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                         if (dot(v, n) < 0)
                         {
                                 v = -v;
@@ -87,7 +87,7 @@ void test_unit(progress::Ratio* const progress, const T alpha, const Vector<N, T
                 "Visible Normals, Reflected", UNIT_COUNT,
                 [&](auto& engine)
                 {
-                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
+                        numerical::Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                         if (dot(v, n) < 0)
                         {
                                 v = -v;
@@ -99,7 +99,11 @@ void test_unit(progress::Ratio* const progress, const T alpha, const Vector<N, T
 }
 
 template <std::size_t N, typename T>
-void test_distribution(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+void test_distribution(
+        progress::Ratio* const progress,
+        const T alpha,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v)
 {
         st::test_distribution_angle<N, T>(
                 "Normals", ANGLE_COUNT_PER_BUCKET, n,
@@ -120,7 +124,7 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
                 {
                         return ggx_visible_normals_h(engine, n, n, alpha);
                 },
-                [&](const Vector<N, T>& h)
+                [&](const numerical::Vector<N, T>& h)
                 {
                         const T n_h = dot(n, h);
                         return n_h * ggx_d<N>(n_h, alpha);
@@ -135,7 +139,7 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
                 {
                         return ggx_visible_normals_h(engine, n, v, alpha);
                 },
-                [&](const Vector<N, T>& h)
+                [&](const numerical::Vector<N, T>& h)
                 {
                         const T n_h = dot(n, h);
                         const T h_v = dot(h, v);
@@ -150,9 +154,9 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
                         const auto [h, l] = ggx_visible_normals_h_l(engine, n, v, alpha);
                         return l;
                 },
-                [&](const Vector<N, T>& l)
+                [&](const numerical::Vector<N, T>& l)
                 {
-                        const Vector<N, T> h = (l + v).normalized();
+                        const numerical::Vector<N, T> h = (l + v).normalized();
                         const T n_h = dot(n, h);
                         const T h_v = dot(h, v);
                         return ggx_visible_normals_l_pdf<N>(n_v, n_h, h_v, alpha);
@@ -161,7 +165,11 @@ void test_distribution(progress::Ratio* const progress, const T alpha, const Vec
 }
 
 template <std::size_t N, typename T>
-void test_performance(progress::Ratio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+void test_performance(
+        progress::Ratio* const progress,
+        const T alpha,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v)
 {
         st::test_performance<PERFORMANCE_COUNT>(
                 "Visible Normals",
@@ -188,8 +196,8 @@ void test_ggx(progress::Ratio* const progress, RandomEngine& engine)
 
         LOG("GGX, " + space_name(N) + ", " + type_name<T>() + ", alpha " + to_string_fixed(alpha, 2));
 
-        const Vector<N, T> n = random_normal<N, T>(engine);
-        const Vector<N, T> v = random_v<N, T>(n, engine);
+        const numerical::Vector<N, T> n = random_normal<N, T>(engine);
+        const numerical::Vector<N, T> v = random_v<N, T>(n, engine);
 
         test_unit(progress, alpha, n);
         test_distribution(progress, alpha, n, v);
@@ -208,7 +216,7 @@ void test_ggx(progress::Ratio* const progress)
 //
 
 template <std::size_t N, typename T>
-void test_performance(const T alpha, const Vector<N, T>& normal, const Vector<N, T>& v)
+void test_performance(const T alpha, const numerical::Vector<N, T>& normal, const numerical::Vector<N, T>& v)
 {
         const long long p_visible_normals = st::test_performance<PERFORMANCE_COUNT>(
                 [&](auto& engine)
@@ -234,8 +242,8 @@ template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(RandomEngine& engine)
 {
         const auto alpha = random_alpha<T>(engine);
-        const Vector<N, T> n = random_normal<N, T>(engine);
-        const Vector<N, T> v = random_v<N, T>(n, engine);
+        const numerical::Vector<N, T> n = random_normal<N, T>(engine);
+        const numerical::Vector<N, T> v = random_v<N, T>(n, engine);
 
         test_performance(alpha, n, v);
 }

@@ -43,13 +43,13 @@ class Transform final
 {
         static_assert(std::is_integral_v<T>);
 
-        const std::vector<Vector<N, float>>* points_;
+        const std::vector<numerical::Vector<N, float>>* points_;
         T max_value_;
-        Vector<N, float> min_;
+        numerical::Vector<N, float> min_;
         double scale_;
 
 public:
-        Transform(const std::vector<Vector<N, float>>* const points, const std::type_identity_t<T> max_value)
+        Transform(const std::vector<numerical::Vector<N, float>>* const points, const std::type_identity_t<T> max_value)
                 : points_(points),
                   max_value_(max_value)
         {
@@ -57,8 +57,8 @@ public:
                 ASSERT(!points->empty());
                 ASSERT(0 < max_value);
 
-                Vector<N, float> min = (*points)[0];
-                Vector<N, float> max = (*points)[0];
+                numerical::Vector<N, float> min = (*points)[0];
+                numerical::Vector<N, float> max = (*points)[0];
                 for (std::size_t i = 1; i < points->size(); ++i)
                 {
                         for (std::size_t n = 0; n < N; ++n)
@@ -78,13 +78,13 @@ public:
                 scale_ = max_value / max_d;
         }
 
-        [[nodiscard]] Vector<N, T> to_integer(const std::size_t index) const
+        [[nodiscard]] numerical::Vector<N, T> to_integer(const std::size_t index) const
         {
                 ASSERT(index < points_->size());
 
-                const Vector<N, float>& point = (*points_)[index];
+                const numerical::Vector<N, float>& point = (*points_)[index];
 
-                Vector<N, T> res;
+                numerical::Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const long long value = std::llround((point[i] - min_[i]) * scale_);
@@ -105,22 +105,22 @@ class Points final
         using T = LeastSignedInteger<BITS>;
         static constexpr T MAX{(1ull << BITS) - 1};
 
-        std::vector<Vector<N, T>> points_;
+        std::vector<numerical::Vector<N, T>> points_;
         std::vector<int> map_;
 
 public:
-        explicit Points(const std::vector<Vector<N, float>>& points)
+        explicit Points(const std::vector<numerical::Vector<N, float>>& points)
         {
                 points_.reserve(points.size());
                 map_.reserve(points.size());
 
                 const Transform<N, T> transform{&points, MAX};
 
-                std::unordered_set<Vector<N, T>> set(points.size());
+                std::unordered_set<numerical::Vector<N, T>> set(points.size());
 
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        const Vector<N, T> integer_value = transform.to_integer(i);
+                        const numerical::Vector<N, T> integer_value = transform.to_integer(i);
                         if (set.insert(integer_value).second)
                         {
                                 points_.push_back(integer_value);
@@ -131,7 +131,7 @@ public:
                 shuffle(PCG(points_.size()), &points_, &map_);
         }
 
-        [[nodiscard]] const std::vector<Vector<N, T>>& points() const
+        [[nodiscard]] const std::vector<numerical::Vector<N, T>>& points() const
         {
                 return points_;
         }

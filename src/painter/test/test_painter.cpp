@@ -109,7 +109,7 @@ class Image final : public Notifier<N>
         {
         }
 
-        void pixel_set(const std::array<int, N>&, const Vector<3, float>&) override
+        void pixel_set(const std::array<int, N>&, const numerical::Vector<3, float>&) override
         {
         }
 
@@ -172,18 +172,18 @@ std::unique_ptr<const model::mesh::Mesh<N>> sphere_mesh(const int facet_count)
 {
         LOG("creating sphere in " + space_name(N) + "...");
 
-        std::vector<Vector<N, float>> vertices;
+        std::vector<numerical::Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;
         geometry::shapes::create_sphere(facet_count, &vertices, &facets);
 
         const float radius = random_radius<N>();
-        const Vector<N, float> center(-radius / 2);
+        const numerical::Vector<N, float> center(-radius / 2);
 
         LOG("mesh radius = " + to_string(radius));
         LOG("mesh center = " + to_string(center));
         LOG("facet count " + to_string(facets.size()));
 
-        for (Vector<N, float>& v : vertices)
+        for (numerical::Vector<N, float>& v : vertices)
         {
                 v = radius * v + center;
         }
@@ -262,7 +262,7 @@ void test_painter(
                 std::vector<const model::mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
 
-                static constexpr std::optional<Vector<N + 1, T>> CLIP_PLANE_EQUATION;
+                static constexpr std::optional<numerical::Vector<N + 1, T>> CLIP_PLANE_EQUATION;
 
                 painter_mesh = shapes::create_mesh<N, T, Color>(mesh_objects, CLIP_PLANE_EQUATION, WRITE_LOG, progress);
         }

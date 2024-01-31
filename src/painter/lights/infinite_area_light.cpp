@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
-void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& scene_center, const T scene_radius)
+void InfiniteAreaLight<N, T, Color>::init(const numerical::Vector<N, T>& scene_center, const T scene_radius)
 {
         if (!(scene_radius > 0))
         {
@@ -52,13 +52,13 @@ void InfiniteAreaLight<N, T, Color>::init(const Vector<N, T>& scene_center, cons
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_sample(
         PCG& engine,
-        const Vector<N, T>& /*point*/,
-        const Vector<N, T>& n) const
+        const numerical::Vector<N, T>& /*point*/,
+        const numerical::Vector<N, T>& n) const
 {
         LightSourceArriveSample<N, T, Color> res;
         res.l = [&]
         {
-                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
+                const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
                 return (dot(n, l) >= 0) ? l : -l;
         }();
         res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
@@ -68,8 +68,8 @@ LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_samp
 
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
-        const Vector<N, T>& /*point*/,
-        const Vector<N, T>& /*l*/) const
+        const numerical::Vector<N, T>& /*point*/,
+        const numerical::Vector<N, T>& /*l*/) const
 {
         LightSourceArriveInfo<T, Color> res;
         res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
@@ -80,9 +80,9 @@ LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
 template <std::size_t N, typename T, typename Color>
 LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample(PCG& engine) const
 {
-        const Vector<N, T> dir = sampling::uniform_on_sphere<N, T>(engine);
+        const numerical::Vector<N, T> dir = sampling::uniform_on_sphere<N, T>(engine);
 
-        const std::array<Vector<N, T>, N - 1> vectors =
+        const std::array<numerical::Vector<N, T>, N - 1> vectors =
                 com::multiply(numerical::orthogonal_complement_of_unit_vector(dir), scene_radius_);
 
         LightSourceLeaveSample<N, T, Color> res;
@@ -96,19 +96,19 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
 }
 
 template <std::size_t N, typename T, typename Color>
-T InfiniteAreaLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
+T InfiniteAreaLight<N, T, Color>::leave_pdf_pos(const numerical::Vector<N, T>& /*dir*/) const
 {
         return leave_pdf_pos_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T InfiniteAreaLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& /*dir*/) const
+T InfiniteAreaLight<N, T, Color>::leave_pdf_dir(const numerical::Vector<N, T>& /*dir*/) const
 {
         return leave_pdf_dir_;
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*dir*/) const
+std::optional<Color> InfiniteAreaLight<N, T, Color>::leave_radiance(const numerical::Vector<N, T>& /*dir*/) const
 {
         return radiance_;
 }

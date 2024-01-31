@@ -63,7 +63,7 @@ template <std::size_t N, typename T, typename Color, typename Normal>
 [[nodiscard]] T area_pdf(
         const Scene<N, T, Color>& scene,
         const LightDistribution<N, T, Color>& light_distribution,
-        const Vector<N, T>& light_dir,
+        const numerical::Vector<N, T>& light_dir,
         const Normal& next_normal)
 {
         T sum = 0;
@@ -95,7 +95,7 @@ class InfiniteLight final
 {
         const Scene<N, T, Color>* scene_;
         const LightDistribution<N, T, Color>* light_distribution_;
-        Vector<N, T> dir_;
+        numerical::Vector<N, T> dir_;
         Color beta_;
         T angle_pdf_forward_;
         T angle_pdf_origin_;
@@ -122,7 +122,7 @@ public:
                 return beta_;
         }
 
-        [[nodiscard]] const Vector<N, T>& dir() const
+        [[nodiscard]] const numerical::Vector<N, T>& dir() const
         {
                 return dir_;
         }

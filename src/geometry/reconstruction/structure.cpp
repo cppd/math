@@ -82,19 +82,19 @@ bool is_unbounded(
 
 // Definition 4.1 (Poles).
 template <std::size_t N>
-Vector<N, double> voronoi_positive_norm(
-        const Vector<N, double>& vertex,
+numerical::Vector<N, double> voronoi_positive_norm(
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const VertexConnections& vertex_connections)
 {
         const bool unbounded = is_unbounded(delaunay_facets, vertex_connections);
 
-        Vector<N, double> positive_norm;
+        numerical::Vector<N, double> positive_norm;
 
         if (unbounded)
         {
-                Vector<N, double> sum(0);
+                numerical::Vector<N, double> sum(0);
                 for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
                 {
                         if (delaunay_facets[vertex_facet.facet_index].one_sided())
@@ -107,11 +107,12 @@ Vector<N, double> voronoi_positive_norm(
         else
         {
                 double max_distance = Limits<double>::lowest();
-                Vector<N, double> max_vector(0);
+                numerical::Vector<N, double> max_vector(0);
                 for (const auto object_index : vertex_connections.objects)
                 {
-                        const Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
-                        const Vector<N, double> vp = voronoi_vertex - vertex;
+                        const numerical::Vector<N, double> voronoi_vertex =
+                                delaunay_objects[object_index].voronoi_vertex();
+                        const numerical::Vector<N, double> vp = voronoi_vertex - vertex;
                         const double distance = vp.norm_squared();
                         if (distance > max_distance)
                         {
@@ -134,19 +135,19 @@ Vector<N, double> voronoi_positive_norm(
 // Definition 5.3 (The radius and the height of a Voronoi cell).
 template <std::size_t N>
 double voronoi_height(
-        const Vector<N, double>& vertex,
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
-        const Vector<N, double>& positive_pole_norm,
+        const numerical::Vector<N, double>& positive_pole_norm,
         const std::vector<int>& vertex_objects)
 {
         double max_distance = Limits<double>::lowest();
-        // Vector<N, double> negative_pole(0);
+        // numerical::Vector<N, double> negative_pole(0);
         bool found = false;
 
         for (const int object_index : vertex_objects)
         {
-                const Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
-                const Vector<N, double> vp = voronoi_vertex - vertex;
+                const numerical::Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
+                const numerical::Vector<N, double> vp = voronoi_vertex - vertex;
 
                 if (dot(vp, positive_pole_norm) >= 0)
                 {
@@ -180,10 +181,10 @@ double voronoi_height(
 template <std::size_t N>
 void check_close_to_vertex(
         const core::DelaunayFacet<N>& facet,
-        const Vector<N, double>& pa,
+        const numerical::Vector<N, double>& pa,
         const double pa_length,
         const double cos_n_a,
-        const Vector<N, double>& a_to_b)
+        const numerical::Vector<N, double>& a_to_b)
 {
         // if PA is close to positive pole
         if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
@@ -208,8 +209,8 @@ template <std::size_t N>
 double voronoi_edge_radius(
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const core::DelaunayFacet<N>& facet,
-        const Vector<N, double>& positive_pole,
-        const Vector<N, double>& pa,
+        const numerical::Vector<N, double>& positive_pole,
+        const numerical::Vector<N, double>& pa,
         const double pa_length,
         const double pb_length,
         const double cos_n_a,
@@ -227,7 +228,7 @@ double voronoi_edge_radius(
 
         // here Voronoi vertices are not equal (if equal then they are inside cocone),
         // so it is possible to take a non-zero vector from a to b.
-        const Vector<N, double> a_to_b =
+        const numerical::Vector<N, double> a_to_b =
                 facet.one_sided()
                         ? facet.ortho()
                         : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
@@ -256,7 +257,7 @@ double voronoi_edge_radius(
 template <std::size_t N>
 struct EdgePoint final
 {
-        Vector<N, double> v;
+        numerical::Vector<N, double> v;
         double length;
         double cos;
 };
@@ -264,12 +265,12 @@ struct EdgePoint final
 template <std::size_t N>
 EdgePoint<N> compute_edge_point(
         const unsigned index,
-        const Vector<N, double>& vertex,
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
-        const Vector<N, double>& positive_pole,
+        const numerical::Vector<N, double>& positive_pole,
         const core::DelaunayFacet<N>& facet)
 {
-        const Vector<N, double> v = delaunay_objects[facet.delaunay(index)].voronoi_vertex() - vertex;
+        const numerical::Vector<N, double> v = delaunay_objects[facet.delaunay(index)].voronoi_vertex() - vertex;
         const double length = v.norm();
         const double cos = dot(positive_pole, v) / length;
         return {.v = v, .length = length, .cos = cos};
@@ -278,10 +279,10 @@ EdgePoint<N> compute_edge_point(
 // Definition 5.3 (The radius and the height of a Voronoi cell).
 template <std::size_t N>
 double cocone_facets_and_voronoi_radius_impl(
-        const Vector<N, double>& vertex,
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
-        const Vector<N, double>& positive_pole,
+        const numerical::Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data,
         const bool find_radius)
@@ -331,10 +332,10 @@ double cocone_facets_and_voronoi_radius_impl(
 
 template <std::size_t N>
 double cocone_facets_and_voronoi_radius(
-        const Vector<N, double>& vertex,
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
-        const Vector<N, double>& positive_pole,
+        const numerical::Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data)
 {
@@ -345,10 +346,10 @@ double cocone_facets_and_voronoi_radius(
 
 template <std::size_t N>
 void cocone_facets(
-        const Vector<N, double>& vertex,
+        const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
-        const Vector<N, double>& positive_pole,
+        const numerical::Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
         std::vector<ManifoldFacet<N>>* const facet_data)
 {
@@ -442,7 +443,7 @@ std::vector<VertexConnections> vertex_connections(
 template <std::size_t N>
 ManifoldData<N> find_manifold_data(
         const bool find_cocone_neighbors,
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<core::DelaunayObject<N>>& objects,
         const std::vector<core::DelaunayFacet<N>>& facets)
 {
@@ -459,13 +460,13 @@ ManifoldData<N> find_manifold_data(
                 {
                         // No all points are Delaunay vertices.
                         // Integer convex hull algorithm can skip some points.
-                        vertex_data.emplace_back(Vector<N, double>(0), 0, 0);
+                        vertex_data.emplace_back(numerical::Vector<N, double>(0), 0, 0);
                         continue;
                 }
 
                 ASSERT(!connections[v].facets.empty() && !connections[v].objects.empty());
 
-                const Vector<N, double> positive_norm =
+                const numerical::Vector<N, double> positive_norm =
                         voronoi_positive_norm(points[v], objects, facets, connections[v]);
 
                 if (!find_cocone_neighbors)
@@ -495,10 +496,10 @@ ManifoldData<N> find_manifold_data(
         return {.vertices = std::move(vertex_data), .facets = std::move(facet_data)};
 }
 
-#define TEMPLATE(N)                                                                                           \
-        template ManifoldData<(N)> find_manifold_data(                                                        \
-                bool, const std::vector<Vector<(N), double>>&, const std::vector<core::DelaunayObject<(N)>>&, \
-                const std::vector<core::DelaunayFacet<(N)>>&);
+#define TEMPLATE(N)                                                       \
+        template ManifoldData<(N)> find_manifold_data(                    \
+                bool, const std::vector<numerical::Vector<(N), double>>&, \
+                const std::vector<core::DelaunayObject<(N)>>&, const std::vector<core::DelaunayFacet<(N)>>&);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

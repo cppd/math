@@ -32,12 +32,12 @@ namespace ns::geometry::spatial::random
 namespace vectors_implementation
 {
 template <std::size_t M, std::size_t N, typename T>
-bool check_vectors(const T& min_length, const T& max_length, const std::array<Vector<N, T>, M>& vectors)
+bool check_vectors(const T& min_length, const T& max_length, const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         constexpr T MAX_DOT_PRODUCT = 0.9;
 
-        std::array<Vector<N, T>, M> unit_vectors = vectors;
-        for (Vector<N, T>& v : unit_vectors)
+        std::array<numerical::Vector<N, T>, M> unit_vectors = vectors;
+        for (numerical::Vector<N, T>& v : unit_vectors)
         {
                 const T length = v.norm();
                 if (!(length >= min_length && length <= max_length))
@@ -63,13 +63,13 @@ bool check_vectors(const T& min_length, const T& max_length, const std::array<Ve
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> point(const std::type_identity_t<T>& interval, RandomEngine& engine)
+numerical::Vector<N, T> point(const std::type_identity_t<T>& interval, RandomEngine& engine)
 {
         ASSERT(interval > 0);
 
         std::uniform_real_distribution<T> urd(-interval, interval);
 
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = urd(engine);
@@ -78,7 +78,7 @@ Vector<N, T> point(const std::type_identity_t<T>& interval, RandomEngine& engine
 }
 
 template <std::size_t M, std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N, T>, M> vectors(
+std::array<numerical::Vector<N, T>, M> vectors(
         const std::type_identity_t<T>& min_length,
         const std::type_identity_t<T>& max_length,
         RandomEngine& engine)
@@ -88,11 +88,11 @@ std::array<Vector<N, T>, M> vectors(
         ASSERT(min_length > 0 && min_length < max_length);
 
         std::uniform_real_distribution<T> urd(min_length, max_length);
-        std::array<Vector<N, T>, M> vectors;
+        std::array<numerical::Vector<N, T>, M> vectors;
 
         while (true)
         {
-                for (Vector<N, T>& v : vectors)
+                for (numerical::Vector<N, T>& v : vectors)
                 {
                         v = urd(engine) * sampling::uniform_on_sphere<N, T>(engine);
                 }
@@ -123,13 +123,17 @@ std::array<T, N> aa_vectors(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, RandomEngine& engine)
+numerical::Vector<N, T> direction_for_normal(
+        const T& from,
+        const T& to,
+        const numerical::Vector<N, T>& normal,
+        RandomEngine& engine)
 {
         ASSERT(from >= 0 && from < to);
 
         while (true)
         {
-                const Vector<N, T> direction = sampling::uniform_on_sphere<N, T>(engine);
+                const numerical::Vector<N, T> direction = sampling::uniform_on_sphere<N, T>(engine);
                 const T d = dot(normal, direction);
 
                 if (!(std::abs(d) >= from && std::abs(d) <= to))

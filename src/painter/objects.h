@@ -40,7 +40,7 @@ struct SurfaceSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> l;
+        numerical::Vector<N, T> l;
         T pdf;
         Color brdf;
 
@@ -63,35 +63,36 @@ protected:
         ~Surface() = default;
 
 public:
-        [[nodiscard]] virtual Vector<N, T> point(const numerical::Ray<N, T>& ray, T distance) const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> point(const numerical::Ray<N, T>& ray, T distance) const = 0;
 
-        [[nodiscard]] virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> geometric_normal(const numerical::Vector<N, T>& point) const = 0;
 
-        [[nodiscard]] virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual std::optional<numerical::Vector<N, T>> shading_normal(
+                const numerical::Vector<N, T>& point) const = 0;
 
         [[nodiscard]] virtual const LightSource<N, T, Color>* light_source() const = 0;
 
         [[nodiscard]] virtual Color brdf(
-                const Vector<N, T>& point,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const = 0;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const = 0;
 
         [[nodiscard]] virtual T pdf(
-                const Vector<N, T>& point,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const = 0;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const = 0;
 
         [[nodiscard]] virtual SurfaceSample<N, T, Color> sample(
                 PCG& engine,
-                const Vector<N, T>& point,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const = 0;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const = 0;
 
-        [[nodiscard]] virtual bool is_specular(const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual bool is_specular(const numerical::Vector<N, T>& point) const = 0;
 
-        [[nodiscard]] virtual T alpha(const Vector<N, T>& point) const = 0;
+        [[nodiscard]] virtual T alpha(const numerical::Vector<N, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -100,7 +101,7 @@ class SurfaceIntersection final
         static_assert(std::is_floating_point_v<T>);
 
         const Surface<N, T, Color>* surface_ = nullptr;
-        Vector<N, T> point_;
+        numerical::Vector<N, T> point_;
         T distance_;
 
 public:
@@ -123,7 +124,7 @@ public:
                 return surface_ != nullptr;
         }
 
-        [[nodiscard]] const Vector<N, T>& point() const
+        [[nodiscard]] const numerical::Vector<N, T>& point() const
         {
                 return point_;
         }
@@ -148,17 +149,26 @@ public:
                 return surface_->light_source();
         }
 
-        [[nodiscard]] decltype(auto) brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] decltype(auto) brdf(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const
         {
                 return surface_->brdf(point_, n, v, l);
         }
 
-        [[nodiscard]] decltype(auto) pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] decltype(auto) pdf(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const
         {
                 return surface_->pdf(point_, n, v, l);
         }
 
-        [[nodiscard]] decltype(auto) sample(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
+        [[nodiscard]] decltype(auto) sample(
+                PCG& engine,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const
         {
                 return surface_->sample(engine, point_, n, v);
         }
@@ -198,7 +208,7 @@ struct LightSourceArriveSample final
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> l;
+        numerical::Vector<N, T> l;
         T pdf;
         Color radiance;
         std::optional<T> distance;
@@ -219,7 +229,7 @@ struct LightSourceLeaveSample final
         static_assert(std::is_floating_point_v<T>);
 
         numerical::Ray<N, T> ray;
-        std::optional<Vector<N, T>> n;
+        std::optional<numerical::Vector<N, T>> n;
         T pdf_pos;
         T pdf_dir;
         Color radiance;
@@ -238,23 +248,23 @@ class LightSource
 public:
         virtual ~LightSource() = default;
 
-        virtual void init(const Vector<N, T>& scene_center, T scene_radius) = 0;
+        virtual void init(const numerical::Vector<N, T>& scene_center, T scene_radius) = 0;
 
         [[nodiscard]] virtual LightSourceArriveSample<N, T, Color> arrive_sample(
                 PCG& engine,
-                const Vector<N, T>& point,
-                const Vector<N, T>& n) const = 0;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n) const = 0;
 
         [[nodiscard]] virtual LightSourceArriveInfo<T, Color> arrive_info(
-                const Vector<N, T>& point,
-                const Vector<N, T>& l) const = 0;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& l) const = 0;
 
         [[nodiscard]] virtual LightSourceLeaveSample<N, T, Color> leave_sample(PCG& engine) const = 0;
 
-        [[nodiscard]] virtual T leave_pdf_pos(const Vector<N, T>& dir) const = 0;
-        [[nodiscard]] virtual T leave_pdf_dir(const Vector<N, T>& dir) const = 0;
+        [[nodiscard]] virtual T leave_pdf_pos(const numerical::Vector<N, T>& dir) const = 0;
+        [[nodiscard]] virtual T leave_pdf_dir(const numerical::Vector<N, T>& dir) const = 0;
 
-        [[nodiscard]] virtual std::optional<Color> leave_radiance(const Vector<N, T>& dir) const = 0;
+        [[nodiscard]] virtual std::optional<Color> leave_radiance(const numerical::Vector<N, T>& dir) const = 0;
 
         [[nodiscard]] virtual Color power() const = 0;
 
@@ -273,7 +283,7 @@ public:
 
         [[nodiscard]] virtual const std::array<int, N - 1>& screen_size() const = 0;
 
-        [[nodiscard]] virtual numerical::Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
+        [[nodiscard]] virtual numerical::Ray<N, T> ray(const numerical::Vector<N - 1, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -328,16 +338,16 @@ public:
         virtual ~Scene() = default;
 
         [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray) const = 0;
 
         [[nodiscard]] virtual SurfaceIntersection<N, T, Color> intersect(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray,
                 T max_distance) const = 0;
 
         [[nodiscard]] virtual bool intersect_any(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray,
                 T max_distance) const = 0;
 

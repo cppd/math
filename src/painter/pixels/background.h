@@ -31,7 +31,7 @@ template <typename Color>
 class Background final
 {
         Color color_;
-        Vector<3, float> color_rgb32_ = color_.rgb32();
+        numerical::Vector<3, float> color_rgb32_ = color_.rgb32();
         Color::DataType contribution_ = sample_color_contribution(color_);
 
 public:
@@ -59,7 +59,7 @@ public:
                 return color_;
         }
 
-        [[nodiscard]] const Vector<3, float>& color_rgb32() const
+        [[nodiscard]] const numerical::Vector<3, float>& color_rgb32() const
         {
                 return color_rgb32_;
         }

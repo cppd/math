@@ -50,12 +50,13 @@ constexpr Hyperplane<N, T> reverse(Hyperplane<N, T> plane)
 template <typename T>
 struct Test final
 {
-        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5).n == Vector<4, T>(1.1, 1.2, 1.3, 1.4));
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5).n == numerical::Vector<4, T>(1.1, 1.2, 1.3, 1.4));
         static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5).d == 1.5);
-        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4, 1.5}).n == Vector<4, T>(1.1, 1.2, 1.3, 1.4));
+        static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4, 1.5}).n == numerical::Vector<4, T>(1.1, 1.2, 1.3, 1.4));
         static_assert(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4, 1.5}).d == -1.5);
 
-        static_assert(reverse(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5)).n == -Vector<4, T>(1.1, 1.2, 1.3, 1.4));
+        static_assert(
+                reverse(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5)).n == -numerical::Vector<4, T>(1.1, 1.2, 1.3, 1.4));
         static_assert(reverse(Hyperplane<4, T>({1.1, 1.2, 1.3, 1.4}, 1.5)).d == -1.5);
 };
 
@@ -64,13 +65,13 @@ template struct Test<double>;
 template struct Test<long double>;
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_plane_vector(
-        const std::array<Vector<N, T>, N - 1>& plane_vectors,
+numerical::Vector<N, T> random_plane_vector(
+        const std::array<numerical::Vector<N, T>, N - 1>& plane_vectors,
         std::uniform_real_distribution<T>& urd,
         RandomEngine& engine)
 {
         static_assert(N >= 2);
-        Vector<N, T> res = urd(engine) * plane_vectors[0];
+        numerical::Vector<N, T> res = urd(engine) * plane_vectors[0];
         for (std::size_t i = 1; i < plane_vectors.size(); ++i)
         {
                 res.multiply_add(urd(engine), plane_vectors[i]);
@@ -81,11 +82,11 @@ Vector<N, T> random_plane_vector(
 template <std::size_t N, typename T>
 bool test_point_on_plane(
         const T precision,
-        const Vector<N, T>& point,
+        const numerical::Vector<N, T>& point,
         const Hyperplane<N, T>& plane,
-        const Vector<N, T>& plane_point)
+        const numerical::Vector<N, T>& plane_point)
 {
-        const Vector<N, T> to_point = point - plane_point;
+        const numerical::Vector<N, T> to_point = point - plane_point;
 
         if (!(to_point.norm() > T{0.1}))
         {
@@ -111,9 +112,9 @@ void test_point_distance(
         const T precision,
         const T distance,
         const T expected_distance,
-        const Vector<N, T>& point,
+        const numerical::Vector<N, T>& point,
         const Hyperplane<N, T>& plane,
-        const Vector<N, T>& plane_point)
+        const numerical::Vector<N, T>& plane_point)
 {
         if (std::abs(distance - expected_distance) < precision)
         {
@@ -133,8 +134,8 @@ void test_intersect(const T precision, RandomEngine& engine)
 {
         constexpr int TEST_COUNT = 100;
 
-        const Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
-        const Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
+        const numerical::Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
+        const numerical::Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
         const Hyperplane plane(plane_normal, dot(plane_normal, plane_point));
 
         int intersected_count = 0;
@@ -173,11 +174,11 @@ void test_distance(const T precision, RandomEngine& engine)
 
         constexpr int TEST_COUNT = 100;
 
-        const Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
-        const Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
+        const numerical::Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
+        const numerical::Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
         const Hyperplane plane(plane_normal, dot(plane_normal, plane_point));
 
-        const std::array<Vector<N, T>, N - 1> plane_vectors =
+        const std::array<numerical::Vector<N, T>, N - 1> plane_vectors =
                 numerical::orthogonal_complement_of_unit_vector(plane_normal.normalized());
 
         std::uniform_real_distribution<T> urd(-INTERVAL<T>, INTERVAL<T>);
@@ -186,7 +187,7 @@ void test_distance(const T precision, RandomEngine& engine)
         {
                 const T random_distance = urd(engine);
 
-                const Vector<N, T> random_point =
+                const numerical::Vector<N, T> random_point =
                         plane_point + random_plane_vector(plane_vectors, urd, engine) + random_distance * plane_normal;
 
                 test_point_distance(
@@ -199,16 +200,16 @@ void test_project(const T precision, RandomEngine& engine)
 {
         constexpr int TEST_COUNT = 100;
 
-        const Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
-        const Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
+        const numerical::Vector<N, T> plane_point = random::point<N, T>(INTERVAL<T>, engine);
+        const numerical::Vector<N, T> plane_normal = sampling::uniform_on_sphere<N, T>(engine);
         const Hyperplane plane(plane_normal, dot(plane_normal, plane_point));
 
         int projected_count = 0;
 
         for (int i = 0; i < TEST_COUNT; ++i)
         {
-                const Vector<N, T> random_point = random::point<N, T>(INTERVAL<T>, engine);
-                const Vector<N, T> projection = plane.project(random_point);
+                const numerical::Vector<N, T> random_point = random::point<N, T>(INTERVAL<T>, engine);
+                const numerical::Vector<N, T> projection = plane.project(random_point);
 
                 if (test_point_on_plane(precision, projection, plane, plane_point))
                 {

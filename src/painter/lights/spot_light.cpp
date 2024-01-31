@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
-void SpotLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+void SpotLight<N, T, Color>::init(const numerical::Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
 {
 }
 
@@ -55,13 +55,13 @@ Color SpotLight<N, T, Color>::radiance(const T cos, const T squared_distance, co
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(
         PCG& /*engine*/,
-        const Vector<N, T>& point,
-        const Vector<N, T>& /*n*/) const
+        const numerical::Vector<N, T>& point,
+        const numerical::Vector<N, T>& /*n*/) const
 {
-        const Vector<N, T> direction = location_ - point;
+        const numerical::Vector<N, T> direction = location_ - point;
         const T squared_distance = direction.norm_squared();
         const T distance = std::sqrt(squared_distance);
-        const Vector<N, T> l = direction / distance;
+        const numerical::Vector<N, T> l = direction / distance;
         const T cos = -dot(l, direction_);
 
         LightSourceArriveSample<N, T, Color> res;
@@ -74,8 +74,8 @@ LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(
 
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveInfo<T, Color> SpotLight<N, T, Color>::arrive_info(
-        const Vector<N, T>& /*point*/,
-        const Vector<N, T>& /*l*/) const
+        const numerical::Vector<N, T>& /*point*/,
+        const numerical::Vector<N, T>& /*l*/) const
 {
         LightSourceArriveInfo<T, Color> res;
         res.pdf = 0;
@@ -102,20 +102,20 @@ LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& en
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
+T SpotLight<N, T, Color>::leave_pdf_pos(const numerical::Vector<N, T>& /*dir*/) const
 {
         return 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-T SpotLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
+T SpotLight<N, T, Color>::leave_pdf_dir(const numerical::Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         return dot(dir, direction_) >= 0 ? sampling::uniform_on_hemisphere_pdf<N, T>() : 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> SpotLight<N, T, Color>::leave_radiance(const Vector<N, T>& /*dir*/) const
+std::optional<Color> SpotLight<N, T, Color>::leave_radiance(const numerical::Vector<N, T>& /*dir*/) const
 {
         return {};
 }
@@ -140,8 +140,8 @@ bool SpotLight<N, T, Color>::is_infinite_area() const
 
 template <std::size_t N, typename T, typename Color>
 SpotLight<N, T, Color>::SpotLight(
-        const Vector<N, T>& location,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& location,
+        const numerical::Vector<N, T>& direction,
         const Color& radiance,
         const std::type_identity_t<T> radiance_distance,
         const std::type_identity_t<T> falloff_start,

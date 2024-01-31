@@ -32,7 +32,7 @@ namespace ns::painter::shapes
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         bool write_log,
         progress::Ratio* progress);
 }

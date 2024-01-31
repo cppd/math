@@ -33,7 +33,7 @@ protected:
 public:
         [[nodiscard]] virtual bool angle_variance_less_than(T variance) const = 0;
 
-        [[nodiscard]] virtual Vector<2 * N, T> position_velocity() const = 0;
+        [[nodiscard]] virtual numerical::Vector<2 * N, T> position_velocity() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
 };
 }

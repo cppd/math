@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::noise
 {
 template <std::size_t N, typename T>
-[[nodiscard]] T noise(const Vector<N, T>& p);
+[[nodiscard]] T noise(const numerical::Vector<N, T>& p);
 }

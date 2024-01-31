@@ -36,9 +36,9 @@ namespace ns::shading::specular
 namespace
 {
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_data(const int count, RandomEngine& engine)
+std::vector<numerical::Vector<N, T>> random_data(const int count, RandomEngine& engine)
 {
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -48,12 +48,12 @@ std::vector<Vector<N, T>> random_data(const int count, RandomEngine& engine)
 }
 
 template <int COUNT, std::size_t N, typename T, typename F>
-long long test(const std::vector<Vector<N, T>>& data, const F& f)
+long long test(const std::vector<numerical::Vector<N, T>>& data, const F& f)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                for (const Vector<N, T>& v : data)
+                for (const numerical::Vector<N, T>& v : data)
                 {
                         do_not_optimize(f(v));
                 }
@@ -74,8 +74,8 @@ void test_fresnel_performance()
 
         PCG engine;
 
-        const Vector<N, T> normal = sampling::uniform_on_sphere<N, T>(engine);
-        const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
+        const numerical::Vector<N, T> normal = sampling::uniform_on_sphere<N, T>(engine);
+        const std::vector<numerical::Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
 
         std::ostringstream oss;
         oss << "Fresnel <" << N << ", " << type_name<T>() << ">:";
@@ -83,7 +83,7 @@ void test_fresnel_performance()
         {
                 const auto p = test<COUNT>(
                         data,
-                        [&](const Vector<N, T>& v)
+                        [&](const numerical::Vector<N, T>& v)
                         {
                                 return fresnel_dielectric(v, normal, N_1, N_2);
                         });
@@ -92,7 +92,7 @@ void test_fresnel_performance()
         {
                 const auto p = test<COUNT>(
                         data,
-                        [&](const Vector<N, T>& v)
+                        [&](const numerical::Vector<N, T>& v)
                         {
                                 return fresnel_conductor(v, normal, ETA, K);
                         });

@@ -69,9 +69,9 @@ const std::array<int, N - 1>& SphericalProjector<N, T>::screen_size() const
 }
 
 template <std::size_t N, typename T>
-numerical::Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point) const
+numerical::Ray<N, T> SphericalProjector<N, T>::ray(const numerical::Vector<N - 1, T>& point) const
 {
-        const Vector<N - 1, T> screen_point = screen_org_ + point;
+        const numerical::Vector<N - 1, T> screen_point = screen_org_ + point;
 
         const T radicand = square_radius_ - screen_point.norm_squared();
         if (!(radicand > 0))
@@ -80,16 +80,16 @@ numerical::Ray<N, T> SphericalProjector<N, T>::ray(const Vector<N - 1, T>& point
         }
 
         const T z = std::sqrt(radicand);
-        const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
+        const numerical::Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
 
         return numerical::Ray<N, T>(camera_org_, camera_dir_ * z + screen_dir);
 }
 
 template <std::size_t N, typename T>
 SphericalProjector<N, T>::SphericalProjector(
-        const Vector<N, T>& camera_org,
-        const Vector<N, T>& camera_dir,
-        const std::array<Vector<N, T>, N - 1>& screen_axes,
+        const numerical::Vector<N, T>& camera_org,
+        const numerical::Vector<N, T>& camera_dir,
+        const std::array<numerical::Vector<N, T>, N - 1>& screen_axes,
         const std::type_identity_t<T> width_view_angle_degrees,
         const std::array<int, N - 1>& screen_size)
         : screen_size_(screen_size),

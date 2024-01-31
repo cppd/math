@@ -41,7 +41,7 @@ Norms
 #include <type_traits>
 #include <utility>
 
-namespace ns
+namespace ns::numerical
 {
 template <std::size_t N, typename T>
 class Vector final

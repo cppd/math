@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, std::size_t M>
-T parallelotope_volume(const std::array<Vector<N, T>, M>& vectors)
+T parallelotope_volume(const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 

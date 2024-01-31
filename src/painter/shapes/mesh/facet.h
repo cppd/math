@@ -40,9 +40,9 @@ class Facet final
         static constexpr T MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
         [[nodiscard]] static std::array<T, N> compute_dots(
-                const std::vector<Vector<N, T>>& normals,
+                const std::vector<numerical::Vector<N, T>>& normals,
                 const std::array<int, N>& normal_indices,
-                const Vector<N, T>& simplex_normal)
+                const numerical::Vector<N, T>& simplex_normal)
         {
                 std::array<T, N> res;
                 for (std::size_t i = 0; i < N; ++i)
@@ -80,8 +80,8 @@ class Facet final
         std::array<bool, N> reverse_normal_;
 
 public:
-        Facet(const std::array<Vector<N, T>, N>& vertices,
-              const std::vector<Vector<N, T>>& normals,
+        Facet(const std::array<numerical::Vector<N, T>, N>& vertices,
+              const std::vector<numerical::Vector<N, T>>& normals,
               const bool has_normals,
               const std::array<int, N>& normal_indices,
               const bool has_texcoords,
@@ -148,13 +148,13 @@ public:
                 return t_[0] >= 0;
         }
 
-        [[nodiscard]] Vector<N - 1, T> texcoord(
-                const std::vector<Vector<N - 1, T>>& mesh_texcoords,
-                const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N - 1, T> texcoord(
+                const std::vector<numerical::Vector<N - 1, T>>& mesh_texcoords,
+                const numerical::Vector<N, T>& point) const
         {
                 if (has_texcoord())
                 {
-                        std::array<Vector<N - 1, T>, N> texcoords;
+                        std::array<numerical::Vector<N - 1, T>, N> texcoords;
                         for (std::size_t i = 0; i < N; ++i)
                         {
                                 texcoords[i] = mesh_texcoords[t_[i]];
@@ -164,9 +164,9 @@ public:
                 error("Mesh facet texture coordinates request when there are no texture coordinates");
         }
 
-        [[nodiscard]] Vector<N, T> shading_normal(
-                const std::vector<Vector<N, T>>& mesh_normals,
-                const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N, T> shading_normal(
+                const std::vector<numerical::Vector<N, T>>& mesh_normals,
+                const numerical::Vector<N, T>& point) const
         {
                 switch (normal_type_)
                 {
@@ -176,7 +176,7 @@ public:
                 }
                 case NormalType::USE:
                 {
-                        std::array<Vector<N, T>, N> normals;
+                        std::array<numerical::Vector<N, T>, N> normals;
                         for (std::size_t i = 0; i < N; ++i)
                         {
                                 normals[i] = mesh_normals[n_[i]];
@@ -185,7 +185,7 @@ public:
                 }
                 case NormalType::REVERSE:
                 {
-                        std::array<Vector<N, T>, N> normals;
+                        std::array<numerical::Vector<N, T>, N> normals;
                         for (std::size_t i = 0; i < N; ++i)
                         {
                                 normals[i] = reverse_normal_[i] ? -mesh_normals[n_[i]] : mesh_normals[n_[i]];
@@ -213,7 +213,7 @@ public:
                 return simplex_.normal();
         }
 
-        [[nodiscard]] decltype(auto) project(const Vector<N, T>& point) const
+        [[nodiscard]] decltype(auto) project(const numerical::Vector<N, T>& point) const
         {
                 return simplex_.project(point);
         }

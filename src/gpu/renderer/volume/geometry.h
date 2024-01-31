@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::renderer
 {
 geometry::spatial::Hyperplane<3, double> volume_clip_plane(
-        const Vector4d& world_clip_plane_equation,
+        const numerical::Vector4d& world_clip_plane_equation,
         const numerical::Matrix4d& model);
 
 // in texture coordinates
-Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vulkan::Image& image);
+numerical::Vector3d volume_gradient_h(const numerical::Matrix4d& texture_to_world, const vulkan::Image& image);
 }

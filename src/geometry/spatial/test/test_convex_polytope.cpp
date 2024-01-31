@@ -61,12 +61,12 @@ ConvexPolytope<N, T> create_random_spherical_polytope(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> internal_points(const int count, RandomEngine& engine)
+std::vector<numerical::Vector<N, T>> internal_points(const int count, RandomEngine& engine)
 {
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         T v_length_square;
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -173,7 +173,7 @@ void test(const int point_count, RandomEngine& engine)
 {
         const ConvexPolytope<N, T> polytope = create_random_spherical_polytope<N, T>(engine);
 
-        for (const Vector<N, T>& point : internal_points<N, T>(point_count, engine))
+        for (const numerical::Vector<N, T>& point : internal_points<N, T>(point_count, engine))
         {
                 numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
 

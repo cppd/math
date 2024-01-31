@@ -53,19 +53,19 @@ x ⋅ (2 * (v(n) - v(0))) = v(n) ⋅ v(n) - v(0) ⋅ v(0)
 namespace ns::geometry::core
 {
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> compute_voronoi_vertex_for_delaunay_object(
-        const std::vector<Vector<N, T>>& points,
+[[nodiscard]] numerical::Vector<N, T> compute_voronoi_vertex_for_delaunay_object(
+        const std::vector<numerical::Vector<N, T>>& points,
         const std::array<int, N + 1>& vertices)
 {
-        const Vector<N, T>& p0 = points[vertices[0]];
+        const numerical::Vector<N, T>& p0 = points[vertices[0]];
         const T dot0 = dot(p0, p0);
 
         numerical::Matrix<N, N, T> a;
-        Vector<N, T> b;
+        numerical::Vector<N, T> b;
 
         for (std::size_t row = 0; row < N; ++row)
         {
-                const Vector<N, T>& p = points[vertices[row + 1]];
+                const numerical::Vector<N, T>& p = points[vertices[row + 1]];
                 for (std::size_t col = 0; col < N; ++col)
                 {
                         a[row, col] = 2 * (p[col] - p0[col]);
@@ -73,7 +73,7 @@ template <std::size_t N, typename T>
                 b[row] = dot(p, p) - dot0;
         }
 
-        Vector<N, T> voronoi_vertex = a.solve(b);
+        numerical::Vector<N, T> voronoi_vertex = a.solve(b);
 
         ASSERT(is_finite(voronoi_vertex));
 

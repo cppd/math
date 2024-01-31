@@ -58,28 +58,28 @@ namespace ggx_implementation
 {
 #if 0
 template <typename T, typename RandomEngine>
-Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
+numerical::Vector<3, T> ggx_vn(RandomEngine& engine, const numerical::Vector<3, T>& ve, const T alpha)
 {
         // Section 3.2: transforming the view direction to the hemisphere configuration
-        const Vector<3, T> vh = Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
+        const numerical::Vector<3, T> vh = numerical::Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
 
         // Section 4.1: orthonormal basis (with special case if cross product is zero)
-        const Vector<3, T> t0 = [&]
+        const numerical::Vector<3, T> t0 = [&]
         {
                 const T length_square = square(vh[0]) + square(vh[1]);
                 if (length_square > 0)
                 {
                         const T length = std::sqrt(length_square);
-                        return Vector<3, T>(-vh[1] / length, vh[0] / length, 0);
+                        return numerical::Vector<3, T>(-vh[1] / length, vh[0] / length, 0);
                 }
-                return Vector<3, T>(1, 0, 0);
+                return numerical::Vector<3, T>(1, 0, 0);
         }();
-        const Vector<3, T> t1 = cross(vh, t0);
+        const numerical::Vector<3, T> t1 = cross(vh, t0);
 
         // Section 4.2: parameterization of the projected area
-        Vector<2, T> t = [&engine]
+        numerical::Vector<2, T> t = [&engine]
         {
-                Vector<2, T> vector;
+                numerical::Vector<2, T> vector;
                 T vector_length_square;
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
@@ -88,14 +88,14 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
         t[1] = interpolation(std::sqrt(1 - square(t[0])), t[1], s);
 
         // Section 4.3: reprojection onto hemisphere
-        const Vector<3, T> nh = [&]
+        const numerical::Vector<3, T> nh = [&]
         {
                 const T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 return t[0] * t0 + t[1] * t1 + z * vh;
         }();
 
         // Section 3.4: transforming the normal back to the ellipsoid configuration
-        Vector<3, T> ne = Vector<3, T>(alpha * nh[0], alpha * nh[1], std::max(T{0}, nh[2])).normalized();
+        numerical::Vector<3, T> ne = numerical::Vector<3, T>(alpha * nh[0], alpha * nh[1], std::max(T{0}, nh[2])).normalized();
 
         return ne;
 }
@@ -103,9 +103,9 @@ Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
 
 // Section 4.1: orthonormal basis
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> compute_orthonormal_basis(const Vector<N, T>& vh)
+std::array<numerical::Vector<N, T>, N - 1> compute_orthonormal_basis(const numerical::Vector<N, T>& vh)
 {
-        std::array<Vector<N, T>, N - 1> res;
+        std::array<numerical::Vector<N, T>, N - 1> res;
 
         const T length_square = [&]
         {
@@ -120,13 +120,13 @@ std::array<Vector<N, T>, N - 1> compute_orthonormal_basis(const Vector<N, T>& vh
         if (length_square > 0)
         {
                 const T length = std::sqrt(length_square);
-                Vector<N - 1, T> plane_v;
+                numerical::Vector<N - 1, T> plane_v;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         plane_v[i] = vh[i] / length;
                 }
 
-                const std::array<Vector<N - 1, T>, N - 2> plane_basis =
+                const std::array<numerical::Vector<N - 1, T>, N - 2> plane_basis =
                         numerical::orthogonal_complement_of_unit_vector(plane_v);
 
                 for (std::size_t i = 0; i < N - 2; ++i)
@@ -157,14 +157,14 @@ std::array<Vector<N, T>, N - 1> compute_orthonormal_basis(const Vector<N, T>& vh
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
+numerical::Vector<N, T> ggx_vn(RandomEngine& engine, const numerical::Vector<N, T>& ve, const T alpha)
 {
         static_assert(N >= 3);
 
         // Section 3.2: transforming the view direction to the hemisphere configuration
-        const Vector<N, T> vh = [&]
+        const numerical::Vector<N, T> vh = [&]
         {
-                Vector<N, T> t;
+                numerical::Vector<N, T> t;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         t[i] = alpha * ve[i];
@@ -174,12 +174,12 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         }();
 
         // Section 4.1: orthonormal basis
-        const std::array<Vector<N, T>, N - 1> orthonormal_basis = compute_orthonormal_basis(vh);
+        const std::array<numerical::Vector<N, T>, N - 1> orthonormal_basis = compute_orthonormal_basis(vh);
 
         // Section 4.2: parameterization of the projected area
-        Vector<N - 1, T> t = [&engine]
+        numerical::Vector<N - 1, T> t = [&engine]
         {
-                Vector<N - 1, T> vector;
+                numerical::Vector<N - 1, T> vector;
                 T vector_length_square;
                 sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
@@ -197,9 +197,9 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         t[N - 2] = interpolation(a, t[N - 2], s);
 
         // Section 4.3: reprojection onto hemisphere
-        const Vector<N, T> nh = [&]
+        const numerical::Vector<N, T> nh = [&]
         {
-                Vector<N, T> v = vh * std::sqrt(std::max(T{0}, 1 - dot(t, t)));
+                numerical::Vector<N, T> v = vh * std::sqrt(std::max(T{0}, 1 - dot(t, t)));
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         v.multiply_add(t[i], orthonormal_basis[i]);
@@ -208,7 +208,7 @@ Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
         }();
 
         // Section 3.4: transforming the normal back to the ellipsoid configuration
-        Vector<N, T> ne;
+        numerical::Vector<N, T> ne;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 ne[i] = alpha * nh[i];
@@ -246,10 +246,10 @@ T ggx_g2(const T n_v, const T n_l, const T alpha)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_visible_normals_h(
+numerical::Vector<N, T> ggx_visible_normals_h(
         RandomEngine& engine,
-        const Vector<N, T>& normal,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& normal,
+        const numerical::Vector<N, T>& v,
         const T alpha)
 {
         static_assert(N >= 3);
@@ -257,18 +257,18 @@ Vector<N, T> ggx_visible_normals_h(
 
         namespace impl = ggx_implementation;
 
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
+        std::array<numerical::Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
-        Vector<N, T> ve;
+        numerical::Vector<N, T> ve;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 ve[i] = dot(v, basis[i]);
         }
         ve[N - 1] = dot(v, normal);
 
-        const Vector<N, T> ne = impl::ggx_vn(engine, ve, alpha);
+        const numerical::Vector<N, T> ne = impl::ggx_vn(engine, ve, alpha);
 
-        Vector<N, T> res = ne[N - 1] * normal;
+        numerical::Vector<N, T> res = ne[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res.multiply_add(ne[i], basis[i]);
@@ -277,14 +277,14 @@ Vector<N, T> ggx_visible_normals_h(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
+std::tuple<numerical::Vector<N, T>, numerical::Vector<N, T>> ggx_visible_normals_h_l(
         RandomEngine& engine,
-        const Vector<N, T>& normal,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& normal,
+        const numerical::Vector<N, T>& v,
         const T alpha)
 {
-        const Vector<N, T> h = ggx_visible_normals_h(engine, normal, v, alpha);
-        const Vector<N, T> l = numerical::reflect_vn(v, h);
+        const numerical::Vector<N, T> h = ggx_visible_normals_h(engine, normal, v, alpha);
+        const numerical::Vector<N, T> l = numerical::reflect_vn(v, h);
         return {h, l};
 }
 

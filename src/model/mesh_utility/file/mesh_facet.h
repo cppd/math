@@ -90,11 +90,11 @@ void check_facet_indices(const Mesh<N>& mesh)
 template <std::size_t N>
         requires (N == 3)
 [[nodiscard]] bool facet_dimension_is_correct(
-        const std::vector<Vector<N, float>>& vertices,
+        const std::vector<numerical::Vector<N, float>>& vertices,
         const std::array<int, N>& indices)
 {
-        const Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
-        const Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
+        const numerical::Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
+        const numerical::Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
 
         if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
         {

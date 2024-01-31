@@ -79,7 +79,7 @@ namespace ns::gpu::dft
 {
 namespace
 {
-constexpr Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
+constexpr numerical::Vector2i GROUP_SIZE_2D = numerical::Vector2i(16, 16);
 
 vulkan::DeviceFunctionality device_functionality()
 {
@@ -96,7 +96,7 @@ class DftImage final : public ComputeImage
         CopyInputMemory copy_input_memory_;
         CopyOutputProgram copy_output_program_;
         CopyOutputMemory copy_output_memory_;
-        Vector2i copy_groups_ = Vector2i(0, 0);
+        numerical::Vector2i copy_groups_ = numerical::Vector2i(0, 0);
 
         VkImage output_ = VK_NULL_HANDLE;
 

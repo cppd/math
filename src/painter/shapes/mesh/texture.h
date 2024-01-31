@@ -34,17 +34,17 @@ namespace ns::painter::shapes::mesh
 template <std::size_t N>
 class Texture final
 {
-        [[nodiscard]] static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
+        [[nodiscard]] static std::vector<numerical::Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {
                 const std::size_t pixel_count = image.pixels.size() / format_pixel_size_in_bytes(image.color_format);
 
-                std::vector<Vector<3, float>> pixels(pixel_count);
+                std::vector<numerical::Vector<3, float>> pixels(pixel_count);
 
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
                         std::as_writable_bytes(std::span(pixels.data(), pixels.size())));
 
-                for (Vector<3, float>& c : pixels)
+                for (numerical::Vector<3, float>& c : pixels)
                 {
                         if (!is_finite(c))
                         {
@@ -59,8 +59,8 @@ class Texture final
                 return pixels;
         }
 
-        std::vector<Vector<3, float>> pixels_;
-        numerical::Interpolation<N, Vector<3, float>, float> interpolation_;
+        std::vector<numerical::Vector<3, float>> pixels_;
+        numerical::Interpolation<N, numerical::Vector<3, float>, float> interpolation_;
 
 public:
         explicit Texture(const image::Image<N>& image)
@@ -70,7 +70,7 @@ public:
         }
 
         template <typename T>
-        [[nodiscard]] Vector<3, float> color(const Vector<N, T>& p) const
+        [[nodiscard]] numerical::Vector<3, float> color(const numerical::Vector<N, T>& p) const
         {
                 return interpolation_.compute(p);
         }

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-inline constexpr Vector2i GROUP_SIZE(16, 16);
+inline constexpr numerical::Vector2i GROUP_SIZE(16, 16);
 
 inline constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
 

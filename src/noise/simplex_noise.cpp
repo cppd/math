@@ -39,7 +39,7 @@ static_assert(std::has_single_bit(SIZE));
 constexpr unsigned SIZE_M = SIZE - 1;
 
 template <std::size_t N, typename T>
-T sum(const Vector<N, T>& p)
+T sum(const numerical::Vector<N, T>& p)
 {
         T res = p[0];
         for (std::size_t i = 1; i < N; ++i)
@@ -50,9 +50,9 @@ T sum(const Vector<N, T>& p)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> floor(const Vector<N, T>& p)
+numerical::Vector<N, T> floor(const numerical::Vector<N, T>& p)
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = std::floor(p[i]);
@@ -61,17 +61,17 @@ Vector<N, T> floor(const Vector<N, T>& p)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> skew(const Vector<N, T>& p)
+numerical::Vector<N, T> skew(const numerical::Vector<N, T>& p)
 {
         static const T f = (std::sqrt(T{N} + 1) - 1) / N;
-        return p + Vector<N, T>(f * sum(p));
+        return p + numerical::Vector<N, T>(f * sum(p));
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> unskew(const Vector<N, T>& p)
+numerical::Vector<N, T> unskew(const numerical::Vector<N, T>& p)
 {
         static const T g = (1 - 1 / std::sqrt(T{N} + 1)) / N;
-        return p - Vector<N, T>(g * sum(p));
+        return p - numerical::Vector<N, T>(g * sum(p));
 }
 
 template <typename T>
@@ -89,7 +89,7 @@ struct Coordinate final
 };
 
 template <std::size_t N, typename T>
-std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
+std::array<int, N> traversal_indices(const numerical::Vector<N, T>& skewed_cell_coord)
         requires (N == 2)
 {
         if (skewed_cell_coord[0] > skewed_cell_coord[1])
@@ -100,7 +100,7 @@ std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
 }
 
 template <std::size_t N, typename T>
-std::array<int, N> traversal_indices(const Vector<N, T>& skewed_cell_coord)
+std::array<int, N> traversal_indices(const numerical::Vector<N, T>& skewed_cell_coord)
         requires (N >= 3)
 {
         std::array<Coordinate<T>, N> coordinates;
@@ -127,7 +127,7 @@ class SimplexNoise final
 
         NoiseTables<N, T> tables_ = noise_tables<N, T>(SIZE);
 
-        [[nodiscard]] Vector<N, T> gradient(const Vector<N, T>& p) const
+        [[nodiscard]] numerical::Vector<N, T> gradient(const numerical::Vector<N, T>& p) const
         {
                 unsigned hash = 0;
                 for (std::size_t i = 0; i < N; ++i)
@@ -137,9 +137,12 @@ class SimplexNoise final
                 return tables_.gradients[hash];
         }
 
-        void add_contribution(const Vector<N, T>& p, const Vector<N, T>& skewed_corner, T* const sum) const
+        void add_contribution(
+                const numerical::Vector<N, T>& p,
+                const numerical::Vector<N, T>& skewed_corner,
+                T* const sum) const
         {
-                const Vector<N, T> coord = p - unskew(skewed_corner);
+                const numerical::Vector<N, T> coord = p - unskew(skewed_corner);
                 const T t = T{0.5} - coord.norm_squared();
                 if (t > 0)
                 {
@@ -148,14 +151,14 @@ class SimplexNoise final
         }
 
         [[nodiscard]] T contributions(
-                const Vector<N, T>& p,
-                const Vector<N, T>& skewed_cell_org,
-                const Vector<N, T>& skewed_cell_coord) const
+                const numerical::Vector<N, T>& p,
+                const numerical::Vector<N, T>& skewed_cell_org,
+                const numerical::Vector<N, T>& skewed_cell_coord) const
         {
                 const std::array<int, N> indices = traversal_indices(skewed_cell_coord);
 
                 T res = 0;
-                Vector<N, T> skewed_corner = skewed_cell_org;
+                numerical::Vector<N, T> skewed_corner = skewed_cell_org;
 
                 add_contribution(p, skewed_corner, &res);
                 for (std::size_t i = 0; i < N; ++i)
@@ -167,11 +170,11 @@ class SimplexNoise final
         }
 
 public:
-        [[nodiscard]] T compute(const Vector<N, T>& p) const
+        [[nodiscard]] T compute(const numerical::Vector<N, T>& p) const
         {
-                const Vector<N, T> skewed_coord = skew(p);
-                const Vector<N, T> skewed_cell_org = floor(skewed_coord);
-                const Vector<N, T> skewed_cell_coord = skewed_coord - skewed_cell_org;
+                const numerical::Vector<N, T> skewed_coord = skew(p);
+                const numerical::Vector<N, T> skewed_cell_org = floor(skewed_coord);
+                const numerical::Vector<N, T> skewed_cell_coord = skewed_coord - skewed_cell_org;
 
                 return contributions(p, skewed_cell_org, skewed_cell_coord);
         }
@@ -179,14 +182,14 @@ public:
 }
 
 template <std::size_t N, typename T>
-T simplex_noise(const Vector<N, T>& p)
+T simplex_noise(const numerical::Vector<N, T>& p)
 {
         static const SimplexNoise<N, T> noise;
 
         return noise.compute(p);
 }
 
-#define TEMPLATE(N, T) template T simplex_noise(const Vector<N, T>&);
+#define TEMPLATE(N, T) template T simplex_noise(const numerical::Vector<N, T>&);
 
 TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }

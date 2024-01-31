@@ -44,19 +44,19 @@ inline constexpr std::size_t MAX_FACETS_PER_LINE = (N == 3 ? 5 : 1);
 template <std::size_t N, typename T>
 struct Vertex final
 {
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
 };
 
 template <std::size_t N, typename T>
 struct TextureVertex final
 {
-        Vector<N - 1, T> v;
+        numerical::Vector<N - 1, T> v;
 };
 
 template <std::size_t N, typename T>
 struct Normal final
 {
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
 };
 
 template <std::size_t N>
@@ -118,7 +118,7 @@ std::optional<Line<N, T>> read_line(
                 data.v.normalize();
                 if (!is_finite(data.v))
                 {
-                        data.v = Vector<N, T>(0);
+                        data.v = numerical::Vector<N, T>(0);
                 }
                 ++counters->normal;
                 return data;

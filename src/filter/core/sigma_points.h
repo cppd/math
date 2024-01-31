@@ -43,8 +43,8 @@ class SigmaPoints final
 
         struct Weights final
         {
-                Vector<2 * N + 1, T> mean;
-                Vector<2 * N + 1, T> covariance;
+                numerical::Vector<2 * N + 1, T> mean;
+                numerical::Vector<2 * N + 1, T> covariance;
         };
 
         static long double lambda(const long double alpha, const long double kappa)
@@ -85,33 +85,33 @@ public:
         {
         }
 
-        [[nodiscard]] const Vector<2 * N + 1, T>& wm() const
+        [[nodiscard]] const numerical::Vector<2 * N + 1, T>& wm() const
         {
                 return weights_.mean;
         }
 
-        [[nodiscard]] const Vector<2 * N + 1, T>& wc() const
+        [[nodiscard]] const numerical::Vector<2 * N + 1, T>& wc() const
         {
                 return weights_.covariance;
         }
 
         template <typename Add, typename Subtract>
-        [[nodiscard]] std::array<Vector<N, T>, 2 * N + 1> points(
-                const Vector<N, T>& x,
+        [[nodiscard]] std::array<numerical::Vector<N, T>, 2 * N + 1> points(
+                const numerical::Vector<N, T>& x,
                 const numerical::Matrix<N, N, T>& p,
-                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
                 const Add add,
-                // Vector<N, T> f(const Vector<N, T>& a, const Vector<N, T>& b)
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
                 const Subtract subtract) const
         {
                 const numerical::Matrix<N, N, T> l =
                         numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
 
-                std::array<Vector<N, T>, 2 * N + 1> res;
+                std::array<numerical::Vector<N, T>, 2 * N + 1> res;
                 res[0] = x;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        const Vector<N, T> c = l.column(i);
+                        const numerical::Vector<N, T> c = l.column(i);
                         res[i + 1] = add(x, c);
                         res[i + N + 1] = subtract(x, c);
                 }

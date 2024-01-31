@@ -32,7 +32,9 @@ namespace ns::sampling
 namespace simplex_implementation
 {
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex_1(RandomEngine& engine, const std::array<Vector<N, T>, M>& vertices)
+numerical::Vector<N, T> uniform_in_simplex_1(
+        RandomEngine& engine,
+        const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         std::array<T, M - 1> random_points;
         std::uniform_real_distribution<T> urd(0, 1 + Limits<T>::epsilon());
@@ -45,7 +47,7 @@ Vector<N, T> uniform_in_simplex_1(RandomEngine& engine, const std::array<Vector<
         }
         sort(random_points);
 
-        Vector<N, T> res = vertices[0] * random_points[0];
+        numerical::Vector<N, T> res = vertices[0] * random_points[0];
         for (std::size_t i = 1; i < M - 1; ++i)
         {
                 res.multiply_add(vertices[i], random_points[i] - random_points[i - 1]);
@@ -56,7 +58,9 @@ Vector<N, T> uniform_in_simplex_1(RandomEngine& engine, const std::array<Vector<
 }
 
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex_2(RandomEngine& engine, const std::array<Vector<N, T>, M>& vertices)
+numerical::Vector<N, T> uniform_in_simplex_2(
+        RandomEngine& engine,
+        const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         std::array<T, M> coordinates;
         std::uniform_real_distribution<T> urd(-1, 0);
@@ -72,7 +76,7 @@ Vector<N, T> uniform_in_simplex_2(RandomEngine& engine, const std::array<Vector<
                 }
         } while (!(std::isfinite(sum) && sum > 0));
 
-        Vector<N, T> res = vertices[0] * (coordinates[0] / sum);
+        numerical::Vector<N, T> res = vertices[0] * (coordinates[0] / sum);
         for (std::size_t i = 1; i < M; ++i)
         {
                 res.multiply_add(vertices[i], coordinates[i] / sum);
@@ -82,7 +86,7 @@ Vector<N, T> uniform_in_simplex_2(RandomEngine& engine, const std::array<Vector<
 }
 
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex(RandomEngine& engine, const std::array<Vector<N, T>, M>& vertices)
+numerical::Vector<N, T> uniform_in_simplex(RandomEngine& engine, const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         static_assert(N > 0 && M >= 2 && M <= N + 1);
 
@@ -96,7 +100,7 @@ Vector<N, T> uniform_in_simplex(RandomEngine& engine, const std::array<Vector<N,
 }
 
 template <std::size_t N, typename T, std::size_t M>
-T uniform_in_simplex_pdf(const std::array<Vector<N, T>, M>& vertices)
+T uniform_in_simplex_pdf(const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         return 1 / geometry::shapes::simplex_volume(vertices);
 }

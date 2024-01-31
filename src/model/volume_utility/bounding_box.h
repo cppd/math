@@ -33,14 +33,14 @@ namespace ns::model::volume
 template <std::size_t N>
 struct BoundingBox final
 {
-        Vector<N, double> min;
-        Vector<N, double> max;
+        numerical::Vector<N, double> min;
+        numerical::Vector<N, double> max;
 };
 
 namespace bounding_box_implementation
 {
 template <std::size_t N, typename T>
-bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
+bool min_max_found(const numerical::Vector<N, T>& min, const numerical::Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -67,13 +67,13 @@ std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
         namespace impl = bounding_box_implementation;
         using T = double;
 
-        Vector<N, T> min = Vector<N, T>(Limits<T>::infinity());
-        Vector<N, T> max = Vector<N, T>(-Limits<T>::infinity());
+        numerical::Vector<N, T> min = numerical::Vector<N, T>(Limits<T>::infinity());
+        numerical::Vector<N, T> max = numerical::Vector<N, T>(-Limits<T>::infinity());
 
-        for (const Vector<N, T>& v : vertices(volume))
+        for (const numerical::Vector<N, T>& v : vertices(volume))
         {
-                min = ::ns::min(min, v);
-                max = ::ns::max(max, v);
+                min = numerical::min(min, v);
+                max = numerical::max(max, v);
         }
 
         if (!impl::min_max_found(min, max))

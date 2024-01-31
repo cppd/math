@@ -112,8 +112,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::vector<long long> busy_indices_2d_;
 
         std::vector<std::byte> pixels_r8g8b8a8_{make_initial_image(screen_size_, COLOR_FORMAT)};
-        std::vector<Vector<3, float>> pixels_original_{
-                static_cast<std::size_t>(global_index_.count()), Vector<3, float>(MIN)};
+        std::vector<numerical::Vector<3, float>> pixels_original_{
+                static_cast<std::size_t>(global_index_.count()), numerical::Vector<3, float>(MIN)};
         std::vector<Spinlock> pixels_lock_{pixels_original_.size()};
         std::atomic<float> pixels_coef_ = 1;
 
@@ -129,7 +129,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::atomic_bool normalize_stop_ = false;
         std::thread normalize_thread_;
 
-        static void write_r8g8b8a8(std::byte* const ptr, const Vector<3, float>& rgb)
+        static void write_r8g8b8a8(std::byte* const ptr, const numerical::Vector<3, float>& rgb)
         {
                 const color::RGB8 rgb8 = color::make_rgb8(rgb);
                 const std::array<std::uint8_t, 4> rgba8{rgb8.red(), rgb8.green(), rgb8.blue(), ALPHA};
@@ -161,7 +161,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 for (std::size_t i = 0; i < pixels_original_.size(); ++i, ptr += PIXEL_SIZE)
                 {
                         const std::lock_guard lg(pixels_lock_[i]);
-                        const Vector<3, float>& pixel = pixels_original_[i];
+                        const numerical::Vector<3, float>& pixel = pixels_original_[i];
                         if (pixel[0] != MIN)
                         {
                                 write_r8g8b8a8(ptr, pixel * coef);
@@ -223,7 +223,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 busy_indices_2d_[thread_number] = NULL_INDEX;
         }
 
-        void pixel_set(const std::array<int, N - 1>& pixel, const Vector<3, float>& rgb) override
+        void pixel_set(const std::array<int, N - 1>& pixel, const numerical::Vector<3, float>& rgb) override
         {
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 

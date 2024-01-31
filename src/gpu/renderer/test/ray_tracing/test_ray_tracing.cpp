@@ -98,7 +98,7 @@ std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices)
 {
-        constexpr std::array VERTICES_0 = std::to_array<Vector3f>({
+        constexpr std::array VERTICES_0 = std::to_array<numerical::Vector3f>({
                 {-0.5,  1, 0},
                 {  -1,  0, 0},
                 {   0,  0, 0},
@@ -106,7 +106,7 @@ std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
         });
         constexpr std::array INDICES_0 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
 
-        constexpr std::array VERTICES_1 = std::to_array<Vector3f>({
+        constexpr std::array VERTICES_1 = std::to_array<numerical::Vector3f>({
                 {0.5,  1, 0},
                 {  1,  0, 0},
                 {  0,  0, 0},

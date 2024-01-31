@@ -48,7 +48,7 @@ class Noise final
         T max_reciprocal_ = 2 / std::sqrt(T{N});
 
 public:
-        [[nodiscard]] T compute(const Vector<N, T>& p) const
+        [[nodiscard]] T compute(const numerical::Vector<N, T>& p) const
         {
                 std::array<std::array<T, 2>, N> s;
                 std::array<std::array<unsigned, 2>, N> cell;
@@ -71,7 +71,7 @@ public:
 
                 for (std::size_t i = 0; i < data.size(); ++i)
                 {
-                        Vector<N, T> v;
+                        numerical::Vector<N, T> v;
                         unsigned hash = 0;
                         for (std::size_t n = 0; n < N; ++n)
                         {
@@ -88,14 +88,14 @@ public:
 }
 
 template <std::size_t N, typename T>
-T noise(const Vector<N, T>& p)
+T noise(const numerical::Vector<N, T>& p)
 {
         static const Noise<N, T> noise;
 
         return noise.compute(p);
 }
 
-#define TEMPLATE(N, T) template T noise(const Vector<N, T>&);
+#define TEMPLATE(N, T) template T noise(const numerical::Vector<N, T>&);
 
 TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }

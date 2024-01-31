@@ -36,13 +36,13 @@ namespace ns::geometry::core::convex_hull
 namespace facet_ortho_implementation
 {
 template <std::size_t N, typename T>
-void reduce(Vector<N, T>* const)
+void reduce(numerical::Vector<N, T>* const)
 {
         static_assert(!std::is_class_v<T>);
 }
 
 template <std::size_t N>
-void reduce(Vector<N, mpz_class>* const v)
+void reduce(numerical::Vector<N, mpz_class>* const v)
 {
         static_assert(N >= 2);
 
@@ -68,7 +68,7 @@ void reduce(Vector<N, mpz_class>* const v)
 //
 
 template <std::size_t N, typename T>
-void negate(Vector<N, T>* const v)
+void negate(numerical::Vector<N, T>* const v)
 {
         static_assert(!std::is_class_v<T>);
 
@@ -79,7 +79,7 @@ void negate(Vector<N, T>* const v)
 }
 
 template <std::size_t N>
-void negate(Vector<N, mpz_class>* const v)
+void negate(numerical::Vector<N, mpz_class>* const v)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -90,7 +90,7 @@ void negate(Vector<N, mpz_class>* const v)
 //
 
 template <std::size_t N, typename T>
-[[nodiscard]] bool are_opposite(const Vector<N, T>& v1, const Vector<N, T>& v2)
+[[nodiscard]] bool are_opposite(const numerical::Vector<N, T>& v1, const numerical::Vector<N, T>& v2)
 {
         static_assert(!std::is_class_v<T>);
 
@@ -105,7 +105,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N>
-[[nodiscard]] bool are_opposite(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+[[nodiscard]] bool are_opposite(const numerical::Vector<N, mpz_class>& v1, const numerical::Vector<N, mpz_class>& v2)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -122,7 +122,7 @@ template <std::size_t N>
 //
 
 template <std::size_t N, typename T>
-[[nodiscard]] bool last_coord_is_negative(const Vector<N, T>& v)
+[[nodiscard]] bool last_coord_is_negative(const numerical::Vector<N, T>& v)
 {
         static_assert(!std::is_class_v<T>);
 
@@ -130,7 +130,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N>
-[[nodiscard]] bool last_coord_is_negative(const Vector<N, mpz_class>& v)
+[[nodiscard]] bool last_coord_is_negative(const numerical::Vector<N, mpz_class>& v)
 {
         return mpz_sgn(v[N - 1].get_mpz_t()) < 0;
 }
@@ -138,7 +138,7 @@ template <std::size_t N>
 //
 
 template <typename Result, std::size_t N, typename T>
-[[nodiscard]] Vector<N, Result> normalize(const Vector<N, T>& v)
+[[nodiscard]] numerical::Vector<N, Result> normalize(const numerical::Vector<N, T>& v)
 {
         static_assert(!std::is_class_v<T>);
         static_assert(std::is_floating_point_v<Result>);
@@ -147,7 +147,7 @@ template <typename Result, std::size_t N, typename T>
 }
 
 template <typename Result, std::size_t N>
-[[nodiscard]] Vector<N, Result> normalize(const Vector<N, mpz_class>& v)
+[[nodiscard]] numerical::Vector<N, Result> normalize(const numerical::Vector<N, mpz_class>& v)
 {
         static_assert(std::is_same_v<Result, float> || std::is_same_v<Result, double>);
 
@@ -168,7 +168,7 @@ template <typename Result, std::size_t N>
                 return res;
         }();
 
-        Vector<N, Result> res;
+        numerical::Vector<N, Result> res;
         thread_local mpf_class v_mpf(0, FLOAT_BIT_PRECISION);
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -183,16 +183,16 @@ template <typename Result, std::size_t N>
 
 template <std::size_t N, typename DataType, typename ComputeType>
 [[nodiscard]] ComputeType dot_product_sign(
-        const Vector<N, ComputeType>& v,
-        const std::vector<Vector<N, DataType>>& points,
+        const numerical::Vector<N, ComputeType>& v,
+        const std::vector<numerical::Vector<N, DataType>>& points,
         const int from_index,
         const int to_index)
 {
         static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
         static_assert(std::is_same_v<ComputeType, std::common_type_t<ComputeType, DataType>>);
 
-        const Vector<N, DataType>& from = points[from_index];
-        const Vector<N, DataType>& to = points[to_index];
+        const numerical::Vector<N, DataType>& from = points[from_index];
+        const numerical::Vector<N, DataType>& to = points[to_index];
 
         ComputeType res = v[0] * (to[0] - from[0]);
         for (std::size_t i = 1; i < N; ++i)
@@ -204,8 +204,8 @@ template <std::size_t N, typename DataType, typename ComputeType>
 
 template <std::size_t N, typename DataType>
 [[nodiscard]] int dot_product_sign(
-        const Vector<N, mpz_class>& v,
-        const std::vector<Vector<N, DataType>>& points,
+        const numerical::Vector<N, mpz_class>& v,
+        const std::vector<numerical::Vector<N, DataType>>& points,
         const int from_index,
         const int to_index)
 {
@@ -214,8 +214,8 @@ template <std::size_t N, typename DataType>
         thread_local mpz_class d;
         thread_local mpz_class w;
 
-        const Vector<N, DataType>& from = points[from_index];
-        const Vector<N, DataType>& to = points[to_index];
+        const numerical::Vector<N, DataType>& from = points[from_index];
+        const numerical::Vector<N, DataType>& to = points[to_index];
 
         set_mpz(&w, to[0] - from[0]);
         mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), w.get_mpz_t());
@@ -230,16 +230,16 @@ template <std::size_t N, typename DataType>
 
 template <std::size_t N>
 [[nodiscard]] int dot_product_sign(
-        const Vector<N, mpz_class>& v,
-        const std::vector<Vector<N, mpz_class>>& points,
+        const numerical::Vector<N, mpz_class>& v,
+        const std::vector<numerical::Vector<N, mpz_class>>& points,
         const int from_index,
         const int to_index)
 {
         thread_local mpz_class d;
         thread_local mpz_class w;
 
-        const Vector<N, mpz_class>& from = points[from_index];
-        const Vector<N, mpz_class>& to = points[to_index];
+        const numerical::Vector<N, mpz_class>& from = points[from_index];
+        const numerical::Vector<N, mpz_class>& to = points[to_index];
 
         mpz_sub(w.get_mpz_t(), to[0].get_mpz_t(), from[0].get_mpz_t());
         mpz_mul(d.get_mpz_t(), v[0].get_mpz_t(), w.get_mpz_t());
@@ -261,12 +261,12 @@ class FacetOrtho final
 
         static constexpr bool REDUCE = false;
 
-        Vector<N, ComputeType> ortho_;
+        numerical::Vector<N, ComputeType> ortho_;
 
         template <bool USE_DIRECTION_FACET>
         FacetOrtho(
                 std::bool_constant<USE_DIRECTION_FACET>,
-                const std::vector<Vector<N, DataType>>& points,
+                const std::vector<numerical::Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point,
                 const FacetOrtho* const direction_facet)
@@ -312,7 +312,7 @@ class FacetOrtho final
 
 public:
         FacetOrtho(
-                const std::vector<Vector<N, DataType>>& points,
+                const std::vector<numerical::Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point,
                 const FacetOrtho& direction_facet)
@@ -321,7 +321,7 @@ public:
         }
 
         FacetOrtho(
-                const std::vector<Vector<N, DataType>>& points,
+                const std::vector<numerical::Vector<N, DataType>>& points,
                 const std::array<int, N>& vertices,
                 const int direction_point)
                 : FacetOrtho(std::bool_constant<false>(), points, vertices, direction_point, nullptr)
@@ -329,7 +329,7 @@ public:
         }
 
         [[nodiscard]] auto dot_product_sign(
-                const std::vector<Vector<N, DataType>>& points,
+                const std::vector<numerical::Vector<N, DataType>>& points,
                 const int from_index,
                 const int to_index) const
         {
@@ -337,7 +337,7 @@ public:
         }
 
         template <typename T>
-        [[nodiscard]] Vector<N, T> to_floating_point() const
+        [[nodiscard]] numerical::Vector<N, T> to_floating_point() const
         {
                 return facet_ortho_implementation::normalize<T>(ortho_);
         }

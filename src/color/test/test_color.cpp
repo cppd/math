@@ -41,14 +41,14 @@ namespace
 template <typename T>
 struct Check final
 {
-        static_assert(RGB<T>(1).rgb32() == Vector<3, float>(1, 1, 1));
-        static_assert(RGB<T>(0).rgb32() == Vector<3, float>(0, 0, 0));
-        static_assert(RGB<T>(0.1).rgb32() == Vector<3, float>(0.1));
-        static_assert(RGB<T>(1, 1, 1).rgb32() == Vector<3, float>(1));
-        static_assert(RGB<T>(0, 0, 0).rgb32() == Vector<3, float>(0));
-        static_assert(RGB<T>(0.1, 0.2, 0.3).rgb32() == Vector<3, float>(0.1, 0.2, 0.3));
-        static_assert(RGB<T>(RGB8(255, 255, 255)).rgb32() == Vector<3, float>(1, 1, 1));
-        static_assert(RGB<T>(RGB8(0, 0, 0)).rgb32() == Vector<3, float>(0, 0, 0));
+        static_assert(RGB<T>(1).rgb32() == numerical::Vector<3, float>(1, 1, 1));
+        static_assert(RGB<T>(0).rgb32() == numerical::Vector<3, float>(0, 0, 0));
+        static_assert(RGB<T>(0.1).rgb32() == numerical::Vector<3, float>(0.1));
+        static_assert(RGB<T>(1, 1, 1).rgb32() == numerical::Vector<3, float>(1));
+        static_assert(RGB<T>(0, 0, 0).rgb32() == numerical::Vector<3, float>(0));
+        static_assert(RGB<T>(0.1, 0.2, 0.3).rgb32() == numerical::Vector<3, float>(0.1, 0.2, 0.3));
+        static_assert(RGB<T>(RGB8(255, 255, 255)).rgb32() == numerical::Vector<3, float>(1, 1, 1));
+        static_assert(RGB<T>(RGB8(0, 0, 0)).rgb32() == numerical::Vector<3, float>(0, 0, 0));
         static_assert(RGB<T>(RGB8(100, 150, 50)).rgb32() == RGB8(100, 150, 50).linear_rgb());
         static_assert(RGB<T>(RGB8(250, 10, 100)).rgb32() == RGB8(250, 10, 100).linear_rgb());
         static_assert(absolute(RGB<T>(RGB8(255, 255, 255)).luminance() - 1) < 1000 * Limits<T>::epsilon());
@@ -121,8 +121,8 @@ template struct Check<double>;
 template struct Check<long double>;
 
 bool equal(
-        const Vector<3, float>& rgb_1,
-        const Vector<3, float>& rgb_2,
+        const numerical::Vector<3, float>& rgb_1,
+        const numerical::Vector<3, float>& rgb_2,
         const float max_error,
         const float sum_max_error)
 {
@@ -140,7 +140,7 @@ bool equal(
 }
 
 template <typename RandomEngine>
-Vector<3, float> random_rgb(RandomEngine& engine)
+numerical::Vector<3, float> random_rgb(RandomEngine& engine)
 {
         std::uniform_real_distribution<float> urd(0, 1);
         return {urd(engine), urd(engine), urd(engine)};
@@ -153,14 +153,14 @@ void test_color_white_light(
         const float max_error,
         const float sum_max_error)
 {
-        const Vector<3, float> rgb = random_rgb(engine);
+        const numerical::Vector<3, float> rgb = random_rgb(engine);
 
         const ColorType white_light = ColorType::illuminant(1, 1, 1);
         const ColorType color(rgb[0], rgb[1], rgb[2]);
 
         const ColorType shaded = color * white_light;
 
-        const Vector<3, float> shaded_rgb = shaded.rgb32();
+        const numerical::Vector<3, float> shaded_rgb = shaded.rgb32();
         if (!equal(rgb, shaded_rgb, max_error, sum_max_error))
         {
                 error(std::string(test_name) + ": white light values are not equal: RGB " + to_string(rgb)
@@ -175,14 +175,14 @@ void test_color_white_color(
         const float max_error,
         const float sum_max_error)
 {
-        const Vector<3, float> rgb = random_rgb(engine);
+        const numerical::Vector<3, float> rgb = random_rgb(engine);
 
         const ColorType white_color(1, 1, 1);
         const ColorType light = ColorType::illuminant(rgb[0], rgb[1], rgb[2]);
 
         const ColorType shaded = white_color * light;
 
-        const Vector<3, float> shaded_rgb = shaded.rgb32();
+        const numerical::Vector<3, float> shaded_rgb = shaded.rgb32();
         if (!equal(rgb, shaded_rgb, max_error, sum_max_error))
         {
                 error(std::string(test_name) + ": white color values are not equal: RGB " + to_string(rgb)
@@ -193,7 +193,7 @@ void test_color_white_color(
 template <typename ColorType, typename RandomEngine>
 void test_color_constructors(RandomEngine& engine, const std::string_view test_name, const float max_error)
 {
-        const Vector<3, float> rgb = random_rgb(engine);
+        const numerical::Vector<3, float> rgb = random_rgb(engine);
 
         const std::uint8_t r = linear_float_to_srgb_uint8(rgb[0]);
         const std::uint8_t g = linear_float_to_srgb_uint8(rgb[1]);
@@ -222,7 +222,7 @@ void test_color_constructors(RandomEngine& engine, const std::string_view test_n
 template <typename ColorType, typename FloatType, typename RandomEngine>
 void test_color_conversions(RandomEngine& engine, const std::string_view test_name)
 {
-        const Vector<3, float> rgb = random_rgb(engine);
+        const numerical::Vector<3, float> rgb = random_rgb(engine);
 
         {
                 const ColorType c1(rgb[0], rgb[1], rgb[2]);

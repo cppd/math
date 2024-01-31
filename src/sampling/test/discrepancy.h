@@ -41,7 +41,7 @@ namespace ns::sampling::test
 template <std::size_t N, typename T>
 class PointSearch final
 {
-        static bool inside(const Vector<N, T>& p, const std::array<std::array<T, 2>, N>& box)
+        static bool inside(const numerical::Vector<N, T>& p, const std::array<std::array<T, 2>, N>& box)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -53,10 +53,10 @@ class PointSearch final
                 return true;
         }
 
-        std::vector<Vector<N, T>> points_;
+        std::vector<numerical::Vector<N, T>> points_;
 
 public:
-        explicit PointSearch(std::vector<Vector<N, T>> points)
+        explicit PointSearch(std::vector<numerical::Vector<N, T>> points)
                 : points_(std::move(points))
         {
         }
@@ -64,7 +64,7 @@ public:
         [[nodiscard]] int count_points(const std::array<std::array<T, 2>, N>& box) const
         {
                 int count = 0;
-                for (const Vector<N, T>& p : points_)
+                for (const numerical::Vector<N, T>& p : points_)
                 {
                         if (inside(p, box))
                         {
@@ -76,7 +76,10 @@ public:
 };
 
 template <std::size_t N, typename T>
-void check_point_range(const Vector<N, T>& p, const std::type_identity_t<T>& min, const std::type_identity_t<T>& max)
+void check_point_range(
+        const numerical::Vector<N, T>& p,
+        const std::type_identity_t<T>& min,
+        const std::type_identity_t<T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -150,7 +153,7 @@ template <std::size_t N, typename T, typename RandomEngine>
 T compute_discrepancy(
         const std::type_identity_t<T>& min,
         const std::type_identity_t<T>& max,
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const int box_count,
         RandomEngine& engine)
 {
@@ -159,7 +162,7 @@ T compute_discrepancy(
                 error("Max " + to_string(max) + " must be greater than min " + to_string(min));
         }
 
-        for (const Vector<N, T>& p : points)
+        for (const numerical::Vector<N, T>& p : points)
         {
                 check_point_range(p, min, max);
         }

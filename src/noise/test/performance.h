@@ -36,16 +36,16 @@ namespace ns::noise::test
 namespace performance_implementation
 {
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> random_data(const int count)
+std::vector<numerical::Vector<N, T>> random_data(const int count)
 {
         PCG engine;
         std::uniform_real_distribution<T> urd(-10, 10);
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T>& v = res.emplace_back();
+                numerical::Vector<N, T>& v = res.emplace_back();
                 for (std::size_t n = 0; n < N; ++n)
                 {
                         v[n] = urd(engine);
@@ -56,15 +56,15 @@ std::vector<Vector<N, T>> random_data(const int count)
 }
 
 template <std::size_t N, typename T>
-void test_performance(const std::string_view name, T (&noise)(const Vector<N, T>&))
+void test_performance(const std::string_view name, T (&noise)(const numerical::Vector<N, T>&))
 {
         constexpr int DATA_COUNT = 1'000'000;
         constexpr int COUNT = 32;
 
-        const std::vector<Vector<N, T>> data = performance_implementation::random_data<N, T>(DATA_COUNT);
+        const std::vector<numerical::Vector<N, T>> data = performance_implementation::random_data<N, T>(DATA_COUNT);
 
         const Clock::time_point start_time = Clock::now();
-        for (const Vector<N, T>& v : data)
+        for (const numerical::Vector<N, T>& v : data)
         {
                 for (int i = 0; i < COUNT; ++i)
                 {

@@ -64,7 +64,7 @@ public:
         }
 
         template <std::size_t N>
-        [[nodiscard]] T compute(const Vector<N, T>& p) const
+        [[nodiscard]] T compute(const numerical::Vector<N, T>& p) const
         {
                 static_assert(N >= 1);
 

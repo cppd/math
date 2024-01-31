@@ -46,11 +46,11 @@ public:
         }
 
         template <typename RandomVector>
-        std::tuple<unsigned, Vector<N, T>> find(const RandomVector& random_vector)
+        std::tuple<unsigned, numerical::Vector<N, T>> find(const RandomVector& random_vector)
         {
                 for (int i = 0; i < 10; ++i)
                 {
-                        const numerical::Ray<N, T> ray(Vector<N, T>(0), random_vector());
+                        const numerical::Ray<N, T> ray(numerical::Vector<N, T>(0), random_vector());
                         const auto index = sphere_mesh_->intersect(ray);
                         if (index)
                         {

@@ -111,11 +111,11 @@ std::vector<int> unique_point_indices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> unique_facet_vertices(const Mesh<N>& mesh)
+std::vector<numerical::Vector<N, float>> unique_facet_vertices(const Mesh<N>& mesh)
 {
         const int vertex_count = mesh.vertices.size();
 
-        std::unordered_set<Vector<N, float>> vertices(vertex_count);
+        std::unordered_set<numerical::Vector<N, float>> vertices(vertex_count);
 
         for (const typename Mesh<N>::Facet& face : mesh.facets)
         {
@@ -134,11 +134,11 @@ std::vector<Vector<N, float>> unique_facet_vertices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> unique_line_vertices(const Mesh<N>& mesh)
+std::vector<numerical::Vector<N, float>> unique_line_vertices(const Mesh<N>& mesh)
 {
         const int vertex_count = mesh.vertices.size();
 
-        std::unordered_set<Vector<N, float>> vertices(vertex_count);
+        std::unordered_set<numerical::Vector<N, float>> vertices(vertex_count);
 
         for (const typename Mesh<N>::Line& line : mesh.lines)
         {
@@ -157,11 +157,11 @@ std::vector<Vector<N, float>> unique_line_vertices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> unique_point_vertices(const Mesh<N>& mesh)
+std::vector<numerical::Vector<N, float>> unique_point_vertices(const Mesh<N>& mesh)
 {
         const int vertex_count = mesh.vertices.size();
 
-        std::unordered_set<Vector<N, float>> vertices(vertex_count);
+        std::unordered_set<numerical::Vector<N, float>> vertices(vertex_count);
 
         for (const typename Mesh<N>::Point& point : mesh.points)
         {

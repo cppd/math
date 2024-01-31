@@ -112,14 +112,14 @@ void write_to_file(
         const std::string_view name,
         const std::string_view file_name,
         const int grid_size,
-        const std::vector<Vector<N, T>>& data)
+        const std::vector<numerical::Vector<N, T>>& data)
 {
         std::ofstream file(settings::test_directory() / path_from_utf8(file_name));
 
         file << "Name: " << name << "\n";
         file << "Grid: " << grid_size << "\n";
 
-        for (const Vector<N, T>& v : data)
+        for (const numerical::Vector<N, T>& v : data)
         {
                 file << to_string(v) << "\n";
         }
@@ -150,8 +150,8 @@ void write_to_files(const bool shuffle)
 
         {
                 const StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                std::vector<Vector<N, T>> data;
-                std::vector<Vector<N, T>> tmp;
+                std::vector<numerical::Vector<N, T>> data;
+                std::vector<numerical::Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)
                 {
                         sampler.generate(engine, &tmp);
@@ -162,8 +162,8 @@ void write_to_files(const bool shuffle)
         }
         {
                 const LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                std::vector<Vector<N, T>> data;
-                std::vector<Vector<N, T>> tmp;
+                std::vector<numerical::Vector<N, T>> data;
+                std::vector<numerical::Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)
                 {
                         sampler.generate(engine, &tmp);
@@ -174,8 +174,8 @@ void write_to_files(const bool shuffle)
         }
         {
                 HaltonSampler<N, T> sampler;
-                std::vector<Vector<N, T>> data(PASS_COUNT * SAMPLE_COUNT);
-                for (Vector<N, T>& v : data)
+                std::vector<numerical::Vector<N, T>> data(PASS_COUNT * SAMPLE_COUNT);
+                for (numerical::Vector<N, T>& v : data)
                 {
                         v = sampler.generate();
                 }

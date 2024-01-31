@@ -24,17 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-void blend_alpha_r8g8b8a8(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r8g8b8a8(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r8g8b8a8_premultiplied(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r8g8b8a8_premultiplied(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r16g16b16a16(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r16g16b16a16(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r16g16b16a16_srgb(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r16g16b16a16_srgb(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r16g16b16a16_premultiplied(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r16g16b16a16_premultiplied(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r32g32b32a32(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r32g32b32a32(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 
-void blend_alpha_r32g32b32a32_premultiplied(std::span<std::byte> bytes, const Vector<3, float>& rgb);
+void blend_alpha_r32g32b32a32_premultiplied(std::span<std::byte> bytes, const numerical::Vector<3, float>& rgb);
 }

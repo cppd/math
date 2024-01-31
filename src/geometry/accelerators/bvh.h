@@ -73,8 +73,8 @@ class Intersect final
         const ObjectIntersect* const object_intersect_;
         const numerical::Ray<N, T>* const ray_;
 
-        const Vector<N, T> dir_reciprocal_;
-        const Vector<N, bool> dir_negative_;
+        const numerical::Vector<N, T> dir_reciprocal_;
+        const numerical::Vector<N, bool> dir_negative_;
 
         T distance_;
         unsigned node_index_ = 0;

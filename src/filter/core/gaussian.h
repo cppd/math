@@ -29,7 +29,7 @@ namespace ns::filter::core
 {
 template <std::size_t N, typename T>
 [[nodiscard]] T compute_mahalanobis_distance_squared(
-        const Vector<N, T>& residual,
+        const numerical::Vector<N, T>& residual,
         const numerical::Matrix<N, N, T>& s_inversed)
 {
         return dot(residual * s_inversed, residual);

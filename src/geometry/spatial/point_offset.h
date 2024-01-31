@@ -33,13 +33,15 @@ inline constexpr T OFFSET = 64 * Limits<T>::epsilon();
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> offset_ray_org(const Vector<N, T>& normal, const numerical::Ray<N, T>& ray)
+[[nodiscard]] numerical::Vector<N, T> offset_ray_org(
+        const numerical::Vector<N, T>& normal,
+        const numerical::Ray<N, T>& ray)
 {
         namespace impl = point_offset_implementation;
 
         const T ray_offset = (dot(normal, ray.dir()) < 0) ? -impl::OFFSET<T> : impl::OFFSET<T>;
 
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = ray.org()[i] + std::abs(ray.org()[i]) * ray_offset * normal[i];
@@ -48,11 +50,13 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> offset_point(const Vector<N, T>& normal, const Vector<N, T>& point)
+[[nodiscard]] numerical::Vector<N, T> offset_point(
+        const numerical::Vector<N, T>& normal,
+        const numerical::Vector<N, T>& point)
 {
         namespace impl = point_offset_implementation;
 
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = point[i] + std::abs(point[i]) * impl::OFFSET<T> * normal[i];

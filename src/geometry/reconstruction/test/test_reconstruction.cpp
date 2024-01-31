@@ -49,19 +49,19 @@ constexpr double BOUND_COCONE_ALPHA = 0.14;
 constexpr double LAST_AXIS_VALUE = -0.3;
 
 template <std::size_t N, typename T>
-constexpr T last_axis(const Vector<N, T>& v)
+constexpr T last_axis(const numerical::Vector<N, T>& v)
 {
         return v[N - 1];
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+numerical::Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {
                 return sampling::uniform_on_sphere<N, T>(engine);
         }
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         do
         {
                 res = sampling::uniform_on_sphere<N, T>(engine);
@@ -70,15 +70,15 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_count, const bool bound)
+std::vector<numerical::Vector<N, float>> points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
         PCG engine(point_count);
 
-        std::vector<Vector<N, float>> res;
+        std::vector<numerical::Vector<N, float>> res;
         res.reserve(point_count);
         for (unsigned i = 0; i < point_count; ++i)
         {
-                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 const double cos = last_axis(v);
                 if (cos > 0)
                 {
@@ -90,7 +90,9 @@ std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_coun
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, const unsigned clone_count)
+std::vector<numerical::Vector<N, float>> clone_object(
+        const std::vector<numerical::Vector<N, float>>& points,
+        const unsigned clone_count)
 {
         ASSERT(clone_count > 1 && clone_count <= (1 << N));
 
@@ -100,11 +102,11 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 
         const unsigned all_object_count = (1 + clone_count);
 
-        std::vector<Vector<N, float>> res(points.begin(), points.end());
+        std::vector<numerical::Vector<N, float>> res(points.begin(), points.end());
         res.reserve(points.size() * all_object_count);
         for (unsigned clone = 0; clone < clone_count; ++clone)
         {
-                Vector<N, float> shift;
+                numerical::Vector<N, float> shift;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         shift[i] = ((1 << i) & clone) ? SHIFT : -SHIFT;
@@ -164,9 +166,9 @@ std::string min_max_to_string(const T min, const T max)
 }
 
 template <std::size_t N>
-void test_normals(const std::vector<Vector<N, float>>& points, const ManifoldConstructor<N>& constructor)
+void test_normals(const std::vector<numerical::Vector<N, float>>& points, const ManifoldConstructor<N>& constructor)
 {
-        const std::vector<Vector<N, double>> normals = constructor.normals();
+        const std::vector<numerical::Vector<N, double>> normals = constructor.normals();
         if (normals.size() != points.size())
         {
                 error("Error normal count: expected " + to_string(points.size()) + ", computed "
@@ -177,7 +179,7 @@ void test_normals(const std::vector<Vector<N, float>>& points, const ManifoldCon
 template <std::size_t N>
 void test_objects(
         const unsigned object_count,
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const ManifoldConstructor<N>& constructor,
         progress::Ratio* const progress)
 {
@@ -208,7 +210,7 @@ void test_objects(
 template <std::size_t N>
 void test_bound_objects(
         const unsigned object_count,
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const ManifoldConstructor<N>& constructor,
         progress::Ratio* const progress)
 {
@@ -237,7 +239,7 @@ template <std::size_t N>
 void test_algorithms(
         const bool bound_object,
         const unsigned object_count,
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* const progress)
 {
         ASSERT(points.size() > N);
@@ -264,7 +266,10 @@ void test_algorithms(
 }
 
 template <std::size_t N>
-void all_tests(const bool bound_object, std::vector<Vector<N, float>>&& points, progress::Ratio* const progress)
+void all_tests(
+        const bool bound_object,
+        std::vector<numerical::Vector<N, float>>&& points,
+        progress::Ratio* const progress)
 {
         static_assert(2 <= N && N <= 4);
 

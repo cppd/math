@@ -42,11 +42,11 @@ template <typename T>
 constexpr T ABS_ERROR = 10 * Limits<T>::epsilon();
 
 template <std::size_t N, typename T>
-void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
+void test_simplex(const std::array<numerical::Vector<N, T>, N + 1>& vertices)
 {
         static_assert(N >= 2);
 
-        for (const Vector<N, T>& v : vertices)
+        for (const numerical::Vector<N, T>& v : vertices)
         {
                 if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
                 {
@@ -68,11 +68,13 @@ void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
 }
 
 template <std::size_t N, typename T>
-void check_facet_equal_distances(const std::string& name, const std::vector<std::array<Vector<N, T>, N>>& facets)
+void check_facet_equal_distances(
+        const std::string& name,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets)
 {
         static_assert(N >= 2);
 
-        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
                 const T d = (vertices[0] - vertices[1]).norm();
                 for (std::size_t i = 0; i < vertices.size(); ++i)
@@ -89,11 +91,13 @@ void check_facet_equal_distances(const std::string& name, const std::vector<std:
 }
 
 template <std::size_t N, typename T>
-void check_unit_distance_from_origin(const std::string& name, const std::vector<std::array<Vector<N, T>, N>>& facets)
+void check_unit_distance_from_origin(
+        const std::string& name,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets)
 {
-        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
-                for (const Vector<N, T>& v : vertices)
+                for (const numerical::Vector<N, T>& v : vertices)
                 {
                         if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
                         {
@@ -106,7 +110,7 @@ void check_unit_distance_from_origin(const std::string& name, const std::vector<
 template <std::size_t N, typename T>
 void check_facet_count(
         const std::string& name,
-        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets,
         const unsigned facet_count)
 {
         if (facets.size() != facet_count)
@@ -118,13 +122,13 @@ void check_facet_count(
 template <std::size_t N, typename T>
 void check_vertex_count(
         const std::string& name,
-        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets,
         const unsigned vertex_count)
 {
-        std::unordered_set<Vector<N, T>> vertex_set;
-        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        std::unordered_set<numerical::Vector<N, T>> vertex_set;
+        for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
-                for (const Vector<N, T>& v : vertices)
+                for (const numerical::Vector<N, T>& v : vertices)
                 {
                         vertex_set.insert(v);
                 }
@@ -139,7 +143,7 @@ void check_vertex_count(
 template <std::size_t N, typename T>
 void test_polytope(
         const std::string& name,
-        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets,
         const unsigned facet_count,
         const unsigned vertex_count)
 {
@@ -148,7 +152,7 @@ void test_polytope(
         check_facet_equal_distances(name, facets);
         check_unit_distance_from_origin(name, facets);
 
-        std::vector<Vector<N, T>> mesh_vertices;
+        std::vector<numerical::Vector<N, T>> mesh_vertices;
         std::vector<std::array<int, N>> mesh_facets;
         create_mesh(facets, &mesh_vertices, &mesh_facets);
 
@@ -162,14 +166,14 @@ void test_polytopes()
 {
         LOG("Test regular polytopes in " + space_name(N) + ", " + type_name<T>());
         {
-                const std::array<Vector<N, T>, N + 1> simplex = create_simplex<N, T>();
+                const std::array<numerical::Vector<N, T>, N + 1> simplex = create_simplex<N, T>();
                 test_simplex(simplex);
         }
         {
                 const std::string name = "Regular cross-polytope";
                 constexpr unsigned FACET_COUNT = 1 << N;
                 constexpr unsigned VERTEX_COUNT = 2 * N;
-                const std::vector<std::array<Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
+                const std::vector<std::array<numerical::Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
                 test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
         if constexpr (N == 3)
@@ -177,7 +181,7 @@ void test_polytopes()
                 const std::string name = "Regular icosahedron";
                 constexpr unsigned FACET_COUNT = 20;
                 constexpr unsigned VERTEX_COUNT = 12;
-                const std::vector<std::array<Vector<3, T>, 3>> facets = create_icosahedron<T>();
+                const std::vector<std::array<numerical::Vector<3, T>, 3>> facets = create_icosahedron<T>();
                 test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
 }

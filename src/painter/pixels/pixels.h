@@ -54,7 +54,7 @@ class Pixels final
         void add_samples(
                 const std::array<int, N>& region_pixel,
                 const std::array<int, N>& sample_pixel,
-                const std::vector<Vector<N, T>>& points,
+                const std::vector<numerical::Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors);
 
 public:
@@ -64,7 +64,7 @@ public:
 
         void add_samples(
                 const std::array<int, N>& pixel,
-                const std::vector<Vector<N, T>>& points,
+                const std::vector<numerical::Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors);
 
         void images(image::Image<N>* image_rgb, image::Image<N>* image_rgba) const;

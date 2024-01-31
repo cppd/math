@@ -262,11 +262,11 @@ constexpr T linear_float_to_linear_luminance(const T red, const T green, const T
 //
 
 template <typename T>
-constexpr Vector<3, T> xyz_to_linear_srgb(const T x, const T y, const T z)
+constexpr numerical::Vector<3, T> xyz_to_linear_srgb(const T x, const T y, const T z)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<3, T> rgb;
+        numerical::Vector<3, T> rgb;
 
         rgb[0] = T{+3.2406255} * x + T{-1.5372080} * y + T{-0.4986286} * z;
         rgb[1] = T{-0.9689307} * x + T{+1.8757561} * y + T{+0.0415175} * z;
@@ -276,11 +276,11 @@ constexpr Vector<3, T> xyz_to_linear_srgb(const T x, const T y, const T z)
 }
 
 template <typename T>
-constexpr Vector<3, T> linear_srgb_to_xyz(const T r, const T g, const T b)
+constexpr numerical::Vector<3, T> linear_srgb_to_xyz(const T r, const T g, const T b)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<3, T> xyz;
+        numerical::Vector<3, T> xyz;
 
         xyz[0] = T{0.4124} * r + T{0.3576} * g + T{0.1805} * b;
         xyz[1] = T{0.2126} * r + T{0.7152} * g + T{0.0722} * b;

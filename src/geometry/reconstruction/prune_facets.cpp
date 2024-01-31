@@ -56,13 +56,16 @@ class RidgeComplement final
 
         // e0 = unit orthogonal complement of n-1 points and a point.
         // e1 = unit orthogonal complement of n-1 points and e0.
-        Vector<N, T> e0_;
-        Vector<N, T> e1_;
+        numerical::Vector<N, T> e0_;
+        numerical::Vector<N, T> e1_;
 
 public:
-        RidgeComplement(const std::vector<Vector<N, T>>& points, const std::array<int, N - 1>& indices, const int point)
+        RidgeComplement(
+                const std::vector<numerical::Vector<N, T>>& points,
+                const std::array<int, N - 1>& indices,
+                const int point)
         {
-                std::array<Vector<N, T>, N - 1> vectors;
+                std::array<numerical::Vector<N, T>, N - 1> vectors;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         vectors[i] = points[indices[i + 1]] - points[indices[0]];
@@ -75,9 +78,9 @@ public:
                 e1_ = numerical::orthogonal_complement(vectors).normalized();
         }
 
-        [[nodiscard]] Vector<2, T> coordinates(const Vector<N, T>& v) const
+        [[nodiscard]] numerical::Vector<2, T> coordinates(const numerical::Vector<N, T>& v) const
         {
-                return Vector<2, T>(dot(e0_, v), dot(e1_, v)).normalized();
+                return numerical::Vector<2, T>(dot(e0_, v), dot(e1_, v)).normalized();
         }
 };
 
@@ -105,7 +108,7 @@ struct Angles final
 
 template <std::size_t N, typename T>
 [[nodiscard]] Angles<T> compute_angles(
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const core::Ridge<N>& ridge,
         const core::RidgeFacets<core::DelaunayFacet<N>>& facets)
 {
@@ -113,14 +116,16 @@ template <std::size_t N, typename T>
 
         const RidgeComplement basis(points, ridge.vertices(), facets.cbegin()->point());
 
-        const Vector<2, T> base = basis.coordinates(points[facets.cbegin()->point()] - points[ridge.vertices()[0]]);
+        const numerical::Vector<2, T> base =
+                basis.coordinates(points[facets.cbegin()->point()] - points[ridge.vertices()[0]]);
         ASSERT(is_finite(base));
 
         Angles<T> res;
 
         for (auto facet = std::next(facets.cbegin()); facet != facets.cend(); ++facet)
         {
-                const Vector<2, T> v = basis.coordinates(points[facet->point()] - points[ridge.vertices()[0]]);
+                const numerical::Vector<2, T> v =
+                        basis.coordinates(points[facet->point()] - points[ridge.vertices()[0]]);
                 ASSERT(is_finite(v));
 
                 const T sine = cross(base, v);
@@ -149,7 +154,7 @@ template <std::size_t N, typename T>
 
 template <std::size_t N, typename T>
 [[nodiscard]] bool sharp_ridge(
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const std::vector<bool>& interior_vertices,
         const core::Ridge<N>& ridge,
         const core::RidgeFacets<core::DelaunayFacet<N>>& ridge_facets)
@@ -186,7 +191,7 @@ template <std::size_t N, typename T>
 
 template <std::size_t N>
 [[nodiscard]] RidgeSet<N> prune(
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<bool>& interior_vertices,
         const std::unordered_map<const core::DelaunayFacet<N>*, int>& facet_ptr_index,
         const RidgeSet<N>& suspicious_ridges,
@@ -233,7 +238,7 @@ template <std::size_t N>
 
 template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& interior_vertices,
         std::vector<bool>* const cocone_facets)
@@ -265,9 +270,9 @@ void prune_facets_incident_to_sharp_ridges(
         }
 }
 
-#define TEMPLATE(N)                                                                                    \
-        template void prune_facets_incident_to_sharp_ridges(                                           \
-                const std::vector<Vector<(N), double>>&, const std::vector<core::DelaunayFacet<(N)>>&, \
+#define TEMPLATE(N)                                                                                               \
+        template void prune_facets_incident_to_sharp_ridges(                                                      \
+                const std::vector<numerical::Vector<(N), double>>&, const std::vector<core::DelaunayFacet<(N)>>&, \
                 const std::vector<bool>&, std::vector<bool>*);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)

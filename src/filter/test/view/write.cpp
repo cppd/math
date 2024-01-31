@@ -43,9 +43,9 @@ namespace ns::filter::test::view
 namespace
 {
 template <std::size_t N, typename T>
-constexpr Vector<N, T> OFFSET = []()
+constexpr numerical::Vector<N, T> OFFSET = []()
 {
-        Vector<N, T> res(0);
+        numerical::Vector<N, T> res(0);
         res[N - 1] = 1000;
         return res;
 }();
@@ -57,7 +57,7 @@ std::string color_to_string(const color::RGB8 color)
 }
 
 template <std::size_t N, typename T>
-void write(std::ostream& os, const Vector<N, T>& v)
+void write(std::ostream& os, const numerical::Vector<N, T>& v)
 {
         static_assert(N > 0);
         os << '(';
@@ -70,7 +70,7 @@ void write(std::ostream& os, const Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
+void write(std::ostream& os, const std::optional<numerical::Vector<N, T>>& v)
 {
         static_assert(N > 0);
         if (v)
@@ -87,7 +87,7 @@ void write(std::ostream& os, const std::optional<Vector<N, T>>& v)
 }
 
 template <std::size_t N, typename T>
-void write_track_position(std::ostream& file, const std::vector<Vector<N, T>>& track_position)
+void write_track_position(std::ostream& file, const std::vector<numerical::Vector<N, T>>& track_position)
 {
         if (track_position.empty())
         {
@@ -109,7 +109,7 @@ void write_track_position(std::ostream& file, const std::vector<Vector<N, T>>& t
 }
 
 template <std::size_t N, typename T>
-void write_track_speed(std::ostream& file, const std::vector<Vector<N, T>>& track_speed)
+void write_track_speed(std::ostream& file, const std::vector<numerical::Vector<N, T>>& track_speed)
 {
         if (track_speed.empty())
         {
@@ -131,7 +131,9 @@ void write_track_speed(std::ostream& file, const std::vector<Vector<N, T>>& trac
 }
 
 template <std::size_t N, typename T>
-void write_measurement_angle(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& measurement_angle)
+void write_measurement_angle(
+        std::ostream& file,
+        const std::vector<std::optional<numerical::Vector<N, T>>>& measurement_angle)
 {
         if (measurement_angle.empty())
         {
@@ -156,7 +158,7 @@ template <std::size_t N, typename T>
 void write_measurement_acceleration(
         std::ostream& file,
         const std::string_view name,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_acceleration)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& measurement_acceleration)
 {
         if (measurement_acceleration.empty())
         {
@@ -180,7 +182,7 @@ void write_measurement_acceleration(
 template <std::size_t N, typename T>
 void write_measurement_position(
         std::ostream& file,
-        const std::vector<std::optional<Vector<N, T>>>& measurement_position)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& measurement_position)
 {
         if (measurement_position.empty())
         {
@@ -202,7 +204,9 @@ void write_measurement_position(
 }
 
 template <std::size_t N, typename T>
-void write_measurement_speed(std::ostream& file, const std::vector<std::optional<Vector<N, T>>>& measurement_speed)
+void write_measurement_speed(
+        std::ostream& file,
+        const std::vector<std::optional<numerical::Vector<N, T>>>& measurement_speed)
 {
         if (measurement_speed.empty())
         {
@@ -228,7 +232,7 @@ void write_filter_speed(
         std::ostream& file,
         const std::string& name,
         const color::RGB8 color,
-        const std::vector<std::optional<Vector<N, T>>>& speed)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& speed)
 {
         if (speed.empty())
         {
@@ -254,7 +258,7 @@ void write_filter_speed_p(
         std::ostream& file,
         const std::string& name,
         const color::RGB8 color,
-        const std::vector<std::optional<Vector<N, T>>>& speed_p)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& speed_p)
 {
         if (speed_p.empty())
         {
@@ -280,7 +284,7 @@ void write_filter_position(
         std::ostream& file,
         const std::string& name,
         const color::RGB8 color,
-        const std::vector<std::optional<Vector<N, T>>>& position)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& position)
 {
         if (position.empty())
         {
@@ -307,7 +311,7 @@ void write_filter_position_p(
         const std::string_view filter_name,
         const std::string_view name,
         const color::RGB8 color,
-        const std::vector<std::optional<Vector<N, T>>>& position_p)
+        const std::vector<std::optional<numerical::Vector<N, T>>>& position_p)
 {
         if (position_p.empty())
         {

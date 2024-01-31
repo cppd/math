@@ -47,8 +47,8 @@ void add_info(const T time, const auto& update_info, view::Filter<N, T>* const f
 
         filter_info->position.push_back({.time = time, .point = update_info->position});
         filter_info->position_p.push_back({.time = time, .point = update_info->position_p});
-        filter_info->speed.push_back({.time = time, .point = Vector<1, T>(update_info->speed)});
-        filter_info->speed_p.push_back({.time = time, .point = Vector<1, T>(update_info->speed_p)});
+        filter_info->speed.push_back({.time = time, .point = numerical::Vector<1, T>(update_info->speed)});
+        filter_info->speed_p.push_back({.time = time, .point = numerical::Vector<1, T>(update_info->speed_p)});
 }
 
 template <typename T>

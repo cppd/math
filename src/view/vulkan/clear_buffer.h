@@ -44,12 +44,12 @@ public:
         void create_buffers(
                 const RenderBuffers* render_buffers,
                 const vulkan::ImageWithMemory* image,
-                const Vector3f& clear_color);
+                const numerical::Vector3f& clear_color);
 
         void delete_buffers();
 
         [[nodiscard]] VkSemaphore clear(const vulkan::Queue& graphics_queue, unsigned index) const;
 
-        void set_color(const Vector3f& clear_color);
+        void set_color(const numerical::Vector3f& clear_color);
 };
 }

@@ -31,27 +31,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N + 1> create_simplex()
+std::array<numerical::Vector<N, T>, N + 1> create_simplex()
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        const Vector<N + 1, T> simplex_hyperplane_normal = Vector<N + 1, T>(1 / std::sqrt(static_cast<T>(N + 1)));
+        const numerical::Vector<N + 1, T> simplex_hyperplane_normal =
+                numerical::Vector<N + 1, T>(1 / std::sqrt(static_cast<T>(N + 1)));
 
-        const std::array<Vector<N + 1, T>, N> basis =
+        const std::array<numerical::Vector<N + 1, T>, N> basis =
                 numerical::orthogonal_complement_of_unit_vector(simplex_hyperplane_normal);
 
-        std::array<Vector<N + 1, T>, N + 1> vertices;
+        std::array<numerical::Vector<N + 1, T>, N + 1> vertices;
         for (std::size_t i = 0; i < N + 1; ++i)
         {
-                vertices[i] = Vector<N + 1, T>(0);
+                vertices[i] = numerical::Vector<N + 1, T>(0);
         }
         for (std::size_t i = 0; i < N + 1; ++i)
         {
                 vertices[i][i] = 1;
         }
 
-        std::array<Vector<N, T>, N + 1> res;
+        std::array<numerical::Vector<N, T>, N + 1> res;
         for (std::size_t i = 0; i < N + 1; ++i)
         {
                 for (std::size_t n = 0; n < N; ++n)
@@ -66,15 +67,17 @@ std::array<Vector<N, T>, N + 1> create_simplex()
 namespace regular_polytopes_implementation
 {
 template <std::size_t I, std::size_t N, typename T>
-void create_cross_polytope_facets(Vector<N, T>* const point, std::vector<std::array<Vector<N, T>, N>>* const facets)
+void create_cross_polytope_facets(
+        numerical::Vector<N, T>* const point,
+        std::vector<std::array<numerical::Vector<N, T>, N>>* const facets)
 {
         static_assert(I <= N);
         if constexpr (I == N)
         {
-                std::array<Vector<N, T>, N>& facet = facets->emplace_back();
+                std::array<numerical::Vector<N, T>, N>& facet = facets->emplace_back();
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        facet[i] = Vector<N, T>(0);
+                        facet[i] = numerical::Vector<N, T>(0);
                         facet[i][i] = (*point)[i];
                 }
         }
@@ -89,17 +92,17 @@ void create_cross_polytope_facets(Vector<N, T>* const point, std::vector<std::ar
 }
 
 template <std::size_t N, typename T>
-std::vector<std::array<Vector<N, T>, N>> create_cross_polytope()
+std::vector<std::array<numerical::Vector<N, T>, N>> create_cross_polytope()
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         constexpr std::size_t FACET_COUNT = 1 << N;
 
-        std::vector<std::array<Vector<N, T>, N>> facets;
+        std::vector<std::array<numerical::Vector<N, T>, N>> facets;
         facets.reserve(FACET_COUNT);
 
-        Vector<N, T> point;
+        numerical::Vector<N, T> point;
         regular_polytopes_implementation::create_cross_polytope_facets<0>(&point, &facets);
         ASSERT(facets.size() == FACET_COUNT);
 
@@ -107,7 +110,7 @@ std::vector<std::array<Vector<N, T>, N>> create_cross_polytope()
 }
 
 template <typename T>
-std::vector<std::array<Vector<3, T>, 3>> create_icosahedron()
+std::vector<std::array<numerical::Vector<3, T>, 3>> create_icosahedron()
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -116,7 +119,7 @@ std::vector<std::array<Vector<3, T>, 3>> create_icosahedron()
 
         const T p = (1 + std::sqrt(T{5})) / 2;
 
-        std::vector<Vector<3, T>> vertices;
+        std::vector<numerical::Vector<3, T>> vertices;
         vertices.reserve(VERTEX_COUNT);
 
         vertices.emplace_back(-1, p, 0);
@@ -132,12 +135,12 @@ std::vector<std::array<Vector<3, T>, 3>> create_icosahedron()
         vertices.emplace_back(-p, 0, -1);
         vertices.emplace_back(-p, 0, 1);
 
-        for (Vector<3, T>& v : vertices)
+        for (numerical::Vector<3, T>& v : vertices)
         {
                 v.normalize();
         }
 
-        std::vector<std::array<Vector<3, T>, 3>> facets;
+        std::vector<std::array<numerical::Vector<3, T>, 3>> facets;
         facets.reserve(FACET_COUNT);
 
         facets.push_back({vertices[0], vertices[1], vertices[7]});

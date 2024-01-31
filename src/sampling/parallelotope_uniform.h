@@ -27,11 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <std::size_t N, typename T, std::size_t M>
-Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors, const Vector<M, T>& samples)
+numerical::Vector<N, T> uniform_in_parallelotope(
+        const std::array<numerical::Vector<N, T>, M>& vectors,
+        const numerical::Vector<M, T>& samples)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
-        Vector<N, T> res = samples[0] * vectors[0];
+        numerical::Vector<N, T> res = samples[0] * vectors[0];
         for (std::size_t i = 1; i < M; ++i)
         {
                 res.multiply_add(samples[i], vectors[i]);
@@ -40,12 +42,14 @@ Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors
 }
 
 template <std::size_t N, typename T, std::size_t M, std::uniform_random_bit_generator RandomEngine>
-Vector<N, T> uniform_in_parallelotope(RandomEngine& engine, const std::array<Vector<N, T>, M>& vectors)
+numerical::Vector<N, T> uniform_in_parallelotope(
+        RandomEngine& engine,
+        const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
         std::uniform_real_distribution<T> urd(0, 1);
-        Vector<N, T> res = vectors[0] * urd(engine);
+        numerical::Vector<N, T> res = vectors[0] * urd(engine);
         for (std::size_t i = 1; i < M; ++i)
         {
                 res.multiply_add(vectors[i], urd(engine));
@@ -54,7 +58,7 @@ Vector<N, T> uniform_in_parallelotope(RandomEngine& engine, const std::array<Vec
 }
 
 template <std::size_t N, typename T, std::size_t M>
-T uniform_in_parallelotope_pdf(const std::array<Vector<N, T>, M>& vectors)
+T uniform_in_parallelotope_pdf(const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         return 1 / geometry::shapes::parallelotope_volume(vectors);
 }

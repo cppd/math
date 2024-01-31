@@ -134,7 +134,7 @@ std::array<const char*, 2> integrator_names()
 }
 
 template <std::size_t N, typename T>
-std::optional<Vector<N + 1, T>> make_clip_plane_equation(const view::info::ClipPlane& clip_plane)
+std::optional<numerical::Vector<N + 1, T>> make_clip_plane_equation(const view::info::ClipPlane& clip_plane)
 {
         if constexpr (N >= 4)
         {
@@ -163,7 +163,7 @@ std::optional<T> make_clip_plane_position(const view::info::ClipPlane& clip_plan
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const painter::Shape<N, T, Color>> make_shape(
         const std::vector<std::shared_ptr<const model::mesh::MeshObject<N>>>& objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         progress::RatioList* const progress_list)
 {
         constexpr bool WRITE_LOG = true;
@@ -192,7 +192,7 @@ painter::scenes::StorageScene<N, T, Color> make_scene(
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
         const gui::dialog::PainterParameters3d& dimension_parameters,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
 {
         progress::Ratio progress(nullptr);
 
@@ -221,7 +221,7 @@ painter::scenes::StorageScene<N, T, Color> make_scene(
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
         const gui::dialog::PainterParametersNd& dimension_parameters,
-        const std::optional<Vector<N + 1, T>>& /*clip_plane_equation*/)
+        const std::optional<numerical::Vector<N + 1, T>>& /*clip_plane_equation*/)
 {
         progress::Ratio progress(nullptr);
 

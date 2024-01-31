@@ -65,8 +65,8 @@ namespace ns::vulkan
         std::uint32_t height,
         const std::vector<VkImageView>& attachments);
 
-[[nodiscard]] VkClearValue create_color_clear_value(VkFormat format, const Vector<4, float>& rgba);
-[[nodiscard]] VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
+[[nodiscard]] VkClearValue create_color_clear_value(VkFormat format, const numerical::Vector<4, float>& rgba);
+[[nodiscard]] VkClearValue create_color_clear_value(VkFormat format, const numerical::Vector<3, float>& rgb);
 
 [[nodiscard]] VkClearValue create_depth_stencil_clear_value();
 }

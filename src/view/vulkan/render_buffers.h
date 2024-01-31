@@ -48,7 +48,7 @@ public:
 
         [[nodiscard]] virtual VkRenderPass render_pass_clear() const = 0;
         [[nodiscard]] virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
-        [[nodiscard]] virtual std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const = 0;
+        [[nodiscard]] virtual std::vector<VkClearValue> clear_values(const numerical::Vector<3, float>& rgb) const = 0;
 
         virtual void commands_color_resolve(
                 VkCommandBuffer command_buffer,

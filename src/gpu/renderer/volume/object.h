@@ -43,14 +43,14 @@ public:
 
         virtual void set_matrix_and_clip_plane(
                 const numerical::Matrix4d& vp_matrix,
-                const std::optional<Vector4d>& world_clip_plane_equation) = 0;
+                const std::optional<numerical::Vector4d>& world_clip_plane_equation) = 0;
 
         virtual void set_matrix_and_clip_plane(
                 const numerical::Matrix4d& vp_matrix,
-                const std::optional<Vector4d>& world_clip_plane_equation,
+                const std::optional<numerical::Vector4d>& world_clip_plane_equation,
                 const numerical::Matrix4d& world_to_shadow_matrix) = 0;
 
-        virtual void set_clip_plane(const Vector4d& world_clip_plane_equation) = 0;
+        virtual void set_clip_plane(const numerical::Vector4d& world_clip_plane_equation) = 0;
 
         struct UpdateChanges final
         {

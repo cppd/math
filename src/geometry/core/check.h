@@ -53,10 +53,10 @@ struct RidgeHash final
 template <std::size_t N, typename T>
 void check_facet_dimension(
         const std::string_view name,
-        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<numerical::Vector<N, T>>& vertices,
         const std::vector<std::array<int, N>>& facets)
 {
-        std::unordered_set<Vector<N, T>> facet_vertex_set;
+        std::unordered_set<numerical::Vector<N, T>> facet_vertex_set;
         for (const std::array<int, N>& facet : facets)
         {
                 facet_vertex_set.clear();
@@ -70,7 +70,7 @@ void check_facet_dimension(
                               + " is not equal to " + to_string(N));
                 }
 
-                const Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
+                const numerical::Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
                 if (!is_finite(n))
                 {
                         error(std::string(name) + " facet normal " + to_string(n) + " is not finite");
@@ -147,7 +147,7 @@ void check_euler_characteristic(
 template <std::size_t N, typename T>
 void check_mesh(
         const std::string_view name,
-        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<numerical::Vector<N, T>>& vertices,
         const std::vector<std::array<int, N>>& facets,
         const bool has_boundary,
         const std::optional<int> expected_euler_characteristic)

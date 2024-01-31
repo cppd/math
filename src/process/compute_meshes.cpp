@@ -65,7 +65,7 @@ std::unique_ptr<const model::mesh::Mesh<N>> mesh_convex_hull(
         const model::mesh::Mesh<N>& mesh,
         progress::Ratio* const progress)
 {
-        const std::vector<Vector<N, float>> points = [&]
+        const std::vector<numerical::Vector<N, float>> points = [&]
         {
                 if (!mesh.facets.empty())
                 {
@@ -212,7 +212,7 @@ void mst(
 template <std::size_t N>
 std::unique_ptr<geometry::reconstruction::ManifoldConstructor<N>> create_manifold_constructor(
         progress::RatioList* const progress_list,
-        const std::vector<Vector<N, float>>& points)
+        const std::vector<numerical::Vector<N, float>>& points)
 {
         progress::Ratio progress(progress_list);
         const Clock::time_point start_time = Clock::now();
@@ -233,7 +233,7 @@ void manifold_constructor(
         const bool build_mst,
         const numerical::Matrix<N + 1, N + 1, double>& matrix,
         const model::ObjectId id,
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const double rho,
         const double alpha)
 {
@@ -315,7 +315,7 @@ void compute_meshes(
                                 {
                                         std::optional<numerical::Matrix<N + 1, N + 1, double>> matrix;
                                         std::optional<model::ObjectId> id;
-                                        std::vector<Vector<N, float>> points;
+                                        std::vector<numerical::Vector<N, float>> points;
                                         {
                                                 const model::mesh::Reading reading(mesh_object);
                                                 points = !reading.mesh().facets.empty()

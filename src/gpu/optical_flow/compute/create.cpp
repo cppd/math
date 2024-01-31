@@ -49,7 +49,7 @@ FlowInfo flow_info(
         const vulkan::Buffer& top_points,
         const vulkan::Buffer& top_flow,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const int top_point_count_x,
         const int top_point_count_y)
 {
@@ -102,7 +102,7 @@ FlowInfo flow_info(
 
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const std::uint32_t family_index)
 {
         if (sizes.size() <= 1)
@@ -116,7 +116,7 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const std::vector<std::uint32_t> family_indices({family_index});
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                const std::size_t buffer_size = sizeof(Vector2f) * sizes[i][0] * sizes[i][1];
+                const std::size_t buffer_size = sizeof(numerical::Vector2f) * sizes[i][0] * sizes[i][1];
                 res.emplace_back(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
@@ -130,7 +130,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::uint32_t family_index,
         const VkSampler sampler,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
         const int top_point_count_x,
         const int top_point_count_y,

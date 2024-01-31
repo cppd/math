@@ -38,7 +38,7 @@ class Flow final
         FlowProgram flow_program_;
         std::vector<FlowDataBuffer> flow_buffer_;
         std::vector<FlowMemory> flow_memory_;
-        std::vector<Vector2i> flow_groups_;
+        std::vector<numerical::Vector2i> flow_groups_;
 
         std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
@@ -48,7 +48,7 @@ public:
         void create_buffers(
                 VkSampler sampler,
                 std::uint32_t family_index,
-                const std::vector<Vector2i>& sizes,
+                const std::vector<numerical::Vector2i>& sizes,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
                 const vulkan::Buffer& top_points,

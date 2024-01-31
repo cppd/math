@@ -37,7 +37,7 @@ template <typename Iter, typename Op>
 }
 
 template <std::size_t N, typename T>
-const char* read(const char* str, Vector<N, T>* const v)
+const char* read(const char* str, numerical::Vector<N, T>* const v)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -55,7 +55,7 @@ const char* read(const char* str, Vector<N, T>* const v)
 }
 
 template <std::size_t N, typename T>
-const char* read(const char* str, Vector<N, T>* const v, std::optional<T>* const n)
+const char* read(const char* str, numerical::Vector<N, T>* const v, std::optional<T>* const n)
 {
         str = read(str, v);
 

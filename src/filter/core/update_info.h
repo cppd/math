@@ -31,14 +31,14 @@ namespace ns::filter::core
 template <std::size_t N, typename T>
 struct UpdateInfo final
 {
-        Vector<N, T> residual;
+        numerical::Vector<N, T> residual;
         bool gate = false;
         std::optional<T> normalized_innovation_squared;
         std::optional<T> likelihood;
 };
 
 template <std::size_t N, typename T>
-UpdateInfo<N, T> make_update_info(const Vector<N, T>& residual)
+UpdateInfo<N, T> make_update_info(const numerical::Vector<N, T>& residual)
 {
         UpdateInfo<N, T> res;
         res.residual = residual;
@@ -47,7 +47,7 @@ UpdateInfo<N, T> make_update_info(const Vector<N, T>& residual)
 
 template <std::size_t N, typename T>
 UpdateInfo<N, T> make_update_info(
-        const Vector<N, T>& residual,
+        const numerical::Vector<N, T>& residual,
         const numerical::Matrix<N, N, T>& s,
         const numerical::Matrix<N, N, T>& s_inversed,
         const std::optional<T> gate,

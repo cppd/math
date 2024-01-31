@@ -177,7 +177,7 @@ handle::Framebuffer create_framebuffer(
         return {device, info};
 }
 
-VkClearValue create_color_clear_value(const VkFormat format, const Vector<4, float>& rgba)
+VkClearValue create_color_clear_value(const VkFormat format, const numerical::Vector<4, float>& rgba)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -215,9 +215,9 @@ VkClearValue create_color_clear_value(const VkFormat format, const Vector<4, flo
 #pragma GCC diagnostic pop
 }
 
-VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, float>& rgb)
+VkClearValue create_color_clear_value(const VkFormat format, const numerical::Vector<3, float>& rgb)
 {
-        return create_color_clear_value(format, Vector<4, float>(rgb[0], rgb[1], rgb[2], 1));
+        return create_color_clear_value(format, numerical::Vector<4, float>(rgb[0], rgb[1], rgb[2], 1));
 }
 
 VkClearValue create_depth_stencil_clear_value()

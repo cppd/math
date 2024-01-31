@@ -66,8 +66,8 @@ constexpr LightType LIGHT_TYPE = LightType::PARALLELOTOPE;
 
 template <typename Color, std::size_t N, typename T>
 std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
-        const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center)
+        const std::array<numerical::Vector<N, T>, N>& camera,
+        const numerical::Vector<N, T>& center)
 {
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.06;
@@ -78,9 +78,9 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
         constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.15;
 
-        const Vector<N, T> org = [&]
+        const numerical::Vector<N, T> org = [&]
         {
-                Vector<N, T> res(0);
+                numerical::Vector<N, T> res(0);
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         res -= camera[i];
@@ -95,7 +95,7 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
 
         // Walls
         {
-                std::array<Vector<N, T>, N> walls_vectors = camera;
+                std::array<numerical::Vector<N, T>, N> walls_vectors = camera;
                 walls_vectors[N - 1] *= DEPTH;
 
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -114,7 +114,7 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
 
         // Box
         {
-                Vector<N, T> box_org = org;
+                numerical::Vector<N, T> box_org = org;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         box_org += (1 - BOX_SPACE - BOX_SIZE) * camera[i];
@@ -122,7 +122,7 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
                 box_org += BOX_SPACE * camera[N - 2];
                 box_org += (DEPTH - BOX_SPACE - BOX_SIZE) * camera[N - 1];
 
-                std::array<Vector<N, T>, N> box_vectors;
+                std::array<numerical::Vector<N, T>, N> box_vectors;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         box_vectors[i] = BOX_SIZE * camera[i];
@@ -140,13 +140,13 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
 template <std::size_t N, typename T>
 std::unique_ptr<Projector<N, T>> create_projector(
         const std::array<int, N - 1>& screen_size,
-        const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center)
+        const std::array<numerical::Vector<N, T>, N>& camera,
+        const numerical::Vector<N, T>& center)
 {
         constexpr T POSITION = 1.3;
 
-        const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
-        const Vector<N, T> view_point = center - POSITION * camera[N - 1];
+        const std::array<numerical::Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
+        const numerical::Vector<N, T> view_point = center - POSITION * camera[N - 1];
 
         switch (PROJECTOR_TYPE)
         {
@@ -167,8 +167,8 @@ std::unique_ptr<Projector<N, T>> create_projector(
 template <std::size_t N, typename T, typename Color>
 void create_light_sources(
         const Color& light,
-        const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center,
+        const std::array<numerical::Vector<N, T>, N>& camera,
+        const numerical::Vector<N, T>& center,
         std::vector<std::unique_ptr<LightSource<N, T, Color>>>* const lights,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const shapes)
 {
@@ -186,7 +186,7 @@ void create_light_sources(
                 constexpr T METALNESS = 0;
                 constexpr T ROUGHNESS = 1;
 
-                Vector<N, T> org = center;
+                numerical::Vector<N, T> org = center;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         org -= (SIZE / 2) * camera[i];
@@ -194,14 +194,14 @@ void create_light_sources(
                 org += T{0.49} * camera[N - 2];
                 org -= (SIZE / 2) * camera[N - 1];
 
-                std::array<Vector<N, T>, N - 1> vectors;
+                std::array<numerical::Vector<N, T>, N - 1> vectors;
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         vectors[i] = SIZE * camera[i];
                 }
                 vectors[N - 2] = SIZE * camera[N - 1];
 
-                const Vector<N, T> direction = -camera[N - 2];
+                const numerical::Vector<N, T> direction = -camera[N - 2];
 
                 auto shape = std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org, vectors);
@@ -219,8 +219,8 @@ void create_light_sources(
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
 
-                const Vector<N, T> org = center + T{0.49} * camera[N - 2];
-                const Vector<N, T> direction = -camera[N - 2];
+                const numerical::Vector<N, T> org = center + T{0.49} * camera[N - 2];
+                const numerical::Vector<N, T> direction = -camera[N - 2];
 
                 lights->push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
                         org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
@@ -231,7 +231,7 @@ void create_light_sources(
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1;
 
-                const Vector<N, T> org = center + T{0.45} * camera[N - 2];
+                const numerical::Vector<N, T> org = center + T{0.45} * camera[N - 2];
 
                 lights->push_back(
                         std::make_unique<lights::PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
@@ -247,8 +247,8 @@ StorageScene<N, T, Color> create_cornell_box_scene(
         const Color& light,
         const Color& /*background_light*/,
         const std::array<int, N - 1>& screen_size,
-        const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center,
+        const std::array<numerical::Vector<N, T>, N>& camera,
+        const numerical::Vector<N, T>& center,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         progress::Ratio* const progress)
 {
@@ -270,14 +270,15 @@ StorageScene<N, T, Color> create_cornell_box_scene(
 }
 
 template <std::size_t N, typename T>
-std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::spatial::BoundingBox<N, T>& bb)
+std::tuple<std::array<numerical::Vector<N, T>, N>, numerical::Vector<N, T>> camera_and_center(
+        const geometry::spatial::BoundingBox<N, T>& bb)
 {
         const T size = bb.diagonal().norm() * T{1.5};
 
-        std::array<Vector<N, T>, N> camera;
+        std::array<numerical::Vector<N, T>, N> camera;
         for (std::size_t i = 0; i < N; ++i)
         {
-                camera[i] = Vector<N, T>(0);
+                camera[i] = numerical::Vector<N, T>(0);
         }
         for (std::size_t i = 0; i < N - 1; ++i)
         {
@@ -285,7 +286,7 @@ std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const ge
         }
         camera[N - 1][N - 1] = -size;
 
-        Vector<N, T> center = bb.center();
+        numerical::Vector<N, T> center = bb.center();
         center[N - 2] += (size - (bb.max()[N - 2] - bb.min()[N - 2])) * T{0.5};
 
         return {camera, center};

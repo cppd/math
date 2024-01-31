@@ -72,18 +72,26 @@ class ComputeBRDF final : public compute::BRDF<N, T, Color>
         T roughness_ = 1;
 
 public:
-        [[nodiscard]] Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] Color f(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 return brdf::f<GGX_ONLY>(roughness_, COLORS, n, v, l);
         }
 
-        [[nodiscard]] T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        [[nodiscard]] T pdf(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const override
         {
                 return brdf::pdf<GGX_ONLY>(roughness_, n, v, l);
         }
 
-        [[nodiscard]] Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
+        [[nodiscard]] Sample<N, T, Color> sample_f(
+                PCG& engine,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const override
         {
                 return brdf::sample_f<GGX_ONLY>(engine, roughness_, COLORS, n, v);
         }
@@ -97,7 +105,7 @@ public:
 template <typename Color>
 [[nodiscard]] float scalar_albedo(const Color& color_albedo)
 {
-        const Vector<3, float> rgb = color_albedo.rgb32();
+        const numerical::Vector<3, float> rgb = color_albedo.rgb32();
         ASSERT(rgb[0] == rgb[1] && rgb[1] == rgb[2]);
 
         const float r = rgb[0];
@@ -120,8 +128,8 @@ void compute(
         const std::size_t roughness_index,
         const std::size_t cosine_index,
         const int sample_count,
-        const Vector<N, T>& n,
-        Vector<N, T>* const v,
+        const numerical::Vector<N, T>& n,
+        numerical::Vector<N, T>* const v,
         ComputeBRDF<N, T, Color>* const brdf,
         std::array<std::array<T, COUNT>, COUNT>* const data,
         RandomEngine& engine)
@@ -154,9 +162,9 @@ std::array<std::array<T, COUNT>, COUNT> compute_albedo()
 {
         using Color = color::RGB<T>;
 
-        const Vector<N, T> n = []
+        const numerical::Vector<N, T> n = []
         {
-                Vector<N, T> res(0);
+                numerical::Vector<N, T> res(0);
                 res[N - 1] = 1;
                 return res;
         }();
@@ -169,7 +177,7 @@ std::array<std::array<T, COUNT>, COUNT> compute_albedo()
                 [&](std::atomic_size_t& task)
                 {
                         ComputeBRDF<N, T, Color> brdf;
-                        Vector<N, T> v(0);
+                        numerical::Vector<N, T> v(0);
                         PCG engine;
 
                         std::size_t index = 0;
@@ -201,7 +209,7 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
                 const T average = geometry::shapes::sphere_cosine_weighted_average_by_cosine<N, T>(
                         [&](const T cosine)
                         {
-                                return interpolation.compute(Vector<1, T>(cosine));
+                                return interpolation.compute(numerical::Vector<1, T>(cosine));
                         },
                         AVERAGE_COUNT);
 

@@ -28,18 +28,18 @@ namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T>
 void create_mesh(
-        const std::vector<std::array<Vector<N, T>, N>>& facets,
-        std::vector<Vector<N, T>>* const mesh_vertices,
+        const std::vector<std::array<numerical::Vector<N, T>, N>>& facets,
+        std::vector<numerical::Vector<N, T>>* const mesh_vertices,
         std::vector<std::array<int, N>>* const mesh_facets)
 {
         mesh_vertices->clear();
         mesh_facets->clear();
         mesh_facets->reserve(facets.size());
 
-        std::unordered_map<Vector<N, T>, int> map;
+        std::unordered_map<numerical::Vector<N, T>, int> map;
         map.reserve(N * facets.size());
 
-        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
                 std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
                 for (std::size_t i = 0; i < N; ++i)

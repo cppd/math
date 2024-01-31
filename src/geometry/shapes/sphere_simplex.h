@@ -29,15 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::shapes
 {
 // template <typename T>
-// T sphere_simplex_area(const std::array<Vector<3, T>, 3>& vectors)
+// T sphere_simplex_area(const std::array<numerical::Vector<3, T>, 3>& vectors)
 // {
 //         static_assert(std::is_floating_point_v<T>);
 //
-//         std::array<Vector<3, T>, 2> v;
+//         std::array<numerical::Vector<3, T>, 2> v;
 //
 //         v[0] = vectors[0];
 //         v[1] = vectors[1];
-//         Vector<3, T> facet_01_normal = numerical::orthogonal_complement(v);
+//         numerical::Vector<3, T> facet_01_normal = numerical::orthogonal_complement(v);
 //         {
 //                 T norm = facet_01_normal.norm();
 //                 if (norm == 0)
@@ -49,7 +49,7 @@ namespace ns::geometry::shapes
 //
 //         v[0] = vectors[1];
 //         v[1] = vectors[2];
-//         Vector<3, T> facet_12_normal = numerical::orthogonal_complement(v);
+//         numerical::Vector<3, T> facet_12_normal = numerical::orthogonal_complement(v);
 //         {
 //                 T norm = facet_12_normal.norm();
 //                 if (norm == 0)
@@ -61,7 +61,7 @@ namespace ns::geometry::shapes
 //
 //         v[0] = vectors[2];
 //         v[1] = vectors[0];
-//         Vector<3, T> facet_20_normal = numerical::orthogonal_complement(v);
+//         numerical::Vector<3, T> facet_20_normal = numerical::orthogonal_complement(v);
 //         {
 //                 T norm = facet_20_normal.norm();
 //                 if (norm == 0)
@@ -85,7 +85,7 @@ namespace ns::geometry::shapes
 // }
 
 template <std::size_t N, typename T>
-T sphere_simplex_area(const std::array<Vector<N, T>, 2>& vectors)
+T sphere_simplex_area(const std::array<numerical::Vector<N, T>, 2>& vectors)
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -108,7 +108,7 @@ T sphere_simplex_area(const std::array<Vector<N, T>, 2>& vectors)
 }
 
 template <std::size_t N, typename T>
-T sphere_simplex_area(const std::array<Vector<N, T>, 3>& vectors)
+T sphere_simplex_area(const std::array<numerical::Vector<N, T>, 3>& vectors)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -131,9 +131,9 @@ T sphere_simplex_area(const std::array<Vector<N, T>, 3>& vectors)
                 return 0;
         }
 
-        const Vector<N, T> a = vectors[0] / norm_0;
-        const Vector<N, T> b = vectors[1] / norm_1;
-        const Vector<N, T> c = vectors[2] / norm_2;
+        const numerical::Vector<N, T> a = vectors[0] / norm_0;
+        const numerical::Vector<N, T> b = vectors[1] / norm_1;
+        const numerical::Vector<N, T> c = vectors[2] / norm_2;
 
         const T cos_a = dot(b, c);
         const T cos_b = dot(a, c);

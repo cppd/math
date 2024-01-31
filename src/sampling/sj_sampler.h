@@ -183,7 +183,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& engine, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine& engine, std::vector<numerical::Vector<N, T>>* const samples) const
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 
@@ -192,7 +192,7 @@ public:
                 for (std::size_t i = 0; i < indices_.size(); ++i)
                 {
                         const std::array<int, N>& indices = indices_[i];
-                        Vector<N, T>& sample = (*samples)[i];
+                        numerical::Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
                                 const T min = offsets_[indices[n]];

@@ -41,7 +41,7 @@ namespace
 namespace ch = convex_hull;
 
 template <typename PointType, std::size_t N, typename SourceType>
-std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, SourceType>>& points)
+std::vector<PointType> create_points_paraboloid(const std::vector<numerical::Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N + 1);
 
@@ -60,7 +60,7 @@ std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, Sour
 }
 
 template <typename PointType, std::size_t N, typename SourceType>
-std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& points)
+std::vector<PointType> create_points(const std::vector<numerical::Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N);
 
@@ -83,7 +83,7 @@ std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
         using S = ch::DelaunayDataType<N>;
         using C = ch::DelaunayComputeType<N>;
 
-        const std::vector<Vector<N, S>> data = create_points<Vector<N, S>>(points.points());
+        const std::vector<numerical::Vector<N, S>> data = create_points<numerical::Vector<N, S>>(points.points());
 
         std::vector<DelaunaySimplex<N>> res;
         res.reserve(convex_hull_facets.size());
@@ -98,7 +98,7 @@ std::vector<DelaunaySimplex<N>> lower_convex_hull_simplices(
 
                 const std::array<int, N + 1>& vertices = facet.vertices();
 
-                std::array<Vector<N, double>, N + 1> orthos;
+                std::array<numerical::Vector<N, double>, N + 1> orthos;
                 for (std::size_t r = 0; r < N + 1; ++r)
                 {
                         // ortho is directed outside
@@ -132,8 +132,8 @@ std::vector<DelaunaySimplex<N>> compute_delaunay(const ch::DelaunayPoints<N>& po
         using S = ch::DelaunayParaboloidDataType<N + 1>;
         using C = ch::DelaunayParaboloidComputeType<N + 1>;
 
-        const ch::FacetList<ch::Facet<N + 1, S, C>> facets =
-                ch::compute_convex_hull<C>(create_points_paraboloid<Vector<N + 1, S>>(points.points()), progress);
+        const ch::FacetList<ch::Facet<N + 1, S, C>> facets = ch::compute_convex_hull<C>(
+                create_points_paraboloid<numerical::Vector<N + 1, S>>(points.points()), progress);
 
         return lower_convex_hull_simplices(points, facets);
 }
@@ -147,7 +147,7 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         using C = ch::ConvexHullComputeType<N>;
 
         const ch::FacetList<ch::Facet<N, S, C>> facets =
-                ch::compute_convex_hull<C>(create_points<Vector<N, S>>(points.points()), progress);
+                ch::compute_convex_hull<C>(create_points<numerical::Vector<N, S>>(points.points()), progress);
 
         return convex_hull_simplices(points, facets);
 }
@@ -155,7 +155,7 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
 
 template <std::size_t N>
 DelaunayData<N> compute_delaunay(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* const progress,
         const bool write_log)
 {
@@ -178,7 +178,7 @@ DelaunayData<N> compute_delaunay(
 
         std::vector<DelaunaySimplex<N>> simplices = compute_delaunay(delaunay_points, progress);
 
-        std::vector<Vector<N, double>> result_points(points.size(), Vector<N, double>(0));
+        std::vector<numerical::Vector<N, double>> result_points(points.size(), numerical::Vector<N, double>(0));
         for (std::size_t i = 0; i < delaunay_points.points().size(); ++i)
         {
                 result_points[delaunay_points.restore_index(i)] = to_vector<double>(delaunay_points.points()[i]);
@@ -194,7 +194,7 @@ DelaunayData<N> compute_delaunay(
 
 template <std::size_t N>
 std::vector<ConvexHullSimplex<N>> compute_convex_hull(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* const progress,
         const bool write_log)
 {
@@ -225,12 +225,13 @@ std::vector<ConvexHullSimplex<N>> compute_convex_hull(
         return res;
 }
 
-#define TEMPLATE_DELAUNAY(N) \
-        template DelaunayData<N> compute_delaunay(const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
+#define TEMPLATE_DELAUNAY(N)                       \
+        template DelaunayData<N> compute_delaunay( \
+                const std::vector<numerical::Vector<(N), float>>&, progress::Ratio*, bool);
 
 #define TEMPLATE_CONVEX_HULL(N)                                           \
         template std::vector<ConvexHullSimplex<(N)>> compute_convex_hull( \
-                const std::vector<Vector<(N), float>>&, progress::Ratio*, bool);
+                const std::vector<numerical::Vector<(N), float>>&, progress::Ratio*, bool);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE_DELAUNAY)
 TEMPLATE_INSTANTIATION_N_2_A(TEMPLATE_CONVEX_HULL)

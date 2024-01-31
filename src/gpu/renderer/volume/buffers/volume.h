@@ -74,9 +74,9 @@ public:
         void set_coordinates(
                 const numerical::Matrix4d& device_to_texture_matrix,
                 const numerical::Matrix4d& texture_to_world_matrix,
-                const Vector4d& third_row_of_texture_to_device,
+                const numerical::Vector4d& third_row_of_texture_to_device,
                 const geometry::spatial::Hyperplane<3, double>& clip_plane,
-                const Vector3d& gradient_h,
+                const numerical::Vector3d& gradient_h,
                 const numerical::Matrix3d& gradient_to_world_matrix,
                 const numerical::Matrix4d& world_to_texture_matrix) const;
 
@@ -93,7 +93,7 @@ public:
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
-                const Vector3f& color) const;
+                const numerical::Vector3f& color) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

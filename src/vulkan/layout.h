@@ -57,13 +57,13 @@ using Matrix2d = Matrix<2, double>;
 using Matrix3d = Matrix<3, double>;
 using Matrix4d = Matrix<4, double>;
 
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, float>))) Vector2f Vector2f;
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, float>))) Vector3f Vector3f;
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, float>))) Vector4f Vector4f;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, float>))) numerical::Vector2f Vector2f;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, float>))) numerical::Vector3f Vector3f;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, float>))) numerical::Vector4f Vector4f;
 
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, double>))) Vector2d Vector2d;
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, double>))) Vector3d Vector3d;
-typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, double>))) Vector4d Vector4d;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<2, double>))) numerical::Vector2d Vector2d;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<3, double>))) numerical::Vector3d Vector3d;
+typedef __attribute__((aligned(implementation::VECTOR_ALIGNMENT<4, double>))) numerical::Vector4d Vector4d;
 }
 
 template <typename Dst, std::size_t N, typename Src>

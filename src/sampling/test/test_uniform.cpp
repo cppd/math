@@ -41,18 +41,18 @@ namespace
 namespace impl = sphere_implementation;
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& engine)
+numerical::Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& engine)
 {
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         T v_length_square;
         impl::uniform_in_sphere_by_rejection(engine, v, v_length_square);
         return v;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_in_sphere_by_normal_distribution(RandomEngine& engine)
+numerical::Vector<N, T> uniform_in_sphere_by_normal_distribution(RandomEngine& engine)
 {
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         T v_length_square;
         impl::uniform_in_sphere_by_normal_distribution(engine, v, v_length_square);
         return v;

@@ -33,15 +33,15 @@ inline constexpr int EDGE_COUNT = BINOMIAL<N, 2>;
 }
 
 template <std::size_t N, typename T, std::size_t M>
-std::array<std::array<Vector<N, T>, 2>, simplex_edges_implementation::EDGE_COUNT<M>> simplex_edges(
-        const std::array<Vector<N, T>, M>& vertices)
+std::array<std::array<numerical::Vector<N, T>, 2>, simplex_edges_implementation::EDGE_COUNT<M>> simplex_edges(
+        const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         static_assert(M > 0 && M <= N);
         static_assert(N <= 3);
 
         static constexpr std::size_t EDGE_COUNT = simplex_edges_implementation::EDGE_COUNT<M>;
 
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> res;
+        std::array<std::array<numerical::Vector<N, T>, 2>, EDGE_COUNT> res;
         std::size_t n = 0;
         for (std::size_t i = 0; i < M - 1; ++i)
         {

@@ -28,7 +28,7 @@ template <std::size_t N, typename T>
 struct NoiseTables final
 {
         std::vector<unsigned> permutations;
-        std::vector<Vector<N, T>> gradients;
+        std::vector<numerical::Vector<N, T>> gradients;
 };
 
 template <std::size_t N, typename T>

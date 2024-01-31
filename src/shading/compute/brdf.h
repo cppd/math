@@ -35,19 +35,27 @@ protected:
         ~BRDF() = default;
 
 public:
-        [[nodiscard]] virtual Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        [[nodiscard]] virtual Color f(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const = 0;
 
-        [[nodiscard]] virtual T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        [[nodiscard]] virtual T pdf(
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v,
+                const numerical::Vector<N, T>& l) const = 0;
 
-        [[nodiscard]] virtual Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const = 0;
+        [[nodiscard]] virtual Sample<N, T, Color> sample_f(
+                PCG& engine,
+                const numerical::Vector<N, T>& n,
+                const numerical::Vector<N, T>& v) const = 0;
 };
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Color directional_albedo_uniform_sampling(
         const BRDF<N, T, Color>& brdf,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
         const long long sample_count,
         RandomEngine& engine)
 {
@@ -63,7 +71,7 @@ Color directional_albedo_uniform_sampling(
         long long i = 0;
         while (i < sample_count)
         {
-                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
+                const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
                 const T n_l = dot(n, l);
 
                 if (n_l <= 0)
@@ -86,8 +94,8 @@ Color directional_albedo_uniform_sampling(
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Color directional_albedo_importance_sampling(
         const BRDF<N, T, Color>& brdf,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
         const long long sample_count,
         RandomEngine& engine)
 {
@@ -133,8 +141,8 @@ Color directional_albedo_importance_sampling(
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 T directional_pdf_integral(
         const BRDF<N, T, Color>& brdf,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& n,
+        const numerical::Vector<N, T>& v,
         const long long sample_count,
         RandomEngine& engine)
 {
@@ -147,7 +155,7 @@ T directional_pdf_integral(
 
         for (long long i = 0; i < sample_count; ++i)
         {
-                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
+                const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
                 const T pdf = brdf.pdf(n, v, l);
                 if (!std::isfinite(pdf))
                 {

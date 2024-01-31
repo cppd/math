@@ -114,7 +114,7 @@ void set_alpha(const std::span<std::byte> bytes, const T alpha)
 }
 }
 
-void blend_alpha(ColorFormat* const color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb)
+void blend_alpha(ColorFormat* const color_format, const std::span<std::byte>& bytes, numerical::Vector<3, float> rgb)
 {
         rgb[0] = std::clamp<float>(rgb[0], 0, 1);
         rgb[1] = std::clamp<float>(rgb[1], 0, 1);

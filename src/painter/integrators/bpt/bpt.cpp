@@ -67,7 +67,10 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T correct_normals(const Normals<N, T>& normals, const Vector<N, T>& v, const Vector<N, T>& l)
+[[nodiscard]] T correct_normals(
+        const Normals<N, T>& normals,
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& l)
 {
         const T denominator = dot(v, normals.geometric) * dot(l, normals.shading);
         if (denominator == 0)
@@ -124,7 +127,7 @@ void walk(
 
         std::tie(surface, normals) = [&]
         {
-                static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+                static constexpr std::optional<numerical::Vector<N, T>> GEOMETRIC_NORMAL;
                 return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
@@ -205,8 +208,8 @@ void generate_light_path(
 
         path->emplace_back(
                 std::in_place_type<vertex::Light<N, T, Color>>, distribution.light,
-                sample.infinite_distance ? std::optional<Vector<N, T>>() : sample.ray.org(), sample.ray.dir(), sample.n,
-                distribution.pdf, sample.pdf_pos, sample.pdf_dir);
+                sample.infinite_distance ? std::optional<numerical::Vector<N, T>>() : sample.ray.org(),
+                sample.ray.dir(), sample.n, distribution.pdf, sample.pdf_pos, sample.pdf_dir);
 
         const T pdf = distribution.pdf * sample.pdf_pos * sample.pdf_dir;
         const T k = sample.n ? std::max<T>(0, dot(*sample.n, sample.ray.dir())) : 1;

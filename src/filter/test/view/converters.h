@@ -41,11 +41,11 @@ T time_unit(const T time)
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> add_offset(
-        const std::vector<std::optional<Vector<N, T>>>& data,
-        const Vector<N, T>& offset)
+std::vector<std::optional<numerical::Vector<N, T>>> add_offset(
+        const std::vector<std::optional<numerical::Vector<N, T>>>& data,
+        const numerical::Vector<N, T>& offset)
 {
-        std::vector<std::optional<Vector<N, T>>> res;
+        std::vector<std::optional<numerical::Vector<N, T>>> res;
         res.reserve(data.size());
         for (const auto& d : data)
         {
@@ -62,9 +62,11 @@ std::vector<std::optional<Vector<N, T>>> add_offset(
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> add_offset(const std::vector<Vector<N, T>>& data, const Vector<N, T>& offset)
+std::vector<numerical::Vector<N, T>> add_offset(
+        const std::vector<numerical::Vector<N, T>>& data,
+        const numerical::Vector<N, T>& offset)
 {
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(data.size());
         for (const auto& d : data)
         {
@@ -74,9 +76,9 @@ std::vector<Vector<N, T>> add_offset(const std::vector<Vector<N, T>>& data, cons
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> track_position(const std::vector<filters::Measurements<N, T>>& measurements)
+std::vector<numerical::Vector<N, T>> track_position(const std::vector<filters::Measurements<N, T>>& measurements)
 {
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(measurements.size());
         for (const filters::Measurements<N, T>& m : measurements)
         {
@@ -86,11 +88,11 @@ std::vector<Vector<N, T>> track_position(const std::vector<filters::Measurements
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<2, T>> track_speed(const std::vector<filters::Measurements<N, T>>& measurements)
+std::vector<numerical::Vector<2, T>> track_speed(const std::vector<filters::Measurements<N, T>>& measurements)
 {
         namespace impl = converters_implementation;
 
-        std::vector<Vector<2, T>> res;
+        std::vector<numerical::Vector<2, T>> res;
         res.reserve(measurements.size());
         for (const filters::Measurements<N, T>& m : measurements)
         {
@@ -100,11 +102,11 @@ std::vector<Vector<2, T>> track_speed(const std::vector<filters::Measurements<N,
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> position_measurements(
+std::vector<std::optional<numerical::Vector<N, T>>> position_measurements(
         const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
-        std::vector<std::optional<Vector<N, T>>> res;
+        std::vector<std::optional<numerical::Vector<N, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
         for (const filters::Measurements<N, T>& m : measurements)
@@ -125,13 +127,13 @@ std::vector<std::optional<Vector<N, T>>> position_measurements(
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<2, T>>> speed_measurements(
+std::vector<std::optional<numerical::Vector<2, T>>> speed_measurements(
         const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
         for (const filters::Measurements<N, T>& m : measurements)
@@ -154,13 +156,13 @@ std::vector<std::optional<Vector<2, T>>> speed_measurements(
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<2, T>>> angle_measurements(
+std::vector<std::optional<numerical::Vector<2, T>>> angle_measurements(
         const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> previous_angle;
         std::optional<T> last_time;
@@ -186,7 +188,7 @@ std::vector<std::optional<Vector<2, T>>> angle_measurements(
 }
 
 template <std::size_t INDEX, std::size_t N, typename T>
-std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
+std::vector<std::optional<numerical::Vector<2, T>>> acceleration_measurements(
         const std::vector<filters::Measurements<N, T>>& measurements,
         const T interval)
 {
@@ -194,7 +196,7 @@ std::vector<std::optional<Vector<2, T>>> acceleration_measurements(
 
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(measurements.size());
         std::optional<T> last_time;
         for (const filters::Measurements<N, T>& m : measurements)
@@ -236,9 +238,10 @@ std::vector<std::optional<TimePoint<N, T>>> optional_value(const std::vector<Tim
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<Vector<N, T>>> convert_position(const std::vector<std::optional<TimePoint<N, T>>>& position)
+std::vector<std::optional<numerical::Vector<N, T>>> convert_position(
+        const std::vector<std::optional<TimePoint<N, T>>>& position)
 {
-        std::vector<std::optional<Vector<N, T>>> res;
+        std::vector<std::optional<numerical::Vector<N, T>>> res;
         res.reserve(position.size());
         for (const std::optional<TimePoint<N, T>>& p : position)
         {
@@ -255,11 +258,12 @@ std::vector<std::optional<Vector<N, T>>> convert_position(const std::vector<std:
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::optional<TimePoint<1, T>>>& speed)
+std::vector<std::optional<numerical::Vector<2, T>>> convert_speed(
+        const std::vector<std::optional<TimePoint<1, T>>>& speed)
 {
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(speed.size());
         for (const std::optional<TimePoint<1, T>>& s : speed)
         {
@@ -278,11 +282,12 @@ std::vector<std::optional<Vector<2, T>>> convert_speed(const std::vector<std::op
 }
 
 template <typename T>
-std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::optional<TimePoint<1, T>>>& speed_p)
+std::vector<std::optional<numerical::Vector<2, T>>> convert_speed_p(
+        const std::vector<std::optional<TimePoint<1, T>>>& speed_p)
 {
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(speed_p.size());
         for (const std::optional<TimePoint<1, T>>& s : speed_p)
         {
@@ -303,14 +308,14 @@ std::vector<std::optional<Vector<2, T>>> convert_speed_p(const std::vector<std::
 }
 
 template <std::size_t INDEX, std::size_t N, typename T>
-std::vector<std::optional<Vector<2, T>>> convert_position_p(
+std::vector<std::optional<numerical::Vector<2, T>>> convert_position_p(
         const std::vector<std::optional<TimePoint<N, T>>>& position_p)
 {
         static_assert(INDEX < N);
 
         namespace impl = converters_implementation;
 
-        std::vector<std::optional<Vector<2, T>>> res;
+        std::vector<std::optional<numerical::Vector<2, T>>> res;
         res.reserve(position_p.size());
         for (const std::optional<TimePoint<N, T>>& p : position_p)
         {

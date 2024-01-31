@@ -33,21 +33,21 @@ class MovingVariance final
         static_assert(N > 0);
 
         std::array<std::vector<T>, N> estimation_residuals_;
-        numerical::MovingVariance<Vector<N, T>> variance_;
+        numerical::MovingVariance<numerical::Vector<N, T>> variance_;
 
-        void fill_estimation(const Vector<N, T>& residual);
+        void fill_estimation(const numerical::Vector<N, T>& residual);
 
 public:
         MovingVariance();
 
-        void push(const Vector<N, T>& residual);
+        void push(const numerical::Vector<N, T>& residual);
 
         [[nodiscard]] bool has_variance() const
         {
                 return variance_.has_variance();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> mean() const
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> mean() const
         {
                 if (!has_variance())
                 {
@@ -57,7 +57,7 @@ public:
                 return variance_.mean();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> variance() const
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> variance() const
         {
                 if (!has_variance())
                 {
@@ -67,7 +67,7 @@ public:
                 return variance_.variance();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> standard_deviation() const
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> standard_deviation() const
         {
                 if (!has_variance())
                 {
@@ -77,6 +77,6 @@ public:
                 return variance_.standard_deviation();
         }
 
-        [[nodiscard]] std::optional<Vector<N, T>> compute() const;
+        [[nodiscard]] std::optional<numerical::Vector<N, T>> compute() const;
 };
 }

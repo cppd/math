@@ -144,7 +144,7 @@ class Impl final : public View
                 top_flow_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
                         std::vector({graphics_command_pool_->family_index(), compute_command_pool_->family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, top_level.points.size() * sizeof(Vector2f));
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, top_level.points.size() * sizeof(numerical::Vector2f));
 
                 pipeline_points_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,

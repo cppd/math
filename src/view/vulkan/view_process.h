@@ -43,7 +43,7 @@ class ViewProcess final
         std::function<void(int)> set_sample_count_;
         bool vertical_sync_;
         bool text_active_ = true;
-        Vector3f clear_color_rgb32_ = Vector3f(0);
+        numerical::Vector3f clear_color_rgb32_ = numerical::Vector3f(0);
 
         void cmd(const command::UpdateMeshObject& v)
         {
@@ -232,7 +232,7 @@ public:
                 return text_active_;
         }
 
-        [[nodiscard]] Vector3f clear_color_rgb32() const
+        [[nodiscard]] numerical::Vector3f clear_color_rgb32() const
         {
                 return clear_color_rgb32_;
         }

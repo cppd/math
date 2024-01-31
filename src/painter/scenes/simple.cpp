@@ -52,9 +52,9 @@ constexpr T LIGHT_SOURCE_RADIUS = LIGHT_SOURCE_DISTANCE<T> / 100;
 template <std::size_t N, typename T>
 struct Info final
 {
-        Vector<N, T> light_direction;
-        Vector<N, T> camera_direction;
-        std::array<Vector<N, T>, N - 1> screen_axes;
+        numerical::Vector<N, T> light_direction;
+        numerical::Vector<N, T> camera_direction;
+        std::array<numerical::Vector<N, T>, N - 1> screen_axes;
         std::array<int, N - 1> screen_size;
         T units_per_pixel;
 };
@@ -63,9 +63,9 @@ template <typename T>
 Info<3, T> create_info(
         const int screen_width,
         const int screen_height,
-        const Vector<3, T>& camera_up,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& light_direction,
+        const numerical::Vector<3, T>& camera_up,
+        const numerical::Vector<3, T>& camera_direction,
+        const numerical::Vector<3, T>& light_direction,
         const T view_width)
 {
         Info<3, T> info;
@@ -90,7 +90,7 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
 
         const int max_view_screen_size = max_screen_size - 2 * BORDER_SIZE;
 
-        const Vector<N, T> view_size = bounding_box.diagonal();
+        const numerical::Vector<N, T> view_size = bounding_box.diagonal();
 
         const T max_view_size = [&]
         {
@@ -112,16 +112,16 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
         info.light_direction = -bounding_box.diagonal();
         info.camera_direction = []
         {
-                Vector<N, T> res(0);
+                numerical::Vector<N, T> res(0);
                 res[N - 1] = -1;
                 return res;
         }();
         info.screen_axes = []
         {
-                std::array<Vector<N, T>, N - 1> res;
+                std::array<numerical::Vector<N, T>, N - 1> res;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        res[i] = Vector<N, T>(0);
+                        res[i] = numerical::Vector<N, T>(0);
                         res[i][i] = 1;
                 }
                 return res;
@@ -143,14 +143,14 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<LightSource<N, T, Color>> create_light_source(
-        const Vector<N, T>& center,
+        const numerical::Vector<N, T>& center,
         const T distance,
         const T radius,
         const Color& color,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& direction,
         const T proportion)
 {
-        const Vector<N, T> position = center - direction.normalized() * distance;
+        const numerical::Vector<N, T> position = center - direction.normalized() * distance;
 
         auto res = std::make_unique<lights::BallLight<N, T, Color>>(position, direction, radius, color * proportion);
         res->set_radiance_for_distance(distance);
@@ -160,7 +160,7 @@ std::unique_ptr<LightSource<N, T, Color>> create_light_source(
 template <std::size_t N, typename T, typename Color>
 std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
         const T object_size,
-        const Vector<N, T>& center,
+        const numerical::Vector<N, T>& center,
         const Info<N, T>& info,
         const T front_light_proportion,
         const Color& color)
@@ -191,17 +191,17 @@ std::vector<std::unique_ptr<LightSource<N, T, Color>>> create_light_sources(
 template <std::size_t N, typename T>
 std::unique_ptr<const Projector<N, T>> create_projector(
         const T shape_size,
-        const Vector<N, T>& center,
+        const numerical::Vector<N, T>& center,
         const Info<N, T>& info)
 {
-        const Vector<N, T> camera_position = center - info.camera_direction * (2 * shape_size);
+        const numerical::Vector<N, T> camera_position = center - info.camera_direction * (2 * shape_size);
 
         return std::make_unique<const projectors::ParallelProjector<N, T>>(
                 camera_position, info.camera_direction, info.screen_axes, info.units_per_pixel, info.screen_size);
 }
 
 template <std::size_t N, typename T>
-std::optional<Vector<N + 1, T>> create_clip_plane(
+std::optional<numerical::Vector<N + 1, T>> create_clip_plane(
         const std::optional<T> clip_plane_position,
         const geometry::spatial::BoundingBox<N, T>& bounding_box)
 {
@@ -212,7 +212,7 @@ std::optional<Vector<N + 1, T>> create_clip_plane(
                 return std::nullopt;
         }
 
-        Vector<N + 1, T> res;
+        numerical::Vector<N + 1, T> res;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res[i] = 0;
@@ -235,9 +235,9 @@ StorageScene<N, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const T front_light_proportion,
-        const Vector<N, T>& center,
+        const numerical::Vector<N, T>& center,
         const T shape_size,
         const Info<N, T>& info,
         progress::Ratio* const progress)
@@ -263,14 +263,14 @@ StorageScene<3, T, Color> create_simple_scene(
         std::unique_ptr<const Shape<3, T, Color>>&& shape,
         const Color& light,
         const Color& background_light,
-        const std::optional<Vector<4, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<4, T>>& clip_plane_equation,
         const std::type_identity_t<T> front_light_proportion,
         const int screen_width,
         const int screen_height,
-        const Vector<3, T>& camera_up,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& light_direction,
-        const Vector<3, T>& view_center,
+        const numerical::Vector<3, T>& camera_up,
+        const numerical::Vector<3, T>& camera_direction,
+        const numerical::Vector<3, T>& light_direction,
+        const numerical::Vector<3, T>& view_center,
         const std::type_identity_t<T> view_width,
         progress::Ratio* const progress)
 {
@@ -298,23 +298,25 @@ StorageScene<N, T, Color> create_simple_scene(
         ASSERT(shape);
 
         const geometry::spatial::BoundingBox<N, T> bounding_box = shape->bounding_box();
-        const Vector<N, T> box_diagonal = bounding_box.diagonal();
-        const Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
+        const numerical::Vector<N, T> box_diagonal = bounding_box.diagonal();
+        const numerical::Vector<N, T> center = bounding_box.min() + box_diagonal / T{2};
 
         const Info<N, T> info = create_info(bounding_box, max_screen_size);
         const T shape_size = box_diagonal.norm();
-        const std::optional<Vector<N + 1, T>> clip_plane = create_clip_plane(clip_plane_position, bounding_box);
+        const std::optional<numerical::Vector<N + 1, T>> clip_plane =
+                create_clip_plane(clip_plane_position, bounding_box);
 
         return create_simple_scene(
                 std::move(shape), light, background_light, clip_plane, front_light_proportion, center, shape_size, info,
                 progress);
 }
 
-#define TEMPLATE_3(T, C)                                                                                          \
-        template StorageScene<3, T, C> create_simple_scene(                                                       \
-                std::unique_ptr<const Shape<3, T, C>>&&, const C&, const C&, const std::optional<Vector<4, T>>&,  \
-                std::type_identity_t<T>, int, int, const Vector<3, T>&, const Vector<3, T>&, const Vector<3, T>&, \
-                const Vector<3, T>&, std::type_identity_t<T>, progress::Ratio*);
+#define TEMPLATE_3(T, C)                                                                                        \
+        template StorageScene<3, T, C> create_simple_scene(                                                     \
+                std::unique_ptr<const Shape<3, T, C>>&&, const C&, const C&,                                    \
+                const std::optional<numerical::Vector<4, T>>&, std::type_identity_t<T>, int, int,               \
+                const numerical::Vector<3, T>&, const numerical::Vector<3, T>&, const numerical::Vector<3, T>&, \
+                const numerical::Vector<3, T>&, std::type_identity_t<T>, progress::Ratio*);
 
 #define TEMPLATE(N, T, C)                                                                                              \
         template StorageScene<N, T, C> create_simple_scene(                                                            \

@@ -41,7 +41,7 @@ class RGB final : public Samples<RGB<T>, 3, T>
 {
         using Base = Samples<RGB<T>, 3, T>;
 
-        static constexpr Vector<3, T> make_rgb(T red, T green, T blue)
+        static constexpr numerical::Vector<3, T> make_rgb(T red, T green, T blue)
         {
                 ASSERT(is_finite(red));
                 ASSERT(is_finite(green));
@@ -51,7 +51,7 @@ class RGB final : public Samples<RGB<T>, 3, T>
                 green = std::max(T{0}, green);
                 blue = std::max(T{0}, blue);
 
-                return Vector<3, T>(red, green, blue);
+                return numerical::Vector<3, T>(red, green, blue);
         }
 
 public:
@@ -90,9 +90,9 @@ public:
                 return RGB(c);
         }
 
-        [[nodiscard]] constexpr Vector<3, float> rgb32() const
+        [[nodiscard]] constexpr numerical::Vector<3, float> rgb32() const
         {
-                Vector<3, float> rgb = to_vector<float>(Base::data());
+                numerical::Vector<3, float> rgb = to_vector<float>(Base::data());
                 rgb[0] = std::max(0.0f, rgb[0]);
                 rgb[1] = std::max(0.0f, rgb[1]);
                 rgb[2] = std::max(0.0f, rgb[2]);
@@ -147,27 +147,28 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
         struct Colors final
         {
-                Vector<N, T> white;
-                Vector<N, T> cyan;
-                Vector<N, T> magenta;
-                Vector<N, T> yellow;
-                Vector<N, T> red;
-                Vector<N, T> green;
-                Vector<N, T> blue;
+                numerical::Vector<N, T> white;
+                numerical::Vector<N, T> cyan;
+                numerical::Vector<N, T> magenta;
+                numerical::Vector<N, T> yellow;
+                numerical::Vector<N, T> red;
+                numerical::Vector<N, T> green;
+                numerical::Vector<N, T> blue;
         };
 
         struct Functions final
         {
-                Vector<N, T> x;
-                Vector<N, T> y;
-                Vector<N, T> z;
+                numerical::Vector<N, T> x;
+                numerical::Vector<N, T> y;
+                numerical::Vector<N, T> z;
                 Colors reflectance;
                 Colors illumination;
         };
 
         static Functions create_functions()
         {
-                const auto copy = []<typename SourceType>(Vector<N, T>* const dst, const std::vector<SourceType>& src)
+                const auto copy =
+                        []<typename SourceType>(numerical::Vector<N, T>* const dst, const std::vector<SourceType>& src)
                 {
                         static_assert(std::is_floating_point_v<SourceType>);
                         ASSERT(src.size() == N);
@@ -222,7 +223,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 const T green,
                 const T blue,
                 const Colors& c,
-                Vector<N, T>* const spectrum)
+                numerical::Vector<N, T>* const spectrum)
         {
                 spectrum->multiply_add(red, c.white);
                 if (green <= blue)
@@ -242,7 +243,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 const T green,
                 const T blue,
                 const Colors& c,
-                Vector<N, T>* const spectrum)
+                numerical::Vector<N, T>* const spectrum)
         {
                 spectrum->multiply_add(green, c.white);
                 if (red <= blue)
@@ -262,7 +263,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 const T green,
                 const T blue,
                 const Colors& c,
-                Vector<N, T>* const spectrum)
+                numerical::Vector<N, T>* const spectrum)
         {
                 spectrum->multiply_add(blue, c.white);
                 if (red <= green)
@@ -277,7 +278,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 }
         }
 
-        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
+        static numerical::Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
         {
                 ASSERT(std::isfinite(red));
                 ASSERT(std::isfinite(green));
@@ -287,7 +288,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 green = std::max(T{0}, green);
                 blue = std::max(T{0}, blue);
 
-                Vector<N, T> spectrum(0);
+                numerical::Vector<N, T> spectrum(0);
 
                 if (red <= green && red <= blue)
                 {
@@ -310,11 +311,11 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return spectrum.max_n(0);
         }
 
-        static Vector<3, T> spectrum_to_rgb(const Vector<N, T>& spectrum)
+        static numerical::Vector<3, T> spectrum_to_rgb(const numerical::Vector<N, T>& spectrum)
         {
                 const Functions& f = functions();
 
-                const Vector<N, T> s = spectrum.max_n(0);
+                const numerical::Vector<N, T> s = spectrum.max_n(0);
 
                 const T x = dot(s, f.x);
                 const T y = dot(s, f.y);
@@ -323,7 +324,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return xyz_to_linear_srgb(x, y, z);
         }
 
-        static T spectrum_to_luminance(const Vector<N, T>& spectrum)
+        static T spectrum_to_luminance(const numerical::Vector<N, T>& spectrum)
         {
                 return dot(spectrum.max_n(0), functions().y);
         }
@@ -345,7 +346,7 @@ public:
                 ASSERT(is_finite(v));
         }
 
-        constexpr explicit SpectrumSamples(const Vector<std::size_t{N}, std::type_identity_t<T>>& samples)
+        constexpr explicit SpectrumSamples(const numerical::Vector<std::size_t{N}, std::type_identity_t<T>>& samples)
                 : Base(samples.max_n(0))
         {
                 ASSERT(is_finite(samples));
@@ -374,9 +375,9 @@ public:
                 return illuminant(c.linear_red(), c.linear_green(), c.linear_blue());
         }
 
-        [[nodiscard]] Vector<3, float> rgb32() const
+        [[nodiscard]] numerical::Vector<3, float> rgb32() const
         {
-                Vector<3, float> rgb = to_vector<float>(spectrum_to_rgb(Base::data()));
+                numerical::Vector<3, float> rgb = to_vector<float>(spectrum_to_rgb(Base::data()));
                 rgb[0] = std::max(0.0f, rgb[0]);
                 rgb[1] = std::max(0.0f, rgb[1]);
                 rgb[2] = std::max(0.0f, rgb[2]);
@@ -402,7 +403,7 @@ public:
                 requires std::is_same_v<Color, RGB<typename Color::DataType>>
         [[nodiscard]] friend Color to_color(const SpectrumSamples& c)
         {
-                const Vector<3, T> rgb = spectrum_to_rgb(c.data());
+                const numerical::Vector<3, T> rgb = spectrum_to_rgb(c.data());
                 return Color(rgb[0], rgb[1], rgb[2]);
         }
 

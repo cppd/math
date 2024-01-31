@@ -144,22 +144,22 @@ class Impl final : public Dft
 
         const vulkan::BufferMemoryType buffer_memory_type_;
 
-        const Vector2i group_size_;
+        const numerical::Vector2i group_size_;
 
         MulProgram mul_program_;
         MulMemory mul_memory_;
-        Vector2i mul_rows_to_buffer_groups_ = Vector2i(0, 0);
-        Vector2i mul_rows_from_buffer_groups_ = Vector2i(0, 0);
-        Vector2i mul_columns_to_buffer_groups_ = Vector2i(0, 0);
-        Vector2i mul_columns_from_buffer_groups_ = Vector2i(0, 0);
+        numerical::Vector2i mul_rows_to_buffer_groups_{0, 0};
+        numerical::Vector2i mul_rows_from_buffer_groups_{0, 0};
+        numerical::Vector2i mul_columns_to_buffer_groups_{0, 0};
+        numerical::Vector2i mul_columns_from_buffer_groups_{0, 0};
 
         MulDProgram mul_d_program_;
         MulDMemory mul_d_d1_fwd_;
         MulDMemory mul_d_d1_inv_;
         MulDMemory mul_d_d2_fwd_;
         MulDMemory mul_d_d2_inv_;
-        Vector2i mul_d_row_groups_ = Vector2i(0, 0);
-        Vector2i mul_d_column_groups_ = Vector2i(0, 0);
+        numerical::Vector2i mul_d_row_groups_{0, 0};
+        numerical::Vector2i mul_d_column_groups_{0, 0};
 
         std::unique_ptr<Fft> fft_n2_m1_;
         std::unique_ptr<Fft> fft_n1_m2_;
@@ -359,7 +359,7 @@ public:
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              const vulkan::BufferMemoryType buffer_memory_type,
-             const Vector2i& group_size)
+             const numerical::Vector2i& group_size)
                 : device_(device),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
@@ -395,7 +395,7 @@ std::unique_ptr<Dft> create_dft(
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         const vulkan::BufferMemoryType buffer_memory_type,
-        const Vector2i& group_size)
+        const numerical::Vector2i& group_size)
 {
         return std::make_unique<Impl>(
                 device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue, buffer_memory_type,

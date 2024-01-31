@@ -35,12 +35,12 @@ public:
         virtual ~FilterEkf() = default;
 
         virtual void reset(
-                const Vector<6, T>& position_velocity_acceleration,
+                const numerical::Vector<6, T>& position_velocity_acceleration,
                 const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
                 const Init<T>& init) = 0;
 
         virtual void reset(
-                const Vector<4, T>& position_velocity,
+                const numerical::Vector<4, T>& position_velocity,
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
@@ -115,7 +115,7 @@ public:
                 const Measurement<2, T>& acceleration,
                 std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<2, T> position() const = 0;
+        [[nodiscard]] virtual numerical::Vector<2, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_p() const = 0;
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;

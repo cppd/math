@@ -34,9 +34,9 @@ namespace ns::painter::shapes::mesh
 template <std::size_t N, typename T, typename Color>
 struct Mesh final
 {
-        std::vector<Vector<N, T>> vertices;
-        std::vector<Vector<N, T>> normals;
-        std::vector<Vector<N - 1, T>> texcoords;
+        std::vector<numerical::Vector<N, T>> vertices;
+        std::vector<numerical::Vector<N, T>> normals;
+        std::vector<numerical::Vector<N - 1, T>> texcoords;
         std::vector<Material<T, Color>> materials;
         std::vector<Texture<N - 1>> images;
         std::vector<Facet<N, T>> facets;
@@ -52,6 +52,6 @@ struct MeshData final
 template <std::size_t N, typename T, typename Color>
 MeshData<N, T, Color> create_mesh_data(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         bool write_log);
 }

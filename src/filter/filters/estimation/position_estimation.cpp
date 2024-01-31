@@ -34,9 +34,9 @@ namespace ns::filter::filters::estimation
 namespace
 {
 template <std::size_t N, typename T>
-Vector<N, T> stddev_degrees(const Vector<N, T>& v)
+numerical::Vector<N, T> stddev_degrees(const numerical::Vector<N, T>& v)
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = radians_to_degrees(std::sqrt(v[i]));
@@ -66,7 +66,8 @@ void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
                 return;
         }
 
-        const Vector<N, T> angle_variance = com::compute_angle_variance(position_->velocity(), position_->velocity_p());
+        const numerical::Vector<N, T> angle_variance =
+                com::compute_angle_variance(position_->velocity(), position_->velocity_p());
         if (!is_finite(angle_variance))
         {
                 return;
@@ -97,7 +98,7 @@ bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
 }
 
 template <std::size_t N, typename T>
-Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
+numerical::Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
 {
         return position_->position_velocity();
 }

@@ -64,7 +64,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> init_light_sources(
                 box.merge(shapes[i]->bounding_box());
         }
 
-        const Vector<N, T> center = box.center();
+        const numerical::Vector<N, T> center = box.center();
         const T radius = box.diagonal().norm() / 2;
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> res;
@@ -83,7 +83,7 @@ std::vector<std::unique_ptr<const LightSource<N, T, Color>>> init_light_sources(
 template <std::size_t N, typename T, typename Color>
 StorageScene<N, T, Color> create_storage_scene(
         const Color& background_light,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<LightSource<N, T, Color>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
@@ -108,10 +108,10 @@ StorageScene<N, T, Color> create_storage_scene(
         return res;
 }
 
-#define TEMPLATE(N, T, C)                                                                                       \
-        template StorageScene<N, T, C> create_storage_scene(                                                    \
-                const C&, const std::optional<Vector<(N) + 1, T>>&, std::unique_ptr<const Projector<(N), T>>&&, \
-                std::vector<std::unique_ptr<LightSource<(N), T, C>>>&&,                                         \
+#define TEMPLATE(N, T, C)                                                                                           \
+        template StorageScene<N, T, C> create_storage_scene(                                                        \
+                const C&, const std::optional<numerical::Vector<(N) + 1, T>>&,                                      \
+                std::unique_ptr<const Projector<(N), T>>&&, std::vector<std::unique_ptr<LightSource<(N), T, C>>>&&, \
                 std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

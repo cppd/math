@@ -50,7 +50,7 @@ public:
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const numerical::Matrix4d& model_matrix, const numerical::Matrix3d& normal_matrix) const;
-        void set_color(const Vector3f& color) const;
+        void set_color(const numerical::Vector3f& color) const;
         void set_alpha(float alpha) const;
         void set_lighting(float ambient, float metalness, float roughness) const;
 };

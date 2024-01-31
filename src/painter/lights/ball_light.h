@@ -41,29 +41,30 @@ class BallLight final : public LightSource<N, T, Color>
         Color radiance_;
         T pdf_;
         T area_;
-        std::array<Vector<N, T>, N - 1> vectors_;
+        std::array<numerical::Vector<N, T>, N - 1> vectors_;
         std::optional<com::Spotlight<N, T>> spotlight_;
 
-        void init(const Vector<N, T>& scene_center, T scene_radius) override;
+        void init(const numerical::Vector<N, T>& scene_center, T scene_radius) override;
 
-        [[nodiscard]] bool visible(const Vector<N, T>& point) const;
-        [[nodiscard]] Vector<N, T> sample_location(PCG& engine) const;
+        [[nodiscard]] bool visible(const numerical::Vector<N, T>& point) const;
+        [[nodiscard]] numerical::Vector<N, T> sample_location(PCG& engine) const;
         [[nodiscard]] Color radiance(T cos) const;
 
         [[nodiscard]] LightSourceArriveSample<N, T, Color> arrive_sample(
                 PCG& engine,
-                const Vector<N, T>& point,
-                const Vector<N, T>& n) const override;
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& n) const override;
 
-        [[nodiscard]] LightSourceArriveInfo<T, Color> arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
-                const override;
+        [[nodiscard]] LightSourceArriveInfo<T, Color> arrive_info(
+                const numerical::Vector<N, T>& point,
+                const numerical::Vector<N, T>& l) const override;
 
         [[nodiscard]] LightSourceLeaveSample<N, T, Color> leave_sample(PCG& engine) const override;
 
-        [[nodiscard]] T leave_pdf_pos(const Vector<N, T>& dir) const override;
-        [[nodiscard]] T leave_pdf_dir(const Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_pos(const numerical::Vector<N, T>& dir) const override;
+        [[nodiscard]] T leave_pdf_dir(const numerical::Vector<N, T>& dir) const override;
 
-        [[nodiscard]] std::optional<Color> leave_radiance(const Vector<N, T>& dir) const override;
+        [[nodiscard]] std::optional<Color> leave_radiance(const numerical::Vector<N, T>& dir) const override;
 
         [[nodiscard]] Color power() const override;
 
@@ -73,14 +74,14 @@ class BallLight final : public LightSource<N, T, Color>
 
 public:
         BallLight(
-                const Vector<N, T>& center,
-                const Vector<N, T>& direction,
+                const numerical::Vector<N, T>& center,
+                const numerical::Vector<N, T>& direction,
                 std::type_identity_t<T> radius,
                 const Color& radiance);
 
         BallLight(
-                const Vector<N, T>& center,
-                const Vector<N, T>& direction,
+                const numerical::Vector<N, T>& center,
+                const numerical::Vector<N, T>& direction,
                 std::type_identity_t<T> radius,
                 const Color& radiance,
                 std::type_identity_t<T> spotlight_falloff_start,

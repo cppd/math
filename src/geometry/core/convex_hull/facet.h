@@ -48,7 +48,7 @@ class Facet final
         mutable bool marked_as_visible_ = false;
 
 public:
-        Facet(const std::vector<Vector<N, DataType>>& points,
+        Facet(const std::vector<numerical::Vector<N, DataType>>& points,
               std::array<int, N>&& vertices,
               const int direction_point,
               const Facet& direction_facet)
@@ -57,7 +57,9 @@ public:
         {
         }
 
-        Facet(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, const int direction_point)
+        Facet(const std::vector<numerical::Vector<N, DataType>>& points,
+              std::array<int, N>&& vertices,
+              const int direction_point)
                 : vertices_(sort(std::move(vertices))),
                   ortho_(points, vertices_, direction_point)
         {
@@ -135,7 +137,7 @@ public:
         }
 
         [[nodiscard]] decltype(auto) visible_from_point(
-                const std::vector<Vector<N, DataType>>& points,
+                const std::vector<numerical::Vector<N, DataType>>& points,
                 const int point_index) const
         {
                 // strictly greater than 0

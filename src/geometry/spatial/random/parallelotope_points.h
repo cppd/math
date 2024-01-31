@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::spatial::random
 {
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> parallelotope_external_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
+std::vector<numerical::Vector<N, T>> parallelotope_external_points(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
         const int count,
         RandomEngine& engine)
 {
@@ -39,7 +39,7 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
@@ -48,7 +48,7 @@ std::vector<Vector<N, T>> parallelotope_external_points(
                 return res;
         };
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -58,9 +58,9 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> parallelotope_external_points(
-        const Vector<N, T>& org,
-        const Vector<N, T>& diagonal,
+std::vector<numerical::Vector<N, T>> parallelotope_external_points(
+        const numerical::Vector<N, T>& org,
+        const numerical::Vector<N, T>& diagonal,
         const int count,
         RandomEngine& engine)
 {
@@ -70,7 +70,7 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
@@ -79,7 +79,7 @@ std::vector<Vector<N, T>> parallelotope_external_points(
                 return res;
         };
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -89,9 +89,9 @@ std::vector<Vector<N, T>> parallelotope_external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> parallelotope_internal_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
+std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
         const int count,
         RandomEngine& engine)
 {
@@ -99,7 +99,7 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res.multiply_add(vectors[i], urd(engine));
@@ -107,7 +107,7 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
                 return res;
         };
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -117,9 +117,9 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> parallelotope_internal_points(
-        const Vector<N, T>& org,
-        const Vector<N, T>& diagonal,
+std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
+        const numerical::Vector<N, T>& org,
+        const numerical::Vector<N, T>& diagonal,
         const int count,
         RandomEngine& engine)
 {
@@ -127,7 +127,7 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 
         const auto random_point = [&]()
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] += diagonal[i] * urd(engine);
@@ -135,7 +135,7 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
                 return res;
         };
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -145,9 +145,9 @@ std::vector<Vector<N, T>> parallelotope_internal_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> parallelotope_cover_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
+std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
         const int count,
         RandomEngine& engine)
 {
@@ -156,7 +156,7 @@ std::vector<Vector<N, T>> parallelotope_cover_points(
 
         const auto cover_point = [&]()
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res.multiply_add(vectors[i], cover_urd(engine));
@@ -166,7 +166,7 @@ std::vector<Vector<N, T>> parallelotope_cover_points(
 
         const auto plane_point = [&](const std::size_t n)
         {
-                Vector<N, T> res = org;
+                numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         if (i != n)
@@ -177,7 +177,7 @@ std::vector<Vector<N, T>> parallelotope_cover_points(
                 return res;
         };
 
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(count * (1 + N * 2));
         for (int i = 0; i < count; ++i)
         {

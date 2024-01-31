@@ -43,19 +43,19 @@ class ParallelotopeAA final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        static constexpr std::array<Vector<N, T>, N> diagonal_matrix(const T& v)
+        static constexpr std::array<numerical::Vector<N, T>, N> diagonal_matrix(const T& v)
         {
-                std::array<Vector<N, T>, N> res;
+                std::array<numerical::Vector<N, T>, N> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        res[i] = Vector<N, T>(0);
+                        res[i] = numerical::Vector<N, T>(0);
                         res[i][i] = v;
                 }
                 return res;
         }
 
-        static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE = diagonal_matrix(1);
-        static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE = diagonal_matrix(-1);
+        static constexpr std::array<numerical::Vector<N, T>, N> NORMALS_POSITIVE = diagonal_matrix(1);
+        static constexpr std::array<numerical::Vector<N, T>, N> NORMALS_NEGATIVE = diagonal_matrix(-1);
 
         static_assert(N <= 27);
 
@@ -70,8 +70,8 @@ class ParallelotopeAA final
 
         std::array<Planes, N> planes_;
 
-        void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
-        void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
+        void set_data(const numerical::Vector<N, T>& org, const std::array<numerical::Vector<N, T>, N>& vectors);
+        void set_data(const numerical::Vector<N, T>& org, const std::array<T, N>& sizes);
 
         enum class IntersectionType
         {
@@ -84,7 +84,7 @@ class ParallelotopeAA final
         [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, T max_distance) const;
 
         template <int INDEX, typename F>
-        void binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f) const;
+        void binary_division_impl(std::array<Planes, N>* p, const numerical::Vector<N, T>& middle_d, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -94,12 +94,12 @@ public:
 
         ParallelotopeAA() = default;
 
-        ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes);
-        ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max);
+        ParallelotopeAA(const numerical::Vector<N, T>& org, const std::array<T, N>& sizes);
+        ParallelotopeAA(const numerical::Vector<N, T>& min, const numerical::Vector<N, T>& max);
 
         [[nodiscard]] Constraints<N, T, 2 * N, 0> constraints() const;
 
-        [[nodiscard]] bool inside(const Vector<N, T>& point) const;
+        [[nodiscard]] bool inside(const numerical::Vector<N, T>& point) const;
 
         [[nodiscard]] std::optional<T> intersect(const numerical::Ray<N, T>& ray, T max_distance = Limits<T>::max())
                 const;
@@ -112,17 +112,17 @@ public:
                 const numerical::Ray<N, T>& ray,
                 T max_distance = Limits<T>::max()) const;
 
-        [[nodiscard]] Vector<N, T> normal(const Vector<N, T>& point) const;
+        [[nodiscard]] numerical::Vector<N, T> normal(const numerical::Vector<N, T>& point) const;
 
         [[nodiscard]] std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
 
         [[nodiscard]] T length() const;
 
-        [[nodiscard]] Vector<N, T> org() const;
-        [[nodiscard]] std::array<Vector<N, T>, N> vectors() const;
+        [[nodiscard]] numerical::Vector<N, T> org() const;
+        [[nodiscard]] std::array<numerical::Vector<N, T>, N> vectors() const;
 
-        [[nodiscard]] Vector<N, T> min() const;
-        [[nodiscard]] Vector<N, T> max() const;
+        [[nodiscard]] numerical::Vector<N, T> min() const;
+        [[nodiscard]] numerical::Vector<N, T> max() const;
 
         [[nodiscard]] auto overlap_function() const;
 
@@ -139,7 +139,7 @@ public:
         [[nodiscard]] friend std::string to_string(const ParallelotopeAA<N, T>& p)
         {
                 std::string s = "org = " + to_string(p.org()) + "\n";
-                const std::array<Vector<N, T>, N> vectors = p.vectors();
+                const std::array<numerical::Vector<N, T>, N> vectors = p.vectors();
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         s += "vector[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
@@ -149,7 +149,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes)
+ParallelotopeAA<N, T>::ParallelotopeAA(const numerical::Vector<N, T>& org, const std::array<T, N>& sizes)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -166,7 +166,7 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array
 }
 
 template <std::size_t N, typename T>
-ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max)
+ParallelotopeAA<N, T>::ParallelotopeAA(const numerical::Vector<N, T>& min, const numerical::Vector<N, T>& max)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -266,13 +266,13 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const numerical::Ray<N,
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& point) const
+numerical::Vector<N, T> ParallelotopeAA<N, T>::normal(const numerical::Vector<N, T>& point) const
 {
         // the normal of the plane closest to the point
 
         T min_distance = Limits<T>::max();
 
-        Vector<N, T> n;
+        numerical::Vector<N, T> n;
         for (std::size_t i = 0; i < N; ++i)
         {
                 {
@@ -300,7 +300,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& point) const
 }
 
 template <std::size_t N, typename T>
-bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& point) const
+bool ParallelotopeAA<N, T>::inside(const numerical::Vector<N, T>& point) const
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -321,7 +321,7 @@ template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void ParallelotopeAA<N, T>::binary_division_impl(
         std::array<Planes, N>* const p,
-        const Vector<N, T>& middle_d,
+        const numerical::Vector<N, T>& middle_d,
         const F& f) const
 {
         if constexpr (INDEX >= 0)
@@ -345,7 +345,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 {
         std::array<ParallelotopeAA, DIVISIONS> res;
 
-        Vector<N, T> middle_d;
+        numerical::Vector<N, T> middle_d;
         for (std::size_t i = 0; i < N; ++i)
         {
                 middle_d[i] = (planes_[i].d1 + planes_[i].d2) / static_cast<T>(2);
@@ -370,7 +370,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::length() const
 {
-        Vector<N, T> s;
+        numerical::Vector<N, T> s;
         for (std::size_t i = 0; i < N; ++i)
         {
                 s[i] = planes_[i].d2 - planes_[i].d1;
@@ -379,9 +379,9 @@ T ParallelotopeAA<N, T>::length() const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::org() const
+numerical::Vector<N, T> ParallelotopeAA<N, T>::org() const
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = planes_[i].d1;
@@ -390,21 +390,21 @@ Vector<N, T> ParallelotopeAA<N, T>::org() const
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> ParallelotopeAA<N, T>::vectors() const
+std::array<numerical::Vector<N, T>, N> ParallelotopeAA<N, T>::vectors() const
 {
-        std::array<Vector<N, T>, N> res;
+        std::array<numerical::Vector<N, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = Vector<N, T>(0);
+                res[i] = numerical::Vector<N, T>(0);
                 res[i][i] = planes_[i].d2 - planes_[i].d1;
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::min() const
+numerical::Vector<N, T> ParallelotopeAA<N, T>::min() const
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = planes_[i].d1;
@@ -413,9 +413,9 @@ Vector<N, T> ParallelotopeAA<N, T>::min() const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::max() const
+numerical::Vector<N, T> ParallelotopeAA<N, T>::max() const
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = planes_[i].d2;

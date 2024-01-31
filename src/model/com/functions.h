@@ -28,7 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model
 {
 template <std::size_t N, typename T>
-std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& min, const Vector<N, T>& max)
+std::tuple<numerical::Vector<N, T>, T> center_and_length_for_min_max(
+        const numerical::Vector<N, T>& min,
+        const numerical::Vector<N, T>& max)
 {
         static_assert(FloatingPoint<T>);
 
@@ -41,7 +43,7 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
                 }
         }
 
-        const Vector<N, T> center = min + (max - min) / T{2};
+        const numerical::Vector<N, T> center = min + (max - min) / T{2};
         const T len = (max - min).norm_stable();
 
         if (!is_finite(center))

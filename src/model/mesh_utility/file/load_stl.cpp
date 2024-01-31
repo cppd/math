@@ -171,18 +171,18 @@ template <std::size_t N>
         {
                 error("Normal coordinates not found in STL file when expected");
         }
-        Vector<N, float> n;
+        numerical::Vector<N, float> n;
         *iter = read(*iter, &n);
         return true;
 }
 
 template <std::size_t N>
 void read_facet(
-        const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet,
+        const std::function<void(const std::array<numerical::Vector<N, float>, N>&)>& yield_facet,
         const char* const last,
         const char** const iter)
 {
-        std::array<Vector<N, float>, N> facet_vertices;
+        std::array<numerical::Vector<N, float>, N> facet_vertices;
         for (std::size_t v = 0; v < N; ++v)
         {
                 *iter = read(*iter, last, ascii::is_space);
@@ -200,7 +200,7 @@ template <std::size_t N>
 void read_ascii_stl(
         const std::vector<char>& data,
         progress::Ratio* const progress,
-        const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
+        const std::function<void(const std::array<numerical::Vector<N, float>, N>&)>& yield_facet)
 {
         const double size_reciprocal = 1.0 / data.size();
 
@@ -243,7 +243,7 @@ template <std::size_t N, bool BYTE_SWAP>
 void read_binary_stl(
         const std::vector<char>& data,
         progress::Ratio* const progress,
-        const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
+        const std::function<void(const std::array<numerical::Vector<N, float>, N>&)>& yield_facet)
 {
         ASSERT(data.size() >= BINARY_DATA_OFFSET);
 
@@ -253,7 +253,7 @@ void read_binary_stl(
         const char* read_ptr = &data[BINARY_DATA_OFFSET];
         const double facet_count_reciprocal = 1.0 / facet_count;
 
-        std::array<Vector<N, std::conditional_t<!BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
+        std::array<numerical::Vector<N, std::conditional_t<!BYTE_SWAP, float, std::uint32_t>>, N> facet_vertices;
         static_assert(sizeof(facet_vertices) == BINARY_FACET_SIZE<N>);
 
         read_ptr += BINARY_NORMAL_SIZE<N>;
@@ -283,10 +283,10 @@ void read_binary_stl(
 template <std::size_t N, bool BYTE_SWAP>
 std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, progress::Ratio* const progress)
 {
-        std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
+        std::unordered_map<numerical::Vector<N, float>, unsigned> unique_vertices;
         Mesh<N> mesh;
 
-        const auto yield_facet = [&](const std::array<Vector<N, float>, N>& facet_vertices)
+        const auto yield_facet = [&](const std::array<numerical::Vector<N, float>, N>& facet_vertices)
         {
                 typename Mesh<N>::Facet& facet = mesh.facets.emplace_back();
 

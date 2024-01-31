@@ -74,20 +74,20 @@ std::unique_ptr<Mesh<N>> create_mesh_for_points_impl(T&& points)
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> create_mesh_for_points(const std::vector<Vector<N, float>>& points)
+std::unique_ptr<Mesh<N>> create_mesh_for_points(const std::vector<numerical::Vector<N, float>>& points)
 {
         return create_mesh_for_points_impl<N>(points);
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
+std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<numerical::Vector<N, float>>&& points)
 {
         return create_mesh_for_points_impl<N>(std::move(points));
 }
 
-#define TEMPLATE(N)                                                                                         \
-        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(const std::vector<Vector<(N), float>>&); \
-        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(std::vector<Vector<(N), float>>&&);
+#define TEMPLATE(N)                                                                                                    \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(const std::vector<numerical::Vector<(N), float>>&); \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(std::vector<numerical::Vector<(N), float>>&&);
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

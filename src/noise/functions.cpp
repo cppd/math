@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::noise
 {
 template <std::size_t N, typename T>
-[[nodiscard]] T fractal_noise(const Vector<N, T>& p, const int count, const T lacunarity, const T gain)
+[[nodiscard]] T fractal_noise(const numerical::Vector<N, T>& p, const int count, const T lacunarity, const T gain)
 {
         T sum = noise(p);
 
@@ -45,7 +45,7 @@ template <std::size_t N, typename T>
         return sum / max;
 }
 
-#define TEMPLATE(N, T) template T fractal_noise(const Vector<N, T>&, int, T, T);
+#define TEMPLATE(N, T) template T fractal_noise(const numerical::Vector<N, T>&, int, T, T);
 
 TEMPLATE_INSTANTIATION_N_T_2(TEMPLATE)
 }

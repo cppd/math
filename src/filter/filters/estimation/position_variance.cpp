@@ -39,7 +39,7 @@ namespace ns::filter::filters::estimation
 namespace
 {
 template <std::size_t N, typename T>
-constexpr Vector<N, T> VARIANCE{square(T{1})};
+constexpr numerical::Vector<N, T> VARIANCE{square(T{1})};
 
 template <typename T>
 constexpr std::optional<T> GATE{T{250}};
@@ -51,13 +51,15 @@ template <typename T>
 constexpr T THETA{0};
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> correct_residual(const Vector<N, T>& residual, const T dt)
+[[nodiscard]] numerical::Vector<N, T> correct_residual(const numerical::Vector<N, T>& residual, const T dt)
 {
         return residual / (dt + 1);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] bool check_residual(const Vector<N, T>& residual, const std::optional<Vector<N, T>>& variance)
+[[nodiscard]] bool check_residual(
+        const numerical::Vector<N, T>& residual,
+        const std::optional<numerical::Vector<N, T>>& variance)
 {
         if (!variance)
         {
@@ -119,7 +121,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         }
         last_update_time_ = m.time;
 
-        const Vector<N, T> residual = correct_residual(update.residual, predict_dt);
+        const numerical::Vector<N, T> residual = correct_residual(update.residual, predict_dt);
 
         if (!check_residual(residual, position_variance_.variance()))
         {
@@ -181,7 +183,7 @@ std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::predict(const Measuremen
 }
 
 template <std::size_t N, typename T>
-const std::optional<Vector<N, T>>& PositionVariance<N, T>::last_position_variance() const
+const std::optional<numerical::Vector<N, T>>& PositionVariance<N, T>::last_position_variance() const
 {
         return last_position_variance_;
 }

@@ -73,11 +73,11 @@ template <std::size_t N>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::array<Vector<N, T>, N> vertices_to_array(
-        const std::vector<Vector<N, T>>& vertices,
+[[nodiscard]] std::array<numerical::Vector<N, T>, N> vertices_to_array(
+        const std::vector<numerical::Vector<N, T>>& vertices,
         const std::array<int, N>& indices)
 {
-        std::array<Vector<N, T>, N> res;
+        std::array<numerical::Vector<N, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = vertices[indices[i]];
@@ -163,7 +163,7 @@ void write_facets_and_materials(
 template <std::size_t N, typename T, typename Color>
 void add_mesh(
         const model::mesh::Reading<N>& mesh_object,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         MeshData<N, T, Color>* const data)
 {
         const T alpha = std::clamp<T>(mesh_object.alpha(), 0, 1);
@@ -211,7 +211,7 @@ void add_mesh(
 template <std::size_t N, typename T, typename Color>
 MeshData<N, T, Color> create_mesh_data(
         const std::vector<model::mesh::Reading<N>>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
 {
         if (mesh_objects.empty())
         {
@@ -271,7 +271,7 @@ MeshData<N, T, Color> create_mesh_data(
 template <std::size_t N, typename T, typename Color>
 MeshData<N, T, Color> create_mesh_data(
         const std::vector<const model::mesh::MeshObject<N>*>& mesh_objects,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const bool write_log)
 {
         const std::optional<Clock::time_point> start_time = [&]() -> std::optional<Clock::time_point>
@@ -303,10 +303,10 @@ MeshData<N, T, Color> create_mesh_data(
         return res;
 }
 
-#define TEMPLATE(N, T, C)                                                                                          \
-        template MeshData<N, T, C> create_mesh_data(                                                               \
-                const std::vector<const model::mesh::MeshObject<(N)>*>&, const std::optional<Vector<(N) + 1, T>>&, \
-                const bool);
+#define TEMPLATE(N, T, C)                                                \
+        template MeshData<N, T, C> create_mesh_data(                     \
+                const std::vector<const model::mesh::MeshObject<(N)>*>&, \
+                const std::optional<numerical::Vector<(N) + 1, T>>&, const bool);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

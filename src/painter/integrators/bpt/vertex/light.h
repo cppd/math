@@ -33,17 +33,17 @@ template <std::size_t N, typename T, typename Color>
 class Light final
 {
         const LightSource<N, T, Color>* light_;
-        std::optional<Vector<N, T>> pos_;
-        Vector<N, T> dir_;
-        std::optional<Vector<N, T>> normal_;
+        std::optional<numerical::Vector<N, T>> pos_;
+        numerical::Vector<N, T> dir_;
+        std::optional<numerical::Vector<N, T>> normal_;
         T pdf_forward_;
         T pdf_reversed_ = 0;
 
 public:
         Light(const LightSource<N, T, Color>* const light,
-              const std::optional<Vector<N, T>>& pos,
-              const Vector<N, T>& dir,
-              const std::optional<Vector<N, T>>& normal,
+              const std::optional<numerical::Vector<N, T>>& pos,
+              const numerical::Vector<N, T>& dir,
+              const std::optional<numerical::Vector<N, T>>& normal,
               const T pdf_distribution,
               const T pdf_pos,
               const T pdf_dir)
@@ -58,9 +58,9 @@ public:
         Light(const LightSource<N, T, Color>* const light,
               const T pdf_distribution,
               const T pdf_dir,
-              const std::optional<Vector<N, T>>& pos,
-              const Vector<N, T>& dir,
-              const std::optional<Vector<N, T>>& normal,
+              const std::optional<numerical::Vector<N, T>>& pos,
+              const numerical::Vector<N, T>& dir,
+              const std::optional<numerical::Vector<N, T>>& normal,
               const Surface<N, T, Color>& next)
                 : light_(light),
                   pos_(pos),
@@ -74,12 +74,12 @@ public:
         {
         }
 
-        [[nodiscard]] const std::optional<Vector<N, T>>& pos() const
+        [[nodiscard]] const std::optional<numerical::Vector<N, T>>& pos() const
         {
                 return pos_;
         }
 
-        [[nodiscard]] Vector<N, T> dir_to_light(const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N, T> dir_to_light(const numerical::Vector<N, T>& point) const
         {
                 if (pos_)
                 {
@@ -88,12 +88,15 @@ public:
                 return -dir_;
         }
 
-        [[nodiscard]] const std::optional<Vector<N, T>>& normal() const
+        [[nodiscard]] const std::optional<numerical::Vector<N, T>>& normal() const
         {
                 return normal_;
         }
 
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
+        [[nodiscard]] T area_pdf(
+                const T angle_pdf,
+                const numerical::Vector<N, T>& next_pos,
+                const numerical::Vector<N, T>& next_normal) const
         {
                 if (!pos_)
                 {
@@ -102,15 +105,16 @@ public:
                 return solid_angle_pdf_to_area_pdf(*pos_, angle_pdf, next_pos, next_normal);
         }
 
-        [[nodiscard]] T area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
+        [[nodiscard]] T area_pdf(const numerical::Vector<N, T>& next_pos, const numerical::Vector<N, T>& next_normal)
+                const
         {
                 if (!pos_)
                 {
                         return pos_pdf_to_area_pdf(light_->leave_pdf_pos(dir_), dir_, next_normal);
                 }
-                const Vector<N, T> l_dir = (next_pos - *pos_);
+                const numerical::Vector<N, T> l_dir = (next_pos - *pos_);
                 const T l_distance = l_dir.norm();
-                const Vector<N, T> l = l_dir / l_distance;
+                const numerical::Vector<N, T> l = l_dir / l_distance;
                 const T pdf = light_->leave_pdf_dir(l);
                 return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, next_normal);
         }

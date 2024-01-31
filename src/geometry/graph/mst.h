@@ -28,7 +28,7 @@ namespace ns::geometry::graph
 {
 template <std::size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(
-        const std::vector<Vector<N, float>>& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         const std::vector<std::array<int, N + 1>>& delaunay_objects,
         progress::Ratio* progress);
 }

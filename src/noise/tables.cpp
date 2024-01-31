@@ -50,16 +50,16 @@ std::vector<unsigned> permutation_table(const unsigned size, RandomEngine& engin
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> gradient_table(const unsigned size, RandomEngine& engine)
+std::vector<numerical::Vector<N, T>> gradient_table(const unsigned size, RandomEngine& engine)
 {
-        std::vector<Vector<N, T>> res;
+        std::vector<numerical::Vector<N, T>> res;
         res.reserve(size);
 
         for (unsigned i = 0; i < size; ++i)
         {
                 static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
                 // using double to make identical vectors for different types
-                const Vector<N, double> random = sampling::uniform_on_sphere<N, double>(engine);
+                const numerical::Vector<N, double> random = sampling::uniform_on_sphere<N, double>(engine);
                 res.push_back(to_vector<T>(random));
         }
 
@@ -73,7 +73,7 @@ NoiseTables<N, T> noise_tables(const unsigned size)
         PCG pcg(PCG_INIT_VALUE);
 
         std::vector<unsigned> permutations = permutation_table(size, pcg);
-        std::vector<Vector<N, T>> gradients = gradient_table<N, T>(size, pcg);
+        std::vector<numerical::Vector<N, T>> gradients = gradient_table<N, T>(size, pcg);
 
         ASSERT(permutations.size() == 2ull * size);
         ASSERT(gradients.size() == size);

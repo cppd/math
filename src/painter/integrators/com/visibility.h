@@ -88,14 +88,14 @@ template <std::size_t N, typename T, typename Color>
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] bool occluded(
         const Scene<N, T, Color>& scene,
-        const Vector<N, T>& point_1,
+        const numerical::Vector<N, T>& point_1,
         const Normals<N, T>& normals_1,
-        const Vector<N, T>& point_2,
+        const numerical::Vector<N, T>& point_2,
         const Normals<N, T>& normals_2)
 {
         namespace impl = visibility_implementation;
 
-        const Vector<N, T> direction_1 = point_2 - point_1;
+        const numerical::Vector<N, T> direction_1 = point_2 - point_1;
         const numerical::Ray<N, T> ray_1(point_1, direction_1);
 
         if (!impl::directed_outside(dot(ray_1.dir(), normals_1.shading)))
@@ -159,7 +159,7 @@ template <std::size_t N, typename T, typename Color>
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] std::tuple<SurfaceIntersection<N, T, Color>, Normals<N, T>> scene_intersect(
         const Scene<N, T, Color>& scene,
-        const std::optional<Vector<N, T>>& geometric_normal,
+        const std::optional<numerical::Vector<N, T>>& geometric_normal,
         const numerical::Ray<N, T>& ray)
 {
         SurfaceIntersection<N, T, Color> surface = scene.intersect(geometric_normal, ray);

@@ -37,7 +37,7 @@ namespace
 {
 template <std::size_t N, typename T>
 [[nodiscard]] bool vertex_inside_clip_plane(
-        const Vector<N, T>& vertex,
+        const numerical::Vector<N, T>& vertex,
         const geometry::spatial::Hyperplane<N, T>& clip_plane)
 {
         return clip_plane.distance(geometry::spatial::offset_point(clip_plane.n, vertex)) >= 0;
@@ -48,7 +48,7 @@ template <std::size_t N, typename T, typename MeshType>
         const typename model::mesh::Mesh<N>::Facet& facet,
         const numerical::transform::MatrixVectorMultiplier<N + 1, T>& multiplier,
         const geometry::spatial::Hyperplane<N, T>& clip_plane,
-        const std::vector<Vector<N, MeshType>>& vertices)
+        const std::vector<numerical::Vector<N, MeshType>>& vertices)
 {
         for (const auto index : facet.vertices)
         {
@@ -62,7 +62,7 @@ template <std::size_t N, typename T, typename MeshType>
 
 template <std::size_t N, typename T, typename MeshType>
 [[nodiscard]] std::vector<typename model::mesh::Mesh<N>::Facet> find_facets_inside_clip_plane(
-        const std::vector<Vector<N, MeshType>>& vertices,
+        const std::vector<numerical::Vector<N, MeshType>>& vertices,
         const std::vector<typename model::mesh::Mesh<N>::Facet>& facets,
         const numerical::Matrix<N + 1, N + 1, T>& mesh_matrix,
         const geometry::spatial::Hyperplane<N, T>& clip_plane)
@@ -83,7 +83,7 @@ template <std::size_t N, typename T, typename MeshType>
 template <std::size_t N, typename T>
 std::vector<typename model::mesh::Mesh<N>::Facet> find_facets(
         const model::mesh::Reading<N>& mesh_object,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
 {
         const model::mesh::Mesh<N>& mesh = mesh_object.mesh();
 
@@ -101,7 +101,7 @@ std::vector<typename model::mesh::Mesh<N>::Facet> find_facets(
 template <std::size_t N, typename T>
 model::mesh::Mesh<N> optimize_mesh(
         const model::mesh::Reading<N>& mesh_object,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation)
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
 {
         const model::mesh::Mesh<N>& mesh = mesh_object.mesh();
 
@@ -120,7 +120,7 @@ model::mesh::Mesh<N> optimize_mesh(
 
 #define TEMPLATE(N, T)                                 \
         template model::mesh::Mesh<(N)> optimize_mesh( \
-                const model::mesh::Reading<(N)>&, const std::optional<Vector<(N) + 1, T>>&);
+                const model::mesh::Reading<(N)>&, const std::optional<numerical::Vector<(N) + 1, T>>&);
 
 TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

@@ -51,8 +51,8 @@ public:
 
 struct ViewVertex final
 {
-        Vector4f position;
-        Vector2f texture_coordinates;
+        numerical::Vector4f position;
+        numerical::Vector2f texture_coordinates;
 
         [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
         [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();

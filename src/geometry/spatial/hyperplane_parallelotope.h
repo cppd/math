@@ -50,11 +50,11 @@ class HyperplaneParallelotope final
         Hyperplane<N, T> plane_;
         std::array<Hyperplane<N, T>, N - 1> planes_;
 
-        Vector<N, T> org_;
-        std::array<Vector<N, T>, N - 1> vectors_;
+        numerical::Vector<N, T> org_;
+        std::array<numerical::Vector<N, T>, N - 1> vectors_;
 
         template <int INDEX, typename F>
-        void vertices_impl(const Vector<N, T>& p, const F& f) const;
+        void vertices_impl(const numerical::Vector<N, T>& p, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -64,19 +64,21 @@ public:
 
         static T intersection_cost();
 
-        HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
+        HyperplaneParallelotope(
+                const numerical::Vector<N, T>& org,
+                const std::array<numerical::Vector<N, T>, N - 1>& vectors);
 
-        void set_normal_direction(const Vector<N, T>& direction);
+        void set_normal_direction(const numerical::Vector<N, T>& direction);
 
         [[nodiscard]] Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
         [[nodiscard]] std::optional<T> intersect(const numerical::Ray<N, T>& r) const;
 
-        [[nodiscard]] const Vector<N, T>& normal() const;
+        [[nodiscard]] const numerical::Vector<N, T>& normal() const;
 
-        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const;
+        [[nodiscard]] numerical::Vector<N, T> project(const numerical::Vector<N, T>& point) const;
 
-        [[nodiscard]] std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+        [[nodiscard]] std::array<numerical::Vector<N, T>, VERTEX_COUNT> vertices() const;
 
         [[nodiscard]] decltype(auto) edges() const
         {
@@ -88,16 +90,16 @@ public:
                 return parallelotope_length(vectors_);
         }
 
-        [[nodiscard]] const Vector<N, T>& org() const;
-        [[nodiscard]] const std::array<Vector<N, T>, N - 1>& vectors() const;
+        [[nodiscard]] const numerical::Vector<N, T>& org() const;
+        [[nodiscard]] const std::array<numerical::Vector<N, T>, N - 1>& vectors() const;
 
         [[nodiscard]] auto overlap_function() const;
 };
 
 template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N - 1>& vectors)
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N - 1>& vectors)
         : org_(org),
           vectors_(vectors)
 {
@@ -130,7 +132,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 }
 
 template <std::size_t N, typename T>
-void HyperplaneParallelotope<N, T>::set_normal_direction(const Vector<N, T>& direction)
+void HyperplaneParallelotope<N, T>::set_normal_direction(const numerical::Vector<N, T>& direction)
 {
         if (dot(plane_.n, direction) < 0)
         {
@@ -173,7 +175,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const numerical::Ray<N
                 return std::nullopt;
         }
 
-        const Vector<N, T> point = ray.point(t);
+        const numerical::Vector<N, T> point = ray.point(t);
 
         for (std::size_t i = 0; i < N - 1; ++i)
         {
@@ -187,20 +189,20 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const numerical::Ray<N
 }
 
 template <std::size_t N, typename T>
-const Vector<N, T>& HyperplaneParallelotope<N, T>::normal() const
+const numerical::Vector<N, T>& HyperplaneParallelotope<N, T>::normal() const
 {
         return plane_.n;
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> HyperplaneParallelotope<N, T>::project(const Vector<N, T>& point) const
+numerical::Vector<N, T> HyperplaneParallelotope<N, T>::project(const numerical::Vector<N, T>& point) const
 {
         return plane_.project(point);
 }
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
+void HyperplaneParallelotope<N, T>::vertices_impl(const numerical::Vector<N, T>& p, const F& f) const
 {
         if constexpr (INDEX >= 0)
         {
@@ -214,13 +216,14 @@ void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> HyperplaneParallelotope<N, T>::vertices() const
+std::array<numerical::Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> HyperplaneParallelotope<N, T>::
+        vertices() const
 {
-        std::array<Vector<N, T>, VERTEX_COUNT> res;
+        std::array<numerical::Vector<N, T>, VERTEX_COUNT> res;
 
         unsigned count = 0;
 
-        const auto f = [&count, &res](const Vector<N, T>& p)
+        const auto f = [&count, &res](const numerical::Vector<N, T>& p)
         {
                 ASSERT(count < res.size());
                 res[count++] = p;
@@ -234,13 +237,13 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
 }
 
 template <std::size_t N, typename T>
-const Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
+const numerical::Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
 {
         return org_;
 }
 
 template <std::size_t N, typename T>
-const std::array<Vector<N, T>, N - 1>& HyperplaneParallelotope<N, T>::vectors() const
+const std::array<numerical::Vector<N, T>, N - 1>& HyperplaneParallelotope<N, T>::vectors() const
 {
         return vectors_;
 }

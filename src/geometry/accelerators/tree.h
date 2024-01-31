@@ -61,7 +61,7 @@ class SpatialSubdivisionTree final
         std::vector<Box> boxes_;
         T ray_offset_;
 
-        [[nodiscard]] const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
+        [[nodiscard]] const Box* find_box_for_point(const Box& box, const numerical::Vector<N, T>& p) const
         {
                 if (!box.parallelotope.inside(p))
                 {
@@ -82,7 +82,7 @@ class SpatialSubdivisionTree final
                 return nullptr;
         }
 
-        [[nodiscard]] const Box* find_box_for_point(const Vector<N, T>& p) const
+        [[nodiscard]] const Box* find_box_for_point(const numerical::Vector<N, T>& p) const
         {
                 return find_box_for_point(boxes_[ROOT_BOX], p);
         }
@@ -90,14 +90,14 @@ class SpatialSubdivisionTree final
         [[nodiscard]] bool find_next_box(
                 const numerical::Ray<N, T>& ray,
                 const Box** const box,
-                Vector<N, T>* const point) const
+                numerical::Vector<N, T>* const point) const
         {
                 T offset = ray_offset_;
                 T k = 1;
 
                 while (true)
                 {
-                        const Vector<N, T> p = ray.point(offset);
+                        const numerical::Vector<N, T> p = ray.point(offset);
                         const Box* const next_box = find_box_for_point(p);
 
                         if (!next_box)
@@ -162,7 +162,7 @@ public:
                 const ObjectIntersect& object_intersect) const
         {
                 numerical::Ray<N, T> local_ray = ray;
-                Vector<N, T> point = local_ray.point(root_t);
+                numerical::Vector<N, T> point = local_ray.point(root_t);
                 local_ray.set_org(point);
 
                 const Box* box = find_box_for_point(point);

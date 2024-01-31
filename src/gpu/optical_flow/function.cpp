@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
+std::vector<numerical::Vector2i> pyramid_sizes(int width, int height, const int min_size)
 {
-        std::vector<Vector2i> sizes;
+        std::vector<numerical::Vector2i> sizes;
 
         sizes.emplace_back(width, height);
 
@@ -62,7 +62,7 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
                 height = new_height;
         }
 
-        // for (const Vector2i& v : sizes)
+        // for (const numerical::Vector2i& v : sizes)
         // {
         //         LOG(to_string(v[0]) + " x " + to_string(v[1]));
         // }
@@ -98,13 +98,13 @@ TopLevelPoints create_top_level_points(
         const int count_y = (lh + size - 1) / size;
         const long long point_count = static_cast<long long>(count_x) * count_y;
 
-        std::vector<Vector2i> points(point_count);
+        std::vector<numerical::Vector2i> points(point_count);
         long long index = 0;
         for (int y = distance; y < height - distance; y += size)
         {
                 for (int x = distance; x < width - distance; x += size)
                 {
-                        points[index++] = Vector2i(x, y);
+                        points[index++] = numerical::Vector2i(x, y);
                 }
         }
 

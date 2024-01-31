@@ -52,12 +52,12 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         return res;
 }
 
-std::vector<Vector2i> flow_groups(
-        const Vector2i group_size,
-        const std::vector<Vector2i>& sizes,
-        const Vector2i top_point_count)
+std::vector<numerical::Vector2i> flow_groups(
+        const numerical::Vector2i group_size,
+        const std::vector<numerical::Vector2i>& sizes,
+        const numerical::Vector2i top_point_count)
 {
-        std::vector<Vector2i> res;
+        std::vector<numerical::Vector2i> res;
         res.reserve(sizes.size());
 
         res.push_back(group_count(top_point_count, group_size));
@@ -80,7 +80,7 @@ Flow::Flow(const vulkan::Device* const device)
 void Flow::create_buffers(
         const VkSampler sampler,
         const std::uint32_t family_index,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const unsigned top_point_count_x,
         const unsigned top_point_count_y,
         const vulkan::Buffer& top_points,

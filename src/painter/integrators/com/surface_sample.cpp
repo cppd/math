@@ -39,11 +39,11 @@ using Sample = std::conditional_t<WITH_PDF, SurfaceSamplePdf<N, T, Color>, Surfa
 template <bool WITH_PDF, std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<Sample<WITH_PDF, N, T, Color>> surface_sample(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
-        const Vector<N, T>& n = normals.shading;
+        const numerical::Vector<N, T>& n = normals.shading;
 
         const painter::SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
 
@@ -52,7 +52,7 @@ template <bool WITH_PDF, std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const Vector<N, T>& l = sample.l;
+        const numerical::Vector<N, T>& l = sample.l;
         ASSERT(l.is_unit());
 
         if (dot(l, normals.geometric) <= 0)
@@ -86,7 +86,7 @@ template <bool WITH_PDF, std::size_t N, typename T, typename Color>
 template <std::size_t N, typename T, typename Color>
 std::optional<SurfaceSamplePdf<N, T, Color>> surface_sample_with_pdf(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
@@ -96,18 +96,20 @@ std::optional<SurfaceSamplePdf<N, T, Color>> surface_sample_with_pdf(
 template <std::size_t N, typename T, typename Color>
 std::optional<SurfaceSample<N, T, Color>> surface_sample(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine)
 {
         return surface_sample<false>(surface, v, normals, engine);
 }
 
-#define TEMPLATE(N, T, C)                                                                                    \
-        template std::optional<SurfaceSamplePdf<(N), T, C>> surface_sample_with_pdf(                         \
-                const SurfaceIntersection<(N), T, C>&, const Vector<(N), T>&, const Normals<(N), T>&, PCG&); \
-        template std::optional<SurfaceSample<(N), T, C>> surface_sample(                                     \
-                const SurfaceIntersection<(N), T, C>&, const Vector<(N), T>&, const Normals<(N), T>&, PCG&);
+#define TEMPLATE(N, T, C)                                                                                        \
+        template std::optional<SurfaceSamplePdf<(N), T, C>> surface_sample_with_pdf(                             \
+                const SurfaceIntersection<(N), T, C>&, const numerical::Vector<(N), T>&, const Normals<(N), T>&, \
+                PCG&);                                                                                           \
+        template std::optional<SurfaceSample<(N), T, C>> surface_sample(                                         \
+                const SurfaceIntersection<(N), T, C>&, const numerical::Vector<(N), T>&, const Normals<(N), T>&, \
+                PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

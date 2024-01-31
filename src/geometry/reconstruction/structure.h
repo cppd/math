@@ -30,12 +30,12 @@ namespace ns::geometry::reconstruction
 template <std::size_t N>
 struct ManifoldVertex final
 {
-        Vector<N, double> positive_norm;
+        numerical::Vector<N, double> positive_norm;
         double height;
         double radius;
         std::vector<int> cocone_neighbors;
 
-        ManifoldVertex(const Vector<N, double>& positive_norm, const double height, const double radius)
+        ManifoldVertex(const numerical::Vector<N, double>& positive_norm, const double height, const double radius)
                 : positive_norm(positive_norm),
                   height(height),
                   radius(radius)
@@ -59,7 +59,7 @@ struct ManifoldData final
 template <std::size_t N>
 [[nodiscard]] ManifoldData<N> find_manifold_data(
         bool find_cocone_neighbors,
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<numerical::Vector<N, double>>& points,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets);
 }

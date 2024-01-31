@@ -33,7 +33,7 @@ class ClipPlane final
         const Camera* camera_;
         std::optional<numerical::Matrix4d> view_matrix_;
         double position_;
-        std::function<void(const std::optional<Vector4d>&)> set_clip_plane_;
+        std::function<void(const std::optional<numerical::Vector4d>&)> set_clip_plane_;
 
         void set_position(double position);
 
@@ -42,11 +42,11 @@ class ClipPlane final
         void cmd(const command::ClipPlaneShow& v);
 
 public:
-        ClipPlane(const Camera* camera, std::function<void(const std::optional<Vector4d>&)> set_clip_plane);
+        ClipPlane(const Camera* camera, std::function<void(const std::optional<numerical::Vector4d>&)> set_clip_plane);
 
         void exec(const ClipPlaneCommand& command);
 
-        [[nodiscard]] std::optional<Vector4d> equation() const;
+        [[nodiscard]] std::optional<numerical::Vector4d> equation() const;
         [[nodiscard]] std::optional<double> position() const;
 };
 }

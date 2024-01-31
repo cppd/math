@@ -30,8 +30,8 @@ namespace ns::text
 {
 struct TextVertex final
 {
-        Vector<2, std::int_least32_t> window;
-        Vector<2, float> texture;
+        numerical::Vector<2, std::int_least32_t> window;
+        numerical::Vector<2, float> texture;
 
         TextVertex(const int w1, const int w2, const float t1, const float t2)
                 : window(w1, w2),

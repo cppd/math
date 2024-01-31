@@ -50,7 +50,7 @@ public:
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
         void set_matrix(const numerical::Matrix4d& matrix) const;
-        void set_color(const Vector3f& color) const;
+        void set_color(const numerical::Vector3f& color) const;
 };
 
 class Memory final
@@ -75,8 +75,8 @@ public:
 
 struct Vertex final
 {
-        Vector<2, std::int32_t> window_coordinates;
-        Vector<2, float> texture_coordinates;
+        numerical::Vector<2, std::int32_t> window_coordinates;
+        numerical::Vector<2, float> texture_coordinates;
 
         [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
         [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();

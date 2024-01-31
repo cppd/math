@@ -72,7 +72,7 @@ public:
                 return color::srgb_uint8_to_linear_float(blue_);
         }
 
-        [[nodiscard]] constexpr Vector<3, float> linear_rgb() const
+        [[nodiscard]] constexpr numerical::Vector<3, float> linear_rgb() const
         {
                 return {linear_red(), linear_green(), linear_blue()};
         }
@@ -87,7 +87,7 @@ public:
 }
 
 template <typename T>
-[[nodiscard]] RGB8 make_rgb8(const Vector<3, T>& v)
+[[nodiscard]] RGB8 make_rgb8(const numerical::Vector<3, T>& v)
 {
         static_assert(std::is_floating_point_v<T>);
         return make_rgb8(v[0], v[1], v[2]);

@@ -42,7 +42,7 @@ Spectrum create_spectrum(const F& f)
                 f(Spectrum::WAVELENGTH_MIN, Spectrum::WAVELENGTH_MAX, Spectrum::SAMPLE_COUNT);
         ASSERT(samples.size() == Spectrum::SAMPLE_COUNT);
 
-        Vector<Spectrum::SAMPLE_COUNT, Spectrum::DataType> v;
+        numerical::Vector<Spectrum::SAMPLE_COUNT, Spectrum::DataType> v;
         for (std::size_t i = 0; i < Spectrum::SAMPLE_COUNT; ++i)
         {
                 v[i] = samples[i];

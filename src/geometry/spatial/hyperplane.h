@@ -28,21 +28,21 @@ template <std::size_t N, typename T>
 struct Hyperplane final
 {
         // n * x - d = 0
-        Vector<N, T> n;
+        numerical::Vector<N, T> n;
         T d;
 
         constexpr Hyperplane()
         {
         }
 
-        constexpr Hyperplane(const Vector<N, T>& n, const T& d)
+        constexpr Hyperplane(const numerical::Vector<N, T>& n, const T& d)
                 : n(n),
                   d(d)
         {
         }
 
         // equation n * x + d = 0
-        explicit constexpr Hyperplane(const Vector<N + 1, T>& equation)
+        explicit constexpr Hyperplane(const numerical::Vector<N + 1, T>& equation)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -62,12 +62,12 @@ struct Hyperplane final
                 return (d - dot(n, ray.org())) / dot(n, ray.dir());
         }
 
-        [[nodiscard]] T distance(const Vector<N, T>& point) const
+        [[nodiscard]] T distance(const numerical::Vector<N, T>& point) const
         {
                 return dot(n, point) - d;
         }
 
-        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N, T> project(const numerical::Vector<N, T>& point) const
         {
                 return point - n * distance(point);
         }

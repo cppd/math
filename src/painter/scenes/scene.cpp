@@ -45,7 +45,7 @@ namespace
 {
 template <std::size_t N, typename T>
 [[nodiscard]] std::optional<geometry::spatial::ConvexPolytope<N - 1, T>> clip_plane_to_clip_polytope(
-        const std::optional<Vector<N, T>>& clip_plane_equation)
+        const std::optional<numerical::Vector<N, T>>& clip_plane_equation)
 {
         if (!clip_plane_equation)
         {
@@ -68,7 +68,7 @@ class Impl final : public Scene<N, T, Color>
         const geometry::accelerators::Bvh<N, T> bvh_;
 
         [[nodiscard]] bool move_ray(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 numerical::Ray<N, T>* const ray,
                 T* const max_distance) const
         {
@@ -131,7 +131,7 @@ class Impl final : public Scene<N, T, Color>
         }
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect_impl(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 numerical::Ray<N, T> ray,
                 T max_distance) const
         {
@@ -143,7 +143,7 @@ class Impl final : public Scene<N, T, Color>
         }
 
         [[nodiscard]] bool intersect_any_impl(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 numerical::Ray<N, T> ray,
                 T max_distance) const
         {
@@ -157,7 +157,7 @@ class Impl final : public Scene<N, T, Color>
         //
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
@@ -165,7 +165,7 @@ class Impl final : public Scene<N, T, Color>
         }
 
         [[nodiscard]] SurfaceIntersection<N, T, Color> intersect(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray,
                 const T max_distance) const override
         {
@@ -176,7 +176,7 @@ class Impl final : public Scene<N, T, Color>
         }
 
         [[nodiscard]] bool intersect_any(
-                const std::optional<Vector<N, T>>& geometric_normal,
+                const std::optional<numerical::Vector<N, T>>& geometric_normal,
                 const numerical::Ray<N, T>& ray,
                 const T max_distance) const override
         {
@@ -208,7 +208,7 @@ class Impl final : public Scene<N, T, Color>
 
 public:
         Impl(const Color& background_color,
-             const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+             const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
              const Projector<N, T>* const projector,
              std::vector<const LightSource<N, T, Color>*>&& light_sources,
              std::vector<const Shape<N, T, Color>*>&& shapes,
@@ -233,7 +233,7 @@ public:
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_scene(
         const Color& background_color,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const Projector<N, T>* const projector,
         std::vector<const LightSource<N, T, Color>*>&& light_sources,
         std::vector<const Shape<N, T, Color>*>&& shapes,
@@ -251,10 +251,10 @@ std::unique_ptr<const Scene<N, T, Color>> create_scene(
                 progress);
 }
 
-#define TEMPLATE(N, T, C)                                                                             \
-        template std::unique_ptr<const Scene<(N), T, C>> create_scene(                                \
-                const C&, const std::optional<Vector<(N) + 1, T>>&, const Projector<(N), T>*,         \
-                std::vector<const LightSource<(N), T, C>*>&&, std::vector<const Shape<(N), T, C>*>&&, \
+#define TEMPLATE(N, T, C)                                                                                \
+        template std::unique_ptr<const Scene<(N), T, C>> create_scene(                                   \
+                const C&, const std::optional<numerical::Vector<(N) + 1, T>>&, const Projector<(N), T>*, \
+                std::vector<const LightSource<(N), T, C>*>&&, std::vector<const Shape<(N), T, C>*>&&,    \
                 progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

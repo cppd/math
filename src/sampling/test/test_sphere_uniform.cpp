@@ -45,7 +45,7 @@ void test_sphere_uniform(progress::Ratio* const progress)
 {
         LOG("Sphere Uniform, " + space_name(N) + ", " + type_name<T>());
 
-        const Vector<N, T> normal = []()
+        const numerical::Vector<N, T> normal = []()
         {
                 PCG engine;
                 return uniform_on_sphere<N, T>(engine).normalized();
@@ -77,7 +77,7 @@ void test_sphere_uniform(progress::Ratio* const progress)
                 {
                         return uniform_on_sphere<N, T>(engine);
                 },
-                [&](const Vector<N, T>& /*v*/)
+                [&](const numerical::Vector<N, T>& /*v*/)
                 {
                         return uniform_on_sphere_pdf<N, T>();
                 },

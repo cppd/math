@@ -45,7 +45,7 @@ namespace
 {
 template <std::size_t N, typename T>
 T facet_normat_weight_at_vertex(
-        const std::vector<Vector<N, T>>& points,
+        const std::vector<numerical::Vector<N, T>>& points,
         const std::array<int, N>& facet,
         const int facet_vertex_index)
 {
@@ -58,7 +58,7 @@ T facet_normat_weight_at_vertex(
         {
                 ASSERT(facet_vertex_index >= 0 && facet_vertex_index < static_cast<int>(N));
 
-                std::array<Vector<N, T>, N - 1> vectors;
+                std::array<numerical::Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         const int index = (facet_vertex_index + 1 + i) % N;
@@ -70,10 +70,12 @@ T facet_normat_weight_at_vertex(
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> average_of_normals(const Vector<N, T>& normal, const std::vector<Vector<N, T>>& normals)
+numerical::Vector<N, T> average_of_normals(
+        const numerical::Vector<N, T>& normal,
+        const std::vector<numerical::Vector<N, T>>& normals)
 {
-        Vector<N, T> sum(0);
-        for (const Vector<N, T>& n : normals)
+        numerical::Vector<N, T> sum(0);
+        for (const numerical::Vector<N, T>& n : normals)
         {
                 if (dot(n, normal) >= 0)
                 {
@@ -94,16 +96,16 @@ struct VertexFacet final
 };
 
 template <std::size_t N, typename T>
-Vector<N, T> compute_normal(
-        const std::vector<Vector<N, T>>& vertices,
-        const std::vector<Vector<N, T>>& facet_normals,
+numerical::Vector<N, T> compute_normal(
+        const std::vector<numerical::Vector<N, T>>& vertices,
+        const std::vector<numerical::Vector<N, T>>& facet_normals,
         const std::vector<typename Mesh<N>::Facet>& mesh_facets,
         const std::size_t vertex_index,
         const std::vector<VertexFacet>& vertex_facets)
 {
         thread_local std::vector<int> vicinity_int;
-        thread_local std::vector<Vector<N, T>> vicinity;
-        thread_local std::vector<Vector<N, T>> weighted_normals;
+        thread_local std::vector<numerical::Vector<N, T>> vicinity;
+        thread_local std::vector<numerical::Vector<N, T>> weighted_normals;
 
         vicinity_int.clear();
         vicinity.clear();
@@ -138,7 +140,7 @@ Vector<N, T> compute_normal(
                 vicinity.push_back(vertices[vi]);
         }
 
-        const Vector<N, T> point_normal = numerical::point_normal(vicinity);
+        const numerical::Vector<N, T> point_normal = numerical::point_normal(vicinity);
 
         return average_of_normals(point_normal, weighted_normals);
 }
@@ -156,9 +158,9 @@ void compute_normals(Mesh<N>* const mesh)
         }
         mesh->normals.resize(mesh->vertices.size());
 
-        const std::vector<Vector<N, ComputeType>> vertices = to_vector<ComputeType>(mesh->vertices);
+        const std::vector<numerical::Vector<N, ComputeType>> vertices = to_vector<ComputeType>(mesh->vertices);
 
-        std::vector<Vector<N, ComputeType>> facet_normals(mesh->facets.size());
+        std::vector<numerical::Vector<N, ComputeType>> facet_normals(mesh->facets.size());
         std::vector<std::vector<VertexFacet>> vertex_facets(mesh->vertices.size());
         for (std::size_t f = 0; f < mesh->facets.size(); ++f)
         {

@@ -55,8 +55,8 @@ public:
         }
 
         void compute_weights(
-                const Vector<N, T>& center,
-                const std::vector<Vector<N, T>>& points,
+                const numerical::Vector<N, T>& center,
+                const std::vector<numerical::Vector<N, T>>& points,
                 std::vector<T>* const weights) const
         {
                 weights->resize(points.size());

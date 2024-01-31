@@ -33,11 +33,11 @@ class ManifoldConstructorCocone
 public:
         virtual ~ManifoldConstructorCocone() = default;
 
-        [[nodiscard]] virtual const std::vector<Vector<N, float>>& points() const = 0;
+        [[nodiscard]] virtual const std::vector<numerical::Vector<N, float>>& points() const = 0;
 
         [[nodiscard]] virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
-        [[nodiscard]] virtual std::vector<Vector<N, double>> normals() const = 0;
+        [[nodiscard]] virtual std::vector<numerical::Vector<N, double>> normals() const = 0;
 
         [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(progress::Ratio* progress) const = 0;
 };
@@ -48,11 +48,11 @@ class ManifoldConstructor
 public:
         virtual ~ManifoldConstructor() = default;
 
-        [[nodiscard]] virtual const std::vector<Vector<N, float>>& points() const = 0;
+        [[nodiscard]] virtual const std::vector<numerical::Vector<N, float>>& points() const = 0;
 
         [[nodiscard]] virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
-        [[nodiscard]] virtual std::vector<Vector<N, double>> normals() const = 0;
+        [[nodiscard]] virtual std::vector<numerical::Vector<N, double>> normals() const = 0;
 
         [[nodiscard]] virtual std::vector<std::array<int, N>> cocone(progress::Ratio* progress) const = 0;
 
@@ -64,11 +64,11 @@ public:
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
-        const std::vector<Vector<N, float>>& source_points,
+        const std::vector<numerical::Vector<N, float>>& source_points,
         progress::Ratio* progress);
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
-        const std::vector<Vector<N, float>>& source_points,
+        const std::vector<numerical::Vector<N, float>>& source_points,
         progress::Ratio* progress);
 }

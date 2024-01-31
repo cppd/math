@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-namespace ns
+namespace ns::numerical
 {
 static_assert(sizeof(Vector2f) == 2 * sizeof(float));
 static_assert(sizeof(Vector3f) == 3 * sizeof(float));

@@ -42,49 +42,50 @@ namespace
 template <typename T>
 struct Test final
 {
-        static constexpr BoundingBox<4, T> BOX{Vector<4, T>(1, -2, 3, -4), Vector<4, T>(-5, 6, -7, 8)};
-        static_assert(BOX.min() == Vector<4, T>(-5, -2, -7, -4));
-        static_assert(BOX.max() == Vector<4, T>(1, 6, 3, 8));
-        static_assert(BOX.diagonal() == Vector<4, T>(6, 8, 10, 12));
-        static_assert(BOX.center() == Vector<4, T>(-2, 2, -2, 2));
+        static constexpr BoundingBox<4, T> BOX{
+                numerical::Vector<4, T>(1, -2, 3, -4), numerical::Vector<4, T>(-5, 6, -7, 8)};
+        static_assert(BOX.min() == numerical::Vector<4, T>(-5, -2, -7, -4));
+        static_assert(BOX.max() == numerical::Vector<4, T>(1, 6, 3, 8));
+        static_assert(BOX.diagonal() == numerical::Vector<4, T>(6, 8, 10, 12));
+        static_assert(BOX.center() == numerical::Vector<4, T>(-2, 2, -2, 2));
         static_assert(BOX.volume() == 5760);
         static_assert(BOX.surface() == 5472);
         static_assert(BOX.maximum_extent() == 3);
 
-        static constexpr Vector<4, T> MERGE_POINT{Vector<4, T>(5, -5, 5, -5)};
+        static constexpr numerical::Vector<4, T> MERGE_POINT{numerical::Vector<4, T>(5, -5, 5, -5)};
         static constexpr BoundingBox<4, T> BOX_MERGE_POINT = []
         {
                 BoundingBox<4, T> res(BOX);
                 res.merge(MERGE_POINT);
                 return res;
         }();
-        static_assert(BOX_MERGE_POINT.min() == Vector<4, T>(-5, -5, -7, -5));
-        static_assert(BOX_MERGE_POINT.max() == Vector<4, T>(5, 6, 5, 8));
+        static_assert(BOX_MERGE_POINT.min() == numerical::Vector<4, T>(-5, -5, -7, -5));
+        static_assert(BOX_MERGE_POINT.max() == numerical::Vector<4, T>(5, 6, 5, 8));
         static_assert(BOX.merged(MERGE_POINT).min() == BOX_MERGE_POINT.min());
         static_assert(BOX.merged(MERGE_POINT).max() == BOX_MERGE_POINT.max());
 
         static constexpr BoundingBox<4, T> MERGE_BOX{
-                BoundingBox<4, T>(Vector<4, T>(4, -3, 2, -1), Vector<4, T>(-4, 5, -6, 7))};
+                BoundingBox<4, T>(numerical::Vector<4, T>(4, -3, 2, -1), numerical::Vector<4, T>(-4, 5, -6, 7))};
         static constexpr BoundingBox<4, T> BOX_MERGE_BOX = []
         {
                 BoundingBox<4, T> res(BOX);
                 res.merge(MERGE_BOX);
                 return res;
         }();
-        static_assert(BOX_MERGE_BOX.min() == Vector<4, T>(-5, -3, -7, -4));
-        static_assert(BOX_MERGE_BOX.max() == Vector<4, T>(4, 6, 3, 8));
+        static_assert(BOX_MERGE_BOX.min() == numerical::Vector<4, T>(-5, -3, -7, -4));
+        static_assert(BOX_MERGE_BOX.max() == numerical::Vector<4, T>(4, 6, 3, 8));
         static_assert(BOX.merged(MERGE_BOX).min() == BOX_MERGE_BOX.min());
         static_assert(BOX.merged(MERGE_BOX).max() == BOX_MERGE_BOX.max());
 
-        static constexpr BoundingBox<4, T> BOX_POINT{Vector<4, T>(1, -2, 3, -4)};
-        static_assert(BOX_POINT.min() == Vector<4, T>(1, -2, 3, -4));
-        static_assert(BOX_POINT.max() == Vector<4, T>(1, -2, 3, -4));
+        static constexpr BoundingBox<4, T> BOX_POINT{numerical::Vector<4, T>(1, -2, 3, -4)};
+        static_assert(BOX_POINT.min() == numerical::Vector<4, T>(1, -2, 3, -4));
+        static_assert(BOX_POINT.max() == numerical::Vector<4, T>(1, -2, 3, -4));
 
         static constexpr BoundingBox<4, T> BOX_ARRAY{
-                std::array{Vector<4, T>(1, -2, 3, -4), Vector<4, T>(-5, 6, -7, 8)}
+                std::array{numerical::Vector<4, T>(1, -2, 3, -4), numerical::Vector<4, T>(-5, 6, -7, 8)}
         };
-        static_assert(BOX_ARRAY.min() == Vector<4, T>(-5, -2, -7, -4));
-        static_assert(BOX_ARRAY.max() == Vector<4, T>(1, 6, 3, 8));
+        static_assert(BOX_ARRAY.min() == numerical::Vector<4, T>(-5, -2, -7, -4));
+        static_assert(BOX_ARRAY.max() == numerical::Vector<4, T>(1, 6, 3, 8));
 };
 
 template struct Test<float>;
@@ -97,8 +98,8 @@ template <std::size_t N, typename T, typename RandomEngine>
 BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
-        Vector<N, T> p1;
-        Vector<N, T> p2;
+        numerical::Vector<N, T> p1;
+        numerical::Vector<N, T> p2;
         for (std::size_t i = 0; i < N; ++i)
         {
                 do
@@ -111,29 +112,29 @@ BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, RandomEngine& engine)
+numerical::Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, RandomEngine& engine)
 {
         if (std::bernoulli_distribution(probability)(engine))
         {
                 return sampling::uniform_on_sphere<N, T>(engine);
         }
         const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
-        Vector<N, T> v(0);
+        numerical::Vector<N, T> v(0);
         v[n] = 1;
         return std::bernoulli_distribution(0.5)(engine) ? v : -v;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> create_random_aa_direction(RandomEngine& engine)
+numerical::Vector<N, T> create_random_aa_direction(RandomEngine& engine)
 {
         const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
-        Vector<N, T> v(1);
+        numerical::Vector<N, T> v(1);
         v[n] = 0;
         return std::bernoulli_distribution(0.5)(engine) ? v : -v;
 }
 
 template <std::size_t N, typename T>
-bool test_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T& precision)
+bool test_on_box(const BoundingBox<N, T>& box, const numerical::Vector<N, T>& point, const T& precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -176,7 +177,7 @@ void test_intersection_1(
                 error(s);
         }
 
-        const Vector<N, T> p = ray.point(*t);
+        const numerical::Vector<N, T> p = ray.point(*t);
         if (!test_on_box(box, p, precision))
         {
                 std::string s;
@@ -259,7 +260,7 @@ void test_intersection_2(
                 error(s);
         }
 
-        const Vector<N, T> p = ray.point(*t);
+        const numerical::Vector<N, T> p = ray.point(*t);
         if (!test_on_box(box, p, precision))
         {
                 std::string s;
@@ -376,7 +377,7 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
         const T move_max = 2 * length;
         const T random_direction_probability = 0.99;
 
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const numerical::Ray<N, T> ray(
@@ -393,7 +394,7 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
 template <std::size_t N, typename T, typename RandomEngine>
 void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEngine& engine)
 {
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_external_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const numerical::Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));

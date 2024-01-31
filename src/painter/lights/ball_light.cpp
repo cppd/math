@@ -38,18 +38,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
-void BallLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+void BallLight<N, T, Color>::init(const numerical::Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
 {
 }
 
 template <std::size_t N, typename T, typename Color>
-bool BallLight<N, T, Color>::visible(const Vector<N, T>& point) const
+bool BallLight<N, T, Color>::visible(const numerical::Vector<N, T>& point) const
 {
         return dot(ball_.normal(), point - ball_.center()) > 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-Vector<N, T> BallLight<N, T, Color>::sample_location(PCG& engine) const
+numerical::Vector<N, T> BallLight<N, T, Color>::sample_location(PCG& engine) const
 {
         return ball_.center() + sampling::uniform_in_sphere(engine, vectors_);
 }
@@ -67,8 +67,8 @@ Color BallLight<N, T, Color>::radiance(const T cos) const
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(
         PCG& engine,
-        const Vector<N, T>& point,
-        const Vector<N, T>& /*n*/) const
+        const numerical::Vector<N, T>& point,
+        const numerical::Vector<N, T>& /*n*/) const
 {
         if (!visible(point))
         {
@@ -77,9 +77,9 @@ LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(
                 return res;
         }
 
-        const Vector<N, T> direction = sample_location(engine) - point;
+        const numerical::Vector<N, T> direction = sample_location(engine) - point;
         const T distance = direction.norm();
-        const Vector<N, T> l = direction / distance;
+        const numerical::Vector<N, T> l = direction / distance;
 
         const T cos = -dot(l, ball_.normal());
 
@@ -92,8 +92,9 @@ LightSourceArriveSample<N, T, Color> BallLight<N, T, Color>::arrive_sample(
 }
 
 template <std::size_t N, typename T, typename Color>
-LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(const Vector<N, T>& point, const Vector<N, T>& l)
-        const
+LightSourceArriveInfo<T, Color> BallLight<N, T, Color>::arrive_info(
+        const numerical::Vector<N, T>& point,
+        const numerical::Vector<N, T>& l) const
 {
         if (!visible(point))
         {
@@ -137,13 +138,13 @@ LightSourceLeaveSample<N, T, Color> BallLight<N, T, Color>::leave_sample(PCG& en
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
+T BallLight<N, T, Color>::leave_pdf_pos(const numerical::Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
+T BallLight<N, T, Color>::leave_pdf_dir(const numerical::Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(ball_.normal(), dir);
@@ -151,7 +152,7 @@ T BallLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> BallLight<N, T, Color>::leave_radiance(const Vector<N, T>& dir) const
+std::optional<Color> BallLight<N, T, Color>::leave_radiance(const numerical::Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(dir, ball_.normal());
@@ -185,8 +186,8 @@ bool BallLight<N, T, Color>::is_infinite_area() const
 
 template <std::size_t N, typename T, typename Color>
 BallLight<N, T, Color>::BallLight(
-        const Vector<N, T>& center,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& center,
+        const numerical::Vector<N, T>& direction,
         const std::type_identity_t<T> radius,
         const Color& radiance)
         : ball_(center, direction, radius),
@@ -200,7 +201,7 @@ BallLight<N, T, Color>::BallLight(
                 error("Ball light radius " + to_string(radius) + " must be positive");
         }
 
-        for (Vector<N, T>& v : vectors_)
+        for (numerical::Vector<N, T>& v : vectors_)
         {
                 v *= radius;
         }
@@ -208,8 +209,8 @@ BallLight<N, T, Color>::BallLight(
 
 template <std::size_t N, typename T, typename Color>
 BallLight<N, T, Color>::BallLight(
-        const Vector<N, T>& center,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& center,
+        const numerical::Vector<N, T>& direction,
         const std::type_identity_t<T> radius,
         const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,

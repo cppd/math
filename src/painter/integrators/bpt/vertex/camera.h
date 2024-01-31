@@ -27,24 +27,24 @@ namespace ns::painter::integrators::bpt::vertex
 template <std::size_t N, typename T, typename Color>
 class Camera final
 {
-        Vector<N, T> dir_to_camera_;
+        numerical::Vector<N, T> dir_to_camera_;
 
 public:
-        explicit Camera(const Vector<N, T>& dir)
+        explicit Camera(const numerical::Vector<N, T>& dir)
                 : dir_to_camera_(-dir)
         {
                 ASSERT(dir_to_camera_.is_unit());
         }
 
-        [[nodiscard]] const Vector<N, T>& dir_to_camera() const
+        [[nodiscard]] const numerical::Vector<N, T>& dir_to_camera() const
         {
                 return dir_to_camera_;
         }
 
         [[nodiscard]] T area_pdf(
                 [[maybe_unused]] const T angle_pdf,
-                const Vector<N, T>& /*next_pos*/,
-                const Vector<N, T>& /*next_normal*/) const
+                const numerical::Vector<N, T>& /*next_pos*/,
+                const numerical::Vector<N, T>& /*next_normal*/) const
         {
                 ASSERT(angle_pdf == 1);
                 return 1;

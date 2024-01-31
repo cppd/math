@@ -27,11 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::shading::testing
 {
 template <std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N, T>, 2> random_n_v(RandomEngine& engine)
+std::array<numerical::Vector<N, T>, 2> random_n_v(RandomEngine& engine)
 {
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(engine);
+        const numerical::Vector<N, T> n = sampling::uniform_on_sphere<N, T>(engine);
 
-        Vector<N, T> v;
+        numerical::Vector<N, T> v;
         T d;
         do
         {

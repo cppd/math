@@ -29,5 +29,5 @@ namespace ns::painter::shapes::mesh
 template <std::size_t N, typename T>
 [[nodiscard]] model::mesh::Mesh<N> optimize_mesh(
         const model::mesh::Reading<N>& mesh_object,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation);
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation);
 }

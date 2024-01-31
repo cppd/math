@@ -106,14 +106,14 @@ std::vector<std::array<int, N>> create_facets(
 template <std::size_t N>
 struct DelaunayData final
 {
-        std::vector<Vector<N, double>> points;
+        std::vector<numerical::Vector<N, double>> points;
         std::vector<core::DelaunayObject<N>> objects;
         std::vector<core::DelaunayFacet<N>> facets;
 };
 
 template <std::size_t N>
 DelaunayData<N> create_voronoi_delaunay(
-        const std::vector<Vector<N, float>>& source_points,
+        const std::vector<numerical::Vector<N, float>>& source_points,
         progress::Ratio* const progress)
 {
         constexpr bool WRITE_LOG = true;
@@ -154,8 +154,8 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
 {
         const bool cocone_only_;
 
-        std::vector<Vector<N, float>> source_points_;
-        std::vector<Vector<N, double>> points_;
+        std::vector<numerical::Vector<N, float>> source_points_;
+        std::vector<numerical::Vector<N, double>> points_;
         std::vector<core::DelaunayObject<N>> delaunay_objects_;
         std::vector<core::DelaunayFacet<N>> delaunay_facets_;
         std::vector<ManifoldVertex<N>> vertex_data_;
@@ -258,9 +258,9 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 return res;
         }
 
-        [[nodiscard]] std::vector<Vector<N, double>> normals() const override
+        [[nodiscard]] std::vector<numerical::Vector<N, double>> normals() const override
         {
-                std::vector<Vector<N, double>> res;
+                std::vector<numerical::Vector<N, double>> res;
                 res.reserve(vertex_data_.size());
                 for (const ManifoldVertex<N>& vertex : vertex_data_)
                 {
@@ -269,13 +269,13 @@ class Impl final : public ManifoldConstructor<N>, public ManifoldConstructorCoco
                 return res;
         }
 
-        [[nodiscard]] const std::vector<Vector<N, float>>& points() const override
+        [[nodiscard]] const std::vector<numerical::Vector<N, float>>& points() const override
         {
                 return source_points_;
         }
 
 public:
-        Impl(const std::vector<Vector<N, float>>& source_points,
+        Impl(const std::vector<numerical::Vector<N, float>>& source_points,
              const bool cocone_only,
              progress::Ratio* const progress)
                 : cocone_only_(cocone_only),
@@ -311,7 +311,7 @@ public:
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
-        const std::vector<Vector<N, float>>& source_points,
+        const std::vector<numerical::Vector<N, float>>& source_points,
         progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N>>(source_points, false, progress);
@@ -319,7 +319,7 @@ std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
 
 template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
-        const std::vector<Vector<N, float>>& source_points,
+        const std::vector<numerical::Vector<N, float>>& source_points,
         progress::Ratio* const progress)
 {
         return std::make_unique<Impl<N>>(source_points, true, progress);
@@ -327,9 +327,9 @@ std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone
 
 #define TEMPLATE(N)                                                                                  \
         template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor(              \
-                const std::vector<Vector<(N), float>>&, progress::Ratio*);                           \
+                const std::vector<numerical::Vector<(N), float>>&, progress::Ratio*);                \
         template std::unique_ptr<ManifoldConstructorCocone<(N)>> create_manifold_constructor_cocone( \
-                const std::vector<Vector<(N), float>>&, progress::Ratio*);
+                const std::vector<numerical::Vector<(N), float>>&, progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_2(TEMPLATE)
 }

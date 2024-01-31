@@ -38,7 +38,10 @@ namespace ns::shading::specular
 namespace fresnel_implementation
 {
 template <std::size_t N, typename T>
-std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
+std::optional<std::array<T, 2>> cos1_cos2(
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& normal,
+        const T eta)
 {
         const T dot1 = dot(normal, v);
 
@@ -72,8 +75,8 @@ struct FresnelDielectric final
 
 template <std::size_t N, typename T>
 std::optional<FresnelDielectric<T>> fresnel_dielectric(
-        const Vector<N, T>& v,
-        const Vector<N, T>& normal,
+        const numerical::Vector<N, T>& v,
+        const numerical::Vector<N, T>& normal,
         const T n1,
         const T n2)
 {
@@ -103,7 +106,7 @@ std::optional<FresnelDielectric<T>> fresnel_dielectric(
 // Physically Based Rendering, 8.2.1 Fresnel reflectance.
 // η — the index of refraction of the conductor, k — its absorption coefficient.
 template <std::size_t N, typename T>
-T fresnel_conductor(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta, const T k)
+T fresnel_conductor(const numerical::Vector<N, T>& v, const numerical::Vector<N, T>& normal, const T eta, const T k)
 {
         static_assert(std::is_floating_point_v<T>);
 

@@ -62,7 +62,7 @@ Color f(const Color& color)
 //
 
 template <std::size_t N, typename T, typename Color>
-Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
+Color f(const Color& color, const numerical::Vector<N, T>& n, const numerical::Vector<N, T>& l)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
@@ -79,7 +79,7 @@ Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
 }
 
 template <std::size_t N, typename T>
-T pdf(const Vector<N, T>& n, const Vector<N, T>& l)
+T pdf(const numerical::Vector<N, T>& n, const numerical::Vector<N, T>& l)
 {
         static_assert(N >= 3);
 
@@ -90,27 +90,27 @@ T pdf(const Vector<N, T>& n, const Vector<N, T>& l)
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Sample<N, T, Color> sample_f(RandomEngine& engine, const Color& color, const Vector<N, T>& n)
+Sample<N, T, Color> sample_f(RandomEngine& engine, const Color& color, const numerical::Vector<N, T>& n)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
 
         ASSERT(n.is_unit());
 
-        const Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
+        const numerical::Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
 
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
         if (n_l <= 0)
         {
-                return {Vector<N, T>(0), 0, Color(0)};
+                return {numerical::Vector<N, T>(0), 0, Color(0)};
         }
 
         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
         if (pdf <= 0)
         {
-                return {Vector<N, T>(0), 0, Color(0)};
+                return {numerical::Vector<N, T>(0), 0, Color(0)};
         }
 
         return {l, pdf, impl::f<N>(color)};

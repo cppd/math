@@ -31,7 +31,7 @@ namespace ns::painter::scenes
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_scene(
         const Color& background_color,
-        const std::optional<Vector<N + 1, T>>& clip_plane_equation,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const Projector<N, T>* projector,
         std::vector<const LightSource<N, T, Color>*>&& light_sources,
         std::vector<const Shape<N, T, Color>*>&& shapes,

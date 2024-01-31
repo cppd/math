@@ -51,7 +51,7 @@ MovingVariance<N, T>::MovingVariance()
 }
 
 template <std::size_t N, typename T>
-void MovingVariance<N, T>::push(const Vector<N, T>& residual)
+void MovingVariance<N, T>::push(const numerical::Vector<N, T>& residual)
 {
         static constexpr std::size_t SIZE = FILTER_WINDOW_SIZE + 2 * FILTER_SIZE;
 
@@ -89,7 +89,7 @@ void MovingVariance<N, T>::push(const Vector<N, T>& residual)
         static_assert(SIZE > 2 * FILTER_SIZE);
         for (std::size_t i = FILTER_SIZE; i < SIZE - FILTER_SIZE; ++i)
         {
-                Vector<N, T> v;
+                numerical::Vector<N, T> v;
                 for (std::size_t n = 0; n < N; ++n)
                 {
                         v[n] = r[n][i];
@@ -104,7 +104,7 @@ void MovingVariance<N, T>::push(const Vector<N, T>& residual)
 }
 
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> MovingVariance<N, T>::compute() const
+std::optional<numerical::Vector<N, T>> MovingVariance<N, T>::compute() const
 {
         if (!has_variance())
         {
@@ -113,7 +113,7 @@ std::optional<Vector<N, T>> MovingVariance<N, T>::compute() const
 
         ASSERT(variance_.has_variance());
 
-        const Vector<N, T> v = variance_.variance();
+        const numerical::Vector<N, T> v = variance_.variance();
 
         T sum = 0;
         for (std::size_t i = 0; i < N; ++i)
@@ -121,7 +121,7 @@ std::optional<Vector<N, T>> MovingVariance<N, T>::compute() const
                 sum += std::sqrt(v[i]);
         }
 
-        return Vector<N, T>(std::clamp<T>(square(sum / N), VARIANCE_MIN<T>, VARIANCE_MAX<T>));
+        return numerical::Vector<N, T>(std::clamp<T>(square(sum / N), VARIANCE_MIN<T>, VARIANCE_MAX<T>));
 }
 
 #define TEMPLATE(N, T) template class MovingVariance<(N), T>;

@@ -38,10 +38,10 @@ namespace ns::geometry::spatial::test
 namespace
 {
 template <std::size_t N, typename T>
-constexpr Vector<N, T> last_coord_vector(const T& v, const T& last)
+constexpr numerical::Vector<N, T> last_coord_vector(const T& v, const T& last)
 {
         static_assert(N > 0);
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res[i] = v;
@@ -51,9 +51,9 @@ constexpr Vector<N, T> last_coord_vector(const T& v, const T& last)
 }
 
 template <std::size_t N, typename T>
-constexpr std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
+constexpr std::array<numerical::Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
 {
-        std::array<Vector<N + 1, T>, N> res;
+        std::array<numerical::Vector<N + 1, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 for (std::size_t j = 0; j < N + 1; ++j)
@@ -86,11 +86,11 @@ void test_overlap()
         const std::string name = "Test parallelotope overlap in " + space_name(N);
 
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
-        constexpr Vector<N, T> ORG_0(0.0);
-        constexpr Vector<N, T> ORG_1(0.75);
-        constexpr Vector<N, T> ORG_2(1.5);
+        constexpr numerical::Vector<N, T> ORG_0(0.0);
+        constexpr numerical::Vector<N, T> ORG_1(0.75);
+        constexpr numerical::Vector<N, T> ORG_2(1.5);
 
-        constexpr Vector<N, T> ORG_BIG(-5);
+        constexpr numerical::Vector<N, T> ORG_BIG(-5);
         constexpr std::array<T, N> EDGES_BIG = make_array_value<T, N>(10);
 
         LOG("------------------------------");
@@ -148,36 +148,36 @@ void test_overlap_hyperplane()
 {
         const std::string name = "Test hyperplane parallelotope overlap in " + space_name(N);
 
-        constexpr Vector<N, T> ORG(5);
+        constexpr numerical::Vector<N, T> ORG(5);
         constexpr T SIZE = 1;
 
         constexpr T SIZE_BIG = 3;
 
-        constexpr Vector<N, T> BIG_1 = last_coord_vector<N, T>(4.0, 4.9);
-        constexpr Vector<N, T> BIG_2 = last_coord_vector<N, T>(4.0, 5.5);
-        constexpr Vector<N, T> BIG_3 = last_coord_vector<N, T>(4.0, 6.1);
+        constexpr numerical::Vector<N, T> BIG_1 = last_coord_vector<N, T>(4.0, 4.9);
+        constexpr numerical::Vector<N, T> BIG_2 = last_coord_vector<N, T>(4.0, 5.5);
+        constexpr numerical::Vector<N, T> BIG_3 = last_coord_vector<N, T>(4.0, 6.1);
 
         constexpr T SIZE_SMALL = 0.2;
 
-        constexpr Vector<N, T> SMALL_1 = last_coord_vector<N, T>(4.9, 4.9);
-        constexpr Vector<N, T> SMALL_2 = last_coord_vector<N, T>(4.9, 5.5);
-        constexpr Vector<N, T> SMALL_3 = last_coord_vector<N, T>(4.9, 6.1);
+        constexpr numerical::Vector<N, T> SMALL_1 = last_coord_vector<N, T>(4.9, 4.9);
+        constexpr numerical::Vector<N, T> SMALL_2 = last_coord_vector<N, T>(4.9, 5.5);
+        constexpr numerical::Vector<N, T> SMALL_3 = last_coord_vector<N, T>(4.9, 6.1);
 
-        constexpr Vector<N, T> SMALL_4 = last_coord_vector<N, T>(4.0, 4.9);
-        constexpr Vector<N, T> SMALL_5 = last_coord_vector<N, T>(4.0, 5.5);
-        constexpr Vector<N, T> SMALL_6 = last_coord_vector<N, T>(4.0, 6.1);
+        constexpr numerical::Vector<N, T> SMALL_4 = last_coord_vector<N, T>(4.0, 4.9);
+        constexpr numerical::Vector<N, T> SMALL_5 = last_coord_vector<N, T>(4.0, 5.5);
+        constexpr numerical::Vector<N, T> SMALL_6 = last_coord_vector<N, T>(4.0, 6.1);
 
-        constexpr Vector<N, T> SMALL_7 = last_coord_vector<N, T>(5.5, 4.9);
-        constexpr Vector<N, T> SMALL_8 = last_coord_vector<N, T>(5.5, 5.5);
-        constexpr Vector<N, T> SMALL_9 = last_coord_vector<N, T>(5.5, 6.1);
+        constexpr numerical::Vector<N, T> SMALL_7 = last_coord_vector<N, T>(5.5, 4.9);
+        constexpr numerical::Vector<N, T> SMALL_8 = last_coord_vector<N, T>(5.5, 5.5);
+        constexpr numerical::Vector<N, T> SMALL_9 = last_coord_vector<N, T>(5.5, 6.1);
 
         LOG("------------------------------");
         LOG(name);
 
-        constexpr std::array<Vector<N, T>, N - 1> EDGES_HYPER_BIG =
+        constexpr std::array<numerical::Vector<N, T>, N - 1> EDGES_HYPER_BIG =
                 to_edge_vector_hyper(make_array_value<T, N - 1>(SIZE_BIG));
 
-        constexpr std::array<Vector<N, T>, N - 1> EDGES_HYPER_SMALL =
+        constexpr std::array<numerical::Vector<N, T>, N - 1> EDGES_HYPER_SMALL =
                 to_edge_vector_hyper(make_array_value<T, N - 1>(SIZE_SMALL));
 
         const HyperplaneParallelotope<N, T> p1(BIG_1, EDGES_HYPER_BIG);

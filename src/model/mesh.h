@@ -58,15 +58,15 @@ struct Mesh final
                 int image{-1}; // index or -1
         };
 
-        std::vector<Vector<N, float>> vertices;
-        std::vector<Vector<N, float>> normals;
-        std::vector<Vector<N - 1, float>> texcoords;
+        std::vector<numerical::Vector<N, float>> vertices;
+        std::vector<numerical::Vector<N, float>> normals;
+        std::vector<numerical::Vector<N - 1, float>> texcoords;
         std::vector<Facet> facets;
         std::vector<Point> points;
         std::vector<Line> lines;
         std::vector<Material> materials;
         std::vector<image::Image<N - 1>> images;
-        Vector<N, float> center{0};
+        numerical::Vector<N, float> center{0};
         float length{0};
 
         Mesh() = default;

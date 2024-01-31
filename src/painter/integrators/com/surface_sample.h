@@ -32,7 +32,7 @@ template <std::size_t N, typename T, typename Color>
 struct SurfaceSamplePdf final
 {
         Color beta;
-        Vector<N, T> l;
+        numerical::Vector<N, T> l;
         T pdf_forward;
         T pdf_reversed;
 };
@@ -41,20 +41,20 @@ template <std::size_t N, typename T, typename Color>
 struct SurfaceSample final
 {
         Color beta;
-        Vector<N, T> l;
+        numerical::Vector<N, T> l;
 };
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<SurfaceSamplePdf<N, T, Color>> surface_sample_with_pdf(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine);
 
 template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<SurfaceSample<N, T, Color>> surface_sample(
         const SurfaceIntersection<N, T, Color>& surface,
-        const Vector<N, T>& v,
+        const numerical::Vector<N, T>& v,
         const Normals<N, T>& normals,
         PCG& engine);
 }

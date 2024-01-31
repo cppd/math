@@ -45,7 +45,7 @@ public:
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 const std::vector<std::uint32_t>& family_indices,
-                const Vector3f& color,
+                const numerical::Vector3f& color,
                 bool use_texture,
                 bool use_material);
 

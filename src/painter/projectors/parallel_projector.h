@@ -34,20 +34,20 @@ class ParallelProjector final : public Projector<N, T>
         static_assert(std::is_floating_point_v<T>);
 
         std::array<int, N - 1> screen_size_;
-        std::array<Vector<N, T>, N - 1> screen_axes_;
-        Vector<N - 1, T> screen_org_;
-        Vector<N, T> camera_org_;
-        Vector<N, T> camera_dir_;
+        std::array<numerical::Vector<N, T>, N - 1> screen_axes_;
+        numerical::Vector<N - 1, T> screen_org_;
+        numerical::Vector<N, T> camera_org_;
+        numerical::Vector<N, T> camera_dir_;
 
         [[nodiscard]] const std::array<int, N - 1>& screen_size() const override;
 
-        [[nodiscard]] numerical::Ray<N, T> ray(const Vector<N - 1, T>& point) const override;
+        [[nodiscard]] numerical::Ray<N, T> ray(const numerical::Vector<N - 1, T>& point) const override;
 
 public:
         ParallelProjector(
-                const Vector<N, T>& camera_org,
-                const Vector<N, T>& camera_dir,
-                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                const numerical::Vector<N, T>& camera_org,
+                const numerical::Vector<N, T>& camera_dir,
+                const std::array<numerical::Vector<N, T>, N - 1>& screen_axes,
                 std::type_identity_t<T> units_per_pixel,
                 const std::array<int, N - 1>& screen_size);
 };

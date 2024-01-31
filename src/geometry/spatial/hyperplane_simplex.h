@@ -52,14 +52,14 @@ class HyperplaneSimplex final
         // and passing through its ridges except for one ridge.
         std::array<Hyperplane<N, T>, N - 1> planes_;
 
-        [[nodiscard]] T barycentric_coordinate(const Vector<N, T>& point, const std::size_t i) const
+        [[nodiscard]] T barycentric_coordinate(const numerical::Vector<N, T>& point, const std::size_t i) const
         {
                 return planes_[i].distance(point);
         }
 
-        [[nodiscard]] Vector<N, T> barycentric_coordinates(const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N, T> barycentric_coordinates(const numerical::Vector<N, T>& point) const
         {
-                Vector<N, T> res;
+                numerical::Vector<N, T> res;
                 res[N - 1] = 1;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
@@ -76,14 +76,14 @@ public:
         {
         }
 
-        explicit HyperplaneSimplex(const std::array<Vector<N, T>, N>& vertices)
+        explicit HyperplaneSimplex(const std::array<numerical::Vector<N, T>, N>& vertices)
         {
                 set(vertices);
         }
 
-        void set(const std::array<Vector<N, T>, N>& vertices)
+        void set(const std::array<numerical::Vector<N, T>, N>& vertices)
         {
-                std::array<Vector<N, T>, N - 1> vectors;
+                std::array<numerical::Vector<N, T>, N - 1> vectors;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         vectors[i] = vertices[i] - vertices[N - 1];
@@ -120,12 +120,12 @@ public:
                 plane_.reverse_normal();
         }
 
-        [[nodiscard]] const Vector<N, T>& normal() const
+        [[nodiscard]] const numerical::Vector<N, T>& normal() const
         {
                 return plane_.n;
         }
 
-        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const
+        [[nodiscard]] numerical::Vector<N, T> project(const numerical::Vector<N, T>& point) const
         {
                 return plane_.project(point);
         }
@@ -133,7 +133,7 @@ public:
         // N constraints b + a * x >= 0
         // one constraint b + a * x = 0
         // vertices must be the same as in the set function
-        [[nodiscard]] Constraints<N, T, N, 1> constraints(const std::array<Vector<N, T>, N>& vertices) const
+        [[nodiscard]] Constraints<N, T, N, 1> constraints(const std::array<numerical::Vector<N, T>, N>& vertices) const
         {
                 Constraints<N, T, N, 1> res;
 
@@ -150,13 +150,13 @@ public:
 
                 {
                         // Create a plane that do not pass through vertex N - 1
-                        std::array<Vector<N, T>, N - 1> vectors;
+                        std::array<numerical::Vector<N, T>, N - 1> vectors;
                         for (std::size_t i = 0; i < N - 2; ++i)
                         {
                                 vectors[i] = vertices[i + 1] - vertices[0];
                         }
                         vectors[N - 2] = plane_.n;
-                        const Vector<N, T> n = numerical::orthogonal_complement(vectors).normalized();
+                        const numerical::Vector<N, T> n = numerical::orthogonal_complement(vectors).normalized();
                         const T d = dot(vertices[0], n);
 
                         // normal must be directed to vertex N - 1
@@ -179,9 +179,9 @@ public:
                         return std::nullopt;
                 }
 
-                const Vector<N, T> point = ray.point(t);
+                const numerical::Vector<N, T> point = ray.point(t);
 
-                Vector<N - 1, T> bc;
+                numerical::Vector<N - 1, T> bc;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         bc[i] = barycentric_coordinate(point, i);
@@ -204,11 +204,13 @@ public:
         }
 
         template <std::size_t M>
-        [[nodiscard]] Vector<M, T> interpolate(const Vector<N, T>& point, const std::array<Vector<M, T>, N>& data) const
+        [[nodiscard]] numerical::Vector<M, T> interpolate(
+                const numerical::Vector<N, T>& point,
+                const std::array<numerical::Vector<M, T>, N>& data) const
         {
-                const Vector<N, T> bc = barycentric_coordinates(point);
+                const numerical::Vector<N, T> bc = barycentric_coordinates(point);
 
-                Vector<M, T> res = bc[0] * data[0];
+                numerical::Vector<M, T> res = bc[0] * data[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
                         res.multiply_add(bc[i], data[i]);

@@ -104,14 +104,14 @@ class Impl final : public VolumeObject
         const std::vector<std::uint32_t> family_indices_;
 
         numerical::Matrix4d vp_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
-        std::optional<Vector4d> world_clip_plane_equation_;
+        std::optional<numerical::Vector4d> world_clip_plane_equation_;
 
         numerical::Matrix3d gradient_to_world_matrix_;
         numerical::Matrix4d world_to_texture_matrix_;
         numerical::Matrix4d texture_to_world_matrix_;
         numerical::Matrix4d world_to_shadow_matrix_ = numerical::IDENTITY_MATRIX<4, double>;
 
-        Vector3d gradient_h_;
+        numerical::Vector3d gradient_h_;
 
         VolumeBuffer buffer_;
 
@@ -166,7 +166,7 @@ class Impl final : public VolumeObject
                 const geometry::spatial::Hyperplane<3, double>& clip_plane =
                         world_clip_plane_equation_
                                 ? volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
-                                : geometry::spatial::Hyperplane<3, double>(Vector3d(0), 0);
+                                : geometry::spatial::Hyperplane<3, double>(numerical::Vector3d(0), 0);
 
                 buffer_.set_coordinates(
                         texture_to_device.inversed(), texture_to_world_matrix_, texture_to_device.row(2), clip_plane,
@@ -281,7 +281,7 @@ class Impl final : public VolumeObject
 
         void set_matrix_and_clip_plane(
                 const numerical::Matrix4d& vp_matrix,
-                const std::optional<Vector4d>& world_clip_plane_equation) override
+                const std::optional<numerical::Vector4d>& world_clip_plane_equation) override
         {
                 vp_matrix_ = vp_matrix;
                 world_clip_plane_equation_ = world_clip_plane_equation;
@@ -290,7 +290,7 @@ class Impl final : public VolumeObject
 
         void set_matrix_and_clip_plane(
                 const numerical::Matrix4d& vp_matrix,
-                const std::optional<Vector4d>& world_clip_plane_equation,
+                const std::optional<numerical::Vector4d>& world_clip_plane_equation,
                 const numerical::Matrix4d& world_to_shadow_matrix) override
         {
                 ASSERT(!ray_tracing_);
@@ -298,7 +298,7 @@ class Impl final : public VolumeObject
                 set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
         }
 
-        void set_clip_plane(const Vector4d& world_clip_plane_equation) override
+        void set_clip_plane(const numerical::Vector4d& world_clip_plane_equation) override
         {
                 world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_clip_plane();

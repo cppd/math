@@ -317,7 +317,7 @@ T compute_cosine_weighted_average(const F& f)
         long double sum_cosine = 0;
         for (int i = 0; i < SAMPLE_COUNT; ++i)
         {
-                Vector<N, T> v;
+                numerical::Vector<N, T> v;
                 T length_square;
                 sampling::uniform_in_sphere(engine, v, length_square);
 
@@ -409,7 +409,7 @@ void test_cosine()
         long double sum = 0;
         for (int i = 0; i < SAMPLE_COUNT; ++i)
         {
-                Vector<N, T> v;
+                numerical::Vector<N, T> v;
                 T length_square;
                 sampling::uniform_in_sphere(engine, v, length_square);
 

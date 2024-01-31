@@ -34,7 +34,7 @@ namespace ns::gpu::optical_flow::compute
 {
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         std::uint32_t family_index);
 
 std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_memory(
@@ -42,7 +42,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
         VkDescriptorSetLayout descriptor_set_layout,
         std::uint32_t family_index,
         VkSampler sampler,
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
         int top_point_count_x,
         int top_point_count_y,

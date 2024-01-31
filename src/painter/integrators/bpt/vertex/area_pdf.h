@@ -28,12 +28,12 @@ namespace ns::painter::integrators::bpt::vertex
 {
 template <std::size_t N, typename T, typename Normal>
 [[nodiscard]] T solid_angle_pdf_to_area_pdf(
-        const Vector<N, T>& prev_pos,
+        const numerical::Vector<N, T>& prev_pos,
         const T angle_pdf,
-        const Vector<N, T>& next_pos,
+        const numerical::Vector<N, T>& next_pos,
         const Normal& next_normal)
 {
-        const Vector<N, T> v = prev_pos - next_pos;
+        const numerical::Vector<N, T> v = prev_pos - next_pos;
         const T distance = v.norm();
         const T cosine = [&]
         {
@@ -52,7 +52,7 @@ template <std::size_t N, typename T, typename Normal>
 template <std::size_t N, typename T, typename Normal>
 [[nodiscard]] T solid_angle_pdf_to_area_pdf(
         const T angle_pdf,
-        const Vector<N, T>& next_dir,
+        const numerical::Vector<N, T>& next_dir,
         const T next_distance,
         const Normal& next_normal)
 {
@@ -72,7 +72,7 @@ template <std::size_t N, typename T, typename Normal>
 }
 
 template <std::size_t N, typename T, typename Normal>
-[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const Vector<N, T>& dir, const Normal& next_normal)
+[[nodiscard]] T pos_pdf_to_area_pdf(const T pos_pdf, const numerical::Vector<N, T>& dir, const Normal& next_normal)
 {
         ASSERT(dir.is_unit());
         const T cosine = [&]

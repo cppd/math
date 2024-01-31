@@ -35,11 +35,13 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-std::vector<Vector2i> sobel_groups(const Vector2i group_size, const std::vector<Vector2i>& sizes)
+std::vector<numerical::Vector2i> sobel_groups(
+        const numerical::Vector2i group_size,
+        const std::vector<numerical::Vector2i>& sizes)
 {
-        std::vector<Vector2i> res;
+        std::vector<numerical::Vector2i> res;
         res.reserve(sizes.size());
-        for (const Vector2i& size : sizes)
+        for (const numerical::Vector2i& size : sizes)
         {
                 res.push_back(group_count(size, group_size));
         }
@@ -77,7 +79,7 @@ Sobel::Sobel(const VkDevice device)
 }
 
 void Sobel::create_buffers(
-        const std::vector<Vector2i>& sizes,
+        const std::vector<numerical::Vector2i>& sizes,
         const std::vector<vulkan::ImageWithMemory>& dx,
         const std::vector<vulkan::ImageWithMemory>& dy,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)

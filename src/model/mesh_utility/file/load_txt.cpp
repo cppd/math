@@ -51,7 +51,7 @@ void read_points_thread(
         const unsigned thread_num,
         const unsigned thread_count,
         const Lines& lines,
-        std::vector<Vector<N, float>>* const vertices,
+        std::vector<numerical::Vector<N, float>>* const vertices,
         progress::Ratio* const progress)
 {
         const std::size_t count = lines.size();
@@ -83,7 +83,7 @@ void read_points_thread(
 
 template <std::size_t N>
 void read_points(
-        std::vector<Vector<N, float>>* const vertices,
+        std::vector<numerical::Vector<N, float>>* const vertices,
         const std::filesystem::path& file_name,
         progress::Ratio* const progress)
 {

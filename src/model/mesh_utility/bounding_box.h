@@ -32,21 +32,21 @@ namespace ns::model::mesh
 template <std::size_t N>
 struct BoundingBox final
 {
-        Vector<N, float> min;
-        Vector<N, float> max;
+        numerical::Vector<N, float> min;
+        numerical::Vector<N, float> max;
 };
 
 namespace bounding_box_implementation
 {
 template <std::size_t N, typename T>
-void init_min_max(Vector<N, T>* const min, Vector<N, T>* const max)
+void init_min_max(numerical::Vector<N, T>* const min, numerical::Vector<N, T>* const max)
 {
-        *min = Vector<N, T>(Limits<T>::max());
-        *max = Vector<N, T>(Limits<T>::lowest());
+        *min = numerical::Vector<N, T>(Limits<T>::max());
+        *max = numerical::Vector<N, T>(Limits<T>::lowest());
 }
 
 template <std::size_t N, typename T>
-bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
+bool min_max_found(const numerical::Vector<N, T>& min, const numerical::Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -69,8 +69,8 @@ bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::optional<BoundingBox<N>>>& boxes)
 {
-        Vector<N, float> min;
-        Vector<N, float> max;
+        numerical::Vector<N, float> min;
+        numerical::Vector<N, float> max;
 
         init_min_max(&min, &max);
 
@@ -78,8 +78,8 @@ std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::opt
         {
                 if (box)
                 {
-                        min = ::ns::min(min, box->min);
-                        max = ::ns::max(max, box->max);
+                        min = numerical::min(min, box->min);
+                        max = numerical::max(max, box->max);
                 }
         }
 
@@ -104,8 +104,8 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        Vector<N, float> min;
-        Vector<N, float> max;
+        numerical::Vector<N, float> min;
+        numerical::Vector<N, float> max;
 
         impl::init_min_max(&min, &max);
 
@@ -121,8 +121,8 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
                                 error("Facet vertex index out of bounds");
                         }
 
-                        min = ::ns::min(min, mesh.vertices[index]);
-                        max = ::ns::max(max, mesh.vertices[index]);
+                        min = numerical::min(min, mesh.vertices[index]);
+                        max = numerical::max(max, mesh.vertices[index]);
                 }
         }
 
@@ -146,8 +146,8 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        Vector<N, float> min;
-        Vector<N, float> max;
+        numerical::Vector<N, float> min;
+        numerical::Vector<N, float> max;
 
         impl::init_min_max(&min, &max);
 
@@ -163,8 +163,8 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
                                 error("Line vertex index out of bounds");
                         }
 
-                        min = ::ns::min(min, mesh.vertices[index]);
-                        max = ::ns::max(max, mesh.vertices[index]);
+                        min = numerical::min(min, mesh.vertices[index]);
+                        max = numerical::max(max, mesh.vertices[index]);
                 }
         }
 
@@ -188,8 +188,8 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
                 return std::nullopt;
         }
 
-        Vector<N, float> min;
-        Vector<N, float> max;
+        numerical::Vector<N, float> min;
+        numerical::Vector<N, float> max;
 
         impl::init_min_max(&min, &max);
 
@@ -204,8 +204,8 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
                         error("Point vertex index out of bounds");
                 }
 
-                min = ::ns::min(min, mesh.vertices[index]);
-                max = ::ns::max(max, mesh.vertices[index]);
+                min = numerical::min(min, mesh.vertices[index]);
+                max = numerical::max(max, mesh.vertices[index]);
         }
 
         if (!impl::min_max_found(min, max))

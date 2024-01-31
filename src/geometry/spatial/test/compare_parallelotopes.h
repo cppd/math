@@ -49,7 +49,7 @@ bool equal(const T& a, const T& b)
 }
 
 template <std::size_t N, typename T>
-bool equal(const Vector<N, T>& a, const Vector<N, T>& b)
+bool equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -62,7 +62,7 @@ bool equal(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction(RandomEngine& engine)
+numerical::Vector<N, T> random_direction(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd_dir(-1, 1);
         std::uniform_int_distribution<int> uid_dir(-1, 1);
@@ -71,7 +71,7 @@ Vector<N, T> random_direction(RandomEngine& engine)
         // equal probability is not needed
         while (true)
         {
-                Vector<N, T> res;
+                numerical::Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
@@ -116,7 +116,7 @@ void compare_intersections(const numerical::Ray<N, T>& ray, const Parallelotope&
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
-void compare_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::string& name)
+void compare_vectors(const std::array<numerical::Vector<N, T>, COUNT>& vectors, const std::string& name)
 {
         for (std::size_t i = 1; i < COUNT; ++i)
         {
@@ -129,7 +129,7 @@ void compare_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
-void compare_vectors(const std::array<std::array<Vector<N, T>, N>, COUNT>& vectors, const std::string& name)
+void compare_vectors(const std::array<std::array<numerical::Vector<N, T>, N>, COUNT>& vectors, const std::string& name)
 {
         for (std::size_t i = 1; i < COUNT; ++i)
         {
@@ -165,15 +165,15 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
                 }
         }
 
-        const std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
+        const std::array<numerical::Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
         compare_vectors(orgs, "orgs");
 
-        const std::array<std::array<Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
+        const std::array<std::array<numerical::Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
         compare_vectors(vectors, "vectors");
 
         const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
 
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};

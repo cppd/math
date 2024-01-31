@@ -45,8 +45,8 @@ struct CameraInfo final
         Volume shadow_volume;
         numerical::Matrix4d main_view_matrix;
         numerical::Matrix4d shadow_view_matrix;
-        Vector3d light_direction;
-        Vector3d camera_direction;
+        numerical::Vector3d light_direction;
+        numerical::Vector3d camera_direction;
 };
 
 namespace command
@@ -133,9 +133,9 @@ struct SetCamera final
 
 struct SetClipPlane final
 {
-        std::optional<Vector4d> plane;
+        std::optional<numerical::Vector4d> plane;
 
-        explicit SetClipPlane(const std::optional<Vector4d>& plane)
+        explicit SetClipPlane(const std::optional<numerical::Vector4d>& plane)
                 : plane(plane)
         {
         }

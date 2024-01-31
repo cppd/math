@@ -36,19 +36,19 @@ public:
         virtual ~Filter2() = default;
 
         virtual void reset(
-                const Vector<N, T>& position,
-                const Vector<N, T>& position_variance,
-                const Vector<N, T>& velocity,
-                const Vector<N, T>& velocity_variance,
-                const Vector<N, T>& acceleration,
-                const Vector<N, T>& acceleration_variance) = 0;
+                const numerical::Vector<N, T>& position,
+                const numerical::Vector<N, T>& position_variance,
+                const numerical::Vector<N, T>& velocity,
+                const numerical::Vector<N, T>& velocity_variance,
+                const numerical::Vector<N, T>& acceleration,
+                const numerical::Vector<N, T>& acceleration_variance) = 0;
 
         virtual void reset(
-                const Vector<3 * N, T>& position_velocity_acceleration,
+                const numerical::Vector<3 * N, T>& position_velocity_acceleration,
                 const numerical::Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) = 0;
 
         virtual void reset(
-                const Vector<2 * N, T>& position_velocity,
+                const numerical::Vector<2 * N, T>& position_velocity,
                 const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
@@ -63,7 +63,7 @@ public:
 
         virtual void update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
 
-        [[nodiscard]] virtual Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
 
         [[nodiscard]] virtual T speed() const = 0;

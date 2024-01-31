@@ -62,7 +62,7 @@ std::vector<numerical::Ray<N, T>> create_rays(const Parallelotope<N, T>& p, cons
         std::vector<numerical::Ray<N, T>> rays;
         rays.reserve(ray_count);
 
-        for (const Vector<N, T>& point :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));

@@ -65,7 +65,7 @@ void DrawingBuffer::set_transparency_max_node_count(const std::uint32_t count) c
         copy_to_buffer(offsetof(Drawing, transparency_max_node_count), c);
 }
 
-void DrawingBuffer::set_clip_plane(const Vector4d& equation, const bool enabled) const
+void DrawingBuffer::set_clip_plane(const numerical::Vector4d& equation, const bool enabled) const
 {
         static_assert(
                 offsetof(Drawing, clip_plane_enabled) + sizeof(Drawing::clip_plane_enabled)
@@ -83,7 +83,7 @@ void DrawingBuffer::set_clip_plane(const Vector4d& equation, const bool enabled)
         map.write(sizeof(clip_plane_enabled), clip_plane_equation);
 }
 
-void DrawingBuffer::set_viewport(const Vector2d& center, const Vector2d& factor) const
+void DrawingBuffer::set_viewport(const numerical::Vector2d& center, const numerical::Vector2d& factor) const
 {
         static_assert(
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
@@ -101,37 +101,37 @@ void DrawingBuffer::set_viewport(const Vector2d& center, const Vector2d& factor)
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void DrawingBuffer::set_lighting_color(const Vector3f& color) const
+void DrawingBuffer::set_lighting_color(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().lighting_color) v = color;
         copy_to_buffer(offsetof(Drawing, lighting_color), v);
 }
 
-void DrawingBuffer::set_background_color(const Vector3f& color) const
+void DrawingBuffer::set_background_color(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().background_color) c = color;
         copy_to_buffer(offsetof(Drawing, background_color), c);
 }
 
-void DrawingBuffer::set_wireframe_color(const Vector3f& color) const
+void DrawingBuffer::set_wireframe_color(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().wireframe_color) c = color;
         copy_to_buffer(offsetof(Drawing, wireframe_color), c);
 }
 
-void DrawingBuffer::set_clip_plane_color(const Vector3f& color) const
+void DrawingBuffer::set_clip_plane_color(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().clip_plane_color) c = color;
         copy_to_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
-void DrawingBuffer::set_normal_color_positive(const Vector3f& color) const
+void DrawingBuffer::set_normal_color_positive(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().normal_color_positive) c = color;
         copy_to_buffer(offsetof(Drawing, normal_color_positive), c);
 }
 
-void DrawingBuffer::set_normal_color_negative(const Vector3f& color) const
+void DrawingBuffer::set_normal_color_negative(const numerical::Vector3f& color) const
 {
         const decltype(Drawing().normal_color_negative) c = color;
         copy_to_buffer(offsetof(Drawing, normal_color_negative), c);
@@ -173,7 +173,7 @@ void DrawingBuffer::set_flat_shading(const bool flat_shading) const
         copy_to_buffer(offsetof(Drawing, flat_shading), s);
 }
 
-void DrawingBuffer::set_direction_to_light(const Vector3f& direction) const
+void DrawingBuffer::set_direction_to_light(const numerical::Vector3f& direction) const
 {
         const decltype(Drawing().direction_to_light) d = direction;
         copy_to_buffer(offsetof(Drawing, direction_to_light), d);
@@ -198,7 +198,7 @@ void DrawingBuffer::set_lighting_proportions(const float front, const float side
         map.write(sizeof(front_lighting_proportion), side_lighting_proportion);
 }
 
-void DrawingBuffer::set_direction_to_camera(const Vector3f& direction) const
+void DrawingBuffer::set_direction_to_camera(const numerical::Vector3f& direction) const
 {
         const decltype(Drawing().direction_to_camera) d = direction;
         copy_to_buffer(offsetof(Drawing, direction_to_camera), d);

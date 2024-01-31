@@ -130,7 +130,7 @@ void build_acceleration_structure(
 BufferWithMemory create_vertex_buffer(
         const Device& device,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const Vector3f> vertices)
+        const std::span<const numerical::Vector3f> vertices)
 {
         constexpr VkBufferUsageFlags USAGE =
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
@@ -175,7 +175,7 @@ std::optional<BufferWithMemory> create_transform_matrix_buffer(
         return res;
 }
 
-void check_data(const std::span<const Vector3f> vertices, const std::span<const std::uint32_t> indices)
+void check_data(const std::span<const numerical::Vector3f> vertices, const std::span<const std::uint32_t> indices)
 {
         if (vertices.empty())
         {
@@ -266,7 +266,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const Vector3f> vertices,
+        const std::span<const numerical::Vector3f> vertices,
         const std::span<const std::uint32_t> indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix)
 {

@@ -44,7 +44,7 @@ void test_sphere_creation()
 
         constexpr unsigned FACET_COUNT = 1000;
 
-        std::vector<Vector<N, T>> vertices;
+        std::vector<numerical::Vector<N, T>> vertices;
         std::vector<std::array<int, N>> facets;
 
         create_sphere(FACET_COUNT, &vertices, &facets);

@@ -204,7 +204,7 @@ void test_stl_file(
 template <std::size_t N>
 void test_mesh_files(
         const std::string& name,
-        const std::vector<Vector<N, float>>& vertices,
+        const std::vector<numerical::Vector<N, float>>& vertices,
         const std::vector<std::array<int, N>>& facets,
         progress::Ratio* const progress)
 {
@@ -246,7 +246,7 @@ void test()
 
         progress::Ratio progress(nullptr);
 
-        std::vector<Vector<N, float>> vertices;
+        std::vector<numerical::Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;
         geometry::shapes::create_sphere(facet_count, &vertices, &facets);
 

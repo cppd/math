@@ -29,9 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::model::mesh
 {
 template <std::size_t N>
-std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const BoundingBox<N>& box)
+std::vector<numerical::Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const BoundingBox<N>& box)
 {
-        const Vector<N, float> extent = box.max - box.min;
+        const numerical::Vector<N, float> extent = box.max - box.min;
 
         const float max_extent = extent.norm_infinity();
 
@@ -41,14 +41,14 @@ std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const Boun
         }
 
         const float scale_factor = 2 / max_extent;
-        const Vector<N, float> center = box.min + 0.5f * extent;
+        const numerical::Vector<N, float> center = box.min + 0.5f * extent;
 
-        std::vector<Vector<N, float>> normalized_vertices;
+        std::vector<numerical::Vector<N, float>> normalized_vertices;
         normalized_vertices.reserve(mesh.vertices.size());
 
-        for (const Vector<N, float>& v : mesh.vertices)
+        for (const numerical::Vector<N, float>& v : mesh.vertices)
         {
-                const Vector<N, float> vertex = (v - center) * scale_factor;
+                const numerical::Vector<N, float> vertex = (v - center) * scale_factor;
                 normalized_vertices.push_back(vertex);
         }
 

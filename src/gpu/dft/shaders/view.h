@@ -49,8 +49,8 @@ public:
 
         [[nodiscard]] const vulkan::Buffer& buffer() const;
 
-        void set_background_color(const Vector3f& background_color) const;
-        void set_foreground_color(const Vector3f& foreground_color) const;
+        void set_background_color(const numerical::Vector3f& background_color) const;
+        void set_foreground_color(const numerical::Vector3f& foreground_color) const;
         void set_brightness(float brightness) const;
 };
 
@@ -76,8 +76,8 @@ public:
 
 struct ViewVertex final
 {
-        Vector4f position;
-        Vector2f texture_coordinates;
+        numerical::Vector4f position;
+        numerical::Vector2f texture_coordinates;
 
         [[nodiscard]] static std::vector<VkVertexInputBindingDescription> binding_descriptions();
         [[nodiscard]] static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();

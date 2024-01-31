@@ -475,10 +475,10 @@ namespace info
 {
 struct Camera final
 {
-        Vector3d up;
-        Vector3d forward;
-        Vector3d lighting;
-        Vector3d view_center;
+        numerical::Vector3d up;
+        numerical::Vector3d forward;
+        numerical::Vector3d lighting;
+        numerical::Vector3d view_center;
         double view_width;
         int width;
         int height;
@@ -486,7 +486,7 @@ struct Camera final
 
 struct ClipPlane final
 {
-        std::optional<Vector4d> equation;
+        std::optional<numerical::Vector4d> equation;
         std::optional<double> position;
 };
 

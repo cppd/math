@@ -34,7 +34,7 @@ class Surface final
         SurfaceIntersection<N, T, Color> surface_;
         Normals<N, T> normals_;
         Color beta_;
-        Vector<N, T> dir_to_prev_;
+        numerical::Vector<N, T> dir_to_prev_;
         T pdf_forward_ = 0;
         T pdf_reversed_ = 0;
 
@@ -42,7 +42,7 @@ public:
         Surface(const SurfaceIntersection<N, T, Color>& surface,
                 const Normals<N, T>& normals,
                 const Color& beta,
-                const Vector<N, T>& dir_to_prev)
+                const numerical::Vector<N, T>& dir_to_prev)
                 : surface_(surface),
                   normals_(normals),
                   beta_(beta),
@@ -51,17 +51,17 @@ public:
                 ASSERT(dir_to_prev_.is_unit());
         }
 
-        [[nodiscard]] const Vector<N, T>& dir_to_prev() const
+        [[nodiscard]] const numerical::Vector<N, T>& dir_to_prev() const
         {
                 return dir_to_prev_;
         }
 
-        [[nodiscard]] const Vector<N, T>& pos() const
+        [[nodiscard]] const numerical::Vector<N, T>& pos() const
         {
                 return surface_.point();
         }
 
-        [[nodiscard]] const Vector<N, T>& normal() const
+        [[nodiscard]] const numerical::Vector<N, T>& normal() const
         {
                 return normals_.shading;
         }
@@ -77,7 +77,8 @@ public:
         }
 
         template <typename Normal>
-        [[nodiscard]] T area_pdf(const T angle_pdf, const Vector<N, T>& next_pos, const Normal& next_normal) const
+        [[nodiscard]] T area_pdf(const T angle_pdf, const numerical::Vector<N, T>& next_pos, const Normal& next_normal)
+                const
         {
                 return solid_angle_pdf_to_area_pdf(surface_.point(), angle_pdf, next_pos, next_normal);
         }
@@ -93,12 +94,14 @@ public:
                 return surface_.light_source()->leave_radiance(dir_to_prev_);
         }
 
-        [[nodiscard]] T light_area_pdf(const Vector<N, T>& next_pos, const Vector<N, T>& next_normal) const
+        [[nodiscard]] T light_area_pdf(
+                const numerical::Vector<N, T>& next_pos,
+                const numerical::Vector<N, T>& next_normal) const
         {
                 ASSERT(surface_.light_source() != nullptr);
-                const Vector<N, T> l_dir = (next_pos - surface_.point());
+                const numerical::Vector<N, T> l_dir = (next_pos - surface_.point());
                 const T l_distance = l_dir.norm();
-                const Vector<N, T> l = l_dir / l_distance;
+                const numerical::Vector<N, T> l = l_dir / l_distance;
                 const T pdf = surface_.light_source()->leave_pdf_dir(l);
                 return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, next_normal);
         }
@@ -120,12 +123,12 @@ public:
                 pdf_reversed_ = next.area_pdf(angle_pdf, surface_.point(), normals_.shading);
         }
 
-        [[nodiscard]] T reversed_pdf(const Vector<N, T>& v, const Surface<N, T, Color>& next) const
+        [[nodiscard]] T reversed_pdf(const numerical::Vector<N, T>& v, const Surface<N, T, Color>& next) const
         {
                 ASSERT(v.is_unit());
-                const Vector<N, T> l_dir = (surface_.point() - next.pos());
+                const numerical::Vector<N, T> l_dir = (surface_.point() - next.pos());
                 const T l_distance = l_dir.norm();
-                const Vector<N, T> l = l_dir / l_distance;
+                const numerical::Vector<N, T> l = l_dir / l_distance;
                 const T pdf = next.angle_pdf(v, l);
                 return solid_angle_pdf_to_area_pdf(pdf, l, l_distance, normals_.shading);
         }
@@ -135,14 +138,14 @@ public:
                 pdf_reversed_ = pdf;
         }
 
-        [[nodiscard]] T angle_pdf(const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] T angle_pdf(const numerical::Vector<N, T>& v, const numerical::Vector<N, T>& l) const
         {
                 ASSERT(v.is_unit());
                 ASSERT(l.is_unit());
                 return surface_.pdf(normals_.shading, v, l);
         }
 
-        [[nodiscard]] Color brdf(const Vector<N, T>& v, const Vector<N, T>& l) const
+        [[nodiscard]] Color brdf(const numerical::Vector<N, T>& v, const numerical::Vector<N, T>& l) const
         {
                 ASSERT(v.is_unit());
                 ASSERT(l.is_unit());

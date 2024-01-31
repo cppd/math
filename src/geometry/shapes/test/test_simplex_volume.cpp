@@ -47,11 +47,11 @@ bool equal(const T& a, const T& b, const T& precision)
 }
 
 template <std::size_t M, std::size_t N, typename T>
-void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices, const T& volume, const T& precision)
+void test_simplex(const std::array<numerical::Vector<N, T>, N + 1>& vertices, const T& volume, const T& precision)
 {
         static_assert(M <= N);
 
-        std::array<Vector<N, T>, M + 1> v;
+        std::array<numerical::Vector<N, T>, M + 1> v;
         for (std::size_t i = 0; i < M + 1; ++i)
         {
                 v[i] = vertices[i];
@@ -69,12 +69,13 @@ template <std::size_t N, typename T, typename RandomEngine>
 void test(const T& precision, RandomEngine& engine)
 {
         const T scale = std::uniform_real_distribution<T>(0.1, 10)(engine);
-        const Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
-        const std::array<Vector<N, T>, N - 1> complement = numerical::orthogonal_complement_of_unit_vector(vector);
+        const numerical::Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
+        const std::array<numerical::Vector<N, T>, N - 1> complement =
+                numerical::orthogonal_complement_of_unit_vector(vector);
 
-        const Vector<N, T> point = [&]
+        const numerical::Vector<N, T> point = [&]
         {
-                Vector<N, T> res;
+                numerical::Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] = std::uniform_real_distribution<T>(-2, 2)(engine);
@@ -82,9 +83,9 @@ void test(const T& precision, RandomEngine& engine)
                 return res;
         }();
 
-        const std::array<Vector<N, T>, N + 1> vertices = [&]
+        const std::array<numerical::Vector<N, T>, N + 1> vertices = [&]
         {
-                std::array<Vector<N, T>, N + 1> res;
+                std::array<numerical::Vector<N, T>, N + 1> res;
                 res[0] = point;
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {

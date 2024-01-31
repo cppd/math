@@ -135,7 +135,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         [[nodiscard]] VkRenderPass render_pass_clear() const override;
         [[nodiscard]] const std::vector<VkFramebuffer>& framebuffers_clear() const override;
-        [[nodiscard]] std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const override;
+        [[nodiscard]] std::vector<VkClearValue> clear_values(const numerical::Vector<3, float>& rgb) const override;
 
         void commands_color_resolve(
                 VkCommandBuffer command_buffer,
@@ -315,7 +315,7 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear() const
         return framebuffers_handles_3d_clear_;
 }
 
-std::vector<VkClearValue> Impl::clear_values(const Vector<3, float>& rgb) const
+std::vector<VkClearValue> Impl::clear_values(const numerical::Vector<3, float>& rgb) const
 {
         std::vector<VkClearValue> res(2);
         res[0] = vulkan::create_color_clear_value(format_, rgb);

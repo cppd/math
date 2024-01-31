@@ -38,18 +38,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::lights
 {
 template <std::size_t N, typename T, typename Color>
-void ParallelotopeLight<N, T, Color>::init(const Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
+void ParallelotopeLight<N, T, Color>::init(const numerical::Vector<N, T>& /*scene_center*/, const T /*scene_radius*/)
 {
 }
 
 template <std::size_t N, typename T, typename Color>
-bool ParallelotopeLight<N, T, Color>::visible(const Vector<N, T>& point) const
+bool ParallelotopeLight<N, T, Color>::visible(const numerical::Vector<N, T>& point) const
 {
         return dot(parallelotope_.normal(), point - parallelotope_.org()) > 0;
 }
 
 template <std::size_t N, typename T, typename Color>
-Vector<N, T> ParallelotopeLight<N, T, Color>::sample_location(PCG& engine) const
+numerical::Vector<N, T> ParallelotopeLight<N, T, Color>::sample_location(PCG& engine) const
 {
         return parallelotope_.org() + sampling::uniform_in_parallelotope(engine, parallelotope_.vectors());
 }
@@ -67,8 +67,8 @@ Color ParallelotopeLight<N, T, Color>::radiance(const T cos) const
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sample(
         PCG& engine,
-        const Vector<N, T>& point,
-        const Vector<N, T>& /*n*/) const
+        const numerical::Vector<N, T>& point,
+        const numerical::Vector<N, T>& /*n*/) const
 {
         if (!visible(point))
         {
@@ -77,9 +77,9 @@ LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sam
                 return res;
         }
 
-        const Vector<N, T> direction = sample_location(engine) - point;
+        const numerical::Vector<N, T> direction = sample_location(engine) - point;
         const T distance = direction.norm();
-        const Vector<N, T> l = direction / distance;
+        const numerical::Vector<N, T> l = direction / distance;
 
         const T cos = -dot(l, parallelotope_.normal());
 
@@ -93,8 +93,8 @@ LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sam
 
 template <std::size_t N, typename T, typename Color>
 LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
-        const Vector<N, T>& point,
-        const Vector<N, T>& l) const
+        const numerical::Vector<N, T>& point,
+        const numerical::Vector<N, T>& l) const
 {
         if (!visible(point))
         {
@@ -139,13 +139,13 @@ LightSourceLeaveSample<N, T, Color> ParallelotopeLight<N, T, Color>::leave_sampl
 }
 
 template <std::size_t N, typename T, typename Color>
-T ParallelotopeLight<N, T, Color>::leave_pdf_pos(const Vector<N, T>& /*dir*/) const
+T ParallelotopeLight<N, T, Color>::leave_pdf_pos(const numerical::Vector<N, T>& /*dir*/) const
 {
         return pdf_;
 }
 
 template <std::size_t N, typename T, typename Color>
-T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
+T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const numerical::Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(parallelotope_.normal(), dir);
@@ -153,7 +153,7 @@ T ParallelotopeLight<N, T, Color>::leave_pdf_dir(const Vector<N, T>& dir) const
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(const Vector<N, T>& dir) const
+std::optional<Color> ParallelotopeLight<N, T, Color>::leave_radiance(const numerical::Vector<N, T>& dir) const
 {
         ASSERT(dir.is_unit());
         const T cos = dot(dir, parallelotope_.normal());
@@ -189,7 +189,7 @@ bool ParallelotopeLight<N, T, Color>::is_infinite_area() const
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& direction,
         const Color& radiance)
         : parallelotope_(parallelotope),
           radiance_(radiance),
@@ -201,7 +201,7 @@ ParallelotopeLight<N, T, Color>::ParallelotopeLight(
 template <std::size_t N, typename T, typename Color>
 ParallelotopeLight<N, T, Color>::ParallelotopeLight(
         const geometry::spatial::HyperplaneParallelotope<N, T>& parallelotope,
-        const Vector<N, T>& direction,
+        const numerical::Vector<N, T>& direction,
         const Color& radiance,
         const std::type_identity_t<T> spotlight_falloff_start,
         const std::type_identity_t<T> spotlight_width)

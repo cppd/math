@@ -85,7 +85,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 
         for (int depth = 0;; ++depth)
         {
-                const Vector<N, T> v = -ray.dir();
+                const numerical::Vector<N, T> v = -ray.dir();
 
                 if (dot(normals.shading, v) <= 0)
                 {
@@ -128,7 +128,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, const numerical::Ray<N,
 {
         const auto [surface, normals] = [&]
         {
-                static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+                static constexpr std::optional<numerical::Vector<N, T>> GEOMETRIC_NORMAL;
                 return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 

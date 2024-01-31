@@ -37,7 +37,7 @@ class MeasurementQueue final
         T angle_estimation_variance_;
         std::optional<T> last_time_;
         T init_time_;
-        Vector<2 * N, T> init_position_velocity_;
+        numerical::Vector<2 * N, T> init_position_velocity_;
         numerical::Matrix<2 * N, 2 * N, T> init_position_velocity_p_;
         std::vector<Measurements<N, T>> measurements_;
 
@@ -98,7 +98,7 @@ public:
                 return init_time_;
         }
 
-        [[nodiscard]] const Vector<2 * N, T>& init_position_velocity() const
+        [[nodiscard]] const numerical::Vector<2 * N, T>& init_position_velocity() const
         {
                 ASSERT(!empty());
 

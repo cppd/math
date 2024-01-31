@@ -29,21 +29,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace std
 {
 template <size_t N, typename T>
-struct hash<::ns::Vector<N, T>> final
+struct hash<::ns::numerical::Vector<N, T>> final
 {
-        size_t operator()(const ::ns::Vector<N, T>& v) const
+        size_t operator()(const ::ns::numerical::Vector<N, T>& v) const
         {
                 return v.hash();
         }
 };
 
 template <size_t N, typename T>
-struct tuple_size<::ns::Vector<N, T>> final : integral_constant<size_t, N>
+struct tuple_size<::ns::numerical::Vector<N, T>> final : integral_constant<size_t, N>
 {
 };
 }
 
-namespace ns
+namespace ns::numerical
 {
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr bool operator==(const Vector<N, T>& a, const Vector<N, T>& b)

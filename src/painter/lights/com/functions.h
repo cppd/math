@@ -44,9 +44,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, std::size_t M, typename T>
-std::array<Vector<N, T>, M> multiply(const std::array<Vector<N, T>, M>& vectors, const T value)
+std::array<numerical::Vector<N, T>, M> multiply(const std::array<numerical::Vector<N, T>, M>& vectors, const T value)
 {
-        std::array<Vector<N, T>, M> res;
+        std::array<numerical::Vector<N, T>, M> res;
         for (std::size_t i = 0; i < M; ++i)
         {
                 res[i] = vectors[i] * value;

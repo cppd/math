@@ -34,13 +34,13 @@ class Sobel final
 
         SobelProgram sobel_program_;
         std::vector<SobelMemory> sobel_memory_;
-        std::vector<Vector2i> sobel_groups_;
+        std::vector<numerical::Vector2i> sobel_groups_;
 
 public:
         explicit Sobel(VkDevice device);
 
         void create_buffers(
-                const std::vector<Vector2i>& sizes,
+                const std::vector<numerical::Vector2i>& sizes,
                 const std::vector<vulkan::ImageWithMemory>& dx,
                 const std::vector<vulkan::ImageWithMemory>& dy,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images);

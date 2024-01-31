@@ -28,11 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::shapes
 {
 template <std::size_t N, typename T, std::size_t M>
-T simplex_volume(const std::array<Vector<N, T>, M>& vertices)
+T simplex_volume(const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         static_assert(N > 0 && M >= 2 && M <= N + 1);
 
-        std::array<Vector<N, T>, M - 1> vectors;
+        std::array<numerical::Vector<N, T>, M - 1> vectors;
         for (std::size_t i = 0; i < M - 1; ++i)
         {
                 vectors[i] = vertices[i + 1] - vertices[0];

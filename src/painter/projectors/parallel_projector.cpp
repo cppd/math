@@ -34,8 +34,8 @@ namespace ns::painter::projectors
 namespace
 {
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> make_screen_axes(
-        const std::array<Vector<N, T>, N - 1>& screen_axes,
+std::array<numerical::Vector<N, T>, N - 1> make_screen_axes(
+        const std::array<numerical::Vector<N, T>, N - 1>& screen_axes,
         const T units_per_pixel)
 {
         if (!(units_per_pixel > 0))
@@ -43,7 +43,7 @@ std::array<Vector<N, T>, N - 1> make_screen_axes(
                 error("Error units per pixel " + to_string(units_per_pixel) + " for parallel projection");
         }
 
-        std::array<Vector<N, T>, N - 1> res = com::normalize_axes(screen_axes);
+        std::array<numerical::Vector<N, T>, N - 1> res = com::normalize_axes(screen_axes);
         for (std::size_t i = 0; i < res.size(); ++i)
         {
                 res[i] *= units_per_pixel;
@@ -59,18 +59,18 @@ const std::array<int, N - 1>& ParallelProjector<N, T>::screen_size() const
 }
 
 template <std::size_t N, typename T>
-numerical::Ray<N, T> ParallelProjector<N, T>::ray(const Vector<N - 1, T>& point) const
+numerical::Ray<N, T> ParallelProjector<N, T>::ray(const numerical::Vector<N - 1, T>& point) const
 {
-        const Vector<N - 1, T> screen_point = screen_org_ + point;
-        const Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
+        const numerical::Vector<N - 1, T> screen_point = screen_org_ + point;
+        const numerical::Vector<N, T> screen_dir = com::screen_dir(screen_axes_, screen_point);
         return numerical::Ray<N, T>(camera_org_ + screen_dir, camera_dir_);
 }
 
 template <std::size_t N, typename T>
 ParallelProjector<N, T>::ParallelProjector(
-        const Vector<N, T>& camera_org,
-        const Vector<N, T>& camera_dir,
-        const std::array<Vector<N, T>, N - 1>& screen_axes,
+        const numerical::Vector<N, T>& camera_org,
+        const numerical::Vector<N, T>& camera_dir,
+        const std::array<numerical::Vector<N, T>, N - 1>& screen_axes,
         const std::type_identity_t<T> units_per_pixel,
         const std::array<int, N - 1>& screen_size)
         : screen_size_(screen_size),

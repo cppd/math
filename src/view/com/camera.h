@@ -30,14 +30,14 @@ class Camera final
 {
         std::function<void(const gpu::renderer::CameraInfo&)> set_camera_;
 
-        Vector3d camera_right_{0};
-        Vector3d camera_up_{0};
-        Vector3d camera_direction_from_{0};
+        numerical::Vector3d camera_right_{0};
+        numerical::Vector3d camera_up_{0};
+        numerical::Vector3d camera_direction_from_{0};
 
-        Vector3d light_up_{0};
-        Vector3d light_direction_from_{0};
+        numerical::Vector3d light_up_{0};
+        numerical::Vector3d light_direction_from_{0};
 
-        Vector2d window_center_{0};
+        numerical::Vector2d window_center_{0};
 
         int width_{-1};
         int height_{-1};
@@ -45,7 +45,7 @@ class Camera final
         double scale_exponent_{0};
         double default_scale_{0};
 
-        void set_vectors(const Vector3d& right, const Vector3d& up);
+        void set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up);
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
         [[nodiscard]] numerical::Matrix4d main_view_matrix() const;
@@ -59,7 +59,7 @@ public:
         void reset_view();
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
-        void move(const Vector2d& delta);
+        void move(const numerical::Vector2d& delta);
         void resize(int width, int height);
 
         [[nodiscard]] info::Camera camera() const;

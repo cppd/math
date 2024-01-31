@@ -190,7 +190,9 @@ void check_distribution(
 struct Add final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const numerical::Vector<N, T>& a,
+                const numerical::Vector<N, T>& b) const
         {
                 return a + b;
         }
@@ -199,7 +201,9 @@ struct Add final
 struct Residual final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] Vector<N, T> operator()(const Vector<N, T>& a, const Vector<N, T>& b) const
+        [[nodiscard]] numerical::Vector<N, T> operator()(
+                const numerical::Vector<N, T>& a,
+                const numerical::Vector<N, T>& b) const
         {
                 return a - b;
         }
@@ -226,7 +230,7 @@ public:
         TestEkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
-                const Vector<2, T>& x,
+                const numerical::Vector<2, T>& x,
                 const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
@@ -242,11 +246,11 @@ public:
                 // Jacobian matrix
                 //  1 dt
                 //  0  1
-                const auto f = [&](const Vector<2, T>& x)
+                const auto f = [&](const numerical::Vector<2, T>& x)
                 {
-                        return Vector<2, T>(x[0] + dt_ * x[1], x[1]);
+                        return numerical::Vector<2, T>(x[0] + dt_ * x[1], x[1]);
                 };
-                const auto f_jacobian = [&](const Vector<2, T>& /*x*/)
+                const auto f_jacobian = [&](const numerical::Vector<2, T>& /*x*/)
                 {
                         return numerical::Matrix<2, 2, T>{
                                 {1, dt_},
@@ -257,11 +261,11 @@ public:
                 // measurement = x[0]
                 // Jacobian matrix
                 //  1 0
-                const auto h = [](const Vector<2, T>& x)
+                const auto h = [](const numerical::Vector<2, T>& x)
                 {
-                        return Vector<1, T>(x[0]);
+                        return numerical::Vector<1, T>(x[0]);
                 };
-                const auto h_jacobian = [](const Vector<2, T>& /*x*/)
+                const auto h_jacobian = [](const numerical::Vector<2, T>& /*x*/)
                 {
                         return numerical::Matrix<1, 2, T>{
                                 {1, 0}
@@ -270,7 +274,7 @@ public:
 
                 filter_.predict(f, f_jacobian, q_);
                 filter_.update(
-                        h, h_jacobian, r_, Vector<1, T>(measurement), Add(), Residual(), THETA, GATE,
+                        h, h_jacobian, r_, numerical::Vector<1, T>(measurement), Add(), Residual(), THETA, GATE,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -316,7 +320,7 @@ public:
         TestUkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
                 const std::type_identity_t<T> measurement_variance,
-                const Vector<2, T>& x,
+                const numerical::Vector<2, T>& x,
                 const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
@@ -329,20 +333,21 @@ public:
         {
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
-                const auto f = [&](const Vector<2, T>& x)
+                const auto f = [&](const numerical::Vector<2, T>& x)
                 {
-                        return Vector<2, T>(x[0] + dt_ * x[1], x[1]);
+                        return numerical::Vector<2, T>(x[0] + dt_ * x[1], x[1]);
                 };
 
                 // measurement = x[0]
-                const auto h = [](const Vector<2, T>& x)
+                const auto h = [](const numerical::Vector<2, T>& x)
                 {
-                        return Vector<1, T>(x[0]);
+                        return numerical::Vector<1, T>(x[0]);
                 };
 
                 filter_.predict(f, q_);
                 filter_.update(
-                        h, r_, Vector<1, T>(measurement), Add(), Residual(), GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        h, r_, numerical::Vector<1, T>(measurement), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const
@@ -380,7 +385,7 @@ void test_impl(
         const std::vector<ProcessData<T>> process_data =
                 generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
 
-        constexpr Vector<2, T> X(10, 5);
+        constexpr numerical::Vector<2, T> X(10, 5);
         constexpr numerical::Matrix<2, 2, T> P{
                 {500,  0},
                 {  0, 50}

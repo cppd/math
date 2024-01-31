@@ -35,7 +35,7 @@ namespace simplex_points_implementation
 {
 // The T range is for determinants only, not for Gram matrix
 template <int COUNT, std::size_t N, typename T>
-bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
+bool linearly_independent(const std::array<numerical::Vector<N, T>, N>& vectors)
 {
         static_assert(Integral<T>);
         static_assert(N > 1);
@@ -51,15 +51,15 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 
 template <unsigned SIMPLEX_I, std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(
-        const std::vector<Vector<N, SourceType>>& points,
+        const std::vector<numerical::Vector<N, SourceType>>& points,
         std::array<int, N + 1>* const simplex_points,
-        std::array<Vector<N, ComputeType>, N>* const simplex_vectors,
+        std::array<numerical::Vector<N, ComputeType>, N>* const simplex_vectors,
         unsigned point_i)
 {
         static_assert(N > 1);
         static_assert(SIMPLEX_I <= N);
 
-        const Vector<N, SourceType>& p = points[(*simplex_points)[0]];
+        const numerical::Vector<N, SourceType>& p = points[(*simplex_points)[0]];
         for (; point_i < points.size(); ++point_i)
         {
                 numerical::set_vector(&(*simplex_vectors)[SIMPLEX_I - 1], points[point_i], p);
@@ -85,7 +85,7 @@ void find_simplex_points(
 }
 
 template <std::size_t N, typename SourceType, typename ComputeType>
-std::array<int, N + 1> find_simplex_points(const std::vector<Vector<N, SourceType>>& points)
+std::array<int, N + 1> find_simplex_points(const std::vector<numerical::Vector<N, SourceType>>& points)
 {
         static_assert(N > 1);
 
@@ -94,7 +94,7 @@ std::array<int, N + 1> find_simplex_points(const std::vector<Vector<N, SourceTyp
                 error("0-simplex not found");
         }
 
-        std::array<Vector<N, ComputeType>, N> simplex_vectors;
+        std::array<numerical::Vector<N, ComputeType>, N> simplex_vectors;
 
         std::array<int, N + 1> simplex_points;
         simplex_points[0] = 0;

@@ -41,7 +41,7 @@ namespace ns::geometry::spatial
 namespace bounding_box_implementation
 {
 template <std::size_t M, std::size_t N, typename T>
-[[nodiscard]] constexpr T volume_impl(const Vector<N, T>& d)
+[[nodiscard]] constexpr T volume_impl(const numerical::Vector<N, T>& d)
 {
         static_assert(M <= N);
         static_assert(M >= 1);
@@ -64,7 +64,7 @@ template <std::size_t M, std::size_t N, typename T>
 }
 
 template <std::size_t M, std::size_t N, typename T>
-[[nodiscard]] constexpr T surface_impl(const Vector<N, T>& d)
+[[nodiscard]] constexpr T surface_impl(const numerical::Vector<N, T>& d)
 {
         static_assert(M <= N);
         static_assert(M >= 2);
@@ -83,13 +83,13 @@ template <std::size_t M, std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr T volume(const Vector<N, T>& d)
+[[nodiscard]] constexpr T volume(const numerical::Vector<N, T>& d)
 {
         return volume_impl<N>(d);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr T surface(const Vector<N, T>& d)
+[[nodiscard]] constexpr T surface(const numerical::Vector<N, T>& d)
 {
         return 2 * surface_impl<N>(d);
 }
@@ -102,7 +102,7 @@ class BoundingBox final
         static_assert(std::is_floating_point_v<T>);
         static_assert(Limits<T>::is_iec559());
 
-        std::array<Vector<N, T>, 2> bounds_;
+        std::array<numerical::Vector<N, T>, 2> bounds_;
 
         enum class IntersectionType
         {
@@ -161,9 +161,9 @@ class BoundingBox final
         //   (-infinity, NaN) -> near=near, far=far -> continue
         //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
         [[nodiscard]] bool intersect_impl(
-                const Vector<N, T>& org,
-                const Vector<N, T>& dir_reciprocal,
-                const Vector<N, bool>& dir_negative,
+                const numerical::Vector<N, T>& org,
+                const numerical::Vector<N, T>& dir_reciprocal,
+                const numerical::Vector<N, bool>& dir_negative,
                 const T max_distance) const
         {
                 T near = 0;
@@ -193,18 +193,18 @@ public:
         {
         }
 
-        constexpr BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2)
-                : bounds_{::ns::min(p1, p2), ::ns::max(p1, p2)}
+        constexpr BoundingBox(const numerical::Vector<N, T>& p1, const numerical::Vector<N, T>& p2)
+                : bounds_{numerical::min(p1, p2), numerical::max(p1, p2)}
         {
         }
 
-        explicit constexpr BoundingBox(const Vector<N, T>& p)
+        explicit constexpr BoundingBox(const numerical::Vector<N, T>& p)
                 : bounds_{p, p}
         {
         }
 
         template <std::size_t SIZE>
-        explicit constexpr BoundingBox(const std::array<Vector<N, T>, SIZE>& points)
+        explicit constexpr BoundingBox(const std::array<numerical::Vector<N, T>, SIZE>& points)
                 : BoundingBox(points[0])
         {
                 static_assert(SIZE > 0);
@@ -215,7 +215,7 @@ public:
         }
 
         template <std::size_t SIZE>
-        BoundingBox(const std::vector<Vector<N, T>>& points, const std::array<int, SIZE>& indices)
+        BoundingBox(const std::vector<numerical::Vector<N, T>>& points, const std::array<int, SIZE>& indices)
                 : BoundingBox(points[indices[0]])
         {
                 static_assert(SIZE > 0);
@@ -225,29 +225,29 @@ public:
                 }
         }
 
-        [[nodiscard]] constexpr const Vector<N, T>& min() const
+        [[nodiscard]] constexpr const numerical::Vector<N, T>& min() const
         {
                 return bounds_[0];
         }
 
-        [[nodiscard]] constexpr const Vector<N, T>& max() const
+        [[nodiscard]] constexpr const numerical::Vector<N, T>& max() const
         {
                 return bounds_[1];
         }
 
-        [[nodiscard]] constexpr Vector<N, T> diagonal() const
+        [[nodiscard]] constexpr numerical::Vector<N, T> diagonal() const
         {
                 return bounds_[1] - bounds_[0];
         }
 
-        [[nodiscard]] constexpr Vector<N, T> center() const
+        [[nodiscard]] constexpr numerical::Vector<N, T> center() const
         {
                 return T{0.5} * (bounds_[0] + bounds_[1]);
         }
 
         [[nodiscard]] constexpr unsigned maximum_extent() const
         {
-                const Vector<N, T> d = diagonal();
+                const numerical::Vector<N, T> d = diagonal();
                 T max = d[0];
                 unsigned res = 0;
                 for (std::size_t i = 1; i < N; ++i)
@@ -287,9 +287,9 @@ public:
         }
 
         [[nodiscard]] bool intersect(
-                const Vector<N, T>& org,
-                const Vector<N, T>& dir_reciprocal,
-                const Vector<N, bool>& dir_negative,
+                const numerical::Vector<N, T>& org,
+                const numerical::Vector<N, T>& dir_reciprocal,
+                const numerical::Vector<N, bool>& dir_negative,
                 const T max_distance = Limits<T>::max()) const
         {
                 return intersect_impl(org, dir_reciprocal, dir_negative, max_distance);
@@ -297,29 +297,29 @@ public:
 
         constexpr void merge(const BoundingBox<N, T>& v)
         {
-                bounds_[0] = ::ns::min(bounds_[0], v.bounds_[0]);
-                bounds_[1] = ::ns::max(bounds_[1], v.bounds_[1]);
+                bounds_[0] = numerical::min(bounds_[0], v.bounds_[0]);
+                bounds_[1] = numerical::max(bounds_[1], v.bounds_[1]);
         }
 
         [[nodiscard]] constexpr BoundingBox<N, T> merged(const BoundingBox<N, T>& v) const
         {
                 BoundingBox<N, T> res;
-                res.bounds_[0] = ::ns::min(bounds_[0], v.bounds_[0]);
-                res.bounds_[1] = ::ns::max(bounds_[1], v.bounds_[1]);
+                res.bounds_[0] = numerical::min(bounds_[0], v.bounds_[0]);
+                res.bounds_[1] = numerical::max(bounds_[1], v.bounds_[1]);
                 return res;
         }
 
-        constexpr void merge(const Vector<N, T>& v)
+        constexpr void merge(const numerical::Vector<N, T>& v)
         {
-                bounds_[0] = ::ns::min(bounds_[0], v);
-                bounds_[1] = ::ns::max(bounds_[1], v);
+                bounds_[0] = numerical::min(bounds_[0], v);
+                bounds_[1] = numerical::max(bounds_[1], v);
         }
 
-        [[nodiscard]] constexpr BoundingBox<N, T> merged(const Vector<N, T>& v) const
+        [[nodiscard]] constexpr BoundingBox<N, T> merged(const numerical::Vector<N, T>& v) const
         {
                 BoundingBox<N, T> res;
-                res.bounds_[0] = ::ns::min(bounds_[0], v);
-                res.bounds_[1] = ::ns::max(bounds_[1], v);
+                res.bounds_[0] = numerical::min(bounds_[0], v);
+                res.bounds_[1] = numerical::max(bounds_[1], v);
                 return res;
         }
 

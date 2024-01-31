@@ -93,16 +93,16 @@ a = PA, ab = AB, n = N:
 */
 template <std::size_t N, typename T>
 std::optional<T> intersect_cocone_max_distance(
-        const Vector<N, T>& normalized_cone_axis,
-        const Vector<N, T>& from_apex_to_point_a,
-        const Vector<N, T>& vector_from_point_a)
+        const numerical::Vector<N, T>& normalized_cone_axis,
+        const numerical::Vector<N, T>& from_apex_to_point_a,
+        const numerical::Vector<N, T>& vector_from_point_a)
 {
         static_assert(std::is_floating_point_v<T>);
         static constexpr auto COS_SQUARED = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
-        const Vector<N, T>& vec_a = from_apex_to_point_a;
-        const Vector<N, T>& vec_ab = vector_from_point_a;
-        const Vector<N, T>& vec_norm = normalized_cone_axis;
+        const numerical::Vector<N, T>& vec_a = from_apex_to_point_a;
+        const numerical::Vector<N, T>& vec_ab = vector_from_point_a;
+        const numerical::Vector<N, T>& vec_norm = normalized_cone_axis;
 
         const T n_ab = dot(vec_norm, vec_ab);
         const T a_n = dot(vec_a, vec_norm);

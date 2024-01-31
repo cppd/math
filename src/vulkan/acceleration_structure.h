@@ -95,7 +95,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        std::span<const Vector3f> vertices,
+        std::span<const numerical::Vector3f> vertices,
         std::span<const std::uint32_t> indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix);
 

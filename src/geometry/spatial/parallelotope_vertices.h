@@ -31,7 +31,7 @@ template <std::size_t N>
 inline constexpr int VERTEX_COUNT = 1 << N;
 
 template <int INDEX, std::size_t N, std::size_t M, typename T, typename F>
-void vertices(const Vector<N, T>& p, const std::array<Vector<N, T>, M>& vectors, const F& f)
+void vertices(const numerical::Vector<N, T>& p, const std::array<numerical::Vector<N, T>, M>& vectors, const F& f)
 {
         if constexpr (INDEX >= 0)
         {
@@ -45,7 +45,11 @@ void vertices(const Vector<N, T>& p, const std::array<Vector<N, T>, M>& vectors,
 }
 
 template <int INDEX, std::size_t N, typename T, typename F>
-void vertices(const Vector<N, T>& min, const Vector<N, T>& max, Vector<N, T>* const p, const F& f)
+void vertices(
+        const numerical::Vector<N, T>& min,
+        const numerical::Vector<N, T>& max,
+        numerical::Vector<N, T>* const p,
+        const F& f)
 {
         if constexpr (INDEX >= 0)
         {
@@ -62,9 +66,9 @@ void vertices(const Vector<N, T>& min, const Vector<N, T>& max, Vector<N, T>* co
 }
 
 template <std::size_t N, typename T, std::size_t M>
-std::array<Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<M>> parallelotope_vertices(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, M>& vectors)
+std::array<numerical::Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<M>> parallelotope_vertices(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0);
         static_assert(M > 0 && M <= N);
@@ -73,11 +77,11 @@ std::array<Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<M>>
 
         static constexpr std::size_t VERTEX_COUNT = impl::VERTEX_COUNT<M>;
 
-        std::array<Vector<N, T>, VERTEX_COUNT> res;
+        std::array<numerical::Vector<N, T>, VERTEX_COUNT> res;
 
         unsigned count = 0;
 
-        const auto f = [&count, &res](const Vector<N, T>& p)
+        const auto f = [&count, &res](const numerical::Vector<N, T>& p)
         {
                 ASSERT(count < res.size());
                 res[count++] = p;
@@ -91,9 +95,9 @@ std::array<Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<M>>
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<N>> parallelotope_vertices(
-        const Vector<N, T>& min,
-        const Vector<N, T>& max)
+std::array<numerical::Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<N>> parallelotope_vertices(
+        const numerical::Vector<N, T>& min,
+        const numerical::Vector<N, T>& max)
 {
         static_assert(N > 0);
 
@@ -101,10 +105,10 @@ std::array<Vector<N, T>, parallelotope_vertices_implementation::VERTEX_COUNT<N>>
 
         static constexpr std::size_t VERTEX_COUNT = impl::VERTEX_COUNT<N>;
 
-        std::array<Vector<N, T>, VERTEX_COUNT> res;
+        std::array<numerical::Vector<N, T>, VERTEX_COUNT> res;
 
         unsigned count = 0;
-        Vector<N, T> p;
+        numerical::Vector<N, T> p;
 
         const auto f = [&]
         {

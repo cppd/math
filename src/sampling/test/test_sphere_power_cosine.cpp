@@ -48,7 +48,7 @@ T random_power()
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> random_normal()
+numerical::Vector<N, T> random_normal()
 {
         PCG engine;
         return uniform_on_sphere<N, T>(engine).normalized();
@@ -63,7 +63,7 @@ void test_power_cosine_on_hemisphere(progress::Ratio* const progress)
 
         LOG("Sphere Power Cosine, " + space_name(N) + ", " + type_name<T>() + ", power " + to_string_fixed(power, 1));
 
-        const Vector<N, T> normal = random_normal<N, T>();
+        const numerical::Vector<N, T> normal = random_normal<N, T>();
 
         testing::test_unit<N, T>(
                 "", UNIT_COUNT,
@@ -91,7 +91,7 @@ void test_power_cosine_on_hemisphere(progress::Ratio* const progress)
                 {
                         return power_cosine_on_hemisphere(engine, normal, power);
                 },
-                [&](const Vector<N, T>& v)
+                [&](const numerical::Vector<N, T>& v)
                 {
                         return power_cosine_on_hemisphere_pdf<N, T>(dot(normal, v), power);
                 },
@@ -119,7 +119,7 @@ template <std::size_t N, typename T>
 void test_performance()
 {
         const auto power = random_power<T>();
-        const Vector<N, T> normal = random_normal<N, T>();
+        const numerical::Vector<N, T> normal = random_normal<N, T>();
 
         const long long p = testing::test_performance<PERFORMANCE_COUNT>(
                 [&](auto& engine)

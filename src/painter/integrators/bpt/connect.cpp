@@ -105,9 +105,9 @@ template <std::size_t N, typename T, typename Color>
         const LightDistributionSample<N, T, Color>& distribution,
         const LightSourceArriveSample<N, T, Color>& sample)
 {
-        const Vector<N, T>& n = surface.normal();
-        const Vector<N, T>& v = surface.dir_to_prev();
-        const Vector<N, T>& l = ray_to_light.dir();
+        const numerical::Vector<N, T>& n = surface.normal();
+        const numerical::Vector<N, T>& v = surface.dir_to_prev();
+        const numerical::Vector<N, T>& l = ray_to_light.dir();
 
         const T n_l = dot(n, l);
         if (!(n_l > 0))
@@ -144,8 +144,9 @@ template <std::size_t N, typename T, typename Color>
         const vertex::Light<N, T, Color> light = [&]()
         {
                 const auto position =
-                        sample.distance ? std::optional<Vector<N, T>>(surface.pos() + sample.l * (*sample.distance))
-                                        : std::nullopt;
+                        sample.distance
+                                ? std::optional<numerical::Vector<N, T>>(surface.pos() + sample.l * (*sample.distance))
+                                : std::nullopt;
 
                 return vertex::Light<N, T, Color>(
                         distribution.light, distribution.pdf, sample.pdf, position, -sample.l, std::nullopt, surface);
@@ -174,13 +175,13 @@ template <std::size_t N, typename T, typename Color>
         const vertex::Surface<N, T, Color>& light,
         const vertex::Surface<N, T, Color>& camera)
 {
-        const Vector<N, T> v = light.pos() - camera.pos();
+        const numerical::Vector<N, T> v = light.pos() - camera.pos();
         const T distance = v.norm();
-        const Vector<N, T> from_camera_to_light = v / distance;
+        const numerical::Vector<N, T> from_camera_to_light = v / distance;
 
-        const Vector<N, T>& camera_n = camera.normal();
-        const Vector<N, T>& camera_v = camera.dir_to_prev();
-        const Vector<N, T>& camera_l = from_camera_to_light;
+        const numerical::Vector<N, T>& camera_n = camera.normal();
+        const numerical::Vector<N, T>& camera_v = camera.dir_to_prev();
+        const numerical::Vector<N, T>& camera_l = from_camera_to_light;
 
         const T camera_n_l = dot(camera_n, camera_l);
         if (!(camera_n_l > 0))
@@ -188,9 +189,9 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const Vector<N, T>& light_n = light.normal();
-        const Vector<N, T>& light_v = light.dir_to_prev();
-        const Vector<N, T>& light_l = -from_camera_to_light;
+        const numerical::Vector<N, T>& light_n = light.normal();
+        const numerical::Vector<N, T>& light_v = light.dir_to_prev();
+        const numerical::Vector<N, T>& light_l = -from_camera_to_light;
 
         const T light_n_l = dot(light_n, light_l);
         if (!(light_n_l > 0))
