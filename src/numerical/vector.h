@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector_object.h" // IWYU pragma: export
 
-#include <src/com/interpolation.h>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -161,17 +159,6 @@ template <std::size_t N, typename T>
         for (std::size_t i = 1; i < N; ++i)
         {
                 res += a[i] * b[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const T& t)
-{
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = interpolation(a[i], b[i], t);
         }
         return res;
 }

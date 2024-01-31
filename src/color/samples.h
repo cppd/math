@@ -266,7 +266,7 @@ public:
         [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, const T& t)
         {
                 Derived res;
-                res.data_ = ::ns::interpolation(a.data_, b.data_, t);
+                res.data_ = interpolation(a.data_, b.data_, t);
                 return res;
         }
 

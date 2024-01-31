@@ -28,6 +28,7 @@ Norms
 
 #include <src/com/exponent.h>
 #include <src/com/hash.h>
+#include <src/com/interpolation.h>
 #include <src/com/type/limit.h>
 
 #include <algorithm>
@@ -316,6 +317,19 @@ public:
                         return false;
                 }
                 return true;
+        }
+
+        [[nodiscard]] friend constexpr Vector<N, T> interpolation(
+                const Vector<N, T>& a,
+                const Vector<N, T>& b,
+                const T& t)
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = interpolation(a[i], b[i], t);
+                }
+                return res;
         }
 
         [[nodiscard]] friend std::string to_string(const Vector<N, T>& v)
