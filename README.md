@@ -79,7 +79,7 @@ Least squares fitting a plane to points                 | Principal component an
 
 Property                  | Value
 --------------------------|--------------------------------------------
-Programming languages     | C++20, GLSL 4.60
+Programming languages     | C++23, GLSL 4.60
 C++ compilers             | GCC 13, Clang 17
 Platforms                 | Linux
 Graphics and compute APIs | Vulkan 1.3 with ray tracing extensions
