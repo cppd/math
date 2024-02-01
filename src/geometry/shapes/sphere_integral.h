@@ -161,7 +161,10 @@ inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
         {
                 return SPHERE_AREA<N - 1, long double> / (N - 1);
         }
-        return 2.0L;
+        else
+        {
+                return 2.0L;
+        }
 }();
 
 /*
