@@ -35,20 +35,6 @@ public:
         virtual ~Filter21() = default;
 
         virtual void reset(
-                const numerical::Vector<2, T>& position,
-                const numerical::Vector<2, T>& position_variance,
-                const numerical::Vector<2, T>& velocity,
-                const numerical::Vector<2, T>& velocity_variance,
-                const numerical::Vector<2, T>& acceleration,
-                const numerical::Vector<2, T>& acceleration_variance,
-                const Init<T>& init) = 0;
-
-        virtual void reset(
-                const numerical::Vector<6, T>& position_velocity_acceleration,
-                const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
-                const Init<T>& init) = 0;
-
-        virtual void reset(
                 const numerical::Vector<4, T>& position_velocity,
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;

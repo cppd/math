@@ -39,47 +39,6 @@ namespace ns::filter::filters::direction
 namespace
 {
 template <typename T>
-numerical::Vector<5, T> x(
-        const numerical::Vector<2, T>& position,
-        const numerical::Vector<2, T>& velocity,
-        const Init<T>& init)
-{
-        ASSERT(is_finite(position));
-        ASSERT(is_finite(velocity));
-
-        numerical::Vector<5, T> res;
-
-        res[0] = position[0];
-        res[1] = velocity[0];
-        res[2] = position[1];
-        res[3] = velocity[1];
-        res[4] = init.angle;
-
-        return res;
-}
-
-template <typename T>
-numerical::Matrix<5, 5, T> p(
-        const numerical::Vector<2, T>& position_variance,
-        const numerical::Vector<2, T>& velocity_variance,
-        const Init<T>& init)
-{
-        ASSERT(is_finite(position_variance));
-        ASSERT(is_finite(velocity_variance));
-        ASSERT(is_finite(init.angle_variance));
-
-        numerical::Matrix<5, 5, T> res(0);
-
-        res[0, 0] = position_variance[0];
-        res[1, 1] = velocity_variance[0];
-        res[2, 2] = position_variance[1];
-        res[3, 3] = velocity_variance[1];
-        res[4, 4] = init.angle_variance;
-
-        return res;
-}
-
-template <typename T>
 numerical::Vector<5, T> x(const numerical::Vector<4, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
@@ -420,18 +379,6 @@ class Filter final : public Filter10<T>
                         {filter_->p()[1, 1], filter_->p()[1, 3]},
                         {filter_->p()[3, 1], filter_->p()[3, 3]}
                 };
-        }
-
-        void reset(
-                const numerical::Vector<2, T>& position,
-                const numerical::Vector<2, T>& position_variance,
-                const numerical::Vector<2, T>& velocity,
-                const numerical::Vector<2, T>& velocity_variance,
-                const Init<T>& init) override
-        {
-                filter_.emplace(
-                        core::create_sigma_points<5, T>(sigma_points_alpha_), x(position, velocity, init),
-                        p(position_variance, velocity_variance, init));
         }
 
         void reset(
