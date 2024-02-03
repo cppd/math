@@ -70,14 +70,12 @@ bool is_unbounded(
         const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
         const VertexConnections& vertex_connections)
 {
-        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
-        {
-                if (delaunay_facets[vertex_facet.facet_index].one_sided())
+        return std::ranges::any_of(
+                vertex_connections.facets,
+                [&](const VertexConnections::Facet& vertex_facet)
                 {
-                        return true;
-                }
-        }
-        return false;
+                        return delaunay_facets[vertex_facet.facet_index].one_sided();
+                });
 }
 
 // Definition 4.1 (Poles).

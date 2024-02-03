@@ -33,6 +33,7 @@ Cambridge University Press, 2007.
 #include <src/geometry/core/delaunay.h>
 #include <src/settings/instantiation.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <vector>
@@ -75,17 +76,12 @@ void initial_phase(
                         continue;
                 }
 
-                const bool flat = [&]
-                {
-                        for (const auto index : vertex.cocone_neighbors)
+                const bool flat = std::ranges::all_of(
+                        vertex.cocone_neighbors,
+                        [&](const auto index)
                         {
-                                if (!normal_condition(vertex, vertices[index], cosine_of_alpha))
-                                {
-                                        return false;
-                                }
-                        }
-                        return true;
-                }();
+                                return normal_condition(vertex, vertices[index], cosine_of_alpha);
+                        });
 
                 if (flat)
                 {

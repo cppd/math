@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <optional>
@@ -89,20 +90,24 @@ bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = Shape1::DataType;
 
-        for (const std::array<numerical::Vector<N, T>, 2>& edge : shape_1.edges())
+        if (std::ranges::any_of(
+                    shape_1.edges(),
+                    [&](const std::array<numerical::Vector<N, T>, 2>& edge)
+                    {
+                            return line_segment_intersects_shape(edge[0], edge[1], shape_2);
+                    }))
         {
-                if (line_segment_intersects_shape(edge[0], edge[1], shape_2))
-                {
-                        return true;
-                }
+                return true;
         }
 
-        for (const std::array<numerical::Vector<N, T>, 2>& edge : shape_2.edges())
+        if (std::ranges::any_of(
+                    shape_2.edges(),
+                    [&](const std::array<numerical::Vector<N, T>, 2>& edge)
+                    {
+                            return line_segment_intersects_shape(edge[0], edge[1], shape_1);
+                    }))
         {
-                if (line_segment_intersects_shape(edge[0], edge[1], shape_1))
-                {
-                        return true;
-                }
+                return true;
         }
 
         return false;
@@ -113,14 +118,12 @@ bool all_vertices_are_on_negative_side(
         const std::array<numerical::Vector<N, T>, V>& vertices,
         const Constraint<N, T>& c)
 {
-        for (const numerical::Vector<N, T>& v : vertices)
-        {
-                if (dot(v, c.a) + c.b >= 0)
+        return std::ranges::all_of(
+                vertices,
+                [&](const numerical::Vector<N, T>& v)
                 {
-                        return false;
-                }
-        }
-        return true;
+                        return !(dot(v, c.a) + c.b >= 0);
+                });
 }
 
 template <std::size_t N, std::size_t V, typename T>

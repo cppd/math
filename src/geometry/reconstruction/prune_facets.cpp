@@ -32,6 +32,7 @@ Cambridge University Press, 2007.
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <unordered_map>
@@ -87,14 +88,12 @@ public:
 template <std::size_t N>
 [[nodiscard]] bool boundary_ridge(const std::vector<bool>& interior_vertices, const core::Ridge<N>& ridge)
 {
-        for (const auto v : ridge.vertices())
-        {
-                if (!interior_vertices[v])
+        return std::ranges::any_of(
+                ridge.vertices(),
+                [&](const auto v)
                 {
-                        return true;
-                }
-        }
-        return false;
+                        return !interior_vertices[v];
+                });
 }
 
 template <typename T>

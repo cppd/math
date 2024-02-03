@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/reference.h>
 #include <src/numerical/ray.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
@@ -59,15 +60,13 @@ template <std::size_t N, typename T, typename Objects, typename Indices>
         const numerical::Ray<N, T>& ray,
         const T& max_distance)
 {
-        for (const auto index : indices)
-        {
-                const auto distance = to_ref(objects[index]).intersect(ray);
-                static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(*distance)>>);
-                if (distance && *distance < max_distance)
+        return std::ranges::any_of(
+                indices,
+                [&](const auto index)
                 {
-                        return true;
-                }
-        }
-        return false;
+                        const auto distance = to_ref(objects[index]).intersect(ray);
+                        static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(*distance)>>);
+                        return distance && *distance < max_distance;
+                });
 }
 }
