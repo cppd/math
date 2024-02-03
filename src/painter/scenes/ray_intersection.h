@@ -177,13 +177,11 @@ template <std::size_t N, typename T, typename Color, typename Indices>
                 return any_intersection(*shapes[indices.front()]);
         }
 
-        for (const auto index : indices)
-        {
-                if (any_intersection(*shapes[index]))
+        return std::ranges::any_of(
+                indices,
+                [&](const auto index)
                 {
-                        return true;
-                }
-        }
-        return false;
+                        return any_intersection(*shapes[index]);
+                });
 }
 }

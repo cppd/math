@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <optional>
 #include <vector>
@@ -50,14 +51,13 @@ template <std::size_t N, typename T, typename MeshType>
         const geometry::spatial::Hyperplane<N, T>& clip_plane,
         const std::vector<numerical::Vector<N, MeshType>>& vertices)
 {
-        for (const auto index : facet.vertices)
-        {
-                if (vertex_inside_clip_plane(multiplier(to_vector<T>(vertices[index])), clip_plane))
+        return std::ranges::any_of(
+                facet.vertices,
+                [&](const auto index)
                 {
-                        return true;
-                }
-        }
-        return false;
+                        const auto& v = multiplier(to_vector<T>(vertices[index]));
+                        return vertex_inside_clip_plane(v, clip_plane);
+                });
 }
 
 template <std::size_t N, typename T, typename MeshType>
