@@ -38,64 +38,6 @@ namespace ns::filter::filters::speed
 namespace
 {
 template <std::size_t N, typename T>
-numerical::Vector<3 * N, T> x(
-        const numerical::Vector<N, T>& position,
-        const numerical::Vector<N, T>& velocity,
-        const numerical::Vector<N, T>& acceleration)
-{
-        ASSERT(is_finite(position));
-        ASSERT(is_finite(velocity));
-        ASSERT(is_finite(acceleration));
-
-        numerical::Vector<3 * N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 3 * i;
-                res[b + 0] = position[i];
-                res[b + 1] = velocity[i];
-                res[b + 2] = acceleration[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<3 * N, 3 * N, T> p(
-        const numerical::Vector<N, T>& position_variance,
-        const numerical::Vector<N, T>& velocity_variance,
-        const numerical::Vector<N, T>& acceleration_variance)
-{
-        ASSERT(is_finite(position_variance));
-        ASSERT(is_finite(velocity_variance));
-        ASSERT(is_finite(acceleration_variance));
-
-        numerical::Matrix<3 * N, 3 * N, T> res(0);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 3 * i;
-                res[b + 0, b + 0] = position_variance[i];
-                res[b + 1, b + 1] = velocity_variance[i];
-                res[b + 2, b + 2] = acceleration_variance[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Vector<N, T> x(const numerical::Vector<N, T>& position_velocity_acceleration)
-{
-        ASSERT(is_finite(position_velocity_acceleration));
-
-        return position_velocity_acceleration;
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> p(const numerical::Matrix<N, N, T>& position_velocity_acceleration_p)
-{
-        ASSERT(is_finite(position_velocity_acceleration_p));
-
-        return position_velocity_acceleration_p;
-}
-
-template <std::size_t N, typename T>
 numerical::Vector<3 * N, T> x(const numerical::Vector<2 * N, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
@@ -315,28 +257,6 @@ class Filter final : public Filter2<N, T>
                 ASSERT(filter_);
 
                 return numerical::slice<1, 3>(filter_->p());
-        }
-
-        void reset(
-                const numerical::Vector<N, T>& position,
-                const numerical::Vector<N, T>& position_variance,
-                const numerical::Vector<N, T>& velocity,
-                const numerical::Vector<N, T>& velocity_variance,
-                const numerical::Vector<N, T>& acceleration,
-                const numerical::Vector<N, T>& acceleration_variance) override
-        {
-                filter_.emplace(
-                        core::create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position, velocity, acceleration),
-                        p(position_variance, velocity_variance, acceleration_variance));
-        }
-
-        void reset(
-                const numerical::Vector<3 * N, T>& position_velocity_acceleration,
-                const numerical::Matrix<3 * N, 3 * N, T>& position_velocity_acceleration_p) override
-        {
-                filter_.emplace(
-                        core::create_sigma_points<3 * N, T>(sigma_points_alpha_), x(position_velocity_acceleration),
-                        p(position_velocity_acceleration_p));
         }
 
         void reset(

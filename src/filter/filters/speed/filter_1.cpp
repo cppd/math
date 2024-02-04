@@ -36,40 +36,6 @@ namespace ns::filter::filters::speed
 namespace
 {
 template <std::size_t N, typename T>
-numerical::Vector<2 * N, T> x(const numerical::Vector<N, T>& position, const numerical::Vector<N, T>& velocity)
-{
-        ASSERT(is_finite(position));
-        ASSERT(is_finite(velocity));
-
-        numerical::Vector<2 * N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 2 * i;
-                res[b + 0] = position[i];
-                res[b + 1] = velocity[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<2 * N, 2 * N, T> p(
-        const numerical::Vector<N, T>& position_variance,
-        const numerical::Vector<N, T>& velocity_variance)
-{
-        ASSERT(is_finite(position_variance));
-        ASSERT(is_finite(velocity_variance));
-
-        numerical::Matrix<2 * N, 2 * N, T> res(0);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 2 * i;
-                res[b + 0, b + 0] = position_variance[i];
-                res[b + 1, b + 1] = velocity_variance[i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
 numerical::Vector<N, T> x(const numerical::Vector<N, T>& position_velocity)
 {
         ASSERT(is_finite(position_velocity));
@@ -255,17 +221,6 @@ class Filter final : public Filter1<N, T>
                 ASSERT(filter_);
 
                 return numerical::slice<1, 2>(filter_->p());
-        }
-
-        void reset(
-                const numerical::Vector<N, T>& position,
-                const numerical::Vector<N, T>& position_variance,
-                const numerical::Vector<N, T>& velocity,
-                const numerical::Vector<N, T>& velocity_variance) override
-        {
-                filter_.emplace(
-                        core::create_sigma_points<2 * N, T>(sigma_points_alpha_), x(position, velocity),
-                        p(position_variance, velocity_variance));
         }
 
         void reset(
