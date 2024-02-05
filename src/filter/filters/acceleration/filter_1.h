@@ -35,11 +35,6 @@ public:
         virtual ~Filter1() = default;
 
         virtual void reset(
-                const numerical::Vector<6, T>& position_velocity_acceleration,
-                const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
-                const Init<T>& init) = 0;
-
-        virtual void reset(
                 const numerical::Vector<4, T>& position_velocity,
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;

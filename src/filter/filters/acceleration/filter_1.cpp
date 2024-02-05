@@ -39,47 +39,6 @@ namespace ns::filter::filters::acceleration
 namespace
 {
 template <typename T>
-numerical::Vector<9, T> x(const numerical::Vector<6, T>& position_velocity_acceleration, const Init<T>& init)
-{
-        ASSERT(is_finite(position_velocity_acceleration));
-
-        numerical::Vector<9, T> res;
-
-        for (std::size_t i = 0; i < 6; ++i)
-        {
-                res[i] = position_velocity_acceleration[i];
-        }
-
-        res[6] = init.angle;
-        res[7] = init.angle_speed;
-        res[8] = init.angle_r;
-
-        return res;
-}
-
-template <typename T>
-numerical::Matrix<9, 9, T> p(const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p, const Init<T>& init)
-{
-        ASSERT(is_finite(position_velocity_acceleration_p));
-
-        numerical::Matrix<9, 9, T> res(0);
-
-        for (std::size_t r = 0; r < 6; ++r)
-        {
-                for (std::size_t c = 0; c < 6; ++c)
-                {
-                        res[r, c] = position_velocity_acceleration_p[r, c];
-                }
-        }
-
-        res[6, 6] = init.angle_variance;
-        res[7, 7] = init.angle_speed_variance;
-        res[8, 8] = init.angle_r_variance;
-
-        return res;
-}
-
-template <typename T>
 numerical::Vector<9, T> x(const numerical::Vector<4, T>& position_velocity, const Init<T>& init)
 {
         ASSERT(is_finite(position_velocity));
@@ -821,23 +780,13 @@ class Filter final : public Filter1<T>
         }
 
         void reset(
-                const numerical::Vector<6, T>& position_velocity_acceleration,
-                const numerical::Matrix<6, 6, T>& position_velocity_acceleration_p,
+                const numerical::Vector<4, T>& position_velocity,
+                const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) override
         {
                 filter_.emplace(
-                        core::create_sigma_points<9, T>(sigma_points_alpha_), x(position_velocity_acceleration, init),
-                        p(position_velocity_acceleration_p, init));
-        }
-
-        void reset(
-                const numerical::Vector<4, T>& position_velocity_acceleration,
-                const numerical::Matrix<4, 4, T>& position_velocity_acceleration_p,
-                const Init<T>& init) override
-        {
-                filter_.emplace(
-                        core::create_sigma_points<9, T>(sigma_points_alpha_), x(position_velocity_acceleration, init),
-                        p(position_velocity_acceleration_p, init));
+                        core::create_sigma_points<9, T>(sigma_points_alpha_), x(position_velocity, init),
+                        p(position_velocity_p, init));
         }
 
         void predict(const T dt) override
