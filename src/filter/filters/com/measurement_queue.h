@@ -18,28 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/measurement.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <cstddef>
-#include <optional>
-#include <vector>
+#include <deque>
 
 namespace ns::filter::filters::com
 {
 template <std::size_t N, typename T>
 class MeasurementQueue final
 {
-        std::size_t size_;
-        T reset_dt_;
-        T angle_estimation_variance_;
-        std::optional<T> last_time_;
-        T init_time_;
-        numerical::Vector<2 * N, T> init_position_velocity_;
-        numerical::Matrix<2 * N, 2 * N, T> init_position_velocity_p_;
-        std::vector<Measurements<N, T>> measurements_;
+        struct Init final
+        {
+                numerical::Vector<2 * N, T> position_velocity;
+                numerical::Matrix<2 * N, 2 * N, T> position_velocity_p;
+        };
+
+        const std::size_t size_;
+        const T reset_dt_;
+        const T angle_estimation_variance_;
+
+        std::deque<Init> inits_;
+        std::deque<Measurements<N, T>> measurements_;
 
 public:
         MeasurementQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
@@ -47,6 +51,10 @@ public:
                   reset_dt_(reset_dt),
                   angle_estimation_variance_(angle_estimation_variance)
         {
+                if (size_ < 2)
+                {
+                        error("Measurement queue size " + to_string(size_) + " must be greater than or equal to 2");
+                }
         }
 
         void update(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
@@ -56,38 +64,31 @@ public:
                         return;
                 }
 
-                if (last_time_ && !(m.time - *last_time_ < reset_dt_))
+                if (!measurements_.empty() && !(m.time - measurements_.back().time < reset_dt_))
                 {
-                        last_time_.reset();
+                        inits_.clear();
                         measurements_.clear();
                         return;
                 }
 
-                if (!(estimation.angle_variance_less_than(angle_estimation_variance_)))
+                if (!estimation.angle_variance_less_than(angle_estimation_variance_))
                 {
-                        last_time_.reset();
+                        inits_.clear();
                         measurements_.clear();
                         return;
                 }
 
-                const bool init = !last_time_;
+                inits_.push_back(
+                        {.position_velocity = estimation.position_velocity(),
+                         .position_velocity_p = estimation.position_velocity_p()});
 
-                last_time_ = m.time;
-
-                if (!init)
-                {
-                        measurements_.push_back(m);
-                        return;
-                }
-
-                ASSERT(measurements_.empty());
-                init_time_ = m.time;
-                init_position_velocity_ = estimation.position_velocity();
-                init_position_velocity_p_ = estimation.position_velocity_p();
+                measurements_.push_back(m);
         }
 
         [[nodiscard]] std::size_t empty() const
         {
+                ASSERT(inits_.size() == measurements_.size());
+
                 return measurements_.size() < size_;
         }
 
@@ -95,24 +96,24 @@ public:
         {
                 ASSERT(!empty());
 
-                return init_time_;
+                return measurements_.front().time;
         }
 
         [[nodiscard]] const numerical::Vector<2 * N, T>& init_position_velocity() const
         {
                 ASSERT(!empty());
 
-                return init_position_velocity_;
+                return inits_.front().position_velocity;
         }
 
         [[nodiscard]] const numerical::Matrix<2 * N, 2 * N, T>& init_position_velocity_p() const
         {
                 ASSERT(!empty());
 
-                return init_position_velocity_p_;
+                return inits_.front().position_velocity_p;
         }
 
-        [[nodiscard]] const std::vector<Measurements<N, T>>& measurements() const
+        [[nodiscard]] const std::deque<Measurements<N, T>>& measurements() const
         {
                 ASSERT(!empty());
 
@@ -123,13 +124,22 @@ public:
 template <std::size_t N, typename T, typename Init, typename Update>
 void update_filter(const MeasurementQueue<N, T>& queue, const Init init, const Update update)
 {
-        ASSERT(!queue.empty());
+        if (queue.empty())
+        {
+                error("Measurement queue is empty");
+        }
 
         init();
 
         T last_time = queue.init_time();
-        for (const Measurements<N, T>& m : queue.measurements())
+
+        const auto& measurements = queue.measurements();
+        auto iter = measurements.cbegin();
+        ASSERT(iter != measurements.cend());
+        for (++iter; iter != measurements.cend(); ++iter)
         {
+                const Measurements<N, T>& m = *iter;
+
                 ASSERT(m.position);
                 ASSERT(m.position->variance);
 
