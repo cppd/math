@@ -94,9 +94,9 @@ std::optional<UpdateInfo<2, T>> Acceleration0<T>::update(
                         return {};
                 }
 
-                ASSERT(queue_.measurements().back().time == m.time);
-                update_filter(
-                        queue_,
+                ASSERT(queue_.last_time() == m.time);
+
+                queue_.update_filter(
                         [&]()
                         {
                                 filter_->reset(

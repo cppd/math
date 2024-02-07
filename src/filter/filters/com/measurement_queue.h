@@ -92,11 +92,11 @@ public:
                 return measurements_.size() < size_;
         }
 
-        [[nodiscard]] T init_time() const
+        [[nodiscard]] T last_time() const
         {
                 ASSERT(!empty());
 
-                return measurements_.front().time;
+                return measurements_.back().time;
         }
 
         [[nodiscard]] const numerical::Vector<2 * N, T>& init_position_velocity() const
@@ -113,42 +113,37 @@ public:
                 return inits_.front().position_velocity_p;
         }
 
-        [[nodiscard]] const std::deque<Measurements<N, T>>& measurements() const
+        template <typename Init, typename Update>
+        void update_filter(const Init init, const Update update) const
         {
-                ASSERT(!empty());
+                if (empty())
+                {
+                        error("Measurement queue is empty");
+                }
 
-                return measurements_;
+                init();
+
+                auto iter = measurements_.cbegin();
+                ASSERT(iter != measurements_.cend());
+
+                T last_time = iter->time;
+
+                for (++iter; iter != measurements_.cend(); ++iter)
+                {
+                        const Measurements<N, T>& m = *iter;
+
+                        ASSERT(m.position);
+                        ASSERT(m.position->variance);
+
+                        const T dt = m.time - last_time;
+                        last_time = m.time;
+
+                        const Measurement<N, T> position = {
+                                .value = m.position->value,
+                                .variance = *m.position->variance};
+
+                        update(position, m, dt);
+                }
         }
 };
-
-template <std::size_t N, typename T, typename Init, typename Update>
-void update_filter(const MeasurementQueue<N, T>& queue, const Init init, const Update update)
-{
-        if (queue.empty())
-        {
-                error("Measurement queue is empty");
-        }
-
-        init();
-
-        T last_time = queue.init_time();
-
-        const auto& measurements = queue.measurements();
-        auto iter = measurements.cbegin();
-        ASSERT(iter != measurements.cend());
-        for (++iter; iter != measurements.cend(); ++iter)
-        {
-                const Measurements<N, T>& m = *iter;
-
-                ASSERT(m.position);
-                ASSERT(m.position->variance);
-
-                const T dt = m.time - last_time;
-                last_time = m.time;
-
-                const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
-
-                update(position, m, dt);
-        }
-}
 }

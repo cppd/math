@@ -92,10 +92,9 @@ void Direction21<T>::reset(const Measurements<2, T>& m)
                 return;
         }
 
-        ASSERT(queue_.measurements().back().time == m.time);
+        ASSERT(queue_.last_time() == m.time);
 
-        update_filter(
-                queue_,
+        queue_.update_filter(
                 [&]()
                 {
                         filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
