@@ -34,14 +34,15 @@ class PositionEstimation final : public Estimation<N, T>
         const position::Position2<N, T>* const position_;
         std::optional<numerical::Vector<N, T>> angle_variance_;
 
+        [[nodiscard]] bool angle_variance_less_than(T variance) const override;
+
+        [[nodiscard]] numerical::Vector<N, T> velocity() const override;
+        [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override;
+        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
+
 public:
         explicit PositionEstimation(const position::Position2<N, T>* position);
 
         void update(const Measurements<N, T>& m);
-
-        [[nodiscard]] bool angle_variance_less_than(T variance) const override;
-
-        [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override;
-        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
 };
 }

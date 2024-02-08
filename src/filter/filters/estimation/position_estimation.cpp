@@ -98,6 +98,12 @@ bool PositionEstimation<N, T>::angle_variance_less_than(const T variance) const
 }
 
 template <std::size_t N, typename T>
+numerical::Vector<N, T> PositionEstimation<N, T>::velocity() const
+{
+        return position_->velocity();
+}
+
+template <std::size_t N, typename T>
 numerical::Vector<2 * N, T> PositionEstimation<N, T>::position_velocity() const
 {
         return position_->position_velocity();
