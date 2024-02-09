@@ -51,17 +51,6 @@ Speed1<N, T>::Speed1(
 }
 
 template <std::size_t N, typename T>
-void Speed1<N, T>::save(const TrueData<N, T>& true_data)
-{
-        if (!nees_)
-        {
-                nees_.emplace();
-        }
-        nees_->position.add(true_data.position - filter_->position(), filter_->position_p());
-        nees_->speed.add(true_data.speed - filter_->speed(), filter_->speed_p());
-}
-
-template <std::size_t N, typename T>
 void Speed1<N, T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
@@ -147,7 +136,7 @@ std::optional<UpdateInfo<N, T>> Speed1<N, T>::update(const Measurements<N, T>& m
 
         last_time_ = m.time;
 
-        save(m.true_data);
+        update_nees(*filter_, m.true_data, nees_);
 
         return {
                 {.position = filter_->position(),

@@ -52,8 +52,6 @@ class Speed1 final : public Filter<N, T>
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
 
-        void save(const TrueData<N, T>& true_data);
-
         void check_time(T time) const;
 
         void reset(const Measurements<N, T>& m);

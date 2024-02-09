@@ -24,6 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
+template <typename Filter, typename Nees, std::size_t N, typename T>
+void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::optional<Nees>& nees)
+{
+        if (!nees)
+        {
+                nees.emplace();
+        }
+        nees->position.add(true_data.position - filter.position(), filter.position_p());
+        nees->speed.add(true_data.speed - filter.speed(), filter.speed_p());
+}
+
 template <typename Filter, std::size_t N, typename T>
 void update_position(
         Filter* const filter,
