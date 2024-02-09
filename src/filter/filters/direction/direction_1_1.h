@@ -56,8 +56,6 @@ class Direction11 final : public Filter<2, T>
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
 
-        void save(const TrueData<2, T>& true_data);
-
         void check_time(T time) const;
 
         void reset(const Measurements<2, T>& m);
