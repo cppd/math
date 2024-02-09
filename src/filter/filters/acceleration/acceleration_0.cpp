@@ -57,19 +57,6 @@ Acceleration0<T>::Acceleration0(
 }
 
 template <typename T>
-void Acceleration0<T>::save(const TrueData<2, T>& true_data)
-{
-        if (!nees_)
-        {
-                nees_.emplace();
-        }
-        nees_->position.add(true_data.position - filter_->position(), filter_->position_p());
-        nees_->speed.add(true_data.speed - filter_->speed(), filter_->speed_p());
-        nees_->angle.add(normalize_angle(true_data.angle - filter_->angle()), filter_->angle_p());
-        nees_->angle_r.add(normalize_angle(true_data.angle_r - filter_->angle_r()), filter_->angle_r_p());
-}
-
-template <typename T>
 void Acceleration0<T>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
@@ -140,7 +127,7 @@ std::optional<UpdateInfo<2, T>> Acceleration0<T>::update(
 
         last_time_ = m.time;
 
-        save(m.true_data);
+        update_nees(*filter_, m.true_data, nees_);
 
         return {
                 {.position = filter_->position(),

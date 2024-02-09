@@ -55,8 +55,6 @@ class AccelerationEkf final : public Filter<2, T>
         std::optional<Nees> nees_;
         std::optional<T> last_time_;
 
-        void save(const TrueData<2, T>& true_data);
-
         void check_time(T time) const;
 
 public:
