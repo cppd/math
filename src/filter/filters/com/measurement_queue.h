@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/filter/filters/estimation.h>
@@ -34,6 +35,7 @@ class MeasurementQueue final
 {
         struct Init final
         {
+                numerical::Vector<N, T> direction;
                 numerical::Vector<2 * N, T> position_velocity;
                 numerical::Matrix<2 * N, 2 * N, T> position_velocity_p;
         };
@@ -41,9 +43,16 @@ class MeasurementQueue final
         const std::size_t size_;
         const T reset_dt_;
         const T angle_estimation_variance_;
+        const T min_cosine_{std::acos(degrees_to_radians(T{40}))};
 
         std::deque<Init> inits_;
         std::deque<Measurements<N, T>> measurements_;
+
+        void clear()
+        {
+                inits_.clear();
+                measurements_.clear();
+        }
 
 public:
         MeasurementQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
@@ -66,20 +75,37 @@ public:
 
                 if (!measurements_.empty() && !(m.time - measurements_.back().time < reset_dt_))
                 {
-                        inits_.clear();
-                        measurements_.clear();
+                        clear();
                         return;
                 }
 
                 if (!estimation.angle_variance_less_than(angle_estimation_variance_))
                 {
-                        inits_.clear();
-                        measurements_.clear();
+                        clear();
                         return;
                 }
 
+                const numerical::Vector<N, T> direction = estimation.velocity().normalized();
+
+                if (!inits_.empty())
+                {
+                        if (!(dot(direction, inits_.back().direction) >= min_cosine_))
+                        {
+                                clear();
+                                return;
+                        }
+
+                        auto iter = inits_.begin();
+                        while (iter != inits_.end() && !(dot(direction, iter->direction) >= min_cosine_))
+                        {
+                                iter = inits_.erase(inits_.begin());
+                                measurements_.pop_front();
+                        }
+                }
+
                 inits_.push_back(
-                        {.position_velocity = estimation.position_velocity(),
+                        {.direction = direction,
+                         .position_velocity = estimation.position_velocity(),
                          .position_velocity_p = estimation.position_velocity_p()});
 
                 measurements_.push_back(m);
