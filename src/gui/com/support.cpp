@@ -281,21 +281,24 @@ std::array<double, 2> widget_size(const QWidget* const widget)
         const double width_mm = widget->widthMM();
         const double height_mm = widget->heightMM();
 
+        const double width_pixels = widget->width();
+        const double height_pixels = widget->height();
         const double logical_ppi = widget->logicalDpiX();
-        const double width = pixels_to_millimeters<double>(widget->width(), logical_ppi);
-        const double height = pixels_to_millimeters<double>(widget->height(), logical_ppi);
+        const double width = pixels_to_millimeters(width_pixels, logical_ppi);
+        const double height = pixels_to_millimeters(height_pixels, logical_ppi);
         const double rel_w = std::abs(width_mm - width) / std::max(std::abs(width_mm), std::abs(width));
         const double rel_h = std::abs(height_mm - height) / std::max(std::abs(height_mm), std::abs(height));
+
         if (!(rel_w < 0.01 && rel_h < 0.01))
         {
                 std::ostringstream oss;
-                oss << "Error finding widget size:";
-                oss << " size mm = (" << width_mm << ", " << height_mm << ");";
-                oss << " size = (" << width << ", " << height << ");";
-                oss << " size pixels = (" << widget->width() << ", " << widget->height() << ");";
-                oss << " logical ppi = " << logical_ppi << ";";
-                oss << " device pixel ratio = " << widget->devicePixelRatioF() << ";";
-                oss << " ppi = " << logical_ppi * widget->devicePixelRatioF();
+                oss << "Error finding widget size";
+                oss << ": size mm = (" << width_mm << ", " << height_mm << ")";
+                oss << "; size = (" << width << ", " << height << ")";
+                oss << "; size pixels = (" << width_pixels << ", " << height_pixels << ")";
+                oss << "; logical ppi = " << logical_ppi;
+                oss << "; device pixel ratio = " << widget->devicePixelRatioF();
+                oss << "; ppi = " << logical_ppi * widget->devicePixelRatioF();
                 LOG(oss.str());
         }
 
