@@ -40,7 +40,7 @@ class Position0 final : public FilterPosition<N, T>
 
         core::NormalizedSquared<N, T> nees_position_;
         core::NormalizedSquared<1, T> nees_speed_;
-        core::NormalizedSquared<1, T> nis_;
+        core::NormalizedSquared<N, T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
