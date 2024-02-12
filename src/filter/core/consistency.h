@@ -52,11 +52,14 @@ class NormalizedSquared final
 
         [[nodiscard]] static bool check(const T average)
         {
-                return average >= (max() / 2) && average <= (2 * max());
+                static constexpr T MIN = static_cast<T>(N) / 2;
+                static constexpr T MAX = static_cast<T>(N) * 2;
+
+                return average >= MIN && average <= MAX;
         }
 
         long double sum_ = 0;
-        std::size_t count_ = 0;
+        unsigned long long count_ = 0;
 
 public:
         void add(const numerical::Vector<N, T>& difference, const numerical::Matrix<N, N, T>& covariance)
@@ -89,11 +92,6 @@ public:
                         error("No data to compute normalized squared average");
                 }
                 return sum_ / count_;
-        }
-
-        [[nodiscard]] static constexpr T max()
-        {
-                return N;
         }
 
         [[nodiscard]] std::string check_string() const
