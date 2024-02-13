@@ -37,6 +37,9 @@ namespace ns::filter::filters::speed
 {
 namespace
 {
+constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool LIKELIHOOD{false};
+
 template <std::size_t N, typename T>
 numerical::Vector<3 * N, T> x(const numerical::Vector<2 * N, T>& position_velocity, const Init<T>& init)
 {
@@ -238,9 +241,6 @@ numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const n
 template <std::size_t N, typename T>
 class Filter final : public Filter2<N, T>
 {
-        static constexpr bool NORMALIZED_INNOVATION{false};
-        static constexpr bool LIKELIHOOD{false};
-
         const T sigma_points_alpha_;
         const T position_variance_;
         std::optional<core::Ukf<3 * N, T, core::SigmaPoints<3 * N, T>>> filter_;

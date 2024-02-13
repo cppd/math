@@ -38,6 +38,9 @@ namespace ns::filter::filters::direction
 {
 namespace
 {
+constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool LIKELIHOOD{false};
+
 template <typename T>
 numerical::Vector<5, T> x(const numerical::Vector<4, T>& position_velocity, const Init<T>& init)
 {
@@ -356,9 +359,6 @@ numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const n
 template <typename T>
 class Filter final : public Filter10<T>
 {
-        static constexpr bool NORMALIZED_INNOVATION{false};
-        static constexpr bool LIKELIHOOD{false};
-
         const T sigma_points_alpha_;
         const T position_variance_;
         const T angle_variance_;

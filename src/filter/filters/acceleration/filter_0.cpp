@@ -38,6 +38,9 @@ namespace ns::filter::filters::acceleration
 {
 namespace
 {
+constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool LIKELIHOOD{false};
+
 template <typename T>
 numerical::Vector<8, T> x(const numerical::Vector<4, T>& position_velocity, const Init<T>& init)
 {
@@ -744,9 +747,6 @@ numerical::Vector<3, T> speed_acceleration_residual(const numerical::Vector<3, T
 template <typename T>
 class Filter final : public Filter0<T>
 {
-        static constexpr bool NORMALIZED_INNOVATION{false};
-        static constexpr bool LIKELIHOOD{false};
-
         const T sigma_points_alpha_;
         const T position_variance_;
         const T angle_variance_;

@@ -36,6 +36,9 @@ namespace ns::filter::filters::position
 {
 namespace
 {
+constexpr bool NORMALIZED_INNOVATION{true};
+constexpr bool LIKELIHOOD{false};
+
 template <std::size_t N, typename T>
 numerical::Vector<3 * N, T> init_x(const numerical::Vector<N, T>& position, const Init<T>& init)
 {
@@ -160,8 +163,6 @@ struct PositionResidual final
 template <std::size_t N, typename T>
 class FilterImpl final : public Filter2<N, T>
 {
-        static constexpr bool LIKELIHOOD{false};
-
         const std::optional<T> theta_;
         const T process_variance_;
         std::optional<core::Ekf<3 * N, T>> filter_;
@@ -205,7 +206,7 @@ class FilterImpl final : public Filter2<N, T>
 
                 const core::UpdateInfo update = filter_->update(
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
-                        /*normalized_innovation=*/true, LIKELIHOOD);
+                        NORMALIZED_INNOVATION, LIKELIHOOD);
 
                 ASSERT(update.normalized_innovation_squared);
                 return {.residual = update.residual,
