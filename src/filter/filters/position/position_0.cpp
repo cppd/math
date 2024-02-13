@@ -113,7 +113,8 @@ std::optional<UpdateInfo<N, T>> Position0<N, T>::update(const Measurements<N, T>
         add_nees_checks(m.true_data);
         if (update_dt <= linear_dt_)
         {
-                nis_.add(update.normalized_innovation_squared);
+                ASSERT(update.normalized_innovation_squared);
+                nis_.add(*update.normalized_innovation_squared);
         }
 
         return {

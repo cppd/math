@@ -160,7 +160,7 @@ class FilterImpl final : public Filter0<N, T>
                         q<N, T>(dt, process_variance_));
         }
 
-        [[nodiscard]] Filter0<N, T>::Update update(
+        [[nodiscard]] core::UpdateInfo<N, T> update(
                 const numerical::Vector<N, T>& position,
                 const numerical::Vector<N, T>& variance,
                 const std::optional<T> gate) override
@@ -175,10 +175,8 @@ class FilterImpl final : public Filter0<N, T>
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
 
-                ASSERT(update.normalized_innovation_squared);
-                return {.residual = update.residual,
-                        .gate = update.gate,
-                        .normalized_innovation_squared = *update.normalized_innovation_squared};
+                ASSERT(update.normalized_innovation_squared.has_value() == NORMALIZED_INNOVATION);
+                return update;
         }
 
         [[nodiscard]] numerical::Vector<N, T> position() const override

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/filter/core/update_info.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -36,14 +37,7 @@ public:
 
         virtual void predict(T dt) = 0;
 
-        struct Update final
-        {
-                numerical::Vector<N, T> residual;
-                bool gate;
-                T normalized_innovation_squared;
-        };
-
-        [[nodiscard]] virtual Update update(
+        [[nodiscard]] virtual core::UpdateInfo<N, T> update(
                 const numerical::Vector<N, T>& position,
                 const numerical::Vector<N, T>& variance,
                 std::optional<T> gate) = 0;
