@@ -38,7 +38,7 @@ struct UpdateInfo final
 };
 
 template <std::size_t N, typename T>
-UpdateInfo<N, T> make_update_info(const numerical::Vector<N, T>& residual)
+[[nodiscard]] UpdateInfo<N, T> make_update_info(const numerical::Vector<N, T>& residual)
 {
         UpdateInfo<N, T> res;
         res.residual = residual;
@@ -46,7 +46,7 @@ UpdateInfo<N, T> make_update_info(const numerical::Vector<N, T>& residual)
 }
 
 template <std::size_t N, typename T>
-UpdateInfo<N, T> make_update_info(
+[[nodiscard]] UpdateInfo<N, T> make_update_info(
         const numerical::Vector<N, T>& residual,
         const numerical::Matrix<N, N, T>& s,
         const numerical::Matrix<N, N, T>& s_inversed,

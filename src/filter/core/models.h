@@ -46,7 +46,7 @@ namespace ns::filter::core
 // of the order of sqrt(Q(2, 2)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr numerical::Matrix<N, N, T> continuous_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> continuous_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> spectral_density)
 {
@@ -67,7 +67,7 @@ constexpr numerical::Matrix<N, N, T> continuous_white_noise(
 // of the order of sqrt(Q(3, 3)) = sqrt(spectral_density * T).
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr numerical::Matrix<N, N, T> continuous_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> continuous_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> spectral_density)
 {
@@ -92,7 +92,7 @@ constexpr numerical::Matrix<N, N, T> continuous_white_noise(
 // A practical range is a/2 <= sigma <= a.
 template <std::size_t N, typename T>
         requires (N == 2)
-constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> variance)
 {
@@ -115,7 +115,7 @@ constexpr numerical::Matrix<N, N, T> discrete_white_noise(
 // A practical range is d/2 <= sigma <= d.
 template <std::size_t N, typename T>
         requires (N == 3)
-constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> variance)
 {
