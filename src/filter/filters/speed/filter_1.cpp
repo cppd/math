@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
+#include <src/filter/core/update_info.h>
 #include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
@@ -245,17 +246,17 @@ class Filter final : public Filter1<N, T>
                         q<N, T>(dt, position_variance_));
         }
 
-        void update_position(const Measurement<N, T>& position, const std::optional<T> gate) override
+        core::UpdateInfo<N, T> update_position(const Measurement<N, T>& position, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_variance(position.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_h<N, T>, position_r(position.variance), position_z(position.value), add_x<2 * N, T>,
                         position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_position_speed(
+        core::UpdateInfo<N + 1, T> update_position_speed(
                 const Measurement<N, T>& position,
                 const Measurement<1, T>& speed,
                 const std::optional<T> gate) override
@@ -264,18 +265,18 @@ class Filter final : public Filter1<N, T>
                 ASSERT(com::check_variance(position.variance));
                 ASSERT(com::check_variance(speed.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_speed_h<N, T>, position_speed_r(position.variance, speed.variance),
                         position_speed_z(position.value, speed.value), add_x<2 * N, T>,
                         position_speed_residual<N + 1, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
+        core::UpdateInfo<1, T> update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_variance(speed.variance));
 
-                filter_->update(
+                return filter_->update(
                         speed_h<N, T>, speed_r(speed.variance), speed_z(speed.value), add_x<2 * N, T>,
                         speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
