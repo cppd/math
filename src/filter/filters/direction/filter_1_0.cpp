@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
+#include <src/filter/core/update_info.h>
 #include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
@@ -404,17 +405,17 @@ class Filter final : public Filter10<T>
                         q(dt, position_variance_, angle_variance_));
         }
 
-        void update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
+        core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_variance(position.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_h<T>, position_r(position.variance), position.value, add_x<T>, position_residual<T>,
                         gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_position_speed(
+        core::UpdateInfo<3, T> update_position_speed(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const std::optional<T> gate) override
@@ -423,13 +424,13 @@ class Filter final : public Filter10<T>
                 ASSERT(com::check_variance(position.variance));
                 ASSERT(com::check_variance(speed.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_speed_h<T>, position_speed_r(position.variance, speed.variance),
                         numerical::Vector<3, T>(position.value[0], position.value[1], speed.value[0]), add_x<T>,
                         position_speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_position_speed_direction(
+        core::UpdateInfo<4, T> update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
@@ -440,7 +441,7 @@ class Filter final : public Filter10<T>
                 ASSERT(com::check_variance(speed.variance));
                 ASSERT(com::check_variance(direction.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_speed_direction_h<T>,
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
                         numerical::Vector<4, T>(
@@ -448,7 +449,7 @@ class Filter final : public Filter10<T>
                         add_x<T>, position_speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_position_direction(
+        core::UpdateInfo<3, T> update_position_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,
                 const std::optional<T> gate) override
@@ -457,13 +458,13 @@ class Filter final : public Filter10<T>
                 ASSERT(com::check_variance(position.variance));
                 ASSERT(com::check_variance(direction.variance));
 
-                filter_->update(
+                return filter_->update(
                         position_direction_h<T>, position_direction_r(position.variance, direction.variance),
                         numerical::Vector<3, T>(position.value[0], position.value[1], direction.value[0]), add_x<T>,
                         position_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_speed_direction(
+        core::UpdateInfo<2, T> update_speed_direction(
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
                 const std::optional<T> gate) override
@@ -472,28 +473,29 @@ class Filter final : public Filter10<T>
                 ASSERT(com::check_variance(speed.variance));
                 ASSERT(com::check_variance(direction.variance));
 
-                filter_->update(
+                return filter_->update(
                         speed_direction_h<T>, speed_direction_r(speed.variance, direction.variance),
                         numerical::Vector<2, T>(speed.value[0], direction.value[0]), add_x<T>,
                         speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_direction(const Measurement<1, T>& direction, const std::optional<T> gate) override
+        core::UpdateInfo<1, T> update_direction(const Measurement<1, T>& direction, const std::optional<T> gate)
+                override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_variance(direction.variance));
 
-                filter_->update(
+                return filter_->update(
                         direction_h<T>, direction_r(direction.variance), numerical::Vector<1, T>(direction.value),
                         add_x<T>, direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
+        core::UpdateInfo<1, T> update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_variance(speed.variance));
 
-                filter_->update(
+                return filter_->update(
                         speed_h<T>, speed_r(speed.variance), numerical::Vector<1, T>(speed.value), add_x<T>,
                         speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
