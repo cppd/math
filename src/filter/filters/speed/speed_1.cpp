@@ -82,7 +82,7 @@ void Speed1<N, T>::reset(const Measurements<N, T>& m)
                 },
                 [&](const Measurement<N, T>& position, const Measurements<N, T>& measurements, const T dt)
                 {
-                        update_position(filter_.get(), position, measurements.speed, gate_, dt);
+                        update_position(filter_.get(), position, measurements.speed, gate_, dt, nis_);
                 });
 
         last_time_ = m.time;
@@ -122,13 +122,13 @@ std::optional<UpdateInfo<N, T>> Speed1<N, T>::update(const Measurements<N, T>& m
                 }
 
                 const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
-                update_position(filter_.get(), position, m.speed, gate_, dt);
+                update_position(filter_.get(), position, m.speed, gate_, dt, nis_);
 
                 last_position_time_ = m.time;
         }
         else
         {
-                if (!update_non_position(filter_.get(), m.speed, gate_, dt))
+                if (!update_non_position(filter_.get(), m.speed, gate_, dt, nis_))
                 {
                         return {};
                 }
@@ -149,16 +149,23 @@ std::optional<UpdateInfo<N, T>> Speed1<N, T>::update(const Measurements<N, T>& m
 template <std::size_t N, typename T>
 std::string Speed1<N, T>::consistency_string() const
 {
-        if (!nees_)
-        {
-                return {};
-        }
-
         std::string s;
 
-        s += "NEES position; " + nees_->position.check_string();
-        s += '\n';
-        s += "NEES speed; " + nees_->speed.check_string();
+        if (nees_)
+        {
+                s += "NEES position; " + nees_->position.check_string();
+                s += '\n';
+                s += "NEES speed; " + nees_->speed.check_string();
+        }
+
+        if (nis_)
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += "NIS position; " + nis_->position.check_string();
+        }
 
         return s;
 }

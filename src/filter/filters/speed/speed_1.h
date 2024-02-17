@@ -49,6 +49,13 @@ class Speed1 final : public Filter<N, T>
 
         std::optional<Nees> nees_;
 
+        struct Nis final
+        {
+                core::NormalizedSquared<N, T> position;
+        };
+
+        std::optional<Nis> nis_;
+
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
 
