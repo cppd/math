@@ -305,6 +305,37 @@ public:
                 return res;
         }
 
+        template <std::size_t POSITION, std::size_t COUNT>
+        [[nodiscard]] constexpr Vector<COUNT, T> segment() const
+        {
+                static_assert(POSITION < N);
+                static_assert(COUNT > 0 && COUNT <= N);
+                static_assert(POSITION + COUNT <= N);
+
+                Vector<COUNT, T> res;
+                for (std::size_t i = 0, j = POSITION; i < COUNT; ++i, ++j)
+                {
+                        res[i] = data_[j];
+                }
+                return res;
+        }
+
+        template <std::size_t M>
+        [[nodiscard]] constexpr Vector<M, T> head() const
+        {
+                static_assert(M <= N);
+
+                return segment<0, M>();
+        }
+
+        template <std::size_t M>
+        [[nodiscard]] constexpr Vector<M, T> tail() const
+        {
+                static_assert(M <= N);
+
+                return segment<N - M, M>();
+        }
+
         [[nodiscard]] friend bool is_finite(const Vector<N, T>& v)
                 requires (std::is_floating_point_v<T>)
         {
