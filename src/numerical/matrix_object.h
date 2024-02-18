@@ -209,7 +209,7 @@ public:
         template <std::size_t R, std::size_t C>
         [[nodiscard]] constexpr Matrix<R, C, T> top_left() const
         {
-                static_assert(R > 0 && C > 0 && R <= ROWS && C <= COLUMNS && (R < ROWS || C < COLUMNS));
+                static_assert(R > 0 && C > 0 && R <= ROWS && C <= COLUMNS);
 
                 Matrix<R, C, T> res;
                 for (std::size_t r = 0; r < R; ++r)
