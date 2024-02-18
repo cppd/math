@@ -92,7 +92,7 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
                         {
                                 update_position(
                                         filter_.get(), position, measurements.acceleration, measurements.direction,
-                                        measurements.speed, gate_, dt);
+                                        measurements.speed, gate_, dt, nis_);
                         });
 
                 last_time_ = m.time;
@@ -110,7 +110,7 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                update_position(filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt);
+                update_position(filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt, nis_);
 
                 LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
                     + "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())))
@@ -119,7 +119,7 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
         }
         else
         {
-                if (!update_non_position(filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt))
+                if (!update_non_position(filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, nis_))
                 {
                         return {};
                 }
@@ -140,20 +140,27 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
 template <typename T>
 std::string AccelerationEkf<T>::consistency_string() const
 {
-        if (!nees_)
-        {
-                return {};
-        }
-
         std::string s;
 
-        s += "NEES position; " + nees_->position.check_string();
-        s += '\n';
-        s += "NEES speed; " + nees_->speed.check_string();
-        s += '\n';
-        s += "NEES angle; " + nees_->angle.check_string();
-        s += '\n';
-        s += "NEES angle r; " + nees_->angle_r.check_string();
+        if (nees_)
+        {
+                s += "NEES position; " + nees_->position.check_string();
+                s += '\n';
+                s += "NEES speed; " + nees_->speed.check_string();
+                s += '\n';
+                s += "NEES angle; " + nees_->angle.check_string();
+                s += '\n';
+                s += "NEES angle r; " + nees_->angle_r.check_string();
+        }
+
+        if (nis_)
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += "NIS position; " + nis_->position.check_string();
+        }
 
         return s;
 }

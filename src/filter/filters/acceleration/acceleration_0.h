@@ -53,6 +53,14 @@ class Acceleration0 final : public Filter<2, T>
         };
 
         std::optional<Nees> nees_;
+
+        struct Nis final
+        {
+                core::NormalizedSquared<2, T> position;
+        };
+
+        std::optional<Nis> nis_;
+
         std::optional<T> last_time_;
 
         void check_time(T time) const;
