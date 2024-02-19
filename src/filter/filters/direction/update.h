@@ -71,30 +71,26 @@ void update_position(
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
                         update_nis_head_position(update);
+                        return;
                 }
-                else
-                {
-                        filter->predict(dt);
-                        const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
-                        update_nis_head_position(update);
-                }
+
+                filter->predict(dt);
+                const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
+                update_nis_head_position(update);
+                return;
         }
-        else
+
+        if (direction)
         {
-                if (direction)
-                {
-                        filter->predict(dt);
-                        const core::UpdateInfo<3, T> update =
-                                filter->update_position_direction(position, *direction, gate);
-                        update_nis_head_position(update);
-                }
-                else
-                {
-                        filter->predict(dt);
-                        const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
-                        update_nis_head_position(update);
-                }
+                filter->predict(dt);
+                const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
+                update_nis_head_position(update);
+                return;
         }
+
+        filter->predict(dt);
+        const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
+        update_nis_head_position(update);
 }
 
 template <typename Filter, typename Nis, typename T>
@@ -112,25 +108,21 @@ template <typename Filter, typename Nis, typename T>
                 {
                         filter->predict(dt);
                         filter->update_speed_direction(*speed, *direction, gate);
+                        return true;
                 }
-                else
-                {
-                        filter->predict(dt);
-                        filter->update_speed(*speed, gate);
-                }
+
+                filter->predict(dt);
+                filter->update_speed(*speed, gate);
+                return true;
         }
-        else
+
+        if (direction)
         {
-                if (direction)
-                {
-                        filter->predict(dt);
-                        filter->update_direction(*direction, gate);
-                }
-                else
-                {
-                        return false;
-                }
+                filter->predict(dt);
+                filter->update_direction(*direction, gate);
+                return true;
         }
-        return true;
+
+        return false;
 }
 }
