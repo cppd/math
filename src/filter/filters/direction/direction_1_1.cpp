@@ -89,7 +89,8 @@ void Direction11<T>::reset(const Measurements<2, T>& m)
                 },
                 [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
                 {
-                        update_position(filter_.get(), position, measurements.direction, measurements.speed, gate_, dt);
+                        update_position(
+                                filter_.get(), position, measurements.direction, measurements.speed, gate_, dt, nis_);
                 });
 
         last_time_ = m.time;
@@ -131,7 +132,7 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
                 const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                update_position(filter_.get(), position, direction, m.speed, gate_, dt);
+                update_position(filter_.get(), position, direction, m.speed, gate_, dt, nis_);
 
                 last_position_time_ = m.time;
 
@@ -143,7 +144,7 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
         else
         {
                 const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                if (!update_non_position(filter_.get(), direction, m.speed, gate_, dt))
+                if (!update_non_position(filter_.get(), direction, m.speed, gate_, dt, nis_))
                 {
                         return {};
                 }
@@ -164,18 +165,25 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
 template <typename T>
 std::string Direction11<T>::consistency_string() const
 {
-        if (!nees_)
-        {
-                return {};
-        }
-
         std::string s;
 
-        s += "NEES position; " + nees_->position.check_string();
-        s += '\n';
-        s += "NEES speed; " + nees_->speed.check_string();
-        s += '\n';
-        s += "NEES angle; " + nees_->angle.check_string();
+        if (nees_)
+        {
+                s += "NEES position; " + nees_->position.check_string();
+                s += '\n';
+                s += "NEES speed; " + nees_->speed.check_string();
+                s += '\n';
+                s += "NEES angle; " + nees_->angle.check_string();
+        }
+
+        if (nis_)
+        {
+                if (!s.empty())
+                {
+                        s += '\n';
+                }
+                s += "NIS position; " + nis_->position.check_string();
+        }
 
         return s;
 }
