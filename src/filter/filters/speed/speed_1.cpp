@@ -165,6 +165,8 @@ std::string Speed1<N, T>::consistency_string() const
                         s += '\n';
                 }
                 s += "NIS position; " + nis_->position.check_string();
+                s += '\n';
+                s += "NIS position speed; " + nis_->position_speed.check_string();
         }
 
         return s;

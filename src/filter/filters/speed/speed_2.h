@@ -54,6 +54,7 @@ class Speed2 final : public Filter<N, T>
         struct Nis final
         {
                 core::NormalizedSquared<N, T> position;
+                core::NormalizedSquared<N + 1, T> position_speed;
         };
 
         std::optional<Nis> nis_;
