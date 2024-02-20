@@ -97,8 +97,8 @@ public:
         [[nodiscard]] std::string check_string() const
         {
                 const T a = average();
-                return "average = " + to_string(a) + "; " + to_string(N) + " degree" + (N > 1 ? "s" : "")
-                       + " of freedom; check " + (check(a) ? "passed" : "failed");
+                return to_string(a / N) + "; count = " + to_string(count_) + "; average = " + to_string(a)
+                       + "; dof = " + to_string(N) + "; check " + (check(a) ? "passed" : "failed");
         }
 };
 }
