@@ -160,6 +160,8 @@ std::string AccelerationEkf<T>::consistency_string() const
                         s += '\n';
                 }
                 s += "NIS position; " + nis_->position.check_string();
+                s += '\n';
+                s += "NIS position SDA; " + nis_->position_speed_direction_acceleration.check_string();
         }
 
         return s;

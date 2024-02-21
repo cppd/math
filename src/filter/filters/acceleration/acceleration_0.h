@@ -56,6 +56,7 @@ class Acceleration0 final : public Filter<2, T>
 
         struct Nis final
         {
+                core::NormalizedSquared<6, T> position_speed_direction_acceleration;
                 core::NormalizedSquared<2, T> position;
         };
 
