@@ -115,12 +115,15 @@ void write_log(const Filters<T>& filters)
                 LOG(add_line_beginning(s, "Variance" + separator));
         }
 
+        LOG("---");
         log(filters.positions_0);
         log(filters.positions_1);
         log(filters.positions_2);
-
+        LOG("---");
         log(filters.accelerations);
+        LOG("---");
         log(filters.directions);
+        LOG("---");
         log(filters.speeds);
 }
 
