@@ -54,7 +54,17 @@ void update_position(
                 nis.emplace();
         }
 
-        const auto update_nis_head_position = [&](const auto& update)
+        const auto update_nis_position_speed_direction = [&](const auto& update)
+        {
+                if (!update.gate)
+                {
+                        ASSERT(update.s);
+                        nis->position.add(update.residual.template head<2>(), update.s->template top_left<2, 2>());
+                        nis->position_speed_direction.add(update.residual, *update.s);
+                }
+        };
+
+        const auto update_nis_position = [&](const auto& update)
         {
                 if (!update.gate)
                 {
@@ -70,13 +80,13 @@ void update_position(
                         filter->predict(dt);
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
-                        update_nis_head_position(update);
+                        update_nis_position_speed_direction(update);
                         return;
                 }
 
                 filter->predict(dt);
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
-                update_nis_head_position(update);
+                update_nis_position(update);
                 return;
         }
 
@@ -84,13 +94,13 @@ void update_position(
         {
                 filter->predict(dt);
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
-                update_nis_head_position(update);
+                update_nis_position(update);
                 return;
         }
 
         filter->predict(dt);
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
-        update_nis_head_position(update);
+        update_nis_position(update);
 }
 
 template <typename Filter, typename Nis, typename T>

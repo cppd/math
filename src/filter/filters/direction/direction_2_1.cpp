@@ -183,6 +183,8 @@ std::string Direction21<T>::consistency_string() const
                         s += '\n';
                 }
                 s += "NIS position; " + nis_->position.check_string();
+                s += '\n';
+                s += "NIS position SD; " + nis_->position_speed_direction.check_string();
         }
 
         return s;

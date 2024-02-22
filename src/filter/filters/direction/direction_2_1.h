@@ -55,6 +55,7 @@ class Direction21 final : public Filter<2, T>
 
         struct Nis final
         {
+                core::NormalizedSquared<4, T> position_speed_direction;
                 core::NormalizedSquared<2, T> position;
         };
 
