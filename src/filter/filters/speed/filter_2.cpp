@@ -38,7 +38,7 @@ namespace ns::filter::filters::speed
 {
 namespace
 {
-constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
 
 template <std::size_t N, typename T>

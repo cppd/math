@@ -41,7 +41,7 @@ namespace
 template <typename T>
 constexpr std::optional<T> THETA{};
 
-constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
 
 template <typename T>

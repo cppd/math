@@ -208,7 +208,6 @@ class FilterImpl final : public Filter2<N, T>
                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
 
-                ASSERT(update.normalized_innovation_squared.has_value() == NORMALIZED_INNOVATION);
                 return update;
         }
 

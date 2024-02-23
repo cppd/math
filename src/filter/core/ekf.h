@@ -195,11 +195,6 @@ public:
                                         residual, matrices->s, matrices->s_inversed, gate, likelihood,
                                         normalized_innovation);
                         }
-                        if (!theta)
-                        {
-                                ASSERT(matrices);
-                                return make_update_info(residual, matrices->s, matrices->s_inversed);
-                        }
                         ASSERT(!matrices);
                         return make_update_info(residual);
                 }();

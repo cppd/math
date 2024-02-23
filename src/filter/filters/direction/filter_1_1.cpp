@@ -39,7 +39,7 @@ namespace ns::filter::filters::direction
 {
 namespace
 {
-constexpr bool NORMALIZED_INNOVATION{false};
+constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
 
 template <typename T>
