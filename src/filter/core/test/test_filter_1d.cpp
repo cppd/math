@@ -420,9 +420,10 @@ void test_impl(
         compare(result_data.back().standard_deviation, expected_deviation, precision);
         compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
 
-        if (!(nees.average() < T{1.35}))
+        const T nees_average = nees.average();
+        if (!(nees_average > T{0.45} && nees_average < T{1.25}))
         {
-                error(nees.check_string());
+                error("NEES; " + nees.check_string());
         }
 
         check_distribution(distribution, expected_distribution);
