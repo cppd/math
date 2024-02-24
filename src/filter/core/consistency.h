@@ -50,16 +50,13 @@ class NormalizedSquared final
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
 
-        [[nodiscard]] static bool check(const T average)
-        {
-                static constexpr T MIN = static_cast<T>(N) / 2;
-                static constexpr T MAX = static_cast<T>(N) * 2;
-
-                return average >= MIN && average <= MAX;
-        }
-
         long double sum_ = 0;
         unsigned long long count_ = 0;
+
+        [[nodiscard]] unsigned long long degrees_of_freedom() const
+        {
+                return count_ * N;
+        }
 
 public:
         void add(const numerical::Vector<N, T>& difference, const numerical::Matrix<N, N, T>& covariance)
@@ -87,18 +84,16 @@ public:
 
         [[nodiscard]] T average() const
         {
-                if (empty())
+                if (!empty())
                 {
-                        error("No data to compute normalized squared average");
+                        return sum_ / degrees_of_freedom();
                 }
-                return sum_ / count_;
+                error("No data to compute normalized squared average");
         }
 
         [[nodiscard]] std::string check_string() const
         {
-                const T a = average();
-                return to_string(a / N) + "; count = " + to_string(count_) + "; average = " + to_string(a)
-                       + "; dof = " + to_string(N) + "; check " + (check(a) ? "passed" : "failed");
+                return to_string(average()) + "; DOF = " + to_string(degrees_of_freedom());
         }
 };
 }
