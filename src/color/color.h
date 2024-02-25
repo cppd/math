@@ -51,7 +51,7 @@ class RGB final : public Samples<RGB<T>, 3, T>
                 green = std::max(T{0}, green);
                 blue = std::max(T{0}, blue);
 
-                return numerical::Vector<3, T>(red, green, blue);
+                return {red, green, blue};
         }
 
 public:
