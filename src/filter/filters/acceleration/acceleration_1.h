@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1.h"
 #include "init.h"
+#include "update.h"
 
-#include <src/filter/core/consistency.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
@@ -44,23 +44,8 @@ class Acceleration1 final : public Filter<2, T>
 
         com::MeasurementQueue<2, T> queue_;
 
-        struct Nees final
-        {
-                core::NormalizedSquared<2, T> position;
-                core::NormalizedSquared<1, T> speed;
-                core::NormalizedSquared<1, T> angle;
-                core::NormalizedSquared<1, T> angle_r;
-        };
-
-        std::optional<Nees> nees_;
-
-        struct Nis final
-        {
-                core::NormalizedSquared<6, T> position_speed_direction_acceleration;
-                core::NormalizedSquared<2, T> position;
-        };
-
-        std::optional<Nis> nis_;
+        std::optional<Nees<T>> nees_;
+        std::optional<Nis<T>> nis_;
 
         std::optional<T> last_time_;
 

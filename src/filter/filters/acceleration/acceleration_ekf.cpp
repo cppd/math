@@ -140,31 +140,7 @@ std::optional<UpdateInfo<2, T>> AccelerationEkf<T>::update(
 template <typename T>
 std::string AccelerationEkf<T>::consistency_string() const
 {
-        std::string s;
-
-        if (nees_)
-        {
-                s += "NEES position; " + nees_->position.check_string();
-                s += '\n';
-                s += "NEES speed; " + nees_->speed.check_string();
-                s += '\n';
-                s += "NEES angle; " + nees_->angle.check_string();
-                s += '\n';
-                s += "NEES angle r; " + nees_->angle_r.check_string();
-        }
-
-        if (nis_)
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += "NIS position; " + nis_->position.check_string();
-                s += '\n';
-                s += "NIS position SDA; " + nis_->position_speed_direction_acceleration.check_string();
-        }
-
-        return s;
+        return make_consistency_string(nees_, nis_);
 }
 
 #define TEMPLATE(T) template class AccelerationEkf<T>;
