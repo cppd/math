@@ -165,29 +165,7 @@ std::optional<UpdateInfo<2, T>> Direction21<T>::update(const Measurements<2, T>&
 template <typename T>
 std::string Direction21<T>::consistency_string() const
 {
-        std::string s;
-
-        if (nees_)
-        {
-                s += "NEES position; " + nees_->position.check_string();
-                s += '\n';
-                s += "NEES speed; " + nees_->speed.check_string();
-                s += '\n';
-                s += "NEES angle; " + nees_->angle.check_string();
-        }
-
-        if (nis_)
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += "NIS position; " + nis_->position.check_string();
-                s += '\n';
-                s += "NIS position SD; " + nis_->position_speed_direction.check_string();
-        }
-
-        return s;
+        return make_consistency_string(nees_, nis_);
 }
 
 #define TEMPLATE(T) template class Direction21<T>;
