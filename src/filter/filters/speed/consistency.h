@@ -70,7 +70,7 @@ void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<N, T>& nis)
         if (!update.gate)
         {
                 ASSERT(update.s);
-                nis.position.add(update.residual.template head<N>(), update.s->template top_left<N, N>());
+                nis.position.add(update.residual, *update.s);
         }
 }
 
