@@ -57,8 +57,8 @@ void update_nees(const Filter& filter, const TrueData<2, T>& true_data, std::opt
         nees->angle.add(normalize_angle(true_data.angle + true_data.angle_r - filter.angle()), filter.angle_p());
 }
 
-template <std::size_t N, typename T>
-void update_nis_position_speed_direction(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
+template <typename T>
+void update_nis_position_speed_direction(const core::UpdateInfo<4, T>& update, Nis<T>& nis)
 {
         if (!update.gate)
         {
@@ -71,6 +71,8 @@ void update_nis_position_speed_direction(const core::UpdateInfo<N, T>& update, N
 template <std::size_t N, typename T>
 void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 {
+        static_assert(N >= 2);
+
         if (!update.gate)
         {
                 ASSERT(update.s);
