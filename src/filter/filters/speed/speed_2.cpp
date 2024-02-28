@@ -152,27 +152,7 @@ std::optional<UpdateInfo<N, T>> Speed2<N, T>::update(const Measurements<N, T>& m
 template <std::size_t N, typename T>
 std::string Speed2<N, T>::consistency_string() const
 {
-        std::string s;
-
-        if (nees_)
-        {
-                s += "NEES position; " + nees_->position.check_string();
-                s += '\n';
-                s += "NEES speed; " + nees_->speed.check_string();
-        }
-
-        if (nis_)
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += "NIS position; " + nis_->position.check_string();
-                s += '\n';
-                s += "NIS position speed; " + nis_->position_speed.check_string();
-        }
-
-        return s;
+        return make_consistency_string(nees_, nis_);
 }
 
 #define TEMPLATE(N, T) template class Speed2<(N), T>;

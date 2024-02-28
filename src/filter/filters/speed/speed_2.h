@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "consistency.h"
 #include "filter_2.h"
 #include "init.h"
 
-#include <src/filter/core/consistency.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
@@ -43,21 +43,8 @@ class Speed2 final : public Filter<N, T>
 
         com::MeasurementQueue<N, T> queue_;
 
-        struct Nees final
-        {
-                core::NormalizedSquared<N, T> position;
-                core::NormalizedSquared<1, T> speed;
-        };
-
-        std::optional<Nees> nees_;
-
-        struct Nis final
-        {
-                core::NormalizedSquared<N, T> position;
-                core::NormalizedSquared<N + 1, T> position_speed;
-        };
-
-        std::optional<Nis> nis_;
+        std::optional<Nees<N, T>> nees_;
+        std::optional<Nis<N, T>> nis_;
 
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
