@@ -109,7 +109,7 @@ void update_position(
         update_nis_position(update, *nis);
 }
 
-template <typename Filter, typename Nis, typename T>
+template <typename Filter, typename T>
 [[nodiscard]] bool update_non_position(
         Filter* const filter,
         const std::optional<Measurement<2, T>>& acceleration,
@@ -117,7 +117,7 @@ template <typename Filter, typename Nis, typename T>
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
-        std::optional<Nis>& /*nis*/)
+        std::optional<Nis<T>>& /*nis*/)
 {
         if (speed)
         {
