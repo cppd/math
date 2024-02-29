@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_1.h"
 
+#include "init.h"
+
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
@@ -226,7 +228,8 @@ class Filter final : public Filter1<N, T>
 
         void reset(
                 const numerical::Vector<2 * N, T>& position_velocity,
-                const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p) override
+                const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
+                const Init<T>& /*init*/) override
         {
                 filter_.emplace(
                         core::create_sigma_points<2 * N, T>(sigma_points_alpha_), x(position_velocity),

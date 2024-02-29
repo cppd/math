@@ -39,8 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/position/position_1.h>
 #include <src/filter/filters/position/position_2.h>
 #include <src/filter/filters/speed/init.h>
-#include <src/filter/filters/speed/speed_1.h>
-#include <src/filter/filters/speed/speed_2.h>
+#include <src/filter/filters/speed/speed.h>
 #include <src/filter/utility/instantiation.h>
 
 #include <array>
@@ -401,7 +400,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                 return {std::make_unique<filters::speed::Speed1<2, T>>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE, alpha,
-                                Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
+                                Config<T>::SPEED_FILTER_POSITION_VARIANCE_1, Config<T>::SPEED_INIT),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         }
 
