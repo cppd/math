@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "consistency.h"
-#include "filter_1.h"
-#include "filter_2.h"
 #include "init.h"
 
 #include <src/filter/filters/com/measurement_queue.h>
@@ -39,8 +37,8 @@ class Speed final : public Filter<N, T>
 {
         T reset_dt_;
         std::optional<T> gate_;
-        std::unique_ptr<F<N, T>> filter_;
         Init<T> init_;
+        std::unique_ptr<F<N, T>> filter_;
 
         com::MeasurementQueue<N, T> queue_;
 
@@ -59,9 +57,8 @@ public:
               T reset_dt,
               T angle_estimation_variance,
               std::optional<T> gate,
-              T sigma_points_alpha,
-              T position_variance,
-              const Init<T>& init);
+              const Init<T>& init,
+              std::unique_ptr<F<N, T>>&& filter);
 
         [[nodiscard]] std::optional<UpdateInfo<N, T>> update(
                 const Measurements<N, T>& m,
@@ -69,10 +66,4 @@ public:
 
         [[nodiscard]] std::string consistency_string() const override;
 };
-
-template <std::size_t N, typename T>
-using Speed1 = Speed<N, T, Filter1>;
-
-template <std::size_t N, typename T>
-using Speed2 = Speed<N, T, Filter2>;
 }

@@ -42,25 +42,14 @@ Speed<N, T, F>::Speed(
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
-        const T sigma_points_alpha,
-        const T position_variance,
-        const Init<T>& init)
+        const Init<T>& init,
+        std::unique_ptr<F<N, T>>&& filter)
         : reset_dt_(reset_dt),
           gate_(gate),
           init_(init),
+          filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
-        static_assert(std::is_same_v<F<N, T>, Filter1<N, T>> || std::is_same_v<F<N, T>, Filter2<N, T>>);
-
-        if constexpr (std::is_same_v<F<N, T>, Filter1<N, T>>)
-        {
-                filter_ = create_filter_1<N, T>(sigma_points_alpha, position_variance);
-        }
-        if constexpr (std::is_same_v<F<N, T>, Filter2<N, T>>)
-        {
-                filter_ = create_filter_2<N, T>(sigma_points_alpha, position_variance);
-        }
-
         ASSERT(filter_);
 }
 
