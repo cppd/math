@@ -138,7 +138,7 @@ std::optional<UpdateInfo<2, T>> Direction10<T>::update(const Measurements<2, T>&
                 last_position_time_ = m.time;
 
                 LOG(to_string(m.time) + "; true angle = "
-                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r))) + "; "
+                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r)))
                     + "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle()))));
         }
         else
