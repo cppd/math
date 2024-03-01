@@ -15,8 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "acceleration_0.h"
+#include "acceleration.h"
 
+#include "filter_0.h"
+#include "filter_1.h"
+#include "filter_ekf.h"
 #include "init.h"
 #include "update.h"
 
@@ -35,8 +38,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::acceleration
 {
+namespace
+{
 template <typename T>
-Acceleration0<T>::Acceleration0(
+std::string measurement_description(const Measurements<2, T>& m)
+{
+        return to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle));
+}
+
+template <typename T>
+std::string filter_description(const Filter0<T>& filter)
+{
+        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
+               + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter.angle_r())));
+}
+
+template <typename T, template <typename> typename Filter>
+std::string filter_description(const Filter<T>& filter)
+{
+        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
+               + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter.angle_speed())))
+               + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter.angle_r())));
+}
+}
+
+template <typename T, template <typename> typename F>
+Acceleration<T, F>::Acceleration(
         const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
@@ -49,15 +76,31 @@ Acceleration0<T>::Acceleration0(
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_0(sigma_points_alpha, position_variance, angle_variance, angle_r_variance)),
           init_(init),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
+        static_assert(
+                std::is_same_v<F<T>, Filter0<T>> || std::is_same_v<F<T>, Filter1<T>>
+                || std::is_same_v<F<T>, FilterEkf<T>>);
+
+        if constexpr (std::is_same_v<F<T>, Filter0<T>>)
+        {
+                filter_ = create_filter_0(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
+        }
+        if constexpr (std::is_same_v<F<T>, Filter1<T>>)
+        {
+                filter_ = create_filter_1(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
+        }
+        if constexpr (std::is_same_v<F<T>, FilterEkf<T>>)
+        {
+                filter_ = create_filter_ekf(position_variance, angle_variance, angle_r_variance);
+        }
+
         ASSERT(filter_);
 }
 
-template <typename T>
-void Acceleration0<T>::check_time(const T time) const
+template <typename T, template <typename> typename F>
+void Acceleration<T, F>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -65,8 +108,8 @@ void Acceleration0<T>::check_time(const T time) const
         }
 }
 
-template <typename T>
-std::optional<UpdateInfo<2, T>> Acceleration0<T>::update(
+template <typename T, template <typename> typename F>
+std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
         const Measurements<2, T>& m,
         const Estimation<2, T>& estimation)
 {
@@ -113,9 +156,7 @@ std::optional<UpdateInfo<2, T>> Acceleration0<T>::update(
 
                 update_position(filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt, nis_);
 
-                LOG(to_string(m.time) + "; true angle = " + to_string(radians_to_degrees(m.true_data.angle)) + "; "
-                    + "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())))
-                    + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_r()))));
+                LOG(measurement_description(m) + filter_description(*filter_));
         }
         else
         {
@@ -137,13 +178,16 @@ std::optional<UpdateInfo<2, T>> Acceleration0<T>::update(
         };
 }
 
-template <typename T>
-std::string Acceleration0<T>::consistency_string() const
+template <typename T, template <typename> typename F>
+std::string Acceleration<T, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
 
-#define TEMPLATE(T) template class Acceleration0<T>;
+#define TEMPLATE(T)                              \
+        template class Acceleration<T, Filter0>; \
+        template class Acceleration<T, Filter1>; \
+        template class Acceleration<T, FilterEkf>;
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

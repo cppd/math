@@ -24,9 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/sort.h>
-#include <src/filter/filters/acceleration/acceleration_0.h>
-#include <src/filter/filters/acceleration/acceleration_1.h>
-#include <src/filter/filters/acceleration/acceleration_ekf.h>
+#include <src/filter/filters/acceleration/acceleration.h>
 #include <src/filter/filters/acceleration/init.h>
 #include <src/filter/filters/direction/direction_1_0.h>
 #include <src/filter/filters/direction/direction_1_1.h>
@@ -283,7 +281,7 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 std::make_unique<filters::acceleration::AccelerationEkf<T>>(
                         Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
-                        Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
+                        /*sigma_points_alpha=*/0, Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                         Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
                         Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1, Config<T>::ACCELERATION_INIT),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));

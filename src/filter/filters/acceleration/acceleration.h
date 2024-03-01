@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "filter_0.h"
+#include "filter_1.h"
 #include "filter_ekf.h"
 #include "init.h"
 #include "update.h"
@@ -33,13 +35,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::acceleration
 {
-template <typename T>
-class AccelerationEkf final : public Filter<2, T>
+template <typename T, template <typename> typename F>
+class Acceleration final : public Filter<2, T>
 {
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> gate_;
-        std::unique_ptr<FilterEkf<T>> filter_;
+        std::unique_ptr<F<T>> filter_;
         Init<T> init_;
 
         com::MeasurementQueue<2, T> queue_;
@@ -52,11 +54,12 @@ class AccelerationEkf final : public Filter<2, T>
         void check_time(T time) const;
 
 public:
-        AccelerationEkf(
+        Acceleration(
                 std::size_t measurement_queue_size,
                 T reset_dt,
                 T angle_estimation_variance,
                 std::optional<T> gate,
+                T sigma_points_alpha,
                 T position_variance,
                 T angle_variance,
                 T angle_r_variance,
@@ -68,4 +71,13 @@ public:
 
         [[nodiscard]] std::string consistency_string() const override;
 };
+
+template <typename T>
+using Acceleration0 = Acceleration<T, Filter0>;
+
+template <typename T>
+using Acceleration1 = Acceleration<T, Filter1>;
+
+template <typename T>
+using AccelerationEkf = Acceleration<T, FilterEkf>;
 }
