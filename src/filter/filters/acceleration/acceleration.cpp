@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/utility/instantiation.h>
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -68,34 +69,15 @@ Acceleration<T, F>::Acceleration(
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
-        const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance,
-        const Init<T>& init)
+        const Init<T>& init,
+        std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
+          filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
-        static_assert(
-                std::is_same_v<F<T>, Filter0<T>> || std::is_same_v<F<T>, Filter1<T>>
-                || std::is_same_v<F<T>, FilterEkf<T>>);
-
-        if constexpr (std::is_same_v<F<T>, Filter0<T>>)
-        {
-                filter_ = create_filter_0(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
-        }
-        if constexpr (std::is_same_v<F<T>, Filter1<T>>)
-        {
-                filter_ = create_filter_1(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
-        }
-        if constexpr (std::is_same_v<F<T>, FilterEkf<T>>)
-        {
-                filter_ = create_filter_ekf(position_variance, angle_variance, angle_r_variance);
-        }
-
         ASSERT(filter_);
 }
 
