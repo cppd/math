@@ -15,8 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "direction_1_1.h"
+#include "direction.h"
 
+#include "filter_1_0.h"
+#include "filter_1_1.h"
+#include "filter_2_1.h"
 #include "init.h"
 #include "update.h"
 
@@ -37,28 +40,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::direction
 {
+namespace
+{
 template <typename T>
-Direction11<T>::Direction11(
+std::string measurement_description(const Measurements<2, T>& m)
+{
+        return to_string(m.time) + "; true angle = "
+               + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r)));
+}
+
+template <typename T>
+std::string filter_description(const Filter10<T>& filter)
+{
+        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())));
+}
+
+template <typename T, template <typename> typename Filter>
+std::string filter_description(const Filter<T>& filter)
+{
+        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
+               + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter.angle_speed())));
+}
+}
+
+template <typename T, template <typename> typename F>
+Direction<T, F>::Direction(
         const std::size_t measurement_queue_size,
         const T reset_dt,
         const T angle_estimation_variance,
         const std::optional<T> gate,
-        const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance,
-        const Init<T>& init)
+        const Init<T>& init,
+        std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
-          filter_(create_filter_1_1(sigma_points_alpha, position_variance, angle_variance)),
           init_(init),
+          filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
         ASSERT(filter_);
 }
 
-template <typename T>
-void Direction11<T>::check_time(const T time) const
+template <typename T, template <typename> typename F>
+void Direction<T, F>::check_time(const T time) const
 {
         if (last_time_ && !(*last_time_ < time))
         {
@@ -72,8 +96,8 @@ void Direction11<T>::check_time(const T time) const
         }
 }
 
-template <typename T>
-void Direction11<T>::reset(const Measurements<2, T>& m)
+template <typename T, template <typename> typename F>
+void Direction<T, F>::reset(const Measurements<2, T>& m)
 {
         if (!m.position || queue_.empty())
         {
@@ -97,8 +121,8 @@ void Direction11<T>::reset(const Measurements<2, T>& m)
         last_position_time_ = m.time;
 }
 
-template <typename T>
-std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
+template <typename T, template <typename> typename F>
+std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
 {
         check_time(m.time);
 
@@ -136,10 +160,7 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
 
                 last_position_time_ = m.time;
 
-                LOG(to_string(m.time) + "; true angle = "
-                    + to_string(radians_to_degrees(normalize_angle(m.true_data.angle + m.true_data.angle_r)))
-                    + "; angle = " + to_string(radians_to_degrees(normalize_angle(filter_->angle())))
-                    + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter_->angle_speed()))));
+                LOG(measurement_description(m) + filter_description(*filter_));
         }
         else
         {
@@ -162,13 +183,16 @@ std::optional<UpdateInfo<2, T>> Direction11<T>::update(const Measurements<2, T>&
         };
 }
 
-template <typename T>
-std::string Direction11<T>::consistency_string() const
+template <typename T, template <typename> typename F>
+std::string Direction<T, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
 
-#define TEMPLATE(T) template class Direction11<T>;
+#define TEMPLATE(T)                            \
+        template class Direction<T, Filter10>; \
+        template class Direction<T, Filter11>; \
+        template class Direction<T, Filter21>;
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "consistency.h"
-#include "filter_1_0.h"
 #include "init.h"
 
 #include <src/filter/filters/com/measurement_queue.h>
@@ -33,14 +32,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::direction
 {
-template <typename T>
-class Direction10 final : public Filter<2, T>
+template <typename T, template <typename> typename F>
+class Direction final : public Filter<2, T>
 {
         T reset_dt_;
         T angle_estimation_variance_;
         std::optional<T> gate_;
-        std::unique_ptr<Filter10<T>> filter_;
         Init<T> init_;
+        std::unique_ptr<F<T>> filter_;
 
         com::MeasurementQueue<2, T> queue_;
 
@@ -55,15 +54,13 @@ class Direction10 final : public Filter<2, T>
         void reset(const Measurements<2, T>& m);
 
 public:
-        Direction10(
+        Direction(
                 std::size_t measurement_queue_size,
                 T reset_dt,
                 T angle_estimation_variance,
                 std::optional<T> gate,
-                T sigma_points_alpha,
-                T position_variance,
-                T angle_variance,
-                const Init<T>& init);
+                const Init<T>& init,
+                std::unique_ptr<F<T>>&& filter);
 
         [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
                 const Measurements<2, T>& m,
