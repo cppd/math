@@ -61,7 +61,40 @@ std::string filter_description(const Filter<T>& filter)
                + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter.angle_speed())))
                + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter.angle_r())));
 }
-}
+
+template <typename T, template <typename> typename F>
+class Acceleration final : public Filter<2, T>
+{
+        T reset_dt_;
+        T angle_estimation_variance_;
+        std::optional<T> gate_;
+        Init<T> init_;
+        std::unique_ptr<F<T>> filter_;
+
+        com::MeasurementQueue<2, T> queue_;
+
+        std::optional<Nees<T>> nees_;
+        std::optional<Nis<T>> nis_;
+
+        std::optional<T> last_time_;
+
+        void check_time(T time) const;
+
+        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
+                const Measurements<2, T>& m,
+                const Estimation<2, T>& estimation) override;
+
+        [[nodiscard]] std::string consistency_string() const override;
+
+public:
+        Acceleration(
+                std::size_t measurement_queue_size,
+                T reset_dt,
+                T angle_estimation_variance,
+                std::optional<T> gate,
+                const Init<T>& init,
+                std::unique_ptr<F<T>>&& filter);
+};
 
 template <typename T, template <typename> typename F>
 Acceleration<T, F>::Acceleration(
@@ -165,11 +198,65 @@ std::string Acceleration<T, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
+}
 
-#define TEMPLATE(T)                              \
-        template class Acceleration<T, Filter0>; \
-        template class Acceleration<T, Filter1>; \
-        template class Acceleration<T, FilterEkf>;
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_acceleration_0(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance,
+        const T angle_r_variance)
+{
+        return std::make_unique<Acceleration<T, filters::acceleration::Filter0>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_0<T>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance));
+}
+
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_acceleration_1(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance,
+        const T angle_r_variance)
+{
+        return std::make_unique<Acceleration<T, filters::acceleration::Filter1>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_1<T>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance));
+}
+
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T position_variance,
+        const T angle_variance,
+        const T angle_r_variance)
+{
+        return std::make_unique<Acceleration<T, filters::acceleration::FilterEkf>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_ekf<T>(position_variance, angle_variance, angle_r_variance));
+}
+
+#define TEMPLATE(T)                                                               \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_0(             \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T, T); \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_1(             \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T, T); \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_ekf(           \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
