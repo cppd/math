@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 #include "update.h"
 
+#include "src/filter/filters/speed/consistency.h"
+
 #include <src/com/error.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
@@ -36,6 +38,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
+namespace
+{
+template <std::size_t N, typename T, template <std::size_t, typename> typename F>
+class Speed final : public Filter<N, T>
+{
+        T reset_dt_;
+        std::optional<T> gate_;
+        Init<T> init_;
+        std::unique_ptr<F<N, T>> filter_;
+
+        com::MeasurementQueue<N, T> queue_;
+
+        std::optional<Nees<N, T>> nees_;
+        std::optional<Nis<N, T>> nis_;
+
+        std::optional<T> last_time_;
+        std::optional<T> last_position_time_;
+
+        void check_time(T time) const;
+
+        void reset(const Measurements<N, T>& m);
+
+        [[nodiscard]] std::optional<UpdateInfo<N, T>> update(
+                const Measurements<N, T>& m,
+                const Estimation<N, T>& estimation) override;
+
+        [[nodiscard]] std::string consistency_string() const override;
+
+public:
+        Speed(std::size_t measurement_queue_size,
+              T reset_dt,
+              T angle_estimation_variance,
+              std::optional<T> gate,
+              const Init<T>& init,
+              std::unique_ptr<F<N, T>>&& filter);
+};
+
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
 Speed<N, T, F>::Speed(
         const std::size_t measurement_queue_size,
@@ -154,10 +193,43 @@ std::string Speed<N, T, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
+}
 
-#define TEMPLATE(N, T)                         \
-        template class Speed<(N), T, Filter1>; \
-        template class Speed<(N), T, Filter2>;
+template <std::size_t N, typename T>
+std::unique_ptr<Filter<N, T>> create_speed_1(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance)
+{
+        return std::make_unique<Speed<N, T, Filter1>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_1<N, T>(sigma_points_alpha, position_variance));
+}
+
+template <std::size_t N, typename T>
+std::unique_ptr<Filter<N, T>> create_speed_2(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance)
+{
+        return std::make_unique<Speed<N, T, Filter2>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_2<N, T>(sigma_points_alpha, position_variance));
+}
+
+#define TEMPLATE(N, T)                                                      \
+        template std::unique_ptr<Filter<N, T>> create_speed_1(              \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T); \
+        template std::unique_ptr<Filter<N, T>> create_speed_2(              \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

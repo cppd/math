@@ -40,8 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/position/position_0.h>
 #include <src/filter/filters/position/position_1.h>
 #include <src/filter/filters/position/position_2.h>
-#include <src/filter/filters/speed/filter_1.h>
-#include <src/filter/filters/speed/filter_2.h>
 #include <src/filter/filters/speed/init.h>
 #include <src/filter/filters/speed/speed.h>
 #include <src/filter/utility/instantiation.h>
@@ -411,23 +409,19 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         if (ORDER_P == 1)
         {
-                return {std::make_unique<filters::speed::Speed<2, T, filters::speed::Filter1>>(
+                return {filters::speed::create_speed_1<2, T>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                Config<T>::SPEED_INIT,
-                                filters::speed::create_filter_1<2, T>(
-                                        alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1)),
+                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         }
 
         if (ORDER_P == 2)
         {
-                return {std::make_unique<filters::speed::Speed<2, T, filters::speed::Filter2>>(
+                return {filters::speed::create_speed_2<2, T>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                Config<T>::SPEED_INIT,
-                                filters::speed::create_filter_2<2, T>(
-                                        alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2)),
+                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         }
 }

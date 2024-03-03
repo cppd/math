@@ -17,53 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "consistency.h"
 #include "init.h"
 
-#include <src/filter/filters/com/measurement_queue.h>
-#include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
-#include <src/filter/filters/measurement.h>
 
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <string>
 
 namespace ns::filter::filters::speed
 {
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-class Speed final : public Filter<N, T>
-{
-        T reset_dt_;
-        std::optional<T> gate_;
-        Init<T> init_;
-        std::unique_ptr<F<N, T>> filter_;
+template <std::size_t N, typename T>
+std::unique_ptr<Filter<N, T>> create_speed_1(
+        std::size_t measurement_queue_size,
+        T reset_dt,
+        T angle_estimation_variance,
+        std::optional<T> gate,
+        const Init<T>& init,
+        T sigma_points_alpha,
+        T position_variance);
 
-        com::MeasurementQueue<N, T> queue_;
-
-        std::optional<Nees<N, T>> nees_;
-        std::optional<Nis<N, T>> nis_;
-
-        std::optional<T> last_time_;
-        std::optional<T> last_position_time_;
-
-        void check_time(T time) const;
-
-        void reset(const Measurements<N, T>& m);
-
-public:
-        Speed(std::size_t measurement_queue_size,
-              T reset_dt,
-              T angle_estimation_variance,
-              std::optional<T> gate,
-              const Init<T>& init,
-              std::unique_ptr<F<N, T>>&& filter);
-
-        [[nodiscard]] std::optional<UpdateInfo<N, T>> update(
-                const Measurements<N, T>& m,
-                const Estimation<N, T>& estimation) override;
-
-        [[nodiscard]] std::string consistency_string() const override;
-};
+template <std::size_t N, typename T>
+std::unique_ptr<Filter<N, T>> create_speed_2(
+        std::size_t measurement_queue_size,
+        T reset_dt,
+        T angle_estimation_variance,
+        std::optional<T> gate,
+        const Init<T>& init,
+        T sigma_points_alpha,
+        T position_variance);
 }
