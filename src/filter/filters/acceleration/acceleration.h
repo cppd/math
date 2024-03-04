@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/filter.h>
 
 #include <cstddef>

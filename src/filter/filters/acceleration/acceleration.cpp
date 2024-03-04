@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration.h"
 
+#include "consistency.h"
 #include "filter_0.h"
 #include "filter_1.h"
 #include "filter_ekf.h"
@@ -27,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
