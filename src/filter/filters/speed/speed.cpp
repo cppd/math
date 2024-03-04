@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "speed.h"
 
+#include "consistency.h"
 #include "filter_1.h"
 #include "filter_2.h"
 #include "init.h"
 #include "update.h"
-
-#include "src/filter/filters/speed/consistency.h"
 
 #include <src/com/error.h>
 #include <src/filter/filters/com/measurement_queue.h>
@@ -226,9 +225,9 @@ std::unique_ptr<Filter<N, T>> create_speed_2(
 }
 
 #define TEMPLATE(N, T)                                                      \
-        template std::unique_ptr<Filter<N, T>> create_speed_1(              \
+        template std::unique_ptr<Filter<(N), T>> create_speed_1(            \
                 std::size_t, T, T, std::optional<T>, const Init<T>&, T, T); \
-        template std::unique_ptr<Filter<N, T>> create_speed_2(              \
+        template std::unique_ptr<Filter<(N), T>> create_speed_2(            \
                 std::size_t, T, T, std::optional<T>, const Init<T>&, T, T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
