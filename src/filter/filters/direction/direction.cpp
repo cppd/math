@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "direction.h"
 
+#include "consistency.h"
 #include "filter_1_0.h"
 #include "filter_1_1.h"
 #include "filter_2_1.h"
@@ -61,7 +62,43 @@ std::string filter_description(const Filter<T>& filter)
         return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
                + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter.angle_speed())));
 }
-}
+
+template <typename T, template <typename> typename F>
+class Direction final : public Filter<2, T>
+{
+        T reset_dt_;
+        T angle_estimation_variance_;
+        std::optional<T> gate_;
+        Init<T> init_;
+        std::unique_ptr<F<T>> filter_;
+
+        com::MeasurementQueue<2, T> queue_;
+
+        std::optional<Nees<T>> nees_;
+        std::optional<Nis<T>> nis_;
+
+        std::optional<T> last_time_;
+        std::optional<T> last_position_time_;
+
+        void check_time(T time) const;
+
+        void reset(const Measurements<2, T>& m);
+
+        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
+                const Measurements<2, T>& m,
+                const Estimation<2, T>& estimation) override;
+
+        [[nodiscard]] std::string consistency_string() const override;
+
+public:
+        Direction(
+                std::size_t measurement_queue_size,
+                T reset_dt,
+                T angle_estimation_variance,
+                std::optional<T> gate,
+                const Init<T>& init,
+                std::unique_ptr<F<T>>&& filter);
+};
 
 template <typename T, template <typename> typename F>
 Direction<T, F>::Direction(
@@ -188,11 +225,63 @@ std::string Direction<T, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
+}
 
-#define TEMPLATE(T)                            \
-        template class Direction<T, Filter10>; \
-        template class Direction<T, Filter11>; \
-        template class Direction<T, Filter21>;
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_1_0(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance)
+{
+        return std::make_unique<Direction<T, Filter10>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_1_0<T>(sigma_points_alpha, position_variance, angle_variance));
+}
+
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_1_1(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance)
+{
+        return std::make_unique<Direction<T, Filter11>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_1_1<T>(sigma_points_alpha, position_variance, angle_variance));
+}
+
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_2_1(
+        const std::size_t measurement_queue_size,
+        const T reset_dt,
+        const T angle_estimation_variance,
+        const std::optional<T> gate,
+        const Init<T>& init,
+        const T sigma_points_alpha,
+        const T position_variance,
+        const T angle_variance)
+{
+        return std::make_unique<Direction<T, Filter21>>(
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
+                create_filter_2_1<T>(sigma_points_alpha, position_variance, angle_variance));
+}
+
+#define TEMPLATE(T)                                                            \
+        template std::unique_ptr<Filter<2, T>> create_direction_1_0(           \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T); \
+        template std::unique_ptr<Filter<2, T>> create_direction_1_1(           \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T); \
+        template std::unique_ptr<Filter<2, T>> create_direction_2_1(           \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

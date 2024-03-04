@@ -17,55 +17,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "consistency.h"
 #include "init.h"
 
-#include <src/filter/filters/com/measurement_queue.h>
-#include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
-#include <src/filter/filters/measurement.h>
 
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <string>
 
 namespace ns::filter::filters::direction
 {
-template <typename T, template <typename> typename F>
-class Direction final : public Filter<2, T>
-{
-        T reset_dt_;
-        T angle_estimation_variance_;
-        std::optional<T> gate_;
-        Init<T> init_;
-        std::unique_ptr<F<T>> filter_;
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_1_0(
+        std::size_t measurement_queue_size,
+        T reset_dt,
+        T angle_estimation_variance,
+        std::optional<T> gate,
+        const Init<T>& init,
+        T sigma_points_alpha,
+        T position_variance,
+        T angle_variance);
 
-        com::MeasurementQueue<2, T> queue_;
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_1_1(
+        std::size_t measurement_queue_size,
+        T reset_dt,
+        T angle_estimation_variance,
+        std::optional<T> gate,
+        const Init<T>& init,
+        T sigma_points_alpha,
+        T position_variance,
+        T angle_variance);
 
-        std::optional<Nees<T>> nees_;
-        std::optional<Nis<T>> nis_;
-
-        std::optional<T> last_time_;
-        std::optional<T> last_position_time_;
-
-        void check_time(T time) const;
-
-        void reset(const Measurements<2, T>& m);
-
-public:
-        Direction(
-                std::size_t measurement_queue_size,
-                T reset_dt,
-                T angle_estimation_variance,
-                std::optional<T> gate,
-                const Init<T>& init,
-                std::unique_ptr<F<T>>&& filter);
-
-        [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
-                const Measurements<2, T>& m,
-                const Estimation<2, T>& estimation) override;
-
-        [[nodiscard]] std::string consistency_string() const override;
-};
+template <typename T>
+std::unique_ptr<Filter<2, T>> create_direction_2_1(
+        std::size_t measurement_queue_size,
+        T reset_dt,
+        T angle_estimation_variance,
+        std::optional<T> gate,
+        const Init<T>& init,
+        T sigma_points_alpha,
+        T position_variance,
+        T angle_variance);
 }

@@ -27,9 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/acceleration/acceleration.h>
 #include <src/filter/filters/acceleration/init.h>
 #include <src/filter/filters/direction/direction.h>
-#include <src/filter/filters/direction/filter_1_0.h>
-#include <src/filter/filters/direction/filter_1_1.h>
-#include <src/filter/filters/direction/filter_2_1.h>
 #include <src/filter/filters/direction/init.h>
 #include <src/filter/filters/estimation/position_estimation.h>
 #include <src/filter/filters/estimation/position_variance.h>
@@ -322,37 +319,31 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return {std::make_unique<filters::direction::Direction<T, filters::direction::Filter10>>(
+                return {filters::direction::create_direction_1_0(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT,
-                                filters::direction::create_filter_1_0<T>(
-                                        alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
-                                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0)),
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return {std::make_unique<filters::direction::Direction<T, filters::direction::Filter11>>(
+                return {filters::direction::create_direction_1_1(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT,
-                                filters::direction::create_filter_1_1<T>(
-                                        alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
-                                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1)),
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return {std::make_unique<filters::direction::Direction<T, filters::direction::Filter21>>(
+                return {filters::direction::create_direction_2_1(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT,
-                                filters::direction::create_filter_2_1<T>(
-                                        alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
-                                        Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1)),
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         }
 }
