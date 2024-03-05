@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "consistency.h"
 #include "filter_0.h"
 
-#include <src/filter/core/consistency.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 
@@ -38,14 +38,11 @@ class Position0 final : public FilterPosition<N, T>
         std::optional<T> gate_;
         std::unique_ptr<Filter0<N, T>> filter_;
 
-        core::NormalizedSquared<N, T> nees_position_;
-        core::NormalizedSquared<1, T> nees_speed_;
-        core::NormalizedSquared<N, T> nis_;
+        Nees<N, T> nees_;
+        Nis<N, T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;
-
-        void add_nees_checks(const TrueData<N, T>& true_data);
 
         void check_time(T time) const;
 

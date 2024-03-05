@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/com/error.h>
-#include <src/filter/core/consistency.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/utility/instantiation.h>
@@ -50,17 +49,6 @@ Position2<N, T>::Position2(
           init_(init)
 {
         ASSERT(filter_);
-}
-
-template <std::size_t N, typename T>
-void Position2<N, T>::add_nees_checks(const TrueData<N, T>& true_data)
-{
-        nees_position_.add(true_data.position - filter_->position(), filter_->position_p());
-
-        if (const T speed_p = filter_->speed_p(); is_finite(speed_p))
-        {
-                nees_speed_.add(true_data.speed - filter_->speed(), speed_p);
-        }
 }
 
 template <std::size_t N, typename T>
@@ -94,7 +82,6 @@ std::optional<UpdateInfo<N, T>> Position2<N, T>::update(const Measurements<N, T>
                 filter_->reset(m.position->value, *m.position->variance, init_);
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
-                add_nees_checks(m.true_data);
                 return {
                         {.position = filter_->position(),
                          .position_p = filter_->position_p().diagonal(),
@@ -106,10 +93,11 @@ std::optional<UpdateInfo<N, T>> Position2<N, T>::update(const Measurements<N, T>
         filter_->predict(m.time - *last_predict_time_);
         last_predict_time_ = m.time;
 
+        update_nees(*filter_, m.true_data, nees_);
+
         const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
         if (update.gate)
         {
-                add_nees_checks(m.true_data);
                 return {
                         {.position = filter_->position(),
                          .position_p = filter_->position_p().diagonal(),
@@ -120,11 +108,9 @@ std::optional<UpdateInfo<N, T>> Position2<N, T>::update(const Measurements<N, T>
         const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
 
-        add_nees_checks(m.true_data);
         if (update_dt <= linear_dt_)
         {
-                ASSERT(update.normalized_innovation_squared);
-                nis_.add(*update.normalized_innovation_squared);
+                update_nis(update, nis_);
         }
 
         return {
@@ -153,7 +139,7 @@ std::optional<UpdateInfo<N, T>> Position2<N, T>::predict(const Measurements<N, T
         filter_->predict(m.time - *last_predict_time_);
         last_predict_time_ = m.time;
 
-        add_nees_checks(m.true_data);
+        update_nees(*filter_, m.true_data, nees_);
 
         return {
                 {.position = filter_->position(),
@@ -220,35 +206,7 @@ numerical::Matrix<3 * N, 3 * N, T> Position2<N, T>::position_velocity_accelerati
 template <std::size_t N, typename T>
 std::string Position2<N, T>::consistency_string() const
 {
-        std::string s;
-
-        const auto new_line = [&]()
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-        };
-
-        if (!nees_position_.empty())
-        {
-                new_line();
-                s += "NEES Position; " + nees_position_.check_string();
-        }
-
-        if (!nees_speed_.empty())
-        {
-                new_line();
-                s += "NEES Speed; " + nees_speed_.check_string();
-        }
-
-        if (!nis_.empty())
-        {
-                new_line();
-                s += "NIS Position; " + nis_.check_string();
-        }
-
-        return s;
+        return make_consistency_string(nees_, nis_);
 }
 
 #define TEMPLATE(N, T) template class Position2<(N), T>;
