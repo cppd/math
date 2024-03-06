@@ -192,18 +192,6 @@ numerical::Matrix<2 * N, 2 * N, T> Position2<N, T>::position_velocity_p() const
 }
 
 template <std::size_t N, typename T>
-numerical::Vector<3 * N, T> Position2<N, T>::position_velocity_acceleration() const
-{
-        return filter_->position_velocity_acceleration();
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<3 * N, 3 * N, T> Position2<N, T>::position_velocity_acceleration_p() const
-{
-        return filter_->position_velocity_acceleration_p();
-}
-
-template <std::size_t N, typename T>
 std::string Position2<N, T>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);

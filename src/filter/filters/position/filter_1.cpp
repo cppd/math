@@ -243,6 +243,20 @@ class FilterImpl final : public Filter1<N, T>
                 return numerical::slice<1, 2>(filter_->p());
         }
 
+        [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->x();
+        }
+
+        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->p();
+        }
+
 public:
         FilterImpl(const T theta, const T process_variance)
                 : theta_(theta),

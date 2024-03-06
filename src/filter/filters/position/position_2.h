@@ -65,7 +65,5 @@ public:
         [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const;
         [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const;
         [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const;
-        [[nodiscard]] numerical::Vector<3 * N, T> position_velocity_acceleration() const;
-        [[nodiscard]] numerical::Matrix<3 * N, 3 * N, T> position_velocity_acceleration_p() const;
 };
 }
