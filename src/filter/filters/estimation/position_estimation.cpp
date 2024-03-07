@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/conversion.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/filter/filters/com/utility.h>
+#include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/filters/position/position_2.h>
 #include <src/filter/utility/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -46,7 +47,7 @@ numerical::Vector<N, T> stddev_degrees(const numerical::Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-PositionEstimation<N, T>::PositionEstimation(const position::Position2<N, T>* const position)
+PositionEstimation<N, T>::PositionEstimation(const FilterPosition<N, T>* const position)
         : position_(position)
 {
 }

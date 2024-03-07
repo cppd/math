@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "estimation.h"
 #include "measurement.h"
 
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <cstddef>
@@ -47,6 +48,15 @@ public:
         [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) = 0;
 
         [[nodiscard]] virtual std::string consistency_string() const = 0;
+
+        [[nodiscard]] virtual bool empty() const = 0;
+
+        [[nodiscard]] virtual numerical::Vector<N, T> position() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> velocity() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<N, N, T> velocity_p() const = 0;
+        [[nodiscard]] virtual numerical::Vector<2 * N, T> position_velocity() const = 0;
+        [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
 };
 
 template <std::size_t N, typename T>

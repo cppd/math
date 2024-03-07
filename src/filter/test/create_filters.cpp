@@ -31,9 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/estimation/position_estimation.h>
 #include <src/filter/filters/estimation/position_variance.h>
 #include <src/filter/filters/position/init.h>
-#include <src/filter/filters/position/position_0.h>
-#include <src/filter/filters/position/position_1.h>
-#include <src/filter/filters/position/position_2.h>
+#include <src/filter/filters/position/position.h>
 #include <src/filter/filters/speed/init.h>
 #include <src/filter/filters/speed/speed.h>
 #include <src/filter/utility/instantiation.h>
@@ -187,27 +185,28 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
 
         if (ORDER == 0)
         {
-                return {std::make_unique<filters::position::Position0<N, T>>(
+                return {filters::position::create_position_0<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                Config<T>::POSITION_FILTER_GATE_0, theta, Config<T>::POSITION_FILTER_VARIANCE_0),
+                                Config<T>::POSITION_FILTER_GATE_0, Config<T>::POSITION_INIT, theta,
+                                Config<T>::POSITION_FILTER_VARIANCE_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
         }
 
         if (ORDER == 1)
         {
-                return {std::make_unique<filters::position::Position1<N, T>>(
+                return {filters::position::create_position_1<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                Config<T>::POSITION_FILTER_GATE_1, theta, Config<T>::POSITION_FILTER_VARIANCE_1,
-                                Config<T>::POSITION_INIT),
+                                Config<T>::POSITION_FILTER_GATE_1, Config<T>::POSITION_INIT, theta,
+                                Config<T>::POSITION_FILTER_VARIANCE_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
         }
 
         if (ORDER == 2)
         {
-                return {std::make_unique<filters::position::Position2<N, T>>(
+                return {filters::position::create_position_2<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
-                                Config<T>::POSITION_FILTER_GATE_2, theta, Config<T>::POSITION_FILTER_VARIANCE_2,
-                                Config<T>::POSITION_INIT),
+                                Config<T>::POSITION_FILTER_GATE_2, Config<T>::POSITION_INIT, theta,
+                                Config<T>::POSITION_FILTER_VARIANCE_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
         }
 }
@@ -446,8 +445,8 @@ Filters<T> create_filters()
         res.directions = create_directions<T>();
         res.speeds = create_speeds<T>();
 
-        res.position_estimation = std::make_unique<filters::estimation::PositionEstimation<2, T>>(
-                static_cast<const filters::position::Position2<2, T>*>(res.positions_2.front().filter.get()));
+        res.position_estimation =
+                std::make_unique<filters::estimation::PositionEstimation<2, T>>(res.positions_2.front().filter.get());
 
         return res;
 }

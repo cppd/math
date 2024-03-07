@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/filter/filters/estimation.h>
+#include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
-#include <src/filter/filters/position/position_2.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -31,7 +31,7 @@ namespace ns::filter::filters::estimation
 template <std::size_t N, typename T>
 class PositionEstimation final : public Estimation<N, T>
 {
-        const position::Position2<N, T>* const position_;
+        const FilterPosition<N, T>* const position_;
         std::optional<numerical::Vector<N, T>> angle_variance_;
 
         [[nodiscard]] bool angle_variance_less_than(T variance) const override;
@@ -41,7 +41,7 @@ class PositionEstimation final : public Estimation<N, T>
         [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
 
 public:
-        explicit PositionEstimation(const position::Position2<N, T>* position);
+        explicit PositionEstimation(const FilterPosition<N, T>* position);
 
         void update(const Measurements<N, T>& m);
 };
