@@ -81,8 +81,9 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 PositionVariance<N, T>::PositionVariance(const T reset_dt, const T process_variance, const position::Init<T>& init)
         : reset_dt_(reset_dt),
-          filter_(position::create_filter_2<N, T>(THETA<T>, process_variance)),
-          init_(init)
+          init_(init),
+          process_variance_(process_variance),
+          filter_(position::create_filter_2<N, T>(THETA<T>))
 {
         ASSERT(filter_);
 }
@@ -111,7 +112,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         ASSERT(last_update_time_);
 
         const T predict_dt = m.time - *last_predict_time_;
-        filter_->predict(predict_dt);
+        filter_->predict(predict_dt, process_variance_);
         last_predict_time_ = m.time;
 
         const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);

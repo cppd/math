@@ -134,7 +134,6 @@ template <std::size_t N, typename T>
 class FilterImpl final : public Filter0<N, T>
 {
         const std::optional<T> theta_;
-        const T process_variance_;
         std::optional<core::Ekf<N, T>> filter_;
 
         void reset(const numerical::Vector<N, T>& position, const numerical::Vector<N, T>& variance) override
@@ -142,10 +141,11 @@ class FilterImpl final : public Filter0<N, T>
                 filter_.emplace(init_x(position), init_p(variance));
         }
 
-        void predict(const T dt) override
+        void predict(const T dt, const T process_variance) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
+                ASSERT(process_variance >= 0);
 
                 const numerical::Matrix<N, N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
@@ -157,7 +157,7 @@ class FilterImpl final : public Filter0<N, T>
                         {
                                 return f;
                         },
-                        q<N, T>(dt, process_variance_));
+                        q<N, T>(dt, process_variance));
         }
 
         [[nodiscard]] core::UpdateInfo<N, T> update(
@@ -193,23 +193,21 @@ class FilterImpl final : public Filter0<N, T>
         }
 
 public:
-        FilterImpl(const T theta, const T process_variance)
-                : theta_(theta),
-                  process_variance_(process_variance)
+        explicit FilterImpl(const T theta)
+                : theta_(theta)
         {
                 ASSERT(theta_ >= 0);
-                ASSERT(process_variance_ >= 0);
         }
 };
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter0<N, T>> create_filter_0(const T theta, const T process_variance)
+std::unique_ptr<Filter0<N, T>> create_filter_0(const T theta)
 {
-        return std::make_unique<FilterImpl<N, T>>(theta, process_variance);
+        return std::make_unique<FilterImpl<N, T>>(theta);
 }
 
-#define TEMPLATE(N, T) template std::unique_ptr<Filter0<(N), T>> create_filter_0<(N), T>(T, T);
+#define TEMPLATE(N, T) template std::unique_ptr<Filter0<(N), T>> create_filter_0<(N), T>(T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

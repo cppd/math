@@ -36,8 +36,9 @@ template <std::size_t N, typename T>
 class PositionVariance final
 {
         T reset_dt_;
-        std::unique_ptr<position::Filter2<N, T>> filter_;
         position::Init<T> init_;
+        const T process_variance_;
+        std::unique_ptr<position::Filter2<N, T>> filter_;
 
         MovingVariance<N, T> position_variance_;
         std::optional<numerical::Vector<N, T>> last_position_variance_;

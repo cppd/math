@@ -46,6 +46,7 @@ class Position final : public FilterPosition<N, T>
         T linear_dt_;
         std::optional<T> gate_;
         Init<T> init_;
+        T process_variance_;
         std::unique_ptr<F<N, T>> filter_;
 
         Nees<N, T> nees_;
@@ -64,6 +65,7 @@ public:
                 T linear_dt,
                 std::optional<T> gate,
                 const Init<T>& init,
+                T process_variance,
                 std::unique_ptr<F<N, T>>&& filter);
 
         [[nodiscard]] std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) override;
@@ -86,11 +88,13 @@ Position<N, T, F>::Position(
         const T linear_dt,
         const std::optional<T> gate,
         const Init<T>& init,
+        const T process_variance,
         std::unique_ptr<F<N, T>>&& filter)
         : reset_dt_(reset_dt),
           linear_dt_(linear_dt),
           gate_(gate),
           init_(init),
+          process_variance_(process_variance),
           filter_(std::move(filter))
 {
         ASSERT(filter_);
@@ -162,7 +166,7 @@ std::optional<UpdateInfo<N, T>> Position<N, T, F>::update(const Measurements<N, 
                 return update_info();
         }
 
-        filter_->predict(m.time - *last_predict_time_);
+        filter_->predict(m.time - *last_predict_time_, process_variance_);
         last_predict_time_ = m.time;
 
         update_nees(*filter_, m.true_data, nees_);
@@ -198,7 +202,7 @@ std::optional<UpdateInfo<N, T>> Position<N, T, F>::predict(const Measurements<N,
                 return {};
         }
 
-        filter_->predict(m.time - *last_predict_time_);
+        filter_->predict(m.time - *last_predict_time_, process_variance_);
         last_predict_time_ = m.time;
 
         update_nees(*filter_, m.true_data, nees_);
@@ -293,7 +297,7 @@ std::unique_ptr<FilterPosition<N, T>> create_position_0(
         const T process_variance)
 {
         return std::make_unique<Position<N, T, Filter0>>(
-                reset_dt, linear_dt, gate, init, create_filter_0<N, T>(theta, process_variance));
+                reset_dt, linear_dt, gate, init, process_variance, create_filter_0<N, T>(theta));
 }
 
 template <std::size_t N, typename T>
@@ -306,7 +310,7 @@ std::unique_ptr<FilterPosition<N, T>> create_position_1(
         const T process_variance)
 {
         return std::make_unique<Position<N, T, Filter1>>(
-                reset_dt, linear_dt, gate, init, create_filter_1<N, T>(theta, process_variance));
+                reset_dt, linear_dt, gate, init, process_variance, create_filter_1<N, T>(theta));
 }
 
 template <std::size_t N, typename T>
@@ -319,7 +323,7 @@ std::unique_ptr<FilterPosition<N, T>> create_position_2(
         const T process_variance)
 {
         return std::make_unique<Position<N, T, Filter2>>(
-                reset_dt, linear_dt, gate, init, create_filter_2<N, T>(theta, process_variance));
+                reset_dt, linear_dt, gate, init, process_variance, create_filter_2<N, T>(theta));
 }
 
 #define TEMPLATE(N, T)                                                      \
