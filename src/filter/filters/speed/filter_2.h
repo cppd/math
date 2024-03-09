@@ -41,7 +41,7 @@ public:
                 const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt) = 0;
+        virtual void predict(T dt, T process_variance) = 0;
 
         virtual core::UpdateInfo<N, T> update_position(const Measurement<N, T>& position, std::optional<T> gate) = 0;
 
@@ -60,5 +60,5 @@ public:
 };
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter2<N, T>> create_filter_2(T sigma_points_alpha, T position_variance);
+std::unique_ptr<Filter2<N, T>> create_filter_2(T sigma_points_alpha);
 }

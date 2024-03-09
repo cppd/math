@@ -45,6 +45,7 @@ class Speed final : public Filter<N, T>
         T reset_dt_;
         std::optional<T> gate_;
         Init<T> init_;
+        T process_variance_;
         std::unique_ptr<F<N, T>> filter_;
 
         com::MeasurementQueue<N, T> queue_;
@@ -71,6 +72,7 @@ public:
               T angle_estimation_variance,
               std::optional<T> gate,
               const Init<T>& init,
+              T process_variance,
               std::unique_ptr<F<N, T>>&& filter);
 };
 
@@ -81,10 +83,12 @@ Speed<N, T, F>::Speed(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
+        const T process_variance,
         std::unique_ptr<F<N, T>>&& filter)
         : reset_dt_(reset_dt),
           gate_(gate),
           init_(init),
+          process_variance_(process_variance),
           filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
@@ -123,7 +127,8 @@ void Speed<N, T, F>::reset(const Measurements<N, T>& m)
                 },
                 [&](const Measurement<N, T>& position, const Measurements<N, T>& measurements, const T dt)
                 {
-                        update_position(filter_.get(), position, measurements.speed, gate_, dt, nis_);
+                        update_position(
+                                filter_.get(), position, measurements.speed, gate_, dt, process_variance_, nis_);
                 });
 
         last_time_ = m.time;
@@ -163,13 +168,13 @@ std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>&
                 }
 
                 const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
-                update_position(filter_.get(), position, m.speed, gate_, dt, nis_);
+                update_position(filter_.get(), position, m.speed, gate_, dt, process_variance_, nis_);
 
                 last_position_time_ = m.time;
         }
         else
         {
-                if (!update_non_position(filter_.get(), m.speed, gate_, dt, nis_))
+                if (!update_non_position(filter_.get(), m.speed, gate_, dt, process_variance_, nis_))
                 {
                         return {};
                 }
@@ -202,11 +207,11 @@ std::unique_ptr<Filter<N, T>> create_speed_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance)
+        const T process_variance)
 {
         return std::make_unique<Speed<N, T, Filter1>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_1<N, T>(sigma_points_alpha, position_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, process_variance,
+                create_filter_1<N, T>(sigma_points_alpha));
 }
 
 template <std::size_t N, typename T>
@@ -217,11 +222,11 @@ std::unique_ptr<Filter<N, T>> create_speed_2(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance)
+        const T process_variance)
 {
         return std::make_unique<Speed<N, T, Filter2>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_2<N, T>(sigma_points_alpha, position_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, process_variance,
+                create_filter_2<N, T>(sigma_points_alpha));
 }
 
 #define TEMPLATE(N, T)                                                      \

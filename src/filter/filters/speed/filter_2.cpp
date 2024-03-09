@@ -112,7 +112,7 @@ numerical::Vector<3 * N, T> f(const T dt, const numerical::Vector<3 * N, T>& x)
 }
 
 template <std::size_t N, typename T>
-constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T position_variance)
+constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T process_variance)
 {
         const T dt_2 = power<2>(dt) / 2;
         const T dt_3 = power<3>(dt) / 6;
@@ -120,7 +120,7 @@ constexpr numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const T position_vari
         const numerical::Matrix<3 * N, N, T> noise_transition =
                 block_diagonal<N>(numerical::Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
         const numerical::Matrix<N, N, T> process_covariance =
-                numerical::make_diagonal_matrix(numerical::Vector<N, T>(position_variance));
+                numerical::make_diagonal_matrix(numerical::Vector<N, T>(process_variance));
 
         return noise_transition * process_covariance * noise_transition.transposed();
 }
@@ -243,7 +243,6 @@ template <std::size_t N, typename T>
 class Filter final : public Filter2<N, T>
 {
         const T sigma_points_alpha_;
-        const T position_variance_;
         std::optional<core::Ukf<3 * N, T, core::SigmaPoints<3 * N, T>>> filter_;
 
         [[nodiscard]] numerical::Vector<N, T> velocity() const
@@ -270,7 +269,7 @@ class Filter final : public Filter2<N, T>
                         p<N, T>(position_velocity_p, init));
         }
 
-        void predict(const T dt) override
+        void predict(const T dt, const T process_variance) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
@@ -280,7 +279,7 @@ class Filter final : public Filter2<N, T>
                         {
                                 return f<N, T>(dt, x);
                         },
-                        q<N, T>(dt, position_variance_));
+                        q<N, T>(dt, process_variance));
         }
 
         core::UpdateInfo<N, T> update_position(const Measurement<N, T>& position, const std::optional<T> gate) override
@@ -343,21 +342,20 @@ class Filter final : public Filter2<N, T>
         }
 
 public:
-        Filter(const T sigma_points_alpha, const T position_variance)
-                : sigma_points_alpha_(sigma_points_alpha),
-                  position_variance_(position_variance)
+        explicit Filter(const T sigma_points_alpha)
+                : sigma_points_alpha_(sigma_points_alpha)
         {
         }
 };
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter2<N, T>> create_filter_2(const T sigma_points_alpha, const T position_variance)
+std::unique_ptr<Filter2<N, T>> create_filter_2(const T sigma_points_alpha)
 {
-        return std::make_unique<Filter<N, T>>(sigma_points_alpha, position_variance);
+        return std::make_unique<Filter<N, T>>(sigma_points_alpha);
 }
 
-#define TEMPLATE(N, T) template std::unique_ptr<Filter2<(N), T>> create_filter_2(T, T);
+#define TEMPLATE(N, T) template std::unique_ptr<Filter2<(N), T>> create_filter_2(T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }

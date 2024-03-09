@@ -35,7 +35,7 @@ std::unique_ptr<Filter<N, T>> create_speed_1(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_variance);
+        T process_variance);
 
 template <std::size_t N, typename T>
 std::unique_ptr<Filter<N, T>> create_speed_2(
@@ -45,5 +45,5 @@ std::unique_ptr<Filter<N, T>> create_speed_2(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_variance);
+        T process_variance);
 }

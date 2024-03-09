@@ -34,6 +34,7 @@ void update_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T process_variance,
         std::optional<Nis<N, T>>& nis)
 {
         if (!nis)
@@ -43,13 +44,13 @@ void update_position(
 
         if (speed)
         {
-                filter->predict(dt);
+                filter->predict(dt, process_variance);
                 const core::UpdateInfo<N + 1, T> update = filter->update_position_speed(position, *speed, gate);
                 update_nis_position_speed(update, *nis);
                 return;
         }
 
-        filter->predict(dt);
+        filter->predict(dt, process_variance);
         const core::UpdateInfo<N, T> update = filter->update_position(position, gate);
         update_nis_position(update, *nis);
 }
@@ -60,11 +61,12 @@ template <typename Filter, std::size_t N, typename T>
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T process_variance,
         std::optional<Nis<N, T>>& /*nis*/)
 {
         if (speed)
         {
-                filter->predict(dt);
+                filter->predict(dt, process_variance);
                 filter->update_speed(*speed, gate);
                 return true;
         }
