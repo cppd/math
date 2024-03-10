@@ -35,6 +35,9 @@ void update_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance,
         std::optional<Nis<T>>& nis)
 {
         if (!nis)
@@ -48,7 +51,9 @@ void update_position(
                 {
                         if (acceleration)
                         {
-                                filter->predict(dt);
+                                filter->predict(
+                                        dt, position_process_variance, angle_process_variance,
+                                        angle_r_process_variance);
                                 const core::UpdateInfo<6, T> update =
                                         filter->update_position_speed_direction_acceleration(
                                                 position, *speed, *direction, *acceleration, gate);
@@ -56,7 +61,8 @@ void update_position(
                                 return;
                         }
 
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
                         update_nis_position(update, *nis);
@@ -65,14 +71,15 @@ void update_position(
 
                 if (acceleration)
                 {
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         const core::UpdateInfo<5, T> update =
                                 filter->update_position_speed_acceleration(position, *speed, *acceleration, gate);
                         update_nis_position(update, *nis);
                         return;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
                 update_nis_position(update, *nis);
                 return;
@@ -82,14 +89,15 @@ void update_position(
         {
                 if (acceleration)
                 {
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         const core::UpdateInfo<5, T> update = filter->update_position_direction_acceleration(
                                 position, *direction, *acceleration, gate);
                         update_nis_position(update, *nis);
                         return;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
                 update_nis_position(update, *nis);
                 return;
@@ -97,14 +105,14 @@ void update_position(
 
         if (acceleration)
         {
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 const core::UpdateInfo<4, T> update =
                         filter->update_position_acceleration(position, *acceleration, gate);
                 update_nis_position(update, *nis);
                 return;
         }
 
-        filter->predict(dt);
+        filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
         update_nis_position(update, *nis);
 }
@@ -117,6 +125,9 @@ template <typename Filter, typename T>
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance,
         std::optional<Nis<T>>& /*nis*/)
 {
         if (speed)
@@ -125,24 +136,28 @@ template <typename Filter, typename T>
                 {
                         if (acceleration)
                         {
-                                filter->predict(dt);
+                                filter->predict(
+                                        dt, position_process_variance, angle_process_variance,
+                                        angle_r_process_variance);
                                 filter->update_speed_direction_acceleration(*speed, *direction, *acceleration, gate);
                                 return true;
                         }
 
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         filter->update_speed_direction(*speed, *direction, gate);
                         return true;
                 }
 
                 if (acceleration)
                 {
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         filter->update_speed_acceleration(*speed, *acceleration, gate);
                         return true;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 filter->update_speed(*speed, gate);
                 return true;
         }
@@ -151,19 +166,20 @@ template <typename Filter, typename T>
         {
                 if (acceleration)
                 {
-                        filter->predict(dt);
+                        filter->predict(
+                                dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                         filter->update_direction_acceleration(*direction, *acceleration, gate);
                         return true;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 filter->update_direction(*direction, gate);
                 return true;
         }
 
         if (acceleration)
         {
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance, angle_r_process_variance);
                 filter->update_acceleration(*acceleration, gate);
                 return true;
         }

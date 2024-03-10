@@ -1115,9 +1115,6 @@ numerical::Vector<3, T> speed_acceleration_residual(const numerical::Vector<3, T
 template <typename T>
 class Filter final : public FilterEkf<T>
 {
-        const T position_variance_;
-        const T angle_variance_;
-        const T angle_r_variance_;
         std::optional<core::Ekf<9, T>> filter_;
 
         [[nodiscard]] numerical::Vector<2, T> velocity() const
@@ -1145,7 +1142,11 @@ class Filter final : public FilterEkf<T>
                 filter_.emplace(x(position_velocity, init), p(position_velocity_p, init));
         }
 
-        void predict(const T dt) override
+        void predict(
+                const T dt,
+                const T position_process_variance,
+                const T angle_process_variance,
+                const T angle_r_process_variance) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
@@ -1160,7 +1161,7 @@ class Filter final : public FilterEkf<T>
                         {
                                 return f_matrix;
                         },
-                        q(dt, position_variance_, angle_variance_, angle_r_variance_));
+                        q(dt, position_process_variance, angle_process_variance, angle_r_process_variance));
         }
 
         core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
@@ -1446,27 +1447,16 @@ class Filter final : public FilterEkf<T>
 
                 return filter_->p()[8, 8];
         }
-
-public:
-        Filter(const T position_variance, const T angle_variance, const T angle_r_variance)
-                : position_variance_(position_variance),
-                  angle_variance_(angle_variance),
-                  angle_r_variance_(angle_r_variance)
-        {
-        }
 };
 }
 
 template <typename T>
-std::unique_ptr<FilterEkf<T>> create_filter_ekf(
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance)
+std::unique_ptr<FilterEkf<T>> create_filter_ekf()
 {
-        return std::make_unique<Filter<T>>(position_variance, angle_variance, angle_r_variance);
+        return std::make_unique<Filter<T>>();
 }
 
-#define TEMPLATE(T) template std::unique_ptr<FilterEkf<T>> create_filter_ekf(T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<FilterEkf<T>> create_filter_ekf();
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

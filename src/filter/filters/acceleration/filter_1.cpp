@@ -758,9 +758,6 @@ template <typename T>
 class Filter final : public Filter1<T>
 {
         const T sigma_points_alpha_;
-        const T position_variance_;
-        const T angle_variance_;
-        const T angle_r_variance_;
         std::optional<core::Ukf<9, T, core::SigmaPoints<9, T>>> filter_;
 
         [[nodiscard]] numerical::Vector<2, T> velocity() const
@@ -790,7 +787,11 @@ class Filter final : public Filter1<T>
                         p(position_velocity_p, init));
         }
 
-        void predict(const T dt) override
+        void predict(
+                const T dt,
+                const T position_process_variance,
+                const T angle_process_variance,
+                const T angle_r_process_variance) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
@@ -800,7 +801,7 @@ class Filter final : public Filter1<T>
                         {
                                 return f(dt, x);
                         },
-                        q(dt, position_variance_, angle_variance_, angle_r_variance_));
+                        q(dt, position_process_variance, angle_process_variance, angle_r_process_variance));
         }
 
         core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, const std::optional<T> gate) override
@@ -1077,27 +1078,20 @@ class Filter final : public Filter1<T>
         }
 
 public:
-        Filter(const T sigma_points_alpha, const T position_variance, const T angle_variance, const T angle_r_variance)
-                : sigma_points_alpha_(sigma_points_alpha),
-                  position_variance_(position_variance),
-                  angle_variance_(angle_variance),
-                  angle_r_variance_(angle_r_variance)
+        explicit Filter(const T sigma_points_alpha)
+                : sigma_points_alpha_(sigma_points_alpha)
         {
         }
 };
 }
 
 template <typename T>
-std::unique_ptr<Filter1<T>> create_filter_1(
-        const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance)
+std::unique_ptr<Filter1<T>> create_filter_1(const T sigma_points_alpha)
 {
-        return std::make_unique<Filter<T>>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance);
+        return std::make_unique<Filter<T>>(sigma_points_alpha);
 }
 
-#define TEMPLATE(T) template std::unique_ptr<Filter1<T>> create_filter_1(T, T, T, T);
+#define TEMPLATE(T) template std::unique_ptr<Filter1<T>> create_filter_1(T);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

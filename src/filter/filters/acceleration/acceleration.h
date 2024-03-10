@@ -35,9 +35,9 @@ std::unique_ptr<Filter<2, T>> create_acceleration_0(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_variance,
-        T angle_variance,
-        T angle_r_variance);
+        T position_process_variance,
+        T angle_process_variance,
+        T angle_r_process_variance);
 
 template <typename T>
 std::unique_ptr<Filter<2, T>> create_acceleration_1(
@@ -47,9 +47,9 @@ std::unique_ptr<Filter<2, T>> create_acceleration_1(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_variance,
-        T angle_variance,
-        T angle_r_variance);
+        T position_process_variance,
+        T angle_process_variance,
+        T angle_r_process_variance);
 
 template <typename T>
 std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
@@ -58,7 +58,7 @@ std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
         T angle_estimation_variance,
         std::optional<T> gate,
         const Init<T>& init,
-        T position_variance,
-        T angle_variance,
-        T angle_r_variance);
+        T position_process_variance,
+        T angle_process_variance,
+        T angle_r_process_variance);
 }

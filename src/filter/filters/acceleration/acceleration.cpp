@@ -71,6 +71,9 @@ class Acceleration final : public Filter<2, T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         Init<T> init_;
+        T position_process_variance_;
+        T angle_process_variance_;
+        T angle_r_process_variance_;
         std::unique_ptr<F<T>> filter_;
 
         com::MeasurementQueue<2, T> queue_;
@@ -95,6 +98,9 @@ public:
                 T angle_estimation_variance,
                 std::optional<T> gate,
                 const Init<T>& init,
+                T position_process_variance,
+                T angle_process_variance,
+                T angle_r_process_variance,
                 std::unique_ptr<F<T>>&& filter);
 };
 
@@ -105,11 +111,17 @@ Acceleration<T, F>::Acceleration(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance,
         std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
+          position_process_variance_(position_process_variance),
+          angle_process_variance_(angle_process_variance),
+          angle_r_process_variance_(angle_r_process_variance),
           filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
@@ -153,7 +165,8 @@ std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
                         {
                                 update_position(
                                         filter_.get(), position, measurements.acceleration, measurements.direction,
-                                        measurements.speed, gate_, dt, nis_);
+                                        measurements.speed, gate_, dt, position_process_variance_,
+                                        angle_process_variance_, angle_r_process_variance_, nis_);
                         });
 
                 last_time_ = m.time;
@@ -171,13 +184,17 @@ std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                update_position(filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt, nis_);
+                update_position(
+                        filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt,
+                        position_process_variance_, angle_process_variance_, angle_r_process_variance_, nis_);
 
                 LOG(measurement_description(m) + filter_description(*filter_));
         }
         else
         {
-                if (!update_non_position(filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, nis_))
+                if (!update_non_position(
+                            filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_process_variance_,
+                            angle_process_variance_, angle_r_process_variance_, nis_))
                 {
                         return {};
                 }
@@ -210,13 +227,13 @@ std::unique_ptr<Filter<2, T>> create_acceleration_0(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance)
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::Filter0>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_0<T>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, angle_r_process_variance, create_filter_0<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -227,13 +244,13 @@ std::unique_ptr<Filter<2, T>> create_acceleration_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance)
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::Filter1>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_1<T>(sigma_points_alpha, position_variance, angle_variance, angle_r_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, angle_r_process_variance, create_filter_1<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -243,13 +260,13 @@ std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
-        const T position_variance,
-        const T angle_variance,
-        const T angle_r_variance)
+        const T position_process_variance,
+        const T angle_process_variance,
+        const T angle_r_process_variance)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::FilterEkf>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_ekf<T>(position_variance, angle_variance, angle_r_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, angle_r_process_variance, create_filter_ekf<T>());
 }
 
 #define TEMPLATE(T)                                                               \
