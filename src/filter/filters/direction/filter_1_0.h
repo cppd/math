@@ -40,7 +40,7 @@ public:
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt) = 0;
+        virtual void predict(T dt, T position_process_variance, T angle_process_variance) = 0;
 
         virtual core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
 
@@ -80,5 +80,5 @@ public:
 };
 
 template <typename T>
-std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha, T position_variance, T angle_variance);
+std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha);
 }

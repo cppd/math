@@ -70,6 +70,8 @@ class Direction final : public Filter<2, T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         Init<T> init_;
+        T position_process_variance_;
+        T angle_process_variance_;
         std::unique_ptr<F<T>> filter_;
 
         com::MeasurementQueue<2, T> queue_;
@@ -97,6 +99,8 @@ public:
                 T angle_estimation_variance,
                 std::optional<T> gate,
                 const Init<T>& init,
+                T position_process_variance,
+                T angle_process_variance,
                 std::unique_ptr<F<T>>&& filter);
 };
 
@@ -107,11 +111,15 @@ Direction<T, F>::Direction(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
+        const T position_process_variance,
+        const T angle_process_variance,
         std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
+          position_process_variance_(position_process_variance),
+          angle_process_variance_(angle_process_variance),
           filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
 {
@@ -151,7 +159,8 @@ void Direction<T, F>::reset(const Measurements<2, T>& m)
                 [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
                 {
                         update_position(
-                                filter_.get(), position, measurements.direction, measurements.speed, gate_, dt, nis_);
+                                filter_.get(), position, measurements.direction, measurements.speed, gate_, dt,
+                                position_process_variance_, angle_process_variance_, nis_);
                 });
 
         last_time_ = m.time;
@@ -193,7 +202,9 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
 
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
                 const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                update_position(filter_.get(), position, direction, m.speed, gate_, dt, nis_);
+                update_position(
+                        filter_.get(), position, direction, m.speed, gate_, dt, position_process_variance_,
+                        angle_process_variance_, nis_);
 
                 last_position_time_ = m.time;
 
@@ -202,7 +213,9 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
         else
         {
                 const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                if (!update_non_position(filter_.get(), direction, m.speed, gate_, dt, nis_))
+                if (!update_non_position(
+                            filter_.get(), direction, m.speed, gate_, dt, position_process_variance_,
+                            angle_process_variance_, nis_))
                 {
                         return {};
                 }
@@ -235,12 +248,12 @@ std::unique_ptr<Filter<2, T>> create_direction_1_0(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance)
+        const T position_process_variance,
+        const T angle_process_variance)
 {
         return std::make_unique<Direction<T, Filter10>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_1_0<T>(sigma_points_alpha, position_variance, angle_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, create_filter_1_0<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -251,12 +264,12 @@ std::unique_ptr<Filter<2, T>> create_direction_1_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance)
+        const T position_process_variance,
+        const T angle_process_variance)
 {
         return std::make_unique<Direction<T, Filter11>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_1_1<T>(sigma_points_alpha, position_variance, angle_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, create_filter_1_1<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -267,12 +280,12 @@ std::unique_ptr<Filter<2, T>> create_direction_2_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_variance,
-        const T angle_variance)
+        const T position_process_variance,
+        const T angle_process_variance)
 {
         return std::make_unique<Direction<T, Filter21>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init,
-                create_filter_2_1<T>(sigma_points_alpha, position_variance, angle_variance));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
+                angle_process_variance, create_filter_2_1<T>(sigma_points_alpha));
 }
 
 #define TEMPLATE(T)                                                            \

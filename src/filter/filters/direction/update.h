@@ -34,6 +34,8 @@ void update_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T position_process_variance,
+        const T angle_process_variance,
         std::optional<Nis<T>>& nis)
 {
         if (!nis)
@@ -45,14 +47,14 @@ void update_position(
         {
                 if (direction)
                 {
-                        filter->predict(dt);
+                        filter->predict(dt, position_process_variance, angle_process_variance);
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
                         update_nis_position_speed_direction(update, *nis);
                         return;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
                 update_nis_position(update, *nis);
                 return;
@@ -60,13 +62,13 @@ void update_position(
 
         if (direction)
         {
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
                 update_nis_position(update, *nis);
                 return;
         }
 
-        filter->predict(dt);
+        filter->predict(dt, position_process_variance, angle_process_variance);
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
         update_nis_position(update, *nis);
 }
@@ -78,25 +80,27 @@ template <typename Filter, typename T>
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
+        const T position_process_variance,
+        const T angle_process_variance,
         std::optional<Nis<T>>& /*nis*/)
 {
         if (speed)
         {
                 if (direction)
                 {
-                        filter->predict(dt);
+                        filter->predict(dt, position_process_variance, angle_process_variance);
                         filter->update_speed_direction(*speed, *direction, gate);
                         return true;
                 }
 
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance);
                 filter->update_speed(*speed, gate);
                 return true;
         }
 
         if (direction)
         {
-                filter->predict(dt);
+                filter->predict(dt, position_process_variance, angle_process_variance);
                 filter->update_direction(*direction, gate);
                 return true;
         }
