@@ -77,6 +77,13 @@ public:
                 ++count_;
         }
 
+        void add(const T normalized_squared, const std::size_t dof)
+                requires (N == 1)
+        {
+                sum_ += normalized_squared;
+                count_ += dof;
+        }
+
         [[nodiscard]] bool empty() const
         {
                 return count_ == 0;
