@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::acceleration
 {
 template <typename T>
-std::unique_ptr<Filter<2, T>> create_acceleration_0(
+[[nodiscard]] std::unique_ptr<Filter<2, T>> create_acceleration_0(
         std::size_t measurement_queue_size,
         T reset_dt,
         T angle_estimation_variance,
@@ -40,7 +40,7 @@ std::unique_ptr<Filter<2, T>> create_acceleration_0(
         T angle_r_process_variance);
 
 template <typename T>
-std::unique_ptr<Filter<2, T>> create_acceleration_1(
+[[nodiscard]] std::unique_ptr<Filter<2, T>> create_acceleration_1(
         std::size_t measurement_queue_size,
         T reset_dt,
         T angle_estimation_variance,
@@ -52,7 +52,7 @@ std::unique_ptr<Filter<2, T>> create_acceleration_1(
         T angle_r_process_variance);
 
 template <typename T>
-std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
+[[nodiscard]] std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
         std::size_t measurement_queue_size,
         T reset_dt,
         T angle_estimation_variance,

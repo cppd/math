@@ -43,6 +43,7 @@ struct Nis final
 {
         core::NormalizedSquared<6, T> position_speed_direction_acceleration;
         core::NormalizedSquared<2, T> position;
+        core::NormalizedSquared<1, T> nis;
 };
 
 template <typename Filter, typename T>
@@ -82,6 +83,18 @@ void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
         }
 }
 
+template <std::size_t N, typename T>
+void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
+{
+        static_assert(N >= 1);
+
+        if (!update.gate)
+        {
+                ASSERT(update.normalized_innovation_squared);
+                nis.nis.add(*update.normalized_innovation_squared, N);
+        }
+}
+
 template <typename T>
 [[nodiscard]] std::string make_consistency_string(const std::optional<Nees<T>>& nees, const std::optional<Nis<T>>& nis)
 {
@@ -107,6 +120,8 @@ template <typename T>
                 s += "NIS position; " + nis->position.check_string();
                 s += '\n';
                 s += "NIS position SDA; " + nis->position_speed_direction_acceleration.check_string();
+                s += '\n';
+                s += "NIS; " + nis->nis.check_string();
         }
 
         return s;
