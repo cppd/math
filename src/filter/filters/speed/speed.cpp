@@ -50,8 +50,8 @@ class Speed final : public Filter<N, T>
 
         com::MeasurementQueue<N, T> queue_;
 
-        std::optional<Nees<N, T>> nees_;
-        std::optional<Nis<N, T>> nis_;
+        std::optional<Nees<T>> nees_;
+        std::optional<Nis<T>> nis_;
 
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;

@@ -49,8 +49,8 @@ class Position final : public FilterPosition<N, T>
         T process_variance_;
         std::unique_ptr<F<N, T>> filter_;
 
-        Nees<N, T> nees_;
-        Nis<N, T> nis_;
+        Nees<T> nees_;
+        Nis<T> nis_;
 
         std::optional<T> last_predict_time_;
         std::optional<T> last_update_time_;

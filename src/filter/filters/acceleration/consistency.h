@@ -32,18 +32,18 @@ namespace ns::filter::filters::acceleration
 template <typename T>
 struct Nees final
 {
-        core::NormalizedSquared<2, T> position;
-        core::NormalizedSquared<1, T> speed;
-        core::NormalizedSquared<1, T> angle;
-        core::NormalizedSquared<1, T> angle_r;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> speed;
+        core::NormalizedSquared<T> angle;
+        core::NormalizedSquared<T> angle_r;
 };
 
 template <typename T>
 struct Nis final
 {
-        core::NormalizedSquared<6, T> position_speed_direction_acceleration;
-        core::NormalizedSquared<2, T> position;
-        core::NormalizedSquared<1, T> nis;
+        core::NormalizedSquared<T> position_speed_direction_acceleration;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> nis;
 };
 
 template <typename Filter, typename T>

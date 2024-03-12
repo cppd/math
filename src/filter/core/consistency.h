@@ -44,44 +44,34 @@ namespace ns::filter::core
 {
 // Average of normalized (state) estimation error squared (NEES).
 // Average of normalized innovation squared (NIS).
-template <std::size_t N, typename T>
+template <typename T>
 class NormalizedSquared final
 {
-        static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
 
         long double sum_ = 0;
         unsigned long long count_ = 0;
 
-        [[nodiscard]] unsigned long long degrees_of_freedom() const
-        {
-                return count_ * N;
-        }
-
 public:
+        template <std::size_t N>
         void add(const numerical::Vector<N, T>& difference, const numerical::Matrix<N, N, T>& covariance)
         {
+                static_assert(N >= 1);
                 sum_ += dot(difference * covariance.inversed(), difference);
-                ++count_;
+                count_ += N;
         }
 
         void add(const T difference, const T variance)
-                requires (N == 1)
         {
                 add(numerical::Vector<1, T>(difference), numerical::Matrix<1, 1, T>{{variance}});
         }
 
-        void add(const T normalized_squared)
+        void add(const T normalized_squared, const std::size_t degrees_of_freedom)
         {
+                ASSERT(normalized_squared >= 0);
+                ASSERT(degrees_of_freedom > 0);
                 sum_ += normalized_squared;
-                ++count_;
-        }
-
-        void add(const T normalized_squared, const std::size_t dof)
-                requires (N == 1)
-        {
-                sum_ += normalized_squared;
-                count_ += dof;
+                count_ += degrees_of_freedom;
         }
 
         [[nodiscard]] bool empty() const
@@ -93,14 +83,14 @@ public:
         {
                 if (!empty())
                 {
-                        return sum_ / degrees_of_freedom();
+                        return sum_ / count_;
                 }
                 error("No data to compute normalized squared average");
         }
 
         [[nodiscard]] std::string check_string() const
         {
-                return to_string(average()) + "; DOF = " + to_string(degrees_of_freedom());
+                return to_string(average()) + "; DOF = " + to_string(count_);
         }
 };
 }

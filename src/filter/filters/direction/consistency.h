@@ -32,16 +32,16 @@ namespace ns::filter::filters::direction
 template <typename T>
 struct Nees final
 {
-        core::NormalizedSquared<2, T> position;
-        core::NormalizedSquared<1, T> speed;
-        core::NormalizedSquared<1, T> angle;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> speed;
+        core::NormalizedSquared<T> angle;
 };
 
 template <typename T>
 struct Nis final
 {
-        core::NormalizedSquared<4, T> position_speed_direction;
-        core::NormalizedSquared<2, T> position;
+        core::NormalizedSquared<T> position_speed_direction;
+        core::NormalizedSquared<T> position;
 };
 
 template <typename Filter, typename T>

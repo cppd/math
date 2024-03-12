@@ -395,7 +395,7 @@ void test_impl(
 
         std::unordered_map<int, unsigned> distribution;
 
-        NormalizedSquared<1, T> nees;
+        NormalizedSquared<T> nees;
 
         std::vector<ResultData<T>> result_data;
         result_data.reserve(process_data.size());

@@ -29,27 +29,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::position
 {
-template <std::size_t N, typename T>
+template <typename T>
 struct Nees final
 {
-        core::NormalizedSquared<N, T> position;
-        core::NormalizedSquared<1, T> speed;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> speed;
 };
 
-template <std::size_t N, typename T>
+template <typename T>
 struct Nis final
 {
-        core::NormalizedSquared<N, T> position;
+        core::NormalizedSquared<T> position;
 };
 
 template <std::size_t N, typename T>
-void update_nees(const Filter0<N, T>& filter, const TrueData<N, T>& true_data, Nees<N, T>& nees)
+void update_nees(const Filter0<N, T>& filter, const TrueData<N, T>& true_data, Nees<T>& nees)
 {
         nees.position.add(true_data.position - filter.position(), filter.position_p());
 }
 
 template <typename Filter, std::size_t N, typename T>
-void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<N, T>& nees)
+void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<T>& nees)
 {
         nees.position.add(true_data.position - filter.position(), filter.position_p());
 
@@ -60,15 +60,15 @@ void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<N, 
 }
 
 template <std::size_t N, typename T>
-void update_nis(const core::UpdateInfo<N, T>& update, Nis<N, T>& nis)
+void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 {
         ASSERT(!update.gate);
         ASSERT(update.normalized_innovation_squared);
-        nis.position.add(*update.normalized_innovation_squared);
+        nis.position.add(*update.normalized_innovation_squared, N);
 }
 
-template <std::size_t N, typename T>
-std::string make_consistency_string(const Nees<N, T>& nees, const Nis<N, T>& nis)
+template <typename T>
+std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
 {
         std::string s;
 

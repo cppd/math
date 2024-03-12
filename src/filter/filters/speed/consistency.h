@@ -28,22 +28,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
-template <std::size_t N, typename T>
+template <typename T>
 struct Nees final
 {
-        core::NormalizedSquared<N, T> position;
-        core::NormalizedSquared<1, T> speed;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> speed;
 };
 
-template <std::size_t N, typename T>
+template <typename T>
 struct Nis final
 {
-        core::NormalizedSquared<N, T> position;
-        core::NormalizedSquared<N + 1, T> position_speed;
+        core::NormalizedSquared<T> position;
+        core::NormalizedSquared<T> position_speed;
 };
 
 template <typename Filter, std::size_t N, typename T>
-void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::optional<Nees<N, T>>& nees)
+void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::optional<Nees<T>>& nees)
 {
         if (!nees)
         {
@@ -54,18 +54,19 @@ void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::opt
 }
 
 template <std::size_t N, typename T>
-void update_nis_position_speed(const core::UpdateInfo<N + 1, T>& update, Nis<N, T>& nis)
+void update_nis_position_speed(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 {
+        static_assert(N >= 2);
         if (!update.gate)
         {
                 ASSERT(update.s);
-                nis.position.add(update.residual.template head<N>(), update.s->template top_left<N, N>());
+                nis.position.add(update.residual.template head<N - 1>(), update.s->template top_left<N - 1, N - 1>());
                 nis.position_speed.add(update.residual, *update.s);
         }
 }
 
 template <std::size_t N, typename T>
-void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<N, T>& nis)
+void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 {
         if (!update.gate)
         {
@@ -74,8 +75,8 @@ void update_nis_position(const core::UpdateInfo<N, T>& update, Nis<N, T>& nis)
         }
 }
 
-template <std::size_t N, typename T>
-std::string make_consistency_string(const std::optional<Nees<N, T>>& nees, const std::optional<Nis<N, T>>& nis)
+template <typename T>
+std::string make_consistency_string(const std::optional<Nees<T>>& nees, const std::optional<Nis<T>>& nis)
 {
         std::string s;
 

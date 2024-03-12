@@ -35,7 +35,7 @@ void update_position(
         const std::optional<T> gate,
         const T dt,
         const T process_variance,
-        std::optional<Nis<N, T>>& nis)
+        std::optional<Nis<T>>& nis)
 {
         if (!nis)
         {
@@ -55,14 +55,14 @@ void update_position(
         update_nis_position(update, *nis);
 }
 
-template <typename Filter, std::size_t N, typename T>
+template <typename Filter, typename T>
 [[nodiscard]] bool update_non_position(
         Filter* const filter,
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
         const T process_variance,
-        std::optional<Nis<N, T>>& /*nis*/)
+        std::optional<Nis<T>>& /*nis*/)
 {
         if (speed)
         {
