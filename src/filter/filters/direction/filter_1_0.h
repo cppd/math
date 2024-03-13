@@ -42,32 +42,38 @@ public:
 
         virtual void predict(T dt, T position_process_variance, T angle_process_variance) = 0;
 
-        virtual core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, std::optional<T> gate) = 0;
+        [[nodiscard]] virtual core::UpdateInfo<2, T> update_position(
+                const Measurement<2, T>& position,
+                std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<3, T> update_position_speed(
+        [[nodiscard]] virtual core::UpdateInfo<3, T> update_position_speed(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<4, T> update_position_speed_direction(
+        [[nodiscard]] virtual core::UpdateInfo<4, T> update_position_speed_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<3, T> update_position_direction(
+        [[nodiscard]] virtual core::UpdateInfo<3, T> update_position_direction(
                 const Measurement<2, T>& position,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<2, T> update_speed_direction(
+        [[nodiscard]] virtual core::UpdateInfo<2, T> update_speed_direction(
                 const Measurement<1, T>& speed,
                 const Measurement<1, T>& direction,
                 std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<1, T> update_direction(const Measurement<1, T>& direction, std::optional<T> gate) = 0;
+        [[nodiscard]] virtual core::UpdateInfo<1, T> update_direction(
+                const Measurement<1, T>& direction,
+                std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<1, T> update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
+        [[nodiscard]] virtual core::UpdateInfo<1, T> update_speed(
+                const Measurement<1, T>& speed,
+                std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual numerical::Vector<2, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_p() const = 0;
@@ -80,5 +86,5 @@ public:
 };
 
 template <typename T>
-std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha);
+[[nodiscard]] std::unique_ptr<Filter10<T>> create_filter_1_0(T sigma_points_alpha);
 }
