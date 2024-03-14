@@ -43,14 +43,18 @@ public:
 
         virtual void predict(T dt, T process_variance) = 0;
 
-        virtual core::UpdateInfo<N, T> update_position(const Measurement<N, T>& position, std::optional<T> gate) = 0;
+        [[nodiscard]] virtual core::UpdateInfo<N, T> update_position(
+                const Measurement<N, T>& position,
+                std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<N + 1, T> update_position_speed(
+        [[nodiscard]] virtual core::UpdateInfo<N + 1, T> update_position_speed(
                 const Measurement<N, T>& position,
                 const Measurement<1, T>& speed,
                 std::optional<T> gate) = 0;
 
-        virtual core::UpdateInfo<1, T> update_speed(const Measurement<1, T>& speed, std::optional<T> gate) = 0;
+        [[nodiscard]] virtual core::UpdateInfo<1, T> update_speed(
+                const Measurement<1, T>& speed,
+                std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual numerical::Vector<N, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<N, N, T> position_p() const = 0;
@@ -60,5 +64,5 @@ public:
 };
 
 template <std::size_t N, typename T>
-std::unique_ptr<Filter2<N, T>> create_filter_2(T sigma_points_alpha);
+[[nodiscard]] std::unique_ptr<Filter2<N, T>> create_filter_2(T sigma_points_alpha);
 }

@@ -47,12 +47,14 @@ void update_position(
                 filter->predict(dt, process_variance);
                 const core::UpdateInfo<N + 1, T> update = filter->update_position_speed(position, *speed, gate);
                 update_nis_position_speed(update, *nis);
+                update_nis(update, *nis);
                 return;
         }
 
         filter->predict(dt, process_variance);
         const core::UpdateInfo<N, T> update = filter->update_position(position, gate);
         update_nis_position(update, *nis);
+        update_nis(update, *nis);
 }
 
 template <typename Filter, typename T>
@@ -62,12 +64,18 @@ template <typename Filter, typename T>
         const std::optional<T> gate,
         const T dt,
         const T process_variance,
-        std::optional<Nis<T>>& /*nis*/)
+        std::optional<Nis<T>>& nis)
 {
+        if (!nis)
+        {
+                nis.emplace();
+        }
+
         if (speed)
         {
                 filter->predict(dt, process_variance);
-                filter->update_speed(*speed, gate);
+                const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
+                update_nis(update, *nis);
                 return true;
         }
 
