@@ -125,60 +125,46 @@ public:
 
         std::optional<MeshObject> mesh_object(const model::ObjectId id) const
         {
-                std::optional<MeshObject> opt;
-
                 const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
-                        try
+                        if (const MeshObject* const p = std::get_if<MeshObject>(&iter->second))
                         {
-                                opt = std::get<MeshObject>(iter->second);
-                        }
-                        catch (const std::bad_variant_access&)
-                        {
+                                return *p;
                         }
                 }
-
-                return opt;
+                return std::nullopt;
         }
 
         std::optional<MeshObjectConst> mesh_object_const(const model::ObjectId id) const
         {
-                std::optional<MeshObject> opt = mesh_object(id);
-                if (opt)
+                if (auto object = mesh_object(id))
                 {
-                        return to_type<MeshObjectConst>(*opt);
+                        return to_type<MeshObjectConst>(std::move(*object));
                 }
                 return std::nullopt;
         }
 
         std::optional<VolumeObject> volume_object(const model::ObjectId id) const
         {
-                std::optional<VolumeObject> opt;
-
                 const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
-                        try
+                        if (const VolumeObject* const p = std::get_if<VolumeObject>(&iter->second))
                         {
-                                opt = std::get<VolumeObject>(iter->second);
-                        }
-                        catch (const std::bad_variant_access&)
-                        {
+                                return *p;
                         }
                 }
-
-                return opt;
+                return std::nullopt;
         }
 
         std::optional<VolumeObjectConst> volume_object_const(const model::ObjectId id) const
         {
-                std::optional<VolumeObject> opt = volume_object(id);
-                if (opt)
+                if (auto object = volume_object(id))
                 {
-                        return to_type<VolumeObjectConst>(*opt);
+                        return to_type<VolumeObjectConst>(std::move(*object));
                 }
                 return std::nullopt;
         }
