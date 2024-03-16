@@ -60,6 +60,13 @@ namespace ns::filter::core
 {
 namespace ekf_implementation
 {
+template <std::size_t M, typename T>
+struct Matrices final
+{
+        numerical::Matrix<M, M, T> s;
+        numerical::Matrix<M, M, T> s_inversed;
+};
+
 // Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
 // 11 The H infinity filter
 // 11.89, 11.90
@@ -85,6 +92,61 @@ template <std::size_t N, std::size_t M, typename T>
         }
 
         return p * (I - theta * p + ht_ri * h * p).inversed() * ht_ri;
+}
+
+template <std::size_t M, std::size_t N, typename T>
+[[nodiscard]] std::optional<Matrices<M, T>> make_s_matrices(
+        const numerical::Matrix<M, M, T>& r,
+        const std::optional<T> theta,
+        const std::optional<T> gate,
+        const bool normalized_innovation,
+        const bool likelihood,
+        const numerical::Matrix<M, N, T>& hjx,
+        const numerical::Matrix<N, M, T>& p_hjxt)
+{
+        if (!theta || gate || likelihood || normalized_innovation)
+        {
+                const numerical::Matrix<M, M, T> s = hjx * p_hjxt + r;
+                return {
+                        {.s = s, .s_inversed = s.inversed()}
+                };
+        }
+        return {};
+}
+
+template <std::size_t M, typename T>
+[[nodiscard]] UpdateInfo<M, T> make_update(
+        const std::optional<T> gate,
+        const bool normalized_innovation,
+        const bool likelihood,
+        const std::optional<Matrices<M, T>>& matrices,
+        const numerical::Vector<M, T>& residual)
+{
+        if (gate || likelihood || normalized_innovation)
+        {
+                ASSERT(matrices);
+                return make_update_info(
+                        residual, matrices->s, matrices->s_inversed, gate, likelihood, normalized_innovation);
+        }
+        return make_update_info(residual);
+}
+
+template <std::size_t M, std::size_t N, typename T>
+[[nodiscard]] numerical::Matrix<N, M, T> make_k_matrix(
+        const numerical::Matrix<N, N, T>& p,
+        const numerical::Matrix<M, M, T>& r,
+        const std::optional<T> theta,
+        const std::optional<Matrices<M, T>>& matrices,
+        const numerical::Matrix<M, N, T>& hjx,
+        const numerical::Matrix<N, M, T>& p_hjxt)
+{
+        if (!theta)
+        {
+                ASSERT(matrices);
+                return p_hjxt * matrices->s_inversed;
+        }
+        const numerical::Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
+        return h_infinity_k("EKF update", *theta, p, hjx, ht_ri);
 }
 }
 
@@ -166,54 +228,20 @@ public:
                 const numerical::Matrix<M, N, T> hjx = hj(x_);
                 const numerical::Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
 
-                struct Matrices final
-                {
-                        numerical::Matrix<M, M, T> s;
-                        numerical::Matrix<M, M, T> s_inversed;
-                };
-
-                const std::optional<Matrices> matrices = [&]() -> std::optional<Matrices>
-                {
-                        if (!theta || gate || likelihood || normalized_innovation)
-                        {
-                                const numerical::Matrix<M, M, T> s = hjx * p_hjxt + r;
-                                return {
-                                        {.s = s, .s_inversed = s.inversed()}
-                                };
-                        }
-                        return {};
-                }();
+                const std::optional<impl::Matrices<M, T>> matrices =
+                        impl::make_s_matrices(r, theta, gate, normalized_innovation, likelihood, hjx, p_hjxt);
 
                 const numerical::Vector<M, T> residual = residual_z(z, h(x_));
 
-                const UpdateInfo<M, T> res = [&]()
-                {
-                        if (gate || likelihood || normalized_innovation)
-                        {
-                                ASSERT(matrices);
-                                return make_update_info(
-                                        residual, matrices->s, matrices->s_inversed, gate, likelihood,
-                                        normalized_innovation);
-                        }
-                        ASSERT(!matrices);
-                        return make_update_info(residual);
-                }();
+                const UpdateInfo<M, T> res =
+                        impl::make_update(gate, normalized_innovation, likelihood, matrices, residual);
 
                 if (res.gate)
                 {
                         return res;
                 }
 
-                const numerical::Matrix<N, M, T> k = [&]()
-                {
-                        if (!theta)
-                        {
-                                ASSERT(matrices);
-                                return p_hjxt * matrices->s_inversed;
-                        }
-                        const numerical::Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
-                        return impl::h_infinity_k("EKF update", *theta, p_, hjx, ht_ri);
-                }();
+                const numerical::Matrix<N, M, T> k = impl::make_k_matrix(p_, r, theta, matrices, hjx, p_hjxt);
 
                 x_ = add_x(x_, k * residual);
 
