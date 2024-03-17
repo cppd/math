@@ -71,6 +71,62 @@ inline const char* constraint_solution_to_string(const ConstraintSolution cs)
 namespace simplex_algorithm_implementation
 {
 template <std::size_t N, std::size_t M, typename T>
+void print_simplex_algorithm_data_impl(
+        const std::string_view text,
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        const T& v,
+        const Vector<N, T>& c,
+        const std::array<unsigned, N>& map_n,
+        const std::array<unsigned, M>& map_m)
+{
+        std::ostringstream oss;
+
+        oss << '\n';
+        oss << text << '\n';
+
+        const int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
+
+        const int precision = Limits<T>::max_digits10();
+
+        oss << std::setprecision(precision);
+
+        const int float_w = precision + 6 + 3;
+
+        oss << std::setfill('-');
+        oss << std::setw(float_w + 4 + int_w) << "b(v)";
+        for (unsigned n = 0; n < N; ++n)
+        {
+                oss << std::setw(float_w - int_w - 1) << "[" << std::setw(int_w) << map_n[n] << "]";
+        }
+        oss << std::setfill(' ');
+        oss << '\n';
+
+        oss << "z = " << std::setw(int_w) << " ";
+        oss << std::setw(float_w) << v;
+        for (unsigned n = 0; n < N; ++n)
+        {
+                oss << std::setw(float_w) << c[n];
+        }
+
+        oss << "\n";
+        oss << "---";
+
+        for (unsigned m = 0; m < M; ++m)
+        {
+                oss << '\n';
+                oss << "[" << std::setw(int_w) << map_m[m] << "]: ";
+                oss << std::setw(float_w) << b[m];
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        oss << std::setw(float_w) << a[m][n];
+                }
+        }
+
+        LOG(oss.str());
+}
+
+template <std::size_t N, std::size_t M, typename T>
 void print_simplex_algorithm_data(
         const std::string_view text,
         const std::array<T, M>& b,
@@ -83,55 +139,90 @@ void print_simplex_algorithm_data(
         static_assert(std::is_floating_point_v<T>);
         try
         {
-                std::ostringstream oss;
-
-                oss << '\n';
-                oss << text << '\n';
-
-                const int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
-
-                const int precision = Limits<T>::max_digits10();
-
-                oss << std::setprecision(precision);
-
-                const int float_w = precision + 6 + 3;
-
-                oss << std::setfill('-');
-                oss << std::setw(float_w + 4 + int_w) << "b(v)";
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        oss << std::setw(float_w - int_w - 1) << "[" << std::setw(int_w) << map_n[n] << "]";
-                }
-                oss << std::setfill(' ');
-                oss << '\n';
-
-                oss << "z = " << std::setw(int_w) << " ";
-                oss << std::setw(float_w) << v;
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        oss << std::setw(float_w) << c[n];
-                }
-
-                oss << "\n";
-                oss << "---";
-
-                for (unsigned m = 0; m < M; ++m)
-                {
-                        oss << '\n';
-                        oss << "[" << std::setw(int_w) << map_m[m] << "]: ";
-                        oss << std::setw(float_w) << b[m];
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                oss << std::setw(float_w) << a[m][n];
-                        }
-                }
-
-                LOG(oss.str());
+                print_simplex_algorithm_data_impl(text, b, a, v, c, map_n, map_m);
         }
         catch (...)
         {
                 error_fatal("Error in print simplex algorithm data function");
         }
+}
+
+// 29.3 The simplex algorithm.
+// Pivoting.
+// Compute the coefficients of the equation for new basic variable.
+// Lines 3–6 of PIVOT.
+template <std::size_t N, std::size_t M, typename T>
+void pivot_equation_coefficients(
+        std::array<T, M>& b,
+        std::array<Vector<N, T>, M>& a,
+        const unsigned l,
+        const unsigned e)
+{
+        b[l] = -b[l] / a[l][e];
+        for (unsigned j = 0; j < N; ++j)
+        {
+                if (j == e)
+                {
+                        continue;
+                }
+                a[l][j] = -a[l][j] / a[l][e];
+        }
+        a[l][e] = 1 / a[l][e];
+}
+
+// 29.3 The simplex algorithm.
+// Pivoting.
+// Compute the coefficients of the remaining constraints.
+// Lines 8–12 of PIVOT.
+template <std::size_t N, std::size_t M, typename T>
+void pivot_constraint_coefficients(
+        std::array<T, M>& b,
+        std::array<Vector<N, T>, M>& a,
+        const unsigned l,
+        const unsigned e)
+{
+        for (unsigned i = 0; i < M; ++i)
+        {
+                if (i == l)
+                {
+                        continue;
+                }
+                b[i] = b[i] + a[i][e] * b[l];
+                for (unsigned j = 0; j < N; ++j)
+                {
+                        if (j == e)
+                        {
+                                continue;
+                        }
+                        a[i][j] = a[i][j] + a[i][e] * a[l][j];
+                }
+                a[i][e] = a[i][e] * a[l][e];
+        }
+}
+
+// 29.3 The simplex algorithm.
+// Pivoting.
+// Compute the objective function.
+// Lines 14–17 of PIVOT.
+template <std::size_t N, std::size_t M, typename T>
+void pivot_objective_function(
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        T& v,
+        Vector<N, T>& c,
+        const unsigned l,
+        const unsigned e)
+{
+        v = v + c[e] * b[l];
+        for (unsigned j = 0; j < N; ++j)
+        {
+                if (j == e)
+                {
+                        continue;
+                }
+                c[j] = c[j] + c[e] * a[l][j];
+        }
+        c[e] = c[e] * a[l][e];
 }
 
 // 29.3 The simplex algorithm.
@@ -151,45 +242,9 @@ void pivot(
         ASSERT(e < N);
         ASSERT(a[l][e] != 0);
 
-        b[l] = -b[l] / a[l][e];
-        for (unsigned j = 0; j < N; ++j)
-        {
-                if (j == e)
-                {
-                        continue;
-                }
-                a[l][j] = -a[l][j] / a[l][e];
-        }
-        a[l][e] = 1 / a[l][e];
-
-        for (unsigned i = 0; i < M; ++i)
-        {
-                if (i == l)
-                {
-                        continue;
-                }
-                b[i] = b[i] + a[i][e] * b[l];
-                for (unsigned j = 0; j < N; ++j)
-                {
-                        if (j == e)
-                        {
-                                continue;
-                        }
-                        a[i][j] = a[i][j] + a[i][e] * a[l][j];
-                }
-                a[i][e] = a[i][e] * a[l][e];
-        }
-
-        v = v + c[e] * b[l];
-        for (unsigned j = 0; j < N; ++j)
-        {
-                if (j == e)
-                {
-                        continue;
-                }
-                c[j] = c[j] + c[e] * a[l][j];
-        }
-        c[e] = c[e] * a[l][e];
+        pivot_equation_coefficients(b, a, l, e);
+        pivot_constraint_coefficients(b, a, l, e);
+        pivot_objective_function(b, a, v, c, l, e);
 }
 
 template <std::size_t N_SOURCE, std::size_t M, typename T>
