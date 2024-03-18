@@ -93,7 +93,10 @@ private:
         void on_timer();
 
         void constructor_graphics_widget();
+        void constructor_splitters();
         void constructor_objects();
+        void constructor_connections();
+
         void first_shown();
 
         [[nodiscard]] std::vector<view::Command> view_initial_commands() const;

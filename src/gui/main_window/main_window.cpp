@@ -84,21 +84,25 @@ constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 MainWindow::MainWindow()
 {
         ui_.setupUi(this);
+
         this->setWindowTitle(settings::APPLICATION_NAME);
+        ui_.action_about->setText("About " + QString(settings::APPLICATION_NAME));
 
         log_ = std::make_unique<Log>(ui_.text_log);
+
         constructor_graphics_widget();
+        constructor_splitters();
         constructor_objects();
+        constructor_connections();
 }
 
 void MainWindow::constructor_graphics_widget()
 {
-        QSplitter* const horizontal_splitter = find_widget_splitter(this, ui_.graphics_widget);
-        ASSERT(horizontal_splitter && horizontal_splitter->orientation() == Qt::Horizontal);
+        QSplitter* const splitter = find_widget_splitter(this, ui_.graphics_widget);
+        ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
 
         graphics_widget_ = new GraphicsWidget(this);
-        if (horizontal_splitter->replaceWidget(horizontal_splitter->indexOf(ui_.graphics_widget), graphics_widget_)
-            != ui_.graphics_widget)
+        if (splitter->replaceWidget(splitter->indexOf(ui_.graphics_widget), graphics_widget_) != ui_.graphics_widget)
         {
                 error_fatal("Failed to replace graphics widget");
         }
@@ -107,6 +111,12 @@ void MainWindow::constructor_graphics_widget()
 
         graphics_widget_->setMinimumSize(100, 100);
         graphics_widget_->setVisible(true);
+}
+
+void MainWindow::constructor_splitters()
+{
+        QSplitter* const horizontal_splitter = find_widget_splitter(this, graphics_widget_);
+        ASSERT(horizontal_splitter && horizontal_splitter->orientation() == Qt::Horizontal);
 
         ASSERT(horizontal_splitter->children().size() >= 2);
         ASSERT(horizontal_splitter->children()[0] == graphics_widget_
@@ -124,12 +134,6 @@ void MainWindow::constructor_graphics_widget()
         ASSERT(vertical_splitter->children()[1] == ui_.text_log
                || vertical_splitter->children()[1] == horizontal_splitter);
         vertical_splitter->setSizes(QList<int>() << 1'000'000 << 1);
-
-        connect(graphics_widget_, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
-        connect(graphics_widget_, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
-        connect(graphics_widget_, &GraphicsWidget::mouse_press, this, &MainWindow::on_graphics_widget_mouse_press);
-        connect(graphics_widget_, &GraphicsWidget::mouse_release, this, &MainWindow::on_graphics_widget_mouse_release);
-        connect(graphics_widget_, &GraphicsWidget::widget_resize, this, &MainWindow::on_graphics_widget_resize);
 }
 
 void MainWindow::constructor_objects()
@@ -161,10 +165,16 @@ void MainWindow::constructor_objects()
 
         // disable height changing when a widget is added or removed
         ui_.status_bar->setFixedHeight(ui_.status_bar->height());
+}
 
-        //
+void MainWindow::constructor_connections()
+{
+        connect(graphics_widget_, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
+        connect(graphics_widget_, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
+        connect(graphics_widget_, &GraphicsWidget::mouse_press, this, &MainWindow::on_graphics_widget_mouse_press);
+        connect(graphics_widget_, &GraphicsWidget::mouse_release, this, &MainWindow::on_graphics_widget_mouse_release);
+        connect(graphics_widget_, &GraphicsWidget::widget_resize, this, &MainWindow::on_graphics_widget_resize);
 
-        ui_.action_about->setText("About " + QString(settings::APPLICATION_NAME));
         connect(ui_.action_about, &QAction::triggered, this,
                 [this]
                 {
