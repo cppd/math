@@ -187,6 +187,9 @@ void generate_camera_path(
 
         walk<FLAT_SHADING>(
                 /*camera_path=*/true, scene, light_distribution, /*beta=*/Color{1}, /*pdf=*/T{1}, ray, engine, path);
+
+        ASSERT(path->size() >= 1);
+        ASSERT(path->size() <= MAX_DEPTH + 1);
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
@@ -217,6 +220,8 @@ void generate_light_path(
 
         walk<FLAT_SHADING>(
                 /*camera_path=*/false, scene, light_distribution, beta, sample.pdf_dir, sample.ray, engine, path);
+
+        ASSERT(path->size() <= MAX_DEPTH + 1);
 }
 }
 
@@ -231,8 +236,6 @@ std::optional<Color> bpt(
         thread_local std::vector<vertex::Vertex<N, T, Color>> light_path;
 
         generate_camera_path<FLAT_SHADING>(scene, light_distribution, ray, engine, &camera_path);
-        ASSERT(camera_path.size() <= MAX_DEPTH + 1);
-        ASSERT(camera_path.size() >= 1);
 
         if (camera_path.size() == 1)
         {
@@ -245,7 +248,6 @@ std::optional<Color> bpt(
         }
 
         generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
-        ASSERT(light_path.size() <= MAX_DEPTH + 1);
 
         const int camera_size = camera_path.size();
         const int light_size = light_path.size();
