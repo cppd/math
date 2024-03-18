@@ -174,11 +174,6 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
 
         queue_.update(m, estimation);
 
-        if (!m.position)
-        {
-                return {};
-        }
-
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
                 reset(m);
