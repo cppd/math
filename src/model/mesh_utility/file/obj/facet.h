@@ -211,7 +211,7 @@ void read_facets(
                 (*facets)[i].texcoords[0] = groups[0][1];
                 (*facets)[i].normals[0] = groups[0][2];
 
-                for (unsigned n = 1; n < N; ++n)
+                for (std::size_t n = 1; n < N; ++n)
                 {
                         (*facets)[i].vertices[n] = groups[i + n][0];
                         (*facets)[i].texcoords[n] = groups[i + n][1];
@@ -230,20 +230,37 @@ void correct_facet_indices(
         const int texcoords_size,
         const int normals_size)
 {
+        const auto correct_vertex_index = [&](const int index)
+        {
+                if (index > 0)
+                {
+                        return index - 1;
+                }
+                if (index < 0)
+                {
+                        return vertices_size + index;
+                }
+                error("Correct facet indices, vertex index is zero");
+        };
+
+        const auto correct_index = [](const int index, const int size)
+        {
+                if (index > 0)
+                {
+                        return index - 1;
+                }
+                if (index < 0)
+                {
+                        return size + index;
+                }
+                return -1;
+        };
+
         for (std::size_t i = 0; i < N; ++i)
         {
-                int& v = facet->vertices[i];
-                int& t = facet->texcoords[i];
-                int& n = facet->normals[i];
-
-                if (v == 0)
-                {
-                        error("Correct indices vertex index is zero");
-                }
-
-                v = v > 0 ? v - 1 : vertices_size + v;
-                t = t > 0 ? t - 1 : (t < 0 ? texcoords_size + t : -1);
-                n = n > 0 ? n - 1 : (n < 0 ? normals_size + n : -1);
+                facet->vertices[i] = correct_vertex_index(facet->vertices[i]);
+                facet->texcoords[i] = correct_index(facet->texcoords[i], texcoords_size);
+                facet->normals[i] = correct_index(facet->normals[i], normals_size);
         }
 }
 }
