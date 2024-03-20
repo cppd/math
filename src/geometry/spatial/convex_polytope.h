@@ -32,6 +32,34 @@ class ConvexPolytope final
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
 
+        [[nodiscard]] static bool process_plane(
+                const Hyperplane<N, T>& plane,
+                const numerical::Ray<N, T>& ray,
+                T& near,
+                T& far)
+        {
+                const T s = dot(ray.dir(), plane.n);
+                const T d = dot(ray.org(), plane.n);
+
+                if (s == 0)
+                {
+                        return d <= plane.d;
+                }
+
+                const T a = (plane.d - d) / s;
+
+                if (s > 0)
+                {
+                        far = a < far ? a : far;
+                }
+                else
+                {
+                        near = a > near ? a : near;
+                }
+
+                return far >= near;
+        }
+
         // Planes have vectors n directed outward
         std::vector<Hyperplane<N, T>> planes_;
 
@@ -48,29 +76,7 @@ public:
 
                 for (const Hyperplane<N, T>& plane : planes_)
                 {
-                        const T s = dot(ray.dir(), plane.n);
-                        const T d = dot(ray.org(), plane.n);
-
-                        if (s == 0)
-                        {
-                                if (d > plane.d)
-                                {
-                                        return false;
-                                }
-                                continue;
-                        }
-
-                        const T a = (plane.d - d) / s;
-                        if (s > 0)
-                        {
-                                l_far = a < l_far ? a : l_far;
-                        }
-                        else
-                        {
-                                l_near = a > l_near ? a : l_near;
-                        }
-
-                        if (l_far < l_near)
+                        if (!process_plane(plane, ray, l_near, l_far))
                         {
                                 return false;
                         }
