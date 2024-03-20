@@ -110,6 +110,23 @@ class BoundingBox final
                 VOLUME
         };
 
+        [[nodiscard]] bool process_bounds(const std::size_t i, const numerical::Ray<N, T>& ray, T& near, T& far) const
+        {
+                const T dir = ray.dir()[i];
+                const T d = ray.org()[i];
+                if (dir == 0)
+                {
+                        return d >= bounds_[0][i] && d <= bounds_[1][i];
+                }
+                const bool dir_negative = (dir < 0);
+                const T r = 1 / dir;
+                const T a1 = (bounds_[dir_negative][i] - d) * r;
+                const T a2 = (bounds_[!dir_negative][i] - d) * r;
+                near = a1 > near ? a1 : near;
+                far = a2 < far ? a2 : far;
+                return far >= near;
+        }
+
         template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
         {
@@ -118,23 +135,7 @@ class BoundingBox final
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        const T dir = ray.dir()[i];
-                        const T d = ray.org()[i];
-                        if (dir == 0)
-                        {
-                                if (d < bounds_[0][i] || d > bounds_[1][i])
-                                {
-                                        return {};
-                                }
-                                continue;
-                        }
-                        const bool dir_negative = (dir < 0);
-                        const T r = 1 / dir;
-                        const T a1 = (bounds_[dir_negative][i] - d) * r;
-                        const T a2 = (bounds_[!dir_negative][i] - d) * r;
-                        near = a1 > near ? a1 : near;
-                        far = a2 < far ? a2 : far;
-                        if (far < near)
+                        if (!process_bounds(i, ray, near, far))
                         {
                                 return {};
                         }
