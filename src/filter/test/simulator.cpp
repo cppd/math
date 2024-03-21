@@ -42,6 +42,9 @@ namespace ns::filter::test
 {
 namespace
 {
+constexpr std::string_view DEGREE = "&#x00b0;";
+constexpr std::string_view SIGMA = "&#x03c3;";
+
 template <typename T>
 [[nodiscard]] numerical::Vector<2, T> rotate(const numerical::Vector<2, T>& v, const T angle)
 {
@@ -86,80 +89,117 @@ struct Config final
         T bad_measurement_position_probability = T{0} / 20;
 };
 
-template <std::size_t N, typename T>
-std::string make_annotation(const Config<T>& config, const std::vector<filters::Measurements<N, T>>& measurements)
+struct MeasurementInfo final
 {
         bool position = false;
         bool speed = false;
         bool direction = false;
         bool acceleration = false;
+};
+
+template <std::size_t N, typename T>
+MeasurementInfo measurement_info(const std::vector<filters::Measurements<N, T>>& measurements)
+{
+        MeasurementInfo res;
 
         for (const filters::Measurements<N, T>& m : measurements)
         {
-                position = position || m.position.has_value();
-                speed = speed || m.speed.has_value();
-                direction = direction || m.direction.has_value();
-                acceleration = acceleration || m.acceleration.has_value();
+                res.position = res.position || m.position.has_value();
+                res.speed = res.speed || m.speed.has_value();
+                res.direction = res.direction || m.direction.has_value();
+                res.acceleration = res.acceleration || m.acceleration.has_value();
         }
 
-        if (!position)
-        {
-                error("No position measurements");
-        }
+        return res;
+}
 
-        constexpr std::string_view DEGREE = "&#x00b0;";
-        constexpr std::string_view SIGMA = "&#x03c3;";
-        std::ostringstream oss;
-
+template <typename T>
+void write_update_annotation(const Config<T>& config, const MeasurementInfo& measurement_info, std::ostringstream& oss)
+{
         oss << "<b>update</b>";
         oss << "<br>";
         oss << "position: " << 1 / (config.measurement_dt * config.measurement_dt_count_position) << " Hz";
-        if (speed)
+
+        if (measurement_info.speed)
         {
                 oss << "<br>";
                 oss << "speed: " << 1 / (config.measurement_dt * config.measurement_dt_count_speed) << " Hz";
         }
-        if (direction)
+
+        if (measurement_info.direction)
         {
                 oss << "<br>";
                 oss << "direction: " << 1 / (config.measurement_dt * config.measurement_dt_count_direction) << " Hz";
         }
-        if (acceleration)
+
+        if (measurement_info.acceleration)
         {
                 oss << "<br>";
                 oss << "acceleration: " << 1 / (config.measurement_dt * config.measurement_dt_count_acceleration)
                     << " Hz";
         }
-        if (direction || acceleration)
+}
+
+template <typename T>
+void write_bias_annotation(const Config<T>& config, const MeasurementInfo& measurement_info, std::ostringstream& oss)
+{
+        if (!measurement_info.direction && !measurement_info.acceleration)
         {
-                oss << "<br>";
-                oss << "<br>";
-                oss << "<b>bias</b>";
-                oss << "<br>";
-                oss << "direction drift: " << radians_to_degrees(config.angle_drift_per_hour) << " " << DEGREE << "/h";
-                oss << "<br>";
-                oss << "direction angle: " << radians_to_degrees(config.angle_r) << DEGREE;
+                return;
         }
+
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>bias</b>";
+        oss << "<br>";
+        oss << "direction drift: " << radians_to_degrees(config.angle_drift_per_hour) << " " << DEGREE << "/h";
+        oss << "<br>";
+        oss << "direction angle: " << radians_to_degrees(config.angle_r) << DEGREE;
+}
+
+template <typename T>
+void write_sigma_annotation(const Config<T>& config, const MeasurementInfo& measurement_info, std::ostringstream& oss)
+{
         oss << "<br>";
         oss << "<br>";
         oss << "<b>" << SIGMA << "</b>";
         oss << "<br>";
         oss << "position: " << std::sqrt(config.measurement_variance_position) << " m";
-        if (speed)
+
+        if (measurement_info.speed)
         {
                 oss << "<br>";
                 oss << "speed: " << std::sqrt(config.measurement_variance_speed) << " m/s";
         }
-        if (direction)
+
+        if (measurement_info.direction)
         {
                 oss << "<br>";
                 oss << "direction: " << radians_to_degrees(std::sqrt(config.measurement_variance_direction)) << DEGREE;
         }
-        if (acceleration)
+
+        if (measurement_info.acceleration)
         {
                 oss << "<br>";
                 oss << "acceleration: " << std::sqrt(config.measurement_variance_acceleration) << " m/s<sup>2</sup>";
         }
+}
+
+template <std::size_t N, typename T>
+std::string make_annotation(const Config<T>& config, const std::vector<filters::Measurements<N, T>>& measurements)
+{
+        const MeasurementInfo info = measurement_info(measurements);
+
+        if (!info.position)
+        {
+                error("No position measurements");
+        }
+
+        std::ostringstream oss;
+
+        write_update_annotation(config, info, oss);
+        write_bias_annotation(config, info, oss);
+        write_sigma_annotation(config, info, oss);
 
         return oss.str();
 }
