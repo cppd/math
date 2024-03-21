@@ -86,6 +86,8 @@ class Direction final : public Filter<2, T>
 
         void reset(const Measurements<2, T>& m);
 
+        [[nodiscard]] bool update_filter(const Measurements<2, T>& m, const Estimation<2, T>& estimation);
+
         [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
                 const Measurements<2, T>& m,
                 const Estimation<2, T>& estimation) override;
@@ -168,6 +170,38 @@ void Direction<T, F>::reset(const Measurements<2, T>& m)
 }
 
 template <typename T, template <typename> typename F>
+bool Direction<T, F>::update_filter(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
+{
+        const T dt = m.time - *last_time_;
+        const bool has_angle = estimation.angle_variance_less_than(angle_estimation_variance_);
+
+        if (m.position)
+        {
+                if (!m.position->variance)
+                {
+                        return false;
+                }
+
+                const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
+                const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
+
+                update_position(
+                        filter_.get(), position, direction, m.speed, gate_, dt, position_process_variance_,
+                        angle_process_variance_, nis_);
+
+                LOG(measurement_description(m) + filter_description(*filter_));
+
+                return true;
+        }
+
+        const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
+
+        return update_non_position(
+                filter_.get(), direction, m.speed, gate_, dt, position_process_variance_, angle_process_variance_,
+                nis_);
+}
+
+template <typename T, template <typename> typename F>
 std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
 {
         check_time(m.time);
@@ -185,35 +219,14 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
                 return {};
         }
 
-        const T dt = m.time - *last_time_;
-        const bool has_angle = estimation.angle_variance_less_than(angle_estimation_variance_);
+        if (!update_filter(m, estimation))
+        {
+                return {};
+        }
 
         if (m.position)
         {
-                if (!m.position->variance)
-                {
-                        return {};
-                }
-
-                const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
-                const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                update_position(
-                        filter_.get(), position, direction, m.speed, gate_, dt, position_process_variance_,
-                        angle_process_variance_, nis_);
-
                 last_position_time_ = m.time;
-
-                LOG(measurement_description(m) + filter_description(*filter_));
-        }
-        else
-        {
-                const std::optional<Measurement<1, T>> direction = has_angle ? m.direction : std::nullopt;
-                if (!update_non_position(
-                            filter_.get(), direction, m.speed, gate_, dt, position_process_variance_,
-                            angle_process_variance_, nis_))
-                {
-                        return {};
-                }
         }
 
         last_time_ = m.time;
