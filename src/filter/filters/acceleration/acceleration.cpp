@@ -85,6 +85,10 @@ class Acceleration final : public Filter<2, T>
 
         void check_time(T time) const;
 
+        void reset(const Measurements<2, T>& m);
+
+        [[nodiscard]] bool update_filter(const Measurements<2, T>& m);
+
         [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
                 const Measurements<2, T>& m,
                 const Estimation<2, T>& estimation) override;
@@ -138,41 +142,35 @@ void Acceleration<T, F>::check_time(const T time) const
 }
 
 template <typename T, template <typename> typename F>
-std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
-        const Measurements<2, T>& m,
-        const Estimation<2, T>& estimation)
+void Acceleration<T, F>::reset(const Measurements<2, T>& m)
 {
-        check_time(m.time);
-
-        queue_.update(m, estimation);
-
-        if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
+        if (!m.position || queue_.empty())
         {
-                if (!m.position || queue_.empty())
-                {
-                        return {};
-                }
-
-                ASSERT(queue_.last_time() == m.time);
-
-                queue_.update_filter(
-                        [&]()
-                        {
-                                filter_->reset(
-                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
-                        },
-                        [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
-                        {
-                                update_position(
-                                        filter_.get(), position, measurements.acceleration, measurements.direction,
-                                        measurements.speed, gate_, dt, position_process_variance_,
-                                        angle_process_variance_, angle_r_process_variance_, nis_);
-                        });
-
-                last_time_ = m.time;
-                return {};
+                return;
         }
 
+        ASSERT(queue_.last_time() == m.time);
+
+        queue_.update_filter(
+                [&]()
+                {
+                        filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
+                },
+                [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
+                {
+                        update_position(
+                                filter_.get(), position, measurements.acceleration, measurements.direction,
+                                measurements.speed, gate_, dt, position_process_variance_, angle_process_variance_,
+                                angle_r_process_variance_, nis_);
+                });
+
+        last_time_ = m.time;
+}
+
+template <typename T, template <typename> typename F>
+bool Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
+{
+        ASSERT(last_time_);
         const T dt = m.time - *last_time_;
 
         if (m.position)
@@ -189,15 +187,33 @@ std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
                         position_process_variance_, angle_process_variance_, angle_r_process_variance_, nis_);
 
                 LOG(measurement_description(m) + filter_description(*filter_));
+
+                return true;
         }
-        else
+
+        return update_non_position(
+                filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_process_variance_,
+                angle_process_variance_, angle_r_process_variance_, nis_);
+}
+
+template <typename T, template <typename> typename F>
+std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
+        const Measurements<2, T>& m,
+        const Estimation<2, T>& estimation)
+{
+        check_time(m.time);
+
+        queue_.update(m, estimation);
+
+        if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (!update_non_position(
-                            filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_process_variance_,
-                            angle_process_variance_, angle_r_process_variance_, nis_))
-                {
-                        return {};
-                }
+                reset(m);
+                return {};
+        }
+
+        if (!update_filter(m))
+        {
+                return {};
         }
 
         last_time_ = m.time;
