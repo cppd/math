@@ -60,6 +60,8 @@ class Speed final : public Filter<N, T>
 
         void reset(const Measurements<N, T>& m);
 
+        [[nodiscard]] bool update_filter(const Measurements<N, T>& m);
+
         [[nodiscard]] std::optional<UpdateInfo<N, T>> update(
                 const Measurements<N, T>& m,
                 const Estimation<N, T>& estimation) override;
@@ -136,6 +138,28 @@ void Speed<N, T, F>::reset(const Measurements<N, T>& m)
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
+bool Speed<N, T, F>::update_filter(const Measurements<N, T>& m)
+{
+        ASSERT(last_time_);
+        const T dt = m.time - *last_time_;
+
+        if (m.position)
+        {
+                if (!m.position->variance)
+                {
+                        return {};
+                }
+
+                const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
+                update_position(filter_.get(), position, m.speed, gate_, dt, process_variance_, nis_);
+
+                return true;
+        }
+
+        return update_non_position(filter_.get(), m.speed, gate_, dt, process_variance_, nis_);
+}
+
+template <std::size_t N, typename T, template <std::size_t, typename> typename F>
 std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
 {
         check_time(m.time);
@@ -158,26 +182,14 @@ std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>&
                 return {};
         }
 
-        const T dt = m.time - *last_time_;
+        if (!update_filter(m))
+        {
+                return {};
+        }
 
         if (m.position)
         {
-                if (!m.position->variance)
-                {
-                        return {};
-                }
-
-                const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
-                update_position(filter_.get(), position, m.speed, gate_, dt, process_variance_, nis_);
-
                 last_position_time_ = m.time;
-        }
-        else
-        {
-                if (!update_non_position(filter_.get(), m.speed, gate_, dt, process_variance_, nis_))
-                {
-                        return {};
-                }
         }
 
         last_time_ = m.time;
