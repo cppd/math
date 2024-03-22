@@ -172,6 +172,7 @@ void Direction<T, F>::reset(const Measurements<2, T>& m)
 template <typename T, template <typename> typename F>
 bool Direction<T, F>::update_filter(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
 {
+        ASSERT(last_time_);
         const T dt = m.time - *last_time_;
         const bool has_angle = estimation.angle_variance_less_than(angle_estimation_variance_);
 
