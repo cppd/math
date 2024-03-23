@@ -133,36 +133,20 @@ void init(
                 ASSERT(src_i < waves.size());
         }
 }
-}
 
-template <typename ResultType, typename T>
-std::vector<ResultType> average(
+template <typename T, typename ResultType>
+void average(
         const std::span<const T> waves,
         const std::span<const T> samples,
-        const std::type_identity_t<T> from,
-        const std::type_identity_t<T> to,
-        const std::size_t count)
+        const T from,
+        const T to,
+        const std::size_t count,
+        std::size_t& dst_i,
+        T& dst_prev,
+        T& dst_next,
+        std::size_t& src_i,
+        std::vector<ResultType>& res)
 {
-        static_assert(std::is_floating_point_v<ResultType>);
-        static_assert(std::is_floating_point_v<T>);
-
-        check_parameters(waves, samples, from, to, count);
-
-        if (to <= waves.front() || from >= waves.back())
-        {
-                return std::vector(count, DEFAULT_VALUE<ResultType>);
-        }
-
-        std::vector<ResultType> res;
-        res.reserve(count);
-
-        std::size_t dst_i;
-        T dst_prev;
-        T dst_next;
-        std::size_t src_i;
-
-        init(waves, from, to, count, dst_i, dst_prev, dst_next, src_i, res);
-
         T prev_wave = std::max(waves[src_i - 1], dst_prev);
         T sum = 0;
 
@@ -193,6 +177,38 @@ std::vector<ResultType> average(
                         res.push_back(DEFAULT_VALUE<ResultType>);
                 }
         }
+}
+}
+
+template <typename ResultType, typename T>
+std::vector<ResultType> average(
+        const std::span<const T> waves,
+        const std::span<const T> samples,
+        const std::type_identity_t<T> from,
+        const std::type_identity_t<T> to,
+        const std::size_t count)
+{
+        static_assert(std::is_floating_point_v<ResultType>);
+        static_assert(std::is_floating_point_v<T>);
+
+        check_parameters(waves, samples, from, to, count);
+
+        if (to <= waves.front() || from >= waves.back())
+        {
+                return std::vector(count, DEFAULT_VALUE<ResultType>);
+        }
+
+        std::vector<ResultType> res;
+        res.reserve(count);
+
+        std::size_t dst_i;
+        T dst_prev;
+        T dst_next;
+        std::size_t src_i;
+
+        init(waves, from, to, count, dst_i, dst_prev, dst_next, src_i, res);
+
+        average(waves, samples, from, to, count, dst_i, dst_prev, dst_next, src_i, res);
 
         ASSERT(res.size() == count);
 
