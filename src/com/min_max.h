@@ -31,6 +31,8 @@ namespace min_max_implementation
 template <bool COMPUTE_MIN, unsigned COUNT, typename T>
 constexpr T min_max_value_array(const std::span<const T> p)
 {
+        static_assert(COUNT > 0);
+
         ASSERT(!p.empty());
         ASSERT(p.size() % COUNT == 0);
 
@@ -44,33 +46,18 @@ constexpr T min_max_value_array(const std::span<const T> p)
         ptr += COUNT;
 
         const T* const end = p.data() + p.size();
-        while (ptr != end)
+        for (; ptr != end; ptr += COUNT)
         {
                 for (unsigned i = 0; i < COUNT; ++i)
                 {
-                        if constexpr (COMPUTE_MIN)
-                        {
-                                m[i] = std::min(m[i], ptr[i]);
-                        }
-                        else
-                        {
-                                m[i] = std::max(m[i], ptr[i]);
-                        }
+                        m[i] = COMPUTE_MIN ? std::min(m[i], ptr[i]) : std::max(m[i], ptr[i]);
                 }
-                ptr += COUNT;
         }
 
         T res = m[0];
         for (unsigned i = 1; i < COUNT; ++i)
         {
-                if constexpr (COMPUTE_MIN)
-                {
-                        res = std::min(res, m[i]);
-                }
-                else
-                {
-                        res = std::max(res, m[i]);
-                }
+                res = COMPUTE_MIN ? std::min(res, m[i]) : std::max(res, m[i]);
         }
         return res;
 }
@@ -79,6 +66,8 @@ template <bool COMPUTE_MIN, typename T>
 constexpr T min_max_value(const std::span<const T> p)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+
+        ASSERT(!p.empty());
 
         // AVX, 256 bits
         constexpr unsigned COUNT = std::is_same_v<T, float> ? 8 : 4;
@@ -98,16 +87,9 @@ constexpr T min_max_value(const std::span<const T> p)
         }
 
         const T* const end = p.data() + p.size();
-        while (ptr != end)
+        for (; ptr != end; ++ptr)
         {
-                if constexpr (COMPUTE_MIN)
-                {
-                        res = std::min(res, *ptr++);
-                }
-                else
-                {
-                        res = std::max(res, *ptr++);
-                }
+                res = COMPUTE_MIN ? std::min(res, *ptr) : std::max(res, *ptr);
         }
 
         return res;
