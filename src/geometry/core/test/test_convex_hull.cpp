@@ -44,25 +44,61 @@ namespace ns::geometry::core
 namespace
 {
 template <std::size_t N>
+numerical::Vector<N, double> uniform_in_sphere(PCG& engine)
+{
+        static_assert(N >= 1);
+
+        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+        numerical::Vector<N, double> v;
+        while (true)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        v[i] = urd(engine);
+                }
+                const double norm_squared = v.norm_squared();
+                if (norm_squared <= 1 && norm_squared > 0)
+                {
+                        break;
+                }
+        }
+        return v;
+}
+
+template <std::size_t N>
+numerical::Vector<N + 1, double> add_zero(const numerical::Vector<N, double>& v)
+{
+        static_assert(N >= 1);
+
+        numerical::Vector<N + 1, double> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = v[i];
+        }
+        res[N] = 0;
+        return res;
+}
+
+template <std::size_t N>
+numerical::Vector<N, double> uniform_in_sphere(const bool zero, PCG& engine)
+{
+        if (!zero)
+        {
+                return uniform_in_sphere<N>(engine);
+        }
+        return add_zero(uniform_in_sphere<N - 1>(engine));
+}
+
+template <std::size_t N>
 std::vector<numerical::Vector<N, float>> random_points(const bool zero, const int count, const bool on_sphere)
 {
         PCG engine(count);
-        std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
         std::vector<numerical::Vector<N, float>> points(count);
 
         for (numerical::Vector<N, float>& point : points)
         {
-                numerical::Vector<N, double> v;
-                v[N - 1] = 0;
-                do
-                {
-                        for (std::size_t i = 0; i < ((zero) ? (N - 1) : N); ++i)
-                        {
-                                v[i] = urd(engine);
-                        }
-                } while (v.norm_squared() > 1);
-
+                const numerical::Vector<N, double> v = uniform_in_sphere<N>(zero, engine);
                 if (!on_sphere)
                 {
                         point = to_vector<float>(v);
