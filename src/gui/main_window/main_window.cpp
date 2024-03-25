@@ -115,25 +115,19 @@ void MainWindow::constructor_graphics_widget()
 
 void MainWindow::constructor_splitters()
 {
-        QSplitter* const horizontal_splitter = find_widget_splitter(this, graphics_widget_);
-        ASSERT(horizontal_splitter && horizontal_splitter->orientation() == Qt::Horizontal);
+        QSplitter* const horizontal = find_widget_splitter(this, graphics_widget_);
+        ASSERT(horizontal && horizontal->orientation() == Qt::Horizontal);
+        ASSERT(horizontal->children().size() >= 2);
+        ASSERT((horizontal->children()[0] == graphics_widget_ && horizontal->children()[1] == ui_.tab_widget)
+               || (horizontal->children()[1] == graphics_widget_ && horizontal->children()[0] == ui_.tab_widget));
+        horizontal->setSizes(QList<int>() << 1 << 1'000'000);
 
-        ASSERT(horizontal_splitter->children().size() >= 2);
-        ASSERT(horizontal_splitter->children()[0] == graphics_widget_
-               || horizontal_splitter->children()[0] == ui_.tab_widget);
-        ASSERT(horizontal_splitter->children()[1] == graphics_widget_
-               || horizontal_splitter->children()[1] == ui_.tab_widget);
-        horizontal_splitter->setSizes(QList<int>() << 1 << 1'000'000);
-
-        QSplitter* const vertical_splitter = find_widget_splitter(this, horizontal_splitter);
-        ASSERT(vertical_splitter && vertical_splitter->orientation() == Qt::Vertical);
-
-        ASSERT(vertical_splitter->children().size() >= 2);
-        ASSERT(vertical_splitter->children()[0] == ui_.text_log
-               || vertical_splitter->children()[0] == horizontal_splitter);
-        ASSERT(vertical_splitter->children()[1] == ui_.text_log
-               || vertical_splitter->children()[1] == horizontal_splitter);
-        vertical_splitter->setSizes(QList<int>() << 1'000'000 << 1);
+        QSplitter* const vertical = find_widget_splitter(this, horizontal);
+        ASSERT(vertical && vertical->orientation() == Qt::Vertical);
+        ASSERT(vertical->children().size() >= 2);
+        ASSERT((vertical->children()[0] == ui_.text_log && vertical->children()[1] == horizontal)
+               || (vertical->children()[1] == ui_.text_log || vertical->children()[0] == horizontal));
+        vertical->setSizes(QList<int>() << 1'000'000 << 1);
 }
 
 void MainWindow::constructor_objects()
