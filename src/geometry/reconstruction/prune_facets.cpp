@@ -105,6 +105,27 @@ struct Angles final
         T sin_minus = 0;
 };
 
+template <typename T>
+void update_angles(const T sine, const T cosine, Angles<T>* const res)
+{
+        if (sine >= 0)
+        {
+                if (cosine < res->cos_plus)
+                {
+                        res->cos_plus = cosine;
+                        res->sin_plus = sine;
+                }
+        }
+        else
+        {
+                if (cosine < res->cos_minus)
+                {
+                        res->cos_minus = cosine;
+                        res->sin_minus = sine;
+                }
+        }
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] Angles<T> compute_angles(
         const std::vector<numerical::Vector<N, T>>& points,
@@ -130,22 +151,7 @@ template <std::size_t N, typename T>
                 const T sine = cross(base, v);
                 const T cosine = dot(base, v);
 
-                if (sine >= 0)
-                {
-                        if (cosine < res.cos_plus)
-                        {
-                                res.cos_plus = cosine;
-                                res.sin_plus = sine;
-                        }
-                }
-                else
-                {
-                        if (cosine < res.cos_minus)
-                        {
-                                res.cos_minus = cosine;
-                                res.sin_minus = sine;
-                        }
-                }
+                update_angles(sine, cosine, &res);
         }
 
         return res;
