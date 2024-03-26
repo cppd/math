@@ -191,24 +191,27 @@ void PainterWindow::create_sliders()
 
         sliders_widget_ = std::make_unique<SlidersWidget>(pixels_->screen_size());
 
-        ASSERT(qobject_cast<QVBoxLayout*>(ui_.main_widget->layout()));
-        qobject_cast<QVBoxLayout*>(ui_.main_widget->layout())->insertWidget(1, sliders_widget_.get());
+        QVBoxLayout* const layout = qobject_cast<QVBoxLayout*>(ui_.main_widget->layout());
+        ASSERT(layout);
+        layout->insertWidget(1, sliders_widget_.get());
 
-        connect(sliders_widget_.get(), &SlidersWidget::changed, this,
-                [this](const std::vector<int>& positions)
+        auto widget_changed = [this](const std::vector<int>& positions)
+        {
+                static constexpr int POSITION_TO_DIMENSION = 2;
+                const std::vector<int>& screen_size = pixels_->screen_size();
+                ASSERT(!positions.empty() && positions.size() + POSITION_TO_DIMENSION == screen_size.size());
+                // ((x[3]*size[2] + x[2])*size[1] + x[1])*size[0] + x[0]
+                long long slice = 0;
+                for (int i = static_cast<int>(positions.size()) - 1; i >= 0; --i)
                 {
-                        ASSERT(!positions.empty() && positions.size() + 2 == pixels_->screen_size().size());
-                        // ((x[3]*size[2] + x[2])*size[1] + x[1])*size[0] + x[0]
-                        long long slice = 0;
-                        for (int i = static_cast<int>(positions.size()) - 1; i >= 0; --i)
-                        {
-                                const std::size_t dimension = i + 2;
-                                ASSERT(dimension < pixels_->screen_size().size());
-                                ASSERT(positions[i] >= 0 && positions[i] < pixels_->screen_size()[dimension]);
-                                slice = slice * pixels_->screen_size()[dimension] + positions[i];
-                        }
-                        slice_ = slice;
-                });
+                        const std::size_t dimension = i + POSITION_TO_DIMENSION;
+                        ASSERT(positions[i] >= 0 && positions[i] < screen_size[dimension]);
+                        slice = slice * screen_size[dimension] + positions[i];
+                }
+                slice_ = slice;
+        };
+
+        connect(sliders_widget_.get(), &SlidersWidget::changed, this, std::move(widget_changed));
 
         sliders_widget_->set(std::vector(count, 0));
 }
