@@ -88,75 +88,77 @@ void check_facet_indices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-        requires (N == 3)
-[[nodiscard]] bool facet_dimension_is_correct(
-        const std::vector<numerical::Vector<N, float>>& vertices,
-        const std::array<int, N>& indices)
+class DimensionChecker final
 {
-        const numerical::Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
-        const numerical::Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
+public:
+        static constexpr bool CHECKABLE = (N == 3);
 
-        if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
+        [[nodiscard]] static bool facet_dimension_is_correct(
+                const std::vector<numerical::Vector<3, float>>& vertices,
+                const std::array<int, 3>& indices)
         {
-                return true;
-        }
+                const numerical::Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
+                const numerical::Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
 
-        if (e0[0] * e1[2] - e0[2] * e1[0] != 0)
-        {
-                return true;
-        }
+                if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
+                {
+                        return true;
+                }
 
-        if (e0[0] * e1[1] - e0[1] * e1[0] != 0)
-        {
-                return true;
-        }
+                if (e0[0] * e1[2] - e0[2] * e1[0] != 0)
+                {
+                        return true;
+                }
 
-        return false;
+                if (e0[0] * e1[1] - e0[1] * e1[0] != 0)
+                {
+                        return true;
+                }
+
+                return false;
+        }
+};
+
+template <std::size_t N>
+        requires (!DimensionChecker<N>::CHECKABLE)
+void remove_facets_with_incorrect_dimension(Mesh<N>* const /*mesh*/)
+{
 }
 
 template <std::size_t N>
+        requires DimensionChecker<N>::CHECKABLE
 void remove_facets_with_incorrect_dimension(Mesh<N>* const mesh)
 {
-        static constexpr bool CHECK =
-                requires { facet_dimension_is_correct(mesh->vertices, mesh->facets.front().vertices); };
+        std::vector<bool> wrong_facets(mesh->facets.size(), false);
 
-        if constexpr (!CHECK)
+        int wrong_facet_count = 0;
+
+        for (std::size_t i = 0; i < mesh->facets.size(); ++i)
+        {
+                if (!DimensionChecker<N>::facet_dimension_is_correct(mesh->vertices, mesh->facets[i].vertices))
+                {
+                        wrong_facets[i] = true;
+                        ++wrong_facet_count;
+                }
+        }
+
+        if (wrong_facet_count == 0)
         {
                 return;
         }
-        else
+
+        std::vector<typename Mesh<N>::Facet> facets;
+        facets.reserve(mesh->facets.size() - wrong_facet_count);
+
+        for (std::size_t i = 0; i < mesh->facets.size(); ++i)
         {
-                std::vector<bool> wrong_facets(mesh->facets.size(), false);
-
-                int wrong_facet_count = 0;
-
-                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
+                if (!wrong_facets[i])
                 {
-                        if (!facet_dimension_is_correct(mesh->vertices, mesh->facets[i].vertices))
-                        {
-                                wrong_facets[i] = true;
-                                ++wrong_facet_count;
-                        }
+                        facets.push_back(mesh->facets[i]);
                 }
-
-                if (wrong_facet_count == 0)
-                {
-                        return;
-                }
-
-                std::vector<typename Mesh<N>::Facet> facets;
-                facets.reserve(mesh->facets.size() - wrong_facet_count);
-
-                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
-                {
-                        if (!wrong_facets[i])
-                        {
-                                facets.push_back(mesh->facets[i]);
-                        }
-                }
-
-                mesh->facets = std::move(facets);
         }
+
+        mesh->facets = std::move(facets);
 }
 
 template <std::size_t N>
