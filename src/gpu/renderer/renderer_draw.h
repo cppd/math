@@ -52,7 +52,7 @@ class RendererDraw final
                 bool transparency;
         };
 
-        DrawInfo draw_meshes(
+        [[nodiscard]] DrawInfo draw_meshes(
                 VkSemaphore semaphore,
                 VkQueue graphics_queue,
                 unsigned index,
@@ -66,7 +66,7 @@ public:
                 const MeshRenderer* mesh_renderer,
                 const VolumeRenderer* volume_renderer);
 
-        VkSemaphore draw(
+        [[nodiscard]] VkSemaphore draw(
                 VkSemaphore semaphore,
                 VkQueue graphics_queue_1,
                 VkQueue graphics_queue_2,

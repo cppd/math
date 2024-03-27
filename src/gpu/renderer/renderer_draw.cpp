@@ -34,6 +34,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+[[nodiscard]] TransparencyMessage::Data transparency_message(
+        const TransparencyBuffers::Info& info,
+        const bool nodes,
+        const bool overload)
+{
+        ASSERT(nodes || overload);
+
+        TransparencyMessage::Data data;
+        if (nodes)
+        {
+                data.required_node_memory = info.required_node_memory;
+        }
+        if (overload)
+        {
+                data.overload_count = info.overload_counter;
+        }
+        return data;
+}
+
+[[nodiscard]] VkSemaphore draw_all_meshes(
+        const VkSemaphore semaphore,
+        const VkQueue graphics_queue,
+        const unsigned index,
+        const bool shadow_mapping,
+        const VkSemaphore mesh_semaphore,
+        const VkSemaphore shadow_mapping_semaphore,
+        const MeshRenderer& mesh_renderer)
+{
+        const auto& command_buffer = mesh_renderer.render_command_buffer_all(index);
+        ASSERT(command_buffer);
+
+        if (!shadow_mapping)
+        {
+                vulkan::queue_submit(
+                        semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, *command_buffer, mesh_semaphore,
+                        graphics_queue);
+        }
+        else
+        {
+                vulkan::queue_submit(
+                        mesh_renderer.shadow_mapping_command_buffer(index), shadow_mapping_semaphore, graphics_queue);
+
+                vulkan::queue_submit(
+                        std::array<VkSemaphore, 2>{semaphore, shadow_mapping_semaphore},
+                        std::array<VkPipelineStageFlags, 2>{
+                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
+                        *command_buffer, mesh_semaphore, graphics_queue);
+        }
+
+        return mesh_semaphore;
+}
+
+[[nodiscard]] VkSemaphore draw_transparent_meshes_as_opaque(
+        const VkSemaphore semaphore,
+        const VkQueue graphics_queue,
+        const unsigned index,
+        const VkSemaphore transparent_as_opaque_semaphore,
+        const MeshRenderer& mesh_renderer)
+{
+        const auto command_buffer = mesh_renderer.render_command_buffer_transparent_as_opaque(index);
+        ASSERT(command_buffer);
+
+        vulkan::queue_submit(
+                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, *command_buffer, transparent_as_opaque_semaphore,
+                graphics_queue);
+
+        return transparent_as_opaque_semaphore;
+}
+}
+
 RendererDraw::RendererDraw(
         const VkDevice device,
         const std::uint32_t transparency_node_buffer_max_size,
@@ -57,30 +129,9 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         const bool shadow_mapping,
         const TransparencyBuffers& transparency_buffers) const
 {
-        if (!shadow_mapping)
-        {
-                ASSERT(mesh_renderer_->render_command_buffer_all(index));
-                vulkan::queue_submit(
-                        semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                        *mesh_renderer_->render_command_buffer_all(index), mesh_semaphore_, graphics_queue);
-
-                semaphore = mesh_semaphore_;
-        }
-        else
-        {
-                vulkan::queue_submit(
-                        mesh_renderer_->shadow_mapping_command_buffer(index), shadow_mapping_semaphore_,
-                        graphics_queue);
-
-                ASSERT(mesh_renderer_->render_command_buffer_all(index));
-                vulkan::queue_submit(
-                        std::array<VkSemaphore, 2>{semaphore, shadow_mapping_semaphore_},
-                        std::array<VkPipelineStageFlags, 2>{
-                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                        *mesh_renderer_->render_command_buffer_all(index), mesh_semaphore_, graphics_queue);
-
-                semaphore = mesh_semaphore_;
-        }
+        semaphore = draw_all_meshes(
+                semaphore, graphics_queue, index, shadow_mapping, mesh_semaphore_, shadow_mapping_semaphore_,
+                *mesh_renderer_);
 
         if (!mesh_renderer_->has_transparent_meshes())
         {
@@ -97,32 +148,15 @@ RendererDraw::DrawInfo RendererDraw::draw_meshes(
         if (!nodes && !overload)
         {
                 transparency_message_.process({});
-
                 return {.semaphore = semaphore, .opacity = mesh_renderer_->has_opaque_meshes(), .transparency = true};
         }
 
-        const auto command_buffer = mesh_renderer_->render_command_buffer_transparent_as_opaque(index);
-        ASSERT(command_buffer);
-        vulkan::queue_submit(
-                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, *command_buffer, transparent_as_opaque_semaphore_,
-                graphics_queue);
+        semaphore = draw_transparent_meshes_as_opaque(
+                semaphore, graphics_queue, index, transparent_as_opaque_semaphore_, *mesh_renderer_);
 
-        transparency_message_.process(
-                [&]()
-                {
-                        TransparencyMessage::Data data;
-                        if (nodes)
-                        {
-                                data.required_node_memory = info.required_node_memory;
-                        }
-                        if (overload)
-                        {
-                                data.overload_count = info.overload_counter;
-                        }
-                        return data;
-                }());
+        transparency_message_.process(transparency_message(info, nodes, overload));
 
-        return {.semaphore = transparent_as_opaque_semaphore_, .opacity = true, .transparency = false};
+        return {.semaphore = semaphore, .opacity = true, .transparency = false};
 }
 
 VkSemaphore RendererDraw::draw(
