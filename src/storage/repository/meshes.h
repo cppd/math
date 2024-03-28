@@ -46,5 +46,5 @@ public:
 };
 
 template <std::size_t N>
-std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();
+[[nodiscard]] std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();
 }

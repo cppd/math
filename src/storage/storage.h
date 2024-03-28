@@ -43,7 +43,7 @@ class Storage final
         std::unordered_map<model::ObjectId, std::variant<MeshObject, VolumeObject>> map_;
 
         template <typename To, typename From>
-        static To to_type(From&& object)
+        [[nodiscard]] static To to_type(From&& object)
         {
                 static_assert(!std::is_same_v<std::remove_cvref_t<From>, std::remove_cvref_t<To>>);
 
@@ -123,7 +123,7 @@ public:
                                std::get<VolumeObject>(iter->second)));
         }
 
-        std::optional<MeshObject> mesh_object(const model::ObjectId id) const
+        [[nodiscard]] std::optional<MeshObject> mesh_object(const model::ObjectId id) const
         {
                 const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
@@ -137,7 +137,7 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<MeshObjectConst> mesh_object_const(const model::ObjectId id) const
+        [[nodiscard]] std::optional<MeshObjectConst> mesh_object_const(const model::ObjectId id) const
         {
                 if (auto object = mesh_object(id))
                 {
@@ -146,7 +146,7 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<VolumeObject> volume_object(const model::ObjectId id) const
+        [[nodiscard]] std::optional<VolumeObject> volume_object(const model::ObjectId id) const
         {
                 const std::shared_lock lock(mutex_);
                 const auto iter = map_.find(id);
@@ -160,7 +160,7 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<VolumeObjectConst> volume_object_const(const model::ObjectId id) const
+        [[nodiscard]] std::optional<VolumeObjectConst> volume_object_const(const model::ObjectId id) const
         {
                 if (auto object = volume_object(id))
                 {
@@ -170,35 +170,21 @@ public:
         }
 
         template <typename T>
-        std::vector<T> objects() const
+        [[nodiscard]] std::vector<T> objects() const
         {
+                static_assert(std::is_same_v<T, MeshObjectConst> || std::is_same_v<T, VolumeObjectConst>);
+
+                using OBJ = std::conditional_t<std::is_same_v<T, MeshObjectConst>, MeshObject, VolumeObject>;
+
                 std::vector<T> objects;
-
                 const std::shared_lock lock(mutex_);
-
-                if constexpr (std::is_same_v<T, MeshObjectConst> || std::is_same_v<T, VolumeObjectConst>)
+                for (const auto& v : map_)
                 {
-                        using OBJ = std::conditional_t<std::is_same_v<T, MeshObjectConst>, MeshObject, VolumeObject>;
-                        for (const auto& v : map_)
+                        if (std::holds_alternative<OBJ>(v.second))
                         {
-                                if (std::holds_alternative<OBJ>(v.second))
-                                {
-                                        objects.push_back(to_type<T>(std::get<OBJ>(v.second)));
-                                }
+                                objects.push_back(to_type<T>(std::get<OBJ>(v.second)));
                         }
                 }
-                else
-                {
-                        static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
-                        for (const auto& v : map_)
-                        {
-                                if (std::holds_alternative<T>(v.second))
-                                {
-                                        objects.push_back(std::get<T>(v.second));
-                                }
-                        }
-                }
-
                 return objects;
         }
 };

@@ -40,5 +40,5 @@ public:
 };
 
 template <std::size_t N>
-std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository();
+[[nodiscard]] std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository();
 }
