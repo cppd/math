@@ -122,6 +122,15 @@ void str(const char* const input_name, const char* const output_name)
         }
 }
 
+void str(const int argc, const char* argv[])
+{
+        if (argc != 4)
+        {
+                error(usage());
+        }
+        str(argv[2], argv[3]);
+}
+
 void bin(const char* const input_name, const char* const output_name)
 {
         const auto write = [](std::ofstream& ofs, const char c)
@@ -150,6 +159,15 @@ void bin(const char* const input_name, const char* const output_name)
         {
                 error(std::string("Error writing to bin file \"") + output_name + "\"");
         }
+}
+
+void bin(const int argc, const char* argv[])
+{
+        if (argc != 4)
+        {
+                error(usage());
+        }
+        bin(argv[2], argv[3]);
 }
 
 void spr(const char* const input_name, const char* const output_name)
@@ -208,6 +226,15 @@ void spr(const char* const input_name, const char* const output_name)
         }
 }
 
+void spr(const int argc, const char* argv[])
+{
+        if (argc != 4)
+        {
+                error(usage());
+        }
+        spr(argv[2], argv[3]);
+}
+
 void cat(const std::span<const char*> input_names, const char* const output_name)
 {
         std::string s;
@@ -227,6 +254,15 @@ void cat(const std::span<const char*> input_names, const char* const output_name
                 error(std::string("Error writing to cat file \"") + output_name + "\"");
         }
 }
+
+void cat(const int argc, const char* argv[])
+{
+        if (argc < 4)
+        {
+                error(usage());
+        }
+        cat({argv + 2, argv + argc - 1}, argv[argc - 1]);
+}
 }
 
 int main(const int argc, const char* argv[])
@@ -240,35 +276,19 @@ int main(const int argc, const char* argv[])
 
         if (command == COMMAND_STR)
         {
-                if (argc != 4)
-                {
-                        error(usage());
-                }
-                str(argv[2], argv[3]);
+                str(argc, argv);
         }
         else if (command == COMMAND_BIN)
         {
-                if (argc != 4)
-                {
-                        error(usage());
-                }
-                bin(argv[2], argv[3]);
+                bin(argc, argv);
         }
         else if (command == COMMAND_SPR)
         {
-                if (argc != 4)
-                {
-                        error(usage());
-                }
-                spr(argv[2], argv[3]);
+                spr(argc, argv);
         }
         else if (command == COMMAND_CAT)
         {
-                if (argc < 4)
-                {
-                        error(usage());
-                }
-                cat({argv + 2, argv + argc - 1}, argv[argc - 1]);
+                cat(argc, argv);
         }
         else
         {
