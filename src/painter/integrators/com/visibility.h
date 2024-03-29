@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "normals.h"
 
+#include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
@@ -47,6 +48,52 @@ template <typename T>
         static constexpr T EPSILON = 100 * Limits<T>::epsilon();
         return cosine > EPSILON;
 }
+
+template <std::size_t N, typename T, typename Color>
+[[nodiscard]] std::optional<T> move(
+        const Scene<N, T, Color>& scene,
+        const numerical::Vector<N, T>& geometric_normal,
+        const numerical::Ray<N, T>& ray,
+        const T distance)
+{
+        const SurfaceIntersection surface = scene.intersect(geometric_normal, ray, distance);
+        if (!surface)
+        {
+                return std::nullopt;
+        }
+
+        const T d = distance - surface.distance();
+        ASSERT(d >= 0);
+
+        if (d > 0)
+        {
+                return d;
+        }
+        return std::nullopt;
+}
+
+template <std::size_t N, typename T, typename Color>
+[[nodiscard]] bool move_and_intersect_any(
+        const Scene<N, T, Color>& scene,
+        const numerical::Vector<N, T>& geometric_normal,
+        const numerical::Ray<N, T>& ray,
+        const T distance)
+{
+        const SurfaceIntersection surface = scene.intersect(geometric_normal, ray, distance);
+        if (!surface)
+        {
+                return false;
+        }
+
+        const T d = distance - surface.distance();
+        ASSERT(d >= 0);
+
+        if (d > 0)
+        {
+                return scene.intersect_any(surface.geometric_normal(), numerical::Ray(ray).set_org(surface.point()), d);
+        }
+        return false;
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -65,24 +112,14 @@ template <std::size_t N, typename T, typename Color>
 
         const T d = distance ? impl::visibility_distance(*distance) : Limits<T>::infinity();
 
-        if (dot(ray.dir(), normals.geometric) >= 0)
+        const bool visible = dot(ray.dir(), normals.geometric) >= 0;
+
+        if (visible)
         {
                 return scene.intersect_any(normals.geometric, ray, d);
         }
 
-        const SurfaceIntersection surface = scene.intersect(normals.geometric, ray, d);
-        if (!surface)
-        {
-                return false;
-        }
-
-        const T d_2 = d - surface.distance();
-        if (d_2 > 0)
-        {
-                return scene.intersect_any(
-                        surface.geometric_normal(), numerical::Ray(ray).set_org(surface.point()), d_2);
-        }
-        return false;
+        return impl::move_and_intersect_any(scene, normals.geometric, ray, d);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -98,12 +135,8 @@ template <std::size_t N, typename T, typename Color>
         const numerical::Vector<N, T> direction_1 = point_2 - point_1;
         const numerical::Ray<N, T> ray_1(point_1, direction_1);
 
-        if (!impl::directed_outside(dot(ray_1.dir(), normals_1.shading)))
-        {
-                return true;
-        }
-
-        if (!impl::directed_outside(-dot(ray_1.dir(), normals_2.shading)))
+        if (!impl::directed_outside(dot(ray_1.dir(), normals_1.shading))
+            || !impl::directed_outside(-dot(ray_1.dir(), normals_2.shading)))
         {
                 return true;
         }
@@ -120,37 +153,19 @@ template <std::size_t N, typename T, typename Color>
 
         if (!visible_1)
         {
-                const SurfaceIntersection surface = scene.intersect(normals_1.geometric, ray_1, distance);
-                if (!surface)
+                const auto d = impl::move(scene, normals_1.geometric, ray_1, distance);
+                if (!d)
                 {
                         return false;
                 }
-
-                distance -= surface.distance();
-                if (distance <= 0)
-                {
-                        return false;
-                }
+                distance = *d;
         }
 
         const numerical::Ray<N, T> ray_2 = ray_1.reversed().set_org(point_2);
 
         if (!visible_2)
         {
-                const SurfaceIntersection surface = scene.intersect(normals_2.geometric, ray_2, distance);
-                if (!surface)
-                {
-                        return false;
-                }
-
-                distance -= surface.distance();
-                if (distance <= 0)
-                {
-                        return false;
-                }
-
-                return scene.intersect_any(
-                        surface.geometric_normal(), numerical::Ray(ray_2).set_org(surface.point()), distance);
+                return impl::move_and_intersect_any(scene, normals_2.geometric, ray_2, distance);
         }
 
         return scene.intersect_any(normals_2.geometric, ray_2, distance);
