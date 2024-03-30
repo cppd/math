@@ -50,6 +50,7 @@ CRC Press, 2018.
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <tuple>
 
 namespace ns::shading::ggx
@@ -58,7 +59,7 @@ namespace ggx_implementation
 {
 #if 0
 template <typename T, typename RandomEngine>
-numerical::Vector<3, T> ggx_vn(RandomEngine& engine, const numerical::Vector<3, T>& ve, const T alpha)
+[[nodiscard]] numerical::Vector<3, T> ggx_vn(RandomEngine& engine, const numerical::Vector<3, T>& ve, const T alpha)
 {
         // Section 3.2: transforming the view direction to the hemisphere configuration
         const numerical::Vector<3, T> vh = numerical::Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
@@ -101,33 +102,40 @@ numerical::Vector<3, T> ggx_vn(RandomEngine& engine, const numerical::Vector<3, 
 }
 #else
 
+template <std::size_t N, typename T>
+[[nodiscard]] std::optional<numerical::Vector<N - 1, T>> plane_unit_vector(const numerical::Vector<N, T>& v)
+{
+        static_assert(N >= 2);
+
+        T length_s = 0;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                length_s += square(v[i]);
+        }
+
+        if (length_s > 0)
+        {
+                const T length = std::sqrt(length_s);
+                numerical::Vector<N - 1, T> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i] = v[i] / length;
+                }
+                return res;
+        }
+        return std::nullopt;
+}
+
 // Section 4.1: orthonormal basis
 template <std::size_t N, typename T>
-std::array<numerical::Vector<N, T>, N - 1> compute_orthonormal_basis(const numerical::Vector<N, T>& vh)
+[[nodiscard]] std::array<numerical::Vector<N, T>, N - 1> compute_orthonormal_basis(const numerical::Vector<N, T>& vh)
 {
         std::array<numerical::Vector<N, T>, N - 1> res;
 
-        const T length_square = [&]
+        if (const auto plane_v = plane_unit_vector(vh))
         {
-                T l = 0;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        l += square(vh[i]);
-                }
-                return l;
-        }();
-
-        if (length_square > 0)
-        {
-                const T length = std::sqrt(length_square);
-                numerical::Vector<N - 1, T> plane_v;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        plane_v[i] = vh[i] / length;
-                }
-
                 const std::array<numerical::Vector<N - 1, T>, N - 2> plane_basis =
-                        numerical::orthogonal_complement_of_unit_vector(plane_v);
+                        numerical::orthogonal_complement_of_unit_vector(*plane_v);
 
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
@@ -157,7 +165,7 @@ std::array<numerical::Vector<N, T>, N - 1> compute_orthonormal_basis(const numer
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-numerical::Vector<N, T> ggx_vn(RandomEngine& engine, const numerical::Vector<N, T>& ve, const T alpha)
+[[nodiscard]] numerical::Vector<N, T> ggx_vn(RandomEngine& engine, const numerical::Vector<N, T>& ve, const T alpha)
 {
         static_assert(N >= 3);
 
@@ -222,7 +230,7 @@ numerical::Vector<N, T> ggx_vn(RandomEngine& engine, const numerical::Vector<N, 
 
 // (2), (9.37), (9.42)
 template <typename T>
-T ggx_lambda(const T n_v, const T alpha)
+[[nodiscard]] T ggx_lambda(const T n_v, const T alpha)
 {
         const T n_v_2 = square(n_v);
         const T t = square(alpha) * (1 - n_v_2) / n_v_2;
@@ -232,21 +240,21 @@ T ggx_lambda(const T n_v, const T alpha)
 
 // (2), (9.24)
 template <typename T>
-T ggx_g1(const T n_v, const T alpha)
+[[nodiscard]] T ggx_g1(const T n_v, const T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha));
 }
 
 // (9.31)
 template <typename T>
-T ggx_g2(const T n_v, const T n_l, const T alpha)
+[[nodiscard]] T ggx_g2(const T n_v, const T n_l, const T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha) + ggx_lambda(n_l, alpha));
 }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-numerical::Vector<N, T> ggx_visible_normals_h(
+[[nodiscard]] numerical::Vector<N, T> ggx_visible_normals_h(
         RandomEngine& engine,
         const numerical::Vector<N, T>& normal,
         const numerical::Vector<N, T>& v,
@@ -277,7 +285,7 @@ numerical::Vector<N, T> ggx_visible_normals_h(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::tuple<numerical::Vector<N, T>, numerical::Vector<N, T>> ggx_visible_normals_h_l(
+[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Vector<N, T>> ggx_visible_normals_h_l(
         RandomEngine& engine,
         const numerical::Vector<N, T>& normal,
         const numerical::Vector<N, T>& v,
@@ -290,7 +298,7 @@ std::tuple<numerical::Vector<N, T>, numerical::Vector<N, T>> ggx_visible_normals
 
 // (1), (9.41)
 template <std::size_t N, typename T>
-T ggx_d(const T n_h, const T alpha)
+[[nodiscard]] T ggx_d(const T n_h, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -318,7 +326,7 @@ T ggx_d(const T n_h, const T alpha)
 
 // (3)
 template <std::size_t N, typename T>
-T ggx_visible_normals_h_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
+[[nodiscard]] T ggx_visible_normals_h_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -333,7 +341,7 @@ T ggx_visible_normals_h_pdf(const T n_v, const T n_h, const T h_v, const T alpha
 }
 
 template <std::size_t N, typename T>
-T ggx_visible_normals_l_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
+[[nodiscard]] T ggx_visible_normals_l_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -344,7 +352,7 @@ T ggx_visible_normals_l_pdf(const T n_v, const T n_h, const T h_v, const T alpha
 // (15), (18), (19)
 // BRDF * (n · l) / PDF = Fresnel * G2 / G1
 template <std::size_t N, typename T, typename Color>
-Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, const T n_h, const T h_l)
+[[nodiscard]] Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, const T n_h, const T h_l)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
