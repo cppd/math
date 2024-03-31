@@ -29,33 +29,6 @@ namespace ns::filter::test
 template <std::size_t N, typename T>
 class Track final
 {
-        class Iter final
-        {
-                std::vector<filters::Measurements<N, T>>::const_iterator iter_;
-
-        public:
-                explicit Iter(std::vector<filters::Measurements<N, T>>::const_iterator iter)
-                        : iter_(std::move(iter))
-                {
-                }
-
-                Iter& operator++()
-                {
-                        ++iter_;
-                        return *this;
-                }
-
-                [[nodiscard]] bool operator==(const Iter& a) const
-                {
-                        return iter_ == a.iter_;
-                }
-
-                [[nodiscard]] const filters::Measurements<N, T>& operator*() const
-                {
-                        return *iter_;
-                }
-        };
-
         std::vector<filters::Measurements<N, T>> measurements_;
         std::string annotation_;
 
@@ -66,14 +39,9 @@ public:
         {
         }
 
-        [[nodiscard]] Iter begin() const
+        [[nodiscard]] const std::vector<filters::Measurements<N, T>>& measurements() const
         {
-                return Iter(measurements_.cbegin());
-        }
-
-        [[nodiscard]] Iter end() const
-        {
-                return Iter(measurements_.cend());
+                return measurements_;
         }
 
         [[nodiscard]] const std::string& annotation() const

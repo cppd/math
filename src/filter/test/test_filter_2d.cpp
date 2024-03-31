@@ -187,7 +187,7 @@ void run(const Track<2, T>& track)
         Filters<T> filters = create_filters<T>();
         std::vector<filters::Measurements<2, T>> measurements;
 
-        for (const filters::Measurements<2, T>& measurement : track)
+        for (const filters::Measurements<2, T>& measurement : track.measurements())
         {
                 update(measurement, &measurements, &filters);
         }
