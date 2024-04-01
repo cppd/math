@@ -61,12 +61,12 @@ public:
                 count_ += N;
         }
 
-        void add(const T difference, const T variance)
+        void add_1(const T difference, const T variance)
         {
                 add(numerical::Vector<1, T>(difference), numerical::Matrix<1, 1, T>{{variance}});
         }
 
-        void add(const T normalized_squared, const std::size_t degrees_of_freedom)
+        void add_dof(const T normalized_squared, const std::size_t degrees_of_freedom)
         {
                 ASSERT(normalized_squared >= 0);
                 ASSERT(degrees_of_freedom > 0);

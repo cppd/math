@@ -55,7 +55,7 @@ void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<T>&
 
         if (const T speed_p = filter.speed_p(); is_finite(speed_p))
         {
-                nees.speed.add(true_data.speed - filter.speed(), speed_p);
+                nees.speed.add_1(true_data.speed - filter.speed(), speed_p);
         }
 }
 
@@ -64,7 +64,7 @@ void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 {
         ASSERT(!update.gate);
         ASSERT(update.normalized_innovation_squared);
-        nis.position.add(*update.normalized_innovation_squared, N);
+        nis.position.add_dof(*update.normalized_innovation_squared, N);
 }
 
 template <typename T>

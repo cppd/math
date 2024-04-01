@@ -51,7 +51,7 @@ void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::opt
                 nees.emplace();
         }
         nees->position.add(true_data.position - filter.position(), filter.position_p());
-        nees->speed.add(true_data.speed - filter.speed(), filter.speed_p());
+        nees->speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
 }
 
 template <std::size_t N, typename T>
@@ -84,7 +84,7 @@ void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
         if (!update.gate)
         {
                 ASSERT(update.normalized_innovation_squared);
-                nis.nis.add(*update.normalized_innovation_squared, N);
+                nis.nis.add_dof(*update.normalized_innovation_squared, N);
         }
 }
 

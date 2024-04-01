@@ -417,7 +417,7 @@ void test_impl(
                 result_data.push_back({.x = x, .standard_deviation = stddev});
                 ++distribution[static_cast<int>((x - process.true_x) / stddev)];
 
-                nees.add(process.true_x - x, variance);
+                nees.add_1(process.true_x - x, variance);
         }
 
         write_to_file(
