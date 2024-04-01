@@ -33,7 +33,8 @@ MEASUREMENT_COLOR = "#000000"
 MEASUREMENT_LINE_WIDTH = 0.25
 MEASUREMENT_MARKER_SIZE = 4
 
-FILTER_COLOR = "#008000"
+FILTER_COLOR_X = "#800000"
+FILTER_COLOR_XV = "#008000"
 FILTER_LINE_WIDTH = 1
 FILTER_MARKER_SIZE = 4
 
@@ -42,19 +43,19 @@ STDDEV_FILL_COLOR = "rgba(180,180,0,0.15)"
 STDDEV_LINE_WIDTH = 1
 
 
-Data = collections.namedtuple("Data", ["x", "z", "filter", "standard_deviation"])
+Data = collections.namedtuple(
+    "Data", ["x", "z", "filter_x", "standard_deviation_x", "filter_xv", "standard_deviation_xv"]
+)
 
 
 def error(message):
     raise Exception(message)
 
 
-def add_stddev(figure, lower, upper):
+def add_stddev(name, figure, lower, upper):
     assert len(lower) == len(upper)
 
     i = list(range(0, len(lower)))
-
-    name = "Standard Deviation"
 
     figure.add_trace(
         go.Scatter(
@@ -125,15 +126,38 @@ def create_figure(data, title):
     figure.add_trace(
         go.Scatter(
             x=i,
-            y=[p.filter for p in data],
-            name="Filter",
+            y=[p.filter_x for p in data],
+            name="Filter X",
             mode="lines+markers",
             marker_size=FILTER_MARKER_SIZE,
-            line=dict(color=FILTER_COLOR, width=FILTER_LINE_WIDTH),
+            line=dict(color=FILTER_COLOR_X, width=FILTER_LINE_WIDTH),
         )
     )
 
-    add_stddev(figure, [p.x - p.standard_deviation for p in data], [p.x + p.standard_deviation for p in data])
+    figure.add_trace(
+        go.Scatter(
+            x=i,
+            y=[p.filter_xv for p in data],
+            name="Filter XV",
+            mode="lines+markers",
+            marker_size=FILTER_MARKER_SIZE,
+            line=dict(color=FILTER_COLOR_XV, width=FILTER_LINE_WIDTH),
+        )
+    )
+
+    add_stddev(
+        "Standard Deviation X",
+        figure,
+        [p.x - p.standard_deviation_x for p in data],
+        [p.x + p.standard_deviation_x for p in data],
+    )
+
+    add_stddev(
+        "Standard Deviation XV",
+        figure,
+        [p.x - p.standard_deviation_xv for p in data],
+        [p.x + p.standard_deviation_xv for p in data],
+    )
 
     figure.update_xaxes(showgrid=True, visible=True)
     figure.update_yaxes(showgrid=True, visible=True)

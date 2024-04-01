@@ -112,13 +112,15 @@ std::vector<ProcessData<T>> simulate(
 }
 
 template <typename T>
-std::string make_string(const ProcessData<T>& process, const ResultData<T>& result)
+std::string make_string(const ProcessData<T>& process, const ResultData<T>& result, const ResultData<T>& result_xv)
 {
         std::string res;
         res += '(' + to_string(process.true_x);
         res += ", " + to_string(process.measurement_x);
         res += ", " + to_string(result.x);
         res += ", " + to_string(result.standard_deviation);
+        res += ", " + to_string(result_xv.x);
+        res += ", " + to_string(result_xv.standard_deviation);
         res += ')';
         return res;
 }
@@ -127,14 +129,16 @@ template <typename T>
 void write_to_file(
         const std::string& file_name,
         const std::vector<ProcessData<T>>& process,
-        const std::vector<ResultData<T>>& result)
+        const std::vector<ResultData<T>>& result,
+        const std::vector<ResultData<T>>& result_v)
 {
         ASSERT(process.size() == result.size());
+        ASSERT(process.size() == result_v.size());
 
         std::ofstream file(utility::test_file_path(file_name));
         for (std::size_t i = 0; i < process.size(); ++i)
         {
-                file << make_string(process[i], result[i]) << '\n';
+                file << make_string(process[i], result[i], result_v[i]) << '\n';
         }
 }
 
@@ -244,7 +248,7 @@ public:
 
         void process(const T measurement_x, const T measurement_variance_x)
         {
-                const numerical::Matrix<1, 1, T> r({{measurement_variance_x}});
+                const numerical::Matrix<1, 1, T> r{{measurement_variance_x}};
 
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
@@ -256,7 +260,7 @@ public:
                         {0,   1}
                 };
 
-                // measurement = x[0]
+                // x = x[0]
                 // Jacobian matrix
                 //  1 0
                 const auto h = [](const numerical::Vector<2, T>& x)
@@ -284,6 +288,60 @@ public:
                 filter_.update(
                         h, h_jacobian, r, numerical::Vector<1, T>(measurement_x), Add(), Residual(), THETA, GATE,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
+        }
+
+        void process(
+                const T measurement_x,
+                const T measurement_variance_x,
+                const T measurement_v,
+                const T measurement_variance_v)
+        {
+                const numerical::Matrix<2, 2, T> r{
+                        {measurement_variance_x,                      0},
+                        {                     0, measurement_variance_v}
+                };
+
+                // x[0] = x[0] + dt * x[1]
+                // x[1] = x[1]
+                // Jacobian matrix
+                //  1 dt
+                //  0  1
+                const numerical::Matrix<2, 2, T> f_matrix{
+                        {1, dt_},
+                        {0,   1}
+                };
+
+                // x = x[0]
+                // v = x[1]
+                // Jacobian matrix
+                //  1 0
+                //  0 1
+                const auto h = [](const numerical::Vector<2, T>& x)
+                {
+                        return numerical::Vector<2, T>(x[0], x[1]);
+                };
+                const auto h_jacobian = [](const numerical::Vector<2, T>& /*x*/)
+                {
+                        return numerical::Matrix<2, 2, T>{
+                                {1, 0},
+                                {0, 1}
+                        };
+                };
+
+                filter_.predict(
+                        [&](const numerical::Vector<2, T>& x)
+                        {
+                                return f_matrix * x;
+                        },
+                        [&](const numerical::Vector<2, T>& /*x*/)
+                        {
+                                return f_matrix;
+                        },
+                        q_);
+
+                filter_.update(
+                        h, h_jacobian, r, numerical::Vector<2, T>(measurement_x, measurement_v), Add(), Residual(),
+                        THETA, GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const
@@ -334,7 +392,7 @@ public:
 
         void process(const T measurement_x, const T measurement_variance_x)
         {
-                const numerical::Matrix<1, 1, T> r({{measurement_variance_x}});
+                const numerical::Matrix<1, 1, T> r{{measurement_variance_x}};
 
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
@@ -343,7 +401,7 @@ public:
                         return numerical::Vector<2, T>(x[0] + dt_ * x[1], x[1]);
                 };
 
-                // measurement = x[0]
+                // x = x[0]
                 const auto h = [](const numerical::Vector<2, T>& x)
                 {
                         return numerical::Vector<1, T>(x[0]);
@@ -353,6 +411,37 @@ public:
                 filter_.update(
                         h, r, numerical::Vector<1, T>(measurement_x), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
+        }
+
+        void process(
+                const T measurement_x,
+                const T measurement_variance_x,
+                const T measurement_v,
+                const T measurement_variance_v)
+        {
+                const numerical::Matrix<2, 2, T> r{
+                        {measurement_variance_x,                      0},
+                        {                     0, measurement_variance_v}
+                };
+
+                // x[0] = x[0] + dt * x[1]
+                // x[1] = x[1]
+                const auto f = [&](const numerical::Vector<2, T>& x)
+                {
+                        return numerical::Vector<2, T>(x[0] + dt_ * x[1], x[1]);
+                };
+
+                // x = x[0]
+                // v = x[1]
+                const auto h = [](const numerical::Vector<2, T>& x)
+                {
+                        return numerical::Vector<2, T>(x[0], x[1]);
+                };
+
+                filter_.predict(f, q_);
+                filter_.update(
+                        h, r, numerical::Vector<2, T>(measurement_x, measurement_v), Add(), Residual(), GATE,
+                        NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T x() const
@@ -372,6 +461,79 @@ public:
 };
 
 template <typename Filter>
+std::vector<ResultData<typename Filter::Type>> test_filter_x(
+        Filter&& filter,
+        const std::vector<ProcessData<typename Filter::Type>>& process_data,
+        const typename Filter::Type measurement_variance_x,
+        const typename Filter::Type precision,
+        const typename Filter::Type expected_deviation,
+        const typename Filter::Type deviation_count,
+        const std::vector<unsigned>& expected_distribution)
+{
+        using T = Filter::Type;
+
+        std::unordered_map<int, unsigned> distribution;
+
+        NormalizedSquared<T> nees;
+
+        std::vector<ResultData<T>> result_data;
+        result_data.reserve(process_data.size());
+        for (const ProcessData<T>& process : process_data)
+        {
+                filter.process(process.measurement_x, measurement_variance_x);
+
+                const T x = filter.x();
+                const T variance = filter.variance();
+                const T stddev = std::sqrt(variance);
+
+                result_data.push_back({.x = x, .standard_deviation = stddev});
+                ++distribution[static_cast<int>((x - process.true_x) / stddev)];
+
+                nees.add_1(process.true_x - x, variance);
+        }
+
+        compare(result_data.back().standard_deviation, expected_deviation, precision);
+        compare(process_data.back().true_x, result_data.back().x,
+                deviation_count * result_data.back().standard_deviation);
+
+        const T nees_average = nees.average();
+        if (!(nees_average > T{0.45} && nees_average < T{1.25}))
+        {
+                error("NEES; " + nees.check_string());
+        }
+
+        check_distribution(distribution, expected_distribution);
+
+        return result_data;
+}
+
+template <typename Filter>
+std::vector<ResultData<typename Filter::Type>> test_filter_xv(
+        Filter&& filter,
+        const std::vector<ProcessData<typename Filter::Type>>& process_data,
+        const typename Filter::Type measurement_variance_x,
+        const typename Filter::Type measurement_variance_v)
+{
+        using T = Filter::Type;
+
+        std::vector<ResultData<T>> result_data;
+        result_data.reserve(process_data.size());
+        for (const ProcessData<T>& process : process_data)
+        {
+                filter.process(
+                        process.measurement_x, measurement_variance_x, process.measurement_v, measurement_variance_v);
+
+                const T x = filter.x();
+                const T variance = filter.variance();
+                const T stddev = std::sqrt(variance);
+
+                result_data.push_back({.x = x, .standard_deviation = stddev});
+        }
+
+        return result_data;
+}
+
+template <typename Filter>
 void test_impl(
         const typename Filter::Type precision,
         const typename Filter::Type expected_deviation,
@@ -384,7 +546,7 @@ void test_impl(
         constexpr T PROCESS_VELOCITY_MEAN = 1;
         constexpr T PROCESS_VELOCITY_VARIANCE = power<2>(0.1);
         constexpr T MEASUREMENT_VARIANCE_X = power<2>(3);
-        constexpr T MEASUREMENT_VARIANCE_V = power<2>(0.05);
+        constexpr T MEASUREMENT_VARIANCE_V = power<2>(0.03);
 
         constexpr std::size_t COUNT = 1000;
 
@@ -398,43 +560,17 @@ void test_impl(
                 {  0, 50}
         };
 
-        Filter filter(DT, PROCESS_VELOCITY_VARIANCE, X, P);
+        const std::vector<ResultData<T>> result_data_x = test_filter_x(
+                Filter(DT, PROCESS_VELOCITY_VARIANCE, X, P), process_data, MEASUREMENT_VARIANCE_X, precision,
+                expected_deviation, deviation_count, expected_distribution);
 
-        std::unordered_map<int, unsigned> distribution;
-
-        NormalizedSquared<T> nees;
-
-        std::vector<ResultData<T>> result_data;
-        result_data.reserve(process_data.size());
-        for (const ProcessData<T>& process : process_data)
-        {
-                filter.process(process.measurement_x, MEASUREMENT_VARIANCE_X);
-
-                const T x = filter.x();
-                const T variance = filter.variance();
-                const T stddev = std::sqrt(variance);
-
-                result_data.push_back({.x = x, .standard_deviation = stddev});
-                ++distribution[static_cast<int>((x - process.true_x) / stddev)];
-
-                nees.add_1(process.true_x - x, variance);
-        }
+        const std::vector<ResultData<T>> result_data_xv = test_filter_xv(
+                Filter(DT, PROCESS_VELOCITY_VARIANCE, X, P), process_data, MEASUREMENT_VARIANCE_X,
+                MEASUREMENT_VARIANCE_V);
 
         write_to_file(
-                "filter_" + to_lower(filter.name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
-                process_data, result_data);
-
-        compare(result_data.back().standard_deviation, expected_deviation, precision);
-        compare(process_data.back().true_x, result_data.back().x,
-                deviation_count * result_data.back().standard_deviation);
-
-        const T nees_average = nees.average();
-        if (!(nees_average > T{0.45} && nees_average < T{1.25}))
-        {
-                error("NEES; " + nees.check_string());
-        }
-
-        check_distribution(distribution, expected_distribution);
+                "filter_" + to_lower(Filter::name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
+                process_data, result_data_x, result_data_xv);
 }
 
 template <typename T>
