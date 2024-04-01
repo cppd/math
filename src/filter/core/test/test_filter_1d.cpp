@@ -69,8 +69,9 @@ void compare(const T a, const T b, const T precision)
 template <typename T>
 struct ProcessData final
 {
-        T x;
-        T z;
+        T true_x;
+        T measurement_x;
+        T measurement_v;
 };
 
 template <typename T>
@@ -81,24 +82,31 @@ struct ResultData final
 };
 
 template <typename T, typename Engine>
-std::vector<ProcessData<T>> generate_random_data(
+std::vector<ProcessData<T>> simulate(
         const std::size_t count,
         const T dt,
-        const T velocity_mean,
-        const T velocity_variance,
-        const T measurement_variance,
+        const T process_velocity_mean,
+        const T process_velocity_variance,
+        const T measurement_variance_x,
+        const T measurement_variance_v,
         Engine engine)
 {
-        std::normal_distribution<T> nd_v(velocity_mean, std::sqrt(velocity_variance));
-        std::normal_distribution<T> nd_m(0, std::sqrt(measurement_variance));
+        std::normal_distribution<T> nd_process_v(process_velocity_mean, std::sqrt(process_velocity_variance));
+        std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
+        std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
 
         T x = 0;
+        T v = nd_process_v(engine);
         std::vector<ProcessData<T>> res;
         res.reserve(count);
         for (std::size_t i = 0; i < count; ++i)
         {
-                x += dt * nd_v(engine);
-                res.push_back({.x = x, .z = x + nd_m(engine)});
+                x += dt * v;
+                v = nd_process_v(engine);
+                res.push_back(
+                        {.true_x = x,
+                         .measurement_x = x + nd_measurement_x(engine),
+                         .measurement_v = v + nd_measurement_v(engine)});
         }
         return res;
 }
@@ -107,8 +115,8 @@ template <typename T>
 std::string make_string(const ProcessData<T>& process, const ResultData<T>& result)
 {
         std::string res;
-        res += '(' + to_string(process.x);
-        res += ", " + to_string(process.z);
+        res += '(' + to_string(process.true_x);
+        res += ", " + to_string(process.measurement_x);
         res += ", " + to_string(result.x);
         res += ", " + to_string(result.standard_deviation);
         res += ')';
@@ -218,10 +226,7 @@ class TestEkf
         static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
 
         const T dt_;
-
         const numerical::Matrix<2, 2, T> q_;
-        const numerical::Matrix<1, 1, T> r_;
-
         Ekf<2, T> filter_;
 
 public:
@@ -229,33 +234,26 @@ public:
 
         TestEkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
-                const std::type_identity_t<T> measurement_variance,
                 const numerical::Vector<2, T>& x,
                 const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
-                  r_({{measurement_variance}}),
                   filter_(x, p)
         {
         }
 
-        void process(const T measurement)
+        void process(const T measurement_x, const T measurement_variance_x)
         {
+                const numerical::Matrix<1, 1, T> r({{measurement_variance_x}});
+
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
                 // Jacobian matrix
                 //  1 dt
                 //  0  1
-                const auto f = [&](const numerical::Vector<2, T>& x)
-                {
-                        return numerical::Vector<2, T>(x[0] + dt_ * x[1], x[1]);
-                };
-                const auto f_jacobian = [&](const numerical::Vector<2, T>& /*x*/)
-                {
-                        return numerical::Matrix<2, 2, T>{
-                                {1, dt_},
-                                {0,   1}
-                        };
+                const numerical::Matrix<2, 2, T> f_matrix{
+                        {1, dt_},
+                        {0,   1}
                 };
 
                 // measurement = x[0]
@@ -272,9 +270,19 @@ public:
                         };
                 };
 
-                filter_.predict(f, f_jacobian, q_);
+                filter_.predict(
+                        [&](const numerical::Vector<2, T>& x)
+                        {
+                                return f_matrix * x;
+                        },
+                        [&](const numerical::Vector<2, T>& /*x*/)
+                        {
+                                return f_matrix;
+                        },
+                        q_);
+
                 filter_.update(
-                        h, h_jacobian, r_, numerical::Vector<1, T>(measurement), Add(), Residual(), THETA, GATE,
+                        h, h_jacobian, r, numerical::Vector<1, T>(measurement_x), Add(), Residual(), THETA, GATE,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -308,10 +316,7 @@ class TestUkf
         static constexpr T SIGMA_POINTS_ALPHA = 0.1;
 
         const T dt_;
-
         const numerical::Matrix<2, 2, T> q_;
-        const numerical::Matrix<1, 1, T> r_;
-
         Ukf<2, T, SigmaPoints<2, T>> filter_;
 
 public:
@@ -319,18 +324,18 @@ public:
 
         TestUkf(const std::type_identity_t<T> dt,
                 const std::type_identity_t<T> process_variance,
-                const std::type_identity_t<T> measurement_variance,
                 const numerical::Vector<2, T>& x,
                 const numerical::Matrix<2, 2, T>& p)
                 : dt_(dt),
                   q_(discrete_white_noise<2, T>(dt, process_variance)),
-                  r_({{measurement_variance}}),
                   filter_(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p)
         {
         }
 
-        void process(const T measurement)
+        void process(const T measurement_x, const T measurement_variance_x)
         {
+                const numerical::Matrix<1, 1, T> r({{measurement_variance_x}});
+
                 // x[0] = x[0] + dt * x[1]
                 // x[1] = x[1]
                 const auto f = [&](const numerical::Vector<2, T>& x)
@@ -346,7 +351,7 @@ public:
 
                 filter_.predict(f, q_);
                 filter_.update(
-                        h, r_, numerical::Vector<1, T>(measurement), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
+                        h, r, numerical::Vector<1, T>(measurement_x), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
@@ -376,14 +381,16 @@ void test_impl(
         using T = Filter::Type;
 
         constexpr T DT = 1;
-        constexpr T VELOCITY_MEAN = 1;
-        constexpr T VELOCITY_VARIANCE = power<2>(0.1);
-        constexpr T MEASUREMENT_VARIANCE = power<2>(3);
+        constexpr T PROCESS_VELOCITY_MEAN = 1;
+        constexpr T PROCESS_VELOCITY_VARIANCE = power<2>(0.1);
+        constexpr T MEASUREMENT_VARIANCE_X = power<2>(3);
+        constexpr T MEASUREMENT_VARIANCE_V = power<2>(0.05);
 
         constexpr std::size_t COUNT = 1000;
 
-        const std::vector<ProcessData<T>> process_data =
-                generate_random_data<T>(COUNT, DT, VELOCITY_MEAN, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, PCG());
+        const std::vector<ProcessData<T>> process_data = simulate<T>(
+                COUNT, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
+                MEASUREMENT_VARIANCE_V, PCG());
 
         constexpr numerical::Vector<2, T> X(10, 5);
         constexpr numerical::Matrix<2, 2, T> P{
@@ -391,7 +398,7 @@ void test_impl(
                 {  0, 50}
         };
 
-        Filter filter(DT, VELOCITY_VARIANCE, MEASUREMENT_VARIANCE, X, P);
+        Filter filter(DT, PROCESS_VELOCITY_VARIANCE, X, P);
 
         std::unordered_map<int, unsigned> distribution;
 
@@ -401,16 +408,16 @@ void test_impl(
         result_data.reserve(process_data.size());
         for (const ProcessData<T>& process : process_data)
         {
-                filter.process(process.z);
+                filter.process(process.measurement_x, MEASUREMENT_VARIANCE_X);
 
                 const T x = filter.x();
                 const T variance = filter.variance();
                 const T stddev = std::sqrt(variance);
 
                 result_data.push_back({.x = x, .standard_deviation = stddev});
-                ++distribution[static_cast<int>((x - process.x) / stddev)];
+                ++distribution[static_cast<int>((x - process.true_x) / stddev)];
 
-                nees.add(process.x - x, variance);
+                nees.add(process.true_x - x, variance);
         }
 
         write_to_file(
@@ -418,7 +425,8 @@ void test_impl(
                 process_data, result_data);
 
         compare(result_data.back().standard_deviation, expected_deviation, precision);
-        compare(process_data.back().x, result_data.back().x, deviation_count * result_data.back().standard_deviation);
+        compare(process_data.back().true_x, result_data.back().x,
+                deviation_count * result_data.back().standard_deviation);
 
         const T nees_average = nees.average();
         if (!(nees_average > T{0.45} && nees_average < T{1.25}))
