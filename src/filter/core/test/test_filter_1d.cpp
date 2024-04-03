@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "distribution.h"
 #include "ekf.h"
 #include "ukf.h"
 
@@ -31,16 +32,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <fstream>
-#include <map>
 #include <memory>
 #include <random>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 namespace ns::filter::core::test
@@ -141,63 +139,6 @@ void write_to_file(
         }
 }
 
-std::string distribution_to_string(const std::unordered_map<int, unsigned>& distribution)
-{
-        std::string res;
-        for (const auto& [k, v] : std::map{distribution.cbegin(), distribution.cend()})
-        {
-                if (!res.empty())
-                {
-                        res += '\n';
-                }
-                res += to_string(k) + ":" + to_string(v);
-        }
-        return res;
-}
-
-void check_distribution(
-        std::unordered_map<int, unsigned> distribution,
-        const std::vector<unsigned>& expected_distribution)
-{
-        if (distribution.empty())
-        {
-                error("Filter distribution is empty");
-        }
-
-        if (expected_distribution.empty())
-        {
-                error("Filter expected distribution is empty");
-        }
-
-        const auto [min, max] = std::minmax_element(
-                distribution.cbegin(), distribution.cend(),
-                [](const auto& a, const auto& b)
-                {
-                        return a.first < b.first;
-                });
-
-        if (!(static_cast<std::size_t>(std::abs(min->first)) < expected_distribution.size()
-              && static_cast<std::size_t>(std::abs(max->first)) < expected_distribution.size()))
-        {
-                error("Filter distribution 1 error\n" + distribution_to_string(distribution));
-        }
-
-        if (!(distribution[0] >= expected_distribution[0]))
-        {
-                error("Filter distribution 2 error\n" + distribution_to_string(distribution));
-        }
-
-        for (std::size_t i = 1; i < expected_distribution.size(); ++i)
-        {
-                const int index = i;
-                if (!(distribution[index] <= expected_distribution[index]
-                      && distribution[-index] <= expected_distribution[index]))
-                {
-                        error("Filter distribution 3 error\n" + distribution_to_string(distribution));
-                }
-        }
-}
-
 template <typename Filter>
 std::vector<ResultData<typename Filter::Type>> test_filter_x(
         Filter* const filter,
@@ -212,7 +153,7 @@ std::vector<ResultData<typename Filter::Type>> test_filter_x(
 {
         using T = Filter::Type;
 
-        std::unordered_map<int, unsigned> distribution;
+        Distribution<T> distribution;
 
         NormalizedSquared<T> nees;
 
@@ -228,7 +169,7 @@ std::vector<ResultData<typename Filter::Type>> test_filter_x(
                 const T stddev = std::sqrt(variance);
 
                 result_data.push_back({.x = x, .standard_deviation = stddev});
-                ++distribution[static_cast<int>((x - process.true_x) / stddev)];
+                distribution.add(x - process.true_x, stddev);
 
                 nees.add_1(process.true_x - x, variance);
         }
@@ -243,7 +184,7 @@ std::vector<ResultData<typename Filter::Type>> test_filter_x(
                 error("NEES; " + nees.check_string());
         }
 
-        check_distribution(distribution, expected_distribution);
+        distribution.check(expected_distribution);
 
         return result_data;
 }
