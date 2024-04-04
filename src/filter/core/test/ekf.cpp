@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/filter/core/ekf.h>
-#include <src/filter/core/models.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -54,6 +53,90 @@ struct Residual final
         }
 };
 
+template <typename T>
+numerical::Matrix<2, 2, T> f(const T dt)
+{
+        // x[0] = x[0] + dt * x[1]
+        // x[1] = x[1]
+        // Jacobian matrix
+        //  1 dt
+        //  0  1
+        return {
+                {1, dt},
+                {0,  1}
+        };
+}
+
+template <typename T>
+numerical::Matrix<2, 2, T> q(const T dt, const T process_variance)
+{
+        const T dt_2 = power<2>(dt) / 2;
+        const numerical::Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
+        const numerical::Matrix<1, 1, T> covariance{{process_variance}};
+        return noise_transition * covariance * noise_transition.transposed();
+}
+
+//
+
+template <typename T>
+numerical::Matrix<1, 1, T> position_r(const T position_variance)
+{
+        return {{position_variance}};
+}
+
+template <typename T>
+numerical::Vector<1, T> position_h(const numerical::Vector<2, T>& x)
+{
+        // x = x[0]
+        return numerical::Vector<1, T>(x[0]);
+}
+
+template <typename T>
+numerical::Matrix<1, 2, T> position_hj(const numerical::Vector<2, T>& /*x*/)
+{
+        // x = x[0]
+        // Jacobian matrix
+        //  1 0
+        return {
+                {1, 0}
+        };
+}
+
+//
+
+template <typename T>
+numerical::Matrix<2, 2, T> position_speed_r(const T position_variance, const T speed_variance)
+{
+        return {
+                {position_variance,              0},
+                {                0, speed_variance}
+        };
+}
+
+template <typename T>
+numerical::Vector<2, T> position_speed_h(const numerical::Vector<2, T>& x)
+{
+        // x = x[0]
+        // v = x[1]
+        return x;
+}
+
+template <typename T>
+numerical::Matrix<2, 2, T> position_speed_hj(const numerical::Vector<2, T>& /*x*/)
+{
+        // x = x[0]
+        // v = x[1]
+        // Jacobian matrix
+        //  1 0
+        //  0 1
+        return {
+                {1, 0},
+                {0, 1}
+        };
+}
+
+//
+
 template <typename T, bool INF>
 class Filter final : public TestEkf<T, INF>
 {
@@ -73,17 +156,7 @@ class Filter final : public TestEkf<T, INF>
         {
                 ASSERT(filter_);
 
-                const numerical::Matrix<2, 2, T> q = discrete_white_noise<2, T>(dt, process_variance);
-
-                // x[0] = x[0] + dt * x[1]
-                // x[1] = x[1]
-                // Jacobian matrix
-                //  1 dt
-                //  0  1
-                const numerical::Matrix<2, 2, T> f_matrix{
-                        {1, dt},
-                        {0,  1}
-                };
+                const numerical::Matrix<2, 2, T> f_matrix = f(dt);
 
                 filter_->predict(
                         [&](const numerical::Vector<2, T>& x)
@@ -94,32 +167,17 @@ class Filter final : public TestEkf<T, INF>
                         {
                                 return f_matrix;
                         },
-                        q);
+                        q(dt, process_variance));
         }
 
         void update_position(const T position, const T position_variance) override
         {
                 ASSERT(filter_);
 
-                const numerical::Matrix<1, 1, T> r{{position_variance}};
-
-                // x = x[0]
-                // Jacobian matrix
-                //  1 0
-                const auto h = [](const numerical::Vector<2, T>& x)
-                {
-                        return numerical::Vector<1, T>(x[0]);
-                };
-                const auto h_jacobian = [](const numerical::Vector<2, T>& /*x*/)
-                {
-                        return numerical::Matrix<1, 2, T>{
-                                {1, 0}
-                        };
-                };
-
                 filter_->update(
-                        h, h_jacobian, r, numerical::Vector<1, T>(position), Add(), Residual(), THETA, GATE,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_h<T>, position_hj<T>, position_r<T>(position_variance),
+                        numerical::Vector<1, T>(position), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         void update_position_speed(const T position, const T position_variance, const T speed, const T speed_variance)
@@ -127,31 +185,11 @@ class Filter final : public TestEkf<T, INF>
         {
                 ASSERT(filter_);
 
-                const numerical::Matrix<2, 2, T> r{
-                        {position_variance,              0},
-                        {                0, speed_variance}
-                };
-
-                // x = x[0]
-                // v = x[1]
-                // Jacobian matrix
-                //  1 0
-                //  0 1
-                const auto h = [](const numerical::Vector<2, T>& x)
-                {
-                        return numerical::Vector<2, T>(x[0], x[1]);
-                };
-                const auto h_jacobian = [](const numerical::Vector<2, T>& /*x*/)
-                {
-                        return numerical::Matrix<2, 2, T>{
-                                {1, 0},
-                                {0, 1}
-                        };
-                };
-
                 filter_->update(
-                        h, h_jacobian, r, numerical::Vector<2, T>(position, speed), Add(), Residual(), THETA, GATE,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_speed_h<T>, position_speed_hj<T>,
+                        position_speed_r<T>(position_variance, speed_variance),
+                        numerical::Vector<2, T>(position, speed), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         [[nodiscard]] T position() const override
