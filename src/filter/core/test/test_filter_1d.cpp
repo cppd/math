@@ -64,22 +64,22 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <typename T>
-struct ProcessData final
+struct Measurements final
 {
         T true_x;
-        T measurement_x;
-        T measurement_v;
+        T x;
+        T v;
 };
 
 template <typename T>
-struct ResultData final
+struct Result final
 {
         T x;
-        T standard_deviation;
+        T stddev;
 };
 
 template <typename T, typename Engine>
-std::vector<ProcessData<T>> simulate(
+std::vector<Measurements<T>> simulate(
         const std::size_t count,
         const T init_x,
         const T dt,
@@ -93,18 +93,14 @@ std::vector<ProcessData<T>> simulate(
         std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
         std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
 
-        std::vector<ProcessData<T>> res;
+        std::vector<Measurements<T>> res;
         res.reserve(count);
 
         const auto push = [&](const T x, const T v)
         {
                 const T m_x = x + nd_measurement_x(engine);
                 const T m_v = v + nd_measurement_v(engine);
-                res.push_back({
-                        .true_x = x,
-                        .measurement_x = m_x,
-                        .measurement_v = m_v,
-                });
+                res.push_back({.true_x = x, .x = m_x, .v = m_v});
         };
 
         T x = init_x;
@@ -123,15 +119,15 @@ std::vector<ProcessData<T>> simulate(
 }
 
 template <typename T>
-std::string make_string(const ProcessData<T>& process, const ResultData<T>& result, const ResultData<T>& result_xv)
+std::string make_string(const Measurements<T>& process, const Result<T>& result_x, const Result<T>& result_xv)
 {
         std::string res;
         res += '(' + to_string(process.true_x);
-        res += ", " + to_string(process.measurement_x);
-        res += ", " + to_string(result.x);
-        res += ", " + to_string(result.standard_deviation);
+        res += ", " + to_string(process.x);
+        res += ", " + to_string(result_x.x);
+        res += ", " + to_string(result_x.stddev);
         res += ", " + to_string(result_xv.x);
-        res += ", " + to_string(result_xv.standard_deviation);
+        res += ", " + to_string(result_xv.stddev);
         res += ')';
         return res;
 }
@@ -139,30 +135,30 @@ std::string make_string(const ProcessData<T>& process, const ResultData<T>& resu
 template <typename T>
 void write_to_file(
         const std::string& file_name,
-        const std::vector<ProcessData<T>>& process,
-        const std::vector<ResultData<T>>& result,
-        const std::vector<ResultData<T>>& result_v)
+        const std::vector<Measurements<T>>& process,
+        const std::vector<Result<T>>& result_x,
+        const std::vector<Result<T>>& result_xv)
 {
-        ASSERT(process.size() == result.size());
-        ASSERT(process.size() == result_v.size());
+        ASSERT(process.size() == result_x.size());
+        ASSERT(process.size() == result_xv.size());
 
         std::ofstream file(utility::test_file_path(file_name));
         for (std::size_t i = 0; i < process.size(); ++i)
         {
-                file << make_string(process[i], result[i], result_v[i]) << '\n';
+                file << make_string(process[i], result_x[i], result_xv[i]) << '\n';
         }
 }
 
 template <typename Filter>
-std::vector<ResultData<typename Filter::Type>> test_filter_x(
+std::vector<Result<typename Filter::Type>> test_filter_x(
         Filter* const filter,
-        const std::vector<ProcessData<typename Filter::Type>>& process_data,
+        const std::vector<Measurements<typename Filter::Type>>& process_data,
         const typename Filter::Type dt,
         const typename Filter::Type process_velocity_variance,
         const typename Filter::Type measurement_variance_x,
         const typename Filter::Type precision,
-        const typename Filter::Type expected_deviation,
-        const typename Filter::Type deviation_count,
+        const typename Filter::Type expected_stddev,
+        const typename Filter::Type stddev_count,
         const std::vector<unsigned>& expected_distribution)
 {
         using T = Filter::Type;
@@ -171,26 +167,25 @@ std::vector<ResultData<typename Filter::Type>> test_filter_x(
 
         NormalizedSquared<T> nees;
 
-        std::vector<ResultData<T>> result_data;
-        result_data.reserve(process_data.size());
-        for (const ProcessData<T>& process : process_data)
+        std::vector<Result<T>> res;
+        res.reserve(process_data.size());
+        for (const Measurements<T>& process : process_data)
         {
                 filter->predict(dt, process_velocity_variance);
-                filter->update_position(process.measurement_x, measurement_variance_x);
+                filter->update_position(process.x, measurement_variance_x);
 
                 const T x = filter->position();
                 const T variance = filter->position_p();
                 const T stddev = std::sqrt(variance);
 
-                result_data.push_back({.x = x, .standard_deviation = stddev});
+                res.push_back({.x = x, .stddev = stddev});
                 distribution.add(x - process.true_x, stddev);
 
                 nees.add_1(process.true_x - x, variance);
         }
 
-        compare(result_data.back().standard_deviation, expected_deviation, precision);
-        compare(process_data.back().true_x, result_data.back().x,
-                deviation_count * result_data.back().standard_deviation);
+        compare(res.back().stddev, expected_stddev, precision);
+        compare(process_data.back().true_x, res.back().x, stddev_count * res.back().stddev);
 
         const T nees_average = nees.average();
         if (!(nees_average > T{0.45} && nees_average < T{1.25}))
@@ -200,13 +195,13 @@ std::vector<ResultData<typename Filter::Type>> test_filter_x(
 
         distribution.check(expected_distribution);
 
-        return result_data;
+        return res;
 }
 
 template <typename Filter>
-std::vector<ResultData<typename Filter::Type>> test_filter_xv(
+std::vector<Result<typename Filter::Type>> test_filter_xv(
         Filter* const filter,
-        const std::vector<ProcessData<typename Filter::Type>>& process_data,
+        const std::vector<Measurements<typename Filter::Type>>& process_data,
         const typename Filter::Type dt,
         const typename Filter::Type process_velocity_variance,
         const typename Filter::Type measurement_variance_x,
@@ -214,30 +209,29 @@ std::vector<ResultData<typename Filter::Type>> test_filter_xv(
 {
         using T = Filter::Type;
 
-        std::vector<ResultData<T>> result_data;
-        result_data.reserve(process_data.size());
-        for (const ProcessData<T>& process : process_data)
+        std::vector<Result<T>> res;
+        res.reserve(process_data.size());
+        for (const Measurements<T>& process : process_data)
         {
                 filter->predict(dt, process_velocity_variance);
-                filter->update_position_speed(
-                        process.measurement_x, measurement_variance_x, process.measurement_v, measurement_variance_v);
+                filter->update_position_speed(process.x, measurement_variance_x, process.v, measurement_variance_v);
 
                 const T x = filter->position();
                 const T variance = filter->position_p();
                 const T stddev = std::sqrt(variance);
 
-                result_data.push_back({.x = x, .standard_deviation = stddev});
+                res.push_back({.x = x, .stddev = stddev});
         }
 
-        return result_data;
+        return res;
 }
 
 template <typename Filter>
 void test_impl(
         std::unique_ptr<Filter> filter,
         const typename Filter::Type precision,
-        const typename Filter::Type expected_deviation,
-        const typename Filter::Type deviation_count,
+        const typename Filter::Type expected_stddev,
+        const typename Filter::Type stddev_count,
         const std::vector<unsigned>& expected_distribution)
 {
         using T = Filter::Type;
@@ -257,23 +251,23 @@ void test_impl(
 
         constexpr std::size_t COUNT = 1000;
 
-        const std::vector<ProcessData<T>> process_data = simulate<T>(
+        const std::vector<Measurements<T>> process_data = simulate<T>(
                 COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
                 MEASUREMENT_VARIANCE_V, PCG());
 
         filter->reset(X, P);
-        const std::vector<ResultData<T>> result_data_x = test_filter_x(
+        const std::vector<Result<T>> result_x = test_filter_x(
                 filter.get(), process_data, DT, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X, precision,
-                expected_deviation, deviation_count, expected_distribution);
+                expected_stddev, stddev_count, expected_distribution);
 
         filter->reset(X, P);
-        const std::vector<ResultData<T>> result_data_xv = test_filter_xv(
+        const std::vector<Result<T>> result_xv = test_filter_xv(
                 filter.get(), process_data, DT, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
                 MEASUREMENT_VARIANCE_V);
 
         write_to_file(
                 "filter_" + to_lower(filter->name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
-                process_data, result_data_x, result_data_xv);
+                process_data, result_x, result_xv);
 }
 
 template <typename T>
