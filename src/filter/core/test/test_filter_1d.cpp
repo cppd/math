@@ -81,6 +81,7 @@ struct ResultData final
 template <typename T, typename Engine>
 std::vector<ProcessData<T>> simulate(
         const std::size_t count,
+        const T init_x,
         const T dt,
         const T process_velocity_mean,
         const T process_velocity_variance,
@@ -92,19 +93,32 @@ std::vector<ProcessData<T>> simulate(
         std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
         std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
 
-        T x = 0;
-        T v = nd_process_v(engine);
         std::vector<ProcessData<T>> res;
         res.reserve(count);
-        for (std::size_t i = 0; i < count; ++i)
+
+        const auto push = [&](const T x, const T v)
         {
-                x += dt * v;
-                v = nd_process_v(engine);
-                res.push_back(
-                        {.true_x = x,
-                         .measurement_x = x + nd_measurement_x(engine),
-                         .measurement_v = v + nd_measurement_v(engine)});
+                const T m_x = x + nd_measurement_x(engine);
+                const T m_v = v + nd_measurement_v(engine);
+                res.push_back({
+                        .true_x = x,
+                        .measurement_x = m_x,
+                        .measurement_v = m_v,
+                });
+        };
+
+        T x = init_x;
+        T v = nd_process_v(engine);
+        push(x, v);
+        for (std::size_t i = 1; i < count; ++i)
+        {
+                const T v_next = nd_process_v(engine);
+                const T v_average = (v + v_next) / 2;
+                x += dt * v_average;
+                v = v_next;
+                push(x, v);
         }
+
         return res;
 }
 
@@ -233,17 +247,18 @@ void test_impl(
         constexpr T PROCESS_VELOCITY_VARIANCE = square(0.1);
         constexpr T MEASUREMENT_VARIANCE_X = square(3);
         constexpr T MEASUREMENT_VARIANCE_V = square(0.03);
+        constexpr T INIT_X = 0;
 
-        constexpr numerical::Vector<2, T> X(10, 5);
+        constexpr numerical::Vector<2, T> X(INIT_X + 10, PROCESS_VELOCITY_MEAN + 5);
         constexpr numerical::Matrix<2, 2, T> P{
-                {square(20),         0},
-                {         0, square(7)}
+                {square(15),           0},
+                {         0, square(7.5)}
         };
 
         constexpr std::size_t COUNT = 1000;
 
         const std::vector<ProcessData<T>> process_data = simulate<T>(
-                COUNT, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
+                COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
                 MEASUREMENT_VARIANCE_V, PCG());
 
         filter->reset(X, P);
