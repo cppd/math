@@ -205,7 +205,10 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
         const typename Filter::Type dt,
         const typename Filter::Type process_velocity_variance,
         const typename Filter::Type measurement_variance_x,
-        const typename Filter::Type measurement_variance_v)
+        const typename Filter::Type measurement_variance_v,
+        const typename Filter::Type precision,
+        const typename Filter::Type expected_stddev,
+        const typename Filter::Type stddev_count)
 {
         using T = Filter::Type;
 
@@ -223,14 +226,19 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
                 res.push_back({.x = x, .stddev = stddev});
         }
 
+        compare(res.back().stddev, expected_stddev, precision);
+        compare(process_data.back().true_x, res.back().x, stddev_count * res.back().stddev);
+
         return res;
 }
 
 template <typename Filter>
 void test_impl(
         std::unique_ptr<Filter> filter,
-        const typename Filter::Type precision,
-        const typename Filter::Type expected_stddev,
+        const typename Filter::Type precision_x,
+        const typename Filter::Type precision_xv,
+        const typename Filter::Type expected_stddev_x,
+        const typename Filter::Type expected_stddev_xv,
         const typename Filter::Type stddev_count,
         const std::vector<unsigned>& expected_distribution)
 {
@@ -257,13 +265,13 @@ void test_impl(
 
         filter->reset(X, P);
         const std::vector<Result<T>> result_x = test_filter_x(
-                filter.get(), process_data, DT, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X, precision,
-                expected_stddev, stddev_count, expected_distribution);
+                filter.get(), process_data, DT, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X, precision_x,
+                expected_stddev_x, stddev_count, expected_distribution);
 
         filter->reset(X, P);
         const std::vector<Result<T>> result_xv = test_filter_xv(
                 filter.get(), process_data, DT, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
-                MEASUREMENT_VARIANCE_V);
+                MEASUREMENT_VARIANCE_V, precision_xv, expected_stddev_xv, stddev_count);
 
         write_to_file(
                 "filter_" + to_lower(filter->name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
@@ -271,20 +279,29 @@ void test_impl(
 }
 
 template <typename T>
-void test_impl(const std::type_identity_t<T> precision)
+void test_impl(const std::type_identity_t<T> precision_x, const std::type_identity_t<T> precision_xv)
 {
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
-        test_impl<TestEkf<T, false>>(create_test_ekf<T, false>(), precision, 1.4306576889002234962L, 5, distribution);
-        test_impl<TestEkf<T, true>>(create_test_ekf<T, true>(), precision, 1.43098764352003224212L, 5, distribution);
-        test_impl<TestUkf<T>>(create_test_ukf<T>(), precision, 1.43670888967218343853L, 5, distribution);
+
+        test_impl<TestEkf<T, false>>(
+                create_test_ekf<T, false>(), precision_x, precision_xv, 1.4306576889002234962L,
+                0.298852051984984113818L, 5, distribution);
+
+        test_impl<TestEkf<T, true>>(
+                create_test_ekf<T, true>(), precision_x, precision_xv, 1.43098764352003224212L,
+                0.298852351052434771634L, 5, distribution);
+
+        test_impl<TestUkf<T>>(
+                create_test_ukf<T>(), precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888146284201L, 5,
+                distribution);
 }
 
 void test()
 {
         LOG("Test Filter 1D");
-        test_impl<float>(1e-3);
-        test_impl<double>(1e-12);
-        test_impl<long double>(1e-15);
+        test_impl<float>(1e-3, 5e-3);
+        test_impl<double>(1e-12, 5e-12);
+        test_impl<long double>(1e-15, 2e-15);
         LOG("Test Filter 1D passed");
 }
 
