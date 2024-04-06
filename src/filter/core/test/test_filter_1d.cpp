@@ -67,6 +67,7 @@ template <typename T>
 struct Measurements final
 {
         T true_x;
+        T true_v;
         T x;
         T v;
 };
@@ -100,7 +101,7 @@ std::vector<Measurements<T>> simulate(
         {
                 const T m_x = x + nd_measurement_x(engine);
                 const T m_v = v + nd_measurement_v(engine);
-                res.push_back({.true_x = x, .x = m_x, .v = m_v});
+                res.push_back({.true_x = x, .true_v = v, .x = m_x, .v = m_v});
         };
 
         T x = init_x;
@@ -190,7 +191,7 @@ std::vector<Result<typename Filter::Type>> test_filter_x(
         const T nees_average = nees.average();
         if (!(nees_average > T{0.45} && nees_average < T{1.25}))
         {
-                error("NEES; " + nees.check_string());
+                error("NEES X; " + nees.check_string());
         }
 
         distribution.check(expected_distribution);
@@ -212,6 +213,8 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
 {
         using T = Filter::Type;
 
+        NormalizedSquared<T> nees;
+
         std::vector<Result<T>> res;
         res.reserve(process_data.size());
         for (const Measurements<T>& process : process_data)
@@ -224,10 +227,20 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
                 const T stddev = std::sqrt(variance);
 
                 res.push_back({.x = x, .stddev = stddev});
+
+                nees.add(
+                        numerical::Vector<2, T>(process.true_x, process.true_v) - filter->position_speed(),
+                        filter->position_speed_p());
         }
 
         compare(res.back().stddev, expected_stddev, precision);
         compare(process_data.back().true_x, res.back().x, stddev_count * res.back().stddev);
+
+        const T nees_average = nees.average();
+        if (!(nees_average > T{0.15} && nees_average < T{2.95}))
+        {
+                error("NEES XV; " + nees.check_string());
+        }
 
         return res;
 }
@@ -283,15 +296,15 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
 {
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
 
-        test_impl<TestEkf<T, false>>(
+        test_impl(
                 create_test_ekf<T, false>(), precision_x, precision_xv, 1.4306576889002234962L,
                 0.298852051984984113818L, 5, distribution);
 
-        test_impl<TestEkf<T, true>>(
+        test_impl(
                 create_test_ekf<T, true>(), precision_x, precision_xv, 1.43098764352003224212L,
                 0.298852351052434771634L, 5, distribution);
 
-        test_impl<TestUkf<T>>(
+        test_impl(
                 create_test_ukf<T>(), precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888146284201L, 5,
                 distribution);
 }

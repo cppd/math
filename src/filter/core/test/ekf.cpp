@@ -206,6 +206,20 @@ class Filter final : public TestEkf<T, INF>
                 return filter_->p()[0, 0];
         }
 
+        [[nodiscard]] numerical::Vector<2, T> position_speed() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->x();
+        }
+
+        [[nodiscard]] numerical::Matrix<2, 2, T> position_speed_p() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->p();
+        }
+
         [[nodiscard]] std::string name() const override
         {
                 return INF ? "EXTENDED_H_INFINITY" : "EKF";
