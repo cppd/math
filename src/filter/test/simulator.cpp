@@ -242,7 +242,9 @@ class Simulator final
         numerical::Vector<N, T> position_{0};
         Velocity velocity_;
         Velocity next_velocity_;
+        numerical::Vector<N, T> next_acceleration_;
         numerical::Vector<N, T> acceleration_;
+
         T angle_;
 
         [[nodiscard]] T angle(const T time) const
@@ -303,7 +305,8 @@ public:
                   measurements_speed_nd_(0, std::sqrt(config.measurement_variance_speed)),
                   velocity_(velocity_with_noise(time_)),
                   next_velocity_(velocity_with_noise(time_ + dt_)),
-                  acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_),
+                  next_acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_),
+                  acceleration_(next_acceleration_),
                   angle_(normalize_angle(config.angle))
         {
                 position_[N - 1] = OFFSET;
@@ -313,11 +316,14 @@ public:
         {
                 time_ += dt_;
 
-                position_ = position_ + dt_ * to_vector(velocity_) + (square(dt_) / 2) * acceleration_;
+                position_ += dt_ * to_vector(velocity_) + (square(dt_) / 2) * next_acceleration_;
 
                 velocity_ = next_velocity_;
                 next_velocity_ = velocity_with_noise(time_ + dt_);
-                acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
+
+                const auto previous_acceleration = next_acceleration_;
+                next_acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
+                acceleration_ = (previous_acceleration + next_acceleration_) / T{2};
 
                 angle_ = normalize_angle(angle_ + angle_drift_);
         }
