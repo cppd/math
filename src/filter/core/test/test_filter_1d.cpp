@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distribution.h"
 #include "ekf.h"
+#include "simulator.h"
 #include "ukf.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/com/type/name.h>
 #include <src/filter/core/consistency.h>
@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <fstream>
 #include <memory>
-#include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -64,60 +63,11 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <typename T>
-struct Measurements final
-{
-        T true_x;
-        T true_v;
-        T x;
-        T v;
-};
-
-template <typename T>
 struct Result final
 {
         T x;
         T stddev;
 };
-
-template <typename T, typename Engine>
-std::vector<Measurements<T>> simulate(
-        const std::size_t count,
-        const T init_x,
-        const T dt,
-        const T process_velocity_mean,
-        const T process_velocity_variance,
-        const T measurement_variance_x,
-        const T measurement_variance_v,
-        Engine engine)
-{
-        std::normal_distribution<T> nd_process_v(process_velocity_mean, std::sqrt(process_velocity_variance));
-        std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
-        std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
-
-        std::vector<Measurements<T>> res;
-        res.reserve(count);
-
-        const auto push = [&](const T x, const T v)
-        {
-                const T m_x = x + nd_measurement_x(engine);
-                const T m_v = v + nd_measurement_v(engine);
-                res.push_back({.true_x = x, .true_v = v, .x = m_x, .v = m_v});
-        };
-
-        T x = init_x;
-        T v = nd_process_v(engine);
-        push(x, v);
-        for (std::size_t i = 1; i < count; ++i)
-        {
-                const T v_next = nd_process_v(engine);
-                const T v_average = (v + v_next) / 2;
-                x += dt * v_average;
-                v = v_next;
-                push(x, v);
-        }
-
-        return res;
-}
 
 template <typename T>
 std::string make_string(const Measurements<T>& process, const Result<T>& result_x, const Result<T>& result_xv)
@@ -274,7 +224,7 @@ void test_impl(
 
         const std::vector<Measurements<T>> process_data = simulate<T>(
                 COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
-                MEASUREMENT_VARIANCE_V, PCG());
+                MEASUREMENT_VARIANCE_V);
 
         filter->reset(X, P);
         const std::vector<Result<T>> result_x = test_filter_x(
