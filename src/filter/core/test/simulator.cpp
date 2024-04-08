@@ -45,23 +45,30 @@ std::vector<Measurements<T>> simulate(
         std::vector<Measurements<T>> res;
         res.reserve(count);
 
-        const auto push = [&](const T x, const T v)
+        const auto push = [&](const T time, const T x, const T v)
         {
                 const T m_x = x + nd_measurement_x(engine);
                 const T m_v = v + nd_measurement_v(engine);
-                res.push_back({.true_x = x, .true_v = v, .x = m_x, .v = m_v});
+                res.push_back(
+                        {.time = time,
+                         .true_x = x,
+                         .true_v = v,
+                         .x = m_x,
+                         .x_variance = measurement_variance_x,
+                         .v = m_v,
+                         .v_variance = measurement_variance_v});
         };
 
         T x = init_x;
         T v = nd_process_v(engine);
-        push(x, v);
+        push(0, x, v);
         for (std::size_t i = 1; i < count; ++i)
         {
                 const T v_next = nd_process_v(engine);
                 const T v_average = (v + v_next) / 2;
                 x += dt * v_average;
                 v = v_next;
-                push(x, v);
+                push(i, x, v);
         }
 
         return res;
