@@ -65,6 +65,7 @@ void compare(const T a, const T b, const T precision)
 template <typename T>
 struct Result final
 {
+        T time;
         T x;
         T stddev;
 };
@@ -100,20 +101,23 @@ void write_to_file(
         }
 }
 
+template <typename T>
+struct TestResult final
+{
+        std::vector<Result<T>> result;
+        Distribution<T> distribution;
+        NormalizedSquared<T> nees;
+};
+
 template <typename Filter>
-std::vector<Result<typename Filter::Type>> test_filter_x(
+TestResult<typename Filter::Type> test_filter_x(
         Filter* const filter,
         const std::vector<Measurements<typename Filter::Type>>& measurements,
-        const typename Filter::Type process_variance,
-        const typename Filter::Type precision,
-        const typename Filter::Type expected_stddev,
-        const typename Filter::Type stddev_count,
-        const std::vector<unsigned>& expected_distribution)
+        const typename Filter::Type process_variance)
 {
         using T = Filter::Type;
 
         Distribution<T> distribution;
-
         NormalizedSquared<T> nees;
 
         auto iter = measurements.cbegin();
@@ -133,7 +137,7 @@ std::vector<Result<typename Filter::Type>> test_filter_x(
         std::vector<Result<T>> res;
         res.reserve(measurements.size());
 
-        res.push_back({.x = filter->position(), .stddev = std::sqrt(filter->position_p())});
+        res.push_back({.time = iter->time, .x = filter->position(), .stddev = std::sqrt(filter->position_p())});
 
         ASSERT(iter != measurements.end());
         for (++iter; iter != measurements.end(); ++iter)
@@ -151,37 +155,24 @@ std::vector<Result<typename Filter::Type>> test_filter_x(
                 const T variance = filter->position_p();
                 const T stddev = std::sqrt(variance);
 
-                res.push_back({.x = x, .stddev = stddev});
-                distribution.add(x - m.true_x, stddev);
+                res.push_back({.time = m.time, .x = x, .stddev = stddev});
 
+                distribution.add(x - m.true_x, stddev);
                 nees.add_1(m.true_x - x, variance);
         }
 
-        compare(res.back().stddev, expected_stddev, precision);
-        compare(measurements.back().true_x, res.back().x, stddev_count * res.back().stddev);
-
-        const T nees_average = nees.average();
-        if (!(nees_average > T{0.45} && nees_average < T{1.25}))
-        {
-                error("NEES X; " + nees.check_string());
-        }
-
-        distribution.check(expected_distribution);
-
-        return res;
+        return {.result = res, .distribution = distribution, .nees = nees};
 }
 
 template <typename Filter>
-std::vector<Result<typename Filter::Type>> test_filter_xv(
+TestResult<typename Filter::Type> test_filter_xv(
         Filter* const filter,
         const std::vector<Measurements<typename Filter::Type>>& measurements,
-        const typename Filter::Type process_variance,
-        const typename Filter::Type precision,
-        const typename Filter::Type expected_stddev,
-        const typename Filter::Type stddev_count)
+        const typename Filter::Type process_variance)
 {
         using T = Filter::Type;
 
+        Distribution<T> distribution;
         NormalizedSquared<T> nees;
 
         auto iter = measurements.cbegin();
@@ -201,7 +192,7 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
         std::vector<Result<T>> res;
         res.reserve(measurements.size());
 
-        res.push_back({.x = filter->position(), .stddev = std::sqrt(filter->position_p())});
+        res.push_back({.time = iter->time, .x = filter->position(), .stddev = std::sqrt(filter->position_p())});
 
         for (++iter; iter != measurements.end(); ++iter)
         {
@@ -218,23 +209,15 @@ std::vector<Result<typename Filter::Type>> test_filter_xv(
                 const T variance = filter->position_p();
                 const T stddev = std::sqrt(variance);
 
-                res.push_back({.x = x, .stddev = stddev});
+                res.push_back({.time = m.time, .x = x, .stddev = stddev});
 
+                distribution.add(x - m.true_x, stddev);
                 nees.add(
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter->position_speed(),
                         filter->position_speed_p());
         }
 
-        compare(res.back().stddev, expected_stddev, precision);
-        compare(measurements.back().true_x, res.back().x, stddev_count * res.back().stddev);
-
-        const T nees_average = nees.average();
-        if (!(nees_average > T{0.15} && nees_average < T{2.95}))
-        {
-                error("NEES XV; " + nees.check_string());
-        }
-
-        return res;
+        return {.result = res, .distribution = distribution, .nees = nees};
 }
 
 template <typename Filter>
@@ -262,16 +245,37 @@ void test_impl(
                 COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
                 MEASUREMENT_VARIANCE_V);
 
-        const std::vector<Result<T>> result_x = test_filter_x(
-                filter.get(), measurements, PROCESS_VELOCITY_VARIANCE, precision_x, expected_stddev_x, stddev_count,
-                expected_distribution);
+        //
 
-        const std::vector<Result<T>> result_xv = test_filter_xv(
-                filter.get(), measurements, PROCESS_VELOCITY_VARIANCE, precision_xv, expected_stddev_xv, stddev_count);
+        const TestResult<T> result_x = test_filter_x(filter.get(), measurements, PROCESS_VELOCITY_VARIANCE);
+
+        compare(result_x.result.back().stddev, expected_stddev_x, precision_x);
+        compare(measurements.back().true_x, result_x.result.back().x, stddev_count * result_x.result.back().stddev);
+
+        if (const auto average = result_x.nees.average(); !(average > T{0.45} && average < T{1.25}))
+        {
+                error("NEES X; " + result_x.nees.check_string());
+        }
+
+        result_x.distribution.check(expected_distribution);
+
+        //
+
+        const TestResult<T> result_xv = test_filter_xv(filter.get(), measurements, PROCESS_VELOCITY_VARIANCE);
+
+        compare(result_xv.result.back().stddev, expected_stddev_xv, precision_xv);
+        compare(measurements.back().true_x, result_xv.result.back().x, stddev_count * result_xv.result.back().stddev);
+
+        if (const T average = result_xv.nees.average(); !(average > T{0.15} && average < T{2.95}))
+        {
+                error("NEES XV; " + result_xv.nees.check_string());
+        }
+
+        //
 
         write_to_file(
                 "filter_" + to_lower(filter->name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
-                measurements, result_x, result_xv);
+                measurements, result_x.result, result_xv.result);
 }
 
 template <typename T>
