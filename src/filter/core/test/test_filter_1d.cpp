@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ekf.h"
 #include "simulator.h"
 #include "ukf.h"
+#include "write.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -69,6 +70,18 @@ struct Result final
         T x;
         T stddev;
 };
+
+template <typename T>
+std::vector<FilterData<T>> filter_data(const std::vector<Result<T>>& result)
+{
+        std::vector<FilterData<T>> res;
+        res.reserve(result.size());
+        for (const Result<T>& r : result)
+        {
+                res.push_back({.time = r.time, .x = r.x, .stddev = r.stddev});
+        }
+        return res;
+}
 
 template <typename T>
 std::string make_string(const Measurements<T>& process, const Result<T>& result_x, const Result<T>& result_xv)
@@ -276,6 +289,7 @@ void test_impl(
         write_to_file(
                 "filter_" + to_lower(filter->name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
                 measurements, result_x.result, result_xv.result);
+        write(filter->name(), measurements, filter_data(result_x.result), filter_data(result_xv.result));
 }
 
 template <typename T>
