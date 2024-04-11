@@ -19,13 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/string/str.h>
+#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/filter/utility/files.h>
 
 #include <fstream>
+#include <iomanip>
+#include <ios>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace ns::filter::core::test
@@ -33,6 +39,28 @@ namespace ns::filter::core::test
 namespace
 {
 constexpr std::string_view SIGMA = "&#x03c3;";
+
+template <typename T>
+std::unordered_map<T, Measurements<T>> measurement_time_map(const std::vector<Measurements<T>>& measurements)
+{
+        std::unordered_map<T, Measurements<T>> res;
+        for (const Measurements<T>& m : measurements)
+        {
+                res[m.time] = m;
+        }
+        return res;
+}
+
+template <typename T>
+const Measurements<T>& measurements_at_time(const std::unordered_map<T, Measurements<T>>& map, const T time)
+{
+        const auto iter = map.find(time);
+        if (iter != map.cend())
+        {
+                return iter->second;
+        }
+        error("Failed to find measurements at time " + to_string(time));
+}
 }
 
 template <typename T>
@@ -44,6 +72,8 @@ void write(
 {
         std::ofstream file(utility::test_file_path(
                 "filter_1d_" + to_lower(name) + "_" + utility::replace_space(type_name<T>()) + ".txt"));
+        file << std::setprecision(Limits<T>::max_digits10());
+        file << std::scientific;
 
         file << '{';
         file << R"("name":"Track")";
@@ -72,7 +102,7 @@ void write(
         }
 
         file << '{';
-        file << R"("name": Filter X")";
+        file << R"("name":"Filter X")";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":"#800000")";
         file << R"(, "line_width":1)";
@@ -85,7 +115,7 @@ void write(
         }
 
         file << '{';
-        file << R"("name": Filter XV")";
+        file << R"("name":"Filter XV")";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":"#008000")";
         file << R"(, "line_width":1)";
@@ -97,8 +127,10 @@ void write(
                 file << "(" << f.time << ", " << f.x << ")\n";
         }
 
+        const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
+
         file << '{';
-        file << R"s("name": ")s" << SIGMA << " X\"";
+        file << R"s("name":")s" << SIGMA << " X\"";
         file << R"s(, "mode":"lines")s";
         file << R"s(, "line_color":"rgba(128,128,0,0.5)")s";
         file << R"s(, "fill_color":"rgba(180,180,0,0.15)")s";
@@ -108,11 +140,12 @@ void write(
         file << "}\n";
         for (const FilterData<T>& f : x)
         {
-                file << "(" << f.time << ", " << f.x << ", " << f.stddev << ")\n";
+                const T true_x = measurements_at_time(time_map, f.time).true_x;
+                file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
         }
 
         file << '{';
-        file << R"s("name": ")s" << SIGMA << " XV\"";
+        file << R"s("name":")s" << SIGMA << " XV\"";
         file << R"s(, "mode":"lines")s";
         file << R"s(, "line_color":"rgba(128,128,0,0.5)")s";
         file << R"s(, "fill_color":"rgba(180,180,0,0.15)")s";
@@ -122,7 +155,8 @@ void write(
         file << "}\n";
         for (const FilterData<T>& f : xv)
         {
-                file << "(" << f.time << ", " << f.x << ", " << f.stddev << ")\n";
+                const T true_x = measurements_at_time(time_map, f.time).true_x;
+                file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
         }
 }
 

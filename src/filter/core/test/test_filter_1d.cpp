@@ -84,37 +84,6 @@ std::vector<FilterData<T>> filter_data(const std::vector<Result<T>>& result)
 }
 
 template <typename T>
-std::string make_string(const Measurements<T>& process, const Result<T>& result_x, const Result<T>& result_xv)
-{
-        std::string res;
-        res += '(' + to_string(process.true_x);
-        res += ", " + to_string(process.x);
-        res += ", " + to_string(result_x.x);
-        res += ", " + to_string(result_x.stddev);
-        res += ", " + to_string(result_xv.x);
-        res += ", " + to_string(result_xv.stddev);
-        res += ')';
-        return res;
-}
-
-template <typename T>
-void write_to_file(
-        const std::string& file_name,
-        const std::vector<Measurements<T>>& process,
-        const std::vector<Result<T>>& result_x,
-        const std::vector<Result<T>>& result_xv)
-{
-        ASSERT(process.size() == result_x.size());
-        ASSERT(process.size() == result_xv.size());
-
-        std::ofstream file(utility::test_file_path(file_name));
-        for (std::size_t i = 0; i < process.size(); ++i)
-        {
-                file << make_string(process[i], result_x[i], result_xv[i]) << '\n';
-        }
-}
-
-template <typename T>
 struct TestResult final
 {
         std::vector<Result<T>> result;
@@ -286,9 +255,6 @@ void test_impl(
 
         //
 
-        write_to_file(
-                "filter_" + to_lower(filter->name()) + "_1d_" + utility::replace_space(type_name<T>()) + ".txt",
-                measurements, result_x.result, result_xv.result);
         write(filter->name(), measurements, filter_data(result_x.result), filter_data(result_xv.result));
 }
 

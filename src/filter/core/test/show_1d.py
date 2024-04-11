@@ -15,7 +15,6 @@
 
 import argparse
 import ast
-import collections
 import os
 import sys
 import tempfile
@@ -26,182 +25,128 @@ from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
 
-TRACK_COLOR = "#0000ff"
-TRACK_LINE_WIDTH = 1
-
-MEASUREMENT_COLOR = "#000000"
-MEASUREMENT_LINE_WIDTH = 0.25
-MEASUREMENT_MARKER_SIZE = 4
-
-FILTER_COLOR_X = "#800000"
-FILTER_COLOR_XV = "#008000"
-FILTER_LINE_WIDTH = 1
-FILTER_MARKER_SIZE = 4
-
-STDDEV_LINE_COLOR = "rgba(128,128,0,0.5)"
-STDDEV_FILL_COLOR = "rgba(180,180,0,0.15)"
-STDDEV_LINE_WIDTH = 1
-
-
-Data = collections.namedtuple(
-    "Data", ["x", "z", "filter_x", "standard_deviation_x", "filter_xv", "standard_deviation_xv"]
-)
-
 
 def error(message):
     raise Exception(message)
 
 
-def add_stddev(name, figure, lower, upper):
-    assert len(lower) == len(upper)
+def add_stddev(figure, d, values):
+    assert len(values) > 0
+    assert len(values[0]) == 3
 
-    i = list(range(0, len(lower)))
+    x = [p[0] for p in values]
+    lower = [p[1] - p[2] for p in values]
+    upper = [p[1] + p[2] for p in values]
 
     figure.add_trace(
         go.Scatter(
-            x=i,
+            x=x,
             y=upper,
-            name=name,
-            legendgroup=name,
+            name=d["name"],
+            legendgroup=d["name"],
             showlegend=False,
-            mode="lines",
-            line=dict(color=STDDEV_LINE_COLOR, width=STDDEV_LINE_WIDTH, dash="dot"),
+            mode=d["mode"],
+            marker_size=d["marker_size"],
+            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
         )
     )
 
     figure.add_trace(
         go.Scatter(
-            x=i,
-            y=lower,
-            name=name,
-            legendgroup=name,
+            x=x,
+            y=upper,
+            name=d["name"],
+            legendgroup=d["name"],
             showlegend=False,
-            mode="lines",
-            line=dict(color=STDDEV_LINE_COLOR, width=STDDEV_LINE_WIDTH, dash="dot"),
+            mode=d["mode"],
+            marker_size=d["marker_size"],
+            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
         )
     )
 
     figure.add_trace(
         go.Scatter(
-            x=i + i[::-1],
+            x=x + x[::-1],
             y=upper + lower[::-1],
-            name=name,
-            legendgroup=name,
+            name=d["name"],
+            legendgroup=d["name"],
             showlegend=True,
             fill="toself",
-            fillcolor=STDDEV_FILL_COLOR,
+            fillcolor=d["fill_color"],
             line_color="rgba(0,0,0,0)",
         )
     )
 
 
-def create_figure(data, title):
-    assert len(data) > 0
+def add_line(figure, d, values):
+    assert len(values) > 0
+    assert len(values[0]) == 2
+    figure.add_trace(
+        go.Scatter(
+            x=[p[0] for p in values],
+            y=[p[1] for p in values],
+            name=d["name"],
+            mode=d["mode"],
+            marker_size=d["marker_size"],
+            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
+        )
+    )
 
-    i = list(range(0, len(data)))
+
+def create_figure(info, title):
+    assert info and isinstance(info, list)
 
     figure = go.Figure()
 
-    figure.add_trace(
-        go.Scatter(
-            x=i,
-            y=[p.x for p in data],
-            name="Track",
-            mode="lines",
-            line=dict(color=TRACK_COLOR, width=TRACK_LINE_WIDTH, dash="dot"),
-        )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=i,
-            y=[p.z for p in data],
-            name="Measurements",
-            mode="lines+markers",
-            marker_size=MEASUREMENT_MARKER_SIZE,
-            line=dict(color=MEASUREMENT_COLOR, width=MEASUREMENT_LINE_WIDTH),
-        )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=i,
-            y=[p.filter_x for p in data],
-            name="Filter X",
-            mode="lines+markers",
-            marker_size=FILTER_MARKER_SIZE,
-            line=dict(color=FILTER_COLOR_X, width=FILTER_LINE_WIDTH),
-        )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=i,
-            y=[p.filter_xv for p in data],
-            name="Filter XV",
-            mode="lines+markers",
-            marker_size=FILTER_MARKER_SIZE,
-            line=dict(color=FILTER_COLOR_XV, width=FILTER_LINE_WIDTH),
-        )
-    )
-
-    add_stddev(
-        "Standard Deviation X",
-        figure,
-        [p.x - p.standard_deviation_x for p in data],
-        [p.x + p.standard_deviation_x for p in data],
-    )
-
-    add_stddev(
-        "Standard Deviation XV",
-        figure,
-        [p.x - p.standard_deviation_xv for p in data],
-        [p.x + p.standard_deviation_xv for p in data],
-    )
+    for d, values in info:
+        assert len(values) > 0
+        assert len(values[0]) == 2 or len(values[0]) == 3
+        if len(values[0]) == 2:
+            add_line(figure, d, values)
+        else:
+            add_stddev(figure, d, values)
 
     figure.update_xaxes(showgrid=True, visible=True)
     figure.update_yaxes(showgrid=True, visible=True)
+
+    title = None
     figure.update_layout(title=title, xaxis_title="Time", yaxis_title="Position")
     return figure
 
 
-def show_data(data, file_name):
-    if len(data) == 0:
-        error("No data to show")
+def show_data(info, file_name):
+    if not info:
+        error("No info to show")
 
-    figure = create_figure(data, title=os.path.basename(file_name))
+    figure = create_figure(info, title=os.path.basename(file_name))
 
     file = tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX)
     figure.write_html(file.name, auto_open=True)
 
 
 def parse_data(text):
-    begin = text.find("(")
-    if begin < 0:
-        error("Malformed input:\n{0}".format(text))
-    end = text.find(")", begin)
-    if end < 0:
-        error("Malformed input:\n{0}".format(text))
-    text = text[begin : (end + 1)]
-
     try:
         data = ast.literal_eval(text)
     except ValueError:
         error("Malformed input:\n{0}".format(text))
 
+    if isinstance(data, dict):
+        return data
+
     if not isinstance(data, tuple):
         error("Not tuple input:\n{0}".format(text))
 
     for d in data:
-        if not isinstance(d, (int, float)):
+        if not (d is None or isinstance(d, float)):
             error("Input type error:\n{0}".format(text))
 
-    return Data(*data)
+    return data
 
 
 def read_file(file_name):
-    data_list = []
+    res = []
     dimension = None
+    values = None
 
     with open(file_name, encoding="utf-8") as file:
         for line in file:
@@ -211,21 +156,30 @@ def read_file(file_name):
 
             data = parse_data(line)
 
+            if isinstance(data, dict):
+                res.append((data, []))
+                values = res[-1][1]
+                dimension = None
+                continue
+
             if dimension is not None:
                 if len(data) != dimension:
                     error("Inconsistent dimensions {0} and {1}".format(dimension, len(data)))
             else:
                 dimension = len(data)
 
-            data_list.append(data)
+            if values is None:
+                error("No data name")
 
-    if not data_list:
+            values.append(data)
+
+    if not res:
         error("No data")
 
     if dimension is None:
         error("No dimension")
 
-    return data_list
+    return res
 
 
 def use_dialog(args):
