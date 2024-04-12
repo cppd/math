@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "write.h"
 
-#include "simulator.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/filter/core/test/measurements.h>
 #include <src/filter/utility/files.h>
 
 #include <fstream>
@@ -34,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::view
 {
 namespace
 {
@@ -67,8 +66,8 @@ template <typename T>
 void write(
         const std::string& name,
         const std::vector<Measurements<T>>& measurements,
-        const std::vector<FilterData<T>>& x,
-        const std::vector<FilterData<T>>& xv)
+        const std::vector<Point<T>>& x,
+        const std::vector<Point<T>>& xv)
 {
         std::ofstream file(utility::test_file_path(
                 "filter_1d_" + to_lower(name) + "_" + utility::replace_space(type_name<T>()) + ".txt"));
@@ -109,7 +108,7 @@ void write(
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const FilterData<T>& f : x)
+        for (const Point<T>& f : x)
         {
                 file << "(" << f.time << ", " << f.x << ")\n";
         }
@@ -122,7 +121,7 @@ void write(
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const FilterData<T>& f : xv)
+        for (const Point<T>& f : xv)
         {
                 file << "(" << f.time << ", " << f.x << ")\n";
         }
@@ -138,7 +137,7 @@ void write(
         file << R"s(, "line_dash":"dot")s";
         file << R"s(, "marker_size":None)s";
         file << "}\n";
-        for (const FilterData<T>& f : x)
+        for (const Point<T>& f : x)
         {
                 const T true_x = measurements_at_time(time_map, f.time).true_x;
                 file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
@@ -153,17 +152,17 @@ void write(
         file << R"s(, "line_dash":"dot")s";
         file << R"s(, "marker_size":None)s";
         file << "}\n";
-        for (const FilterData<T>& f : xv)
+        for (const Point<T>& f : xv)
         {
                 const T true_x = measurements_at_time(time_map, f.time).true_x;
                 file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
         }
 }
 
-#define INSTANTIATION(T)                                                                                    \
-        template void write(                                                                                \
-                const std::string&, const std::vector<Measurements<T>>&, const std::vector<FilterData<T>>&, \
-                const std::vector<FilterData<T>>&);
+#define INSTANTIATION(T)                                                                               \
+        template void write(                                                                           \
+                const std::string&, const std::vector<Measurements<T>>&, const std::vector<Point<T>>&, \
+                const std::vector<Point<T>>&);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

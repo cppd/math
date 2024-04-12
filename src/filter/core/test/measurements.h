@@ -17,20 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "measurements.h"
-
-#include <cstddef>
-#include <vector>
-
 namespace ns::filter::core::test
 {
 template <typename T>
-std::vector<Measurements<T>> simulate(
-        std::size_t count,
-        T init_x,
-        T dt,
-        T process_velocity_mean,
-        T process_velocity_variance,
-        T measurement_variance_x,
-        T measurement_variance_v);
+struct Measurements final
+{
+        T time;
+        T true_x;
+        T true_v;
+        T x;
+        T x_variance;
+        T v;
+        T v_variance;
+};
 }

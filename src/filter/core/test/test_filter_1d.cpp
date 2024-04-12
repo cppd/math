@@ -17,27 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distribution.h"
 #include "ekf.h"
+#include "measurements.h"
 #include "simulator.h"
 #include "ukf.h"
-#include "write.h"
+
+#include "view/write.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/string/str.h>
-#include <src/com/type/name.h>
 #include <src/filter/core/consistency.h>
-#include <src/filter/utility/files.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <cmath>
 #include <cstddef>
-#include <fstream>
 #include <memory>
-#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -72,9 +69,9 @@ struct Result final
 };
 
 template <typename T>
-std::vector<FilterData<T>> filter_data(const std::vector<Result<T>>& result)
+std::vector<view::Point<T>> view_points(const std::vector<Result<T>>& result)
 {
-        std::vector<FilterData<T>> res;
+        std::vector<view::Point<T>> res;
         res.reserve(result.size());
         for (const Result<T>& r : result)
         {
@@ -255,7 +252,7 @@ void test_impl(
 
         //
 
-        write(filter->name(), measurements, filter_data(result_x.result), filter_data(result_xv.result));
+        view::write(filter->name(), measurements, view_points(result_x.result), view_points(result_xv.result));
 }
 
 template <typename T>

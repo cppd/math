@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "simulator.h"
+#include <src/filter/core/test/measurements.h>
 
 #include <string>
 #include <vector>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::view
 {
 template <typename T>
-struct FilterData final
+struct Point final
 {
         T time;
         T x;
@@ -36,6 +36,6 @@ template <typename T>
 void write(
         const std::string& file_name,
         const std::vector<Measurements<T>>& measurements,
-        const std::vector<FilterData<T>>& x,
-        const std::vector<FilterData<T>>& xv);
+        const std::vector<Point<T>>& x,
+        const std::vector<Point<T>>& xv);
 }

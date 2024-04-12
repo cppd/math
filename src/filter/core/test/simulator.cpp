@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "simulator.h"
 
+#include "measurements.h"
+
 #include <src/com/random/pcg.h>
 
 #include <cmath>
