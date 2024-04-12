@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ekf.h"
+#include "ukf.h"
 
 #include <src/com/error.h>
-#include <src/filter/core/ekf.h>
+#include <src/filter/core/sigma_points.h>
+#include <src/filter/core/ukf.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -27,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::filters
 {
 namespace
 {
@@ -54,17 +55,9 @@ struct Residual final
 };
 
 template <typename T>
-numerical::Matrix<2, 2, T> f(const T dt)
+numerical::Vector<2, T> f(const T dt, const numerical::Vector<2, T>& x)
 {
-        // x[0] = x[0] + dt * x[1]
-        // x[1] = x[1]
-        // Jacobian matrix
-        //  1 dt
-        //  0  1
-        return {
-                {1, dt},
-                {0,  1}
-        };
+        return {x[0] + dt * x[1], x[1]};
 }
 
 template <typename T>
@@ -91,17 +84,6 @@ numerical::Vector<1, T> position_h(const numerical::Vector<2, T>& x)
         return numerical::Vector<1, T>(x[0]);
 }
 
-template <typename T>
-numerical::Matrix<1, 2, T> position_hj(const numerical::Vector<2, T>& /*x*/)
-{
-        // x = x[0]
-        // Jacobian matrix
-        //  1 0
-        return {
-                {1, 0}
-        };
-}
-
 //
 
 template <typename T>
@@ -121,51 +103,32 @@ numerical::Vector<2, T> position_speed_h(const numerical::Vector<2, T>& x)
         return x;
 }
 
-template <typename T>
-numerical::Matrix<2, 2, T> position_speed_hj(const numerical::Vector<2, T>& /*x*/)
-{
-        // x = x[0]
-        // v = x[1]
-        // Jacobian matrix
-        //  1 0
-        //  0 1
-        return {
-                {1, 0},
-                {0, 1}
-        };
-}
-
 //
 
-template <typename T, bool INF>
-class Filter final : public TestEkf<T, INF>
+template <typename T>
+class Filter final : public FilterUkf<T>
 {
         static constexpr std::optional<T> GATE{};
         static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
-        static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
 
-        std::optional<Ekf<2, T>> filter_;
+        static constexpr T SIGMA_POINTS_ALPHA = 0.1;
+
+        std::optional<Ukf<2, T, SigmaPoints<2, T>>> filter_;
 
         void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) override
         {
-                filter_.emplace(x, p);
+                filter_.emplace(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p);
         }
 
         void predict(const T dt, const T process_variance) override
         {
                 ASSERT(filter_);
 
-                const numerical::Matrix<2, 2, T> f_matrix = f(dt);
-
                 filter_->predict(
-                        [&](const numerical::Vector<2, T>& x)
+                        [dt](const numerical::Vector<2, T>& x)
                         {
-                                return f_matrix * x;
-                        },
-                        [&](const numerical::Vector<2, T>& /*x*/)
-                        {
-                                return f_matrix;
+                                return f(dt, x);
                         },
                         q(dt, process_variance));
         }
@@ -175,9 +138,8 @@ class Filter final : public TestEkf<T, INF>
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_h<T>, position_hj<T>, position_r<T>(position_variance),
-                        numerical::Vector<1, T>(position), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        position_h<T>, position_r<T>(position_variance), numerical::Vector<1, T>(position), Add(),
+                        Residual(), GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_position_speed(const T position, const T position_variance, const T speed, const T speed_variance)
@@ -186,9 +148,8 @@ class Filter final : public TestEkf<T, INF>
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_speed_h<T>, position_speed_hj<T>,
-                        position_speed_r<T>(position_variance, speed_variance),
-                        numerical::Vector<2, T>(position, speed), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
+                        position_speed_h<T>, position_speed_r<T>(position_variance, speed_variance),
+                        numerical::Vector<2, T>(position, speed), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
@@ -222,7 +183,7 @@ class Filter final : public TestEkf<T, INF>
 
         [[nodiscard]] std::string name() const override
         {
-                return INF ? "EXTENDED_H_INFINITY" : "EKF";
+                return "UKF";
         }
 
 public:
@@ -230,15 +191,13 @@ public:
 };
 }
 
-template <typename T, bool INF>
-[[nodiscard]] std::unique_ptr<TestEkf<T, INF>> create_test_ekf()
+template <typename T>
+[[nodiscard]] std::unique_ptr<FilterUkf<T>> create_filter_ukf()
 {
-        return std::make_unique<Filter<T, INF>>();
+        return std::make_unique<Filter<T>>();
 }
 
-#define INSTANTIATION(T)                                               \
-        template std::unique_ptr<TestEkf<T, false>> create_test_ekf(); \
-        template std::unique_ptr<TestEkf<T, true>> create_test_ekf();
+#define INSTANTIATION(T) template std::unique_ptr<FilterUkf<T>> create_filter_ukf();
 
 INSTANTIATION(float)
 INSTANTIATION(double)

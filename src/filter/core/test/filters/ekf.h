@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::filters
 {
 template <typename T, bool INF>
-class TestEkf
+class FilterEkf
 {
 public:
         using Type = T;
 
-        virtual ~TestEkf() = default;
+        virtual ~FilterEkf() = default;
 
         virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
@@ -51,5 +51,5 @@ public:
 };
 
 template <typename T, bool INF>
-[[nodiscard]] std::unique_ptr<TestEkf<T, INF>> create_test_ekf();
+[[nodiscard]] std::unique_ptr<FilterEkf<T, INF>> create_filter_ekf();
 }

@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::filters
 {
 template <typename T>
-class TestUkf
+class FilterUkf
 {
 public:
         using Type = T;
 
-        virtual ~TestUkf() = default;
+        virtual ~FilterUkf() = default;
 
         virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
@@ -51,5 +51,5 @@ public:
 };
 
 template <typename T>
-[[nodiscard]] std::unique_ptr<TestUkf<T>> create_test_ukf();
+[[nodiscard]] std::unique_ptr<FilterUkf<T>> create_filter_ukf();
 }

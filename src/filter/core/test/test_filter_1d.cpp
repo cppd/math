@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "distribution.h"
-#include "ekf.h"
 #include "measurements.h"
 #include "simulator.h"
-#include "ukf.h"
 
+#include "filters/ekf.h"
+#include "filters/ukf.h"
 #include "view/write.h"
 
 #include <src/com/error.h>
@@ -261,16 +261,16 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
 
         test_impl(
-                create_test_ekf<T, false>(), precision_x, precision_xv, 1.4306576889002234962L,
+                filters::create_filter_ekf<T, false>(), precision_x, precision_xv, 1.4306576889002234962L,
                 0.298852051985480352583L, 5, distribution);
 
         test_impl(
-                create_test_ekf<T, true>(), precision_x, precision_xv, 1.43098764352003224212L,
+                filters::create_filter_ekf<T, true>(), precision_x, precision_xv, 1.43098764352003224212L,
                 0.298852351050054556604L, 5, distribution);
 
         test_impl(
-                create_test_ukf<T>(), precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5,
-                distribution);
+                filters::create_filter_ukf<T>(), precision_x, precision_xv, 1.43670888967218343853L,
+                0.304462860888633687857L, 5, distribution);
 }
 
 void test()
