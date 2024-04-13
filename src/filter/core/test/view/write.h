@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/rgb8.h>
 #include <src/filter/core/test/measurements.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ns::filter::core::test::view
@@ -33,9 +35,23 @@ struct Point final
 };
 
 template <typename T>
+struct Filter final
+{
+        std::string name;
+        color::RGB8 color;
+        std::vector<Point<T>> points;
+
+        Filter(std::string name, color::RGB8 color, std::vector<Point<T>> points)
+                : name(std::move(name)),
+                  color(color),
+                  points(std::move(points))
+        {
+        }
+};
+
+template <typename T>
 void write(
         const std::string& file_name,
         const std::vector<Measurements<T>>& measurements,
-        const std::vector<Point<T>>& x,
-        const std::vector<Point<T>>& xv);
+        const std::vector<Filter<T>>& filters);
 }

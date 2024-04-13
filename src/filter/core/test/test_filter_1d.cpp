@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filters/ukf.h"
 #include "view/write.h"
 
+#include <src/color/rgb8.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
@@ -43,6 +44,22 @@ namespace ns::filter::core::test
 namespace
 {
 template <typename T>
+struct Result final
+{
+        T time;
+        T x;
+        T stddev;
+};
+
+template <typename T>
+struct TestResult final
+{
+        std::vector<Result<T>> result;
+        Distribution<T> distribution;
+        NormalizedSquared<T> nees;
+};
+
+template <typename T>
 void compare(const T a, const T b, const T precision)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -61,14 +78,6 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <typename T>
-struct Result final
-{
-        T time;
-        T x;
-        T stddev;
-};
-
-template <typename T>
 std::vector<view::Point<T>> view_points(const std::vector<Result<T>>& result)
 {
         std::vector<view::Point<T>> res;
@@ -79,14 +88,6 @@ std::vector<view::Point<T>> view_points(const std::vector<Result<T>>& result)
         }
         return res;
 }
-
-template <typename T>
-struct TestResult final
-{
-        std::vector<Result<T>> result;
-        Distribution<T> distribution;
-        NormalizedSquared<T> nees;
-};
 
 template <typename Filter>
 TestResult<typename Filter::Type> test_filter_x(
@@ -252,7 +253,10 @@ void test_impl(
 
         //
 
-        view::write(filter->name(), measurements, view_points(result_x.result), view_points(result_xv.result));
+        view::write(
+                filter->name(), measurements,
+                {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
+                 view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
 }
 
 template <typename T>

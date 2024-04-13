@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "write.h"
 
+#include <src/color/rgb8.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
@@ -29,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <ios>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -37,7 +37,11 @@ namespace ns::filter::core::test::view
 {
 namespace
 {
-constexpr std::string_view SIGMA = "&#x03c3;";
+std::string color_to_string(const color::RGB8 color)
+{
+        return "\"rgb(" + to_string(color.red()) + "," + to_string(color.green()) + "," + to_string(color.blue())
+               + ")\"";
+}
 
 template <typename T>
 std::unordered_map<T, Measurements<T>> measurement_time_map(const std::vector<Measurements<T>>& measurements)
@@ -60,20 +64,10 @@ const Measurements<T>& measurements_at_time(const std::unordered_map<T, Measurem
         }
         error("Failed to find measurements at time " + to_string(time));
 }
-}
 
 template <typename T>
-void write(
-        const std::string& name,
-        const std::vector<Measurements<T>>& measurements,
-        const std::vector<Point<T>>& x,
-        const std::vector<Point<T>>& xv)
+void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
 {
-        std::ofstream file(utility::test_file_path(
-                "filter_1d_" + to_lower(name) + "_" + utility::replace_space(type_name<T>()) + ".txt"));
-        file << std::setprecision(Limits<T>::max_digits10());
-        file << std::scientific;
-
         file << '{';
         file << R"("name":"Track")";
         file << R"(, "mode":"lines")";
@@ -99,37 +93,26 @@ void write(
         {
                 file << "(" << m.time << ", " << m.x << ")\n";
         }
+}
 
+template <typename T>
+void write_filter(std::ofstream& file, const std::unordered_map<T, Measurements<T>> time_map, const Filter<T>& filter)
+{
         file << '{';
-        file << R"("name":"Filter X")";
+        file << R"("name":")" << filter.name << "\"";
         file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#800000")";
+        file << R"(, "line_color":)" << color_to_string(filter.color);
         file << R"(, "line_width":1)";
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
-        for (const Point<T>& f : x)
+        for (const Point<T>& f : filter.points)
         {
                 file << "(" << f.time << ", " << f.x << ")\n";
         }
 
         file << '{';
-        file << R"("name":"Filter XV")";
-        file << R"(, "mode":"lines+markers")";
-        file << R"(, "line_color":"#008000")";
-        file << R"(, "line_width":1)";
-        file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":4)";
-        file << "}\n";
-        for (const Point<T>& f : xv)
-        {
-                file << "(" << f.time << ", " << f.x << ")\n";
-        }
-
-        const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
-
-        file << '{';
-        file << R"s("name":")s" << SIGMA << " X\"";
+        file << R"s("name":")s" << filter.name << " P\"";
         file << R"s(, "mode":"lines")s";
         file << R"s(, "line_color":"rgba(128,128,0,0.5)")s";
         file << R"s(, "fill_color":"rgba(180,180,0,0.15)")s";
@@ -137,32 +120,45 @@ void write(
         file << R"s(, "line_dash":"dot")s";
         file << R"s(, "marker_size":None)s";
         file << "}\n";
-        for (const Point<T>& f : x)
-        {
-                const T true_x = measurements_at_time(time_map, f.time).true_x;
-                file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
-        }
-
-        file << '{';
-        file << R"s("name":")s" << SIGMA << " XV\"";
-        file << R"s(, "mode":"lines")s";
-        file << R"s(, "line_color":"rgba(128,128,0,0.5)")s";
-        file << R"s(, "fill_color":"rgba(180,180,0,0.15)")s";
-        file << R"s(, "line_width":1)s";
-        file << R"s(, "line_dash":"dot")s";
-        file << R"s(, "marker_size":None)s";
-        file << "}\n";
-        for (const Point<T>& f : xv)
+        for (const Point<T>& f : filter.points)
         {
                 const T true_x = measurements_at_time(time_map, f.time).true_x;
                 file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
         }
 }
 
-#define INSTANTIATION(T)                                                                               \
-        template void write(                                                                           \
-                const std::string&, const std::vector<Measurements<T>>&, const std::vector<Point<T>>&, \
-                const std::vector<Point<T>>&);
+template <typename T>
+void write_filters(
+        std::ofstream& file,
+        const std::vector<Measurements<T>>& measurements,
+        const std::vector<Filter<T>>& filters)
+{
+        const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
+        for (const Filter<T>& filter : filters)
+        {
+                write_filter(file, time_map, filter);
+        }
+}
+}
+
+template <typename T>
+void write(
+        const std::string& name,
+        const std::vector<Measurements<T>>& measurements,
+        const std::vector<Filter<T>>& filters)
+{
+        std::ofstream file(utility::test_file_path(
+                "filter_1d_" + to_lower(name) + "_" + utility::replace_space(type_name<T>()) + ".txt"));
+        file << std::setprecision(Limits<T>::max_digits10());
+        file << std::scientific;
+
+        write_measurements(file, measurements);
+
+        write_filters(file, measurements, filters);
+}
+
+#define INSTANTIATION(T) \
+        template void write(const std::string&, const std::vector<Measurements<T>>&, const std::vector<Filter<T>>&);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

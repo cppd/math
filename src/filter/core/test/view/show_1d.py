@@ -30,6 +30,21 @@ def error(message):
     raise Exception(message)
 
 
+def add_stddev_line(figure, d, x, y):
+    figure.add_trace(
+        go.Scatter(
+            x=x,
+            y=y,
+            name=d["name"],
+            legendgroup=d["name"],
+            showlegend=False,
+            mode=d["mode"],
+            marker_size=d["marker_size"],
+            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
+        )
+    )
+
+
 def add_stddev(figure, d, values):
     assert len(values) > 0
     assert len(values[0]) == 3
@@ -38,31 +53,8 @@ def add_stddev(figure, d, values):
     lower = [p[1] - p[2] for p in values]
     upper = [p[1] + p[2] for p in values]
 
-    figure.add_trace(
-        go.Scatter(
-            x=x,
-            y=upper,
-            name=d["name"],
-            legendgroup=d["name"],
-            showlegend=False,
-            mode=d["mode"],
-            marker_size=d["marker_size"],
-            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
-        )
-    )
-
-    figure.add_trace(
-        go.Scatter(
-            x=x,
-            y=upper,
-            name=d["name"],
-            legendgroup=d["name"],
-            showlegend=False,
-            mode=d["mode"],
-            marker_size=d["marker_size"],
-            line={"color": d["line_color"], "width": d["line_width"], "dash": d["line_dash"]},
-        )
-    )
+    add_stddev_line(figure, d, x, lower)
+    add_stddev_line(figure, d, x, upper)
 
     figure.add_trace(
         go.Scatter(
@@ -81,6 +73,7 @@ def add_stddev(figure, d, values):
 def add_line(figure, d, values):
     assert len(values) > 0
     assert len(values[0]) == 2
+
     figure.add_trace(
         go.Scatter(
             x=[p[0] for p in values],
