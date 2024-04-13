@@ -51,14 +51,13 @@ std::vector<Measurements<T>> simulate(
         {
                 const T m_x = x + nd_measurement_x(engine);
                 const T m_v = v + nd_measurement_v(engine);
-                res.push_back(
-                        {.time = time,
-                         .true_x = x,
-                         .true_v = v,
-                         .x = m_x,
-                         .x_variance = measurement_variance_x,
-                         .v = m_v,
-                         .v_variance = measurement_variance_v});
+                res.push_back({
+                        .time = time,
+                        .true_x = x,
+                        .true_v = v,
+                        .x = {.value = m_x, .variance = measurement_variance_x},
+                        .v = {.value = m_v, .variance = measurement_variance_v}
+                });
         };
 
         T x = init_x;

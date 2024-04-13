@@ -106,10 +106,10 @@ TestResult<typename Filter::Type> test_filter_x(
         ASSERT(iter != measurements.end());
 
         {
-                const numerical::Vector<2, T> x(iter->x, iter->v);
+                const numerical::Vector<2, T> x(iter->x.value, iter->v.value);
                 const numerical::Matrix<2, 2, T> p{
-                        {iter->x_variance,                0},
-                        {               0, iter->v_variance}
+                        {iter->x.variance,                0},
+                        {               0, iter->v.variance}
                 };
                 filter->reset(x, p);
         }
@@ -131,7 +131,7 @@ TestResult<typename Filter::Type> test_filter_x(
                 last_time = m.time;
 
                 filter->predict(dt, process_variance);
-                filter->update_position(m.x, m.x_variance);
+                filter->update_position(m.x.value, m.x.variance);
 
                 const T x = filter->position();
                 const T variance = filter->position_p();
@@ -161,10 +161,10 @@ TestResult<typename Filter::Type> test_filter_xv(
         ASSERT(iter != measurements.end());
 
         {
-                const numerical::Vector<2, T> x(iter->x, iter->v);
+                const numerical::Vector<2, T> x(iter->x.value, iter->v.value);
                 const numerical::Matrix<2, 2, T> p{
-                        {iter->x_variance,                0},
-                        {               0, iter->v_variance}
+                        {iter->x.variance,                0},
+                        {               0, iter->v.variance}
                 };
                 filter->reset(x, p);
         }
@@ -185,7 +185,7 @@ TestResult<typename Filter::Type> test_filter_xv(
                 last_time = m.time;
 
                 filter->predict(dt, process_variance);
-                filter->update_position_speed(m.x, m.x_variance, m.v, m.v_variance);
+                filter->update_position_speed(m.x.value, m.x.variance, m.v.value, m.v.variance);
 
                 const T x = filter->position();
                 const T variance = filter->position_p();

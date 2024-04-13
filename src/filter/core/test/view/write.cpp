@@ -67,7 +67,7 @@ const Measurements<T>& measurements_at_time(const std::unordered_map<T, Measurem
 }
 
 template <typename T>
-void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+void write_track(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
 {
         file << '{';
         file << R"("name":"Track")";
@@ -81,7 +81,11 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         {
                 file << "(" << m.time << ", " << m.true_x << ")\n";
         }
+}
 
+template <typename T>
+void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+{
         file << '{';
         file << R"("name":"Measurements")";
         file << R"(, "mode":"lines+markers")";
@@ -92,7 +96,21 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << m.x << ")\n";
+                file << "(" << m.time << ", " << m.x.value << ")\n";
+        }
+
+        file << '{';
+        file << R"s("name":"Measurements P")s";
+        file << R"s(, "mode":"lines")s";
+        file << R"s(, "line_color":"rgba(128,128,128,0.5)")s";
+        file << R"s(, "fill_color":"rgba(180,180,180,0.15)")s";
+        file << R"s(, "line_width":1)s";
+        file << R"s(, "line_dash":"dot")s";
+        file << R"s(, "marker_size":None)s";
+        file << "}\n";
+        for (const Measurements<T>& m : measurements)
+        {
+                file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x.variance) << ")\n";
         }
 }
 
@@ -153,6 +171,8 @@ void write(
                 + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
+
+        write_track(file, measurements);
 
         write_measurements(file, measurements);
 

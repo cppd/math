@@ -20,14 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core::test
 {
 template <typename T>
+struct Measurement final
+{
+        T value;
+        T variance;
+};
+
+template <typename T>
 struct Measurements final
 {
         T time;
         T true_x;
         T true_v;
-        T x;
-        T x_variance;
-        T v;
-        T v_variance;
+        Measurement<T> x;
+        Measurement<T> v;
 };
 }
