@@ -33,9 +33,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -202,16 +204,58 @@ TestResult<typename Filter::Type> test_filter_xv(
 
 template <typename Filter>
 void test_impl(
+        const std::string_view name,
         std::unique_ptr<Filter> filter,
+        const std::vector<Measurements<typename Filter::Type>>& measurements,
+        const typename Filter::Type process_velocity_variance,
         const typename Filter::Type precision_x,
         const typename Filter::Type precision_xv,
         const typename Filter::Type expected_stddev_x,
         const typename Filter::Type expected_stddev_xv,
         const typename Filter::Type stddev_count,
-        const std::vector<unsigned>& expected_distribution)
+        const std::vector<unsigned>& expected_distribution,
+        const std::array<typename Filter::Type, 2>& min_max_nees_x,
+        const std::array<typename Filter::Type, 2>& min_max_nees_xv)
 {
         using T = Filter::Type;
 
+        //
+
+        const TestResult<T> result_x = test_filter_x(filter.get(), measurements, process_velocity_variance);
+
+        compare(result_x.result.back().stddev, expected_stddev_x, precision_x);
+        compare(measurements.back().true_x, result_x.result.back().x, stddev_count * result_x.result.back().stddev);
+
+        if (const auto average = result_x.nees.average(); !(average > min_max_nees_x[0] && average < min_max_nees_x[1]))
+        {
+                error("NEES X; " + result_x.nees.check_string());
+        }
+
+        result_x.distribution.check(expected_distribution);
+
+        //
+
+        const TestResult<T> result_xv = test_filter_xv(filter.get(), measurements, process_velocity_variance);
+
+        compare(result_xv.result.back().stddev, expected_stddev_xv, precision_xv);
+        compare(measurements.back().true_x, result_xv.result.back().x, stddev_count * result_xv.result.back().stddev);
+
+        if (const T average = result_xv.nees.average(); !(average > min_max_nees_xv[0] && average < min_max_nees_xv[1]))
+        {
+                error("NEES XV; " + result_xv.nees.check_string());
+        }
+
+        //
+
+        view::write(
+                name, measurements,
+                {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
+                 view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
+}
+
+template <typename T>
+void test_impl(const std::type_identity_t<T> precision_x, const std::type_identity_t<T> precision_xv)
+{
         constexpr T DT = 1;
         constexpr T PROCESS_VELOCITY_MEAN = 1;
         constexpr T PROCESS_VELOCITY_VARIANCE = square(0.1);
@@ -225,56 +269,24 @@ void test_impl(
                 COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
                 MEASUREMENT_VARIANCE_V);
 
-        //
-
-        const TestResult<T> result_x = test_filter_x(filter.get(), measurements, PROCESS_VELOCITY_VARIANCE);
-
-        compare(result_x.result.back().stddev, expected_stddev_x, precision_x);
-        compare(measurements.back().true_x, result_x.result.back().x, stddev_count * result_x.result.back().stddev);
-
-        if (const auto average = result_x.nees.average(); !(average > T{0.45} && average < T{1.25}))
-        {
-                error("NEES X; " + result_x.nees.check_string());
-        }
-
-        result_x.distribution.check(expected_distribution);
-
-        //
-
-        const TestResult<T> result_xv = test_filter_xv(filter.get(), measurements, PROCESS_VELOCITY_VARIANCE);
-
-        compare(result_xv.result.back().stddev, expected_stddev_xv, precision_xv);
-        compare(measurements.back().true_x, result_xv.result.back().x, stddev_count * result_xv.result.back().stddev);
-
-        if (const T average = result_xv.nees.average(); !(average > T{0.15} && average < T{2.95}))
-        {
-                error("NEES XV; " + result_xv.nees.check_string());
-        }
-
-        //
-
-        view::write(
-                filter->name(), measurements,
-                {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
-                 view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
-}
-
-template <typename T>
-void test_impl(const std::type_identity_t<T> precision_x, const std::type_identity_t<T> precision_xv)
-{
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
+        const std::array<T, 2> min_max_nees_x{0.45, 1.25};
+        const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
         test_impl(
-                filters::create_filter_ekf<T, false>(), precision_x, precision_xv, 1.4306576889002234962L,
-                0.298852051985480352583L, 5, distribution);
+                "EKF", filters::create_filter_ekf<T, false>(), measurements, PROCESS_VELOCITY_VARIANCE, precision_x,
+                precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5, distribution, min_max_nees_x,
+                min_max_nees_xv);
 
         test_impl(
-                filters::create_filter_ekf<T, true>(), precision_x, precision_xv, 1.43098764352003224212L,
-                0.298852351050054556604L, 5, distribution);
+                "H_INFINITY", filters::create_filter_ekf<T, true>(), measurements, PROCESS_VELOCITY_VARIANCE,
+                precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5, distribution,
+                min_max_nees_x, min_max_nees_xv);
 
         test_impl(
-                filters::create_filter_ukf<T>(), precision_x, precision_xv, 1.43670888967218343853L,
-                0.304462860888633687857L, 5, distribution);
+                "UKF", filters::create_filter_ukf<T>(), measurements, PROCESS_VELOCITY_VARIANCE, precision_x,
+                precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5, distribution, min_max_nees_x,
+                min_max_nees_xv);
 }
 
 void test()

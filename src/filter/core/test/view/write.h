@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/core/test/measurements.h>
 
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -51,7 +52,7 @@ struct Filter final
 
 template <typename T>
 void write(
-        const std::string& file_name,
+        const std::string_view& file_name,
         const std::vector<Measurements<T>>& measurements,
         const std::vector<Filter<T>>& filters);
 }

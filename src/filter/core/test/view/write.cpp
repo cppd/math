@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <ios>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -143,12 +144,13 @@ void write_filters(
 
 template <typename T>
 void write(
-        const std::string& name,
+        const std::string_view& name,
         const std::vector<Measurements<T>>& measurements,
         const std::vector<Filter<T>>& filters)
 {
         std::ofstream file(utility::test_file_path(
-                "filter_1d_" + to_lower(name) + "_" + utility::replace_space(type_name<T>()) + ".txt"));
+                "filter_1d_" + utility::replace_space(to_lower(name)) + "_" + utility::replace_space(type_name<T>())
+                + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
@@ -157,8 +159,9 @@ void write(
         write_filters(file, measurements, filters);
 }
 
-#define INSTANTIATION(T) \
-        template void write(const std::string&, const std::vector<Measurements<T>>&, const std::vector<Filter<T>>&);
+#define INSTANTIATION(T)     \
+        template void write( \
+                const std::string_view&, const std::vector<Measurements<T>>&, const std::vector<Filter<T>>&);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

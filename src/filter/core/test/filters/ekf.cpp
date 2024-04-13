@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <string>
 
 namespace ns::filter::core::test::filters
 {
@@ -218,11 +217,6 @@ class Filter final : public FilterEkf<T, INF>
                 ASSERT(filter_);
 
                 return filter_->p();
-        }
-
-        [[nodiscard]] std::string name() const override
-        {
-                return INF ? "EXTENDED_H_INFINITY" : "EKF";
         }
 
 public:

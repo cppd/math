@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <memory>
-#include <string>
 
 namespace ns::filter::core::test::filters
 {
@@ -46,8 +45,6 @@ public:
 
         [[nodiscard]] virtual numerical::Vector<2, T> position_speed() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_speed_p() const = 0;
-
-        [[nodiscard]] virtual std::string name() const = 0;
 };
 
 template <typename T>
