@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurements.h"
 #include "simulator.h"
 
-#include "filters/ekf.h"
-#include "filters/ukf.h"
+#include "filters/filter.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -29,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/filter/core/consistency.h>
-#include <src/numerical/matrix.h>
-#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -46,17 +43,16 @@ namespace ns::filter::core::test
 namespace
 {
 template <typename T>
-struct Result final
+struct TimeUpdateInfo final
 {
         T time;
-        T x;
-        T stddev;
+        filters::UpdateInfo<T> info;
 };
 
 template <typename T>
 struct TestResult final
 {
-        std::vector<Result<T>> result;
+        std::vector<TimeUpdateInfo<T>> result;
         Distribution<T> distribution;
         NormalizedSquared<T> nees;
 };
@@ -80,13 +76,13 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <typename T>
-std::vector<view::Point<T>> view_points(const std::vector<Result<T>>& result)
+std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result)
 {
         std::vector<view::Point<T>> res;
         res.reserve(result.size());
-        for (const Result<T>& r : result)
+        for (const TimeUpdateInfo<T>& r : result)
         {
-                res.push_back({.time = r.time, .x = r.x, .stddev = r.stddev});
+                res.push_back({.time = r.time, .x = r.info.x, .stddev = r.info.stddev});
         }
         return res;
 }
@@ -102,140 +98,49 @@ std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measure
         return res;
 }
 
-template <typename Filter>
-void reset(
-        Filter* const filter,
-        const Measurements<typename Filter::Type>& m,
-        const typename Filter::Type init_v,
-        const typename Filter::Type init_v_variance)
+template <typename T>
+TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Measurements<T>>& measurements)
 {
-        using T = Filter::Type;
+        filter->reset();
 
-        ASSERT(filter);
-        ASSERT(m.x);
-
-        const numerical::Vector<2, T> x(m.x->value, m.v ? m.v->value : init_v);
-
-        const numerical::Matrix<2, 2, T> p{
-                {m.x->variance,                                     0},
-                {            0, m.v ? m.v->variance : init_v_variance}
-        };
-
-        filter->reset(x, p);
-}
-
-template <typename Filter>
-bool update(Filter* const filter, const Measurements<typename Filter::Type>& m)
-{
-        ASSERT(filter);
-        ASSERT(m.x || m.v);
-
-        if (m.x)
-        {
-                if (m.v)
-                {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance);
-                        return true;
-                }
-                filter->update_position(m.x->value, m.x->variance);
-                return true;
-        }
-        if (m.v)
-        {
-                filter->update_speed(m.v->value, m.v->variance);
-                return true;
-        }
-        return false;
-}
-
-template <typename Filter>
-TestResult<typename Filter::Type> test_filter(
-        Filter* const filter,
-        const std::vector<Measurements<typename Filter::Type>>& measurements,
-        const typename Filter::Type init_v,
-        const typename Filter::Type init_v_variance,
-        const typename Filter::Type process_variance)
-{
-        using T = Filter::Type;
-
+        std::vector<TimeUpdateInfo<T>> result;
         Distribution<T> distribution;
-        NormalizedSquared<T> nees;
 
-        auto iter = measurements.cbegin();
-
-        for (; iter != measurements.end() && !iter->x; ++iter)
+        for (const Measurements<T>& m : measurements)
         {
-        }
-        if (iter == measurements.end())
-        {
-                error("position measurement not found");
-        }
-
-        reset(filter, *iter, init_v, init_v_variance);
-
-        T last_time = iter->time;
-
-        std::vector<Result<T>> res;
-        res.reserve(measurements.size());
-
-        res.push_back({.time = iter->time, .x = filter->position(), .stddev = std::sqrt(filter->position_p())});
-
-        for (++iter; iter != measurements.end() && (iter->x || iter->v); ++iter)
-        {
-                const Measurements<T>& m = *iter;
-
-                const T dt = m.time - last_time;
-                ASSERT(dt >= 0);
-                last_time = m.time;
-
-                filter->predict(dt, process_variance);
-
-                if (!update(filter, m))
+                const auto update = filter->update(m);
+                if (!update)
                 {
                         continue;
                 }
-
-                const T x = filter->position();
-                const T stddev = std::sqrt(filter->position_p());
-
-                res.push_back({.time = m.time, .x = x, .stddev = stddev});
-
-                distribution.add(x - m.true_x, stddev);
-
-                nees.add(
-                        numerical::Vector<2, T>(m.true_x, m.true_v) - filter->position_speed(),
-                        filter->position_speed_p());
+                result.push_back({.time = m.time, .info = *update});
+                distribution.add(update->x - m.true_x, update->stddev);
         }
 
-        return {.result = res, .distribution = distribution, .nees = nees};
+        return {.result = result, .distribution = distribution, .nees = filter->nees()};
 }
 
-template <typename Filter>
+template <typename T>
 void test_impl(
         const std::string_view name,
-        std::unique_ptr<Filter> filter,
-        const std::vector<Measurements<typename Filter::Type>>& measurements,
-        const typename Filter::Type init_v,
-        const typename Filter::Type init_v_variance,
-        const typename Filter::Type process_velocity_variance,
-        const typename Filter::Type precision_x,
-        const typename Filter::Type precision_xv,
-        const typename Filter::Type expected_stddev_x,
-        const typename Filter::Type expected_stddev_xv,
-        const typename Filter::Type stddev_count,
+        std::unique_ptr<filters::Filter<T>> filter,
+        const std::vector<Measurements<T>>& measurements,
+        const T precision_x,
+        const T precision_xv,
+        const T expected_stddev_x,
+        const T expected_stddev_xv,
+        const T stddev_count,
         const std::vector<unsigned>& expected_distribution,
-        const std::array<typename Filter::Type, 2>& min_max_nees_x,
-        const std::array<typename Filter::Type, 2>& min_max_nees_xv)
+        const std::array<T, 2>& min_max_nees_x,
+        const std::array<T, 2>& min_max_nees_xv)
 {
-        using T = Filter::Type;
+        const TestResult<T> result_x = test_filter(filter.get(), reset_v(measurements));
 
-        //
-
-        const TestResult<T> result_x =
-                test_filter(filter.get(), reset_v(measurements), init_v, init_v_variance, process_velocity_variance);
-
-        compare(result_x.result.back().stddev, expected_stddev_x, precision_x);
-        compare(measurements.back().true_x, result_x.result.back().x, stddev_count * result_x.result.back().stddev);
+        {
+                const auto& info = result_x.result.back().info;
+                compare(info.stddev, expected_stddev_x, precision_x);
+                compare(measurements.back().true_x, info.x, stddev_count * info.stddev);
+        }
 
         if (const auto average = result_x.nees.average(); !(average > min_max_nees_x[0] && average < min_max_nees_x[1]))
         {
@@ -246,11 +151,13 @@ void test_impl(
 
         //
 
-        const TestResult<T> result_xv =
-                test_filter(filter.get(), measurements, init_v, init_v_variance, process_velocity_variance);
+        const TestResult<T> result_xv = test_filter(filter.get(), measurements);
 
-        compare(result_xv.result.back().stddev, expected_stddev_xv, precision_xv);
-        compare(measurements.back().true_x, result_xv.result.back().x, stddev_count * result_xv.result.back().stddev);
+        {
+                const auto& info = result_xv.result.back().info;
+                compare(info.stddev, expected_stddev_xv, precision_xv);
+                compare(measurements.back().true_x, info.x, stddev_count * info.stddev);
+        }
 
         if (const T average = result_xv.nees.average(); !(average > min_max_nees_xv[0] && average < min_max_nees_xv[1]))
         {
@@ -287,20 +194,20 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         const std::array<T, 2> min_max_nees_x{0.4, 1.0};
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
-        test_impl(
-                "EKF", filters::create_filter_ekf<T, false>(), measurements, INIT_V, INIT_V_VARIANCE,
-                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L,
-                5, distribution, min_max_nees_x, min_max_nees_xv);
+        test_impl<T>(
+                "EKF", filters::create_ekf<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE), measurements,
+                precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5, distribution,
+                min_max_nees_x, min_max_nees_xv);
 
-        test_impl(
-                "H_INFINITY", filters::create_filter_ekf<T, true>(), measurements, INIT_V, INIT_V_VARIANCE,
-                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L,
-                5, distribution, min_max_nees_x, min_max_nees_xv);
+        test_impl<T>(
+                "H_INFINITY", filters::create_h_infinity<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE),
+                measurements, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
 
-        test_impl(
-                "UKF", filters::create_filter_ukf<T>(), measurements, INIT_V, INIT_V_VARIANCE,
-                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L,
-                5, distribution, min_max_nees_x, min_max_nees_xv);
+        test_impl<T>(
+                "UKF", filters::create_ukf<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE), measurements,
+                precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5, distribution,
+                min_max_nees_x, min_max_nees_xv);
 }
 
 void test()
