@@ -40,11 +40,16 @@ public:
 
         virtual void update_position_speed(T position, T position_variance, T speed, T speed_variance) = 0;
 
+        virtual void update_speed(T speed, T speed_variance) = 0;
+
         [[nodiscard]] virtual T position() const = 0;
         [[nodiscard]] virtual T position_p() const = 0;
 
         [[nodiscard]] virtual numerical::Vector<2, T> position_speed() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_speed_p() const = 0;
+
+        [[nodiscard]] virtual T speed() const = 0;
+        [[nodiscard]] virtual T speed_p() const = 0;
 };
 
 template <typename T>

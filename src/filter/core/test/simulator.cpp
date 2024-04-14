@@ -55,8 +55,8 @@ std::vector<Measurements<T>> simulate(
                         .time = time,
                         .true_x = x,
                         .true_v = v,
-                        .x = {.value = m_x, .variance = measurement_variance_x},
-                        .v = {.value = m_v, .variance = measurement_variance_v}
+                        .x = Measurement<T>{.value = m_x, .variance = measurement_variance_x},
+                        .v = Measurement<T>{.value = m_v, .variance = measurement_variance_v}
                 });
         };
 

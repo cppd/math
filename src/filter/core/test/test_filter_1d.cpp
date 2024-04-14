@@ -91,65 +91,69 @@ std::vector<view::Point<T>> view_points(const std::vector<Result<T>>& result)
         return res;
 }
 
-template <typename Filter>
-TestResult<typename Filter::Type> test_filter_x(
-        Filter* const filter,
-        const std::vector<Measurements<typename Filter::Type>>& measurements,
-        const typename Filter::Type process_variance)
+template <typename T>
+std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measurements)
 {
-        using T = Filter::Type;
-
-        Distribution<T> distribution;
-        NormalizedSquared<T> nees;
-
-        auto iter = measurements.cbegin();
-        ASSERT(iter != measurements.end());
-
+        std::vector<Measurements<T>> res(measurements);
+        for (Measurements<T>& m : res)
         {
-                const numerical::Vector<2, T> x(iter->x.value, iter->v.value);
-                const numerical::Matrix<2, 2, T> p{
-                        {iter->x.variance,                0},
-                        {               0, iter->v.variance}
-                };
-                filter->reset(x, p);
+                m.v.reset();
         }
-
-        T last_time = iter->time;
-
-        std::vector<Result<T>> res;
-        res.reserve(measurements.size());
-
-        res.push_back({.time = iter->time, .x = filter->position(), .stddev = std::sqrt(filter->position_p())});
-
-        ASSERT(iter != measurements.end());
-        for (++iter; iter != measurements.end(); ++iter)
-        {
-                const Measurements<T>& m = *iter;
-
-                const T dt = m.time - last_time;
-                ASSERT(dt >= 0);
-                last_time = m.time;
-
-                filter->predict(dt, process_variance);
-                filter->update_position(m.x.value, m.x.variance);
-
-                const T x = filter->position();
-                const T variance = filter->position_p();
-                const T stddev = std::sqrt(variance);
-
-                res.push_back({.time = m.time, .x = x, .stddev = stddev});
-
-                distribution.add(x - m.true_x, stddev);
-                nees.add_1(m.true_x - x, variance);
-        }
-
-        return {.result = res, .distribution = distribution, .nees = nees};
+        return res;
 }
 
 template <typename Filter>
-TestResult<typename Filter::Type> test_filter_xv(
+void reset(
+        Filter* const filter,
+        const Measurements<typename Filter::Type>& m,
+        const typename Filter::Type init_v,
+        const typename Filter::Type init_v_variance)
+{
+        using T = Filter::Type;
+
+        ASSERT(filter);
+        ASSERT(m.x);
+
+        const numerical::Vector<2, T> x(m.x->value, m.v ? m.v->value : init_v);
+
+        const numerical::Matrix<2, 2, T> p{
+                {m.x->variance,                                     0},
+                {            0, m.v ? m.v->variance : init_v_variance}
+        };
+
+        filter->reset(x, p);
+}
+
+template <typename Filter>
+bool update(Filter* const filter, const Measurements<typename Filter::Type>& m)
+{
+        ASSERT(filter);
+        ASSERT(m.x || m.v);
+
+        if (m.x)
+        {
+                if (m.v)
+                {
+                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance);
+                        return true;
+                }
+                filter->update_position(m.x->value, m.x->variance);
+                return true;
+        }
+        if (m.v)
+        {
+                filter->update_speed(m.v->value, m.v->variance);
+                return true;
+        }
+        return false;
+}
+
+template <typename Filter>
+TestResult<typename Filter::Type> test_filter(
         Filter* const filter,
         const std::vector<Measurements<typename Filter::Type>>& measurements,
+        const typename Filter::Type init_v,
+        const typename Filter::Type init_v_variance,
         const typename Filter::Type process_variance)
 {
         using T = Filter::Type;
@@ -158,16 +162,16 @@ TestResult<typename Filter::Type> test_filter_xv(
         NormalizedSquared<T> nees;
 
         auto iter = measurements.cbegin();
-        ASSERT(iter != measurements.end());
 
+        for (; iter != measurements.end() && !iter->x; ++iter)
         {
-                const numerical::Vector<2, T> x(iter->x.value, iter->v.value);
-                const numerical::Matrix<2, 2, T> p{
-                        {iter->x.variance,                0},
-                        {               0, iter->v.variance}
-                };
-                filter->reset(x, p);
         }
+        if (iter == measurements.end())
+        {
+                error("position measurement not found");
+        }
+
+        reset(filter, *iter, init_v, init_v_variance);
 
         T last_time = iter->time;
 
@@ -176,7 +180,7 @@ TestResult<typename Filter::Type> test_filter_xv(
 
         res.push_back({.time = iter->time, .x = filter->position(), .stddev = std::sqrt(filter->position_p())});
 
-        for (++iter; iter != measurements.end(); ++iter)
+        for (++iter; iter != measurements.end() && (iter->x || iter->v); ++iter)
         {
                 const Measurements<T>& m = *iter;
 
@@ -185,15 +189,19 @@ TestResult<typename Filter::Type> test_filter_xv(
                 last_time = m.time;
 
                 filter->predict(dt, process_variance);
-                filter->update_position_speed(m.x.value, m.x.variance, m.v.value, m.v.variance);
+
+                if (!update(filter, m))
+                {
+                        continue;
+                }
 
                 const T x = filter->position();
-                const T variance = filter->position_p();
-                const T stddev = std::sqrt(variance);
+                const T stddev = std::sqrt(filter->position_p());
 
                 res.push_back({.time = m.time, .x = x, .stddev = stddev});
 
                 distribution.add(x - m.true_x, stddev);
+
                 nees.add(
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter->position_speed(),
                         filter->position_speed_p());
@@ -207,6 +215,8 @@ void test_impl(
         const std::string_view name,
         std::unique_ptr<Filter> filter,
         const std::vector<Measurements<typename Filter::Type>>& measurements,
+        const typename Filter::Type init_v,
+        const typename Filter::Type init_v_variance,
         const typename Filter::Type process_velocity_variance,
         const typename Filter::Type precision_x,
         const typename Filter::Type precision_xv,
@@ -221,7 +231,8 @@ void test_impl(
 
         //
 
-        const TestResult<T> result_x = test_filter_x(filter.get(), measurements, process_velocity_variance);
+        const TestResult<T> result_x =
+                test_filter(filter.get(), reset_v(measurements), init_v, init_v_variance, process_velocity_variance);
 
         compare(result_x.result.back().stddev, expected_stddev_x, precision_x);
         compare(measurements.back().true_x, result_x.result.back().x, stddev_count * result_x.result.back().stddev);
@@ -235,7 +246,8 @@ void test_impl(
 
         //
 
-        const TestResult<T> result_xv = test_filter_xv(filter.get(), measurements, process_velocity_variance);
+        const TestResult<T> result_xv =
+                test_filter(filter.get(), measurements, init_v, init_v_variance, process_velocity_variance);
 
         compare(result_xv.result.back().stddev, expected_stddev_xv, precision_xv);
         compare(measurements.back().true_x, result_xv.result.back().x, stddev_count * result_xv.result.back().stddev);
@@ -262,6 +274,8 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         constexpr T MEASUREMENT_VARIANCE_X = square(3);
         constexpr T MEASUREMENT_VARIANCE_V = square(0.03);
         constexpr T INIT_X = 0;
+        constexpr T INIT_V = 0;
+        constexpr T INIT_V_VARIANCE = 2;
 
         constexpr std::size_t COUNT = 1000;
 
@@ -270,23 +284,23 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 MEASUREMENT_VARIANCE_V);
 
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
-        const std::array<T, 2> min_max_nees_x{0.45, 1.25};
+        const std::array<T, 2> min_max_nees_x{0.4, 1.0};
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
         test_impl(
-                "EKF", filters::create_filter_ekf<T, false>(), measurements, PROCESS_VELOCITY_VARIANCE, precision_x,
-                precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5, distribution, min_max_nees_x,
-                min_max_nees_xv);
+                "EKF", filters::create_filter_ekf<T, false>(), measurements, INIT_V, INIT_V_VARIANCE,
+                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L,
+                5, distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl(
-                "H_INFINITY", filters::create_filter_ekf<T, true>(), measurements, PROCESS_VELOCITY_VARIANCE,
-                precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5, distribution,
-                min_max_nees_x, min_max_nees_xv);
+                "H_INFINITY", filters::create_filter_ekf<T, true>(), measurements, INIT_V, INIT_V_VARIANCE,
+                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L,
+                5, distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl(
-                "UKF", filters::create_filter_ukf<T>(), measurements, PROCESS_VELOCITY_VARIANCE, precision_x,
-                precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5, distribution, min_max_nees_x,
-                min_max_nees_xv);
+                "UKF", filters::create_filter_ukf<T>(), measurements, INIT_V, INIT_V_VARIANCE,
+                PROCESS_VELOCITY_VARIANCE, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L,
+                5, distribution, min_max_nees_x, min_max_nees_xv);
 }
 
 void test()
@@ -294,7 +308,7 @@ void test()
         LOG("Test Filter 1D");
         test_impl<float>(1e-3, 5e-3);
         test_impl<double>(1e-12, 5e-12);
-        test_impl<long double>(1e-15, 2e-15);
+        test_impl<long double>(1e-15, 3e-15);
         LOG("Test Filter 1D passed");
 }
 

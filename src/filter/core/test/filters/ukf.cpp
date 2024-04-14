@@ -105,6 +105,21 @@ numerical::Vector<2, T> position_speed_h(const numerical::Vector<2, T>& x)
 //
 
 template <typename T>
+numerical::Matrix<1, 1, T> speed_r(const T speed_variance)
+{
+        return {{speed_variance}};
+}
+
+template <typename T>
+numerical::Vector<1, T> speed_h(const numerical::Vector<2, T>& x)
+{
+        // v = x[1]
+        return numerical::Vector<1, T>(x[1]);
+}
+
+//
+
+template <typename T>
 class Filter final : public FilterUkf<T>
 {
         static constexpr std::optional<T> GATE{};
@@ -152,6 +167,15 @@ class Filter final : public FilterUkf<T>
                         LIKELIHOOD);
         }
 
+        void update_speed(const T speed, const T speed_variance) override
+        {
+                ASSERT(filter_);
+
+                filter_->update(
+                        speed_h<T>, speed_r<T>(speed_variance), numerical::Vector<1, T>(speed), Add(), Residual(), GATE,
+                        NORMALIZED_INNOVATION, LIKELIHOOD);
+        }
+
         [[nodiscard]] T position() const override
         {
                 ASSERT(filter_);
@@ -178,6 +202,20 @@ class Filter final : public FilterUkf<T>
                 ASSERT(filter_);
 
                 return filter_->p();
+        }
+
+        [[nodiscard]] T speed() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->x()[1];
+        }
+
+        [[nodiscard]] T speed_p() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->p()[1, 1];
         }
 
 public:

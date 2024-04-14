@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <optional>
+
 namespace ns::filter::core::test
 {
 template <typename T>
@@ -32,7 +34,7 @@ struct Measurements final
         T time;
         T true_x;
         T true_v;
-        Measurement<T> x;
-        Measurement<T> v;
+        std::optional<Measurement<T>> x;
+        std::optional<Measurement<T>> v;
 };
 }

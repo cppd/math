@@ -96,7 +96,10 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << m.x.value << ")\n";
+                if (m.x)
+                {
+                        file << "(" << m.time << ", " << m.x->value << ")\n";
+                }
         }
 
         file << '{';
@@ -110,7 +113,10 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x.variance) << ")\n";
+                if (m.x)
+                {
+                        file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x->variance) << ")\n";
+                }
         }
 }
 
