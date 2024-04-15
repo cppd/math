@@ -69,7 +69,7 @@ std::vector<Measurements<T>> simulate(
                 const T v_average = (v + v_next) / 2;
                 x += dt * v_average;
                 v = v_next;
-                push(i, x, v);
+                push(i * dt, x, v);
         }
 
         return res;

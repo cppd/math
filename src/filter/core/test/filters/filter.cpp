@@ -101,6 +101,11 @@ class FilterImpl : public Filter<typename F::Type>
         {
                 using T = typename F::Type;
 
+                if (!(m.x || m.v))
+                {
+                        return std::nullopt;
+                }
+
                 if (!last_time_)
                 {
                         if (!m.x)
