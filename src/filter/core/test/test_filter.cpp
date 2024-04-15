@@ -175,50 +175,53 @@ void test_impl(
 template <typename T>
 void test_impl(const std::type_identity_t<T> precision_x, const std::type_identity_t<T> precision_xv)
 {
-        constexpr T DT = 1;
-        constexpr T PROCESS_VELOCITY_MEAN = 1;
-        constexpr T PROCESS_VELOCITY_VARIANCE = square(0.1);
-        constexpr T MEASUREMENT_VARIANCE_X = square(3);
-        constexpr T MEASUREMENT_VARIANCE_V = square(0.03);
-        constexpr T INIT_X = 0;
-        constexpr T INIT_V = 0;
-        constexpr T INIT_V_VARIANCE = 2;
+        constexpr std::size_t SIMULATION_COUNT = 1000;
 
-        constexpr std::size_t COUNT = 1000;
+        constexpr T SIMULATION_DT = 1;
+        constexpr T SIMULATION_VELOCITY_MEAN = 1;
+        constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.1);
+        constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(3);
+        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.03);
+        constexpr T SIMULATION_INIT_X = 0;
+
+        constexpr T FILTER_INIT_V = 0;
+        constexpr T FILTER_INIT_V_VARIANCE = 2 * SIMULATION_VELOCITY_MEAN;
+        constexpr T FILTER_VELOCITY_VARIANCE = SIMULATION_VELOCITY_VARIANCE;
 
         const std::vector<Measurements<T>> measurements = simulate<T>(
-                COUNT, INIT_X, DT, PROCESS_VELOCITY_MEAN, PROCESS_VELOCITY_VARIANCE, MEASUREMENT_VARIANCE_X,
-                MEASUREMENT_VARIANCE_V);
+                SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
+                SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};
         const std::array<T, 2> min_max_nees_x{0.4, 1.0};
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
         test_impl<T>(
-                "EKF", filters::create_ekf<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE), measurements,
-                precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5, distribution,
-                min_max_nees_x, min_max_nees_xv);
+                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                measurements, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
-                "H_INFINITY", filters::create_h_infinity<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE),
+                "H_INFINITY",
+                filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
                 measurements, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
-                "UKF", filters::create_ukf<T>(INIT_V, INIT_V_VARIANCE, PROCESS_VELOCITY_VARIANCE), measurements,
-                precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5, distribution,
-                min_max_nees_x, min_max_nees_xv);
+                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                measurements, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
 }
 
 void test()
 {
-        LOG("Test Filter 1D");
+        LOG("Test Filter");
         test_impl<float>(1e-3, 5e-3);
         test_impl<double>(1e-12, 5e-12);
         test_impl<long double>(1e-15, 3e-15);
-        LOG("Test Filter 1D passed");
+        LOG("Test Filter passed");
 }
 
-TEST_SMALL("Filter 1D", test)
+TEST_SMALL("Filter", test)
 }
 }
