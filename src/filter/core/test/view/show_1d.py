@@ -45,13 +45,8 @@ def add_stddev_line(figure, d, x, y):
     )
 
 
-def add_stddev(figure, d, values):
-    assert len(values) > 0
-    assert len(values[0]) == 3
-
-    x = [p[0] for p in values]
-    lower = [p[1] - p[2] for p in values]
-    upper = [p[1] + p[2] for p in values]
+def add_stddev_segment(figure, d, x, lower, upper, show_legend):
+    assert len(x) > 0 and len(x) == len(lower) and len(x) == len(upper)
 
     add_stddev_line(figure, d, x, lower)
     add_stddev_line(figure, d, x, upper)
@@ -62,12 +57,38 @@ def add_stddev(figure, d, values):
             y=upper + lower[::-1],
             name=d["name"],
             legendgroup=d["name"],
-            showlegend=True,
+            showlegend=show_legend,
             fill="toself",
             fillcolor=d["fill_color"],
             line_color="rgba(0,0,0,0)",
         )
     )
+
+
+def add_stddev(figure, d, values):
+    assert len(values) > 0
+    assert len(values[0]) == 3
+
+    length = len(values)
+    i = 0
+    first = True
+    while i < length:
+        while i < length and values[i][0] is None:
+            value = values[i]
+            assert value[1] is None and value[2] is None
+            i += 1
+        x = []
+        lower = []
+        upper = []
+        while i < length and values[i][0] is not None:
+            value = values[i]
+            assert value[1] is not None and value[2] is not None
+            x.append(value[0])
+            lower.append(value[1] - value[2])
+            upper.append(value[1] + value[2])
+            i += 1
+        add_stddev_segment(figure, d, x, lower, upper, first)
+        first = False
 
 
 def add_line(figure, d, values):
