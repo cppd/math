@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <iomanip>
 #include <ios>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -84,7 +85,7 @@ void write_track(std::ofstream& file, const std::vector<Measurements<T>>& measur
 }
 
 template <typename T>
-void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+void write_measurement_v(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
 {
         file << '{';
         file << R"("name":"Measurements")";
@@ -94,14 +95,27 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
+
+        std::optional<T> last_time;
         for (const Measurements<T>& m : measurements)
         {
-                if (m.x)
+                ASSERT(!last_time || *last_time < m.time);
+                if (!m.x)
                 {
-                        file << "(" << m.time << ", " << m.x->value << ")\n";
+                        continue;
                 }
+                if (last_time && m.time > *last_time + interval)
+                {
+                        file << "(None, None)\n";
+                }
+                last_time = m.time;
+                file << "(" << m.time << ", " << m.x->value << ")\n";
         }
+}
 
+template <typename T>
+void write_measurement_p(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+{
         file << '{';
         file << R"s("name":"Measurements P")s";
         file << R"s(, "mode":"lines")s";
@@ -111,17 +125,33 @@ void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>&
         file << R"s(, "line_dash":"dot")s";
         file << R"s(, "marker_size":None)s";
         file << "}\n";
+
+        std::optional<T> last_time;
         for (const Measurements<T>& m : measurements)
         {
-                if (m.x)
+                ASSERT(!last_time || *last_time < m.time);
+                if (!m.x)
                 {
-                        file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x->variance) << ")\n";
+                        continue;
                 }
+                if (last_time && m.time > *last_time + interval)
+                {
+                        file << "(None, None, None)\n";
+                }
+                last_time = m.time;
+                file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x->variance) << ")\n";
         }
 }
 
 template <typename T>
-void write_filter(std::ofstream& file, const std::unordered_map<T, Measurements<T>> time_map, const Filter<T>& filter)
+void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+{
+        write_measurement_v(file, measurements, interval);
+        write_measurement_p(file, measurements, interval);
+}
+
+template <typename T>
+void write_filter_v(std::ofstream& file, const Filter<T>& filter, const T interval)
 {
         file << '{';
         file << R"("name":")" << filter.name << "\"";
@@ -131,11 +161,27 @@ void write_filter(std::ofstream& file, const std::unordered_map<T, Measurements<
         file << R"(, "line_dash":None)";
         file << R"(, "marker_size":4)";
         file << "}\n";
+
+        std::optional<T> last_time;
         for (const Point<T>& f : filter.points)
         {
+                ASSERT(!last_time || *last_time < f.time);
+                if (last_time && f.time > *last_time + interval)
+                {
+                        file << "(None, None)\n";
+                }
+                last_time = f.time;
                 file << "(" << f.time << ", " << f.x << ")\n";
         }
+}
 
+template <typename T>
+void write_filter_p(
+        std::ofstream& file,
+        const std::unordered_map<T, Measurements<T>> time_map,
+        const Filter<T>& filter,
+        const T interval)
+{
         file << '{';
         file << R"s("name":")s" << filter.name << " P\"";
         file << R"s(, "mode":"lines")s";
@@ -145,8 +191,16 @@ void write_filter(std::ofstream& file, const std::unordered_map<T, Measurements<
         file << R"s(, "line_dash":"dot")s";
         file << R"s(, "marker_size":None)s";
         file << "}\n";
+
+        std::optional<T> last_time;
         for (const Point<T>& f : filter.points)
         {
+                ASSERT(!last_time || *last_time < f.time);
+                if (last_time && f.time > *last_time + interval)
+                {
+                        file << "(None, None, None)\n";
+                }
+                last_time = f.time;
                 const T true_x = measurements_at_time(time_map, f.time).true_x;
                 file << "(" << f.time << ", " << true_x << ", " << f.stddev << ")\n";
         }
@@ -156,12 +210,14 @@ template <typename T>
 void write_filters(
         std::ofstream& file,
         const std::vector<Measurements<T>>& measurements,
-        const std::vector<Filter<T>>& filters)
+        const std::vector<Filter<T>>& filters,
+        const T interval)
 {
         const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
         for (const Filter<T>& filter : filters)
         {
-                write_filter(file, time_map, filter);
+                write_filter_v(file, filter, interval);
+                write_filter_p(file, time_map, filter, interval);
         }
 }
 }
@@ -170,6 +226,7 @@ template <typename T>
 void write(
         const std::string_view& name,
         const std::vector<Measurements<T>>& measurements,
+        const T interval,
         const std::vector<Filter<T>>& filters)
 {
         std::ofstream file(utility::test_file_path(
@@ -180,14 +237,14 @@ void write(
 
         write_track(file, measurements);
 
-        write_measurements(file, measurements);
+        write_measurements(file, measurements, interval);
 
-        write_filters(file, measurements, filters);
+        write_filters(file, measurements, filters, interval);
 }
 
 #define INSTANTIATION(T)     \
         template void write( \
-                const std::string_view&, const std::vector<Measurements<T>>&, const std::vector<Filter<T>>&);
+                const std::string_view&, const std::vector<Measurements<T>>&, T, const std::vector<Filter<T>>&);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

@@ -43,6 +43,9 @@ namespace ns::filter::core::test
 namespace
 {
 template <typename T>
+constexpr T DATA_CONNECT_INTERVAL = 10;
+
+template <typename T>
 struct TimeUpdateInfo final
 {
         T time;
@@ -167,7 +170,7 @@ void test_impl(
         //
 
         view::write(
-                name, measurements,
+                name, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
                  view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
 }

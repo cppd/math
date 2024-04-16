@@ -36,6 +36,9 @@ namespace ns::filter::core::test
 namespace
 {
 template <typename T>
+constexpr T DATA_CONNECT_INTERVAL = 10;
+
+template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
         const std::vector<Measurements<T>>& measurements,
         const unsigned interval)
@@ -96,7 +99,7 @@ void test_impl(
         const std::vector<view::Point<T>> xv = test_filter(filter.get(), measurements);
 
         view::write(
-                name, measurements,
+                name, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), x),
                  view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), xv)});
 }
