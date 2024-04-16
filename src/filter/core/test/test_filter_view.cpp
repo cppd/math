@@ -47,6 +47,10 @@ std::vector<Measurements<T>> reset_position_measurements(
                 {
                         res[i].x.reset();
                 }
+                if (i >= 450 && i < 570)
+                {
+                        res[i].x.reset();
+                }
         }
         return res;
 }
@@ -105,18 +109,18 @@ void test_impl()
         constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 5;
         constexpr T SIMULATION_DT = 0.5;
 
-        constexpr T SIMULATION_VELOCITY_MEAN = 10;
-        constexpr T SIMULATION_VELOCITY_VARIANCE = square(1.0);
+        constexpr T SIMULATION_ACCELERATION = 2;
+        constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.2);
         constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100);
-        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.1);
+        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.2);
         constexpr T SIMULATION_INIT_X = 0;
 
         constexpr T FILTER_INIT_V = 0;
-        constexpr T FILTER_INIT_V_VARIANCE = 2 * SIMULATION_VELOCITY_MEAN;
-        constexpr T FILTER_VELOCITY_VARIANCE = SIMULATION_VELOCITY_VARIANCE;
+        constexpr T FILTER_INIT_V_VARIANCE = square(10.0);
+        constexpr T FILTER_VELOCITY_VARIANCE = 2;
 
-        const std::vector<Measurements<T>> measurements = simulate<T>(
-                SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
+        const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
+                SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(

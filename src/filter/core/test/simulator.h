@@ -33,4 +33,14 @@ std::vector<Measurements<T>> simulate(
         T process_velocity_variance,
         T measurement_variance_x,
         T measurement_variance_v);
+
+template <typename T>
+std::vector<Measurements<T>> simulate_acceleration(
+        std::size_t count,
+        T init_x,
+        T dt,
+        T process_acceleration,
+        T process_velocity_variance,
+        T measurement_variance_x,
+        T measurement_variance_v);
 }
