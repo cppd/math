@@ -114,7 +114,7 @@ void test_impl()
 
         constexpr T SIMULATION_ACCELERATION = 2;
         constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.2);
-        constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100);
+        constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100.0);
         constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.2);
         constexpr T SIMULATION_INIT_X = 0;
 
@@ -127,7 +127,7 @@ void test_impl()
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(
-                "view", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
                 reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL));
 }
 
