@@ -165,7 +165,6 @@ numerical::Matrix<1, 2, T> speed_hj(const numerical::Vector<2, T>& /*x*/)
 template <typename T, bool INF>
 class Filter final : public FilterEkf<T, INF>
 {
-        static constexpr std::optional<T> GATE{};
         static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
         static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
@@ -195,35 +194,39 @@ class Filter final : public FilterEkf<T, INF>
                         q(dt, process_variance));
         }
 
-        void update_position(const T position, const T position_variance) override
+        void update_position(const T position, const T position_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_h<T>, position_hj<T>, position_r<T>(position_variance),
-                        numerical::Vector<1, T>(position), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
+                        numerical::Vector<1, T>(position), Add(), Residual(), THETA, gate, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
-        void update_position_speed(const T position, const T position_variance, const T speed, const T speed_variance)
-                override
+        void update_position_speed(
+                const T position,
+                const T position_variance,
+                const T speed,
+                const T speed_variance,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_speed_h<T>, position_speed_hj<T>,
                         position_speed_r<T>(position_variance, speed_variance),
-                        numerical::Vector<2, T>(position, speed), Add(), Residual(), THETA, GATE, NORMALIZED_INNOVATION,
+                        numerical::Vector<2, T>(position, speed), Add(), Residual(), THETA, gate, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
-        void update_speed(const T speed, const T speed_variance) override
+        void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         speed_h<T>, speed_hj<T>, speed_r<T>(speed_variance), numerical::Vector<1, T>(speed), Add(),
-                        Residual(), THETA, GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        Residual(), THETA, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T position() const override

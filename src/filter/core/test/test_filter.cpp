@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <type_traits>
 #include <vector>
@@ -178,6 +179,8 @@ void test_impl(
 template <typename T>
 void test_impl(const std::type_identity_t<T> precision_x, const std::type_identity_t<T> precision_xv)
 {
+        constexpr std::optional<T> GATE{};
+
         constexpr std::size_t SIMULATION_COUNT = 1000;
 
         constexpr T SIMULATION_DT = 1;
@@ -200,18 +203,18 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
         test_impl<T>(
-                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
                 measurements, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
                 "H_INFINITY",
-                filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
                 measurements, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
-                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
                 measurements, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 }

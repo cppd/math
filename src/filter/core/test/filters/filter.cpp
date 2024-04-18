@@ -56,7 +56,10 @@ void reset_filter(
 }
 
 template <typename Filter>
-bool update_filter(Filter* const filter, const Measurements<typename Filter::Type>& m)
+bool update_filter(
+        Filter* const filter,
+        const Measurements<typename Filter::Type>& m,
+        const std::optional<typename Filter::Type> gate)
 {
         ASSERT(filter);
         ASSERT(m.x || m.v);
@@ -65,15 +68,15 @@ bool update_filter(Filter* const filter, const Measurements<typename Filter::Typ
         {
                 if (m.v)
                 {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance);
+                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
                         return true;
                 }
-                filter->update_position(m.x->value, m.x->variance);
+                filter->update_position(m.x->value, m.x->variance, gate);
                 return true;
         }
         if (m.v)
         {
-                filter->update_speed(m.v->value, m.v->variance);
+                filter->update_speed(m.v->value, m.v->variance, gate);
                 return true;
         }
         return false;
@@ -85,6 +88,7 @@ class FilterImpl : public Filter<typename F::Type>
         F::Type init_v_;
         F::Type init_v_variance_;
         F::Type process_variance_;
+        std::optional<typename F::Type> gate_;
         std::unique_ptr<F> filter_;
 
         NormalizedSquared<typename F::Type> nees_;
@@ -128,7 +132,7 @@ class FilterImpl : public Filter<typename F::Type>
 
                 filter_->predict(dt, process_variance_);
 
-                if (!update_filter(filter_.get(), m))
+                if (!update_filter(filter_.get(), m, gate_))
                 {
                         return std::nullopt;
                 }
@@ -152,10 +156,12 @@ public:
                 const typename F::Type init_v,
                 const typename F::Type init_v_variance,
                 const typename F::Type process_variance,
+                const std::optional<typename F::Type> gate,
                 std::unique_ptr<F>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
                   process_variance_(process_variance),
+                  gate_(gate),
                   filter_(std::move(filter))
         {
         }
@@ -163,30 +169,42 @@ public:
 }
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_ekf(const T init_v, const T init_v_variance, const T process_variance)
+std::unique_ptr<Filter<T>> create_ekf(
+        const T init_v,
+        const T init_v_variance,
+        const T process_variance,
+        const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, false>>>(
-                init_v, init_v_variance, process_variance, filters::create_filter_ekf<T, false>());
+                init_v, init_v_variance, process_variance, gate, filters::create_filter_ekf<T, false>());
 }
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_h_infinity(const T init_v, const T init_v_variance, const T process_variance)
+std::unique_ptr<Filter<T>> create_h_infinity(
+        const T init_v,
+        const T init_v_variance,
+        const T process_variance,
+        const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, true>>>(
-                init_v, init_v_variance, process_variance, filters::create_filter_ekf<T, true>());
+                init_v, init_v_variance, process_variance, gate, filters::create_filter_ekf<T, true>());
 }
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_ukf(const T init_v, const T init_v_variance, const T process_variance)
+std::unique_ptr<Filter<T>> create_ukf(
+        const T init_v,
+        const T init_v_variance,
+        const T process_variance,
+        const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterUkf<T>>>(
-                init_v, init_v_variance, process_variance, filters::create_filter_ukf<T>());
+                init_v, init_v_variance, process_variance, gate, filters::create_filter_ukf<T>());
 }
 
-#define INSTANTIATION(T)                                                \
-        template std::unique_ptr<Filter<T>> create_ekf(T, T, T);        \
-        template std::unique_ptr<Filter<T>> create_h_infinity(T, T, T); \
-        template std::unique_ptr<Filter<T>> create_ukf(T, T, T);
+#define INSTANTIATION(T)                                                                  \
+        template std::unique_ptr<Filter<T>> create_ekf(T, T, T, std::optional<T>);        \
+        template std::unique_ptr<Filter<T>> create_h_infinity(T, T, T, std::optional<T>); \
+        template std::unique_ptr<Filter<T>> create_ukf(T, T, T, std::optional<T>);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

@@ -107,6 +107,8 @@ void test_impl(
 template <typename T>
 void test_impl()
 {
+        constexpr T GATE = 5;
+
         constexpr std::size_t SIMULATION_COUNT = 1000;
 
         constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 5;
@@ -127,7 +129,7 @@ void test_impl()
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(
-                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE),
+                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
                 reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL));
 }
 

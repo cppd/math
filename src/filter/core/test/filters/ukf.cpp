@@ -122,7 +122,6 @@ numerical::Vector<1, T> speed_h(const numerical::Vector<2, T>& x)
 template <typename T>
 class Filter final : public FilterUkf<T>
 {
-        static constexpr std::optional<T> GATE{};
         static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
 
@@ -147,32 +146,36 @@ class Filter final : public FilterUkf<T>
                         q(dt, process_variance));
         }
 
-        void update_position(const T position, const T position_variance) override
+        void update_position(const T position, const T position_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_h<T>, position_r<T>(position_variance), numerical::Vector<1, T>(position), Add(),
-                        Residual(), GATE, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        Residual(), gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        void update_position_speed(const T position, const T position_variance, const T speed, const T speed_variance)
-                override
+        void update_position_speed(
+                const T position,
+                const T position_variance,
+                const T speed,
+                const T speed_variance,
+                const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
                         position_speed_h<T>, position_speed_r<T>(position_variance, speed_variance),
-                        numerical::Vector<2, T>(position, speed), Add(), Residual(), GATE, NORMALIZED_INNOVATION,
+                        numerical::Vector<2, T>(position, speed), Add(), Residual(), gate, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
-        void update_speed(const T speed, const T speed_variance) override
+        void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
                 filter_->update(
-                        speed_h<T>, speed_r<T>(speed_variance), numerical::Vector<1, T>(speed), Add(), Residual(), GATE,
+                        speed_h<T>, speed_r<T>(speed_variance), numerical::Vector<1, T>(speed), Add(), Residual(), gate,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
