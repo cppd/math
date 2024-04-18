@@ -24,10 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/rgb8.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
 #include <cstddef>
 #include <memory>
+#include <optional>
+#include <random>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -53,6 +57,30 @@ std::vector<Measurements<T>> reset_position_measurements(
                 if (i >= 450 && i < 570)
                 {
                         res[i].x.reset();
+                }
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<Measurements<T>> add_bad_measurements(const std::vector<Measurements<T>>& measurements)
+{
+        constexpr T X = 1000;
+        constexpr T V = 100;
+        constexpr T PROBABILITY = T{1} / 20;
+
+        PCG engine;
+
+        std::vector<Measurements<T>> res(measurements);
+        for (Measurements<T>& m : std::ranges::drop_view(res, 5))
+        {
+                if (m.x && std::bernoulli_distribution(PROBABILITY)(engine))
+                {
+                        m.x->value += std::bernoulli_distribution(0.5)(engine) ? X : -X;
+                }
+                if (m.v && std::bernoulli_distribution(PROBABILITY)(engine))
+                {
+                        m.v->value += V;
                 }
         }
         return res;
@@ -107,7 +135,7 @@ void test_impl(
 template <typename T>
 void test_impl()
 {
-        constexpr T GATE = 5;
+        constexpr std::optional<T> GATE{5};
 
         constexpr std::size_t SIMULATION_COUNT = 1000;
 
@@ -130,7 +158,7 @@ void test_impl()
 
         test_impl<T>(
                 "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
-                reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL));
+                add_bad_measurements(reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL)));
 }
 
 void test()
