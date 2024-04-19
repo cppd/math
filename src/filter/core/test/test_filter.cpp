@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simulator.h"
 
 #include "filters/filter.h"
+#include "filters/noise_model.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -192,7 +193,8 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
 
         constexpr T FILTER_INIT_V = 0;
         constexpr T FILTER_INIT_V_VARIANCE = 2 * SIMULATION_VELOCITY_MEAN;
-        constexpr T FILTER_VELOCITY_VARIANCE = SIMULATION_VELOCITY_VARIANCE;
+        constexpr filters::NoiseModel<T> FILTER_NOISE_MODEL =
+                filters::DiscreteNoiseModel<T>{.variance = SIMULATION_VELOCITY_VARIANCE};
 
         const std::vector<Measurements<T>> measurements = simulate<T>(
                 SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
@@ -203,18 +205,18 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
         test_impl<T>(
-                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
+                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
                 measurements, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
                 "H_INFINITY",
-                filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
+                filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
                 measurements, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
-                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
+                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
                 measurements, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 }

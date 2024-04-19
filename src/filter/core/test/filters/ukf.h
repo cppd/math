@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "noise_model.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -35,7 +37,7 @@ public:
 
         virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
-        virtual void predict(T dt, T process_variance) = 0;
+        virtual void predict(T dt, const NoiseModel<T>& noise_model) = 0;
 
         virtual void update_position(T position, T position_variance, std::optional<T> gate) = 0;
 

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simulator.h"
 
 #include "filters/filter.h"
+#include "filters/noise_model.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -150,14 +151,14 @@ void test_impl()
 
         constexpr T FILTER_INIT_V = 0;
         constexpr T FILTER_INIT_V_VARIANCE = square(10.0);
-        constexpr T FILTER_VELOCITY_VARIANCE = 2;
+        constexpr filters::NoiseModel<T> FILTER_NOISE_MODEL = filters::DiscreteNoiseModel<T>{.variance = 2};
 
         const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
                 SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(
-                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_VELOCITY_VARIANCE, GATE),
+                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
                 add_bad_measurements(reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL)));
 }
 

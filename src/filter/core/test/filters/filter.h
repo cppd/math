@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "noise_model.h"
+
 #include <src/filter/core/consistency.h>
 #include <src/filter/core/test/measurements.h>
 
@@ -46,11 +48,23 @@ public:
 };
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_ekf(T init_v, T init_v_variance, T process_variance, std::optional<T> gate);
+std::unique_ptr<Filter<T>> create_ekf(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        std::optional<T> gate);
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_h_infinity(T init_v, T init_v_variance, T process_variance, std::optional<T> gate);
+std::unique_ptr<Filter<T>> create_h_infinity(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        std::optional<T> gate);
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_ukf(T init_v, T init_v_variance, T process_variance, std::optional<T> gate);
+std::unique_ptr<Filter<T>> create_ukf(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        std::optional<T> gate);
 }

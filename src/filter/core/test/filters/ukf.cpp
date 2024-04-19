@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ukf.h"
 
+#include "noise_model.h"
+
 #include <src/com/error.h>
+#include <src/com/variant.h>
+#include <src/filter/core/models.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
 #include <src/numerical/matrix.h>
@@ -60,12 +64,21 @@ numerical::Vector<2, T> f(const T dt, const numerical::Vector<2, T>& x)
 }
 
 template <typename T>
-numerical::Matrix<2, 2, T> q(const T dt, const T process_variance)
+numerical::Matrix<2, 2, T> q(const T dt, const NoiseModel<T>& noise_model)
 {
-        const T dt_2 = power<2>(dt) / 2;
-        const numerical::Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
-        const numerical::Matrix<1, 1, T> covariance{{process_variance}};
-        return noise_transition * covariance * noise_transition.transposed();
+        const auto visitors = Visitors{
+                [&](const ContinuousNoiseModel<T>& model)
+                {
+                        return continuous_white_noise<2, T>(dt, model.spectral_density);
+                },
+                [&](const DiscreteNoiseModel<T>& model)
+                {
+                        const T dt_2 = power<2>(dt) / 2;
+                        const numerical::Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
+                        const numerical::Matrix<1, 1, T> covariance{{model.variance}};
+                        return noise_transition * covariance * noise_transition.transposed();
+                }};
+        return std::visit(visitors, noise_model);
 }
 
 //
@@ -134,7 +147,7 @@ class Filter final : public FilterUkf<T>
                 filter_.emplace(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p);
         }
 
-        void predict(const T dt, const T process_variance) override
+        void predict(const T dt, const NoiseModel<T>& noise_model) override
         {
                 ASSERT(filter_);
 
@@ -143,7 +156,7 @@ class Filter final : public FilterUkf<T>
                         {
                                 return f(dt, x);
                         },
-                        q(dt, process_variance));
+                        q(dt, noise_model));
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override
