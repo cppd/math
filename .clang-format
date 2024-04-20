@@ -119,7 +119,7 @@ PackConstructorInitializers: Never
 # PenaltyBreakString: 1000
 # PenaltyBreakTemplateDeclaration: 0
 # PenaltyExcessCharacter: 900
-PenaltyIndentedWhitespace: 6
+PenaltyIndentedWhitespace: 8
 PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
 QualifierAlignment: Custom
