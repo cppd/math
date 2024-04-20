@@ -96,6 +96,7 @@ function(set_compiler_warnings source_files)
                         -Wno-padded
                         -Wno-shadow-field-in-constructor
                         -Wno-shadow-uncaptured-local
+                        -Wno-switch-default
                         -Wno-unsafe-buffer-usage
                         -Wno-weak-template-vtables
                         -Wno-weak-vtables
