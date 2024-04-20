@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "measurements.h"
 
-#include <cstddef>
 #include <vector>
 
 namespace ns::filter::core::test
 {
 template <typename T>
 std::vector<Measurements<T>> simulate(
-        std::size_t count,
+        T length,
         T init_x,
         T dt,
         T process_velocity_mean,
@@ -36,7 +35,7 @@ std::vector<Measurements<T>> simulate(
 
 template <typename T>
 std::vector<Measurements<T>> simulate_acceleration(
-        std::size_t count,
+        T length,
         T init_x,
         T dt,
         T process_acceleration,

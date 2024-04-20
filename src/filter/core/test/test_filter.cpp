@@ -33,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -182,7 +181,7 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
 {
         constexpr std::optional<T> GATE{};
 
-        constexpr std::size_t SIMULATION_COUNT = 1000;
+        constexpr T SIMULATION_LENGTH = 1000;
 
         constexpr T SIMULATION_DT = 1;
         constexpr T SIMULATION_VELOCITY_MEAN = 1;
@@ -197,7 +196,7 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 filters::DiscreteNoiseModel<T>{.variance = SIMULATION_VELOCITY_VARIANCE};
 
         const std::vector<Measurements<T>> measurements = simulate<T>(
-                SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
+                SIMULATION_LENGTH, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         const std::vector<unsigned> distribution = {580, 230, 60, 16, 7, 3, 0, 0, 0, 0};

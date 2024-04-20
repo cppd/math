@@ -28,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
-#include <cstddef>
-#include <memory>
 #include <optional>
 #include <random>
 #include <ranges>
@@ -46,18 +44,29 @@ constexpr T DATA_CONNECT_INTERVAL = 10;
 template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
         const std::vector<Measurements<T>>& measurements,
-        const unsigned interval)
+        const T interval)
 {
-        std::vector<Measurements<T>> res(measurements);
-        for (std::size_t i = 0; i < res.size(); ++i)
+        if (measurements.empty())
         {
-                if (i % interval != 0)
+                return {};
+        }
+
+        std::vector<Measurements<T>> res(measurements);
+        auto iter = res.begin();
+        T next_time = iter->time + interval;
+        while (++iter != res.end())
+        {
+                if (iter->time < next_time)
                 {
-                        res[i].x.reset();
+                        iter->x.reset();
                 }
-                if (i >= 450 && i < 570)
+                else
                 {
-                        res[i].x.reset();
+                        next_time = iter->time + interval;
+                }
+                if (iter->time >= 225 && iter->time < 285)
+                {
+                        iter->x.reset();
                 }
         }
         return res;
@@ -120,27 +129,37 @@ std::vector<view::Point<T>> test_filter(
 template <typename T>
 void test_impl(
         const std::string_view name,
-        std::unique_ptr<filters::Filter<T>> filter,
+        const T init_v,
+        const T init_v_variance,
+        const std::optional<T> gate,
         const std::vector<Measurements<T>>& measurements)
 {
-        const std::vector<view::Point<T>> x = test_filter(filter.get(), reset_v(measurements));
+        using C = filters::ContinuousNoiseModel<T>;
+        using D = filters::DiscreteNoiseModel<T>;
 
-        const std::vector<view::Point<T>> xv = test_filter(filter.get(), measurements);
+        const auto position_measurements = reset_v(measurements);
+
+        constexpr T SIGMA = 2;
+        constexpr T INTERVAL = 2.5;
+
+        const auto f_c =
+                filters::create_ekf<T>(init_v, init_v_variance, C{.spectral_density = INTERVAL * square(SIGMA)}, gate);
+        const auto f_d = filters::create_ekf<T>(init_v, init_v_variance, D{.variance = square(SIGMA)}, gate);
 
         view::write(
                 name, measurements, DATA_CONNECT_INTERVAL<T>,
-                {view::Filter<T>("Position", color::RGB8(128, 0, 0), x),
-                 view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), xv)});
+                {view::Filter<T>("C Position", color::RGB8(180, 0, 0), test_filter(f_c.get(), position_measurements)),
+                 view::Filter<T>("C Position Speed", color::RGB8(0, 180, 0), test_filter(f_c.get(), measurements)),
+                 view::Filter<T>("D Position", color::RGB8(128, 0, 0), test_filter(f_d.get(), position_measurements)),
+                 view::Filter<T>("D Position Speed", color::RGB8(0, 128, 0), test_filter(f_d.get(), measurements))});
 }
 
 template <typename T>
 void test_impl()
 {
-        constexpr std::optional<T> GATE{5};
+        constexpr T SIMULATION_LENGTH = 500;
 
-        constexpr std::size_t SIMULATION_COUNT = 1000;
-
-        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 5;
+        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 0.5;
         constexpr T SIMULATION_DT = 0.5;
 
         constexpr T SIMULATION_ACCELERATION = 2;
@@ -151,14 +170,14 @@ void test_impl()
 
         constexpr T FILTER_INIT_V = 0;
         constexpr T FILTER_INIT_V_VARIANCE = square(10.0);
-        constexpr filters::NoiseModel<T> FILTER_NOISE_MODEL = filters::DiscreteNoiseModel<T>{.variance = 2};
+        constexpr std::optional<T> FILTER_GATE{5};
 
         const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
-                SIMULATION_COUNT, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
+                SIMULATION_LENGTH, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(
-                "view", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
+                "view", FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_GATE,
                 add_bad_measurements(reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL)));
 }
 
