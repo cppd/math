@@ -50,11 +50,11 @@ VolumeBuffer::VolumeBuffer(
         const std::vector<std::uint32_t>& graphics_family_indices,
         const std::vector<std::uint32_t>& transfer_family_indices)
         : uniform_buffer_coordinates_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                graphics_family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(VolumeCoordinates)),
+                  vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  graphics_family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(VolumeCoordinates)),
           uniform_buffer_volume_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,

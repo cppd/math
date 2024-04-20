@@ -359,21 +359,21 @@ DepthImageWithMemory::DepthImageWithMemory(
         const std::uint32_t height,
         const VkImageUsageFlags usage)
         : image_(create_image(
-                device.handle(),
-                device.physical_device(),
-                VK_IMAGE_TYPE_2D,
-                limit_image_extent(
-                        VK_IMAGE_TYPE_2D,
-                        make_extent(width, height),
-                        device.physical_device(),
-                        format,
-                        VK_IMAGE_TILING_OPTIMAL,
-                        usage),
-                format,
-                family_indices,
-                sample_count,
-                VK_IMAGE_TILING_OPTIMAL,
-                usage)),
+                  device.handle(),
+                  device.physical_device(),
+                  VK_IMAGE_TYPE_2D,
+                  limit_image_extent(
+                          VK_IMAGE_TYPE_2D,
+                          make_extent(width, height),
+                          device.physical_device(),
+                          format,
+                          VK_IMAGE_TILING_OPTIMAL,
+                          usage),
+                  format,
+                  family_indices,
+                  sample_count,
+                  VK_IMAGE_TILING_OPTIMAL,
+                  usage)),
           device_memory_(create_device_memory(
                   device.handle(),
                   device.physical_device(),
@@ -404,20 +404,20 @@ DepthImageWithMemory::DepthImageWithMemory(
         const std::uint32_t height,
         const VkImageUsageFlags usage)
         : DepthImageWithMemory(
-                device,
-                family_indices,
-                find_supported_image_format(
-                        device.physical_device(),
-                        depth_formats(formats),
-                        VK_IMAGE_TYPE_2D,
-                        VK_IMAGE_TILING_OPTIMAL,
-                        format_features_for_image_usage(usage),
-                        usage,
-                        sample_count),
-                sample_count,
-                width,
-                height,
-                usage)
+                  device,
+                  family_indices,
+                  find_supported_image_format(
+                          device.physical_device(),
+                          depth_formats(formats),
+                          VK_IMAGE_TYPE_2D,
+                          VK_IMAGE_TILING_OPTIMAL,
+                          format_features_for_image_usage(usage),
+                          usage,
+                          sample_count),
+                  sample_count,
+                  width,
+                  height,
+                  usage)
 {
 }
 

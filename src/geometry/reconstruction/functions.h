@@ -66,7 +66,7 @@ bool cocone_inside_or_equal(const T... cos_n_p)
 {
         static_assert((std::is_floating_point_v<T> && ...));
 
-        return ((std::abs(cos_n_p) <= functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((std::abs(cos_n_p) <= functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>) && ...);
 }
 
 /*

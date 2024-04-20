@@ -34,11 +34,11 @@ namespace ns::gpu::renderer
 {
 MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : uniform_buffer_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Mesh))
+                  vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Mesh))
 {
 }
 

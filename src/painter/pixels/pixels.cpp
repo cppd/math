@@ -165,7 +165,7 @@ void Pixels<N, T, Color>::images(image::Image<N>* const image_rgb, image::Image<
         ASSERT(ptr_rgba == image_rgba->pixels.data() + image_rgba->pixels.size());
 }
 
-#define TEMPLATE_N_T_C(N, T, C) template class Pixels<(N)-1, T, C>;
+#define TEMPLATE_N_T_C(N, T, C) template class Pixels<(N) - 1, T, C>;
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE_N_T_C)
 }

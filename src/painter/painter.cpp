@@ -142,7 +142,7 @@ std::unique_ptr<Painter> create_painter(
 
 #define TEMPLATE(N, T, C)                                 \
         template std::unique_ptr<Painter> create_painter( \
-                Integrator, Notifier<(N)-1>*, int, std::optional<int>, const Scene<(N), T, C>*, int, bool);
+                Integrator, Notifier<(N) - 1>*, int, std::optional<int>, const Scene<(N), T, C>*, int, bool);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

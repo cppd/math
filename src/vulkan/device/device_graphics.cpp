@@ -91,7 +91,7 @@ DeviceGraphics::DeviceGraphics(
         const DeviceFunctionality& device_functionality,
         const VkSurfaceKHR surface)
         : physical_device_(
-                find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
+                  find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
           graphics_compute_family_index_(find_graphics_compute_family_index(physical_device_)),
           compute_family_index_(find_compute_family_index(physical_device_)),
           transfer_family_index_(find_transfer_family_index(physical_device_)),

@@ -38,12 +38,11 @@ namespace ns::gpu::dft
 {
 
 ViewDataBuffer::ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
-        : buffer_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Data))
+        : buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Data))
 {
 }
 

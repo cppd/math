@@ -288,12 +288,12 @@ void painting(
         }
 }
 
-#define TEMPLATE(N, T, C)                                                                                         \
-        template void painting<true, (N), T, C>(                                                                  \
-                Integrator, Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
-                std::atomic_bool*) noexcept;                                                                      \
-        template void painting<false, (N), T, C>(                                                                 \
-                Integrator, Notifier<(N)-1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+#define TEMPLATE(N, T, C)                                                                                           \
+        template void painting<true, (N), T, C>(                                                                    \
+                Integrator, Notifier<(N) - 1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
+                std::atomic_bool*) noexcept;                                                                        \
+        template void painting<false, (N), T, C>(                                                                   \
+                Integrator, Notifier<(N) - 1>*, Statistics*, int, std::optional<int>, const Scene<(N), T, C>&, int, \
                 std::atomic_bool*) noexcept;
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

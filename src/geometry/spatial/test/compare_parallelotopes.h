@@ -87,7 +87,7 @@ template <std::size_t N, typename T, typename... Parallelotope>
 void compare_intersections(const numerical::Ray<N, T>& ray, const Parallelotope&... p)
 {
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
-        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
+        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>) && ...));
 
         std::array<std::optional<T>, sizeof...(Parallelotope)> intersections{p.intersect(ray)...};
 
@@ -153,7 +153,7 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
         using T = std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
 
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
-        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
+        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>) && ...));
 
         std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};
 

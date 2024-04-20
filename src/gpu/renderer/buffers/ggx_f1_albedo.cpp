@@ -115,10 +115,10 @@ GgxF1Albedo::GgxF1Albedo(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue)
         : cosine_roughness_(create_cosine_roughness_image(
-                device,
-                merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue.family_index()),
-                transfer_command_pool,
-                transfer_queue)),
+                  device,
+                  merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue.family_index()),
+                  transfer_command_pool,
+                  transfer_queue)),
           cosine_weighted_average_(create_cosine_weighted_average_image(
                   device,
                   merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue.family_index()),

@@ -361,8 +361,9 @@ class Impl final
                                 device_graphics_.graphics_compute_queue(0).family_index(),
                                 device_graphics_.presentation_queue().family_index()},
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
-                        view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
-                                                      : vulkan::PresentMode::PREFER_FAST);
+                        view_process_.vertical_sync()
+                                ? vulkan::PresentMode::PREFER_SYNC
+                                : vulkan::PresentMode::PREFER_FAST);
 
                 if (window_size_in_mm)
                 {
@@ -421,11 +422,11 @@ class Impl final
 public:
         Impl(const window::WindowID window, const std::array<double, 2>& window_size_in_mm)
                 : surface_(
-                        vulkan::Instance::handle(),
-                        [&](const VkInstance instance)
-                        {
-                                return window::vulkan_create_surface(window, instance);
-                        }),
+                          vulkan::Instance::handle(),
+                          [&](const VkInstance instance)
+                          {
+                                  return window::vulkan_create_surface(window, instance);
+                          }),
                   device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
                   graphics_compute_command_pool_(vulkan::create_command_pool(
                           device_graphics_.device().handle(),

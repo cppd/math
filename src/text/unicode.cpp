@@ -78,8 +78,9 @@ char32_t utf8_4_to_utf32(const std::string& s, std::size_t* const i)
                         if ((s3 & 0b11'000000) == 0b10'000000)
                         {
                                 const unsigned char s0 = s[*i];
-                                const char32_t res = (s0 & 0b111) << 18 | (s1 & 0b11'1111) << 12 | (s2 & 0b11'1111) << 6
-                                                     | (s3 & 0b11'1111);
+                                const char32_t res =
+                                        (s0 & 0b111) << 18 | (s1 & 0b11'1111) << 12 | (s2 & 0b11'1111) << 6
+                                        | (s3 & 0b11'1111);
                                 if (res <= 0x10FFFF)
                                 {
                                         *i += 4;

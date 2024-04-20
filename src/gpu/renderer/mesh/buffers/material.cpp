@@ -38,11 +38,11 @@ MaterialBuffer::MaterialBuffer(
         const bool use_texture,
         const bool use_material)
         : uniform_buffer_(
-                vulkan::BufferMemoryType::DEVICE_LOCAL,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                sizeof(Material))
+                  vulkan::BufferMemoryType::DEVICE_LOCAL,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                  sizeof(Material))
 {
         Material m;
         m.color = color;

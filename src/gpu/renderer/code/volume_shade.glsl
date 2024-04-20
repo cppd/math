@@ -53,9 +53,9 @@ vec4 isosurface_color(const vec3 texture_position)
 
         vec3 color = volume.ambient * volume.color;
 
-        color +=
-                shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                      ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, front_lighting, side_lighting);
+        color += shade(
+                volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, front_lighting, side_lighting);
 
         return vec4(color, volume.isosurface_alpha);
 }

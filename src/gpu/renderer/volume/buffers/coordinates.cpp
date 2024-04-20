@@ -34,12 +34,11 @@ namespace ns::gpu::renderer
 VolumeCoordinatesBuffer::VolumeCoordinatesBuffer(
         const vulkan::Device& device,
         const std::vector<std::uint32_t>& family_indices)
-        : buffer_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Coordinates))
+        : buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Coordinates))
 {
 }
 

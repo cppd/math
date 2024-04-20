@@ -166,10 +166,8 @@ geometry::spatial::BoundingBox<N, T> Parallelotope<N, T, Color>::bounding_box() 
 }
 
 template <std::size_t N, typename T, typename Color>
-std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)> Parallelotope<
-        N,
-        T,
-        Color>::overlap_function() const
+std::function<bool(const geometry::spatial::ShapeOverlap<geometry::spatial::ParallelotopeAA<N, T>>&)>
+        Parallelotope<N, T, Color>::overlap_function() const
 {
         return parallelotope_.overlap_function();
 }

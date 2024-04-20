@@ -309,9 +309,9 @@ StorageScene<N, T, Color> create_cornell_box_scene(
                 light, background_light, screen_size, camera, center, std::move(shape), progress);
 }
 
-#define TEMPLATE(N, T, C)                                                                                     \
-        template StorageScene<(N), T, C> create_cornell_box_scene(                                            \
-                std::unique_ptr<const Shape<(N), T, C>>&&, const C&, const C&, const std::array<int, (N)-1>&, \
+#define TEMPLATE(N, T, C)                                                                                       \
+        template StorageScene<(N), T, C> create_cornell_box_scene(                                              \
+                std::unique_ptr<const Shape<(N), T, C>>&&, const C&, const C&, const std::array<int, (N) - 1>&, \
                 progress::Ratio*);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)

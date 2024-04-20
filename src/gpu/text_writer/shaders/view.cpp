@@ -39,12 +39,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::text_writer
 {
 Buffer::Buffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
-        : buffer_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Data))
+        : buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Data))
 {
 }
 
