@@ -79,8 +79,8 @@ std::vector<Measurements<T>> add_bad_measurements(
         const std::vector<Measurements<T>>& measurements,
         const T speed_factor)
 {
-        constexpr T X = 1000;
-        constexpr T V = 50;
+        constexpr T X = 2000;
+        constexpr T V = 30;
         constexpr T PROBABILITY = T{1} / 20;
 
         PCG engine;
@@ -231,13 +231,13 @@ void test_impl()
 {
         constexpr T SIMULATION_LENGTH = 500;
 
-        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 2.5;
+        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 2;
         constexpr T SIMULATION_DT = 0.5;
 
         constexpr T SIMULATION_ACCELERATION = 2;
         constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.1);
         constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100.0);
-        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.2);
+        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.5);
         constexpr T SIMULATION_INIT_X = 0;
 
         constexpr T MEASUREMENT_SPEED_FACTOR = 1;
@@ -246,8 +246,8 @@ void test_impl()
         constexpr T FILTER_INIT_V_VARIANCE = square(10.0);
         constexpr std::optional<T> FILTER_GATE{5};
 
-        constexpr T FILTER_SIGMA = 2;
-        constexpr T FILTER_SIGMA_INTERVAL = 2.5;
+        constexpr T FILTER_SIGMA = 1;
+        constexpr T FILTER_SIGMA_INTERVAL = 2;
 
         const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
                 SIMULATION_LENGTH, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
