@@ -39,7 +39,7 @@ enable_language(C CXX)
 
 check_compiler_versions(
         GCC_MINIMAL_VERSION 13
-        CLANG_MINIMAL_VERSION 17)
+        CLANG_MINIMAL_VERSION 18)
 
 # after enable_language
 set(CMAKE_C_STANDARD 23)
