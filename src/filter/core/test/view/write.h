@@ -54,7 +54,8 @@ struct Filter final
 
 template <typename T>
 void write(
-        const std::string_view& file_name,
+        std::string_view file_name,
+        std::string_view annotation,
         const std::vector<Measurements<T>>& measurements,
         T interval,
         const std::vector<Filter<T>>& filters);

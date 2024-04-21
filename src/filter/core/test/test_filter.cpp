@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <sstream>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
@@ -132,6 +134,7 @@ TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Me
 template <typename T>
 void test_impl(
         const std::string_view name,
+        const std::string_view annotation,
         std::unique_ptr<filters::Filter<T>> filter,
         const std::vector<Measurements<T>>& measurements,
         const T precision_x,
@@ -176,9 +179,37 @@ void test_impl(
         //
 
         view::write(
-                name, measurements, DATA_CONNECT_INTERVAL<T>,
+                name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
                  view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
+}
+
+template <typename T>
+std::string make_annotation(
+        const T simulation_dt,
+        const T simulation_velocity_variance,
+        const T simulation_measurement_variance_x,
+        const T simulation_measurement_variance_v)
+{
+        constexpr std::string_view SIGMA = "&#x03c3;";
+
+        std::ostringstream oss;
+
+        oss << "<b>update</b>";
+        oss << "<br>";
+        oss << "position: " << 1 / simulation_dt << " Hz";
+
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>" << SIGMA << "</b>";
+        oss << "<br>";
+        oss << "process speed: " << std::sqrt(simulation_velocity_variance) << " m/s";
+        oss << "<br>";
+        oss << "position: " << std::sqrt(simulation_measurement_variance_x) << " m";
+        oss << "<br>";
+        oss << "speed: " << std::sqrt(simulation_measurement_variance_v) << " m/s";
+
+        return oss.str();
 }
 
 template <typename T>
@@ -208,21 +239,27 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         const std::array<T, 2> min_max_nees_x{0.4, 1.0};
         const std::array<T, 2> min_max_nees_xv{0.15, 2.95};
 
-        test_impl<T>(
-                "EKF", filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
-                measurements, precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5,
-                distribution, min_max_nees_x, min_max_nees_xv);
+        const std::string annotation = make_annotation(
+                SIMULATION_DT, SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X,
+                SIMULATION_MEASUREMENT_VARIANCE_V);
 
         test_impl<T>(
-                "H_INFINITY",
+                "EKF", annotation,
+                filters::create_ekf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE), measurements,
+                precision_x, precision_xv, 1.4306576889002234962L, 0.298852051985480352583L, 5, distribution,
+                min_max_nees_x, min_max_nees_xv);
+
+        test_impl<T>(
+                "H_INFINITY", annotation,
                 filters::create_h_infinity<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
                 measurements, precision_x, precision_xv, 1.43098764352003224212L, 0.298852351050054556604L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
-                "UKF", filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE),
-                measurements, precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5,
-                distribution, min_max_nees_x, min_max_nees_xv);
+                "UKF", annotation,
+                filters::create_ukf<T>(FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, GATE), measurements,
+                precision_x, precision_xv, 1.43670888967218343853L, 0.304462860888633687857L, 5, distribution,
+                min_max_nees_x, min_max_nees_xv);
 }
 
 void test()

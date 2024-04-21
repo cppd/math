@@ -18,12 +18,15 @@ import ast
 import os
 import sys
 import tempfile
+from collections import namedtuple
 
 import plotly.graph_objects as go
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
+
+Info = namedtuple("Info", "annotation data")
 
 
 def error(message):
@@ -108,11 +111,12 @@ def add_line(figure, d, values):
 
 
 def create_figure(info, title):
-    assert info and isinstance(info, list)
+    assert info and isinstance(info, Info)
+    assert info.data and isinstance(info.data, list)
 
     figure = go.Figure()
 
-    for d, values in info:
+    for d, values in info.data:
         assert len(values) > 0
         assert len(values[0]) == 2 or len(values[0]) == 3
         if len(values[0]) == 2:
@@ -122,6 +126,19 @@ def create_figure(info, title):
 
     figure.update_xaxes(showgrid=True, visible=True)
     figure.update_yaxes(showgrid=True, visible=True)
+
+    if info.annotation:
+        figure.add_annotation(
+            text=info.annotation,
+            align="left",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+            x=1.02,
+            y=0.01,
+            xanchor="left",
+            yanchor="bottom",
+        )
 
     title = None
     figure.update_layout(title=title, xaxis_title="Time", yaxis_title="Position/Speed")
@@ -147,6 +164,9 @@ def parse_data(text):
     if isinstance(data, dict):
         return data
 
+    if isinstance(data, str):
+        return data
+
     if not isinstance(data, tuple):
         error("Not tuple input:\n{0}".format(text))
 
@@ -161,6 +181,7 @@ def read_file(file_name):
     res = []
     dimension = None
     values = None
+    annotation = None
 
     with open(file_name, encoding="utf-8") as file:
         for line in file:
@@ -169,6 +190,12 @@ def read_file(file_name):
                 continue
 
             data = parse_data(line)
+
+            if isinstance(data, str):
+                if annotation is not None:
+                    error("Too many annotations")
+                annotation = data
+                continue
 
             if isinstance(data, dict):
                 res.append((data, []))
@@ -193,7 +220,7 @@ def read_file(file_name):
     if dimension is None:
         error("No dimension")
 
-    return res
+    return Info(annotation, res)
 
 
 def use_dialog(args):

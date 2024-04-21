@@ -79,7 +79,7 @@ template <typename T>
 void write_track_position(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
 {
         file << '{';
-        file << R"("name":"Track, p")";
+        file << R"("name":"<b>Track, p<b>")";
         file << R"(, "mode":"lines")";
         file << R"(, "line_color":"#0000ff")";
         file << R"(, "line_width":1)";
@@ -120,7 +120,7 @@ template <typename T>
 void write_measurement_position(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
 {
         file << '{';
-        file << R"("name":"Measurements, p")";
+        file << R"("name":"<b>Measurements, p<b>")";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":"#000000")";
         file << R"(, "line_width":0.25)";
@@ -219,7 +219,7 @@ template <typename T>
 void write_filter_position(std::ofstream& file, const Filter<T>& filter, const T interval)
 {
         file << '{';
-        file << R"("name":")" << filter.name << ", p\"";
+        file << R"("name":"<b>)" << filter.name << ", p<b>\"";
         file << R"(, "mode":"lines+markers")";
         file << R"(, "line_color":)" << color_to_string(filter.color);
         file << R"(, "line_width":1)";
@@ -315,7 +315,8 @@ void write_filters(
 
 template <typename T>
 void write(
-        const std::string_view& name,
+        const std::string_view name,
+        const std::string_view annotation,
         const std::vector<Measurements<T>>& measurements,
         const T interval,
         const std::vector<Filter<T>>& filters)
@@ -326,6 +327,11 @@ void write(
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
+        if (!annotation.empty())
+        {
+                file << '"' << annotation << "\"\n";
+        }
+
         write_track(file, measurements);
 
         write_measurements(file, measurements, interval);
@@ -333,9 +339,10 @@ void write(
         write_filters(file, measurements, filters, interval);
 }
 
-#define INSTANTIATION(T)     \
-        template void write( \
-                const std::string_view&, const std::vector<Measurements<T>>&, T, const std::vector<Filter<T>>&);
+#define INSTANTIATION(T)                                                                    \
+        template void write(                                                                \
+                std::string_view, std::string_view, const std::vector<Measurements<T>>&, T, \
+                const std::vector<Filter<T>>&);
 
 INSTANTIATION(float)
 INSTANTIATION(double)
