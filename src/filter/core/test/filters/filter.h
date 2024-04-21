@@ -31,7 +31,9 @@ template <typename T>
 struct UpdateInfo final
 {
         T x;
-        T stddev;
+        T x_stddev;
+        T v;
+        T v_stddev;
 };
 
 template <typename T>

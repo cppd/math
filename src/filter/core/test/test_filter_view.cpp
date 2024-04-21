@@ -121,7 +121,12 @@ std::vector<view::Point<T>> test_filter(
                 {
                         continue;
                 }
-                res.push_back({.time = m.time, .x = update->x, .stddev = update->stddev});
+                res.push_back(
+                        {.time = m.time,
+                         .x = update->x,
+                         .x_stddev = update->x_stddev,
+                         .v = update->v,
+                         .v_stddev = update->v_stddev});
         }
         return res;
 }
@@ -149,9 +154,9 @@ void test_impl(
         view::write(
                 name, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("C Position", color::RGB8(180, 0, 0), test_filter(f_c.get(), position_measurements)),
-                 view::Filter<T>("C Position Speed", color::RGB8(0, 180, 0), test_filter(f_c.get(), measurements)),
+                 view::Filter<T>("C Speed", color::RGB8(0, 180, 0), test_filter(f_c.get(), measurements)),
                  view::Filter<T>("D Position", color::RGB8(128, 0, 0), test_filter(f_d.get(), position_measurements)),
-                 view::Filter<T>("D Position Speed", color::RGB8(0, 128, 0), test_filter(f_d.get(), measurements))});
+                 view::Filter<T>("D Speed", color::RGB8(0, 128, 0), test_filter(f_d.get(), measurements))});
 }
 
 template <typename T>

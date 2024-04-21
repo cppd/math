@@ -32,7 +32,9 @@ struct Point final
 {
         T time;
         T x;
-        T stddev;
+        T x_stddev;
+        T v;
+        T v_stddev;
 };
 
 template <typename T>

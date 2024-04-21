@@ -86,7 +86,12 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
         res.reserve(result.size());
         for (const TimeUpdateInfo<T>& r : result)
         {
-                res.push_back({.time = r.time, .x = r.info.x, .stddev = r.info.stddev});
+                res.push_back(
+                        {.time = r.time,
+                         .x = r.info.x,
+                         .x_stddev = r.info.x_stddev,
+                         .v = r.info.v,
+                         .v_stddev = r.info.v_stddev});
         }
         return res;
 }
@@ -118,7 +123,7 @@ TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Me
                         continue;
                 }
                 result.push_back({.time = m.time, .info = *update});
-                distribution.add(update->x - m.true_x, update->stddev);
+                distribution.add(update->x - m.true_x, update->x_stddev);
         }
 
         return {.result = result, .distribution = distribution, .nees = filter->nees()};
@@ -142,8 +147,8 @@ void test_impl(
 
         {
                 const auto& info = result_x.result.back().info;
-                compare(info.stddev, expected_stddev_x, precision_x);
-                compare(measurements.back().true_x, info.x, stddev_count * info.stddev);
+                compare(info.x_stddev, expected_stddev_x, precision_x);
+                compare(measurements.back().true_x, info.x, stddev_count * info.x_stddev);
         }
 
         if (const auto average = result_x.nees.average(); !(average > min_max_nees_x[0] && average < min_max_nees_x[1]))
@@ -159,8 +164,8 @@ void test_impl(
 
         {
                 const auto& info = result_xv.result.back().info;
-                compare(info.stddev, expected_stddev_xv, precision_xv);
-                compare(measurements.back().true_x, info.x, stddev_count * info.stddev);
+                compare(info.x_stddev, expected_stddev_xv, precision_xv);
+                compare(measurements.back().true_x, info.x, stddev_count * info.x_stddev);
         }
 
         if (const T average = result_xv.nees.average(); !(average > min_max_nees_xv[0] && average < min_max_nees_xv[1]))
@@ -173,7 +178,7 @@ void test_impl(
         view::write(
                 name, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
-                 view::Filter<T>("Position Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
+                 view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
 }
 
 template <typename T>

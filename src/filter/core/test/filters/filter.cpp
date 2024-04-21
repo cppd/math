@@ -123,7 +123,10 @@ class FilterImpl : public Filter<typename F::Type>
                         reset_filter(filter_.get(), m, init_v_, init_v_variance_);
 
                         return {
-                                {.x = filter_->position(), .stddev = std::sqrt(filter_->position_p())}
+                                {.x = filter_->position(),
+                                 .x_stddev = std::sqrt(filter_->position_p()),
+                                 .v = filter_->speed(),
+                                 .v_stddev = std::sqrt(filter_->speed_p())}
                         };
                 }
 
@@ -143,7 +146,10 @@ class FilterImpl : public Filter<typename F::Type>
                         filter_->position_speed_p());
 
                 return {
-                        {.x = filter_->position(), .stddev = std::sqrt(filter_->position_p())}
+                        {.x = filter_->position(),
+                         .x_stddev = std::sqrt(filter_->position_p()),
+                         .v = filter_->speed(),
+                         .v_stddev = std::sqrt(filter_->speed_p())}
                 };
         }
 
