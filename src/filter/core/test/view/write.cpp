@@ -39,6 +39,14 @@ namespace ns::filter::core::test::view
 {
 namespace
 {
+constexpr std::string_view SIGMA = "&#x03c3;";
+
+template <typename T>
+T to_kph(const T speed)
+{
+        return 3.6 * speed;
+}
+
 std::string color_to_string(const color::RGB8 color)
 {
         return "\"rgb(" + to_string(color.red()) + "," + to_string(color.green()) + "," + to_string(color.blue())
@@ -68,7 +76,7 @@ const Measurements<T>& measurements_at_time(const std::unordered_map<T, Measurem
 }
 
 template <typename T>
-void write_track(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+void write_track_position(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
 {
         file << '{';
         file << R"("name":"Track")";
@@ -85,7 +93,31 @@ void write_track(std::ofstream& file, const std::vector<Measurements<T>>& measur
 }
 
 template <typename T>
-void write_measurement_v(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+void write_track_speed(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+{
+        file << '{';
+        file << R"("name":"Track Speed")";
+        file << R"(, "mode":"lines")";
+        file << R"(, "line_color":"#0000ff")";
+        file << R"(, "line_width":1)";
+        file << R"(, "line_dash":"dot")";
+        file << R"(, "marker_size":None)";
+        file << "}\n";
+        for (const Measurements<T>& m : measurements)
+        {
+                file << "(" << m.time << ", " << to_kph(m.true_v) << ")\n";
+        }
+}
+
+template <typename T>
+void write_track(std::ofstream& file, const std::vector<Measurements<T>>& measurements)
+{
+        write_track_position(file, measurements);
+        write_track_speed(file, measurements);
+}
+
+template <typename T>
+void write_measurement_position(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
 {
         file << '{';
         file << R"("name":"Measurements")";
@@ -114,10 +146,10 @@ void write_measurement_v(std::ofstream& file, const std::vector<Measurements<T>>
 }
 
 template <typename T>
-void write_measurement_p(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+void write_measurement_sigma(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
 {
         file << '{';
-        file << R"s("name":"Measurements P")s";
+        file << R"s("name":"Measurements )s" << SIGMA << "\"";
         file << R"s(, "mode":"lines")s";
         file << R"s(, "line_color":"rgba(128,128,128,0.5)")s";
         file << R"s(, "fill_color":"rgba(180,180,180,0.15)")s";
@@ -144,14 +176,44 @@ void write_measurement_p(std::ofstream& file, const std::vector<Measurements<T>>
 }
 
 template <typename T>
-void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+void write_measurement_speed(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
 {
-        write_measurement_v(file, measurements, interval);
-        write_measurement_p(file, measurements, interval);
+        file << '{';
+        file << R"("name":"Measurements Speed")";
+        file << R"(, "mode":"lines+markers")";
+        file << R"(, "line_color":"#000000")";
+        file << R"(, "line_width":0.25)";
+        file << R"(, "line_dash":None)";
+        file << R"(, "marker_size":4)";
+        file << "}\n";
+
+        std::optional<T> last_time;
+        for (const Measurements<T>& m : measurements)
+        {
+                ASSERT(!last_time || *last_time < m.time);
+                if (!m.v)
+                {
+                        continue;
+                }
+                if (last_time && m.time > *last_time + interval)
+                {
+                        file << "(None, None)\n";
+                }
+                last_time = m.time;
+                file << "(" << m.time << ", " << to_kph(m.v->value) << ")\n";
+        }
 }
 
 template <typename T>
-void write_filter_v(std::ofstream& file, const Filter<T>& filter, const T interval)
+void write_measurements(std::ofstream& file, const std::vector<Measurements<T>>& measurements, const T interval)
+{
+        write_measurement_position(file, measurements, interval);
+        write_measurement_sigma(file, measurements, interval);
+        write_measurement_speed(file, measurements, interval);
+}
+
+template <typename T>
+void write_filter_position(std::ofstream& file, const Filter<T>& filter, const T interval)
 {
         file << '{';
         file << R"("name":")" << filter.name << "\"";
@@ -176,14 +238,14 @@ void write_filter_v(std::ofstream& file, const Filter<T>& filter, const T interv
 }
 
 template <typename T>
-void write_filter_p(
+void write_filter_sigma(
         std::ofstream& file,
         const std::unordered_map<T, Measurements<T>> time_map,
         const Filter<T>& filter,
         const T interval)
 {
         file << '{';
-        file << R"s("name":")s" << filter.name << " P\"";
+        file << R"s("name":")s" << filter.name << " " << SIGMA << "\"";
         file << R"s(, "mode":"lines")s";
         file << R"s(, "line_color":"rgba(128,128,0,0.5)")s";
         file << R"s(, "fill_color":"rgba(180,180,0,0.15)")s";
@@ -216,8 +278,8 @@ void write_filters(
         const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
         for (const Filter<T>& filter : filters)
         {
-                write_filter_v(file, filter, interval);
-                write_filter_p(file, time_map, filter, interval);
+                write_filter_position(file, filter, interval);
+                write_filter_sigma(file, time_map, filter, interval);
         }
 }
 }

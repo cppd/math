@@ -100,7 +100,7 @@ std::vector<Measurements<T>> simulate_acceleration(
         const auto push = [&](const T time, const T x, const T v)
         {
                 const T m_x = x + nd_measurement_x(engine);
-                const T m_v = v + nd_measurement_v(engine);
+                const T m_v = v + (v > 0 ? nd_measurement_v(engine) : 0);
                 res.push_back({
                         .time = time,
                         .true_x = x,
@@ -110,24 +110,29 @@ std::vector<Measurements<T>> simulate_acceleration(
                 });
         };
 
-        const auto next_speed = [&](const T time, const T v)
+        const auto speed = [&](const T time)
         {
-                const T p = std::fmod(time, 90);
-                if (p < 10)
+                constexpr T STANDING = 10;
+                constexpr T ACCELERATION = 10;
+                constexpr T UNIFORM = 60;
+
+                const T p = std::fmod(time, STANDING + ACCELERATION + UNIFORM + ACCELERATION);
+                if (p < STANDING)
                 {
                         ASSERT(p >= 0);
                         return T{0};
                 }
-                if (p < 20)
+                if (p < STANDING + ACCELERATION)
                 {
-                        return v + process_acceleration * dt + nd_process_v(engine);
+                        return process_acceleration * std::fmod(p, ACCELERATION) + nd_process_v(engine);
                 }
-                if (p < 80)
+                if (p < STANDING + ACCELERATION + UNIFORM)
                 {
-                        return v + nd_process_v(engine);
+                        return process_acceleration * ACCELERATION + nd_process_v(engine);
                 }
-                ASSERT(p < 90);
-                return v - process_acceleration * dt + nd_process_v(engine);
+                ASSERT(p < STANDING + ACCELERATION + UNIFORM + ACCELERATION);
+                return process_acceleration * ACCELERATION - process_acceleration * std::fmod(p, ACCELERATION)
+                       + nd_process_v(engine);
         };
 
         T x = init_x;
@@ -140,7 +145,7 @@ std::vector<Measurements<T>> simulate_acceleration(
                 {
                         break;
                 }
-                const T v_next = next_speed(time, v);
+                const T v_next = speed(time);
                 const T v_average = (v + v_next) / 2;
                 x += dt * v_average;
                 v = v_next;

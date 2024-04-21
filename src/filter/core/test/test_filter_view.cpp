@@ -76,7 +76,7 @@ template <typename T>
 std::vector<Measurements<T>> add_bad_measurements(const std::vector<Measurements<T>>& measurements)
 {
         constexpr T X = 1000;
-        constexpr T V = 100;
+        constexpr T V = 50;
         constexpr T PROBABILITY = T{1} / 20;
 
         PCG engine;
@@ -159,11 +159,11 @@ void test_impl()
 {
         constexpr T SIMULATION_LENGTH = 500;
 
-        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 0.5;
+        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 2.5;
         constexpr T SIMULATION_DT = 0.5;
 
         constexpr T SIMULATION_ACCELERATION = 2;
-        constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.2);
+        constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.1);
         constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100.0);
         constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.2);
         constexpr T SIMULATION_INIT_X = 0;

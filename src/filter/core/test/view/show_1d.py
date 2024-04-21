@@ -124,7 +124,7 @@ def create_figure(info, title):
     figure.update_yaxes(showgrid=True, visible=True)
 
     title = None
-    figure.update_layout(title=title, xaxis_title="Time", yaxis_title="Position")
+    figure.update_layout(title=title, xaxis_title="Time", yaxis_title="Position/Speed")
     return figure
 
 
