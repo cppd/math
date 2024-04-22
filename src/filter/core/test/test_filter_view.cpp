@@ -40,8 +40,88 @@ namespace ns::filter::core::test
 {
 namespace
 {
+constexpr std::string_view SIGMA = "&#x03c3;";
+
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
+
+template <typename T>
+struct SimulationConfig final
+{
+        T length = 500;
+        T dt = 0.5;
+        T acceleration = 2;
+        T velocity_variance = square(0.1);
+        T measurement_variance_x = square(100.0);
+        T measurement_variance_v = square(0.5);
+        T init_x = 0;
+};
+
+template <typename T>
+struct FilterConfig final
+{
+        T init_v = 0;
+        T init_v_variance = square(10.0);
+        std::optional<T> gate{5};
+        T sigma = 2;
+        T sigma_interval = 2;
+};
+
+template <typename T>
+struct MeasurementConfig final
+{
+        T position_reset_interval = 2;
+        T speed_factor = 1;
+};
+
+template <typename T>
+std::string make_annotation(
+        const SimulationConfig<T>& simulation_config,
+        const FilterConfig<T>& filter_config,
+        const MeasurementConfig<T>& measurement_config)
+{
+        std::ostringstream oss;
+
+        oss << "<b>update</b>";
+        oss << "<br>";
+        oss << "position: " << 1 / measurement_config.position_reset_interval << " Hz";
+        oss << "<br>";
+        oss << "speed: " << 1 / simulation_config.dt << " Hz";
+
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>" << SIGMA << "</b>";
+        oss << "<br>";
+        oss << "process speed: " << std::sqrt(simulation_config.velocity_variance) << " m/s";
+        oss << "<br>";
+        oss << "position: " << std::sqrt(simulation_config.measurement_variance_x) << " m";
+        oss << "<br>";
+        oss << "speed: " << std::sqrt(simulation_config.measurement_variance_v) << " m/s";
+
+        oss << "<br>";
+        oss << "<br>";
+        oss << "<b>settings</b>";
+        oss << "<br>";
+        oss << "speed factor: " << measurement_config.speed_factor;
+        oss << "<br>";
+        oss << "acceleration: " << simulation_config.acceleration << " m/s<sup>2</sup>";
+        oss << "<br>";
+        oss << "filter " << SIGMA << ": " << filter_config.sigma;
+        oss << "<br>";
+        oss << "filter " << SIGMA << " interval: " << filter_config.sigma_interval << " s";
+        oss << "<br>";
+        oss << "filter gate: ";
+        if (filter_config.gate)
+        {
+                oss << *filter_config.gate;
+        }
+        else
+        {
+                oss << "none";
+        }
+
+        return oss.str();
+}
 
 template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
@@ -143,127 +223,51 @@ template <typename T>
 void test_impl(
         const std::string_view name,
         const std::string_view annotation,
-        const T init_v,
-        const T init_v_variance,
-        const std::optional<T> gate,
-        const T sigma,
-        const T sigma_interval,
+        const FilterConfig<T>& config,
         const std::vector<Measurements<T>>& measurements)
 {
-        using C = filters::ContinuousNoiseModel<T>;
-        using D = filters::DiscreteNoiseModel<T>;
+        const filters::ContinuousNoiseModel<T> continuous{
+                .spectral_density = config.sigma_interval * square(config.sigma)};
+        const filters::DiscreteNoiseModel<T> discrete{.variance = square(config.sigma)};
 
         const auto position_measurements = reset_v(measurements);
 
-        const auto f_c = filters::create_ekf<T>(
-                init_v, init_v_variance, C{.spectral_density = sigma_interval * square(sigma)}, gate);
+        const auto c_f = filters::create_ekf<T>(config.init_v, config.init_v_variance, continuous, config.gate);
+        const auto d_f = filters::create_ekf<T>(config.init_v, config.init_v_variance, discrete, config.gate);
 
-        const auto f_d = filters::create_ekf<T>(init_v, init_v_variance, D{.variance = square(sigma)}, gate);
+        const auto c_position = test_filter(c_f.get(), position_measurements);
+        const auto c_speed = test_filter(c_f.get(), measurements);
+
+        const auto d_position = test_filter(d_f.get(), position_measurements);
+        const auto d_speed = test_filter(d_f.get(), measurements);
 
         view::write(
                 name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
-                {view::Filter<T>("C Position", color::RGB8(180, 0, 0), test_filter(f_c.get(), position_measurements)),
-                 view::Filter<T>("C Speed", color::RGB8(0, 180, 0), test_filter(f_c.get(), measurements)),
-                 view::Filter<T>("D Position", color::RGB8(128, 0, 0), test_filter(f_d.get(), position_measurements)),
-                 view::Filter<T>("D Speed", color::RGB8(0, 128, 0), test_filter(f_d.get(), measurements))});
-}
-
-template <typename T>
-std::string make_annotation(
-        const T position_measurements_reset_interval,
-        const T simulation_dt,
-        const T simulation_acceleration,
-        const T simulation_velocity_variance,
-        const T simulation_measurement_variance_x,
-        const T simulation_measurement_variance_v,
-        const T measurement_speed_factor,
-        const std::optional<T> filter_gate,
-        const T filter_sigma,
-        const T filter_sigma_interval)
-{
-        constexpr std::string_view SIGMA = "&#x03c3;";
-
-        std::ostringstream oss;
-
-        oss << "<b>update</b>";
-        oss << "<br>";
-        oss << "position: " << 1 / position_measurements_reset_interval << " Hz";
-        oss << "<br>";
-        oss << "speed: " << 1 / simulation_dt << " Hz";
-
-        oss << "<br>";
-        oss << "<br>";
-        oss << "<b>" << SIGMA << "</b>";
-        oss << "<br>";
-        oss << "process speed: " << std::sqrt(simulation_velocity_variance) << " m/s";
-        oss << "<br>";
-        oss << "position: " << std::sqrt(simulation_measurement_variance_x) << " m";
-        oss << "<br>";
-        oss << "speed: " << std::sqrt(simulation_measurement_variance_v) << " m/s";
-
-        oss << "<br>";
-        oss << "<br>";
-        oss << "<b>settings</b>";
-        oss << "<br>";
-        oss << "speed factor: " << measurement_speed_factor;
-        oss << "<br>";
-        oss << "acceleration: " << simulation_acceleration << " m/s<sup>2</sup>";
-        oss << "<br>";
-        oss << "filter " << SIGMA << ": " << filter_sigma;
-        oss << "<br>";
-        oss << "filter " << SIGMA << " interval: " << filter_sigma_interval << " s";
-        oss << "<br>";
-        oss << "filter gate: ";
-        if (filter_gate)
-        {
-                oss << *filter_gate;
-        }
-        else
-        {
-                oss << "none";
-        }
-
-        return oss.str();
+                {view::Filter<T>("C Position", color::RGB8(180, 0, 0), c_position),
+                 view::Filter<T>("C Speed", color::RGB8(0, 180, 0), c_speed),
+                 view::Filter<T>("D Position", color::RGB8(128, 0, 0), d_position),
+                 view::Filter<T>("D Speed", color::RGB8(0, 128, 0), d_speed)});
 }
 
 template <typename T>
 void test_impl()
 {
-        constexpr T SIMULATION_LENGTH = 500;
-
-        constexpr T POSITION_MEASUREMENTS_RESET_INTERVAL = 2;
-        constexpr T SIMULATION_DT = 0.5;
-
-        constexpr T SIMULATION_ACCELERATION = 2;
-        constexpr T SIMULATION_VELOCITY_VARIANCE = square(0.1);
-        constexpr T SIMULATION_MEASUREMENT_VARIANCE_X = square(100.0);
-        constexpr T SIMULATION_MEASUREMENT_VARIANCE_V = square(0.5);
-        constexpr T SIMULATION_INIT_X = 0;
-
-        constexpr T MEASUREMENT_SPEED_FACTOR = 1;
-
-        constexpr T FILTER_INIT_V = 0;
-        constexpr T FILTER_INIT_V_VARIANCE = square(10.0);
-        constexpr std::optional<T> FILTER_GATE{5};
-
-        constexpr T FILTER_SIGMA = 1;
-        constexpr T FILTER_SIGMA_INTERVAL = 2;
+        const SimulationConfig<T> simulation_config;
+        const FilterConfig<T> filter_config;
+        const MeasurementConfig<T> measurement_config;
 
         const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
-                SIMULATION_LENGTH, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_ACCELERATION,
-                SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
+                simulation_config.length, simulation_config.init_x, simulation_config.dt,
+                simulation_config.acceleration, simulation_config.velocity_variance,
+                simulation_config.measurement_variance_x, simulation_config.measurement_variance_v);
 
-        const std::string annotation = make_annotation(
-                POSITION_MEASUREMENTS_RESET_INTERVAL, SIMULATION_DT, SIMULATION_ACCELERATION,
-                SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V,
-                MEASUREMENT_SPEED_FACTOR, FILTER_GATE, FILTER_SIGMA, FILTER_SIGMA_INTERVAL);
+        const std::vector<Measurements<T>> test_measurements = add_bad_measurements(
+                reset_position_measurements(measurements, measurement_config.position_reset_interval),
+                measurement_config.speed_factor);
 
-        test_impl<T>(
-                "view", annotation, FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_GATE, FILTER_SIGMA,
-                FILTER_SIGMA_INTERVAL,
-                add_bad_measurements(
-                        reset_position_measurements(measurements, POSITION_MEASUREMENTS_RESET_INTERVAL),
-                        MEASUREMENT_SPEED_FACTOR));
+        const std::string annotation = make_annotation(simulation_config, filter_config, measurement_config);
+
+        test_impl<T>("view", annotation, filter_config, test_measurements);
 }
 
 void test()
