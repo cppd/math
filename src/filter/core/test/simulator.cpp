@@ -31,10 +31,83 @@ namespace ns::filter::core::test
 namespace
 {
 template <typename T>
+class SpeedSimulator final
+{
+        const T dt_;
+        const T measurement_variance_x_;
+        const T measurement_variance_v_;
+        PCG engine_;
+        std::normal_distribution<T> nd_process_v_;
+        std::normal_distribution<T> nd_measurement_x_;
+        std::normal_distribution<T> nd_measurement_v_;
+        unsigned long long index_{0};
+        T time_{0};
+        T x_;
+        T v_{nd_process_v_(engine_)};
+
+public:
+        SpeedSimulator(
+                const T init_x,
+                const T dt,
+                const T process_velocity_mean,
+                const T process_velocity_variance,
+                const T measurement_variance_x,
+                const T measurement_variance_v)
+                : dt_(dt),
+                  measurement_variance_x_(measurement_variance_x),
+                  measurement_variance_v_(measurement_variance_v),
+                  nd_process_v_(process_velocity_mean, std::sqrt(process_velocity_variance)),
+                  nd_measurement_x_(0, std::sqrt(measurement_variance_x)),
+                  nd_measurement_v_(0, std::sqrt(measurement_variance_v)),
+                  x_(init_x)
+        {
+        }
+
+        void move()
+        {
+                ++index_;
+                time_ = index_ * dt_;
+                const T v_next = nd_process_v_(engine_);
+                const T v_average = (v_ + v_next) / 2;
+                x_ += dt_ * v_average;
+                v_ = v_next;
+        }
+
+        [[nodiscard]] T time() const
+        {
+                return time_;
+        }
+
+        [[nodiscard]] T x() const
+        {
+                return x_;
+        }
+
+        [[nodiscard]] T v() const
+        {
+                return v_;
+        }
+
+        [[nodiscard]] Measurement<T> measurement_x()
+        {
+                const T x = x_ + nd_measurement_x_(engine_);
+                return {.value = x, .variance = measurement_variance_x_};
+        }
+
+        [[nodiscard]] Measurement<T> measurement_v()
+        {
+                const T v = v_ + nd_measurement_v_(engine_);
+                return {.value = v, .variance = measurement_variance_v_};
+        }
+};
+
+template <typename T>
 class AccelerationSimulator final
 {
         const T dt_;
         const T process_acceleration_;
+        const T measurement_variance_x_;
+        const T measurement_variance_v_;
         PCG engine_;
         std::normal_distribution<T> nd_process_v_;
         std::normal_distribution<T> nd_measurement_x_;
@@ -83,6 +156,8 @@ public:
                 const T measurement_variance_v)
                 : dt_(dt),
                   process_acceleration_(process_acceleration),
+                  measurement_variance_x_(measurement_variance_x),
+                  measurement_variance_v_(measurement_variance_v),
                   nd_process_v_(0, std::sqrt(process_velocity_variance)),
                   nd_measurement_x_(0, std::sqrt(measurement_variance_x)),
                   nd_measurement_v_(0, std::sqrt(measurement_variance_v)),
@@ -115,16 +190,38 @@ public:
                 return v_;
         }
 
-        [[nodiscard]] T measurement_x()
+        [[nodiscard]] Measurement<T> measurement_x()
         {
-                return x_ + nd_measurement_x_(engine_);
+                const T x = x_ + nd_measurement_x_(engine_);
+                return {.value = x, .variance = measurement_variance_x_};
         }
 
-        [[nodiscard]] T measurement_v()
+        [[nodiscard]] Measurement<T> measurement_v()
         {
-                return v_ + (v_ > 0 ? nd_measurement_v_(engine_) : 0);
+                const T v = v_ + (v_ > 0 ? nd_measurement_v_(engine_) : 0);
+                return {.value = v, .variance = measurement_variance_v_};
         }
 };
+
+template <template <typename> typename Simulator, typename T>
+std::vector<Measurements<T>> simulate(const T length, Simulator<T>* const simulator)
+{
+        std::vector<Measurements<T>> res;
+
+        while (simulator->time() <= length)
+        {
+                res.push_back(
+                        {.time = simulator->time(),
+                         .true_x = simulator->x(),
+                         .true_v = simulator->v(),
+                         .x = simulator->measurement_x(),
+                         .v = simulator->measurement_v()});
+
+                simulator->move();
+        }
+
+        return res;
+}
 }
 
 template <typename T>
@@ -137,45 +234,11 @@ std::vector<Measurements<T>> simulate(
         const T measurement_variance_x,
         const T measurement_variance_v)
 {
-        PCG engine;
+        SpeedSimulator<T> simulator(
+                init_x, dt, process_velocity_mean, process_velocity_variance, measurement_variance_x,
+                measurement_variance_v);
 
-        std::normal_distribution<T> nd_process_v(process_velocity_mean, std::sqrt(process_velocity_variance));
-        std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
-        std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
-
-        std::vector<Measurements<T>> res;
-
-        const auto push = [&](const T time, const T x, const T v)
-        {
-                const T m_x = x + nd_measurement_x(engine);
-                const T m_v = v + nd_measurement_v(engine);
-                res.push_back({
-                        .time = time,
-                        .true_x = x,
-                        .true_v = v,
-                        .x = Measurement<T>{.value = m_x, .variance = measurement_variance_x},
-                        .v = Measurement<T>{.value = m_v, .variance = measurement_variance_v}
-                });
-        };
-
-        T x = init_x;
-        T v = nd_process_v(engine);
-        push(0, x, v);
-        for (unsigned long long i = 1;; ++i)
-        {
-                const T time = i * dt;
-                if (time >= length)
-                {
-                        break;
-                }
-                const T v_next = nd_process_v(engine);
-                const T v_average = (v + v_next) / 2;
-                x += dt * v_average;
-                v = v_next;
-                push(time, x, v);
-        }
-
-        return res;
+        return simulate(length, &simulator);
 }
 
 template <typename T>
@@ -196,22 +259,7 @@ std::vector<Measurements<T>> simulate_acceleration(
                 measurement_variance_x,
                 measurement_variance_v};
 
-        std::vector<Measurements<T>> res;
-
-        while (simulator.time() <= length)
-        {
-                res.push_back({
-                        .time = simulator.time(),
-                        .true_x = simulator.x(),
-                        .true_v = simulator.v(),
-                        .x = Measurement<T>{.value = simulator.measurement_x(), .variance = measurement_variance_x},
-                        .v = Measurement<T>{.value = simulator.measurement_v(), .variance = measurement_variance_v}
-                });
-
-                simulator.move();
-        }
-
-        return res;
+        return simulate(length, &simulator);
 }
 
 #define INSTANTIATION(T)                                                     \
