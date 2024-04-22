@@ -28,6 +28,105 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::core::test
 {
+namespace
+{
+template <typename T>
+class AccelerationSimulator final
+{
+        const T dt_;
+        const T process_acceleration_;
+        PCG engine_;
+        std::normal_distribution<T> nd_process_v_;
+        std::normal_distribution<T> nd_measurement_x_;
+        std::normal_distribution<T> nd_measurement_v_;
+        unsigned long long index_{0};
+        T time_{0};
+        T x_;
+        T v_{0};
+
+        T speed()
+        {
+                constexpr T STANDING = 10;
+                constexpr T ACCELERATION = 10;
+                constexpr T UNIFORM = 60;
+
+                const T p = std::fmod(time_, STANDING + ACCELERATION + UNIFORM + ACCELERATION);
+
+                if (p < STANDING)
+                {
+                        ASSERT(p >= 0);
+                        return T{0};
+                }
+
+                if (p < STANDING + ACCELERATION)
+                {
+                        return process_acceleration_ * std::fmod(p, ACCELERATION) + nd_process_v_(engine_);
+                }
+
+                if (p < STANDING + ACCELERATION + UNIFORM)
+                {
+                        return process_acceleration_ * ACCELERATION + nd_process_v_(engine_);
+                }
+
+                ASSERT(p < STANDING + ACCELERATION + UNIFORM + ACCELERATION);
+                return process_acceleration_ * ACCELERATION - process_acceleration_ * std::fmod(p, ACCELERATION)
+                       + nd_process_v_(engine_);
+        }
+
+public:
+        AccelerationSimulator(
+                const T init_x,
+                const T dt,
+                const T process_acceleration,
+                const T process_velocity_variance,
+                const T measurement_variance_x,
+                const T measurement_variance_v)
+                : dt_(dt),
+                  process_acceleration_(process_acceleration),
+                  nd_process_v_(0, std::sqrt(process_velocity_variance)),
+                  nd_measurement_x_(0, std::sqrt(measurement_variance_x)),
+                  nd_measurement_v_(0, std::sqrt(measurement_variance_v)),
+                  x_(init_x)
+        {
+        }
+
+        void move()
+        {
+                ++index_;
+                time_ = index_ * dt_;
+                const T v_next = speed();
+                const T v_average = (v_ + v_next) / 2;
+                x_ += dt_ * v_average;
+                v_ = v_next;
+        }
+
+        [[nodiscard]] T time() const
+        {
+                return time_;
+        }
+
+        [[nodiscard]] T x() const
+        {
+                return x_;
+        }
+
+        [[nodiscard]] T v() const
+        {
+                return v_;
+        }
+
+        [[nodiscard]] T measurement_x()
+        {
+                return x_ + nd_measurement_x_(engine_);
+        }
+
+        [[nodiscard]] T measurement_v()
+        {
+                return v_ + (v_ > 0 ? nd_measurement_v_(engine_) : 0);
+        }
+};
+}
+
 template <typename T>
 std::vector<Measurements<T>> simulate(
         const T length,
@@ -89,67 +188,27 @@ std::vector<Measurements<T>> simulate_acceleration(
         const T measurement_variance_x,
         const T measurement_variance_v)
 {
-        PCG engine;
-
-        std::normal_distribution<T> nd_process_v(0, std::sqrt(process_velocity_variance));
-        std::normal_distribution<T> nd_measurement_x(0, std::sqrt(measurement_variance_x));
-        std::normal_distribution<T> nd_measurement_v(0, std::sqrt(measurement_variance_v));
+        AccelerationSimulator simulator{
+                init_x,
+                dt,
+                process_acceleration,
+                process_velocity_variance,
+                measurement_variance_x,
+                measurement_variance_v};
 
         std::vector<Measurements<T>> res;
 
-        const auto push = [&](const T time, const T x, const T v)
+        while (simulator.time() <= length)
         {
-                const T m_x = x + nd_measurement_x(engine);
-                const T m_v = v + (v > 0 ? nd_measurement_v(engine) : 0);
                 res.push_back({
-                        .time = time,
-                        .true_x = x,
-                        .true_v = v,
-                        .x = Measurement<T>{.value = m_x, .variance = measurement_variance_x},
-                        .v = Measurement<T>{.value = m_v, .variance = measurement_variance_v}
+                        .time = simulator.time(),
+                        .true_x = simulator.x(),
+                        .true_v = simulator.v(),
+                        .x = Measurement<T>{.value = simulator.measurement_x(), .variance = measurement_variance_x},
+                        .v = Measurement<T>{.value = simulator.measurement_v(), .variance = measurement_variance_v}
                 });
-        };
 
-        const auto speed = [&](const T time)
-        {
-                constexpr T STANDING = 10;
-                constexpr T ACCELERATION = 10;
-                constexpr T UNIFORM = 60;
-
-                const T p = std::fmod(time, STANDING + ACCELERATION + UNIFORM + ACCELERATION);
-                if (p < STANDING)
-                {
-                        ASSERT(p >= 0);
-                        return T{0};
-                }
-                if (p < STANDING + ACCELERATION)
-                {
-                        return process_acceleration * std::fmod(p, ACCELERATION) + nd_process_v(engine);
-                }
-                if (p < STANDING + ACCELERATION + UNIFORM)
-                {
-                        return process_acceleration * ACCELERATION + nd_process_v(engine);
-                }
-                ASSERT(p < STANDING + ACCELERATION + UNIFORM + ACCELERATION);
-                return process_acceleration * ACCELERATION - process_acceleration * std::fmod(p, ACCELERATION)
-                       + nd_process_v(engine);
-        };
-
-        T x = init_x;
-        T v = 0;
-        push(0, x, v);
-        for (unsigned long long i = 1;; ++i)
-        {
-                const T time = i * dt;
-                if (time >= length)
-                {
-                        break;
-                }
-                const T v_next = speed(time);
-                const T v_average = (v + v_next) / 2;
-                x += dt * v_average;
-                v = v_next;
-                push(time, x, v);
+                simulator.move();
         }
 
         return res;
