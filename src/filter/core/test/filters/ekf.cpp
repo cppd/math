@@ -189,7 +189,7 @@ class Filter final : public FilterEkf<T, INF>
                 filter_.emplace(x, p);
         }
 
-        void predict(const T dt, const NoiseModel<T>& noise_model) override
+        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
 
@@ -204,7 +204,7 @@ class Filter final : public FilterEkf<T, INF>
                         {
                                 return f_matrix;
                         },
-                        q(dt, noise_model));
+                        q(dt, noise_model), fading_memory_alpha);
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override

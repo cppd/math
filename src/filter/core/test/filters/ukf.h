@@ -37,7 +37,7 @@ public:
 
         virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
-        virtual void predict(T dt, const NoiseModel<T>& noise_model) = 0;
+        virtual void predict(T dt, const NoiseModel<T>& noise_model, T fading_memory_alpha) = 0;
 
         virtual void update_position(T position, T position_variance, std::optional<T> gate) = 0;
 

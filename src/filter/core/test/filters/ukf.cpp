@@ -147,7 +147,7 @@ class Filter final : public FilterUkf<T>
                 filter_.emplace(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p);
         }
 
-        void predict(const T dt, const NoiseModel<T>& noise_model) override
+        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
 
@@ -156,7 +156,7 @@ class Filter final : public FilterUkf<T>
                         {
                                 return f(dt, x);
                         },
-                        q(dt, noise_model));
+                        q(dt, noise_model), fading_memory_alpha);
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override

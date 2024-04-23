@@ -89,6 +89,7 @@ class FilterImpl : public Filter<typename F::Type>
         F::Type init_v_;
         F::Type init_v_variance_;
         NoiseModel<typename F::Type> noise_model_;
+        F::Type fading_memory_alpha_;
         std::optional<typename F::Type> gate_;
         std::unique_ptr<F> filter_;
 
@@ -134,7 +135,7 @@ class FilterImpl : public Filter<typename F::Type>
                 ASSERT(dt >= 0);
                 last_time_ = m.time;
 
-                filter_->predict(dt, noise_model_);
+                filter_->predict(dt, noise_model_, fading_memory_alpha_);
 
                 if (!update_filter(filter_.get(), m, gate_))
                 {
@@ -163,11 +164,13 @@ public:
                 const typename F::Type init_v,
                 const typename F::Type init_v_variance,
                 const NoiseModel<typename F::Type>& noise_model,
+                const typename F::Type fading_memory_alpha,
                 const std::optional<typename F::Type> gate,
                 std::unique_ptr<F>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
                   noise_model_(noise_model),
+                  fading_memory_alpha_(fading_memory_alpha),
                   gate_(gate),
                   filter_(std::move(filter))
         {
@@ -180,10 +183,12 @@ std::unique_ptr<Filter<T>> create_ekf(
         const T init_v,
         const T init_v_variance,
         const NoiseModel<T>& noise_model,
+        const T fading_memory_alpha,
         const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, false>>>(
-                init_v, init_v_variance, noise_model, gate, filters::create_filter_ekf<T, false>());
+                init_v, init_v_variance, noise_model, fading_memory_alpha, gate,
+                filters::create_filter_ekf<T, false>());
 }
 
 template <typename T>
@@ -191,10 +196,11 @@ std::unique_ptr<Filter<T>> create_h_infinity(
         const T init_v,
         const T init_v_variance,
         const NoiseModel<T>& noise_model,
+        const T fading_memory_alpha,
         const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, true>>>(
-                init_v, init_v_variance, noise_model, gate, filters::create_filter_ekf<T, true>());
+                init_v, init_v_variance, noise_model, fading_memory_alpha, gate, filters::create_filter_ekf<T, true>());
 }
 
 template <typename T>
@@ -202,16 +208,17 @@ std::unique_ptr<Filter<T>> create_ukf(
         const T init_v,
         const T init_v_variance,
         const NoiseModel<T>& noise_model,
+        const T fading_memory_alpha,
         const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterUkf<T>>>(
-                init_v, init_v_variance, noise_model, gate, filters::create_filter_ukf<T>());
+                init_v, init_v_variance, noise_model, fading_memory_alpha, gate, filters::create_filter_ukf<T>());
 }
 
-#define INSTANTIATION(T)                                                                                     \
-        template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, std::optional<T>);        \
-        template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, std::optional<T>); \
-        template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, std::optional<T>);
+#define INSTANTIATION(T)                                                                                        \
+        template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, std::optional<T>);        \
+        template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, T, std::optional<T>); \
+        template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, std::optional<T>);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

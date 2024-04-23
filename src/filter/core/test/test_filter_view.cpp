@@ -65,6 +65,7 @@ struct FilterConfig final
         std::optional<T> gate{5};
         T sigma = 2;
         T sigma_interval = 2;
+        T fading_memory_alpha = 1;
 };
 
 template <typename T>
@@ -232,8 +233,11 @@ void test_impl(
 
         const auto positions = reset_v(measurements);
 
-        const auto c = filters::create_ekf<T>(config.init_v, config.init_v_variance, continuous, config.gate);
-        const auto d = filters::create_ekf<T>(config.init_v, config.init_v_variance, discrete, config.gate);
+        const auto c = filters::create_ekf<T>(
+                config.init_v, config.init_v_variance, continuous, config.fading_memory_alpha, config.gate);
+
+        const auto d = filters::create_ekf<T>(
+                config.init_v, config.init_v_variance, discrete, config.fading_memory_alpha, config.gate);
 
         std::vector<view::Filter<T>> filters;
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));
