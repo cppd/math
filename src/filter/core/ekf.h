@@ -23,6 +23,7 @@ Kalman and Bayesian Filters in Python.
 7.4 Stable Compution of the Posterior Covariance
 9.6 Detecting and Rejecting Bad Measurement
 11.1 Linearizing the Kalman Filter
+14.5 Fading Memory Filter
 */
 
 /*
@@ -31,6 +32,7 @@ Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
 John Wiley & Sons, 2006.
 
 5 The discrete-time Kalman filter
+7.4 Kalman filtering with fading memory
 11 The H infinity filter
 */
 
@@ -186,12 +188,26 @@ public:
                 // numerical::Matrix<N, N, T> f(const numerical::Vector<N, T>& x)
                 const FJ fj,
                 // Process covariance
-                const numerical::Matrix<N, N, T>& q)
+                const numerical::Matrix<N, N, T>& q,
+                // Fading memory alpha
+                const T fading_memory_alpha = 1)
         {
+                ASSERT(fading_memory_alpha >= 1);
+
                 x_ = f(x_);
 
                 const numerical::Matrix<N, N, T> fjx = fj(x_);
-                p_ = fjx * p_ * fjx.transposed() + q;
+                const numerical::Matrix<N, N, T> covariance = fjx * p_ * fjx.transposed();
+
+                if (fading_memory_alpha == 1)
+                {
+                        p_ = covariance + q;
+                }
+                else
+                {
+                        const T factor = square(fading_memory_alpha);
+                        p_ = factor * covariance + q;
+                }
 
                 check_x_p("EKF predict", x_, p_);
         }
