@@ -23,6 +23,15 @@ Kalman and Bayesian Filters in Python.
 10.4 The Unscented Transform
 10.5 The Unscented Kalman Filter
 10.11 Implementation of the UKF
+14.5 Fading Memory Filter
+*/
+
+/*
+Dan Simon.
+Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
+John Wiley & Sons, 2006.
+
+7.4 Kalman filtering with fading memory
 */
 
 #pragma once
@@ -30,6 +39,7 @@ Kalman and Bayesian Filters in Python.
 #include "checks.h"
 #include "update_info.h"
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -50,11 +60,12 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
         const numerical::Vector<POINT_COUNT, T>& wc,
         const numerical::Matrix<N, N, T>& noise_covariance,
         const Mean mean,
-        const Residual residual)
+        const Residual residual,
+        const T fading_memory_alpha = 1)
 {
         const numerical::Vector<N, T> x = mean(points, wm);
 
-        numerical::Matrix<N, N, T> p = noise_covariance;
+        numerical::Matrix<N, N, T> covariance(0);
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
                 const numerical::Vector<N, T> v = residual(points[i], x);
@@ -62,12 +73,18 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
                 {
                         for (std::size_t c = 0; c < N; ++c)
                         {
-                                p[r, c] += wc[i] * v[r] * v[c];
+                                covariance[r, c] += wc[i] * v[r] * v[c];
                         }
                 }
         }
 
-        return {x, p};
+        if (fading_memory_alpha == 1)
+        {
+                return {x, covariance + noise_covariance};
+        }
+
+        const T factor = square(fading_memory_alpha);
+        return {x, factor * covariance + noise_covariance};
 }
 
 template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typename ResidualX, typename ResidualZ>
@@ -190,14 +207,19 @@ public:
                 // numerical::Vector<N, T> f(const numerical::Vector<N, T>& x)
                 const F f,
                 // Process covariance
-                const numerical::Matrix<N, N, T>& q)
+                const numerical::Matrix<N, N, T>& q,
+                // Fading memory alpha
+                const T fading_memory_alpha = 1)
         {
+                ASSERT(fading_memory_alpha >= 1);
+
                 namespace impl = ukf_implementation;
 
                 sigmas_f_ = impl::apply(f, sigma_points_.points(x_, p_, impl::Add(), impl::Subtract()));
 
                 std::tie(x_, p_) = impl::unscented_transform(
-                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), impl::Subtract());
+                        sigmas_f_, sigma_points_.wm(), sigma_points_.wc(), q, impl::Mean(), impl::Subtract(),
+                        fading_memory_alpha);
 
                 check_x_p("UKF predict", x_, p_);
         }
