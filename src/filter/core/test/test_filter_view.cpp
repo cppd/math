@@ -230,23 +230,18 @@ void test_impl(
                 .spectral_density = config.sigma_interval * square(config.sigma)};
         const filters::DiscreteNoiseModel<T> discrete{.variance = square(config.sigma)};
 
-        const auto position_measurements = reset_v(measurements);
+        const auto positions = reset_v(measurements);
 
-        const auto c_f = filters::create_ekf<T>(config.init_v, config.init_v_variance, continuous, config.gate);
-        const auto d_f = filters::create_ekf<T>(config.init_v, config.init_v_variance, discrete, config.gate);
+        const auto c = filters::create_ekf<T>(config.init_v, config.init_v_variance, continuous, config.gate);
+        const auto d = filters::create_ekf<T>(config.init_v, config.init_v_variance, discrete, config.gate);
 
-        const auto c_position = test_filter(c_f.get(), position_measurements);
-        const auto c_speed = test_filter(c_f.get(), measurements);
+        std::vector<view::Filter<T>> filters;
+        filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));
+        filters.emplace_back("C Measurements", color::RGB8(0, 180, 0), test_filter(c.get(), measurements));
+        filters.emplace_back("D Positions", color::RGB8(128, 0, 0), test_filter(d.get(), positions));
+        filters.emplace_back("D Measurements", color::RGB8(0, 128, 0), test_filter(d.get(), measurements));
 
-        const auto d_position = test_filter(d_f.get(), position_measurements);
-        const auto d_speed = test_filter(d_f.get(), measurements);
-
-        view::write(
-                name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
-                {view::Filter<T>("C Position", color::RGB8(180, 0, 0), c_position),
-                 view::Filter<T>("C Speed", color::RGB8(0, 180, 0), c_speed),
-                 view::Filter<T>("D Position", color::RGB8(128, 0, 0), d_position),
-                 view::Filter<T>("D Speed", color::RGB8(0, 128, 0), d_speed)});
+        view::write(name, annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
 }
 
 template <typename T>
