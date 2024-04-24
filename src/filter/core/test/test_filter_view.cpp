@@ -65,7 +65,7 @@ struct FilterConfig final
         std::optional<T> gate{5};
         T sigma = 2;
         T sigma_interval = 2;
-        T fading_memory_alpha = 1;
+        T fading_memory_alpha = 1.005;
 };
 
 template <typename T>
