@@ -63,8 +63,8 @@ struct FilterConfig final
         T init_v = 0;
         T init_v_variance = square(10.0);
         std::optional<T> gate{5};
-        T sigma = 2;
-        T sigma_interval = 2;
+        filters::DiscreteNoiseModel<T> discrete_noise{.variance = square(2)};
+        filters::ContinuousNoiseModel<T> continuous_noise{.spectral_density = 2 * discrete_noise.variance};
         T fading_memory_alpha = 1.005;
 };
 
@@ -107,9 +107,10 @@ std::string make_annotation(
         oss << "<br>";
         oss << "acceleration: " << simulation_config.acceleration << " m/s<sup>2</sup>";
         oss << "<br>";
-        oss << "filter " << SIGMA << ": " << filter_config.sigma;
+        oss << "filter " << SIGMA << ": " << std::sqrt(filter_config.discrete_noise.variance);
         oss << "<br>";
-        oss << "filter " << SIGMA << " interval: " << filter_config.sigma_interval << " s";
+        oss << "filter " << SIGMA << " interval: "
+            << filter_config.continuous_noise.spectral_density / filter_config.discrete_noise.variance << " s";
         oss << "<br>";
         oss << "filter gate: ";
         if (filter_config.gate)
@@ -227,17 +228,14 @@ void test_impl(
         const FilterConfig<T>& config,
         const std::vector<Measurements<T>>& measurements)
 {
-        const filters::ContinuousNoiseModel<T> continuous{
-                .spectral_density = config.sigma_interval * square(config.sigma)};
-        const filters::DiscreteNoiseModel<T> discrete{.variance = square(config.sigma)};
-
         const auto positions = reset_v(measurements);
 
         const auto c = filters::create_ekf<T>(
-                config.init_v, config.init_v_variance, continuous, config.fading_memory_alpha, config.gate);
+                config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
+                config.gate);
 
         const auto d = filters::create_ekf<T>(
-                config.init_v, config.init_v_variance, discrete, config.fading_memory_alpha, config.gate);
+                config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha, config.gate);
 
         std::vector<view::Filter<T>> filters;
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));
