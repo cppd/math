@@ -121,9 +121,10 @@ class AccelerationSimulator final
         {
                 constexpr T STANDING = 10;
                 constexpr T ACCELERATION = 10;
-                constexpr T UNIFORM = 60;
+                constexpr T UNIFORM = 65;
+                constexpr T DECELERATION = 5;
 
-                const T p = std::fmod(time_, STANDING + ACCELERATION + UNIFORM + ACCELERATION);
+                const T p = std::fmod(time_, STANDING + ACCELERATION + UNIFORM + DECELERATION);
 
                 if (p < STANDING)
                 {
@@ -133,7 +134,8 @@ class AccelerationSimulator final
 
                 if (p < STANDING + ACCELERATION)
                 {
-                        return process_acceleration_ * std::fmod(p, ACCELERATION) + nd_process_v_(engine_);
+                        const T t = p - STANDING;
+                        return process_acceleration_ * t + nd_process_v_(engine_);
                 }
 
                 if (p < STANDING + ACCELERATION + UNIFORM)
@@ -141,8 +143,9 @@ class AccelerationSimulator final
                         return process_acceleration_ * ACCELERATION + nd_process_v_(engine_);
                 }
 
-                ASSERT(p < STANDING + ACCELERATION + UNIFORM + ACCELERATION);
-                return process_acceleration_ * ACCELERATION - process_acceleration_ * std::fmod(p, ACCELERATION)
+                ASSERT(p < STANDING + ACCELERATION + UNIFORM + DECELERATION);
+                const T t = p - (STANDING + ACCELERATION + UNIFORM);
+                return process_acceleration_ * ACCELERATION - (ACCELERATION / DECELERATION) * process_acceleration_ * t
                        + nd_process_v_(engine_);
         }
 
