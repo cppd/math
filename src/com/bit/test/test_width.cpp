@@ -25,13 +25,13 @@ static_assert(bit_width(2u) == 2);
 static_assert(bit_width(3u) == 2);
 static_assert(bit_width(4u) == 3);
 
-static_assert(bit_width(0b10000u) == 5);
-static_assert(bit_width(0b10001u) == 5);
-static_assert(bit_width(0b10101u) == 5);
-static_assert(bit_width(0b11111u) == 5);
+static_assert(bit_width(0b1'0000u) == 5);
+static_assert(bit_width(0b1'0001u) == 5);
+static_assert(bit_width(0b1'0101u) == 5);
+static_assert(bit_width(0b1'1111u) == 5);
 
-static_assert(bit_width(static_cast<unsigned __int128>(0b10000)) == 5);
-static_assert(bit_width(static_cast<unsigned __int128>(0b10001)) == 5);
-static_assert(bit_width(static_cast<unsigned __int128>(0b10101)) == 5);
-static_assert(bit_width(static_cast<unsigned __int128>(0b11111)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b1'0000)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b1'0001)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b1'0101)) == 5);
+static_assert(bit_width(static_cast<unsigned __int128>(0b1'1111)) == 5);
 }

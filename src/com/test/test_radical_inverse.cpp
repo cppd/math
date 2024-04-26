@@ -47,7 +47,7 @@ static_assert(compare<4>(3, 3, 4));
 static_assert(compare<5>(0, 0, 1));
 static_assert(compare<5>(4, 4, 5));
 
-static_assert(compare<2>(0b101011, 0b110101, 0b1000000));
+static_assert(compare<2>(0b10'1011, 0b11'0101, 0b100'0000));
 static_assert(compare<5>(1 * (5 * 5) + 2 * (5) + 3, 3 * (5 * 5) + 2 * (5) + 1, 5 * 5 * 5));
 static_assert(compare<8>(0'1020'3040, 0'0403'0201, 01'0000'0000));
 static_assert(compare<10>(123, 321, 1000));

@@ -39,7 +39,7 @@ namespace
 char32_t utf8_2_to_utf32(const std::string& s, std::size_t* const i)
 {
         const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b11'000000) == 0b10'000000)
+        if ((s1 & 0b1100'0000) == 0b1000'0000)
         {
                 const unsigned char s0 = s[*i];
                 *i += 2;
@@ -52,10 +52,10 @@ char32_t utf8_2_to_utf32(const std::string& s, std::size_t* const i)
 char32_t utf8_3_to_utf32(const std::string& s, std::size_t* const i)
 {
         const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b11'000000) == 0b10'000000)
+        if ((s1 & 0b1100'0000) == 0b1000'0000)
         {
                 const unsigned char s2 = s[*i + 2];
-                if ((s2 & 0b11'000000) == 0b10'000000)
+                if ((s2 & 0b1100'0000) == 0b1000'0000)
                 {
                         const unsigned char s0 = s[*i];
                         *i += 3;
@@ -69,13 +69,13 @@ char32_t utf8_3_to_utf32(const std::string& s, std::size_t* const i)
 char32_t utf8_4_to_utf32(const std::string& s, std::size_t* const i)
 {
         const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b11'000000) == 0b10'000000)
+        if ((s1 & 0b1100'0000) == 0b1000'0000)
         {
                 const unsigned char s2 = s[*i + 2];
-                if ((s2 & 0b11'000000) == 0b10'000000)
+                if ((s2 & 0b1100'0000) == 0b1000'0000)
                 {
                         const unsigned char s3 = s[*i + 3];
-                        if ((s3 & 0b11'000000) == 0b10'000000)
+                        if ((s3 & 0b1100'0000) == 0b1000'0000)
                         {
                                 const unsigned char s0 = s[*i];
                                 const char32_t res =
@@ -138,25 +138,25 @@ std::string utf32_to_utf8(const T code_point)
 
         if (code_point <= 0x7FF)
         {
-                const char c0 = 0b11000000 | (code_point >> 6);
-                const char c1 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b1100'0000 | (code_point >> 6);
+                const char c1 = 0b1000'0000 | (code_point & 0b11'1111);
                 return std::string({c0, c1});
         }
 
         if (code_point <= 0xFFFF)
         {
-                const char c0 = 0b11100000 | (code_point >> 12);
-                const char c1 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
-                const char c2 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b1110'0000 | (code_point >> 12);
+                const char c1 = 0b1000'0000 | ((code_point >> 6) & 0b11'1111);
+                const char c2 = 0b1000'0000 | (code_point & 0b11'1111);
                 return std::string({c0, c1, c2});
         }
 
         if (code_point <= 0x10FFFF)
         {
-                const char c0 = 0b11110000 | (code_point >> 18);
-                const char c1 = 0b10000000 | ((code_point >> 12) & 0b11'1111);
-                const char c2 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
-                const char c3 = 0b10000000 | (code_point & 0b11'1111);
+                const char c0 = 0b1111'0000 | (code_point >> 18);
+                const char c1 = 0b1000'0000 | ((code_point >> 12) & 0b11'1111);
+                const char c2 = 0b1000'0000 | ((code_point >> 6) & 0b11'1111);
+                const char c3 = 0b1000'0000 | (code_point & 0b11'1111);
                 return std::string({c0, c1, c2, c3});
         }
 
@@ -179,7 +179,7 @@ char32_t utf8_to_utf32(const std::string& s, std::size_t* const i)
                 return s0;
         }
 
-        if ((s0 & 0b111'00000) == 0b110'00000)
+        if ((s0 & 0b1110'0000) == 0b1100'0000)
         {
                 if (*i + 1 < s.size())
                 {
@@ -193,7 +193,7 @@ char32_t utf8_to_utf32(const std::string& s, std::size_t* const i)
                         return utf8_3_to_utf32(s, i);
                 }
         }
-        else if ((s0 & 0b11111'000) == 0b11110'000)
+        else if ((s0 & 0b1111'1000) == 0b1111'0000)
         {
                 if (*i + 3 < s.size())
                 {
