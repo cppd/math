@@ -127,19 +127,19 @@ std::tuple<int, MeshFileType> dimension_and_file_type(const Path& file_name)
                 error("No file extension found");
         }
 
-        if (extension.find(OBJ) == 0)
+        if (extension.starts_with(OBJ))
         {
                 return {(extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size())),
                         MeshFileType::OBJ};
         }
 
-        if (extension.find(STL) == 0)
+        if (extension.starts_with(STL))
         {
                 return {(extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size())),
                         MeshFileType::STL};
         }
 
-        if (extension.find(TXT) == 0)
+        if (extension.starts_with(TXT))
         {
                 if (extension == TXT)
                 {

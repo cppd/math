@@ -112,7 +112,7 @@ FileType file_type_by_name(const std::filesystem::path& file_name)
 
         const std::string extension = generic_utf8_filename(file_name.extension());
 
-        if (extension.find(OBJ) == 0)
+        if (extension.starts_with(OBJ))
         {
                 if (extension == OBJ)
                 {
@@ -122,7 +122,7 @@ FileType file_type_by_name(const std::filesystem::path& file_name)
                 return FileType::OBJ;
         }
 
-        if (extension.find(STL) == 0)
+        if (extension.starts_with(STL))
         {
                 if (extension == STL)
                 {
