@@ -17,8 +17,10 @@ AlignTrailingComments:
         Kind: Never
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
+AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
+AllowShortCompoundRequirementOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
@@ -49,6 +51,7 @@ BraceWrapping:
         SplitEmptyRecord: true
         SplitEmptyNamespace: true
 BracedInitializerIndentWidth: 8
+BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Never
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
@@ -100,9 +103,12 @@ IndentWrappedFunctionNames: true
 InsertBraces: true
 InsertNewlineAtEOF: true
 IntegerLiteralSeparator:
-        Binary: 0
+        Binary: 4
+        BinaryMinDigits: 0
         Decimal: 0
+        DecimalMinDigits: 0
         Hex: 0
+        HexMinDigits: 0
 KeepEmptyLinesAtEOF: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: Signature
@@ -116,6 +122,7 @@ PackConstructorInitializers: Never
 # PenaltyBreakComment: 300
 # PenaltyBreakFirstLessLess: 120
 # PenaltyBreakOpenParenthesis: 0
+# PenaltyBreakScopeResolution: 0
 # PenaltyBreakString: 1000
 # PenaltyBreakTemplateDeclaration: 0
 # PenaltyExcessCharacter: 900
@@ -132,6 +139,7 @@ RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: Keyword
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
+SkipMacroDefinitionBody: false
 SortIncludes: CaseSensitive
 SortUsingDeclarations: Lexicographic
 SpaceAfterCStyleCast: false
@@ -151,17 +159,15 @@ SpaceBeforeParensOptions:
         AfterFunctionDefinitionName: false
         AfterIfMacros: false
         AfterOverloadedOperator: false
+        AfterPlacementOperator: true
         AfterRequiresInClause: true
         AfterRequiresInExpression: true
         BeforeNonEmptyParentheses: false
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpaceInEmptyBlock: false
-SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
 SpacesInAngles: Never
-SpacesInCStyleCastParentheses: false
-SpacesInConditionalStatement: false
 SpacesInContainerLiterals: false
 SpacesInLineCommentPrefix:
         Minimum: 1
