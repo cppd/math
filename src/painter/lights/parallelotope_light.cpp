@@ -117,7 +117,7 @@ LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
         LightSourceArriveInfo<T, Color> res;
         res.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
         res.radiance = radiance(cos);
-        res.distance = *intersection;
+        res.distance = intersection;
         return res;
 }
 
