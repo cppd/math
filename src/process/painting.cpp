@@ -153,11 +153,7 @@ std::optional<numerical::Vector<N + 1, T>> make_clip_plane_equation(const view::
 template <typename T>
 std::optional<T> make_clip_plane_position(const view::info::ClipPlane& clip_plane)
 {
-        if (clip_plane.position)
-        {
-                return *clip_plane.position;
-        }
-        return std::nullopt;
+        return clip_plane.position;
 }
 
 template <std::size_t N, typename T, typename Color>
