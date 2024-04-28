@@ -43,7 +43,7 @@ std::string vulkan_create_surface_extension()
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
-        const auto vkCreateXcbSurfaceKHR = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateXcbSurfaceKHR);
+        const auto create_surface = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateXcbSurfaceKHR);
 
         VkXcbSurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
@@ -51,7 +51,7 @@ VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance insta
         info.window = window;
 
         VkSurfaceKHR surface;
-        VULKAN_CHECK(vkCreateXcbSurfaceKHR(instance, &info, nullptr, &surface));
+        VULKAN_CHECK(create_surface(instance, &info, nullptr, &surface));
         return surface;
 }
 }
@@ -74,7 +74,7 @@ std::string vulkan_create_surface_extension()
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
-        const auto vkCreateWin32SurfaceKHR = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateWin32SurfaceKHR);
+        const auto create_surface = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateWin32SurfaceKHR);
 
         VkWin32SurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -82,7 +82,7 @@ VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance insta
         info.hwnd = window;
 
         VkSurfaceKHR surface;
-        VULKAN_CHECK(vkCreateWin32SurfaceKHR(instance, &info, nullptr, &surface));
+        VULKAN_CHECK(create_surface(instance, &info, nullptr, &surface));
         return surface;
 }
 }
