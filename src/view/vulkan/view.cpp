@@ -197,6 +197,7 @@ class Impl final
 
                 device_graphics_.device().wait_idle();
 
+                ASSERT(swapchain_);
                 const int width = swapchain_->width();
                 const int height = swapchain_->height();
 
@@ -336,6 +337,8 @@ class Impl final
 
         void create_swapchain_buffers()
         {
+                ASSERT(swapchain_);
+
                 create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
                 swapchain_resolve_.emplace(
@@ -376,6 +379,8 @@ class Impl final
 
         [[nodiscard]] bool render_swapchain() const
         {
+                ASSERT(swapchain_);
+
                 const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
                         device_graphics_.device().handle(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
@@ -388,6 +393,7 @@ class Impl final
 
                 VkSemaphore semaphore = draw();
 
+                ASSERT(swapchain_resolve_);
                 semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
