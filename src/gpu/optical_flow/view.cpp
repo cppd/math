@@ -88,9 +88,11 @@ class Impl final : public View
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
+                ASSERT(pipeline_points_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_points_);
                 vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
 
+                ASSERT(pipeline_lines_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_lines_);
                 vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
         }
@@ -215,6 +217,7 @@ class Impl final : public View
                 //
 
                 ASSERT(graphics_queue.family_index() == graphics_command_pool_->family_index());
+                ASSERT(command_buffers_);
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(

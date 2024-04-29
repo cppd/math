@@ -233,6 +233,8 @@ class Impl final : public Fft
                         return;
                 }
 
+                ASSERT(bit_reverse_);
+                ASSERT(fft_global_);
                 bit_reverse_->set(data.buffer());
                 fft_global_->set(data.buffer());
         }
@@ -250,6 +252,8 @@ class Impl final : public Fft
                         return;
                 }
 
+                ASSERT(bit_reverse_);
+                ASSERT(fft_global_);
                 // n is greater than shared size. First bit reverse
                 // then compute, because calculations are in place.
                 bit_reverse_->commands(command_buffer);

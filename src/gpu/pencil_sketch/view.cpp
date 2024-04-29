@@ -100,6 +100,7 @@ class Impl final : public View
 
                 //
 
+                ASSERT(pipeline_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
                 vkCmdBindDescriptorSets(
@@ -178,6 +179,7 @@ class Impl final : public View
                 //
 
                 ASSERT(queue.family_index() == graphics_queue_->family_index());
+                ASSERT(command_buffers_);
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(

@@ -108,6 +108,7 @@ class Impl final : public View
         {
                 compute_->compute_commands(command_buffer);
 
+                ASSERT(points_);
                 buffer_barrier(
                         command_buffer, points_->buffer().handle(), VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -121,6 +122,7 @@ class Impl final : public View
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
+                ASSERT(pipeline_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
                 vkCmdBindDescriptorSets(
@@ -211,6 +213,7 @@ class Impl final : public View
                 //
 
                 ASSERT(queue.family_index() == family_index_);
+                ASSERT(command_buffers_);
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(

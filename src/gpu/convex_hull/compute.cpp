@@ -87,6 +87,8 @@ class Impl final : public Compute
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
+                ASSERT(lines_buffer_);
+
                 //
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, prepare_program_.pipeline());
