@@ -283,28 +283,28 @@ void MeshRenderer::draw_commands(
                 return;
         }
 
-        ASSERT(render_pipelines(transparent));
-
-        const Pipelines& pipelines = *render_pipelines(transparent);
+        const auto& pipelines = render_pipelines(transparent);
+        ASSERT(pipelines);
 
         commands_triangles(
-                meshes, command_buffer, pipelines.triangles, transparent, triangles_program_, triangles_shared_memory_);
+                meshes, command_buffer, pipelines->triangles, transparent, triangles_program_,
+                triangles_shared_memory_);
 
-        commands_lines(meshes, command_buffer, pipelines.lines, transparent, points_program_, points_shared_memory_);
+        commands_lines(meshes, command_buffer, pipelines->lines, transparent, points_program_, points_shared_memory_);
 
-        commands_points(meshes, command_buffer, pipelines.points, transparent, points_program_, points_shared_memory_);
+        commands_points(meshes, command_buffer, pipelines->points, transparent, points_program_, points_shared_memory_);
 
         if (show_clip_plane_lines)
         {
                 commands_triangle_lines(
-                        meshes, command_buffer, pipelines.triangle_lines, transparent, triangle_lines_program_,
+                        meshes, command_buffer, pipelines->triangle_lines, transparent, triangle_lines_program_,
                         triangle_lines_shared_memory_);
         }
 
         if (show_normals)
         {
                 commands_normals(
-                        meshes, command_buffer, pipelines.normals, transparent, normals_program_,
+                        meshes, command_buffer, pipelines->normals, transparent, normals_program_,
                         normals_shared_memory_);
         }
 }

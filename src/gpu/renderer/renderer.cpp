@@ -375,6 +375,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 {
                         return;
                 }
+                ASSERT(acceleration_structure_);
                 acceleration_structure_->create(
                         *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
                 mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
@@ -389,6 +390,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 {
                         return;
                 }
+                ASSERT(acceleration_structure_);
                 acceleration_structure_->update_matrices(
                         device_->handle(), *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
         }
@@ -486,11 +488,11 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 {
                         create_mesh_render_command_buffers();
                 }
-                if (renderer_view_.clip_plane())
+                if (const auto& clip_plane = renderer_view_.clip_plane())
                 {
                         for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                         {
-                                visible_volume->set_clip_plane(*renderer_view_.clip_plane());
+                                visible_volume->set_clip_plane(*clip_plane);
                         }
                 }
         }
