@@ -49,18 +49,16 @@ std::tuple<numerical::Region<2, int>, std::optional<numerical::Region<2, int>>> 
                 const int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
-                        std::tuple<numerical::Region<2, int>, std::optional<numerical::Region<2, int>>> res;
-                        std::get<0>(res) = numerical::Region<2, int>({frame, frame}, {w, h});
-                        std::get<1>(res) = numerical::Region<2, int>({width - frame - w, frame}, {w, h});
-                        check(std::get<0>(res), width, height);
-                        check(*std::get<1>(res), width, height);
-                        return res;
+                        const numerical::Region<2, int> w0({frame, frame}, {w, h});
+                        const numerical::Region<2, int> w1({width - frame - w, frame}, {w, h});
+                        check(w0, width, height);
+                        check(w1, width, height);
+                        return {w0, w1};
                 }
         }
 
-        std::tuple<numerical::Region<2, int>, std::optional<numerical::Region<2, int>>> res;
-        std::get<0>(res) = numerical::Region<2, int>({0, 0}, {width, height});
-        check(std::get<0>(res), width, height);
-        return res;
+        const numerical::Region<2, int> w0({0, 0}, {width, height});
+        check(w0, width, height);
+        return {w0, std::nullopt};
 }
 }

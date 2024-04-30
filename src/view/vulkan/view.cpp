@@ -317,6 +317,7 @@ class Impl final
                 const vulkan::Queue& graphics_queue = device_graphics_.graphics_compute_queue(0);
                 const vulkan::Queue& compute_queue = device_graphics_.compute_queue();
 
+                ASSERT(image_resolve_);
                 semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
                 if (view_process_.text_active())
@@ -370,6 +371,7 @@ class Impl final
 
                 if (window_size_in_mm)
                 {
+                        ASSERT(swapchain_);
                         pixel_sizes_ = pixel_sizes(
                                 TEXT_SIZE_IN_POINTS, FRAME_SIZE_IN_MILLIMETERS, *window_size_in_mm, *swapchain_);
                 }
