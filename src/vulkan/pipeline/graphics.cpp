@@ -55,35 +55,43 @@ VkPipelineVertexInputStateCreateInfo create_vertex_input_state_info(const Graphi
 
 VkPipelineInputAssemblyStateCreateInfo create_input_assembly_state_info(const GraphicsPipelineCreateInfo& info)
 {
+        const auto& primitive_topology = info.primitive_topology;
+        ASSERT(primitive_topology);
+
         VkPipelineInputAssemblyStateCreateInfo res = {};
         res.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        res.topology = info.primitive_topology.value();
+        res.topology = *primitive_topology;
         res.primitiveRestartEnable = VK_FALSE;
         return res;
 }
 
 VkViewport create_viewport(const GraphicsPipelineCreateInfo& info)
 {
-        ASSERT(info.viewport.value().is_positive());
+        const auto& viewport = info.viewport;
+        ASSERT(viewport);
+        ASSERT(viewport->is_positive());
 
-        VkViewport viewport = {};
-        viewport.x = info.viewport.value().x0();
-        viewport.y = info.viewport.value().y0();
-        viewport.width = info.viewport.value().width();
-        viewport.height = info.viewport.value().height();
-        viewport.minDepth = 0;
-        viewport.maxDepth = 1;
-        return viewport;
+        VkViewport res = {};
+        res.x = viewport->x0();
+        res.y = viewport->y0();
+        res.width = viewport->width();
+        res.height = viewport->height();
+        res.minDepth = 0;
+        res.maxDepth = 1;
+        return res;
 }
 
 VkRect2D create_scissor(const GraphicsPipelineCreateInfo& info)
 {
-        VkRect2D scissor = {};
-        scissor.offset.x = info.viewport.value().x0();
-        scissor.offset.y = info.viewport.value().y0();
-        scissor.extent.width = info.viewport.value().width();
-        scissor.extent.height = info.viewport.value().height();
-        return scissor;
+        const auto& viewport = info.viewport;
+        ASSERT(viewport);
+
+        VkRect2D res = {};
+        res.offset.x = viewport->x0();
+        res.offset.y = viewport->y0();
+        res.extent.width = viewport->width();
+        res.extent.height = viewport->height();
+        return res;
 }
 
 VkPipelineViewportStateCreateInfo create_viewport_state_info(
@@ -118,10 +126,16 @@ VkPipelineRasterizationStateCreateInfo create_rasterization_state_info(const Gra
 
 VkPipelineMultisampleStateCreateInfo create_multisample_state_info(const GraphicsPipelineCreateInfo& info)
 {
+        const auto& sample_count = info.sample_count;
+        ASSERT(sample_count);
+
+        const auto& sample_shading = info.sample_shading;
+        ASSERT(sample_shading);
+
         VkPipelineMultisampleStateCreateInfo res = {};
         res.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         res.rasterizationSamples = info.sample_count.value();
-        if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
+        if (*sample_count != VK_SAMPLE_COUNT_1_BIT && *sample_shading)
         {
                 if (!info.device->features().features_10.sampleRateShading)
                 {
@@ -144,7 +158,7 @@ VkPipelineMultisampleStateCreateInfo create_multisample_state_info(const Graphic
 std::vector<VkPipelineColorBlendAttachmentState> create_color_blend_attachment_states(
         const GraphicsPipelineCreateInfo& info)
 {
-        std::vector<VkPipelineColorBlendAttachmentState> states;
+        std::vector<VkPipelineColorBlendAttachmentState> res;
 
         if (info.color_blend.empty())
         {
@@ -156,7 +170,7 @@ std::vector<VkPipelineColorBlendAttachmentState> create_color_blend_attachment_s
                                 | VK_COLOR_COMPONENT_A_BIT;
                         state.blendEnable = VK_FALSE;
 
-                        states.resize(info.render_pass->color_attachment_count(), state);
+                        res.resize(info.render_pass->color_attachment_count(), state);
                 }
         }
         else
@@ -167,10 +181,10 @@ std::vector<VkPipelineColorBlendAttachmentState> create_color_blend_attachment_s
                               + " is not equal to color attachment count "
                               + to_string(info.render_pass->color_attachment_count()));
                 }
-                states = info.color_blend;
+                res = info.color_blend;
         }
 
-        return states;
+        return res;
 }
 
 VkPipelineColorBlendStateCreateInfo create_color_blend_state_info(
