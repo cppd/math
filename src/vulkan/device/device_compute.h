@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 
+#include <src/com/error.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/physical_device/physical_device.h>
@@ -56,6 +57,7 @@ public:
 
         [[nodiscard]] const Device& device() const
         {
+                ASSERT(device_);
                 return *device_;
         }
 

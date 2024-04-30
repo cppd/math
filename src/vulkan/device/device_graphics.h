@@ -61,6 +61,7 @@ public:
 
         [[nodiscard]] const Device& device() const
         {
+                ASSERT(device_);
                 return *device_;
         }
 
