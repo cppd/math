@@ -112,21 +112,25 @@ public:
 
         [[nodiscard]] const vulkan::Buffer& d1_fwd() const
         {
+                ASSERT(d1_fwd_);
                 return d1_fwd_->buffer();
         }
 
         [[nodiscard]] const vulkan::Buffer& d1_inv() const
         {
+                ASSERT(d1_inv_);
                 return d1_inv_->buffer();
         }
 
         [[nodiscard]] const vulkan::Buffer& d2_fwd() const
         {
+                ASSERT(d2_fwd_);
                 return d2_fwd_->buffer();
         }
 
         [[nodiscard]] const vulkan::Buffer& d2_inv() const
         {
+                ASSERT(d2_inv_);
                 return d2_inv_->buffer();
         }
 };
@@ -180,6 +184,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_to_buffer_groups_[0], mul_rows_to_buffer_groups_[1], 1);
 
+                ASSERT(buffer_);
                 buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
@@ -193,6 +198,7 @@ class Impl final : public Dft
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_row_groups_[0], mul_d_row_groups_[1], 1);
 
+                ASSERT(buffer_);
                 buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
@@ -206,6 +212,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_from_buffer_groups_[0], mul_rows_from_buffer_groups_[1], 1);
 
+                ASSERT(x_d_);
                 buffer_barrier(command_buffer, x_d_->buffer().handle());
         }
 
@@ -219,6 +226,7 @@ class Impl final : public Dft
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_columns_to_buffer_groups_[0], mul_columns_to_buffer_groups_[1], 1);
 
+                ASSERT(buffer_);
                 buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
@@ -232,6 +240,7 @@ class Impl final : public Dft
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_column_groups_[0], mul_d_column_groups_[1], 1);
 
+                ASSERT(buffer_);
                 buffer_barrier(command_buffer, buffer_->buffer().handle());
         }
 
@@ -246,6 +255,7 @@ class Impl final : public Dft
                 vkCmdDispatch(
                         command_buffer, mul_columns_from_buffer_groups_[0], mul_columns_from_buffer_groups_[1], 1);
 
+                ASSERT(x_d_);
                 buffer_barrier(command_buffer, x_d_->buffer().handle());
         }
 

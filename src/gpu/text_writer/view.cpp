@@ -103,6 +103,7 @@ class Impl final : public View
 
                 ASSERT(vertex_buffer_ && vertex_buffer_->buffer().size() > 0);
 
+                ASSERT(pipeline_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
                 vkCmdBindDescriptorSets(
@@ -198,6 +199,7 @@ class Impl final : public View
 
                 const std::size_t size = data_size(vertices);
 
+                ASSERT(vertex_buffer_);
                 if (vertex_buffer_->buffer().size() < size)
                 {
                         VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
@@ -223,6 +225,7 @@ class Impl final : public View
 
                 //
 
+                ASSERT(command_buffers_);
                 ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(

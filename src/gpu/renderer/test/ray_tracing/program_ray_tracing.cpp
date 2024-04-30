@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code/code.h"
 
+#include <src/com/error.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/descriptor.h>
@@ -115,7 +116,13 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
 
         //
 
-        const std::size_t handle_size = device.properties().ray_tracing_pipeline->shaderGroupHandleSize;
+        const std::size_t handle_size = [&]()
+        {
+                const auto& pipeline = device.properties().ray_tracing_pipeline;
+                ASSERT(pipeline);
+                return pipeline->shaderGroupHandleSize;
+        }();
+
         constexpr std::size_t GROUP_COUNT = 3;
 
         std::vector<std::uint8_t> shader_group_handles(handle_size * GROUP_COUNT);
