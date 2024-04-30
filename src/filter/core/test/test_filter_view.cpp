@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
@@ -72,6 +73,8 @@ template <typename T>
 struct MeasurementConfig final
 {
         T position_reset_interval = 2;
+        T reset_min_time = 226;
+        T reset_max_time = reset_min_time + 60;
         T speed_factor = 1;
 };
 
@@ -128,7 +131,7 @@ std::string make_annotation(
 template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
         const std::vector<Measurements<T>>& measurements,
-        const T interval)
+        const MeasurementConfig<T>& config)
 {
         if (measurements.empty())
         {
@@ -137,7 +140,7 @@ std::vector<Measurements<T>> reset_position_measurements(
 
         std::vector<Measurements<T>> res(measurements);
         auto iter = res.begin();
-        T next_time = iter->time + interval;
+        T next_time = iter->time + config.position_reset_interval;
         while (++iter != res.end())
         {
                 if (iter->time < next_time)
@@ -146,9 +149,9 @@ std::vector<Measurements<T>> reset_position_measurements(
                 }
                 else
                 {
-                        next_time = iter->time + interval;
+                        next_time = iter->time + config.position_reset_interval;
                 }
-                if (iter->time >= 225 && iter->time < 285)
+                if (iter->time >= config.reset_min_time && iter->time < config.reset_max_time)
                 {
                         iter->x.reset();
                 }
@@ -159,7 +162,7 @@ std::vector<Measurements<T>> reset_position_measurements(
 template <typename T>
 std::vector<Measurements<T>> add_bad_measurements(
         const std::vector<Measurements<T>>& measurements,
-        const T speed_factor)
+        const MeasurementConfig<T>& config)
 {
         constexpr T X = 2000;
         constexpr T V = 30;
@@ -170,13 +173,18 @@ std::vector<Measurements<T>> add_bad_measurements(
         std::vector<Measurements<T>> res(measurements);
         for (Measurements<T>& m : std::ranges::drop_view(res, 5))
         {
-                if (m.x && std::bernoulli_distribution(PROBABILITY)(engine))
+                if (m.time == config.reset_max_time || m.time == config.reset_max_time + config.position_reset_interval)
+                {
+                        ASSERT(m.x);
+                        m.x->value += std::bernoulli_distribution(0.5)(engine) ? 500 : -500;
+                }
+                else if (m.x && std::bernoulli_distribution(PROBABILITY)(engine))
                 {
                         m.x->value += std::bernoulli_distribution(0.5)(engine) ? X : -X;
                 }
                 if (m.v)
                 {
-                        m.v->value *= speed_factor;
+                        m.v->value *= config.speed_factor;
                 }
                 if (m.v && std::bernoulli_distribution(PROBABILITY)(engine))
                 {
@@ -184,6 +192,15 @@ std::vector<Measurements<T>> add_bad_measurements(
                 }
         }
         return res;
+}
+
+template <typename T>
+std::vector<Measurements<T>> prepare_measurements(
+        const std::vector<Measurements<T>>& measurements,
+        const MeasurementConfig<T>& config)
+{
+        const std::vector<Measurements<T>> v = reset_position_measurements(measurements, config);
+        return add_bad_measurements(v, config);
 }
 
 template <typename T>
@@ -258,9 +275,7 @@ void test_impl()
                 simulation_config.acceleration, simulation_config.velocity_variance,
                 simulation_config.measurement_variance_x, simulation_config.measurement_variance_v);
 
-        const std::vector<Measurements<T>> test_measurements = add_bad_measurements(
-                reset_position_measurements(measurements, measurement_config.position_reset_interval),
-                measurement_config.speed_factor);
+        const std::vector<Measurements<T>> test_measurements = prepare_measurements(measurements, measurement_config);
 
         const std::string annotation = make_annotation(simulation_config, filter_config, measurement_config);
 
