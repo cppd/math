@@ -22,11 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ukf.h"
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/filter/core/consistency.h>
 #include <src/filter/core/test/measurements.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 
@@ -56,23 +58,51 @@ void reset_filter(
         filter->reset(x, p);
 }
 
+template <typename T>
+class VarianceCorrection final
+{
+        std::optional<T> last_time_;
+        T last_k_{1};
+
+        [[nodiscard]] static T correction(const T dt)
+        {
+                return std::min(T{30}, 1 + power<3>(dt) / 10'000);
+        }
+
+public:
+        [[nodiscard]] T update(const T time)
+        {
+                const T dt = time - last_time_.value_or(time);
+                ASSERT(dt >= 0);
+                const T k = (dt < 5) ? 1 : correction(dt);
+                ASSERT(k >= 1);
+                const T res = (last_k_ + k) / 2;
+                last_time_ = time;
+                last_k_ = res;
+                return square(res);
+        }
+};
+
 template <typename Filter>
 bool update_filter(
         Filter* const filter,
+        VarianceCorrection<typename Filter::Type>* const variance_correction,
         const Measurements<typename Filter::Type>& m,
         const std::optional<typename Filter::Type> gate)
 {
         ASSERT(filter);
+        ASSERT(variance_correction);
         ASSERT(m.x || m.v);
 
         if (m.x)
         {
+                const auto xv = m.x->variance * variance_correction->update(m.time);
                 if (m.v)
                 {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
+                        filter->update_position_speed(m.x->value, xv, m.v->value, m.v->variance, gate);
                         return true;
                 }
-                filter->update_position(m.x->value, m.x->variance, gate);
+                filter->update_position(m.x->value, xv, gate);
                 return true;
         }
         if (m.v)
@@ -93,6 +123,8 @@ class FilterImpl : public Filter<typename F::Type>
         std::optional<typename F::Type> gate_;
         std::unique_ptr<F> filter_;
 
+        std::optional<VarianceCorrection<typename F::Type>> variance_correction_;
+
         NormalizedSquared<typename F::Type> nees_;
 
         std::optional<typename F::Type> last_time_;
@@ -100,6 +132,7 @@ class FilterImpl : public Filter<typename F::Type>
         void reset() override
         {
                 last_time_.reset();
+                variance_correction_.reset();
         }
 
         [[nodiscard]] std::optional<UpdateInfo<typename F::Type>> update(
@@ -122,6 +155,7 @@ class FilterImpl : public Filter<typename F::Type>
                         last_time_ = m.time;
 
                         reset_filter(filter_.get(), m, init_v_, init_v_variance_);
+                        variance_correction_.emplace();
 
                         return {
                                 {.x = filter_->position(),
@@ -137,7 +171,8 @@ class FilterImpl : public Filter<typename F::Type>
 
                 filter_->predict(dt, noise_model_, fading_memory_alpha_);
 
-                if (!update_filter(filter_.get(), m, gate_))
+                ASSERT(variance_correction_);
+                if (!update_filter(filter_.get(), &*variance_correction_, m, gate_))
                 {
                         return std::nullopt;
                 }
