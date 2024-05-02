@@ -72,7 +72,18 @@ constexpr int SCREEN_SIZE_3D_MAXIMUM = 10000;
 constexpr int SCREEN_SIZE_ND_MINIMUM = 50;
 constexpr int SCREEN_SIZE_ND_MAXIMUM = 5000;
 template <std::size_t N>
-constexpr int SCREEN_SIZE_ND = (N == 4) ? 300 : ((N == 5) ? 100 : SCREEN_SIZE_ND_MINIMUM);
+constexpr int SCREEN_SIZE_ND = []()
+{
+        switch (N)
+        {
+        case 4:
+                return 300;
+        case 5:
+                return 100;
+        default:
+                return SCREEN_SIZE_ND_MINIMUM;
+        }
+}();
 
 using Precisions = std::tuple<double, float>;
 constexpr std::size_t PRECISION_INDEX = 0;
