@@ -92,7 +92,11 @@ public:
 
         [[nodiscard]] std::size_t count() const
         {
-                return full() ? COUNT : (empty() ? 0 : -weight_sum_);
+                if (full())
+                {
+                        return COUNT;
+                }
+                return empty() ? 0 : -weight_sum_;
         }
 
         [[nodiscard]] const Color& color_sum() const
