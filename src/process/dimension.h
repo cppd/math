@@ -37,7 +37,18 @@ auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
 
         if constexpr (std::is_same_v<void, ReturnType>)
         {
-                if (((N == dimension ? (static_cast<void>(f(Dimension<N>())), true) : false) || ...))
+                const bool r = ((
+                        [&]()
+                        {
+                                if (N == dimension)
+                                {
+                                        f(Dimension<N>());
+                                        return true;
+                                }
+                                return false;
+                        }()
+                        || ...));
+                if (r)
                 {
                         return;
                 }
@@ -45,7 +56,18 @@ auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
         else
         {
                 std::optional<ReturnType> r;
-                if (((N == dimension ? (static_cast<void>(r.emplace(f(Dimension<N>()))), true) : false) || ...))
+                static_cast<void>((
+                        [&]()
+                        {
+                                if (N == dimension)
+                                {
+                                        r.emplace(f(Dimension<N>()));
+                                        return true;
+                                }
+                                return false;
+                        }()
+                        || ...));
+                if (r)
                 {
                         return std::move(*r);
                 }
