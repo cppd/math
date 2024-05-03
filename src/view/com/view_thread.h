@@ -248,7 +248,7 @@ public:
                 try
                 {
                         thread_ = std::thread(
-                                [args..., this]()
+                                [args..., this]
                                 {
                                         try
                                         {

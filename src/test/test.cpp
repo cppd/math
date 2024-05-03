@@ -66,7 +66,7 @@ void run(const T& test, const std::string& name, progress::Ratios* const progres
 
         catch_all(
                 name,
-                [&]()
+                [&]
                 {
                         std::visit(visitors, test);
                 });

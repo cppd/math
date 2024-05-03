@@ -192,7 +192,7 @@ public:
                 for (unsigned i = 0; i < thread_count_; ++i)
                 {
                         threads_[i] = std::thread(
-                                [this, i]()
+                                [this, i]
                                 {
                                         thread(i);
                                 });

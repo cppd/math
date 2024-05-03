@@ -39,7 +39,7 @@ namespace print_implementation
 template <typename T>
 char digit(const T value)
 {
-        const int remainder = [&]()
+        const int remainder = [&]
         {
                 const int res = value % 10;
                 if constexpr (Signed<T>)

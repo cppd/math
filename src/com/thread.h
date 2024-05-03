@@ -181,7 +181,7 @@ void run_in_threads(const F& f, const std::size_t count)
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         f(task);
                                 });

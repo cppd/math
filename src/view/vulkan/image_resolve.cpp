@@ -62,7 +62,7 @@ ImageResolve::ImageResolve(
                         vulkan::make_extent(render_buffers.width(), render_buffers.height()),
                         usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
 
-                const auto commands = [&]()
+                const auto commands = [&]
                 {
                         render_buffers.commands_color_resolve(
                                 command_buffers_[i], images_[i].image().handle(), image_layout, rectangle, i);

@@ -30,7 +30,7 @@ namespace ns::image
 template <std::size_t N>
 [[nodiscard]] Image<N> convert_to_8_bit(const Image<N>& image)
 {
-        const ColorFormat color_format = [&]()
+        const ColorFormat color_format = [&]
         {
                 switch (image.color_format)
                 {

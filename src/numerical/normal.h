@@ -48,7 +48,7 @@ Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& 
 {
         const Matrix<N, N, T> covariance_matrix = covariance_matrix_simple(points);
 
-        const T tolerance = [&]()
+        const T tolerance = [&]
         {
                 T max = Limits<T>::lowest();
                 for (std::size_t i = 0; i < N - 1; ++i)

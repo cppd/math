@@ -34,7 +34,7 @@ void record_command_buffer(
         const VkCommandBuffer command_buffer,
         const VkRenderPassBeginInfo& render_pass_info)
 {
-        const auto commands = [&]()
+        const auto commands = [&]
         {
                 if (info.before_render_pass_commands)
                 {

@@ -226,7 +226,7 @@ Image<N> convert_to_r_component_format(const Image<N>& image)
 {
         Image<N> res;
 
-        res.color_format = [&]()
+        res.color_format = [&]
         {
                 switch (image.color_format)
                 {
