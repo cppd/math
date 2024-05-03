@@ -152,7 +152,7 @@ void Acceleration<T, F>::reset(const Measurements<2, T>& m)
         ASSERT(queue_.last_time() == m.time);
 
         queue_.update_filter(
-                [&]()
+                [&]
                 {
                         filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
                 },

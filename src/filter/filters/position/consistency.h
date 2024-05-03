@@ -72,7 +72,7 @@ std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
 {
         std::string s;
 
-        const auto new_line = [&]()
+        const auto new_line = [&]
         {
                 if (!s.empty())
                 {

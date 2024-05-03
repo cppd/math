@@ -194,7 +194,7 @@ std::string PositionVariance<N, T>::consistency_string() const
 {
         std::string s;
 
-        const auto new_line = [&]()
+        const auto new_line = [&]
         {
                 if (!s.empty())
                 {

@@ -175,7 +175,7 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
 
         const int precision = compute_string_precision(Config<T>::POSITION_FILTER_THETAS);
 
-        const auto name = [&]()
+        const auto name = [&]
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
@@ -236,7 +236,7 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
 
         const int precision = compute_string_precision(Config<T>::ACCELERATION_FILTER_UKF_ALPHAS);
 
-        const auto name = [&]()
+        const auto name = [&]
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
@@ -308,7 +308,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         const int precision = compute_string_precision(Config<T>::DIRECTION_FILTER_UKF_ALPHAS);
 
-        const auto name = [&]()
+        const auto name = [&]
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
@@ -382,7 +382,7 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 
         const int precision = compute_string_precision(Config<T>::SPEED_FILTER_UKF_ALPHAS);
 
-        const auto name = [&]()
+        const auto name = [&]
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;

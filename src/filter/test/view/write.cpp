@@ -43,7 +43,7 @@ namespace ns::filter::test::view
 namespace
 {
 template <std::size_t N, typename T>
-constexpr numerical::Vector<N, T> OFFSET = []()
+constexpr numerical::Vector<N, T> OFFSET = []
 {
         numerical::Vector<N, T> res(0);
         res[N - 1] = 1000;
