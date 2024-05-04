@@ -132,18 +132,35 @@ struct Task final
 };
 
 template <typename Box, typename Objects>
+void insert_child_box_indices(const Objects& objects, const std::vector<int>& box_object_indices, Box* const child_box)
+{
+        const std::vector<int> indices = objects.intersection_indices(child_box->parallelotope, box_object_indices);
+        child_box->object_indices.reserve(indices.size());
+        for (const int index : indices)
+        {
+                child_box->object_indices.push_back(index);
+        }
+}
+
+template <typename Box, typename Objects>
 void extend(
+        const Objects& objects,
         const unsigned max_depth,
         const unsigned min_objects,
         const unsigned max_boxes,
         std::mutex* const boxes_lock,
         std::deque<Box>* const boxes,
         ThreadTaskManager<Task<Box>>* const task_manager,
-        const Objects& objects,
         progress::Ratio* const progress)
 {
-        while (const auto task = task_manager->get())
+        while (true)
         {
+                const auto task = task_manager->get();
+                if (!task)
+                {
+                        break;
+                }
+
                 if (task->depth >= max_depth || task->box->object_indices.size() <= min_objects)
                 {
                         task->box->childs[0] = -1;
@@ -161,17 +178,7 @@ void extend(
                         task->box->childs[i] = child_boxes[i].index;
 
                         Box* const child_box = child_boxes[i].box;
-
-                        {
-                                const std::vector<int> indices = objects.intersection_indices(
-                                        child_box->parallelotope, task->box->object_indices);
-                                child_box->object_indices.reserve(indices.size());
-                                for (const int index : indices)
-                                {
-                                        child_box->object_indices.push_back(index);
-                                }
-                        }
-
+                        insert_child_box_indices(objects, task->box->object_indices, child_box);
                         task_manager->emplace(child_box, task->depth + 1);
                 }
 
@@ -228,8 +235,8 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
                 try
                 {
                         ThreadTaskManager<Task<Box>> task_manager(&tasks);
-                        extend(max_depth, MIN_OBJECTS_PER_BOX, max_box_count, &boxes_lock, &boxes, &task_manager,
-                               objects, progress);
+                        extend(objects, max_depth, MIN_OBJECTS_PER_BOX, max_box_count, &boxes_lock, &boxes,
+                               &task_manager, progress);
                 }
                 catch (...)
                 {
