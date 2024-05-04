@@ -79,9 +79,11 @@ class Impl final : public Scene<N, T, Color>
 
                 if constexpr (!USE_CLIP_POLYTOPE)
                 {
+                        ASSERT(!clip_polytope_);
                         return true;
                 }
 
+                ASSERT(clip_polytope_);
                 T near = 0;
                 if (clip_polytope_->intersect(*ray, &near, max_distance))
                 {
