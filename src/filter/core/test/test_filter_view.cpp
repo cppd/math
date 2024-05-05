@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
-#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
@@ -141,6 +140,7 @@ std::vector<Measurements<T>> reset_position_measurements(
         std::vector<Measurements<T>> res(measurements);
         auto iter = res.begin();
         T next_time = iter->time + config.position_reset_interval;
+
         while (++iter != res.end())
         {
                 if (iter->time < next_time)
@@ -151,11 +151,13 @@ std::vector<Measurements<T>> reset_position_measurements(
                 {
                         next_time = iter->time + config.position_reset_interval;
                 }
+
                 if (iter->time >= config.reset_min_time && iter->time < config.reset_max_time)
                 {
                         iter->x.reset();
                 }
         }
+
         return res;
 }
 
@@ -165,31 +167,55 @@ std::vector<Measurements<T>> add_bad_measurements(
         const MeasurementConfig<T>& config)
 {
         constexpr T X = 2000;
+        constexpr T X_AFTER_RESET = 500;
         constexpr T V = 30;
         constexpr T PROBABILITY = T{1} / 20;
+        constexpr int COUNT_AFTER_RESET = 2;
 
         PCG engine;
+
+        const auto random_sign = [&](const T v)
+        {
+                return std::bernoulli_distribution(0.5)(engine) ? v : -v;
+        };
+
+        int count_after_reset = 0;
+
+        const auto x = [&](Measurements<T>& m)
+        {
+                if (!m.x)
+                {
+                        return;
+                }
+                if (m.time >= config.reset_max_time && count_after_reset < COUNT_AFTER_RESET)
+                {
+                        ++count_after_reset;
+                        m.x->value += random_sign(X_AFTER_RESET);
+                }
+                else if (std::bernoulli_distribution(PROBABILITY)(engine))
+                {
+                        m.x->value += random_sign(X);
+                }
+        };
+
+        const auto v = [&](Measurements<T>& m)
+        {
+                if (!m.v)
+                {
+                        return;
+                }
+                m.v->value *= config.speed_factor;
+                if (std::bernoulli_distribution(PROBABILITY)(engine))
+                {
+                        m.v->value += V;
+                }
+        };
 
         std::vector<Measurements<T>> res(measurements);
         for (Measurements<T>& m : std::ranges::drop_view(res, 5))
         {
-                if (m.time == config.reset_max_time || m.time == config.reset_max_time + config.position_reset_interval)
-                {
-                        ASSERT(m.x);
-                        m.x->value += std::bernoulli_distribution(0.5)(engine) ? 500 : -500;
-                }
-                else if (m.x && std::bernoulli_distribution(PROBABILITY)(engine))
-                {
-                        m.x->value += std::bernoulli_distribution(0.5)(engine) ? X : -X;
-                }
-                if (m.v)
-                {
-                        m.v->value *= config.speed_factor;
-                }
-                if (m.v && std::bernoulli_distribution(PROBABILITY)(engine))
-                {
-                        m.v->value += V;
-                }
+                x(m);
+                v(m);
         }
         return res;
 }
