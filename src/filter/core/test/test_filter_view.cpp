@@ -62,6 +62,7 @@ struct FilterConfig final
 {
         T init_v = 0;
         T init_v_variance = square(10.0);
+        T reset_dt = 20;
         std::optional<T> gate{5};
         filters::DiscreteNoiseModel<T> discrete_noise{.variance = square(2)};
         filters::ContinuousNoiseModel<T> continuous_noise{.spectral_density = 2 * discrete_noise.variance};
@@ -275,10 +276,11 @@ void test_impl(
 
         const auto c = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
-                config.gate);
+                config.reset_dt, config.gate);
 
         const auto d = filters::create_ekf<T>(
-                config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha, config.gate);
+                config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha,
+                config.reset_dt, config.gate);
 
         std::vector<view::Filter<T>> filters;
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));
