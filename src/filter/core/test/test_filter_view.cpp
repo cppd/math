@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 #include <random>
-#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -64,6 +63,7 @@ struct FilterConfig final
         T init_v_variance = square(10.0);
         T reset_dt = 20;
         std::optional<T> gate{5};
+        bool variance_correction = true;
         filters::DiscreteNoiseModel<T> discrete_noise{.variance = square(2)};
         filters::ContinuousNoiseModel<T> continuous_noise{.spectral_density = 2 * discrete_noise.variance};
         T fading_memory_alpha = 1.005;
@@ -129,6 +129,12 @@ std::string make_annotation(
 }
 
 template <typename T>
+T random_sign(const T v, PCG& engine)
+{
+        return std::bernoulli_distribution(0.5)(engine) ? v : -v;
+}
+
+template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
         const std::vector<Measurements<T>>& measurements,
         const MeasurementConfig<T>& config)
@@ -175,12 +181,8 @@ std::vector<Measurements<T>> add_bad_measurements(
 
         PCG engine;
 
-        const auto random_sign = [&](const T v)
-        {
-                return std::bernoulli_distribution(0.5)(engine) ? v : -v;
-        };
-
         int count_after_reset = 0;
+        int x_count = 0;
 
         const auto x = [&](Measurements<T>& m)
         {
@@ -188,14 +190,19 @@ std::vector<Measurements<T>> add_bad_measurements(
                 {
                         return;
                 }
+                if (++x_count == 1)
+                {
+                        m.x->value += random_sign(X, engine);
+                        return;
+                }
                 if (m.time >= config.reset_max_time && count_after_reset < COUNT_AFTER_RESET)
                 {
                         ++count_after_reset;
-                        m.x->value += random_sign(X_AFTER_RESET);
+                        m.x->value += random_sign(X_AFTER_RESET, engine);
                 }
                 else if (std::bernoulli_distribution(PROBABILITY)(engine))
                 {
-                        m.x->value += random_sign(X);
+                        m.x->value += random_sign(X, engine);
                 }
         };
 
@@ -213,7 +220,7 @@ std::vector<Measurements<T>> add_bad_measurements(
         };
 
         std::vector<Measurements<T>> res(measurements);
-        for (Measurements<T>& m : std::ranges::drop_view(res, 5))
+        for (Measurements<T>& m : res)
         {
                 x(m);
                 v(m);
@@ -276,11 +283,11 @@ void test_impl(
 
         const auto c = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
-                config.reset_dt, config.gate);
+                config.reset_dt, config.gate, config.variance_correction);
 
         const auto d = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha,
-                config.reset_dt, config.gate);
+                config.reset_dt, config.gate, config.variance_correction);
 
         std::vector<view::Filter<T>> filters;
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));

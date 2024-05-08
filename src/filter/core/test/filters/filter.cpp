@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ekf.h"
 #include "noise_model.h"
 #include "ukf.h"
+#include "variance_correction.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/filter/core/consistency.h>
 #include <src/filter/core/test/measurements.h>
 #include <src/numerical/matrix.h>
@@ -39,6 +39,7 @@ namespace
 template <typename Filter>
 void reset_filter(
         Filter* const filter,
+        std::optional<VarianceCorrection<typename Filter::Type>>& variance_correction,
         const Measurements<typename Filter::Type>& m,
         const typename Filter::Type init_v,
         const typename Filter::Type init_v_variance)
@@ -50,53 +51,31 @@ void reset_filter(
 
         const numerical::Vector<2, T> x(m.x->value, m.v ? m.v->value : init_v);
 
+        const auto x_variance =
+                !variance_correction ? m.x->variance : m.x->variance * variance_correction->update(m.time);
+        const auto v_variance = m.v ? m.v->variance : init_v_variance;
         const numerical::Matrix<2, 2, T> p{
-                {m.x->variance,                                     0},
-                {            0, m.v ? m.v->variance : init_v_variance}
+                {x_variance,          0},
+                {         0, v_variance}
         };
 
         filter->reset(x, p);
 }
 
-template <typename T>
-class VarianceCorrection final
-{
-        std::optional<T> last_time_;
-        T last_k_{1};
-
-        [[nodiscard]] static T correction(const T dt)
-        {
-                return std::min(T{30}, 1 + power<3>(dt) / 10'000);
-        }
-
-public:
-        [[nodiscard]] T update(const T time)
-        {
-                const T dt = time - last_time_.value_or(time);
-                ASSERT(dt >= 0);
-                const T k = (dt < 5) ? 1 : correction(dt);
-                ASSERT(k >= 1);
-                const T res = (last_k_ + k) / 2;
-                last_time_ = time;
-                last_k_ = res;
-                return square(res);
-        }
-};
-
 template <typename Filter>
 bool update_filter(
         Filter* const filter,
-        VarianceCorrection<typename Filter::Type>* const variance_correction,
+        std::optional<VarianceCorrection<typename Filter::Type>>& variance_correction,
         const Measurements<typename Filter::Type>& m,
         const std::optional<typename Filter::Type> gate)
 {
         ASSERT(filter);
-        ASSERT(variance_correction);
         ASSERT(m.x || m.v);
 
         if (m.x)
         {
-                const auto xv = m.x->variance * variance_correction->update(m.time);
+                const auto xv =
+                        !variance_correction ? m.x->variance : m.x->variance * variance_correction->update(m.time);
                 if (m.v)
                 {
                         filter->update_position_speed(m.x->value, xv, m.v->value, m.v->variance, gate);
@@ -133,7 +112,6 @@ class FilterImpl : public Filter<typename F::Type>
         void reset() override
         {
                 last_time_.reset();
-                variance_correction_.reset();
         }
 
         [[nodiscard]] std::optional<UpdateInfo<typename F::Type>> update(
@@ -154,9 +132,11 @@ class FilterImpl : public Filter<typename F::Type>
                         }
 
                         last_time_ = m.time;
-
-                        reset_filter(filter_.get(), m, init_v_, init_v_variance_);
-                        variance_correction_.emplace();
+                        if (variance_correction_)
+                        {
+                                variance_correction_->reset();
+                        }
+                        reset_filter(filter_.get(), variance_correction_, m, init_v_, init_v_variance_);
 
                         return {
                                 {.x = filter_->position(),
@@ -172,8 +152,7 @@ class FilterImpl : public Filter<typename F::Type>
 
                 filter_->predict(dt, noise_model_, fading_memory_alpha_);
 
-                ASSERT(variance_correction_);
-                if (!update_filter(filter_.get(), &*variance_correction_, m, gate_))
+                if (!update_filter(filter_.get(), variance_correction_, m, gate_))
                 {
                         return std::nullopt;
                 }
@@ -203,6 +182,7 @@ public:
                 const typename F::Type fading_memory_alpha,
                 const F::Type reset_dt,
                 const std::optional<typename F::Type> gate,
+                const bool variance_correction,
                 std::unique_ptr<F>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
@@ -212,6 +192,10 @@ public:
                   gate_(gate),
                   filter_(std::move(filter))
         {
+                if (variance_correction)
+                {
+                        variance_correction_.emplace();
+                }
         }
 };
 }
@@ -223,10 +207,11 @@ std::unique_ptr<Filter<T>> create_ekf(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         const T reset_dt,
-        const std::optional<T> gate)
+        const std::optional<T> gate,
+        const bool variance_correction)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, false>>>(
-                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate,
+                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate, variance_correction,
                 filters::create_filter_ekf<T, false>());
 }
 
@@ -237,10 +222,11 @@ std::unique_ptr<Filter<T>> create_h_infinity(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         const T reset_dt,
-        const std::optional<T> gate)
+        const std::optional<T> gate,
+        const bool variance_correction)
 {
         return std::make_unique<FilterImpl<filters::FilterEkf<T, true>>>(
-                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate,
+                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate, variance_correction,
                 filters::create_filter_ekf<T, true>());
 }
 
@@ -251,17 +237,19 @@ std::unique_ptr<Filter<T>> create_ukf(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         const T reset_dt,
-        const std::optional<T> gate)
+        const std::optional<T> gate,
+        const bool variance_correction)
 {
         return std::make_unique<FilterImpl<filters::FilterUkf<T>>>(
-                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate,
+                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate, variance_correction,
                 filters::create_filter_ukf<T>());
 }
 
-#define INSTANTIATION(T)                                                                                           \
-        template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);        \
-        template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, T, T, std::optional<T>); \
-        template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);
+#define INSTANTIATION(T)                                                                                          \
+        template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, T, std::optional<T>, bool); \
+        template std::unique_ptr<Filter<T>> create_h_infinity(                                                    \
+                T, T, const NoiseModel<T>&, T, T, std::optional<T>, bool);                                        \
+        template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, T, std::optional<T>, bool);
 
 INSTANTIATION(float)
 INSTANTIATION(double)
