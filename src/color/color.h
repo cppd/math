@@ -346,7 +346,7 @@ public:
                 ASSERT(is_finite(v));
         }
 
-        constexpr explicit SpectrumSamples(const numerical::Vector<std::size_t{N}, std::type_identity_t<T>>& samples)
+        constexpr explicit SpectrumSamples(const numerical::Vector<1 * N, std::type_identity_t<T>>& samples)
                 : Base(samples.max_n(0))
         {
                 ASSERT(is_finite(samples));
