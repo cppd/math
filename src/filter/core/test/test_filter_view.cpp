@@ -23,13 +23,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <optional>
 #include <random>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -63,7 +66,6 @@ struct FilterConfig final
         T init_v_variance = square(10.0);
         T reset_dt = 20;
         std::optional<T> gate{5};
-        bool variance_correction = true;
         filters::DiscreteNoiseModel<T> discrete_noise{.variance = square(2)};
         filters::ContinuousNoiseModel<T> continuous_noise{.spectral_density = 2 * discrete_noise.variance};
         T fading_memory_alpha = 1.005;
@@ -182,17 +184,11 @@ std::vector<Measurements<T>> add_bad_measurements(
         PCG engine;
 
         int count_after_reset = 0;
-        int x_count = 0;
 
         const auto x = [&](Measurements<T>& m)
         {
                 if (!m.x)
                 {
-                        return;
-                }
-                if (++x_count == 1)
-                {
-                        m.x->value += random_sign(X, engine);
                         return;
                 }
                 if (m.time >= config.reset_max_time && count_after_reset < COUNT_AFTER_RESET)
@@ -220,7 +216,7 @@ std::vector<Measurements<T>> add_bad_measurements(
         };
 
         std::vector<Measurements<T>> res(measurements);
-        for (Measurements<T>& m : res)
+        for (Measurements<T>& m : std::ranges::drop_view(res, 5))
         {
                 x(m);
                 v(m);
@@ -249,14 +245,46 @@ std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measure
 }
 
 template <typename T>
+class VarianceCorrection final
+{
+        std::optional<T> last_time_;
+        T last_k_{1};
+
+        [[nodiscard]] static T correction(const T dt)
+        {
+                return std::min(T{30}, 1 + power<3>(dt) / 10'000);
+        }
+
+public:
+        [[nodiscard]] T update(const T time)
+        {
+                const T dt = last_time_ ? (time - *last_time_) : 0;
+                ASSERT(dt >= 0);
+                const T k = (dt < 5) ? 1 : correction(dt);
+                ASSERT(k >= 1);
+                const T res = (last_k_ + k) / 2;
+                last_time_ = time;
+                last_k_ = res;
+                return square(res);
+        }
+};
+
+template <typename T>
 std::vector<view::Point<T>> test_filter(
         filters::Filter<T>* const filter,
         const std::vector<Measurements<T>>& measurements)
 {
         filter->reset();
+
+        VarianceCorrection<T> variance_correction;
+
         std::vector<view::Point<T>> res;
-        for (const Measurements<T>& m : measurements)
+        for (Measurements<T> m : measurements)
         {
+                if (m.x)
+                {
+                        m.x->variance *= variance_correction.update(m.time);
+                }
                 const auto update = filter->update(m);
                 if (!update)
                 {
@@ -283,11 +311,11 @@ void test_impl(
 
         const auto c = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
-                config.reset_dt, config.gate, config.variance_correction);
+                config.reset_dt, config.gate);
 
         const auto d = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha,
-                config.reset_dt, config.gate, config.variance_correction);
+                config.reset_dt, config.gate);
 
         std::vector<view::Filter<T>> filters;
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));

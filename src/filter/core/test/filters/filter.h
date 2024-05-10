@@ -56,8 +56,7 @@ std::unique_ptr<Filter<T>> create_ekf(
         const NoiseModel<T>& noise_model,
         T fading_memory_alpha,
         T reset_dt,
-        std::optional<T> gate,
-        bool variance_correction);
+        std::optional<T> gate);
 
 template <typename T>
 std::unique_ptr<Filter<T>> create_h_infinity(
@@ -66,8 +65,7 @@ std::unique_ptr<Filter<T>> create_h_infinity(
         const NoiseModel<T>& noise_model,
         T fading_memory_alpha,
         T reset_dt,
-        std::optional<T> gate,
-        bool variance_correction);
+        std::optional<T> gate);
 
 template <typename T>
 std::unique_ptr<Filter<T>> create_ukf(
@@ -76,6 +74,5 @@ std::unique_ptr<Filter<T>> create_ukf(
         const NoiseModel<T>& noise_model,
         T fading_memory_alpha,
         T reset_dt,
-        std::optional<T> gate,
-        bool variance_correction);
+        std::optional<T> gate);
 }
