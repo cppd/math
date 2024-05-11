@@ -72,7 +72,7 @@ constexpr int SCREEN_SIZE_3D_MAXIMUM = 10000;
 constexpr int SCREEN_SIZE_ND_MINIMUM = 50;
 constexpr int SCREEN_SIZE_ND_MAXIMUM = 5000;
 template <std::size_t N>
-constexpr int SCREEN_SIZE_ND = []()
+constexpr int SCREEN_SIZE_ND = []
 {
         switch (N)
         {

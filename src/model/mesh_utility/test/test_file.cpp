@@ -238,7 +238,7 @@ void test()
 {
         LOG("Test mesh files, " + space_name(N));
 
-        const unsigned facet_count = []()
+        const unsigned facet_count = []
         {
                 PCG engine;
                 return std::uniform_int_distribution<unsigned>(100, 1000)(engine);
