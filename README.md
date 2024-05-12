@@ -74,6 +74,7 @@ Ray intersection acceleration using spatial subdivision | 2<sup>d</sup>-trees
 Ray intersection acceleration using object subdivision  | Bounding volume hierarchies and the surface area heuristic
 Eigenvalues and eigenvectors of symmetric matrices      | Jacobi method
 Least squares fitting a plane to points                 | Principal component analysis
+State estimation                                        | The Kalman filter, the extended Kalman filter, the unscented Kalman filter
 
 ## Technical details
 
