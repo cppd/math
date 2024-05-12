@@ -48,62 +48,62 @@ public:
 
         //
 
-        void operator()(const model::mesh::event::Insert<N>& event) const
+        void operator()(model::mesh::event::Insert<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::UpdateMeshObject(event.object));
+                        view_->send(view::command::UpdateMeshObject(std::as_const(event.object)));
                 }
                 ASSERT(event.object);
-                tree_->insert(event.object, event.parent_object_id);
+                tree_->insert(std::move(event.object), std::move(event.parent_object_id));
         }
 
-        void operator()(const model::mesh::event::Erase<N>& event) const
+        void operator()(model::mesh::event::Erase<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::DeleteObject(event.id));
+                        view_->send(view::command::DeleteObject(std::as_const(event.id)));
                 }
-                tree_->erase(event.id);
+                tree_->erase(std::move(event.id));
         }
 
-        void operator()(const model::mesh::event::Update<N>& event) const
+        void operator()(model::mesh::event::Update<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::UpdateMeshObject(event.object));
+                        view_->send(view::command::UpdateMeshObject(std::as_const(event.object)));
                 }
-                tree_->update(event.object);
+                tree_->update(std::move(event.object));
         }
 
         //
 
-        void operator()(const model::volume::event::Insert<N>& event) const
+        void operator()(model::volume::event::Insert<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::UpdateVolumeObject(event.object));
+                        view_->send(view::command::UpdateVolumeObject(std::as_const(event.object)));
                 }
                 ASSERT(event.object);
-                tree_->insert(event.object, event.parent_object_id);
+                tree_->insert(std::move(event.object), std::move(event.parent_object_id));
         }
 
-        void operator()(const model::volume::event::Erase<N>& event) const
+        void operator()(model::volume::event::Erase<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::DeleteObject(event.id));
+                        view_->send(view::command::DeleteObject(std::as_const(event.id)));
                 }
-                tree_->erase(event.id);
+                tree_->erase(std::move(event.id));
         }
 
-        void operator()(const model::volume::event::Update<N>& event) const
+        void operator()(model::volume::event::Update<N>&& event) const
         {
                 if constexpr (N == 3)
                 {
-                        view_->send(view::command::UpdateVolumeObject(event.object));
+                        view_->send(view::command::UpdateVolumeObject(std::as_const(event.object)));
                 }
-                tree_->update(event.object);
+                tree_->update(std::move(event.object));
         }
 };
 }
@@ -111,13 +111,13 @@ public:
 template <std::size_t N>
 void ModelEvents::Events<N>::send(model::mesh::MeshEvent<N>&& event) const
 {
-        std::visit(Visitor<N>(tree_, view_), event);
+        std::visit(Visitor<N>(tree_, view_), std::move(event));
 }
 
 template <std::size_t N>
 void ModelEvents::Events<N>::send(model::volume::VolumeEvent<N>&& event) const
 {
-        std::visit(Visitor<N>(tree_, view_), event);
+        std::visit(Visitor<N>(tree_, view_), std::move(event));
 }
 
 ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
