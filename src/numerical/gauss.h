@@ -32,6 +32,7 @@ Replace Ax = b by LUx = b -> Ly = b, where Ux = y
 
 #include "vector.h"
 
+#include <src/com/error.h>
 #include <src/com/math.h>
 #include <src/com/type/concept.h>
 
@@ -222,7 +223,7 @@ constexpr void solve_x(RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant(RowMatrix<N, N, T>&& m)
+constexpr T determinant(RowMatrix<N, N, T>& m)
 {
         static_assert(FloatingPoint<T>);
         static_assert(N >= 1);
@@ -239,7 +240,7 @@ constexpr T determinant(RowMatrix<N, N, T>&& m)
 }
 
 template <std::size_t N, typename T>
-constexpr Vector<N, T> solve_gauss(RowMatrix<N, N, T>&& a, Vector<N, T>&& b)
+constexpr Vector<N, T> solve_gauss(RowMatrix<N, N, T>& a, Vector<N, T>& b)
 {
         static_assert(FloatingPoint<T>);
         static_assert(N >= 1);
@@ -252,7 +253,7 @@ constexpr Vector<N, T> solve_gauss(RowMatrix<N, N, T>&& a, Vector<N, T>&& b)
 }
 
 template <std::size_t N, std::size_t M, typename T>
-constexpr std::array<Vector<M, T>, N> solve_gauss(RowMatrix<N, N, T>&& a, RowMatrix<N, M, T>&& b)
+constexpr std::array<Vector<M, T>, N> solve_gauss(RowMatrix<N, N, T>& a, RowMatrix<N, M, T>& b)
 {
         static_assert(FloatingPoint<T>);
         static_assert(N >= 1 && M >= 1);
@@ -271,12 +272,12 @@ constexpr std::array<Vector<M, T>, N> solve_gauss(RowMatrix<N, N, T>&& a, RowMat
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
+[[nodiscard]] constexpr T determinant_gauss(std::array<Vector<N, T>, N> rows)
 {
         namespace impl = gauss_implementation;
 
-        std::array<Vector<N, T>, N> rows_copy{rows};
-        return impl::determinant(impl::RowMatrix<N, N, T>(&rows_copy));
+        impl::RowMatrix<N, N, T> matrix(&rows);
+        return impl::determinant(matrix);
 }
 
 template <std::size_t N, typename T>
@@ -285,6 +286,8 @@ template <std::size_t N, typename T>
         const std::size_t excluded_column)
 {
         namespace impl = gauss_implementation;
+
+        ASSERT(excluded_column <= N);
 
         std::array<Vector<N, T>, N> rows_copy;
         for (std::size_t r = 0; r < N; ++r)
@@ -298,7 +301,8 @@ template <std::size_t N, typename T>
                         rows_copy[r][c] = rows[r][c + 1];
                 }
         }
-        return impl::determinant(impl::RowMatrix<N, N, T>(&rows_copy));
+        impl::RowMatrix<N, N, T> matrix(&rows_copy);
+        return impl::determinant(matrix);
 }
 
 template <std::size_t N, typename T>
@@ -306,7 +310,8 @@ template <std::size_t N, typename T>
 {
         namespace impl = gauss_implementation;
 
-        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a), std::move(b));
+        impl::RowMatrix<N, N, T> a_matrix(&a);
+        return impl::solve_gauss(a_matrix, b);
 }
 
 template <std::size_t N, std::size_t M, typename T>
@@ -316,6 +321,8 @@ template <std::size_t N, std::size_t M, typename T>
 {
         namespace impl = gauss_implementation;
 
-        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a), impl::RowMatrix<N, M, T>(&b));
+        impl::RowMatrix<N, N, T> a_matrix(&a);
+        impl::RowMatrix<N, M, T> b_matrix(&b);
+        return impl::solve_gauss(a_matrix, b_matrix);
 }
 }
