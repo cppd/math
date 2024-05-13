@@ -45,12 +45,15 @@ public:
         virtual ~WorkerThreads() = default;
 
         [[nodiscard]] virtual unsigned count() const = 0;
+
         virtual void terminate_with_message(unsigned id) = 0;
+
         virtual void terminate_all() = 0;
+
         virtual bool terminate_and_start(
                 unsigned id,
                 const std::string& description,
-                std::function<Function()>&& function) = 0;
+                const std::function<Function()>& function) = 0;
 
         virtual void set_progresses() = 0;
 };

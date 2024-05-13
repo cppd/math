@@ -240,7 +240,7 @@ class Impl final : public WorkerThreads
         bool terminate_and_start(
                 const unsigned id,
                 const std::string& description,
-                std::function<Function()>&& function) override
+                const std::function<Function()>& function) override
         {
                 bool res = false;
                 catch_all(
