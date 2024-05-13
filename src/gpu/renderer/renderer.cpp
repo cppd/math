@@ -141,7 +141,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 renderer_view_.exec(command);
         }
 
-        void exec(Command&& command) override
+        void exec(const Command& command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 

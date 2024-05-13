@@ -41,7 +41,7 @@ public:
 
         virtual void receive(const Info& info) const = 0;
 
-        virtual void exec(Command&& command) = 0;
+        virtual void exec(const Command& command) = 0;
 
         [[nodiscard]] virtual VkSemaphore draw(
                 VkSemaphore semaphore,
