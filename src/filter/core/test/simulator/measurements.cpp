@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/core/test/measurements.h>
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <random>
 #include <ranges>
 #include <vector>
@@ -135,30 +137,48 @@ std::vector<Measurements<T>> add_bad_measurements(
         }
         return res;
 }
-}
 
 template <typename T>
-void VarianceCorrection<T>::correct(Measurements<T>* const m)
+class VarianceCorrectionImpl final : public VarianceCorrection<T>
 {
-        if (!m->x)
+        std::optional<T> last_time_;
+        T last_k_;
+
+        void reset() override
         {
-                return;
+                last_time_.reset();
+                last_k_ = 1;
         }
 
-        const auto correction = [](const T dt)
+        void correct(Measurements<T>* const m) override
         {
-                return std::min(T{30}, 1 + power<3>(dt) / 10'000);
-        };
+                if (!m->x)
+                {
+                        return;
+                }
 
-        const T dt = last_time_ ? (m->time - *last_time_) : 0;
-        ASSERT(dt >= 0);
-        const T k = (dt < 5) ? 1 : correction(dt);
-        ASSERT(k >= 1);
-        const T res = (last_k_ + k) / 2;
-        last_time_ = m->time;
-        last_k_ = res;
+                const auto correction = [](const T dt)
+                {
+                        return std::min(T{30}, 1 + power<3>(dt) / 10'000);
+                };
 
-        m->x->variance *= square(res);
+                const T dt = last_time_ ? (m->time - *last_time_) : 0;
+                ASSERT(dt >= 0);
+                const T k = (dt < 5) ? 1 : correction(dt);
+                ASSERT(k >= 1);
+                const T res = (last_k_ + k) / 2;
+                last_time_ = m->time;
+                last_k_ = res;
+
+                m->x->variance *= square(res);
+        }
+
+public:
+        VarianceCorrectionImpl()
+        {
+                reset();
+        }
+};
 }
 
 template <typename T>
@@ -166,7 +186,9 @@ SimulatorMeasurements<T> prepare_measurements(const std::vector<Measurements<T>>
 {
         const MeasurementConfig<T> config = measurement_config<T>();
         const std::vector<Measurements<T>> v = reset_position_measurements(measurements, config);
-        return {.config = config, .measurements = add_bad_measurements(v, config)};
+        return {.variance_correction = std::make_unique<VarianceCorrectionImpl<T>>(),
+                .config = config,
+                .measurements = add_bad_measurements(v, config)};
 }
 
 #define INSTANTIATION(T)                      \

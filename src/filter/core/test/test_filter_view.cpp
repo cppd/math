@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/test/test.h>
@@ -131,21 +132,23 @@ std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measure
 template <typename T>
 std::vector<view::Point<T>> test_filter(
         filters::Filter<T>* const filter,
-        const std::vector<Measurements<T>>& measurements)
+        const std::vector<Measurements<T>>& measurements,
+        simulator::VarianceCorrection<T>* const correction)
 {
         filter->reset();
-
-        simulator::VarianceCorrection<T> variance_correction;
+        correction->reset();
 
         std::vector<view::Point<T>> res;
         for (Measurements<T> m : measurements)
         {
-                variance_correction.correct(&m);
+                correction->correct(&m);
+
                 const auto update = filter->update(m);
                 if (!update)
                 {
                         continue;
                 }
+
                 res.push_back(
                         {.time = m.time,
                          .x = update->x,
@@ -161,7 +164,8 @@ void test_impl(
         const std::string_view name,
         const std::string_view annotation,
         const FilterConfig<T>& config,
-        const std::vector<Measurements<T>>& measurements)
+        const std::vector<Measurements<T>>& measurements,
+        simulator::VarianceCorrection<T>* const correction)
 {
         const auto positions = reset_v(measurements);
 
@@ -174,10 +178,10 @@ void test_impl(
                 config.reset_dt, config.gate);
 
         std::vector<view::Filter<T>> filters;
-        filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions));
-        filters.emplace_back("C Measurements", color::RGB8(0, 180, 0), test_filter(c.get(), measurements));
-        filters.emplace_back("D Positions", color::RGB8(128, 0, 0), test_filter(d.get(), positions));
-        filters.emplace_back("D Measurements", color::RGB8(0, 128, 0), test_filter(d.get(), measurements));
+        filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions, correction));
+        filters.emplace_back("C Measurements", color::RGB8(0, 180, 0), test_filter(c.get(), measurements, correction));
+        filters.emplace_back("D Positions", color::RGB8(128, 0, 0), test_filter(d.get(), positions, correction));
+        filters.emplace_back("D Measurements", color::RGB8(0, 128, 0), test_filter(d.get(), measurements, correction));
 
         view::write(name, annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
 }
@@ -194,10 +198,13 @@ void test_impl()
                 simulation_config.measurement_variance_x, simulation_config.measurement_variance_v);
 
         const auto test_measurements = simulator::prepare_measurements(measurements);
+        ASSERT(test_measurements.variance_correction);
 
         const std::string annotation = make_annotation(simulation_config, filter_config, test_measurements.config);
 
-        test_impl<T>("view", annotation, filter_config, test_measurements.measurements);
+        test_impl<T>(
+                "view", annotation, filter_config, test_measurements.measurements,
+                test_measurements.variance_correction.get());
 }
 
 void test()

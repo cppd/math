@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/filter/core/test/measurements.h>
 
-#include <optional>
+#include <memory>
 #include <vector>
 
 namespace ns::filter::core::test::simulator
@@ -34,18 +34,19 @@ struct MeasurementConfig final
 };
 
 template <typename T>
-class VarianceCorrection final
+class VarianceCorrection
 {
-        std::optional<T> last_time_;
-        T last_k_{1};
-
 public:
-        void correct(Measurements<T>* m);
+        virtual ~VarianceCorrection() = default;
+
+        virtual void reset() = 0;
+        virtual void correct(Measurements<T>* m) = 0;
 };
 
 template <typename T>
 struct SimulatorMeasurements final
 {
+        std::unique_ptr<VarianceCorrection<T>> variance_correction;
         MeasurementConfig<T> config;
         std::vector<Measurements<T>> measurements;
 };
