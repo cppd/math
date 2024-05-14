@@ -15,20 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "simulator_measurements.h"
-
 #include "measurements.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
+#include <src/filter/core/test/measurements.h>
 
 #include <algorithm>
 #include <random>
 #include <ranges>
 #include <vector>
 
-namespace ns::filter::core::test
+namespace ns::filter::core::test::simulator
 {
 namespace
 {

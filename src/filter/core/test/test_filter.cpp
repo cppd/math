@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distribution.h"
 #include "measurements.h"
-#include "simulator.h"
 
 #include "filters/filter.h"
 #include "filters/noise_model.h"
+#include "simulator/speed.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -233,7 +233,7 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         constexpr T FILTER_RESET_DT = 10;
         constexpr std::optional<T> FILTER_GATE{};
 
-        const std::vector<Measurements<T>> measurements = simulate<T>(
+        const std::vector<Measurements<T>> measurements = simulator::simulate_speed<T>(
                 SIMULATION_LENGTH, SIMULATION_INIT_X, SIMULATION_DT, SIMULATION_VELOCITY_MEAN,
                 SIMULATION_VELOCITY_VARIANCE, SIMULATION_MEASUREMENT_VARIANCE_X, SIMULATION_MEASUREMENT_VARIANCE_V);
 

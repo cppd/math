@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "measurements.h"
-#include "simulator.h"
-#include "simulator_measurements.h"
 
 #include "filters/filter.h"
 #include "filters/noise_model.h"
+#include "simulator/acceleration.h"
+#include "simulator/measurements.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -71,7 +71,7 @@ template <typename T>
 std::string make_annotation(
         const SimulationConfig<T>& simulation_config,
         const FilterConfig<T>& filter_config,
-        const MeasurementConfig<T>& measurement_config)
+        const simulator::MeasurementConfig<T>& measurement_config)
 {
         std::ostringstream oss;
 
@@ -135,7 +135,7 @@ std::vector<view::Point<T>> test_filter(
 {
         filter->reset();
 
-        VarianceCorrection<T> variance_correction;
+        simulator::VarianceCorrection<T> variance_correction;
 
         std::vector<view::Point<T>> res;
         for (Measurements<T> m : measurements)
@@ -188,12 +188,12 @@ void test_impl()
         const SimulationConfig<T> simulation_config;
         const FilterConfig<T> filter_config;
 
-        const std::vector<Measurements<T>> measurements = simulate_acceleration<T>(
+        const std::vector<Measurements<T>> measurements = simulator::simulate_acceleration<T>(
                 simulation_config.length, simulation_config.init_x, simulation_config.dt,
                 simulation_config.acceleration, simulation_config.velocity_variance,
                 simulation_config.measurement_variance_x, simulation_config.measurement_variance_v);
 
-        const auto test_measurements = prepare_measurements(measurements);
+        const auto test_measurements = simulator::prepare_measurements(measurements);
 
         const std::string annotation = make_annotation(simulation_config, filter_config, test_measurements.config);
 
