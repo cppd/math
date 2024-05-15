@@ -44,7 +44,8 @@ public:
                 T dt,
                 T position_process_variance,
                 T angle_process_variance,
-                T angle_r_process_variance) = 0;
+                T angle_r_process_variance,
+                T fading_memory_alpha) = 0;
 
         [[nodiscard]] virtual core::UpdateInfo<2, T> update_position(
                 const Measurement<2, T>& position,

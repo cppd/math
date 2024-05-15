@@ -85,6 +85,8 @@ struct Config final
         static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE_1 = square(degrees_to_radians(0.001));
         static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE_1 = square(degrees_to_radians(0.001));
         static constexpr T ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr T ACCELERATION_FILTER_FADING_MEMORY_ALPHA_0 = 1.001;
+        static constexpr T ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1 = 1.001;
         static constexpr std::array ACCELERATION_FILTER_UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
         static constexpr T ACCELERATION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> ACCELERATION_FILTER_GATE{};
@@ -252,7 +254,8 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Config<T>::ACCELERATION_FILTER_GATE, Config<T>::ACCELERATION_INIT, alpha,
                                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_0,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_0),
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_0,
+                                Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         }
 
@@ -264,7 +267,8 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Config<T>::ACCELERATION_FILTER_GATE, Config<T>::ACCELERATION_INIT, alpha,
                                 Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1),
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1,
+                                Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         }
 }
@@ -280,7 +284,8 @@ std::vector<TestFilter<2, T>> create_accelerations()
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
                         Config<T>::ACCELERATION_INIT, Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
                         Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1),
+                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1,
+                        Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
 
         const auto alphas = sort(std::array(Config<T>::DIRECTION_FILTER_UKF_ALPHAS));

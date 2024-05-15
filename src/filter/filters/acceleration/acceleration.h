@@ -37,7 +37,8 @@ template <typename T>
         T sigma_points_alpha,
         T position_process_variance,
         T angle_process_variance,
-        T angle_r_process_variance);
+        T angle_r_process_variance,
+        T fading_memory_alpha);
 
 template <typename T>
 [[nodiscard]] std::unique_ptr<Filter<2, T>> create_acceleration_1(
@@ -49,7 +50,8 @@ template <typename T>
         T sigma_points_alpha,
         T position_process_variance,
         T angle_process_variance,
-        T angle_r_process_variance);
+        T angle_r_process_variance,
+        T fading_memory_alpha);
 
 template <typename T>
 [[nodiscard]] std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
@@ -60,5 +62,6 @@ template <typename T>
         const Init<T>& init,
         T position_process_variance,
         T angle_process_variance,
-        T angle_r_process_variance);
+        T angle_r_process_variance,
+        T fading_memory_alpha);
 }
