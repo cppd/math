@@ -123,6 +123,8 @@ struct Config final
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_1 = square(2.0);
         static constexpr T SPEED_FILTER_POSITION_VARIANCE_2 = square(2.0);
         static constexpr T SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr T SPEED_FILTER_FADING_MEMORY_ALPHA_1 = 1.001;
+        static constexpr T SPEED_FILTER_FADING_MEMORY_ALPHA_2 = 1.001;
         static constexpr std::array SPEED_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T SPEED_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> SPEED_FILTER_GATE{};
@@ -400,7 +402,8 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                 return {filters::speed::create_speed_1<2, T>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1),
+                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_1,
+                                Config<T>::SPEED_FILTER_FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         }
 
@@ -409,7 +412,8 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                 return {filters::speed::create_speed_2<2, T>(
                                 Config<T>::SPEED_MEASUREMENT_QUEUE_SIZE, Config<T>::SPEED_FILTER_RESET_DT,
                                 Config<T>::SPEED_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::SPEED_FILTER_GATE,
-                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2),
+                                Config<T>::SPEED_INIT, alpha, Config<T>::SPEED_FILTER_POSITION_VARIANCE_2,
+                                Config<T>::SPEED_FILTER_FADING_MEMORY_ALPHA_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         }
 }

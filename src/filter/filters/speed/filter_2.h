@@ -41,7 +41,7 @@ public:
                 const numerical::Matrix<2 * N, 2 * N, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt, T process_variance) = 0;
+        virtual void predict(T dt, T process_variance, T fading_memory_alpha) = 0;
 
         [[nodiscard]] virtual core::UpdateInfo<N, T> update_position(
                 const Measurement<N, T>& position,
