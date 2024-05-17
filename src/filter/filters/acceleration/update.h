@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "consistency.h"
 
+#include <src/com/error.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/measurement.h>
 
@@ -39,13 +40,8 @@ void update_position(
         const T angle_process_variance,
         const T angle_r_process_variance,
         const T fading_memory_alpha,
-        std::optional<Nis<T>>& nis)
+        Nis<T>& nis)
 {
-        if (!nis)
-        {
-                nis.emplace();
-        }
-
         filter->predict(
                 dt, position_process_variance, angle_process_variance, angle_r_process_variance, fading_memory_alpha);
 
@@ -58,15 +54,15 @@ void update_position(
                                 const core::UpdateInfo<6, T> update =
                                         filter->update_position_speed_direction_acceleration(
                                                 position, *speed, *direction, *acceleration, gate);
-                                update_nis_position_speed_direction_acceleration(update, *nis);
-                                update_nis(update, *nis);
+                                update_nis_position_speed_direction_acceleration(update, nis);
+                                update_nis(update, nis);
                                 return;
                         }
 
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
-                        update_nis_position(update, *nis);
-                        update_nis(update, *nis);
+                        update_nis_position(update, nis);
+                        update_nis(update, nis);
                         return;
                 }
 
@@ -74,14 +70,14 @@ void update_position(
                 {
                         const core::UpdateInfo<5, T> update =
                                 filter->update_position_speed_acceleration(position, *speed, *acceleration, gate);
-                        update_nis_position(update, *nis);
-                        update_nis(update, *nis);
+                        update_nis_position(update, nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
-                update_nis_position(update, *nis);
-                update_nis(update, *nis);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
                 return;
         }
 
@@ -91,14 +87,14 @@ void update_position(
                 {
                         const core::UpdateInfo<5, T> update = filter->update_position_direction_acceleration(
                                 position, *direction, *acceleration, gate);
-                        update_nis_position(update, *nis);
-                        update_nis(update, *nis);
+                        update_nis_position(update, nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
-                update_nis_position(update, *nis);
-                update_nis(update, *nis);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
                 return;
         }
 
@@ -106,14 +102,14 @@ void update_position(
         {
                 const core::UpdateInfo<4, T> update =
                         filter->update_position_acceleration(position, *acceleration, gate);
-                update_nis_position(update, *nis);
-                update_nis(update, *nis);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
                 return;
         }
 
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
-        update_nis_position(update, *nis);
-        update_nis(update, *nis);
+        update_nis_position(update, nis);
+        update_nis(update, nis);
 }
 
 template <typename Filter, typename T>
@@ -128,13 +124,8 @@ void update_non_position(
         const T angle_process_variance,
         const T angle_r_process_variance,
         const T fading_memory_alpha,
-        std::optional<Nis<T>>& nis)
+        Nis<T>& nis)
 {
-        if (!nis)
-        {
-                nis.emplace();
-        }
-
         filter->predict(
                 dt, position_process_variance, angle_process_variance, angle_r_process_variance, fading_memory_alpha);
 
@@ -146,12 +137,12 @@ void update_non_position(
                         {
                                 const core::UpdateInfo<4, T> update = filter->update_speed_direction_acceleration(
                                         *speed, *direction, *acceleration, gate);
-                                update_nis(update, *nis);
+                                update_nis(update, nis);
                                 return;
                         }
 
                         const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
-                        update_nis(update, *nis);
+                        update_nis(update, nis);
                         return;
                 }
 
@@ -159,12 +150,12 @@ void update_non_position(
                 {
                         const core::UpdateInfo<3, T> update =
                                 filter->update_speed_acceleration(*speed, *acceleration, gate);
-                        update_nis(update, *nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
-                update_nis(update, *nis);
+                update_nis(update, nis);
                 return;
         }
 
@@ -174,20 +165,22 @@ void update_non_position(
                 {
                         const core::UpdateInfo<3, T> update =
                                 filter->update_direction_acceleration(*direction, *acceleration, gate);
-                        update_nis(update, *nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<1, T> update = filter->update_direction(*direction, gate);
-                update_nis(update, *nis);
+                update_nis(update, nis);
                 return;
         }
 
         if (acceleration)
         {
                 const core::UpdateInfo<2, T> update = filter->update_acceleration(*acceleration, gate);
-                update_nis(update, *nis);
+                update_nis(update, nis);
                 return;
         }
+
+        ASSERT(false);
 }
 }

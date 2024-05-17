@@ -162,10 +162,14 @@ void Acceleration<T, F>::reset(const Measurements<2, T>& m)
                 },
                 [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
                 {
+                        if (!nis_)
+                        {
+                                nis_.emplace();
+                        }
                         update_position(
                                 filter_.get(), position, measurements.acceleration, measurements.direction,
                                 measurements.speed, gate_, dt, position_process_variance_, angle_process_variance_,
-                                angle_r_process_variance_, fading_memory_alpha_, nis_);
+                                angle_r_process_variance_, fading_memory_alpha_, *nis_);
                 });
 
         last_time_ = m.time;
@@ -177,6 +181,11 @@ void Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
         ASSERT(last_time_);
         const T dt = m.time - *last_time_;
 
+        if (!nis_)
+        {
+                nis_.emplace();
+        }
+
         if (m.position)
         {
                 ASSERT(m.position->variance);
@@ -186,7 +195,7 @@ void Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
                 update_position(
                         filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt,
                         position_process_variance_, angle_process_variance_, angle_r_process_variance_,
-                        fading_memory_alpha_, nis_);
+                        fading_memory_alpha_, *nis_);
 
                 LOG(measurement_description(m) + filter_description(*filter_));
 
@@ -197,7 +206,7 @@ void Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
 
         update_non_position(
                 filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_process_variance_,
-                angle_process_variance_, angle_r_process_variance_, fading_memory_alpha_, nis_);
+                angle_process_variance_, angle_r_process_variance_, fading_memory_alpha_, *nis_);
 }
 
 template <typename T, template <typename> typename F>
