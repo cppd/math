@@ -108,6 +108,9 @@ struct Config final
         static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_1_1 = square(degrees_to_radians(0.001));
         static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_2_1 = square(degrees_to_radians(0.001));
         static constexpr T DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
+        static constexpr T DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_0 = 1.001;
+        static constexpr T DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_1 = 1.001;
+        static constexpr T DIRECTION_FILTER_FADING_MEMORY_ALPHA_2_1 = 1;
         static constexpr std::array DIRECTION_FILTER_UKF_ALPHAS = std::to_array<T>({1.0});
         static constexpr T DIRECTION_FILTER_RESET_DT = 10;
         static constexpr std::optional<T> DIRECTION_FILTER_GATE{};
@@ -329,7 +332,8 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0),
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0,
+                                Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
         }
 
@@ -339,7 +343,8 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1),
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1,
+                                Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
         }
 
@@ -349,7 +354,8 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
                                 Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1),
+                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1,
+                                Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         }
 }

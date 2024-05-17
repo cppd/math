@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "consistency.h"
 
+#include <src/com/error.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/measurement.h>
 
@@ -36,6 +37,7 @@ void update_position(
         const T dt,
         const T position_process_variance,
         const T angle_process_variance,
+        const T fading_memory_alpha,
         std::optional<Nis<T>>& nis)
 {
         if (!nis)
@@ -43,11 +45,12 @@ void update_position(
                 nis.emplace();
         }
 
+        filter->predict(dt, position_process_variance, angle_process_variance, fading_memory_alpha);
+
         if (speed)
         {
                 if (direction)
                 {
-                        filter->predict(dt, position_process_variance, angle_process_variance);
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
                         update_nis_position_speed_direction(update, *nis);
@@ -55,7 +58,6 @@ void update_position(
                         return;
                 }
 
-                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
                 update_nis_position(update, *nis);
                 update_nis(update, *nis);
@@ -64,21 +66,19 @@ void update_position(
 
         if (direction)
         {
-                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
                 update_nis_position(update, *nis);
                 update_nis(update, *nis);
                 return;
         }
 
-        filter->predict(dt, position_process_variance, angle_process_variance);
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
         update_nis_position(update, *nis);
         update_nis(update, *nis);
 }
 
 template <typename Filter, typename T>
-[[nodiscard]] bool update_non_position(
+void update_non_position(
         Filter* const filter,
         const std::optional<Measurement<1, T>>& direction,
         const std::optional<Measurement<1, T>>& speed,
@@ -86,6 +86,7 @@ template <typename Filter, typename T>
         const T dt,
         const T position_process_variance,
         const T angle_process_variance,
+        const T fading_memory_alpha,
         std::optional<Nis<T>>& nis)
 {
         if (!nis)
@@ -93,30 +94,29 @@ template <typename Filter, typename T>
                 nis.emplace();
         }
 
+        filter->predict(dt, position_process_variance, angle_process_variance, fading_memory_alpha);
+
         if (speed)
         {
                 if (direction)
                 {
-                        filter->predict(dt, position_process_variance, angle_process_variance);
                         const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
                         update_nis(update, *nis);
-                        return true;
+                        return;
                 }
 
-                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
                 update_nis(update, *nis);
-                return true;
+                return;
         }
 
         if (direction)
         {
-                filter->predict(dt, position_process_variance, angle_process_variance);
                 const core::UpdateInfo<1, T> update = filter->update_direction(*direction, gate);
                 update_nis(update, *nis);
-                return true;
+                return;
         }
 
-        return false;
+        ASSERT(false);
 }
 }

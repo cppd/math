@@ -417,7 +417,11 @@ class Filter final : public Filter21<T>
                         p(position_velocity_p, init));
         }
 
-        void predict(const T dt, const T position_process_variance, const T angle_process_variance) override
+        void predict(
+                const T dt,
+                const T position_process_variance,
+                const T angle_process_variance,
+                const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
@@ -427,7 +431,7 @@ class Filter final : public Filter21<T>
                         {
                                 return f(dt, x);
                         },
-                        q(dt, position_process_variance, angle_process_variance));
+                        q(dt, position_process_variance, angle_process_variance), fading_memory_alpha);
         }
 
         core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, const std::optional<T> gate) override

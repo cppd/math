@@ -36,7 +36,8 @@ std::unique_ptr<Filter<2, T>> create_direction_1_0(
         const Init<T>& init,
         T sigma_points_alpha,
         T position_process_variance,
-        T angle_process_variance);
+        T angle_process_variance,
+        T fading_memory_alpha);
 
 template <typename T>
 std::unique_ptr<Filter<2, T>> create_direction_1_1(
@@ -47,7 +48,8 @@ std::unique_ptr<Filter<2, T>> create_direction_1_1(
         const Init<T>& init,
         T sigma_points_alpha,
         T position_process_variance,
-        T angle_process_variance);
+        T angle_process_variance,
+        T fading_memory_alpha);
 
 template <typename T>
 std::unique_ptr<Filter<2, T>> create_direction_2_1(
@@ -58,5 +60,6 @@ std::unique_ptr<Filter<2, T>> create_direction_2_1(
         const Init<T>& init,
         T sigma_points_alpha,
         T position_process_variance,
-        T angle_process_variance);
+        T angle_process_variance,
+        T fading_memory_alpha);
 }
