@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/measurement.h>
 
 #include <cstddef>
-#include <optional>
 #include <string>
 
 namespace ns::filter::filters::speed
@@ -44,14 +43,10 @@ struct Nis final
 };
 
 template <typename Filter, std::size_t N, typename T>
-void update_nees(const Filter& filter, const TrueData<N, T>& true_data, std::optional<Nees<T>>& nees)
+void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<T>& nees)
 {
-        if (!nees)
-        {
-                nees.emplace();
-        }
-        nees->position.add(true_data.position - filter.position(), filter.position_p());
-        nees->speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
+        nees.position.add(true_data.position - filter.position(), filter.position_p());
+        nees.speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
 }
 
 template <std::size_t N, typename T>
@@ -89,28 +84,39 @@ void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 }
 
 template <typename T>
-std::string make_consistency_string(const std::optional<Nees<T>>& nees, const std::optional<Nis<T>>& nis)
+std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
 {
         std::string s;
 
-        if (nees)
-        {
-                s += "NEES position; " + nees->position.check_string();
-                s += '\n';
-                s += "NEES speed; " + nees->speed.check_string();
-        }
-
-        if (nis)
+        const auto add = [&](const auto& text)
         {
                 if (!s.empty())
                 {
                         s += '\n';
                 }
-                s += "NIS position; " + nis->position.check_string();
-                s += '\n';
-                s += "NIS position speed; " + nis->position_speed.check_string();
-                s += '\n';
-                s += "NIS; " + nis->nis.check_string();
+                s += text;
+        };
+
+        if (!nees.position.empty())
+        {
+                add("NEES position; " + nees.position.check_string());
+        }
+        if (!nees.speed.empty())
+        {
+                add("NEES speed; " + nees.speed.check_string());
+        }
+
+        if (!nis.position.empty())
+        {
+                add("NIS position; " + nis.position.check_string());
+        }
+        if (!nis.position_speed.empty())
+        {
+                add("NIS position speed; " + nis.position_speed.check_string());
+        }
+        if (!nis.nis.empty())
+        {
+                add("NIS; " + nis.nis.check_string());
         }
 
         return s;
