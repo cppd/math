@@ -38,13 +38,8 @@ void update_position(
         const T position_process_variance,
         const T angle_process_variance,
         const T fading_memory_alpha,
-        std::optional<Nis<T>>& nis)
+        Nis<T>& nis)
 {
-        if (!nis)
-        {
-                nis.emplace();
-        }
-
         filter->predict(dt, position_process_variance, angle_process_variance, fading_memory_alpha);
 
         if (speed)
@@ -53,28 +48,28 @@ void update_position(
                 {
                         const core::UpdateInfo<4, T> update =
                                 filter->update_position_speed_direction(position, *speed, *direction, gate);
-                        update_nis_position_speed_direction(update, *nis);
-                        update_nis(update, *nis);
+                        update_nis_position_speed_direction(update, nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
-                update_nis_position(update, *nis);
-                update_nis(update, *nis);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
                 return;
         }
 
         if (direction)
         {
                 const core::UpdateInfo<3, T> update = filter->update_position_direction(position, *direction, gate);
-                update_nis_position(update, *nis);
-                update_nis(update, *nis);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
                 return;
         }
 
         const core::UpdateInfo<2, T> update = filter->update_position(position, gate);
-        update_nis_position(update, *nis);
-        update_nis(update, *nis);
+        update_nis_position(update, nis);
+        update_nis(update, nis);
 }
 
 template <typename Filter, typename T>
@@ -87,13 +82,8 @@ void update_non_position(
         const T position_process_variance,
         const T angle_process_variance,
         const T fading_memory_alpha,
-        std::optional<Nis<T>>& nis)
+        Nis<T>& nis)
 {
-        if (!nis)
-        {
-                nis.emplace();
-        }
-
         filter->predict(dt, position_process_variance, angle_process_variance, fading_memory_alpha);
 
         if (speed)
@@ -101,19 +91,19 @@ void update_non_position(
                 if (direction)
                 {
                         const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
-                        update_nis(update, *nis);
+                        update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
-                update_nis(update, *nis);
+                update_nis(update, nis);
                 return;
         }
 
         if (direction)
         {
                 const core::UpdateInfo<1, T> update = filter->update_direction(*direction, gate);
-                update_nis(update, *nis);
+                update_nis(update, nis);
                 return;
         }
 

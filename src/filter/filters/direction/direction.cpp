@@ -77,8 +77,8 @@ class Direction final : public Filter<2, T>
 
         com::MeasurementQueue<2, T> queue_;
 
-        std::optional<Nees<T>> nees_;
-        std::optional<Nis<T>> nis_;
+        Nees<T> nees_;
+        Nis<T> nis_;
 
         std::optional<T> last_time_;
         std::optional<T> last_position_time_;
