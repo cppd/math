@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/measurement.h>
 
 #include <cstddef>
-#include <optional>
 #include <string>
 
 namespace ns::filter::filters::acceleration
@@ -47,17 +46,12 @@ struct Nis final
 };
 
 template <typename Filter, typename T>
-void update_nees(const Filter& filter, const TrueData<2, T>& true_data, std::optional<Nees<T>>& nees)
+void update_nees(const Filter& filter, const TrueData<2, T>& true_data, Nees<T>& nees)
 {
-        if (!nees)
-        {
-                nees.emplace();
-        }
-
-        nees->position.add(true_data.position - filter.position(), filter.position_p());
-        nees->speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
-        nees->angle.add_1(normalize_angle(true_data.angle - filter.angle()), filter.angle_p());
-        nees->angle_r.add_1(normalize_angle(true_data.angle_r - filter.angle_r()), filter.angle_r_p());
+        nees.position.add(true_data.position - filter.position(), filter.position_p());
+        nees.speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
+        nees.angle.add_1(normalize_angle(true_data.angle - filter.angle()), filter.angle_p());
+        nees.angle_r.add_1(normalize_angle(true_data.angle_r - filter.angle_r()), filter.angle_r_p());
 }
 
 template <typename T>
@@ -96,32 +90,47 @@ void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 }
 
 template <typename T>
-[[nodiscard]] std::string make_consistency_string(const std::optional<Nees<T>>& nees, const std::optional<Nis<T>>& nis)
+[[nodiscard]] std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
 {
         std::string s;
 
-        if (nees)
-        {
-                s += "NEES position; " + nees->position.check_string();
-                s += '\n';
-                s += "NEES speed; " + nees->speed.check_string();
-                s += '\n';
-                s += "NEES angle; " + nees->angle.check_string();
-                s += '\n';
-                s += "NEES angle r; " + nees->angle_r.check_string();
-        }
-
-        if (nis)
+        const auto add = [&](const auto& text)
         {
                 if (!s.empty())
                 {
                         s += '\n';
                 }
-                s += "NIS position; " + nis->position.check_string();
-                s += '\n';
-                s += "NIS position SDA; " + nis->position_speed_direction_acceleration.check_string();
-                s += '\n';
-                s += "NIS; " + nis->nis.check_string();
+                s += text;
+        };
+
+        if (!nees.position.empty())
+        {
+                add("NEES position; " + nees.position.check_string());
+        }
+        if (!nees.speed.empty())
+        {
+                add("NEES speed; " + nees.speed.check_string());
+        }
+        if (!nees.angle.empty())
+        {
+                add("NEES angle; " + nees.angle.check_string());
+        }
+        if (!nees.angle_r.empty())
+        {
+                add("NEES angle r; " + nees.angle_r.check_string());
+        }
+
+        if (!nis.position.empty())
+        {
+                add("NIS position; " + nis.position.check_string());
+        }
+        if (!nis.position_speed_direction_acceleration.empty())
+        {
+                add("NIS position SDA; " + nis.position_speed_direction_acceleration.check_string());
+        }
+        if (!nis.nis.empty())
+        {
+                add("NIS; " + nis.nis.check_string());
         }
 
         return s;
