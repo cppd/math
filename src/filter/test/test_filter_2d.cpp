@@ -126,7 +126,7 @@ void write_log(const Filters<T>& filters)
 }
 
 template <typename T>
-void update(const filters::Measurements<2, T>& m, Filters<T>* const filters)
+void update_filters(const filters::Measurements<2, T>& m, Filters<T>* const filters)
 {
         const auto& position_estimation = *filters->position_estimation;
 
@@ -150,20 +150,8 @@ void update(const filters::Measurements<2, T>& m, Filters<T>* const filters)
 }
 
 template <typename T>
-void update(
-        filters::Measurements<2, T> m,
-        std::vector<filters::Measurements<2, T>>* const measurements,
-        Filters<T>* const filters)
+void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const filters)
 {
-        measurements->push_back(m);
-
-        filters->position_variance->update(m);
-
-        if (m.position && !m.position->variance)
-        {
-                m.position->variance = filters->position_variance->last_position_variance();
-        }
-
         for (auto& f : filters->positions_1)
         {
                 const auto& update_info = f.filter->update(m);
@@ -177,22 +165,28 @@ void update(
         }
 
         filters->position_estimation->update(m);
-
-        update(m, filters);
 }
 
 template <typename T>
 void run(const Track<2, T>& track)
 {
         Filters<T> filters = create_filters<T>();
-        std::vector<filters::Measurements<2, T>> measurements;
 
-        for (const filters::Measurements<2, T>& m : track.measurements())
+        for (filters::Measurements<2, T> m : track.measurements())
         {
-                update(m, &measurements, &filters);
+                filters.position_variance->update(m);
+                if (m.position && !m.position->variance)
+                {
+                        m.position->variance = filters.position_variance->last_position_variance();
+                }
+
+                track.variance_correction().correct(&m);
+
+                update_positions(m, &filters);
+                update_filters(m, &filters);
         }
 
-        write_file(track.annotation(), measurements, filters);
+        write_file(track.annotation(), track.measurements(), filters);
 
         write_log(filters);
 }

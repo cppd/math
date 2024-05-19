@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/filter/filters/measurement.h>
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -27,21 +29,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T>
+class VarianceCorrection
+{
+public:
+        virtual ~VarianceCorrection() = default;
+
+        virtual void reset() = 0;
+        virtual void correct(filters::Measurements<N, T>* m) = 0;
+};
+
+template <std::size_t N, typename T>
 class Track final
 {
         std::vector<filters::Measurements<N, T>> measurements_;
+        std::unique_ptr<VarianceCorrection<N, T>> variance_correction_;
         std::string annotation_;
 
 public:
-        Track(std::vector<filters::Measurements<N, T>> measurements, std::string annotation)
+        Track(std::vector<filters::Measurements<N, T>> measurements,
+              std::unique_ptr<VarianceCorrection<N, T>>&& variance_correction,
+              std::string annotation)
                 : measurements_(std::move(measurements)),
+                  variance_correction_(std::move(variance_correction)),
                   annotation_(std::move(annotation))
         {
+                ASSERT(variance_correction_);
         }
 
         [[nodiscard]] const std::vector<filters::Measurements<N, T>>& measurements() const
         {
                 return measurements_;
+        }
+
+        [[nodiscard]] VarianceCorrection<N, T>& variance_correction() const
+        {
+                return *variance_correction_;
         }
 
         [[nodiscard]] const std::string& annotation() const

@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <random>
 #include <sstream>
 #include <string>
@@ -453,6 +454,48 @@ void correct_measurements(std::vector<filters::Measurements<N, T>>* const measur
                 }
         }
 }
+
+template <std::size_t N, typename T>
+class VarianceCorrectionImpl final : public VarianceCorrection<N, T>
+{
+        std::optional<T> last_time_;
+        T last_k_;
+
+        void reset() override
+        {
+                last_time_.reset();
+                last_k_ = 1;
+        }
+
+        void correct(filters::Measurements<N, T>* const m) override
+        {
+                if (!m->position || !m->position->variance)
+                {
+                        return;
+                }
+
+                const auto correction = [](const T dt)
+                {
+                        return std::min(T{30}, 1 + power<3>(dt) / 10'000);
+                };
+
+                const T dt = last_time_ ? (m->time - *last_time_) : 0;
+                ASSERT(dt >= 0);
+                const T k = (dt < 5) ? 1 : correction(dt);
+                ASSERT(k >= 1);
+                const T res = (last_k_ + k) / 2;
+                last_time_ = m->time;
+                last_k_ = res;
+
+                *m->position->variance *= square(res);
+        }
+
+public:
+        VarianceCorrectionImpl()
+        {
+                reset();
+        }
+};
 }
 
 template <std::size_t N, typename T>
@@ -470,7 +513,9 @@ Track<N, T> track()
 
         std::string annotation = make_annotation(config, measurements);
 
-        return {std::move(measurements), std::move(annotation)};
+        auto variance_correction = std::make_unique<VarianceCorrectionImpl<N, T>>();
+
+        return {std::move(measurements), std::move(variance_correction), std::move(annotation)};
 }
 
 #define TEMPLATE(T) template Track<2, T> track();
