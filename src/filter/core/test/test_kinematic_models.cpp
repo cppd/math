@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <src/filter/core/models.h>
+#include <src/filter/core/kinematic_models.h>
 #include <src/numerical/matrix.h>
 
 #include <cstddef>
@@ -46,31 +46,39 @@ struct Test final
 {
         void test()
         {
+                constexpr numerical::Matrix<1, 1, T> CWN_1{{0.25L}};
+                static_assert(equal(continuous_white_noise<1, T>(0.5L, 0.5L), CWN_1));
+
                 constexpr numerical::Matrix<2, 2, T> CWN_2{
                         {0.0208333333333333333339L, 0.0625L},
                         {                  0.0625L,   0.25L}
                 };
-                static_assert(equal(continuous_white_noise<2, T>(0.5, 0.5), CWN_2));
+                static_assert(equal(continuous_white_noise<2, T>(0.5L, 0.5L), CWN_2));
 
                 constexpr numerical::Matrix<3, 3, T> CWN_3{
                         {0.000781250000000000000011L,               0.00390625L, 0.0104166666666666666669L},
                         {                0.00390625L, 0.0208333333333333333339L,                   0.0625L},
                         {  0.0104166666666666666669L,                   0.0625L,                     0.25L}
                 };
-                static_assert(equal(continuous_white_noise<3, T>(0.5, 0.5), CWN_3));
+                static_assert(equal(continuous_white_noise<3, T>(0.5L, 0.5L), CWN_3));
+
+                //
+
+                constexpr numerical::Matrix<1, 1, T> DWN_1{{0.125L}};
+                static_assert(equal(discrete_white_noise<1, T>(0.5L, 0.5L), DWN_1));
 
                 constexpr numerical::Matrix<2, 2, T> DWN_2{
                         {0.0078125L, 0.03125L},
                         {  0.03125L,   0.125L}
                 };
-                static_assert(equal(discrete_white_noise<2, T>(0.5, 0.5), DWN_2));
+                static_assert(equal(discrete_white_noise<2, T>(0.5L, 0.5L), DWN_2));
 
                 constexpr numerical::Matrix<3, 3, T> DWN_3{
                         {0.0078125, 0.03125, 0.0625},
                         {  0.03125,   0.125,   0.25},
                         {   0.0625,    0.25,    0.5}
                 };
-                static_assert(equal(discrete_white_noise<3, T>(0.5, 0.5), DWN_3));
+                static_assert(equal(discrete_white_noise<3, T>(0.5L, 0.5L), DWN_3));
         }
 };
 

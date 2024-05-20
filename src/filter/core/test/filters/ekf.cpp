@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/variant.h>
 #include <src/filter/core/ekf.h>
-#include <src/filter/core/models.h>
+#include <src/filter/core/kinematic_models.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 

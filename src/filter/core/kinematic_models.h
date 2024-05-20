@@ -41,6 +41,17 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter::core
 {
+template <std::size_t N, typename T>
+        requires (N == 1)
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> continuous_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> spectral_density)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return numerical::Matrix<N, N, T>{{dt * spectral_density}};
+}
+
 // 6.2.2 Continuous White Noise Acceleration Model
 // The changes in the velocity over a sampling period T are
 // of the order of sqrt(Q(2, 2)) = sqrt(spectral_density * T).
@@ -84,6 +95,17 @@ template <std::size_t N, typename T>
                 { dt_4 / 8, dt_3 / 3, dt_2 / 2},
                 { dt_3 / 6, dt_2 / 2,     dt_1}
         };
+}
+
+template <std::size_t N, typename T>
+        requires (N == 1)
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> variance)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return numerical::Matrix<N, N, T>{{dt * dt * variance}};
 }
 
 // 6.3.2 Discrete White Noise Acceleration Model

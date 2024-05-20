@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/variant.h>
-#include <src/filter/core/models.h>
+#include <src/filter/core/kinematic_models.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
 #include <src/numerical/matrix.h>
