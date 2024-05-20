@@ -41,6 +41,47 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter::core
 {
+/*
+factorOut[m_, f_] :=
+  Module[{h},
+   h = f*HoldForm[Evaluate[m /. f -> 1]];
+   TraditionalForm[h]];
+
+continuous[f_, q_, phi_] :=
+  Module[{m},
+   m = Integrate[f.q.Transpose[f], dt];
+   factorOut[m, phi]];
+
+discrete[v_, var_] :=
+  Module[{m},
+   m = (v*var).Transpose[v];
+   factorOut[m, var]];
+
+f = {{1}};
+q = {{phi}};
+continuous[f, q, phi]
+
+f = {{1, dt}, {0, 1}};
+q = {{0, 0}, {0, phi}};
+continuous[f, q, phi]
+
+f = {{1, dt, dt^2/2}, {0, 1, dt}, {0, 0, 1}};
+q = {{0, 0, 0}, {0, 0, 0}, {0, 0, phi}};
+continuous[f, q, phi]
+
+f = {{dt}};
+discrete[f, var]
+
+f = {{dt^2/2}, {dt}};
+discrete[f, var]
+
+f = {{dt^2/2}, {dt}, {1}};
+discrete[f, var]
+
+f = {{dt^3/6}, {dt^2/2}, {dt}};
+discrete[f, var]
+*/
+
 template <std::size_t N, typename T>
         requires (N == 1)
 [[nodiscard]] constexpr numerical::Matrix<N, N, T> continuous_white_noise(
