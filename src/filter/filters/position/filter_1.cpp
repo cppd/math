@@ -168,7 +168,7 @@ class FilterImpl final : public Filter1<N, T>
                 filter_.emplace(init_x(position, init), init_p(variance, init));
         }
 
-        void predict(const T dt, const T process_variance) override
+        void predict(const T dt, const T process_variance, const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
@@ -184,7 +184,7 @@ class FilterImpl final : public Filter1<N, T>
                         {
                                 return f;
                         },
-                        q<N, T>(dt, process_variance));
+                        q<N, T>(dt, process_variance), fading_memory_alpha);
         }
 
         [[nodiscard]] core::UpdateInfo<N, T> update(

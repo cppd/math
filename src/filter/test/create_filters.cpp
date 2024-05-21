@@ -57,12 +57,15 @@ template <typename T>
 struct Config final
 {
         static constexpr T POSITION_FILTER_VARIANCE_0 = square(0.5);
+        static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_0 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_0{};
 
         static constexpr T POSITION_FILTER_VARIANCE_1 = square(1);
+        static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_1 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_1{10};
 
         static constexpr T POSITION_FILTER_VARIANCE_2 = square(0.5);
+        static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_2 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_2{5};
 
         static constexpr std::array POSITION_FILTER_THETAS = std::to_array<T>({0});
@@ -169,7 +172,7 @@ std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_var
 {
         return std::make_unique<filters::estimation::PositionVariance<N, T>>(
                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_VARIANCE_2,
-                Config<T>::POSITION_VARIANCE_INIT);
+                Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_2, Config<T>::POSITION_VARIANCE_INIT);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -195,7 +198,8 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_0<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_0, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_0),
+                                Config<T>::POSITION_FILTER_VARIANCE_0,
+                                Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
         }
 
@@ -204,7 +208,8 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_1<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_1, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_1),
+                                Config<T>::POSITION_FILTER_VARIANCE_1,
+                                Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
         }
 
@@ -213,7 +218,8 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_2<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_2, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_2),
+                                Config<T>::POSITION_FILTER_VARIANCE_2,
+                                Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
         }
 }

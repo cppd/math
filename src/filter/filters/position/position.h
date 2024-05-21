@@ -34,7 +34,8 @@ std::unique_ptr<FilterPosition<N, T>> create_position_0(
         std::optional<T> gate,
         const Init<T>& init,
         T theta,
-        T process_variance);
+        T process_variance,
+        T fading_memory_alpha);
 
 template <std::size_t N, typename T>
 std::unique_ptr<FilterPosition<N, T>> create_position_1(
@@ -43,7 +44,8 @@ std::unique_ptr<FilterPosition<N, T>> create_position_1(
         std::optional<T> gate,
         const Init<T>& init,
         T theta,
-        T process_variance);
+        T process_variance,
+        T fading_memory_alpha);
 
 template <std::size_t N, typename T>
 std::unique_ptr<FilterPosition<N, T>> create_position_2(
@@ -52,5 +54,6 @@ std::unique_ptr<FilterPosition<N, T>> create_position_2(
         std::optional<T> gate,
         const Init<T>& init,
         T theta,
-        T process_variance);
+        T process_variance,
+        T fading_memory_alpha);
 }

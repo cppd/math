@@ -40,7 +40,7 @@ public:
                 const numerical::Vector<N, T>& variance,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt, T process_variance) = 0;
+        virtual void predict(T dt, T process_variance, T fading_memory_alpha) = 0;
 
         [[nodiscard]] virtual core::UpdateInfo<N, T> update(
                 const numerical::Vector<N, T>& position,
