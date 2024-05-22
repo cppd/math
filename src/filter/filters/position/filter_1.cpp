@@ -21,9 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/variant.h>
 #include <src/filter/core/ekf.h>
+#include <src/filter/core/kinematic_models.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/com/utility.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/utility/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -90,16 +93,25 @@ numerical::Matrix<2 * N, 2 * N, T> f_matrix(const T dt)
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<2 * N, 2 * N, T> q(const T dt, const T process_variance)
+numerical::Matrix<2 * N, 2 * N, T> q(const T dt, const NoiseModel<T>& noise_model)
 {
-        const T dt_2 = power<2>(dt) / 2;
+        const auto visitors = Visitors{
+                [&](const ContinuousNoiseModel<T>& model)
+                {
+                        return block_diagonal<N>(core::continuous_white_noise<2, T>(dt, model.spectral_density));
+                },
+                [&](const DiscreteNoiseModel<T>& model)
+                {
+                        const T dt_2 = power<2>(dt) / 2;
 
-        const numerical::Matrix<2 * N, N, T> noise_transition =
-                block_diagonal<N>(numerical::Matrix<2, 1, T>{{dt_2}, {dt}});
-        const numerical::Matrix<N, N, T> process_covariance =
-                numerical::make_diagonal_matrix(numerical::Vector<N, T>(process_variance));
+                        const numerical::Matrix<2 * N, N, T> noise_transition =
+                                block_diagonal<N>(numerical::Matrix<2, 1, T>{{dt_2}, {dt}});
+                        const numerical::Matrix<N, N, T> process_covariance =
+                                numerical::make_diagonal_matrix(numerical::Vector<N, T>(model.variance));
 
-        return noise_transition * process_covariance * noise_transition.transposed();
+                        return noise_transition * process_covariance * noise_transition.transposed();
+                }};
+        return std::visit(visitors, noise_model);
 }
 
 template <std::size_t N, typename T>
@@ -168,11 +180,10 @@ class FilterImpl final : public Filter1<N, T>
                 filter_.emplace(init_x(position, init), init_p(variance, init));
         }
 
-        void predict(const T dt, const T process_variance, const T fading_memory_alpha) override
+        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
-                ASSERT(process_variance >= 0);
 
                 const numerical::Matrix<2 * N, 2 * N, T> f = f_matrix<N, T>(dt);
                 filter_->predict(
@@ -184,7 +195,7 @@ class FilterImpl final : public Filter1<N, T>
                         {
                                 return f;
                         },
-                        q<N, T>(dt, process_variance), fading_memory_alpha);
+                        q<N, T>(dt, noise_model), fading_memory_alpha);
         }
 
         [[nodiscard]] core::UpdateInfo<N, T> update(

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/filters/position/filter_2.h>
 #include <src/filter/filters/position/init.h>
 #include <src/filter/utility/instantiation.h>
@@ -81,12 +82,12 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 PositionVariance<N, T>::PositionVariance(
         const T reset_dt,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         const position::Init<T>& init)
         : reset_dt_(reset_dt),
           init_(init),
-          process_variance_(process_variance),
+          noise_model_(noise_model),
           fading_memory_alpha_(fading_memory_alpha),
           filter_(position::create_filter_2<N, T>(THETA<T>))
 {
@@ -117,7 +118,7 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
         ASSERT(last_update_time_);
 
         const T predict_dt = m.time - *last_predict_time_;
-        filter_->predict(predict_dt, process_variance_, fading_memory_alpha_);
+        filter_->predict(predict_dt, noise_model_, fading_memory_alpha_);
         last_predict_time_ = m.time;
 
         const auto update = filter_->update(m.position->value, VARIANCE<N, T>, GATE<T>);

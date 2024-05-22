@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/direction/init.h>
 #include <src/filter/filters/estimation/position_estimation.h>
 #include <src/filter/filters/estimation/position_variance.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/filters/position/init.h>
 #include <src/filter/filters/position/position.h>
 #include <src/filter/filters/speed/init.h>
@@ -56,15 +57,15 @@ const auto* const THETA = reinterpret_cast<const char*>(u8"\u03b8");
 template <typename T>
 struct Config final
 {
-        static constexpr T POSITION_FILTER_VARIANCE_0 = square(0.5);
+        static constexpr filters::DiscreteNoiseModel<T> POSITION_FILTER_NOISE_MODEL_0{.variance = square(0.5)};
         static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_0 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_0{};
 
-        static constexpr T POSITION_FILTER_VARIANCE_1 = square(1);
+        static constexpr filters::DiscreteNoiseModel<T> POSITION_FILTER_NOISE_MODEL_1{.variance = square(1)};
         static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_1 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_1{10};
 
-        static constexpr T POSITION_FILTER_VARIANCE_2 = square(0.5);
+        static constexpr filters::DiscreteNoiseModel<T> POSITION_FILTER_NOISE_MODEL_2{.variance = square(0.5)};
         static constexpr T POSITION_FILTER_FADING_MEMORY_ALPHA_2 = 1;
         static constexpr std::optional<T> POSITION_FILTER_GATE_2{5};
 
@@ -171,7 +172,7 @@ template <std::size_t N, typename T>
 std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_variance()
 {
         return std::make_unique<filters::estimation::PositionVariance<N, T>>(
-                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_VARIANCE_2,
+                Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_NOISE_MODEL_2,
                 Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_2, Config<T>::POSITION_VARIANCE_INIT);
 }
 
@@ -198,7 +199,7 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_0<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_0, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_0,
+                                Config<T>::POSITION_FILTER_NOISE_MODEL_0,
                                 Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
         }
@@ -208,7 +209,7 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_1<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_1, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_1,
+                                Config<T>::POSITION_FILTER_NOISE_MODEL_1,
                                 Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
         }
@@ -218,7 +219,7 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return {filters::position::create_position_2<N, T>(
                                 Config<T>::POSITION_FILTER_RESET_DT, Config<T>::POSITION_FILTER_LINEAR_DT,
                                 Config<T>::POSITION_FILTER_GATE_2, Config<T>::POSITION_INIT, theta,
-                                Config<T>::POSITION_FILTER_VARIANCE_2,
+                                Config<T>::POSITION_FILTER_NOISE_MODEL_2,
                                 Config<T>::POSITION_FILTER_FADING_MEMORY_ALPHA_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
         }

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/filters/position/filter_2.h>
 #include <src/filter/filters/position/init.h>
 #include <src/numerical/vector.h>
@@ -37,7 +38,7 @@ class PositionVariance final
 {
         const T reset_dt_;
         const position::Init<T> init_;
-        const T process_variance_;
+        const NoiseModel<T> noise_model_;
         const T fading_memory_alpha_;
         std::unique_ptr<position::Filter2<N, T>> filter_;
 
@@ -51,7 +52,11 @@ class PositionVariance final
         void update_position_variance(const Measurements<N, T>& m);
 
 public:
-        PositionVariance(T reset_dt, T process_variance, T fading_memory_alpha, const position::Init<T>& init);
+        PositionVariance(
+                T reset_dt,
+                const NoiseModel<T>& noise_model,
+                T fading_memory_alpha,
+                const position::Init<T>& init);
 
         std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m);
         std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m);
