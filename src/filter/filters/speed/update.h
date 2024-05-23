@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 
 #include <cstddef>
 #include <optional>
@@ -35,11 +36,11 @@ void update_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(dt, process_variance, fading_memory_alpha);
+        filter->predict(dt, noise_model, fading_memory_alpha);
 
         if (speed)
         {
@@ -60,11 +61,11 @@ void update_non_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(dt, process_variance, fading_memory_alpha);
+        filter->predict(dt, noise_model, fading_memory_alpha);
 
         if (speed)
         {

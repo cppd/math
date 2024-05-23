@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/filter/filters/filter.h>
+#include <src/filter/filters/noise_model.h>
 
 #include <cstddef>
 #include <memory>
@@ -35,7 +36,7 @@ std::unique_ptr<Filter<N, T>> create_speed_1(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T process_variance,
+        const NoiseModel<T>& noise_model,
         T fading_memory_alpha);
 
 template <std::size_t N, typename T>
@@ -46,6 +47,6 @@ std::unique_ptr<Filter<N, T>> create_speed_2(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T process_variance,
+        const NoiseModel<T>& noise_model,
         T fading_memory_alpha);
 }

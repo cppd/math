@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/utility/instantiation.h>
 
 #include <cstddef>
@@ -45,7 +46,7 @@ class Speed final : public Filter<N, T>
         T reset_dt_;
         std::optional<T> gate_;
         Init<T> init_;
-        T process_variance_;
+        NoiseModel<T> noise_model_;
         T fading_memory_alpha_;
         std::unique_ptr<F<N, T>> filter_;
 
@@ -75,7 +76,7 @@ public:
               T angle_estimation_variance,
               std::optional<T> gate,
               const Init<T>& init,
-              T process_variance,
+              const NoiseModel<T>& noise_model,
               T fading_memory_alpha,
               std::unique_ptr<F<N, T>>&& filter);
 };
@@ -87,13 +88,13 @@ Speed<N, T, F>::Speed(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
         std::unique_ptr<F<N, T>>&& filter)
         : reset_dt_(reset_dt),
           gate_(gate),
           init_(init),
-          process_variance_(process_variance),
+          noise_model_(noise_model),
           fading_memory_alpha_(fading_memory_alpha),
           filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
@@ -134,7 +135,7 @@ void Speed<N, T, F>::reset(const Measurements<N, T>& m)
                 [&](const Measurement<N, T>& position, const Measurements<N, T>& measurements, const T dt)
                 {
                         update_position(
-                                filter_.get(), position, measurements.speed, gate_, dt, process_variance_,
+                                filter_.get(), position, measurements.speed, gate_, dt, noise_model_,
                                 fading_memory_alpha_, nis_);
                 });
 
@@ -154,13 +155,12 @@ void Speed<N, T, F>::update_filter(const Measurements<N, T>& m)
 
                 const Measurement<N, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
-                update_position(
-                        filter_.get(), position, m.speed, gate_, dt, process_variance_, fading_memory_alpha_, nis_);
+                update_position(filter_.get(), position, m.speed, gate_, dt, noise_model_, fading_memory_alpha_, nis_);
 
                 return;
         }
 
-        update_non_position(filter_.get(), m.speed, gate_, dt, process_variance_, fading_memory_alpha_, nis_);
+        update_non_position(filter_.get(), m.speed, gate_, dt, noise_model_, fading_memory_alpha_, nis_);
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
@@ -225,11 +225,11 @@ std::unique_ptr<Filter<N, T>> create_speed_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha)
 {
         return std::make_unique<Speed<N, T, Filter1>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, process_variance,
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, noise_model,
                 fading_memory_alpha, create_filter_1<N, T>(sigma_points_alpha));
 }
 
@@ -241,19 +241,19 @@ std::unique_ptr<Filter<N, T>> create_speed_2(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T process_variance,
+        const NoiseModel<T>& noise_model,
         const T fading_memory_alpha)
 {
         return std::make_unique<Speed<N, T, Filter2>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, process_variance,
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, noise_model,
                 fading_memory_alpha, create_filter_2<N, T>(sigma_points_alpha));
 }
 
-#define TEMPLATE(N, T)                                                         \
-        template std::unique_ptr<Filter<(N), T>> create_speed_1(               \
-                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T); \
-        template std::unique_ptr<Filter<(N), T>> create_speed_2(               \
-                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T);
+#define TEMPLATE(N, T)                                                                            \
+        template std::unique_ptr<Filter<(N), T>> create_speed_1(                                  \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, T); \
+        template std::unique_ptr<Filter<(N), T>> create_speed_2(                                  \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
 }
