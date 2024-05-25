@@ -83,11 +83,16 @@ struct Config final
                 .acceleration = 0,
                 .acceleration_variance = square<T>(10)};
 
-        static constexpr T ACCELERATION_FILTER_POSITION_VARIANCE = square(1.0);
-        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE_0 = square(degrees_to_radians(1.0));
-        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE_0 = square(degrees_to_radians(1.0));
-        static constexpr T ACCELERATION_FILTER_ANGLE_VARIANCE_1 = square(degrees_to_radians(0.001));
-        static constexpr T ACCELERATION_FILTER_ANGLE_R_VARIANCE_1 = square(degrees_to_radians(0.001));
+        static constexpr filters::DiscreteNoiseModel<T> ACCELERATION_FILTER_POSITION_NOISE_MODEL{
+                .variance = square(1.0)};
+        static constexpr filters::DiscreteNoiseModel<T> ACCELERATION_FILTER_ANGLE_NOISE_MODEL_0{
+                .variance = square(degrees_to_radians(1.0))};
+        static constexpr filters::DiscreteNoiseModel<T> ACCELERATION_FILTER_ANGLE_R_NOISE_MODEL_0{
+                .variance = square(degrees_to_radians(1.0))};
+        static constexpr filters::DiscreteNoiseModel<T> ACCELERATION_FILTER_ANGLE_NOISE_MODEL_1{
+                .variance = square(degrees_to_radians(0.001))};
+        static constexpr filters::DiscreteNoiseModel<T> ACCELERATION_FILTER_ANGLE_R_NOISE_MODEL_1{
+                .variance = square(degrees_to_radians(0.001))};
         static constexpr T ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
         static constexpr T ACCELERATION_FILTER_FADING_MEMORY_ALPHA_0 = 1.001;
         static constexpr T ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1 = 1.001;
@@ -264,9 +269,9 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_GATE, Config<T>::ACCELERATION_INIT, alpha,
-                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_0,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_0,
+                                Config<T>::ACCELERATION_FILTER_POSITION_NOISE_MODEL,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_NOISE_MODEL_0,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_NOISE_MODEL_0,
                                 Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         }
@@ -277,9 +282,9 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                                 Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE,
                                 Config<T>::ACCELERATION_FILTER_GATE, Config<T>::ACCELERATION_INIT, alpha,
-                                Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
-                                Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1,
+                                Config<T>::ACCELERATION_FILTER_POSITION_NOISE_MODEL,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_NOISE_MODEL_1,
+                                Config<T>::ACCELERATION_FILTER_ANGLE_R_NOISE_MODEL_1,
                                 Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         }
@@ -294,9 +299,9 @@ std::vector<TestFilter<2, T>> create_accelerations()
                 filters::acceleration::create_acceleration_ekf<T>(
                         Config<T>::ACCELERATION_MEASUREMENT_QUEUE_SIZE, Config<T>::ACCELERATION_FILTER_RESET_DT,
                         Config<T>::ACCELERATION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::ACCELERATION_FILTER_GATE,
-                        Config<T>::ACCELERATION_INIT, Config<T>::ACCELERATION_FILTER_POSITION_VARIANCE,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_VARIANCE_1,
-                        Config<T>::ACCELERATION_FILTER_ANGLE_R_VARIANCE_1,
+                        Config<T>::ACCELERATION_INIT, Config<T>::ACCELERATION_FILTER_POSITION_NOISE_MODEL,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_NOISE_MODEL_1,
+                        Config<T>::ACCELERATION_FILTER_ANGLE_R_NOISE_MODEL_1,
                         Config<T>::ACCELERATION_FILTER_FADING_MEMORY_ALPHA_1),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
 

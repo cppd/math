@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/filter/filters/filter.h>
+#include <src/filter/filters/noise_model.h>
 
 #include <cstddef>
 #include <memory>
@@ -35,9 +36,9 @@ template <typename T>
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_process_variance,
-        T angle_process_variance,
-        T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         T fading_memory_alpha);
 
 template <typename T>
@@ -48,9 +49,9 @@ template <typename T>
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_process_variance,
-        T angle_process_variance,
-        T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         T fading_memory_alpha);
 
 template <typename T>
@@ -60,8 +61,8 @@ template <typename T>
         T angle_estimation_variance,
         std::optional<T> gate,
         const Init<T>& init,
-        T position_process_variance,
-        T angle_process_variance,
-        T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         T fading_memory_alpha);
 }

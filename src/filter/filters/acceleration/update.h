@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 
 #include <optional>
 
@@ -36,14 +37,13 @@ void update_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(
-                dt, position_process_variance, angle_process_variance, angle_r_process_variance, fading_memory_alpha);
+        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
 
         if (speed)
         {
@@ -120,14 +120,13 @@ void update_non_position(
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
         const T dt,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(
-                dt, position_process_variance, angle_process_variance, angle_r_process_variance, fading_memory_alpha);
+        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
 
         if (speed)
         {

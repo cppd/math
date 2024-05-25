@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/utility/instantiation.h>
 
 #include <cstddef>
@@ -71,9 +72,9 @@ class Acceleration final : public Filter<2, T>
         T angle_estimation_variance_;
         std::optional<T> gate_;
         Init<T> init_;
-        T position_process_variance_;
-        T angle_process_variance_;
-        T angle_r_process_variance_;
+        NoiseModel<T> position_noise_model_;
+        NoiseModel<T> angle_noise_model_;
+        NoiseModel<T> angle_r_noise_model_;
         T fading_memory_alpha_;
         std::unique_ptr<F<T>> filter_;
 
@@ -103,9 +104,9 @@ public:
                 T angle_estimation_variance,
                 std::optional<T> gate,
                 const Init<T>& init,
-                T position_process_variance,
-                T angle_process_variance,
-                T angle_r_process_variance,
+                const NoiseModel<T>& position_noise_model,
+                const NoiseModel<T>& angle_noise_model,
+                const NoiseModel<T>& angle_r_noise_model,
                 T fading_memory_alpha,
                 std::unique_ptr<F<T>>&& filter);
 };
@@ -117,18 +118,18 @@ Acceleration<T, F>::Acceleration(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha,
         std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
           angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
-          position_process_variance_(position_process_variance),
-          angle_process_variance_(angle_process_variance),
-          angle_r_process_variance_(angle_r_process_variance),
+          position_noise_model_(position_noise_model),
+          angle_noise_model_(angle_noise_model),
+          angle_r_noise_model_(angle_r_noise_model),
           fading_memory_alpha_(fading_memory_alpha),
           filter_(std::move(filter)),
           queue_(measurement_queue_size, reset_dt, angle_estimation_variance)
@@ -164,8 +165,8 @@ void Acceleration<T, F>::reset(const Measurements<2, T>& m)
                 {
                         update_position(
                                 filter_.get(), position, measurements.acceleration, measurements.direction,
-                                measurements.speed, gate_, dt, position_process_variance_, angle_process_variance_,
-                                angle_r_process_variance_, fading_memory_alpha_, nis_);
+                                measurements.speed, gate_, dt, position_noise_model_, angle_noise_model_,
+                                angle_r_noise_model_, fading_memory_alpha_, nis_);
                 });
 
         last_time_ = m.time;
@@ -184,9 +185,8 @@ void Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
                 update_position(
-                        filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt,
-                        position_process_variance_, angle_process_variance_, angle_r_process_variance_,
-                        fading_memory_alpha_, nis_);
+                        filter_.get(), position, m.acceleration, m.direction, m.speed, gate_, dt, position_noise_model_,
+                        angle_noise_model_, angle_r_noise_model_, fading_memory_alpha_, nis_);
 
                 LOG(measurement_description(m) + filter_description(*filter_));
 
@@ -196,8 +196,8 @@ void Acceleration<T, F>::update_filter(const Measurements<2, T>& m)
         ASSERT(m.acceleration || m.direction || m.speed);
 
         update_non_position(
-                filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_process_variance_,
-                angle_process_variance_, angle_r_process_variance_, fading_memory_alpha_, nis_);
+                filter_.get(), m.acceleration, m.direction, m.speed, gate_, dt, position_noise_model_,
+                angle_noise_model_, angle_r_noise_model_, fading_memory_alpha_, nis_);
 }
 
 template <typename T, template <typename> typename F>
@@ -249,15 +249,14 @@ std::unique_ptr<Filter<2, T>> create_acceleration_0(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::Filter0>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
-                angle_process_variance, angle_r_process_variance, fading_memory_alpha,
-                create_filter_0<T>(sigma_points_alpha));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_noise_model,
+                angle_noise_model, angle_r_noise_model, fading_memory_alpha, create_filter_0<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -268,15 +267,14 @@ std::unique_ptr<Filter<2, T>> create_acceleration_1(
         const std::optional<T> gate,
         const Init<T>& init,
         const T sigma_points_alpha,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::Filter1>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
-                angle_process_variance, angle_r_process_variance, fading_memory_alpha,
-                create_filter_1<T>(sigma_points_alpha));
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_noise_model,
+                angle_noise_model, angle_r_noise_model, fading_memory_alpha, create_filter_1<T>(sigma_points_alpha));
 }
 
 template <typename T>
@@ -286,23 +284,26 @@ std::unique_ptr<Filter<2, T>> create_acceleration_ekf(
         const T angle_estimation_variance,
         const std::optional<T> gate,
         const Init<T>& init,
-        const T position_process_variance,
-        const T angle_process_variance,
-        const T angle_r_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
         const T fading_memory_alpha)
 {
         return std::make_unique<Acceleration<T, filters::acceleration::FilterEkf>>(
-                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_process_variance,
-                angle_process_variance, angle_r_process_variance, fading_memory_alpha, create_filter_ekf<T>());
+                measurement_queue_size, reset_dt, angle_estimation_variance, gate, init, position_noise_model,
+                angle_noise_model, angle_r_noise_model, fading_memory_alpha, create_filter_ekf<T>());
 }
 
-#define TEMPLATE(T)                                                                  \
-        template std::unique_ptr<Filter<2, T>> create_acceleration_0(                \
-                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T, T, T); \
-        template std::unique_ptr<Filter<2, T>> create_acceleration_1(                \
-                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T, T, T); \
-        template std::unique_ptr<Filter<2, T>> create_acceleration_ekf(              \
-                std::size_t, T, T, std::optional<T>, const Init<T>&, T, T, T, T);
+#define TEMPLATE(T)                                                                                                 \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_0(                                               \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, const NoiseModel<T>&, \
+                const NoiseModel<T>&, T);                                                                           \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_1(                                               \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, const NoiseModel<T>&, \
+                const NoiseModel<T>&, T);                                                                           \
+        template std::unique_ptr<Filter<2, T>> create_acceleration_ekf(                                             \
+                std::size_t, T, T, std::optional<T>, const Init<T>&, const NoiseModel<T>&, const NoiseModel<T>&,    \
+                const NoiseModel<T>&, T);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
