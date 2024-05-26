@@ -22,11 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/variant.h>
+#include <src/filter/core/kinematic_models.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/filter/utility/instantiation.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -105,26 +108,41 @@ numerical::Vector<5, T> f(const T dt, const numerical::Vector<5, T>& x)
 }
 
 template <typename T>
-constexpr numerical::Matrix<5, 5, T> q(const T dt, const T position_variance, const T angle_variance)
+constexpr numerical::Matrix<5, 5, T> q(
+        const T dt,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model)
 {
-        const T dt_2 = power<2>(dt) / 2;
-        const numerical::Matrix<5, 3, T> noise_transition{
-                {dt_2,    0,  0},
-                {  dt,    0,  0},
-                {   0, dt_2,  0},
-                {   0,   dt,  0},
-                {   0,    0, dt}
-        };
+        const auto position = std::visit(
+                Visitors{
+                        [&](const ContinuousNoiseModel<T>& model)
+                        {
+                                return core::continuous_white_noise<2, T>(dt, model.spectral_density);
+                        },
+                        [&](const DiscreteNoiseModel<T>& model)
+                        {
+                                const T dt_2 = power<2>(dt) / 2;
+                                const numerical::Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
+                                const numerical::Matrix<1, 1, T> process_covariance = {{model.variance}};
+                                return noise_transition * process_covariance * noise_transition.transposed();
+                        }},
+                position_noise_model);
 
-        const T p = position_variance;
-        const T a = angle_variance;
-        const numerical::Matrix<3, 3, T> covariance{
-                {p, 0, 0},
-                {0, p, 0},
-                {0, 0, a}
-        };
+        const auto angle = std::visit(
+                Visitors{
+                        [&](const ContinuousNoiseModel<T>& model)
+                        {
+                                return core::continuous_white_noise<1, T>(dt, model.spectral_density);
+                        },
+                        [&](const DiscreteNoiseModel<T>& model)
+                        {
+                                const numerical::Matrix<1, 1, T> noise_transition{{dt}};
+                                const numerical::Matrix<1, 1, T> process_covariance = {{model.variance}};
+                                return noise_transition * process_covariance * noise_transition.transposed();
+                        }},
+                angle_noise_model);
 
-        return noise_transition * covariance * noise_transition.transposed();
+        return numerical::block_diagonal(position, position, angle);
 }
 
 //
@@ -392,8 +410,8 @@ class Filter final : public Filter10<T>
 
         void predict(
                 const T dt,
-                const T position_process_variance,
-                const T angle_process_variance,
+                const NoiseModel<T>& position_noise_model,
+                const NoiseModel<T>& angle_noise_model,
                 const T fading_memory_alpha) override
         {
                 ASSERT(filter_);
@@ -404,7 +422,7 @@ class Filter final : public Filter10<T>
                         {
                                 return f(dt, x);
                         },
-                        q(dt, position_process_variance, angle_process_variance), fading_memory_alpha);
+                        q(dt, position_noise_model, angle_noise_model), fading_memory_alpha);
         }
 
         core::UpdateInfo<2, T> update_position(const Measurement<2, T>& position, const std::optional<T> gate) override

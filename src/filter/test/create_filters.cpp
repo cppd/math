@@ -110,12 +110,18 @@ struct Config final
                 .angle_r_variance = square(degrees_to_radians(50.0))};
         static constexpr std::size_t ACCELERATION_MEASUREMENT_QUEUE_SIZE = 20;
 
-        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_0 = square(2.0);
-        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_1_1 = square(2.0);
-        static constexpr T DIRECTION_FILTER_POSITION_VARIANCE_2_1 = square(1.0);
-        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_1_0 = square(degrees_to_radians(0.2));
-        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_1_1 = square(degrees_to_radians(0.001));
-        static constexpr T DIRECTION_FILTER_ANGLE_VARIANCE_2_1 = square(degrees_to_radians(0.001));
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_POSITION_NOISE_MODEL_1_0{
+                .variance = square(2.0)};
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_POSITION_NOISE_MODEL_1_1{
+                .variance = square(2.0)};
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_POSITION_NOISE_MODEL_2_1{
+                .variance = square(1.0)};
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_ANGLE_NOISE_MODEL_1_0{
+                .variance = square(degrees_to_radians(0.2))};
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_ANGLE_NOISE_MODEL_1_1{
+                .variance = square(degrees_to_radians(0.001))};
+        static constexpr filters::DiscreteNoiseModel<T> DIRECTION_FILTER_ANGLE_NOISE_MODEL_2_1{
+                .variance = square(degrees_to_radians(0.001))};
         static constexpr T DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
         static constexpr T DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_0 = 1.001;
         static constexpr T DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_1 = 1.001;
@@ -340,33 +346,33 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 
         if (ORDER_P == 1 && ORDER_A == 0)
         {
-                return {filters::direction::create_direction_1_0(
+                return {filters::direction::create_direction_1_0<T>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_0,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_0,
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_NOISE_MODEL_1_0,
+                                Config<T>::DIRECTION_FILTER_ANGLE_NOISE_MODEL_1_0,
                                 Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
         }
 
         if (ORDER_P == 1 && ORDER_A == 1)
         {
-                return {filters::direction::create_direction_1_1(
+                return {filters::direction::create_direction_1_1<T>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_1_1,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_1_1,
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_NOISE_MODEL_1_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_NOISE_MODEL_1_1,
                                 Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
         }
 
         if (ORDER_P == 2 && ORDER_A == 1)
         {
-                return {filters::direction::create_direction_2_1(
+                return {filters::direction::create_direction_2_1<T>(
                                 Config<T>::DIRECTION_MEASUREMENT_QUEUE_SIZE, Config<T>::DIRECTION_FILTER_RESET_DT,
                                 Config<T>::DIRECTION_FILTER_ANGLE_ESTIMATION_VARIANCE, Config<T>::DIRECTION_FILTER_GATE,
-                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_VARIANCE_2_1,
-                                Config<T>::DIRECTION_FILTER_ANGLE_VARIANCE_2_1,
+                                Config<T>::DIRECTION_INIT, alpha, Config<T>::DIRECTION_FILTER_POSITION_NOISE_MODEL_2_1,
+                                Config<T>::DIRECTION_FILTER_ANGLE_NOISE_MODEL_2_1,
                                 Config<T>::DIRECTION_FILTER_FADING_MEMORY_ALPHA_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         }

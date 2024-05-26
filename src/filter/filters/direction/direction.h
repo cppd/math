@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/filter/filters/filter.h>
+#include <src/filter/filters/noise_model.h>
 
 #include <cstddef>
 #include <memory>
@@ -35,8 +36,8 @@ std::unique_ptr<Filter<2, T>> create_direction_1_0(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_process_variance,
-        T angle_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
         T fading_memory_alpha);
 
 template <typename T>
@@ -47,8 +48,8 @@ std::unique_ptr<Filter<2, T>> create_direction_1_1(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_process_variance,
-        T angle_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
         T fading_memory_alpha);
 
 template <typename T>
@@ -59,7 +60,7 @@ std::unique_ptr<Filter<2, T>> create_direction_2_1(
         std::optional<T> gate,
         const Init<T>& init,
         T sigma_points_alpha,
-        T position_process_variance,
-        T angle_process_variance,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
         T fading_memory_alpha);
 }

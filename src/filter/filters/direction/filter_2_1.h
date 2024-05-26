@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -40,7 +41,11 @@ public:
                 const numerical::Matrix<4, 4, T>& position_velocity_p,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt, T position_process_variance, T angle_process_variance, T fading_memory_alpha) = 0;
+        virtual void predict(
+                T dt,
+                const NoiseModel<T>& position_noise_model,
+                const NoiseModel<T>& angle_noise_model,
+                T fading_memory_alpha) = 0;
 
         [[nodiscard]] virtual core::UpdateInfo<2, T> update_position(
                 const Measurement<2, T>& position,
